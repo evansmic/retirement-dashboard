@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retirement Plan Intake — Parallel Wealth Method</title>
+<style>
+:root{
+  --navy:#0f2744;--navy2:#1a3a5c;--navy3:#234e7a;
+  --gold:#e8a020;--gold2:#f5c060;
+  --green:#1e8c4a;
+  --bg:#eef2f7;--card:#fff;--border:#d4dde8;
+  --text:#1e2a38;--muted:#5a6a7a;--light:#f4f7fb;
+  --r:10px;--shadow:0 2px 12px rgba(15,39,68,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 100%);color:#fff;padding:20px 32px 16px;display:flex;justify-content:space-between;align-items:flex-end}
+.hdr h1{font-size:22px;font-weight:700}
+.hdr p{font-size:13px;color:#a8c8e8;margin-top:3px}
+.hdr-right{text-align:right;font-size:12px;color:#7ab8e0}
+
+.body{max-width:860px;margin:0 auto;padding:28px 20px 80px}
+
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 26px;margin-bottom:20px}
+.card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:18px}
+
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border)}
+.section-label:first-child{margin-top:0;padding-top:0;border-top:none}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:14px}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+.row.four{grid-template-columns:1fr 1fr 1fr 1fr}
+.row.solo{grid-template-columns:1fr}
+
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+.field input,.field select{padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;transition:border .15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy3)}
+.field .hint{font-size:11px;color:var(--muted);font-style:italic}
+.field input[type=number]{-moz-appearance:textfield}
+.field input[type=number]::-webkit-outer-spin-button,
+.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+.submit-bar{position:sticky;bottom:0;background:var(--navy);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,.25)}
+.submit-bar p{color:#a8c8e8;font-size:12px}
+.btn-submit{background:var(--gold);color:var(--navy);font-weight:700;font-size:15px;padding:11px 32px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-submit:hover{background:var(--gold2)}
+
+.progress{display:flex;gap:6px;margin-bottom:24px}
+.progress-step{flex:1;height:4px;border-radius:2px;background:var(--border)}
+.progress-step.done{background:var(--navy3)}
+.progress-step.active{background:var(--gold)}
+
+.error-msg{display:none;background:#fde8e8;color:#c0392b;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:14px;border:1px solid #f5c6cb}
+
+.restore-banner{display:none;background:#e8f4fd;border:1px solid #b8d9f0;border-radius:8px;padding:12px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px}
+.restore-banner p{font-size:13px;color:#1a3a5c;margin:0}
+.restore-banner p strong{color:var(--navy)}
+.restore-banner-btns{display:flex;gap:8px;flex-shrink:0}
+.btn-restore{background:var(--navy);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-restore:hover{background:var(--navy3)}
+.btn-discard{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-discard:hover{background:var(--light)}
+
+.save-indicator{font-size:12px;color:#a8c8e8;opacity:0;transition:opacity .4s}
+.btn-clear{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-clear:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
+
+@media(max-width:600px){
+  .row,.row.three,.row.four{grid-template-columns:1fr}
+  .restore-banner{flex-direction:column;align-items:flex-start}
+  .submit-bar{flex-wrap:wrap;gap:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>Retirement Plan Intake</h1>
+    <p>Fill in your details below to generate your personalised retirement dashboard</p>
+  </div>
+  <div class="hdr-right">Parallel Wealth Method<br>Ontario · Canada</div>
+</div>
+
+<div class="body">
+  <div id="restore-banner" class="restore-banner">
+    <p>📋 <strong>Welcome back.</strong> We found your previously saved data — want to pick up where you left off?</p>
+    <div class="restore-banner-btns">
+      <button class="btn-restore" onclick="confirmRestore()">Restore my data</button>
+      <button class="btn-discard" onclick="dismissRestore()">Start fresh</button>
+    </div>
+  </div>
+  <div id="error-msg" class="error-msg"></div>
+
+  <!-- ══ SECTION 1: WHO ARE YOU ══ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">👤</span> Person 1 (Primary — usually the pension earner)</div>
+
+    <div class="section-label">Identity &amp; Retirement</div>
+    <div class="row three">
+      <div class="field">
+        <label>First Name</label>
+        <input type="text" id="f_name" value="Alex" required>
+      </div>
+      <div class="field">
+        <label>Birth Year</label>
+        <input type="number" id="f_dob" value="1966" min="1940" max="2005" required>
+      </div>
+      <div class="field">
+        <label>Birth Month (1–12)</label>
+        <input type="number" id="f_dobMonth" value="6" min="1" max="12" required>
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field">
+        <label>Retirement Year (last working year)</label>
+        <input type="number" id="f_retireYear" value="2027" min="2024" max="2050">
+        <span class="hint">Full salary earned through this year</span>
+      </div>
+    </div>
+
+    <!-- Phase 5.2: Pre-retirement employment income + automatic savings.
+         Zero-out salary if this spouse is already retired. -->
+    <div class="section-label">Employment Income (current — leave 0 if retired)</div>
+    <div class="row four">
+      <div class="field">
+        <label>Gross Annual Salary ($)</label>
+        <input type="number" id="f_salary" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Salary Reference Year</label>
+        <input type="number" id="f_salaryRefYear" value="2026" min="2020" max="2040">
+        <span class="hint">Year the salary above is stated in</span>
+      </div>
+      <div class="field">
+        <label>Annual Raise (e.g. 0.03)</label>
+        <input type="number" id="f_salaryRaise" value="0.03" step="0.005" min="0" max="0.20">
+      </div>
+    </div>
+    <div class="row four">
+      <div class="field">
+        <label>Annual RRSP Contribution ($)</label>
+        <input type="number" id="f_annualRrspContrib" value="0" min="0">
+        <span class="hint">Applied each year while working</span>
+      </div>
+      <div class="field">
+        <label>Annual TFSA Contribution ($)</label>
+        <input type="number" id="f_annualTfsaContrib" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Annual Non-Reg Contribution ($)</label>
+        <input type="number" id="f_annualNonregContrib" value="0" min="0">
+      </div>
+    </div>
+
+    <div class="section-label">DB Pension (leave 0 if none)</div>
+    <div class="row four">
+      <div class="field">
+        <label>Annual Amount Before 65 ($)</label>
+        <input type="number" id="f_db_before65" value="0" min="0">
+        <span class="hint">Includes bridge benefit</span>
+      </div>
+      <div class="field">
+        <label>Annual Amount After 65 ($)</label>
+        <input type="number" id="f_db_after65" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Indexation Rate (e.g. 0.022)</label>
+        <input type="number" id="f_db_index" value="0.02" step="0.001" min="0" max="0.10">
+      </div>
+      <div class="field">
+        <label>Pension Start Year</label>
+        <input type="number" id="f_db_startYear" value="2027" min="2024" max="2040">
+      </div>
+    </div>
+
+    <div class="section-label">Account Balances (start of retirement year)</div>
+    <div class="row four">
+      <div class="field">
+        <label>RRSP / RRIF ($)</label>
+        <input type="number" id="f_rrsp" value="500000" min="0">
+      </div>
+      <div class="field">
+        <label>TFSA ($)</label>
+        <input type="number" id="f_tfsa" value="75000" min="0">
+      </div>
+      <div class="field">
+        <label>TFSA Room Remaining ($)</label>
+        <input type="number" id="f_tfsaRoom" value="7000" min="0">
+      </div>
+      <div class="field">
+        <label>TFSA Annual Contribution ($)</label>
+        <input type="number" id="f_tfsaAnnual" value="7000" min="0">
+      </div>
+    </div>
+    <div class="row four">
+      <div class="field">
+        <label>LIF / LIRA ($)</label>
+        <input type="number" id="f_lif" value="50000" min="0">
+      </div>
+      <div class="field">
+        <label>Non-Reg Portfolio ($)</label>
+        <input type="number" id="f_nonreg" value="25000" min="0">
+      </div>
+      <div class="field">
+        <label>Non-Reg ACB ($)</label>
+        <input type="number" id="f_nonregAcb" value="20000" min="0">
+      </div>
+      <div class="field">
+        <label>Non-Reg Annual Contrib ($)</label>
+        <input type="number" id="f_nonregAnnual" value="0" min="0">
+      </div>
+    </div>
+
+    <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
+    <div class="row three">
+      <div class="field">
+        <label>CPP at age 70 ($/mo)</label>
+        <input type="number" id="f_cpp70_monthly" value="1300" min="0">
+        <span class="hint">Your Statement of Contributions estimate</span>
+      </div>
+      <div class="field">
+        <label>CPP at age 65 ($/mo)</label>
+        <input type="number" id="f_cpp65_monthly" value="916" min="0">
+        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
+      </div>
+      <div class="field">
+        <label>OAS at age 65 ($/mo)</label>
+        <input type="number" id="f_oas_monthly" value="742.31" min="0">
+        <span class="hint">Max 2026 = $742.31/mo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: PERSON 2 ══ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">👤</span> Person 2 (Spouse / Partner)</div>
+
+    <div class="section-label">Identity &amp; Retirement</div>
+    <div class="row three">
+      <div class="field">
+        <label>First Name</label>
+        <input type="text" id="m_name" value="Sam" required>
+      </div>
+      <div class="field">
+        <label>Birth Year</label>
+        <input type="number" id="m_dob" value="1969" min="1940" max="2005" required>
+      </div>
+      <div class="field">
+        <label>Birth Month (1–12)</label>
+        <input type="number" id="m_dobMonth" value="3" min="1" max="12" required>
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field">
+        <label>Retirement Year (last working year)</label>
+        <input type="number" id="m_retireYear" value="2027" min="2024" max="2050">
+        <span class="hint">Can differ from Person 1</span>
+      </div>
+    </div>
+
+    <!-- Phase 5.2: Pre-retirement employment income + automatic savings for Person 2. -->
+    <div class="section-label">Employment Income (current — leave 0 if retired)</div>
+    <div class="row four">
+      <div class="field">
+        <label>Gross Annual Salary ($)</label>
+        <input type="number" id="m_salary" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Salary Reference Year</label>
+        <input type="number" id="m_salaryRefYear" value="2026" min="2020" max="2040">
+      </div>
+      <div class="field">
+        <label>Annual Raise (e.g. 0.03)</label>
+        <input type="number" id="m_salaryRaise" value="0.03" step="0.005" min="0" max="0.20">
+      </div>
+    </div>
+    <div class="row four">
+      <div class="field">
+        <label>Annual RRSP Contribution ($)</label>
+        <input type="number" id="m_annualRrspContrib" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Annual TFSA Contribution ($)</label>
+        <input type="number" id="m_annualTfsaContrib" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Annual Non-Reg Contribution ($)</label>
+        <input type="number" id="m_annualNonregContrib" value="0" min="0">
+      </div>
+    </div>
+
+    <!-- Phase 5.1: DB pension fields for Person 2 (in case both spouses have DB pensions). -->
+    <div class="section-label">DB Pension (leave 0 if none)</div>
+    <div class="row four">
+      <div class="field">
+        <label>Annual Amount Before 65 ($)</label>
+        <input type="number" id="m_db_before65" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Annual Amount After 65 ($)</label>
+        <input type="number" id="m_db_after65" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Indexation Rate (e.g. 0.022)</label>
+        <input type="number" id="m_db_index" value="0.02" step="0.001" min="0" max="0.10">
+      </div>
+      <div class="field">
+        <label>Pension Start Year</label>
+        <input type="number" id="m_db_startYear" value="2027" min="2024" max="2040">
+      </div>
+    </div>
+
+    <div class="section-label">Account Balances</div>
+    <div class="row four">
+      <div class="field">
+        <label>RRSP ($)</label>
+        <input type="number" id="m_rrsp" value="125000" min="0">
+      </div>
+      <div class="field">
+        <label>RRSP Room Remaining ($)</label>
+        <input type="number" id="m_rrspRoom" value="50000" min="0">
+      </div>
+      <div class="field">
+        <label>TFSA ($)</label>
+        <input type="number" id="m_tfsa" value="60000" min="0">
+      </div>
+      <div class="field">
+        <label>TFSA Room Remaining ($)</label>
+        <input type="number" id="m_tfsaRoom" value="35000" min="0">
+      </div>
+    </div>
+    <div class="row four">
+      <div class="field">
+        <label>TFSA Annual Contribution ($)</label>
+        <input type="number" id="m_tfsaAnnual" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>LIRA ($)</label>
+        <input type="number" id="m_lira" value="20000" min="0">
+        <span class="hint">Converts to LIF at age 55</span>
+      </div>
+      <div class="field">
+        <label>LIF ($)</label>
+        <input type="number" id="m_lif" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Non-Reg Portfolio ($)</label>
+        <input type="number" id="m_nonreg" value="0" min="0">
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field">
+        <label>Non-Reg ACB ($)</label>
+        <input type="number" id="m_nonregAcb" value="0" min="0">
+        <span class="hint">Adjusted cost base of the non-reg portfolio</span>
+      </div>
+      <div class="field">
+        <label>Non-Reg Annual Contrib ($)</label>
+        <input type="number" id="m_nonregAnnual" value="0" min="0">
+      </div>
+      <div class="field"></div>
+    </div>
+
+    <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
+    <div class="row three">
+      <div class="field">
+        <label>CPP at age 70 ($/mo)</label>
+        <input type="number" id="m_cpp70_monthly" value="900" min="0">
+      </div>
+      <div class="field">
+        <label>CPP at age 65 ($/mo)</label>
+        <input type="number" id="m_cpp65_monthly" value="634" min="0">
+        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
+      </div>
+      <div class="field">
+        <label>OAS at age 65 ($/mo)</label>
+        <input type="number" id="m_oas_monthly" value="742.31" min="0">
+      </div>
+    </div>
+
+    <div class="section-label">Survivor CPP (if Person 1 dies first)</div>
+    <div class="row">
+      <div class="field">
+        <label>CPP Survivor Benefit under 65 ($/mo)</label>
+        <input type="number" id="m_cppSurv_u65" value="530" min="0">
+      </div>
+      <div class="field">
+        <label>CPP Survivor Benefit 65+ ($/mo)</label>
+        <input type="number" id="m_cppSurv_o65" value="600" min="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: JOINT / LIABILITIES ══ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🏠</span> Joint Assets &amp; Liabilities</div>
+
+    <div class="section-label">Mortgage (0 if none / paid off at retirement)</div>
+    <div class="row three">
+      <div class="field">
+        <label>Balance ($)</label>
+        <input type="number" id="mort_balance" value="100000" min="0">
+      </div>
+      <div class="field">
+        <label>Rate (e.g. 0.034)</label>
+        <input type="number" id="mort_rate" value="0.055" step="0.001" min="0" max="0.25">
+      </div>
+      <div class="field">
+        <label>Monthly Payment ($)</label>
+        <input type="number" id="mort_monthly" value="1400" min="0">
+      </div>
+    </div>
+
+    <div class="section-label">Line of Credit (0 if none)</div>
+    <div class="row">
+      <div class="field">
+        <label>Balance ($)</label>
+        <input type="number" id="loc_balance" value="10000" min="0">
+      </div>
+      <div class="field">
+        <label>Rate (e.g. 0.0641)</label>
+        <input type="number" id="loc_rate" value="0.07" step="0.001" min="0" max="0.30">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 4: SPENDING ══ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">💳</span> Spending Targets (annual, today's dollars)</div>
+
+    <div class="row three">
+      <div class="field">
+        <label>Go-Go Annual Budget ($)</label>
+        <input type="number" id="sp_gogo" value="75000" min="0">
+        <span class="hint">Active retirement years</span>
+      </div>
+      <div class="field">
+        <label>Go-Go Ends at Person 1 Age</label>
+        <input type="number" id="sp_gogoEnd" value="75" min="60" max="95">
+      </div>
+      <div class="field">
+        <label>Slow-Go Annual Budget ($)</label>
+        <input type="number" id="sp_slowgo" value="65000" min="0">
+        <span class="hint">Slower years</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Slow-Go Ends at Person 1 Age</label>
+        <input type="number" id="sp_slowgoEnd" value="85" min="65" max="95">
+      </div>
+      <div class="field">
+        <label>No-Go Annual Budget ($)</label>
+        <input type="number" id="sp_nogo" value="55000" min="0">
+        <span class="hint">Final years</span>
+      </div>
+    </div>
+    <div class="row solo">
+      <div class="field">
+        <label>Inheritance Goal ($, today's dollars)</label>
+        <input type="number" id="a_inheritance" value="0" min="0" step="10000">
+        <span class="hint">Minimum portfolio balance to leave at plan end. Enter 0 to spend it all. If your target spend can't support this goal, the dashboard will automatically solve for the maximum sustainable spend.</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Downsize — Year (0 = none)</label>
+        <input type="number" id="a_downsizeYear" value="0" min="0" step="1">
+        <span class="hint">Calendar year the home sale closes. Net proceeds (after agent fees, moving costs, replacement-home cost) flow into the non-registered account tax-free under the principal-residence exemption.</span>
+      </div>
+      <div class="field">
+        <label>Downsize — Net Proceeds ($, today's dollars)</label>
+        <input type="number" id="a_downsizeProceeds" value="0" min="0" step="10000">
+        <span class="hint">Amount in today's dollars; auto-inflated at CPI to the sale year.</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>One-off #1 — Year</label>
+        <input type="number" id="a_oneOff1Year" value="0" min="0" step="1">
+        <span class="hint">Wedding, renovation, family gift, RV purchase, charitable bequest, etc.</span>
+      </div>
+      <div class="field">
+        <label>One-off #1 — Amount ($)</label>
+        <input type="number" id="a_oneOff1Amt" value="0" min="0" step="5000">
+      </div>
+      <div class="field">
+        <label>One-off #1 — Label</label>
+        <input type="text" id="a_oneOff1Label" value="" placeholder="e.g. wedding">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>One-off #2 — Year</label>
+        <input type="number" id="a_oneOff2Year" value="0" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>One-off #2 — Amount ($)</label>
+        <input type="number" id="a_oneOff2Amt" value="0" min="0" step="5000">
+      </div>
+      <div class="field">
+        <label>One-off #2 — Label</label>
+        <input type="text" id="a_oneOff2Label" value="" placeholder="e.g. renovation">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Cash Wedge Balance ($)</label>
+        <input type="number" id="a_cashWedge" value="0" min="0" step="5000">
+        <span class="hint">Parallel-Wealth-style reserve (HISA/GIC) drawn before equities during market-down years. Typically 1–3 years of spending. Leave 0 to skip.</span>
+      </div>
+      <div class="field">
+        <label>Cash Wedge Return Rate</label>
+        <input type="number" id="a_cashWedgeReturn" value="0.03" step="0.005" min="0" max="0.08">
+        <span class="hint">Annual nominal return on the wedge (HISA ~3%, 1-yr GIC ~4%).</span>
+      </div>
+      <div class="field">
+        <label>Wedge Target (years)</label>
+        <input type="number" id="a_cashWedgeYears" value="2" min="0" max="5" step="1">
+        <span class="hint">Surplus income refills the wedge up to this many years of go-go spending before spilling into the non-registered account.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 5: ASSUMPTIONS ══ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> Plan Assumptions</div>
+
+    <!-- Phase 4.5: FP Canada Projection Assumption Guidelines.
+         Annual publication from FP Canada used by certified financial planners
+         to ensure projections aren't over-optimistic. Click "Apply" to populate
+         a blended 60/40 portfolio plus the current inflation assumption. Users
+         can override per-field afterwards. -->
+    <div style="background:#eef4fa;border:1px solid #b9d0e3;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:300px;font-size:12px;color:#234">
+        <strong>FP Canada Projection Assumption Guidelines</strong> — a standardised, conservative
+        set of inputs updated annually by FP Canada and used by certified planners. Latest values:
+        inflation 2.1%, return on fixed income 3.4%, Canadian equity 6.4%, foreign developed 6.7%,
+        emerging 7.4% (all nominal, pre-fee).
+      </div>
+      <select id="a_fpPreset" style="padding:5px 8px;border:1px solid #b9d0e3;border-radius:5px;font-size:12px">
+        <option value="balanced60">Balanced 60/40 (~4.5% net)</option>
+        <option value="growth80">Growth 80/20 (~5.2% net)</option>
+        <option value="conservative40">Conservative 40/60 (~3.8% net)</option>
+      </select>
+      <button type="button" onclick="applyFpGuidelines()"
+        style="background:#2db560;color:#fff;border:0;border-radius:5px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600">
+        Apply
+      </button>
+      <div id="fpAppliedBanner" style="display:none;width:100%;margin-top:8px;padding:6px 10px;background:#d4f0e0;color:#135b2b;border-radius:5px;font-size:12px;font-weight:500"></div>
+    </div>
+
+    <div class="row four">
+      <div class="field">
+        <!-- Phase 5.2: was the single retirement year for both spouses. Kept as
+             a legacy compatibility field — prefer the per-spouse retirement year
+             inputs at the top of each Person section. Derived automatically on
+             submit if both per-spouse years are set to the same value. -->
+        <label>Plan Start Year</label>
+        <input type="number" id="a_planStart" value="" min="2024" max="2050" placeholder="auto">
+        <span class="hint">Leave blank to use earliest retirement year. Set earlier to model working years.</span>
+      </div>
+      <div class="field">
+        <label>Plan End Year</label>
+        <input type="number" id="a_planEnd" value="2064" min="2040" max="2100">
+        <span class="hint">Person 2 life expectancy year</span>
+      </div>
+      <div class="field">
+        <label>Planning Horizon Age</label>
+        <input type="number" id="a_horizon" value="95" min="80" max="100">
+      </div>
+      <div class="field">
+        <label>Year Person 1 dies (Survivor scenario)</label>
+        <input type="number" id="a_frankDies" value="2028" min="2025" max="2060">
+        <span class="hint">Used only in Survivor tab</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Portfolio Return Rate (e.g. 0.05)</label>
+        <input type="number" id="a_returnRate" value="0.05" step="0.005" min="0" max="0.15">
+      </div>
+      <div class="field">
+        <label>Inflation Rate (e.g. 0.025)</label>
+        <input type="number" id="a_inflation" value="0.025" step="0.005" min="0" max="0.10">
+      </div>
+      <div class="field">
+        <!-- Phase 4.5: Return volatility — used by Monte Carlo + stress tests. -->
+        <label>Return Std. Deviation (Monte Carlo)</label>
+        <input type="number" id="a_returnStdDev" value="0.10" step="0.01" min="0" max="0.30">
+        <span class="hint">60/40 ≈ 0.10; 80/20 ≈ 0.13; 100% equity ≈ 0.18</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>
+          <input type="checkbox" id="a_youngerSpouseRrif" style="margin-right:6px">
+          Use younger spouse's age for RRIF minimums
+        </label>
+        <span class="hint">One-time CRA election. Reduces mandatory RRIF withdrawals by basing the factor on the younger spouse's age — useful when the older spouse wants to keep more money inside the registered shelter.</span>
+      </div>
+      <div class="field">
+        <label>
+          <input type="checkbox" id="a_cppSharing" style="margin-right:6px">
+          Apply CPP pension sharing (50/50)
+        </label>
+        <span class="hint">Service Canada election that splits each spouse's CPP 50/50 while both are alive. Distinct from pension splitting — CPP sharing changes who actually receives the money.</span>
+      </div>
+      <div class="field">
+        <label>Withdrawal order (baseline scenario)</label>
+        <select id="a_withdrawalOrder">
+          <option value="default" selected>Default — Non-Reg → TFSA → RRSP (CFM textbook)</option>
+          <option value="meltdown">Meltdown — RRSP/RRIF first (Snap-style)</option>
+        </select>
+        <span class="hint">Which account funds the spending gap each year. Default preserves registered shelters; Meltdown drains RRSPs early to reduce future RRIF minimums and estate tax. The Meltdown scenario card always uses the meltdown order regardless of this setting.</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Spousal RRSP contributor</label>
+        <select id="a_spousalContributor">
+          <option value="" selected>None (no spousal RRSP)</option>
+          <option value="f">Person 1 contributed (Person 2 is annuitant)</option>
+          <option value="m">Person 2 contributed (Person 1 is annuitant)</option>
+        </select>
+        <span class="hint">CRA rule: withdrawals from a spousal RRSP are attributed back to the contributor (not the annuitant) if the contributor put money in during the current year or the two preceding calendar years. Reduces income-splitting benefit.</span>
+      </div>
+      <div class="field">
+        <label>Contribution, Year -1 ($)</label>
+        <input type="number" id="a_spousalContribY1" value="0" min="0" step="1000">
+        <span class="hint">Amount contributed last calendar year (relative to retirement year).</span>
+      </div>
+      <div class="field">
+        <label>Contribution, Year -2 ($)</label>
+        <input type="number" id="a_spousalContribY2" value="0" min="0" step="1000">
+        <span class="hint">Amount contributed two calendar years ago.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <p>All amounts in today's dollars &nbsp;·&nbsp; Ontario tax rules &nbsp;·&nbsp; Calculations are estimates only</p>
+    <span class="save-indicator" id="save-indicator">✓ Progress saved</span>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn-clear" onclick="clearForm()">Clear Form</button>
+    <button class="btn-submit" onclick="submitForm()">Generate Dashboard →</button>
+  </div>
+</div>
+
+<script>
+// ── LOCAL STORAGE: save / restore / clear ──────────────────────────────────
+const STORAGE_KEY = 'retirement_intake_v1';
+let _savedData = null;   // raw saved values — only applied if user confirms
+
+function getAllFieldValues() {
+  const data = {};
+  document.querySelectorAll('input[id]').forEach(el => { data[el.id] = el.value; });
+  return data;
+}
+
+function applyFieldValues(data) {
+  Object.entries(data).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveToLocal() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getAllFieldValues()));
+  const ind = document.getElementById('save-indicator');
+  if (ind) { ind.style.opacity = 1; setTimeout(() => { ind.style.opacity = 0; }, 2000); }
+}
+
+function confirmRestore() {
+  if (_savedData) applyFieldValues(_savedData);
+  document.getElementById('restore-banner').style.display = 'none';
+  _savedData = null;
+}
+
+function dismissRestore() {
+  _savedData = null;
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('restore-banner').style.display = 'none';
+}
+
+function clearForm() {
+  if (!confirm('Clear all fields and start fresh?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('input[id]').forEach(el => {
+    el.value = el.type === 'text' ? '' : '0';
+  });
+}
+
+// Auto-save 600ms after any input change
+let _saveTimer;
+document.addEventListener('input', () => {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveToLocal, 600);
+});
+
+// On page load: check for saved data and offer restore
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Only show banner if there's meaningful data (name filled in)
+      if (parsed.f_name && parsed.f_name.trim() && parsed.f_name !== 'Alex') {
+        _savedData = parsed;
+        document.getElementById('restore-banner').style.display = 'flex';
+      }
+    }
+  } catch(e) { /* ignore */ }
+});
+// ──────────────────────────────────────────────────────────────────────────
+
+function n(id, fallback=0) {
+  const el = document.getElementById(id);
+  if (!el) return fallback;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? fallback : v;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Phase 4.5: FP Canada Projection Assumption Guidelines presets.
+// Values taken from the 2024 edition (applicable to plans starting 2025).
+// All returns are nominal and *pre-fee*; we subtract 1.0% management fee to
+// reach a planning-grade net return. The Standard Deviation numbers are
+// approximations based on long-run realised volatility of a broad portfolio
+// (60/40 ≈ 10%, 80/20 ≈ 13%, 40/60 ≈ 7%).
+// Reference: https://www.fpcanada.ca/planners/projection-assumption-guidelines
+const FP_GUIDELINES_2024 = {
+  inflation:     0.021,
+  shortTerm:     0.024,
+  fixedIncome:   0.034,
+  canadaEquity:  0.064,
+  foreignEquity: 0.067,
+  emergingEq:    0.074,
+  borrowing:     0.044,
+  ympeGrowth:    0.031,
+  managementFee: 0.010   // subtracted from gross return for net planning number
+};
+const FP_PRESETS = {
+  balanced60:     { equity: 0.60, label: 'Balanced 60/40',      stdDev: 0.10 },
+  growth80:       { equity: 0.80, label: 'Growth 80/20',        stdDev: 0.13 },
+  conservative40: { equity: 0.40, label: 'Conservative 40/60',  stdDev: 0.07 }
+};
+// Blend equity across CA/Foreign/Emerging using FP Canada's canonical weights
+// (30/20/10 of the equity slice).
+function fpBlendedReturn(equityShare){
+  const g = FP_GUIDELINES_2024;
+  const fi = (1 - equityShare) * g.fixedIncome;
+  const ca = equityShare * 0.50 * g.canadaEquity;
+  const fo = equityShare * 0.33 * g.foreignEquity;
+  const em = equityShare * 0.17 * g.emergingEq;
+  return fi + ca + fo + em - g.managementFee;
+}
+function applyFpGuidelines(){
+  const sel = document.getElementById('a_fpPreset');
+  const preset = FP_PRESETS[sel.value];
+  if(!preset) return;
+  const ret = fpBlendedReturn(preset.equity);
+  const g = FP_GUIDELINES_2024;
+  // Set the core rates.
+  document.getElementById('a_returnRate').value = ret.toFixed(4);
+  document.getElementById('a_inflation').value  = g.inflation.toFixed(4);
+  // Indexation overrides (all derived from inflation / CPP wage-base guidance).
+  const setIf = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+  setIf('a_cpiIndex',    g.inflation.toFixed(4));
+  setIf('a_cppIndex',    g.inflation.toFixed(4));
+  setIf('a_oasIndex',    g.inflation.toFixed(4));
+  setIf('a_fedTaxIndex', g.inflation.toFixed(4));
+  setIf('a_onTaxIndex',  g.inflation.toFixed(4));
+  // Return volatility (used by Monte Carlo in the dashboard).
+  setIf('a_returnStdDev', preset.stdDev.toFixed(3));
+  // Friendly confirmation — avoid a full dialog; fade a brief banner above.
+  const banner = document.getElementById('fpAppliedBanner');
+  if(banner){
+    banner.style.display = 'block';
+    banner.textContent = 'Applied ' + preset.label + ': ' + (ret*100).toFixed(2) + '% return, '
+      + (g.inflation*100).toFixed(1) + '% inflation, ' + (preset.stdDev*100).toFixed(0) + '% SD.';
+    clearTimeout(window._fpBannerTimer);
+    window._fpBannerTimer = setTimeout(()=>{ banner.style.display='none'; }, 4500);
+  }
+}
+function s(id, fallback='') {
+  const el = document.getElementById(id);
+  return el ? (el.value.trim() || fallback) : fallback;
+}
+
+function submitForm() {
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  // Basic validation
+  if (!s('f_name') || !s('m_name')) {
+    errEl.textContent = 'Please enter names for both people.';
+    errEl.style.display = 'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if (n('f_dob') < 1940 || n('m_dob') < 1940) {
+    errEl.textContent = 'Please enter valid birth years for both people.';
+    errEl.style.display = 'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  const f_cpp65_raw  = n('f_cpp65_monthly', 0);
+  const m_cpp65_raw  = n('m_cpp65_monthly', 0);
+  const f_cpp70_mo   = n('f_cpp70_monthly', 0);
+  const m_cpp70_mo   = n('m_cpp70_monthly', 0);
+
+  const D = {
+    frank: {
+      name:         s('f_name', 'Person 1'),
+      dob:          n('f_dob'),
+      dobMonth:     n('f_dobMonth', 9),
+      retireYear:   n('f_retireYear', 2027),
+      // Phase 5.2: pre-retirement employment income + automatic contributions.
+      salary:             n('f_salary', 0),
+      salaryRefYear:      n('f_salaryRefYear', 2026),
+      salaryRaise:        n('f_salaryRaise', 0.03),
+      annualRrspContrib:  n('f_annualRrspContrib', 0),
+      annualTfsaContrib:  n('f_annualTfsaContrib', 0),
+      annualNonregContrib:n('f_annualNonregContrib', 0),
+      db_before65:  n('f_db_before65'),
+      db_after65:   n('f_db_after65'),
+      db_index:     n('f_db_index', 0.022),
+      db_startYear: n('f_db_startYear', n('f_retireYear', 2027)),
+      rrsp:         n('f_rrsp'),
+      tfsa:         n('f_tfsa'),
+      tfsaRoom:     n('f_tfsaRoom', 7000),
+      tfsaAnnual:   n('f_tfsaAnnual'),
+      lif:          n('f_lif'),
+      nonreg:       n('f_nonreg'),
+      nonregAcb:    n('f_nonregAcb'),
+      nonregAnnual: n('f_nonregAnnual'),
+      // Store monthly values; dashboard rehydrates to annual
+      cpp70_monthly: f_cpp70_mo,
+      cpp65_monthly: f_cpp65_raw > 0 ? f_cpp65_raw : Math.round(f_cpp70_mo / 1.42),
+      oas_monthly:   n('f_oas_monthly', 742.31),
+    },
+    moon: {
+      name:         s('m_name', 'Person 2'),
+      dob:          n('m_dob'),
+      dobMonth:     n('m_dobMonth', 12),
+      retireYear:   n('m_retireYear', 2027),
+      // Phase 5.2: pre-retirement employment for Person 2.
+      salary:             n('m_salary', 0),
+      salaryRefYear:      n('m_salaryRefYear', 2026),
+      salaryRaise:        n('m_salaryRaise', 0.03),
+      annualRrspContrib:  n('m_annualRrspContrib', 0),
+      annualTfsaContrib:  n('m_annualTfsaContrib', 0),
+      annualNonregContrib:n('m_annualNonregContrib', 0),
+      // Phase 5.2: DB pension fields for Person 2.
+      db_before65:  n('m_db_before65'),
+      db_after65:   n('m_db_after65'),
+      db_index:     n('m_db_index', 0.022),
+      db_startYear: n('m_db_startYear', n('m_retireYear', 2027)),
+      rrsp:         n('m_rrsp'),
+      rrspRoom:     n('m_rrspRoom'),
+      tfsa:         n('m_tfsa'),
+      tfsaRoom:     n('m_tfsaRoom'),
+      tfsaAnnual:   n('m_tfsaAnnual'),
+      lira:         n('m_lira'),
+      lif:          n('m_lif'),
+      nonreg:       n('m_nonreg'),
+      nonregAcb:    n('m_nonregAcb'),
+      nonregAnnual: n('m_nonregAnnual'),
+      cpp70_monthly: n('m_cpp70_monthly', 0),
+      cpp65_monthly: m_cpp65_raw > 0 ? m_cpp65_raw : Math.round(m_cpp70_mo / 1.42),
+      oas_monthly:   n('m_oas_monthly', 742.31),
+      cppSurv_u65_mo: n('m_cppSurv_u65'),
+      cppSurv_o65_mo: n('m_cppSurv_o65'),
+    },
+    mortgage: {
+      balance: n('mort_balance'),
+      rate:    n('mort_rate', 0.034),
+      monthly: n('mort_monthly'),
+    },
+    loc: {
+      balance: n('loc_balance'),
+      rate:    n('loc_rate', 0.0641),
+    },
+    spending: {
+      gogo:      n('sp_gogo', 120000),
+      gogoEnd:   n('sp_gogoEnd', 75),
+      slowgo:    n('sp_slowgo', 108000),
+      slowgoEnd: n('sp_slowgoEnd', 85),
+      nogo:      n('sp_nogo', 96000),
+    },
+    inheritance: n('a_inheritance', 0),
+    // Phase 3.6: downsize event (principal residence sale).
+    downsize: {
+      year:        n('a_downsizeYear', 0),
+      netProceeds: n('a_downsizeProceeds', 0),
+    },
+    // Phase 3.7: one-off expenses / bequests. Empty-label or zero-amount entries are elided.
+    oneOffs: (function(){
+      const out = [];
+      for(const i of [1, 2]){
+        const yr = n(`a_oneOff${i}Year`, 0);
+        const amt = n(`a_oneOff${i}Amt`, 0);
+        if(yr > 0 && amt > 0){
+          out.push({ year: yr, amount: amt, label: s(`a_oneOff${i}Label`, `Event #${i}`) });
+        }
+      }
+      return out;
+    })(),
+    // Phase 3.2: cash wedge config. Zero balance disables the feature.
+    cashWedge: {
+      balance:     n('a_cashWedge', 0),
+      returnRate:  n('a_cashWedgeReturn', 0.03),
+      targetYears: n('a_cashWedgeYears', 2),
+    },
+    assumptions: {
+      // Phase 5.2: `retireYear` now means "the earliest spouse's retirement year";
+      // derived from the per-spouse f_retireYear / m_retireYear inputs. Kept for
+      // back-compat with downstream code that references it for labels.
+      retireYear:           Math.min(
+        n('f_retireYear', 2027),
+        n('m_retireYear', 2027)
+      ),
+      // Phase 5.2: explicit plan start (for modelling working years). Null => use retireYear.
+      planStart:            (function(){ const v = n('a_planStart', 0); return v > 0 ? v : null; })(),
+      planEnd:              n('a_planEnd', 2068),
+      frankDiesInSurvivor:  n('a_frankDies', 2028),
+      returnRate:           n('a_returnRate', 0.05),
+      inflation:            n('a_inflation', 0.025),
+      // Phase 4.5: Monte Carlo volatility (passed through to dashboard's returnStdDev assumption).
+      returnStdDev:         n('a_returnStdDev', 0.10),
+      horizon:              n('a_horizon', 95),
+      // Phase 3.3: younger-spouse RRIF election.
+      youngerSpouseRrif:    document.getElementById('a_youngerSpouseRrif').checked,
+      // Phase 3.5: CPP pension sharing.
+      cppSharing:           (document.getElementById('a_cppSharing') || {checked:false}).checked,
+      // Phase 3.1: per-plan withdrawal-order preset for the baseline scenario.
+      withdrawalOrder:      (document.getElementById('a_withdrawalOrder') || {value:'default'}).value,
+      // Phase 3.4: spousal RRSP attribution — 3-year rolling window on contributions.
+      spousalRrsp:          (function(){
+        const c = (document.getElementById('a_spousalContributor') || {value:''}).value;
+        if(!c) return null;
+        // Anchor the 3-year attribution window on the *annuitant's* retirement year —
+        // the spouse who will eventually draw from the spousal RRSP.
+        const annuitantKey = (c === 'frank') ? 'moon' : 'frank';
+        const retYr = n(annuitantKey[0] + '_retireYear', 2027);
+        const contribs = {};
+        const y1 = n('a_spousalContribY1', 0);
+        const y2 = n('a_spousalContribY2', 0);
+        if(y1 > 0) contribs[retYr - 1] = y1;
+        if(y2 > 0) contribs[retYr - 2] = y2;
+        return { contributor: c, contribs };
+      })(),
+    }
+  };
+
+  try {
+    const encoded = btoa(encodeURIComponent(JSON.stringify(D)));
+    window.location.href = 'retirement_dashboard#' + encoded;
+  } catch(e) {
+    errEl.textContent = 'Encoding error: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// Allow pressing Enter to submit
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) submitForm();
+});
+</script>
+</body>
+</html>

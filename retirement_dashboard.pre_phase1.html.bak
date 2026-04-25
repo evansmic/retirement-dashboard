@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retirement Dashboard — Frank & Moon Unit Zappa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0f2744;--navy2:#1a3a5c;--navy3:#234e7a;
+  --gold:#e8a020;--gold2:#f5c060;
+  --green:#1e8c4a;--green2:#2db560;
+  --red:#c0392b;--red2:#e74c3c;
+  --bg:#eef2f7;--card:#fff;--border:#d4dde8;
+  --text:#1e2a38;--muted:#5a6a7a;--light:#f4f7fb;
+  --r:10px;--shadow:0 2px 12px rgba(15,39,68,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy3) 100%);color:#fff;padding:18px 28px 14px;display:flex;justify-content:space-between;align-items:flex-end}
+.hdr-left h1{font-size:20px;font-weight:700;letter-spacing:.2px}
+.hdr-left p{font-size:13px;color:#a8c8e8;margin-top:2px}
+.hdr-right{text-align:right;font-size:12px;color:#7ab8e0}
+.hdr-right strong{color:var(--gold);font-size:14px}
+
+/* SCENARIO TABS */
+.tabs{background:var(--navy2);padding:0 28px;display:flex;gap:4px;border-bottom:2px solid var(--navy)}
+.tab{padding:10px 18px;border:none;background:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-family:inherit;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.dot-base{background:#7ab8e0}.dot-melt{background:#2db560}.dot-zero{background:#f5a623}.dot-surv{background:#e74c3c}.dot-maxs{background:#9b59b6}
+
+/* BODY */
+.body{max-width:1400px;margin:0 auto;padding:22px 20px 60px}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;border-top:3px solid var(--navy2)}
+.kpi.g{border-top-color:var(--green)}
+.kpi.o{border-top-color:var(--gold)}
+.kpi.r{border-top-color:var(--red)}
+.kpi label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px}
+.kpi .val{font-size:22px;font-weight:700;color:var(--navy)}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi .delta{font-size:12px;font-weight:700;margin-top:4px}
+.kpi .delta.pos{color:var(--green)}.kpi .delta.neg{color:var(--red)}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.chart-card h3{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.chart-card h3 span{font-size:11px;font-weight:400;color:var(--muted)}
+.chart-wrap{position:relative;height:240px}
+
+/* COMPARISON TABLE */
+.section-head{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cmp-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:20px;overflow-x:auto}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--navy2)}
+.cmp-table th:first-child{background:var(--navy)}
+.cmp-table td{padding:9px 12px;border-bottom:1px solid var(--border)}
+.cmp-table tr:hover td{background:var(--light)}
+.cmp-table td:first-child{font-weight:600;color:var(--muted);font-size:12px;white-space:nowrap}
+.best{color:var(--green);font-weight:700}
+.worst{color:var(--red)}
+.cmp-table .row-head{background:var(--light);font-weight:700;color:var(--navy);font-size:12px}
+
+/* DETAIL TABLE */
+.detail-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:20px}
+.detail-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.detail-hdr h3{font-size:13px;font-weight:700;color:var(--navy)}
+.detail-hdr .toggle{font-size:12px;color:var(--muted)}
+.detail-body{overflow-x:auto;max-height:420px;overflow-y:auto}
+.det-table{width:100%;border-collapse:collapse;font-size:12px}
+.det-table th{padding:7px 10px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;white-space:nowrap}
+.det-table td{padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.det-table tr:hover td{background:#f0f6ff}
+.det-table .yr{font-weight:700;color:var(--navy);background:var(--light)}
+.det-table .neg{color:var(--red)}.det-table .pos{color:var(--green)}
+.det-table .milestone{background:#fff8e8}
+.hidden{display:none}
+
+/* INFO BAR */
+.info-bar{background:var(--navy);color:#a8c8e8;font-size:12px;padding:8px 28px;display:flex;gap:24px;flex-wrap:wrap}
+.info-bar span{display:flex;align-items:center;gap:5px}
+.info-bar strong{color:#fff}
+
+/* UTIL */
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+.tag-g{background:#d4f0e0;color:var(--green)}
+.tag-r{background:#fde8e8;color:var(--red)}
+.tag-o{background:#fef3dc;color:#b87800}
+.note{font-size:11px;color:var(--muted);font-style:italic;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>Retirement Planning Dashboard</h1>
+    <p id="hdr-names">— &nbsp;|&nbsp; Projection: — – —</p>
+  </div>
+  <div class="hdr-right">
+    Planning to age <strong id="hdr-horizon">95</strong><br>
+    As at April 2026 &nbsp;|&nbsp; All figures in today's dollars (nominal)
+  </div>
+</div>
+
+<!-- INFO BAR -->
+<div class="info-bar" id="info-bar">
+  <span id="ib-frank">—</span>
+  <span id="ib-moon">—</span>
+  <span id="ib-db">—</span>
+  <span id="ib-rrsp">—</span>
+  <span id="ib-return">—</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="setScenario('base')"><span class="dot dot-base"></span>Baseline (CPP/OAS at 65)</button>
+  <button class="tab" onclick="setScenario('melt')"><span class="dot dot-melt"></span>RRSP Meltdown (CPP/OAS at 70)</button>
+  <button class="tab" onclick="setScenario('zero')"><span class="dot dot-zero"></span>Net 0% Return</button>
+  <button class="tab" onclick="setScenario('surv')"><span class="dot dot-surv"></span>Survivor (Frank dies age 62)</button>
+  <button class="tab" onclick="setScenario('maxs')"><span class="dot dot-maxs"></span>Max Spend (Estate → 0)</button>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi" id="kpi-sustain">
+      <label>Plan Sustainability</label>
+      <div class="val" id="kv-sustain">—</div>
+      <div class="sub" id="ks-sustain">Age funds reach $0</div>
+    </div>
+    <div class="kpi g" id="kpi-aftax">
+      <label>Total After-Tax Income</label>
+      <div class="val" id="kv-aftax">—</div>
+      <div class="sub">Lifetime (nominal)</div>
+      <div class="delta" id="kd-aftax"></div>
+    </div>
+    <div class="kpi r" id="kpi-tax">
+      <label>Total Taxes Paid</label>
+      <div class="val" id="kv-tax">—</div>
+      <div class="sub">Lifetime (nominal)</div>
+      <div class="delta" id="kd-tax"></div>
+    </div>
+    <div class="kpi o" id="kpi-estate">
+      <label>Estate at Life Expectancy</label>
+      <div class="val" id="kv-estate">—</div>
+      <div class="sub">Net portfolio (excl. home)</div>
+      <div class="delta" id="kd-estate"></div>
+    </div>
+    <div class="kpi" id="kpi-oas">
+      <label>OAS Clawback (lifetime)</label>
+      <div class="val" id="kv-oas">—</div>
+      <div class="sub">Total OAS lost to recovery tax</div>
+      <div class="delta" id="kd-oas"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>📊 Annual Income by Source <span>vs. Spending Target</span></h3>
+      <div class="chart-wrap"><canvas id="chartIncome"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>💼 Portfolio Balances Over Time <span>RRSP · TFSA · Non-Reg · LIF</span></h3>
+      <div class="chart-wrap"><canvas id="chartBalance"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🧾 Annual Taxes Paid <span>Federal + Ontario + OAS Clawback</span></h3>
+      <div class="chart-wrap"><canvas id="chartTax"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🏦 Net Estate Value <span>Total portfolio (home excluded)</span></h3>
+      <div class="chart-wrap"><canvas id="chartEstate"></canvas></div>
+    </div>
+  </div>
+
+  <!-- YEAR-BY-YEAR TABLE -->
+  <div class="detail-card">
+    <div class="detail-hdr" onclick="toggleDetail()">
+      <h3>📅 Year-by-Year Detail — <span id="detScenLabel">Baseline</span></h3>
+      <span class="toggle" id="detToggle">▼ Show</span>
+    </div>
+    <div class="detail-body hidden" id="detBody">
+      <table class="det-table">
+        <thead>
+          <tr>
+            <th>Year</th><th>Age F/M</th>
+            <th>DB Pension</th><th>CPP (F+M)</th><th>OAS (F+M)</th>
+            <th>RRIF/LIF Draw</th><th>TFSA Draw</th><th>Non-Reg</th>
+            <th>Gross Income</th><th>Total Tax</th><th>OAS Clawback</th>
+            <th>Actual Spend</th><th>Monthly</th><th>Target</th><th>Mortgage</th><th>Shortfall</th>
+            <th>RRSP/RRIF</th><th>TFSA Total</th><th>LIF</th><th>Non-Reg Bal</th>
+          </tr>
+        </thead>
+        <tbody id="detTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="cmp-card">
+    <div class="section-head" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <span>📋 Scenario Comparison</span>
+    </div>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th><span class="dot dot-base" style="margin-right:4px"></span>Baseline</th>
+          <th><span class="dot dot-melt" style="margin-right:4px"></span>RRSP Meltdown</th>
+          <th><span class="dot dot-zero" style="margin-right:4px"></span>Net 0% Return</th>
+          <th><span class="dot dot-surv" style="margin-right:4px"></span>Survivor</th>
+          <th><span class="dot dot-maxs" style="margin-right:4px"></span>Max Spend</th>
+        </tr>
+      </thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--light);border-radius:8px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:12px;font-weight:700;color:var(--navy)">📍 Key Year Snapshot — Frank age:</div>
+      <input type="range" id="snapAge" min="62" max="95" value="75" step="1"
+             style="flex:1;min-width:160px;max-width:280px;accent-color:var(--navy2)"
+             oninput="updateSnapshot(+this.value)">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);min-width:120px">
+        Age <span id="snapAgeLabel">75</span> &nbsp;(<span id="snapYearLabel">2041</span>)
+        &nbsp;·&nbsp; Moon <span id="snapAgeMLabel">68</span>
+      </div>
+    </div>
+    <table class="cmp-table" style="margin-top:6px">
+      <thead>
+        <tr>
+          <th>Snapshot Metric</th>
+          <th><span class="dot dot-base" style="margin-right:4px"></span>Baseline</th>
+          <th><span class="dot dot-melt" style="margin-right:4px"></span>RRSP Meltdown</th>
+          <th><span class="dot dot-zero" style="margin-right:4px"></span>Net 0% Return</th>
+          <th><span class="dot dot-surv" style="margin-right:4px"></span>Survivor</th>
+          <th><span class="dot dot-maxs" style="margin-right:4px"></span>Max Spend</th>
+        </tr>
+      </thead>
+      <tbody id="snapBody"></tbody>
+    </table>
+    <p class="note" style="margin-top:10px">All figures nominal. Sustainability = year portfolio reaches $0 (Never = funds last to plan end).</p>
+  </div>
+
+</div><!-- /body -->
+
+<script>
+// ════════════════════════════════════════════════════════
+//  CLIENT DATA — loaded from URL hash or default fallback
+// ════════════════════════════════════════════════════════
+function getDefaultD() {
+  // Typical middle-class Ontario couple — Person 1 retires at 60, no DB pension
+  return {
+    frank: {
+      name:'Alex', dob:1966, dobMonth:6,
+      retireYear:2027,
+      // No DB pension
+      db_before65: 0, db_after65: 0, db_index: 0.02, db_startYear:2027,
+      // Accounts
+      rrsp: 500000,
+      tfsa: 75000, tfsaRoom: 7000, tfsaAnnual: 7000,
+      lif: 50000,   // old employer DCPP converted to LIF
+      nonreg: 25000, nonregAcb: 20000, nonregAnnual: 0,
+      // CPP / OAS
+      cpp70: 1300 * 12,          // $15,600/yr at 70
+      cpp65: Math.round(1300 / 1.42) * 12,  // ~$10,986/yr at 65
+      oasBase: 742 * 12,         // $8,904/yr at 65
+    },
+    moon: {
+      name:'Sam', dob:1969, dobMonth:3,
+      retireYear:2027,
+      rrsp: 125000, rrspRoom: 50000,
+      tfsa: 60000, tfsaRoom: 35000, tfsaAnnual: 0,
+      lira: 20000, lif: 0, nonreg: 0,
+      cpp70: 900 * 12,           // $10,800/yr at 70
+      cpp65: Math.round(900 / 1.42) * 12,   // ~$7,606/yr at 65
+      oasBase: 742 * 12,
+      cppSurvivor_under65: 530 * 12,
+      cppSurvivor_over65:  600 * 12,
+    },
+    mortgage: { balance: 100000, rate: 0.055, monthly: 1400 },
+    loc:      { balance: 10000, rate: 0.07 },
+    spending: { gogo: 75000, gogoEnd: 75, slowgo: 65000, slowgoEnd: 85, nogo: 55000 },
+    assumptions: {
+      retireYear: 2027, planEnd: 2064,   // Sam age 95 in 2064
+      frankDiesInSurvivor: 2028,
+      returnRate: 0.05, inflation: 0.025, horizon: 95
+    }
+  };
+}
+
+function loadClientData() {
+  try {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const parsed = JSON.parse(decodeURIComponent(atob(hash)));
+      // Rehydrate computed fields that intake form stores as raw inputs
+      if (parsed.frank) {
+        const f = parsed.frank;
+        if (f.cpp70_monthly)  { f.cpp70 = f.cpp70_monthly * 12; delete f.cpp70_monthly; }
+        if (f.cpp65_monthly)  { f.cpp65 = f.cpp65_monthly * 12; delete f.cpp65_monthly; }
+        if (f.oas_monthly)    { f.oasBase = f.oas_monthly * 12; delete f.oas_monthly; }
+      }
+      if (parsed.moon) {
+        const m = parsed.moon;
+        if (m.cpp70_monthly)  { m.cpp70 = m.cpp70_monthly * 12; delete m.cpp70_monthly; }
+        if (m.cpp65_monthly)  { m.cpp65 = m.cpp65_monthly * 12; delete m.cpp65_monthly; }
+        if (m.oas_monthly)    { m.oasBase = m.oas_monthly * 12; delete m.oas_monthly; }
+        if (m.cppSurv_u65_mo) { m.cppSurvivor_under65 = m.cppSurv_u65_mo * 12; delete m.cppSurv_u65_mo; }
+        if (m.cppSurv_o65_mo) { m.cppSurvivor_over65  = m.cppSurv_o65_mo * 12; delete m.cppSurv_o65_mo; }
+      }
+      return parsed;
+    }
+  } catch(e) {
+    console.warn('Could not parse URL hash data, using defaults:', e);
+  }
+  return getDefaultD();
+}
+
+const D = loadClientData();
+
+// ════════════════════════════════════════════════════════
+//  CONSTANTS — RRIF MINIMUM RATES
+// ════════════════════════════════════════════════════════
+const RRIF_RATES = {
+  65:0.0400,66:0.0417,67:0.0435,68:0.0453,69:0.0473,70:0.0500,
+  71:0.0528,72:0.0540,73:0.0553,74:0.0567,75:0.0582,76:0.0598,
+  77:0.0617,78:0.0634,79:0.0655,80:0.0682,81:0.0706,82:0.0733,
+  83:0.0771,84:0.0802,85:0.0851,86:0.0899,87:0.0935,88:0.0964,
+  89:0.1000,90:0.1099,91:0.1192,92:0.1306,93:0.1449,94:0.1879,
+};
+function rrif_min(age){ if(age<71) return 1/(90-age); return RRIF_RATES[Math.min(age,94)] || 0.20; }
+
+// LIF maximum Ontario (approximate — using 130% of RRIF minimum as simplification)
+function lif_max(age){ return Math.min(rrif_min(age)*1.3, 0.40); }
+
+// ════════════════════════════════════════════════════════
+//  TAX ENGINE
+// ════════════════════════════════════════════════════════
+function calcBracketTax(income, brackets){
+  let tax=0, prev=0;
+  for(const [lim,rate] of brackets){
+    if(income<=prev) break;
+    tax += (Math.min(income,lim)-prev)*rate;
+    prev=lim;
+  }
+  return tax;
+}
+
+function calcTax(income, age, year, hasPension){
+  if(income<=0) return 0;
+  const idx = Math.pow(1.025, year-2026); // index factor for brackets/amounts
+
+  // ── FEDERAL ──
+  const fedBrk = [
+    [58523*idx,  0.15],
+    [117045*idx, 0.205],
+    [161733*idx, 0.26],
+    [230451*idx, 0.29],
+    [Infinity,   0.33]
+  ];
+  let fedTax = calcBracketTax(income, fedBrk);
+  let fedCred = 16129*idx*0.15; // BPA
+  if(hasPension) fedCred += 2000*0.15; // pension income credit
+  if(age>=65){
+    const aaMax = 8790*idx;
+    const aaPhase = Math.max(0,(income-46432*idx)*0.15);
+    fedCred += Math.max(0,aaMax-aaPhase)*0.15;
+  }
+  fedTax = Math.max(0, fedTax-fedCred);
+
+  // ── ONTARIO ── ($150K and $220K NOT indexed)
+  const ontBrk = [
+    [52886*idx, 0.0505],
+    [105775*idx,0.0915],
+    [150000,    0.1116],
+    [220000,    0.1216],
+    [Infinity,  0.1316]
+  ];
+  let ontTax = calcBracketTax(income, ontBrk);
+  let ontCred = 11141*idx*0.0505; // Ontario BPA
+  if(hasPension) ontCred += 2000*0.0505;
+  if(age>=65){
+    const aaON = Math.max(0, 5725*idx - Math.max(0,(income-39546*idx)*0.15));
+    ontCred += aaON*0.0505;
+  }
+  ontTax = Math.max(0, ontTax-ontCred);
+  // Ontario surtax
+  const s1=5315*idx, s2=6802*idx;
+  let surtax=0;
+  if(ontTax>s1) surtax += (Math.min(ontTax,s2)-s1)*0.20;
+  if(ontTax>s2) surtax += (ontTax-s2)*0.36;
+  ontTax += surtax;
+
+  return fedTax+ontTax;
+}
+
+// OAS recovery tax (clawback)
+function oasClawback(netIncome, year){
+  const thresh = 95323 * Math.pow(1.025, year-2026);
+  return Math.max(0,(netIncome-thresh)*0.15);
+}
+
+// ════════════════════════════════════════════════════════
+//  INCOME CALCULATORS
+// ════════════════════════════════════════════════════════
+function calcDBPension(year, frankAlive){
+  if(!frankAlive) return 0;
+  if(year < D.frank.retireYear) return 0;
+  const age = year - D.frank.dob;
+  const yrs = year - D.frank.db_startYear;
+  const idx = Math.pow(1+D.frank.db_index, yrs);
+  return (age < 65 ? D.frank.db_before65 : D.frank.db_after65) * idx;
+}
+
+// DB pension survivor (60% of base pension after Frank dies, no bridge)
+function calcDBSurvivor(year, frankDeathYear){
+  if(year <= frankDeathYear) return 0;
+  const yrs = frankDeathYear - D.frank.db_startYear;
+  const idx = Math.pow(1+D.frank.db_index, yrs);
+  // Survivor gets 60% of base (no bridge on survivor)
+  return D.frank.db_after65 * idx * 0.60 * Math.pow(1+D.frank.db_index, year-frankDeathYear);
+}
+
+function calcCPP_Frank(year, startAge){
+  const age = year - D.frank.dob;
+  if(age < startAge) return 0;
+  const startYear = D.frank.dob + startAge;
+  const amount = startAge===70 ? D.frank.cpp70 : D.frank.cpp65;
+  return amount * Math.pow(1.02, year-startYear); // CPP indexed ~2%
+}
+
+function calcCPP_Moon(year, startAge, frankAlive, frankDeathYear){
+  const age = year - D.moon.dob;
+  const startYear = D.moon.dob + startAge;
+  let cpp = 0;
+  if(age >= startAge) {
+    const amount = startAge===70 ? D.moon.cpp70 : D.moon.cpp65;
+    cpp = amount * Math.pow(1.02, year-startYear);
+  }
+  // CPP survivor benefit if Frank has died
+  if(!frankAlive && year > frankDeathYear){
+    const survAge = year - D.moon.dob;
+    const surv = survAge < 65 ? D.moon.cppSurvivor_under65 : D.moon.cppSurvivor_over65;
+    cpp = Math.min(cpp + surv * Math.pow(1.02, year-frankDeathYear),
+      (D.frank.cpp70 + D.moon.cpp70) * Math.pow(1.02, year - 2043) * 1.0); // cap at combined
+  }
+  return cpp;
+}
+
+function calcOAS_Frank(year, startAge, frankAlive){
+  if(!frankAlive) return 0;
+  const age = year - D.frank.dob;
+  if(age < startAge) return 0;
+  const bonus = 1 + (startAge-65)*0.006*12; // 0.6% per month of deferral past 65
+  const base = D.frank.oasBase * bonus;
+  const age75bonus = age >= 75 ? 1.10 : 1.0;
+  const startYear = D.frank.dob + startAge;
+  return base * age75bonus * Math.pow(1.025, year-startYear);
+}
+
+function calcOAS_Moon(year, startAge){
+  const age = year - D.moon.dob;
+  if(age < startAge) return 0;
+  const bonus = 1 + (startAge-65)*0.006*12;
+  const base = D.moon.oasBase * bonus;
+  const age75bonus = age >= 75 ? 1.10 : 1.0;
+  const startYear = D.moon.dob + startAge;
+  return base * age75bonus * Math.pow(1.025, year-startYear);
+}
+
+function calcSpending(year){
+  const frankAge  = year - D.frank.dob;
+  const startYear = D.assumptions.retireYear;
+  const inf       = D.assumptions.inflation;
+  // Within each phase, spending is constant in real (today's) dollars
+  // and grows by inflation nominally — smooth, consistent within each phase
+  const idx = Math.pow(1 + inf, year - startYear);
+  if(frankAge <= D.spending.gogoEnd)   return D.spending.gogo   * idx;
+  if(frankAge <= D.spending.slowgoEnd) return D.spending.slowgo * idx;
+  return D.spending.nogo * idx;
+}
+
+function calcMortgage(balance, year){
+  if(balance<=0) return {payment:0,interest:0,principal:0,newBalance:0};
+  const monthlyRate = D.mortgage.rate/12;
+  let bal = balance;
+  let annualInterest=0, annualPrincipal=0;
+  for(let m=0;m<12;m++){
+    const interest = bal*monthlyRate;
+    const principal = Math.min(bal, D.mortgage.monthly - interest);
+    annualInterest += interest;
+    annualPrincipal += principal;
+    bal = Math.max(0, bal-principal);
+  }
+  return {payment:D.mortgage.monthly*12, interest:annualInterest, principal:annualPrincipal, newBalance:bal};
+}
+
+// ════════════════════════════════════════════════════════
+//  PENSION INCOME SPLITTING OPTIMIZER
+//  Returns optimal split fraction (0–0.5) for Frank's eligible pension
+// ════════════════════════════════════════════════════════
+function optimalSplit(frankEligible, frankOther, moonIncome, frankAge, moonAge, year){
+  // DB pension splittable at any age; RRIF/LIF only from 65+ (caller already handles eligibility)
+  if(frankEligible <= 0) return 0;
+  let best=0, bestSplit=0;
+  for(let f=0;f<=50;f+=5){
+    const frac = f/100;
+    const split = frankEligible*frac;
+    const fTax = calcTax(frankEligible*(1-frac)+frankOther, frankAge, year, frankEligible>0);
+    const mTax = calcTax(moonIncome+split, moonAge, year, split>0);
+    const combined = fTax+mTax;
+    if(f===0 || combined<best){ best=combined; bestSplit=frac; }
+  }
+  return bestSplit;
+}
+
+// ════════════════════════════════════════════════════════
+//  CORE SIMULATION ENGINE
+// ════════════════════════════════════════════════════════
+function runSimulation(cfg){
+  /*  cfg = {
+        cppAgeF: 65|70, cppAgeM: 65|70,
+        oasAgeF: 65|70, oasAgeM: 65|70,
+        meltdown: bool,   meltdownTarget: number (target annual taxable income for Frank),
+        returnRate: 0.05|0,
+        pensionSplit: bool,
+        frankDies: null | year (e.g. 2028)
+      }
+  */
+  const R = cfg.returnRate;
+  const years = [];
+  const START = 2027, END = D.assumptions.planEnd;
+
+  // Mutable state (end-of-prior-year balances, so beginning-of-year for projection)
+  let st = {
+    rrsp_f: D.frank.rrsp,
+    rrsp_m: D.moon.rrsp,
+    tfsa_f: D.frank.tfsa,
+    tfsa_m: D.moon.tfsa,
+    // TFSA contribution room: Frank fully contributed (just annual room going forward)
+    // Moon has $100,535 accumulated unused room + annual $7K each year
+    tfsa_room_f: 0,
+    tfsa_room_m: D.moon.tfsaRoom,  // $100,535
+    lif_f:  D.frank.lif,
+    lira_m: D.moon.lira,
+    lif_m:  0,
+    nonreg_f: D.frank.nonreg,
+    nonreg_acb_f: D.frank.nonregAcb,
+    mortgage: D.mortgage.balance,
+    loc: D.loc.balance,
+  };
+
+  let totalTax=0, totalAftax=0, totalOasClawback=0, planSustainable=true, sustainYear='Never';
+
+  for(let year=START; year<=END; year++){
+    const ageF = year - D.frank.dob;
+    const ageM = year - D.moon.dob;
+    const frankAlive = cfg.frankDies ? year <= cfg.frankDies : true;
+    const isFirstDeathYear = cfg.frankDies && year === cfg.frankDies + 1;
+
+    // ── Annual TFSA room accrual ($7,000/person/year) ──
+    st.tfsa_room_f += 7000;
+    st.tfsa_room_m += 7000;
+
+    // ── If Frank just died: transfer assets to Moon ──
+    if(isFirstDeathYear && cfg.frankDies){
+      st.rrsp_m += st.rrsp_f;  // spousal rollover (tax-deferred)
+      st.rrsp_f = 0;
+      st.tfsa_m += st.tfsa_f;  // TFSA → Moon (successor holder)
+      st.tfsa_f = 0;
+      // LIF survivor: 60% continues via DB survivor, rest to Moon RRSP
+      st.rrsp_m += st.lif_f * 0.60;
+      st.lif_f = 0;
+      // Non-reg: deemed disposition — capital gains tax (simplified: just transfer net)
+      const gain = Math.max(0, st.nonreg_f - st.nonreg_acb_f);
+      const cgTax = gain * 0.50 * 0.35; // ~35% effective on 50% inclusion
+      st.nonreg_f = Math.max(0, st.nonreg_f - cgTax);
+      // Non-reg stays in estate; we'll add to Moon's portfolio
+      st.rrsp_m += st.nonreg_f; // simplified: reinvest after-tax into Moon's RRSP
+      st.nonreg_f = 0;
+      st.nonreg_acb_f = 0;
+    }
+
+    // ── LIRA → LIF conversion at Moon age 55 ──
+    if(ageM === 55 && st.lira_m > 0){
+      st.rrsp_m += st.lira_m * 0.50;  // 50% Ontario unlocking
+      st.lif_m   = st.lira_m * 0.50;
+      st.lira_m  = 0;
+    }
+
+    // ── FIXED INCOME ──
+    const dbPension = calcDBPension(year, frankAlive);
+    const dbSurvivor = cfg.frankDies ? calcDBSurvivor(year, cfg.frankDies) : 0;
+    const cpp_f = frankAlive ? calcCPP_Frank(year, cfg.cppAgeF) : 0;
+    const cpp_m = calcCPP_Moon(year, cfg.cppAgeM, frankAlive, cfg.frankDies||0);
+    const oas_f = calcOAS_Frank(year, cfg.oasAgeF, frankAlive);
+    const oas_m = calcOAS_Moon(year, cfg.oasAgeM);
+
+    // Total fixed taxable income per person (before RRSP/RRIF withdrawals)
+    const fixedF = dbPension + dbSurvivor + cpp_f + oas_f;
+    const fixedM = cpp_m + oas_m;
+
+    // ── REGISTERED MINIMUMS ──
+    let rrif_min_f = 0, rrif_min_m = 0;
+    if(ageF >= 65 && frankAlive) rrif_min_f = Math.max(0, st.rrsp_f * rrif_min(Math.min(ageF,94)));
+    if(ageM >= 65)               rrif_min_m = Math.max(0, st.rrsp_m * rrif_min(Math.min(ageM,94)));
+    let lif_min_f = 0, lif_min_m = 0;
+    if(ageF >= 60 && frankAlive) lif_min_f = Math.max(0, st.lif_f * rrif_min(Math.min(ageF,94)));
+    if(ageM >= 55 && st.lif_m>0) lif_min_m = Math.max(0, st.lif_m * rrif_min(Math.min(ageM,94)));
+
+    // ── STRATEGY: RRSP/RRIF WITHDRAWAL ──
+    let rrif_draw_f = rrif_min_f;
+    let rrif_draw_m = rrif_min_m;
+
+    if(cfg.meltdown && frankAlive && st.rrsp_f > 0){
+      // Draw-based meltdown: nominal flat amounts ($100K pre-65, $250K from 65+).
+      // Max-spend mode (drawForGap) adds a Phase 2 top-up AFTER TFSA/nonreg draws below.
+      const drawTarget = ageF < 65 ? cfg.meltdownDraw60_64 : cfg.meltdownDraw65plus;
+      rrif_draw_f = Math.min(st.rrsp_f * 0.98, Math.max(rrif_min_f, drawTarget));
+    }
+
+    // ── TAXABLE INCOME ──
+    let taxableF = fixedF + rrif_draw_f + lif_min_f;
+    let taxableM = fixedM + rrif_draw_m + lif_min_m;
+
+    // ── OAS CLAWBACK ──
+    let clawF = oasClawback(taxableF, year);
+    const clawM = oasClawback(taxableM, year);
+    const netOasF = Math.max(0, oas_f - clawF);
+    const netOasM = Math.max(0, oas_m - clawM);
+
+    // ── PENSION INCOME SPLITTING ──
+    let splitAmt = 0;
+    if(cfg.pensionSplit && frankAlive){
+      const eligF = dbPension + dbSurvivor + (ageF>=65 ? rrif_draw_f+lif_min_f : 0);
+      const frac = optimalSplit(eligF, cpp_f+(ageF>=65?oas_f:0), taxableM, ageF, ageM, year);
+      splitAmt = eligF * frac;
+      taxableF -= splitAmt;
+      taxableM += splitAmt;
+    }
+
+    // ── TAXES ──
+    const hasPensionF = frankAlive && (dbPension+dbSurvivor+rrif_draw_f+lif_min_f) > 0;
+    const hasPensionM = (rrif_draw_m+lif_min_m+splitAmt) > 0;
+    let taxF = calcTax(Math.max(0,taxableF), ageF, year, hasPensionF) + clawF;
+    const taxM = calcTax(Math.max(0,taxableM), ageM, year, hasPensionM) + clawM;
+    let totalTaxYear = taxF + taxM;
+
+    let grossIncomeF = fixedF + rrif_draw_f + lif_min_f;
+    const grossIncomeM = fixedM + rrif_draw_m + lif_min_m;
+    let grossIncome  = grossIncomeF + grossIncomeM;
+    let afterTaxReg  = grossIncome - totalTaxYear;
+
+    // ── SPENDING & MORTGAGE ──
+    const spending = calcSpending(year) * (cfg.spendMultiplier || 1);
+    const mtg = calcMortgage(st.mortgage, year);
+    const totalNeeded = spending + mtg.payment;
+
+    // ── TFSA DRAWS / CONTRIBUTIONS ──
+    let tfsa_draw_f=0, tfsa_draw_m=0;
+    let tfsa_contrib_f=0, tfsa_contrib_m=0;
+    let gap = totalNeeded - Math.max(0,afterTaxReg);
+    if(gap > 0){
+      tfsa_draw_f = Math.min(st.tfsa_f, gap*0.7);
+      tfsa_draw_m = Math.min(st.tfsa_m, Math.max(0, gap - tfsa_draw_f));
+    }
+
+    // Non-reg draw if still short
+    let remaining = Math.max(0, gap - tfsa_draw_f - tfsa_draw_m);
+    let nonreg_draw_f = Math.min(st.nonreg_f, remaining);
+
+    // If surplus after spending: route into TFSA using available room
+    // Priority: Moon's large accumulated room first, then Frank's annual room
+    let surplus = Math.max(0, afterTaxReg - totalNeeded);
+    let surplusLeft = surplus;
+    tfsa_contrib_m = Math.min(surplusLeft, st.tfsa_room_m);
+    surplusLeft -= tfsa_contrib_m;
+    st.tfsa_room_m = Math.max(0, st.tfsa_room_m - tfsa_contrib_m);
+    tfsa_contrib_f = Math.min(surplusLeft, st.tfsa_room_f);
+    surplusLeft -= tfsa_contrib_f;
+    st.tfsa_room_f = Math.max(0, st.tfsa_room_f - tfsa_contrib_f);
+    // Route remaining surplus beyond TFSA room to non-reg (full ACB — already taxed)
+    if(surplusLeft > 0){
+      st.nonreg_f += surplusLeft;
+      st.nonreg_acb_f += surplusLeft;
+    }
+
+    // Total actually available this year (never negative)
+    // Subtract TFSA contributions to avoid double-counting future TFSA draws
+    const totalAvailable = Math.max(0, afterTaxReg) - tfsa_contrib_f - tfsa_contrib_m
+                         + tfsa_draw_f + tfsa_draw_m + nonreg_draw_f;
+
+    // Cap actual spending to what's available — never show negative cash flow
+    const actualSpend    = Math.min(totalNeeded, Math.max(0, totalAvailable));
+    const shortfall      = Math.max(0, totalNeeded - actualSpend);   // unmet spending
+    const cashFlow       = Math.max(0, totalAvailable - actualSpend); // surplus (if any)
+    const totalAftaxYear = actualSpend;
+
+    // ── UPDATE BALANCES ──
+    // RRSP/RRIF
+    st.rrsp_f = Math.max(0, (st.rrsp_f - rrif_draw_f) * (1+R));
+    st.rrsp_m = Math.max(0, (st.rrsp_m - rrif_draw_m) * (1+R));
+    // LIF
+    st.lif_f  = Math.max(0, (st.lif_f - lif_min_f) * (1+R));
+    st.lif_m  = Math.max(0, (st.lif_m - lif_min_m) * (1+R));
+    // TFSA
+    st.tfsa_f = Math.max(0, (st.tfsa_f - tfsa_draw_f + tfsa_contrib_f) * (1+R));
+    st.tfsa_m = Math.max(0, (st.tfsa_m - tfsa_draw_m + tfsa_contrib_m) * (1+R));
+    // Non-reg
+    const gainDrawn = nonreg_draw_f > 0 ? (nonreg_draw_f/st.nonreg_f)*Math.max(0,st.nonreg_f-st.nonreg_acb_f) : 0;
+    st.nonreg_acb_f = Math.max(0, st.nonreg_acb_f - (nonreg_draw_f - gainDrawn));
+    st.nonreg_f = Math.max(0, (st.nonreg_f - nonreg_draw_f) * (1+R));
+    // LIRA (if still exists)
+    st.lira_m = Math.max(0, st.lira_m * (1+R));
+    // Mortgage
+    st.mortgage = mtg.newBalance;
+    // LOC (assume paid off in first couple years)
+    if(year <= 2028) st.loc = Math.max(0, st.loc * 0.70);
+    else st.loc = 0;
+
+    const totalPortfolio = st.rrsp_f+st.rrsp_m+st.tfsa_f+st.tfsa_m+st.lif_f+st.lif_m+st.nonreg_f+st.lira_m;
+
+    // Sustainability: fail when spending shortfall occurs OR portfolio nearly empty
+    if((shortfall > 500 || totalPortfolio < 10000) && planSustainable){
+      planSustainable=false; sustainYear=year;
+    }
+
+    // Accumulate summary stats
+    totalTax    += totalTaxYear;
+    totalAftax  += totalAftaxYear;
+    totalOasClawback += clawF + clawM;
+
+    years.push({
+      year, ageF, ageM, frankAlive,
+      dbPension, dbSurvivor, cpp_f, cpp_m, oas_f:netOasF, oas_m:netOasM,
+      rrif_draw_f, rrif_draw_m, lif_min_f, lif_min_m, lif_draw: lif_min_f+lif_min_m,
+      tfsa_draw_f, tfsa_draw_m, tfsa_draw:tfsa_draw_f+tfsa_draw_m,
+      nonreg_draw_f, splitAmt,
+      grossIncome, totalTaxYear, clawF, clawM, totalOasClawY: clawF+clawM,
+      afterTaxReg, totalAftaxYear, spending, mortgage:mtg.payment,
+      cashFlow, surplus, shortfall,
+      bal_rrsp_f:st.rrsp_f, bal_rrsp_m:st.rrsp_m,
+      bal_rrsp: st.rrsp_f+st.rrsp_m,
+      bal_tfsa: st.tfsa_f+st.tfsa_m,
+      bal_lif: st.lif_f+st.lif_m,
+      bal_nonreg: st.nonreg_f,
+      bal_total: totalPortfolio
+    });
+  }
+
+  return { years, totalTax, totalAftax, totalOasClawback, sustainYear };
+}
+
+// ════════════════════════════════════════════════════════
+//  SCENARIO CONFIGURATIONS
+// ════════════════════════════════════════════════════════
+// Meltdown draw amounts scaled to Person 1's RRSP size
+// (~8% pre-65, ~16% from 65, rounded to nearest $5K, min $20K/$40K)
+const _meltDraw60 = Math.max(20000, Math.round(D.frank.rrsp * 0.08 / 5000) * 5000);
+const _meltDraw65 = Math.max(40000, Math.round(D.frank.rrsp * 0.16 / 5000) * 5000);
+const _survYear   = D.assumptions.frankDiesInSurvivor;
+const _survAge    = _survYear - D.frank.dob;
+
+const SCENARIOS = {
+  base: {
+    label:'Baseline (CPP/OAS at 65)', color:'#7ab8e0',
+    cfg:{ cppAgeF:65, cppAgeM:65, oasAgeF:65, oasAgeM:65,
+          meltdown:false,
+          returnRate:0.05, pensionSplit:false, frankDies:null }
+  },
+  melt: {
+    label:'RRSP Meltdown (CPP/OAS at 70)', color:'#2db560',
+    cfg:{ cppAgeF:70, cppAgeM:70, oasAgeF:70, oasAgeM:70,
+          meltdown:true, meltdownDraw60_64:_meltDraw60, meltdownDraw65plus:_meltDraw65,
+          returnRate:0.05, pensionSplit:true, frankDies:null }
+  },
+  zero: {
+    label:'Net 0% Return', color:'#f5a623',
+    cfg:{ cppAgeF:70, cppAgeM:70, oasAgeF:70, oasAgeM:70,
+          meltdown:true, meltdownDraw60_64:_meltDraw60, meltdownDraw65plus:_meltDraw65,
+          returnRate:0.0, pensionSplit:true, frankDies:null }
+  },
+  surv: {
+    label:`Survivor (${D.frank.name} dies age ${_survAge})`, color:'#e74c3c',
+    cfg:{ cppAgeF:70, cppAgeM:70, oasAgeF:70, oasAgeM:70,
+          meltdown:true, meltdownDraw60_64:_meltDraw60, meltdownDraw65plus:_meltDraw65,
+          returnRate:0.05, pensionSplit:true, frankDies:_survYear }
+  }
+};
+
+// ════════════════════════════════════════════════════════
+//  MAX SPEND SOLVER
+//  Binary search: find the spending multiplier where LIQUID assets
+//  (TFSA + non-reg) reach ~$0 at Person 2's end-of-life.
+//  The RRSP follows standard meltdown draws; a small mandatory-minimum
+//  residual remains — this is the natural floor. Real estate is excluded
+//  from the model and serves as the longevity safety net.
+// ════════════════════════════════════════════════════════
+function solveMaxSpend(baseCfg){
+  // Find the highest spending multiplier where the plan has ZERO shortfall years.
+  // lo = 0.1 so underfunded plans correctly show a number BELOW the stated target.
+  let lo = 0.1, hi = 4.0;
+  for(let i = 0; i < 45; i++){
+    const mid = (lo + hi) / 2;
+    const r = runSimulation(Object.assign({}, baseCfg, {spendMultiplier: mid}));
+    const hasShortfall = r.years.some(y => y.shortfall > 500);
+    if(hasShortfall) hi = mid; else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+const _maxsCfgBase = {
+  cppAgeF:70, cppAgeM:70, oasAgeF:70, oasAgeM:70,
+  meltdown:true, meltdownDraw60_64:_meltDraw60, meltdownDraw65plus:_meltDraw65,
+  returnRate:0.05, pensionSplit:true, frankDies:null
+};
+const _maxsMult = solveMaxSpend(_maxsCfgBase);
+
+SCENARIOS.maxs = {
+  label:'Max Spend (Estate → 0)', color:'#9b59b6',
+  cfg: Object.assign({}, _maxsCfgBase, {spendMultiplier: _maxsMult})
+};
+
+// ════════════════════════════════════════════════════════
+//  RUN ALL SCENARIOS
+// ════════════════════════════════════════════════════════
+const RESULTS = {};
+for(const [key, scn] of Object.entries(SCENARIOS)){
+  RESULTS[key] = runSimulation(scn.cfg);
+}
+
+// ════════════════════════════════════════════════════════
+//  STATE & UI
+// ════════════════════════════════════════════════════════
+let activeScenario = 'base';
+let charts = {};
+let detailVisible = false;
+
+function fmt(n, prefix='$'){
+  if(n==null||isNaN(n)) return '—';
+  const abs=Math.abs(n);
+  if(abs>=1e6) return (n<0?'-':'')+prefix+(abs/1e6).toFixed(2)+'M';
+  if(abs>=1000) return (n<0?'-':'')+prefix+Math.round(abs).toLocaleString();
+  return (n<0?'-':'')+prefix+Math.round(abs).toLocaleString();
+}
+function fmtM(n){ return fmt(n,'$'); }
+function fmtK(n){ return n>=1000?fmt(n,'$'):'$'+Math.round(n); }
+
+function setScenario(key){
+  activeScenario = key;
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const keys=['base','melt','zero','surv'];
+    t.classList.toggle('active', keys[i]===key);
+  });
+  updateKPIs();
+  updateCharts();
+  updateDetailTable();
+}
+
+function toggleDetail(){
+  detailVisible = !detailVisible;
+  document.getElementById('detBody').classList.toggle('hidden', !detailVisible);
+  document.getElementById('detToggle').textContent = detailVisible ? '▲ Hide' : '▼ Show';
+}
+
+// ════════════════════════════════════════════════════════
+//  KPI CARDS
+// ════════════════════════════════════════════════════════
+function updateKPIs(){
+  const r = RESULTS[activeScenario];
+  const base = RESULTS['base'];
+
+  // Sustainability
+  document.getElementById('kv-sustain').textContent = r.sustainYear==='Never'
+    ? '✓ Never' : r.sustainYear;
+  document.getElementById('ks-sustain').textContent = r.sustainYear==='Never'
+    ? 'Funds last to plan end' : `Funds depleted in ${r.sustainYear}`;
+
+  // After-tax income
+  document.getElementById('kv-aftax').textContent = fmtM(r.totalAftax);
+  const atDelta = r.totalAftax - base.totalAftax;
+  const atEl = document.getElementById('kd-aftax');
+  if(activeScenario!=='base'){
+    atEl.textContent=(atDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(atDelta))+' vs. Baseline';
+    atEl.className='delta '+(atDelta>=0?'pos':'neg');
+  } else atEl.textContent='';
+
+  // Taxes
+  document.getElementById('kv-tax').textContent = fmtM(r.totalTax);
+  const txDelta = r.totalTax - base.totalTax;
+  const txEl = document.getElementById('kd-tax');
+  if(activeScenario!=='base'){
+    txEl.textContent=(txDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(txDelta))+(txDelta<=0?' saved':' more')+' vs. Baseline';
+    txEl.className='delta '+(txDelta<=0?'pos':'neg');
+  } else txEl.textContent='';
+
+  // Estate (last year with positive balance)
+  const lastYr = r.years[r.years.length-1];
+  document.getElementById('kv-estate').textContent = fmtM(lastYr.bal_total);
+  const estDelta = lastYr.bal_total - RESULTS['base'].years[RESULTS['base'].years.length-1].bal_total;
+  const estEl = document.getElementById('kd-estate');
+  if(activeScenario!=='base'){
+    estEl.textContent=(estDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(estDelta))+' vs. Baseline';
+    estEl.className='delta '+(estDelta>=0?'pos':'neg');
+  } else estEl.textContent='';
+
+  // OAS Clawback
+  document.getElementById('kv-oas').textContent = fmtM(r.totalOasClawback);
+  const oasDelta = r.totalOasClawback - base.totalOasClawback;
+  const oasEl = document.getElementById('kd-oas');
+  if(activeScenario!=='base'){
+    oasEl.textContent=(oasDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(oasDelta))+(oasDelta<=0?' less clawback':' more clawback')+' vs. Baseline';
+    oasEl.className='delta '+(oasDelta<=0?'pos':'neg');
+  } else oasEl.textContent='';
+}
+
+// ════════════════════════════════════════════════════════
+//  CHARTS
+// ════════════════════════════════════════════════════════
+function getChartData(scnKey){
+  const years = RESULTS[scnKey].years;
+  const labels = years.map(y=>y.year);
+  return { labels, years };
+}
+
+function initCharts(){
+  const {labels, years:y} = getChartData('base');
+  const common = { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{boxWidth:10,font:{size:11}}},
+              tooltip:{ mode:'index', intersect:false,
+                callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${fmtM(ctx.raw)}` }}},
+    scales:{ x:{ stacked:true, ticks:{ maxTicksLimit:12, font:{size:10}}},
+             y:{ stacked:true, ticks:{ callback:v=>fmtM(v), font:{size:10}},
+                 grid:{color:'#e8eef4'}}}};
+
+  // Chart 1: Income
+  charts.income = new Chart(document.getElementById('chartIncome'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'DB Pension',    data:y.map(r=>r.dbPension+r.dbSurvivor), backgroundColor:'#3b82f6'},
+      {label:'CPP (Frank)',   data:y.map(r=>r.cpp_f), backgroundColor:'#06b6d4'},
+      {label:'OAS (Frank)',   data:y.map(r=>r.oas_f), backgroundColor:'#8b5cf6'},
+      {label:'CPP+OAS (Moon)',data:y.map(r=>r.cpp_m+r.oas_m), backgroundColor:'#a78bfa'},
+      {label:'RRIF/LIF Draw', data:y.map(r=>r.rrif_draw_f+r.rrif_draw_m+r.lif_draw), backgroundColor:'#10b981'},
+      {label:'TFSA (tax-free)',data:y.map(r=>r.tfsa_draw), backgroundColor:'#34d399'},
+      {label:'Non-Reg',       data:y.map(r=>r.nonreg_draw_f), backgroundColor:'#6ee7b7'},
+      {label:'Spending',type:'line',data:y.map(r=>r.spending+r.mortgage),
+       borderColor:'#e74c3c',backgroundColor:'transparent',borderWidth:2,
+       pointRadius:0,stack:undefined,order:0}
+    ]},
+    options:{...common, plugins:{...common.plugins}}
+  });
+
+  // Chart 2: Balances
+  const commonLine = { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{boxWidth:10,font:{size:11}}},
+              tooltip:{ mode:'index', intersect:false,
+                callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${fmtM(ctx.raw)}` }}},
+    scales:{ x:{ ticks:{maxTicksLimit:12, font:{size:10}}},
+             y:{ ticks:{ callback:v=>fmtM(v), font:{size:10}}, grid:{color:'#e8eef4'}}}};
+
+  charts.balance = new Chart(document.getElementById('chartBalance'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'RRSP/RRIF', data:y.map(r=>r.bal_rrsp), borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', fill:true, pointRadius:0, borderWidth:2},
+      {label:'TFSA',      data:y.map(r=>r.bal_tfsa), borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.08)', fill:true, pointRadius:0, borderWidth:2},
+      {label:'LIF',       data:y.map(r=>r.bal_lif),  borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,.08)', fill:true, pointRadius:0, borderWidth:2},
+      {label:'Non-Reg',   data:y.map(r=>r.bal_nonreg),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.08)', fill:true, pointRadius:0, borderWidth:2},
+      {label:'TOTAL',     data:y.map(r=>r.bal_total), borderColor:'#0f2744', backgroundColor:'transparent', pointRadius:0, borderWidth:3, borderDash:[6,2]}
+    ]},
+    options:commonLine
+  });
+
+  // Chart 3: Tax
+  charts.tax = new Chart(document.getElementById('chartTax'), {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Income Tax', data:y.map(r=>r.totalTaxYear-r.totalOasClawY), backgroundColor:'#e74c3c'},
+      {label:'OAS Clawback',data:y.map(r=>r.totalOasClawY), backgroundColor:'#f5a623'},
+    ]},
+    options:{...common, scales:{...common.scales, y:{...common.scales.y, stacked:false}}}
+  });
+
+  // Chart 4: Estate — shows active scenario detail + Max Spend overlay for reference
+  const ymaxs = RESULTS.maxs.years;
+  charts.estate = new Chart(document.getElementById('chartEstate'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'Total Portfolio', data:y.map(r=>r.bal_total), borderColor:'#0f2744', backgroundColor:'rgba(15,39,68,.06)', fill:true, pointRadius:0, borderWidth:2},
+      {label:'RRIF Balance',    data:y.map(r=>r.bal_rrsp),  borderColor:'#e74c3c', backgroundColor:'transparent', pointRadius:0, borderWidth:1.5, borderDash:[4,2]},
+      {label:'TFSA Balance',    data:y.map(r=>r.bal_tfsa),  borderColor:'#10b981', backgroundColor:'transparent', pointRadius:0, borderWidth:1.5},
+      {label:'Max Spend (ref)', data:ymaxs.map(r=>r.bal_total), borderColor:'#9b59b6', backgroundColor:'transparent', pointRadius:0, borderWidth:1.5, borderDash:[3,3]}
+    ]},
+    options:commonLine
+  });
+}
+
+function updateCharts(){
+  const {labels, years:y} = getChartData(activeScenario);
+  const scnColor = SCENARIOS[activeScenario].color;
+
+  charts.income.data.labels = labels;
+  charts.income.data.datasets[0].data = y.map(r=>r.dbPension+r.dbSurvivor);
+  charts.income.data.datasets[1].data = y.map(r=>r.cpp_f);
+  charts.income.data.datasets[2].data = y.map(r=>r.oas_f);
+  charts.income.data.datasets[3].data = y.map(r=>r.cpp_m+r.oas_m);
+  charts.income.data.datasets[4].data = y.map(r=>r.rrif_draw_f+r.rrif_draw_m+r.lif_draw);
+  charts.income.data.datasets[5].data = y.map(r=>r.tfsa_draw);
+  charts.income.data.datasets[6].data = y.map(r=>r.nonreg_draw_f);
+  charts.income.data.datasets[7].data = y.map(r=>r.spending+r.mortgage);
+  charts.income.update();
+
+  charts.balance.data.labels = labels;
+  charts.balance.data.datasets[0].data = y.map(r=>r.bal_rrsp);
+  charts.balance.data.datasets[1].data = y.map(r=>r.bal_tfsa);
+  charts.balance.data.datasets[2].data = y.map(r=>r.bal_lif);
+  charts.balance.data.datasets[3].data = y.map(r=>r.bal_nonreg);
+  charts.balance.data.datasets[4].data = y.map(r=>r.bal_total);
+  charts.balance.update();
+
+  charts.tax.data.labels = labels;
+  charts.tax.data.datasets[0].data = y.map(r=>Math.max(0,r.totalTaxYear-r.totalOasClawY));
+  charts.tax.data.datasets[1].data = y.map(r=>r.totalOasClawY);
+  charts.tax.update();
+
+  charts.estate.data.labels = labels;
+  charts.estate.data.datasets[0].data = y.map(r=>r.bal_total);
+  charts.estate.data.datasets[0].borderColor = scnColor;
+  charts.estate.data.datasets[1].data = y.map(r=>r.bal_rrsp);
+  charts.estate.data.datasets[2].data = y.map(r=>r.bal_tfsa);
+  charts.estate.update();
+}
+
+// ════════════════════════════════════════════════════════
+//  COMPARISON TABLE
+// ════════════════════════════════════════════════════════
+function renderCmpRows(rows){
+  return rows.map(([label,b,m,z,s,x,isHead,better])=>{
+    if(isHead) return `<tr><td colspan="6" class="row-head">${label}</td></tr>`;
+    const vals=[b,m,z,s,x];
+    let bestIdx=-1;
+    if(better==='higher') bestIdx=vals.map(v=>parseFloat(String(v).replace(/[$,M%,→]/g,''))).reduce((bi,v,i,a)=>v>a[bi]?i:bi,0);
+    if(better==='lower')  bestIdx=vals.map(v=>parseFloat(String(v).replace(/[$,M%,→]/g,''))).reduce((bi,v,i,a)=>v<a[bi]?i:bi,0);
+    return `<tr><td>${label}</td>${vals.map((v,i)=>`<td class="${i===bestIdx?'best':''}">${v??'—'}</td>`).join('')}</tr>`;
+  }).join('');
+}
+
+function buildComparisonTable(){
+  const tbody = document.getElementById('cmpBody');
+  const base = RESULTS.base, melt = RESULTS.melt, zero = RESULTS.zero, surv = RESULTS.surv, maxs = RESULTS.maxs;
+  const lastBase = base.years[base.years.length-1];
+  const lastMelt = melt.years[melt.years.length-1];
+  const lastZero = zero.years[zero.years.length-1];
+  const lastSurv = surv.years[surv.years.length-1];
+  const lastMaxs = maxs.years[maxs.years.length-1];
+  const sustain = (r)=>r.sustainYear ? '⚠ Depletes '+r.sustainYear : '✓ Sustainable';
+  const totalCPP_OAS = (r)=>r.years.reduce((s,y)=>s+y.cpp_f+y.cpp_m+y.oas_f+y.oas_m,0);
+  const mult = SCENARIOS.maxs.cfg.spendMultiplier || 1;
+  const maxsGoGo   = Math.round(D.spending.gogo   * mult);
+  const maxsGoGoMo = Math.round(maxsGoGo / 12);
+  const isBelowTarget = mult < 0.999;
+  const maxsLabel = isBelowTarget
+    ? `$${maxsGoGo.toLocaleString()} ($${maxsGoGoMo.toLocaleString()}/mo) ⚠ below target`
+    : `$${maxsGoGo.toLocaleString()} ($${maxsGoGoMo.toLocaleString()}/mo)`;
+
+  const rows = [
+    ['─── LIFETIME SUMMARY ───', null, null, null, null, null, true],
+    ['Total After-Tax Income', fmtM(base.totalAftax), fmtM(melt.totalAftax), fmtM(zero.totalAftax), fmtM(surv.totalAftax), fmtM(maxs.totalAftax), false, 'higher'],
+    ['Total Taxes Paid', fmtM(base.totalTax), fmtM(melt.totalTax), fmtM(zero.totalTax), fmtM(surv.totalTax), fmtM(maxs.totalTax), false, 'lower'],
+    ['Total OAS Clawback Lost', fmtM(base.totalOasClawback), fmtM(melt.totalOasClawback), fmtM(zero.totalOasClawback), fmtM(surv.totalOasClawback), fmtM(maxs.totalOasClawback), false, 'lower'],
+    ['Total CPP + OAS Collected', fmtM(totalCPP_OAS(base)), fmtM(totalCPP_OAS(melt)), fmtM(totalCPP_OAS(zero)), fmtM(totalCPP_OAS(surv)), fmtM(totalCPP_OAS(maxs)), false, 'higher'],
+    ['─── SPENDING ───', null, null, null, null, null, true],
+    ['Go-Go Annual (Target / Max Sustainable)', fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo),
+      maxsLabel, false, 'higher'],
+    ['─── ESTATE ───', null, null, null, null, null, true],
+    [`Portfolio at Plan End (${D.assumptions.planEnd})`, fmtM(lastBase.bal_total), fmtM(lastMelt.bal_total), fmtM(lastZero.bal_total), fmtM(lastSurv.bal_total),
+      fmtM(lastMaxs.bal_total)+' (RRIF residual)', false, 'higher'],
+    ['RRSP/RRIF at Plan End', fmtM(lastBase.bal_rrsp), fmtM(lastMelt.bal_rrsp), fmtM(lastZero.bal_rrsp), fmtM(lastSurv.bal_rrsp), fmtM(lastMaxs.bal_rrsp), false, 'lower'],
+    ['TFSA at Plan End', fmtM(lastBase.bal_tfsa), fmtM(lastMelt.bal_tfsa), fmtM(lastZero.bal_tfsa), fmtM(lastSurv.bal_tfsa), fmtM(lastMaxs.bal_tfsa), false, 'higher'],
+    ['─── SUSTAINABILITY ───', null, null, null, null, null, true],
+    ['Plan Sustainability', sustain(base), sustain(melt), sustain(zero), sustain(surv), sustain(maxs), false, null],
+  ];
+
+  tbody.innerHTML = renderCmpRows(rows);
+
+  // Initial snapshot at Frank age 75
+  updateSnapshot(75);
+}
+
+function updateSnapshot(frankAge){
+  const year = D.frank.dob + frankAge;
+  const moonAge = year - D.moon.dob;
+
+  // Update slider labels
+  document.getElementById('snapAgeLabel').textContent = frankAge;
+  document.getElementById('snapYearLabel').textContent = year;
+  document.getElementById('snapAgeMLabel').textContent = moonAge;
+  document.getElementById('snapAge').value = frankAge;
+
+  const snap = (r)=>r.years.find(y=>y.year===year) || null;
+  const [yb,ym,yz,ys,yx] = [RESULTS.base,RESULTS.melt,RESULTS.zero,RESULTS.surv,RESULTS.maxs].map(snap);
+
+  const fv = (y,fn)=> y ? fn(y) : '—';
+  const yr = year;
+
+  const rows = [
+    [`Gross Income (${yr})`,
+      fv(yb,y=>fmtM(y.grossIncome+y.tfsa_draw)), fv(ym,y=>fmtM(y.grossIncome+y.tfsa_draw)),
+      fv(yz,y=>fmtM(y.grossIncome+y.tfsa_draw)), fv(ys,y=>fmtM(y.grossIncome+y.tfsa_draw)),
+      fv(yx,y=>fmtM(y.grossIncome+y.tfsa_draw)), false, 'higher'],
+    [`Monthly After-Tax (${yr})`,
+      fv(yb,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()), fv(ym,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()),
+      fv(yz,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()), fv(ys,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()),
+      fv(yx,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()), false, 'higher'],
+    [`Annual Tax (${yr})`,
+      fv(yb,y=>fmtM(y.totalTaxYear)), fv(ym,y=>fmtM(y.totalTaxYear)),
+      fv(yz,y=>fmtM(y.totalTaxYear)), fv(ys,y=>fmtM(y.totalTaxYear)),
+      fv(yx,y=>fmtM(y.totalTaxYear)), false, 'lower'],
+    [`RRSP/RRIF Balance (${yr})`,
+      fv(yb,y=>fmtM(y.bal_rrsp)), fv(ym,y=>fmtM(y.bal_rrsp)),
+      fv(yz,y=>fmtM(y.bal_rrsp)), fv(ys,y=>fmtM(y.bal_rrsp)),
+      fv(yx,y=>fmtM(y.bal_rrsp)), false, null],
+    [`TFSA Balance (${yr})`,
+      fv(yb,y=>fmtM(y.bal_tfsa)), fv(ym,y=>fmtM(y.bal_tfsa)),
+      fv(yz,y=>fmtM(y.bal_tfsa)), fv(ys,y=>fmtM(y.bal_tfsa)),
+      fv(yx,y=>fmtM(y.bal_tfsa)), false, 'higher'],
+    [`Total Portfolio (${yr})`,
+      fv(yb,y=>fmtM(y.bal_total)), fv(ym,y=>fmtM(y.bal_total)),
+      fv(yz,y=>fmtM(y.bal_total)), fv(ys,y=>fmtM(y.bal_total)),
+      fv(yx,y=>fmtM(y.bal_total)), false, 'higher'],
+  ];
+
+  document.getElementById('snapBody').innerHTML = renderCmpRows(rows);
+}
+
+// ════════════════════════════════════════════════════════
+//  DETAIL TABLE
+// ════════════════════════════════════════════════════════
+function updateDetailTable(){
+  const scn = SCENARIOS[activeScenario];
+  document.getElementById('detScenLabel').textContent = scn.label;
+  const tbody = document.getElementById('detTableBody');
+  const years = RESULTS[activeScenario].years;
+  // Milestone years
+  const milestones = new Set([2028,2031,2036,2037,2041,2043,2044,2046,2051,2061,2068]);
+
+  tbody.innerHTML = years.map(y=>{
+    const isMilestone = milestones.has(y.year);
+    const totalDraw = y.rrif_draw_f+y.rrif_draw_m+y.lif_draw;
+    return `<tr class="${isMilestone?'milestone':''}">
+      <td class="yr">${y.year}</td>
+      <td>${y.ageF}${y.frankAlive?'':' †'}/${y.ageM}</td>
+      <td>${fmtK(y.dbPension+y.dbSurvivor)}</td>
+      <td>${fmtK(y.cpp_f+y.cpp_m)}</td>
+      <td>${fmtK(y.oas_f+y.oas_m)}</td>
+      <td>${fmtK(totalDraw)}</td>
+      <td>${fmtK(y.tfsa_draw)}</td>
+      <td>${fmtK(y.nonreg_draw_f)}</td>
+      <td><strong>${fmtK(y.grossIncome+y.tfsa_draw)}</strong></td>
+      <td class="neg">${fmtK(y.totalTaxYear)}</td>
+      <td class="${y.totalOasClawY>0?'neg':''}">${y.totalOasClawY>100?fmtK(y.totalOasClawY):'—'}</td>
+      <td class="${y.shortfall>0?'neg':'pos'}"><strong>${fmtK(y.totalAftaxYear)}</strong></td>
+      <td class="${y.shortfall>0?'neg':'pos'}"><strong>$${Math.round(y.totalAftaxYear/12).toLocaleString()}</strong></td>
+      <td>${fmtK(y.spending)}</td>
+      <td>${y.mortgage>100?fmtK(y.mortgage):'—'}</td>
+      <td class="${y.shortfall>500?'neg':''}">${y.shortfall>500?fmtK(y.shortfall):'—'}</td>
+      <td>${fmtM(y.bal_rrsp)}</td>
+      <td>${fmtM(y.bal_tfsa)}</td>
+      <td>${fmtM(y.bal_lif)}</td>
+      <td>${fmtM(y.bal_nonreg)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+function populateHeader() {
+  const f = D.frank, m = D.moon, a = D.assumptions;
+  const fRetAge = a.retireYear - f.dob;
+  const mRetAge = a.retireYear - m.dob;
+  document.getElementById('hdr-names').innerHTML =
+    `${f.name} &amp; ${m.name} &nbsp;|&nbsp; Projection: ${a.retireYear} – ${a.planEnd}`;
+  document.getElementById('hdr-horizon').textContent = a.horizon;
+  document.getElementById('ib-frank').innerHTML =
+    `${f.name}: <strong>Born ${f.dob} · Retires ${a.retireYear} (age ${fRetAge})</strong>`;
+  document.getElementById('ib-moon').innerHTML =
+    `${m.name}: <strong>Born ${m.dob} · Retires ${a.retireYear} (age ${mRetAge})</strong>`;
+  const dbStr = f.db_before65 > 0
+    ? `DB Pension: <strong>$${f.db_before65.toLocaleString()}/yr → $${f.db_after65.toLocaleString()}/yr at 65</strong>`
+    : `No DB Pension`;
+  document.getElementById('ib-db').innerHTML = dbStr;
+  document.getElementById('ib-rrsp').innerHTML =
+    `${f.name} RRSP: <strong>$${f.rrsp.toLocaleString()}</strong>`;
+  document.getElementById('ib-return').innerHTML =
+    `Return: <strong>${(a.returnRate*100).toFixed(0)}% · Inflation: ${(a.inflation*100).toFixed(1)}%</strong>`;
+  // Update survivor tab button to reflect loaded client name + age
+  const survBtn = document.querySelector('.tab[onclick="setScenario(\'surv\')"]');
+  if (survBtn) survBtn.innerHTML =
+    `<span class="dot dot-surv"></span>Survivor (${f.name} dies age ${_survAge})`;
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  populateHeader();
+  initCharts();
+  updateKPIs();
+  buildComparisonTable();
+  updateDetailTable();
+});
+</script>
+</body>
+</html>

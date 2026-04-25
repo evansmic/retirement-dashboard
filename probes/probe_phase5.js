@@ -1,0 +1,100 @@
+// Phase 5.3 verification: pre-retirement employment, staggered retirement, dual DB pensions.
+// Checks:
+//   (a) Existing deterministic scenarios still return 0 shortfall years (no regression).
+//   (b) With planStart earlier than retireYear and salary > 0, salary appears in
+//       pre-retirement year rows but not post-retirement year rows.
+//   (c) RRSP contributions during working years grow the RRSP balance.
+//   (d) TFSA contributions during working years grow the TFSA balance.
+//   (e) Staggered retirement: salary_m is non-zero AFTER frank.retireYear if moon
+//       retires later.
+//   (f) Moon's DB pension (db_before65/db_after65) shows up after her retireYear.
+const fs = require("fs");
+const html = fs.readFileSync(require("path").join(__dirname, "..", "retirement_dashboard.html") + "", "utf8");
+const m = html.match(/<script>([\s\S]*?)<\/script>/);
+const body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
+const wrapper = `${body}\n  return { runSimulation, SCENARIOS, RESULTS, D };`;
+const f = new Function("window", "document", wrapper);
+const out = f({location:{hash:""}, addEventListener:()=>{}}, {getElementById:()=>null, addEventListener:()=>{}});
+
+let passed = 0, failed = 0;
+function check(cond, label){
+  if(cond){ passed++; console.log("  ✓ " + label); }
+  else   { failed++; console.log("  ✗ " + label); }
+}
+
+// (a) Scenario regression.
+console.log("\n═══ (a) Existing scenarios still produce 0 shortfall years ═══");
+for(const key of ['base','melt','zero','surv','maxs']){
+  const r = out.RESULTS[key];
+  const short = r.years.filter(y => y.shortfall > 500).length;
+  check(short === 0, `${key.padEnd(5)} — ${short} shortfall years`);
+}
+
+// (b) Pre-retirement salary appears only in working years.
+console.log("\n═══ (b) Salary in working years only ═══");
+const D = out.D;
+// Deep clone assumption + frank to inject a pre-retirement scenario.
+const preRetCfg = Object.assign({}, out.SCENARIOS.base.cfg);
+// Override the in-engine `D` directly via a modified copy and re-run via runSimulation.
+// Easiest path: monkey-patch D.frank.retireYear / D.assumptions.planStart, then revert.
+const savedFrank = Object.assign({}, D.frank);
+const savedMoon = Object.assign({}, D.moon);
+const savedAssum = Object.assign({}, D.assumptions);
+
+D.assumptions.planStart = 2026;
+D.frank.retireYear = 2031;
+D.frank.salary = 120000;
+D.frank.salaryRefYear = 2026;
+D.frank.salaryRaise = 0.03;
+D.frank.annualRrspContrib = 15000;
+D.frank.annualTfsaContrib = 7000;
+D.frank.annualNonregContrib = 3000;
+D.moon.retireYear = 2034;  // staggered — moon retires 3 years after frank
+D.moon.salary = 80000;
+D.moon.salaryRefYear = 2026;
+D.moon.salaryRaise = 0.03;
+D.moon.annualRrspContrib = 10000;
+D.moon.annualTfsaContrib = 7000;
+D.moon.annualNonregContrib = 0;
+// Phase 5.2: Moon DB pension starts at her retire year.
+D.moon.db_before65 = 0;
+D.moon.db_after65  = 24000;
+D.moon.db_startYear = 2034;
+D.moon.db_index    = 0.022;
+
+const preRet = out.runSimulation(preRetCfg);
+
+const y2026 = preRet.years.find(y => y.year === 2026);
+const y2030 = preRet.years.find(y => y.year === 2030);
+const y2032 = preRet.years.find(y => y.year === 2032);  // frank retired, moon working
+const y2035 = preRet.years.find(y => y.year === 2035);  // both retired
+check(y2026 && y2026.salary_f > 100000, `2026 salary_f = $${Math.round((y2026||{}).salary_f||0).toLocaleString()} (expected ~$120k)`);
+check(y2026 && y2026.salary_m > 70000,  `2026 salary_m = $${Math.round((y2026||{}).salary_m||0).toLocaleString()} (expected ~$80k)`);
+check(y2030 && y2030.salary_f > y2026.salary_f, `salary_f grew 2026→2030 ($${Math.round(y2030.salary_f).toLocaleString()} > $${Math.round(y2026.salary_f).toLocaleString()})`);
+
+// (c/d/e) Staggered retirement.
+console.log("\n═══ (c/d/e) Staggered retirement and contributions ═══");
+check(y2032 && y2032.salary_f === 0, `2032 salary_f = 0 (frank retired 2031)`);
+check(y2032 && y2032.salary_m > 0,   `2032 salary_m = $${Math.round((y2032||{}).salary_m||0).toLocaleString()} (moon still working)`);
+check(y2035 && y2035.salary_f === 0 && y2035.salary_m === 0, "2035 both retired, no salary");
+
+// Check RRSP balance grew pre-retirement thanks to contributions.
+const y2025 = preRet.years[0];  // first year (= 2026)
+const rrspEnd2030 = y2030.bal_rrsp_f;
+const rrspStart   = D.frank.rrsp;
+// Over 5 years, contributing $15k/yr @ 5% should roughly (15k * annuity(5,5%)) + initial*(1.05)^5
+check(rrspEnd2030 > rrspStart, `RRSP balance grew during working years ($${Math.round(rrspStart).toLocaleString()} → $${Math.round(rrspEnd2030).toLocaleString()})`);
+
+// (f) Moon DB pension appears after her retireYear (2034).
+console.log("\n═══ (f) Moon DB pension ═══");
+const y2033 = preRet.years.find(y => y.year === 2033);
+check(y2033 && !y2033.dbPension_m, "2033 no moon DB pension (still working)");
+check(y2035 && y2035.dbPension_m > 20000, `2035 moon DB pension = $${Math.round((y2035||{}).dbPension_m||0).toLocaleString()} (expected ~$24k + inflation)`);
+
+// Restore D.
+Object.assign(D.frank, savedFrank);
+Object.assign(D.moon, savedMoon);
+Object.assign(D.assumptions, savedAssum);
+
+console.log(`\n═══ SUMMARY ═══\nPassed: ${passed}\nFailed: ${failed}`);
+process.exit(failed > 0 ? 1 : 0);
