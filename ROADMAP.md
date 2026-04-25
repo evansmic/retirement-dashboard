@@ -50,46 +50,38 @@
 
 ## Current phase
 
-**Phase 5 shipped.** No active phase. Ready for Phase 6 scoping.
+**Phase 5 shipped (2026-04-25).** Decision session held same day resolved every open question (see `DECISIONS.md` — Open decisions section is now empty). Forward path is broken into four sprints (`TASKS.md`, tasks #41–#59).
 
-## Next 30 days — priorities
+**Active sprint: Sprint 1 — Foundation.**
 
-**1. Stabilise what exists (High).** Add the `probe_*.js` harness into a short README and commit it. Run regression before any further engine edits.
+## Sprint plan (post-decision)
 
-**2. Intake UX polish (High).** The form works end-to-end but is intimidating. Light touch: collapsible sections, inline tooltips, a "guided defaults" button that fills sensible values for a given age bracket.
+**Sprint 1 — Foundation.** Internal-cleanup pass that takes the codebase from "private project" to "ready to be public." Adds LICENSE, disclaimer, schema versioning + migration scaffold, `frank`/`moon` → `p1`/`p2` rename, blank form with example presets, JSDoc types on `D`, GitHub Actions CI, polished public README. *Estimated: one focused weekend.*
 
-**3. Validation + error handling (High).** If the user omits key fields, the hash round-trip silently defaults; the dashboard should surface a "missing input" banner rather than project on zeroes.
+**Sprint 2 — UX polish.** Collapsible sections, inline tooltips on key fields, back-to-form button + hash decoder, soft RRSP-room warning, improved CPP help text, default-on Monte Carlo with progressive rendering. *Estimated: one weekend.*
 
-**4. Decide product direction (High — blocks downstream work).** Personal tool, open-source, commercial? See Open Decisions in `DECISIONS.md`.
+**Sprint 3 — Guided form.** Sidebar nav with per-section save/advance and status icons. Turns the long form into something genuinely guided without going full wizard. *Estimated: half-day to a full day.*
 
-## Medium-term roadmap
+**Sprint 4 — Launch.** Donate / micro-pay button + launch posts (r/PersonalFinanceCanada, HN). *Estimated: one evening.*
 
-**Phase 6 — Intake UX + onboarding (suggested)**
-- Guided mode with step-by-step questions.
-- Preset "profiles" (pre-retiree, early retiree, survivor).
-- Inline explainer cards for each technical term (OAS clawback, BPA, LIF).
+**Minimum viable launch sequence:** Sprint 1 + Sprint 4. Ship public, iterate UX (Sprints 2–3) in public. Choice between this and the full Sprint 1→2→3→4 sequence depends on whether you'd rather optimise for learning (ship sooner) or first-impression polish (ship later).
 
-**Phase 7 — Provinces (suggested)**
-- Abstract Ontario-specific tax calc behind a province selector.
-- BC, Alberta, Quebec (Quebec is largest scope — separate pension plan, Solidarity Tax Credit).
+## Medium-term roadmap (post-launch, beyond the four sprints)
 
-**Phase 8 — Save/load (suggested)**
-- Export/import a `.plan.json` file.
-- Optionally sync to a user-owned cloud drive (privacy-preserving).
+**Phase 7 — Provinces.** Abstract Ontario-specific tax calc behind a province selector. BC and Alberta first; Quebec is largest scope due to QPP and distinct tax structure.
 
-**Phase 9 — Advisor mode (suggested, gated on product-direction decision)**
-- Multi-household dashboard.
-- Compare two households side-by-side.
-- White-label branding.
+**Phase 8 — Save/load.** Export/import `.plan.json` file. Optionally sync to user-owned cloud drive (privacy-preserving).
+
+**Phase 9 — Advisor mode (gated on B2B interest).** Multi-household dashboard, side-by-side comparison, white-label branding. Per Decision 1's hybrid framing, only build if planner interest emerges unprompted.
 
 ## Nice-to-have future ideas
 
-- CPP contribution accrual for users still working (currently relies on a Service Canada statement).
+- CPP contribution accrual estimator (deferred per Decision 4b — rely on Service Canada).
 - RRSP/TFSA contribution-room auto-tracker year over year.
 - Tax-loss-harvesting modelling in non-reg.
 - Withdrawal-order optimiser (search over N→T→R permutations for max after-tax).
 - "What if I work one more year?" slider.
 - Estate tax optimisation (deemed disposition at last death).
 - RDSP / DTC support if relevant.
-- Mobile-friendly layout (current layout is desktop-first).
-- Translation to French (Canadian market — especially Quebec).
+- Mobile-friendly layout (Sprint 3's #55 is desktop-first; mobile is its own task).
+- French translation (Canadian market — especially Quebec).

@@ -62,34 +62,41 @@
 - Save/load beyond hash URL — deferred.
 - Multi-province — deferred.
 
-## Open decisions (not yet resolved)
+### Resolved in 2026-04-25 decision session
 
-### Product direction
+**Product direction: hybrid — open-source (MIT) with optional commercialisation later.**
+*Why*: solo developer, no appetite to run a software business; the engine is the hard and already-done part; helping more Canadians is the goal. A donate / micro-pay button (Buy Me a Coffee or Stripe Buy Button — no backend) lets users who appreciate the tool contribute. Door left open for B2B white-label if planner interest emerges unprompted.
 
-- **Personal tool, open-source, or commercial?** The biggest unresolved question. Until this is answered, every other roadmap decision is speculative. Options:
-  - *Personal*: keep private, evolve for one household's needs. Smallest scope.
-  - *Open-source*: publish as MIT-licensed, accept contributions. Low cost, builds portfolio, no revenue.
-  - *Commercial consumer*: one-time purchase app or freemium web. Requires marketing, support, privacy marketing.
-  - *Commercial B2B*: white-label for fee-only Canadian planners. Smaller market but higher willingness to pay.
+**Add `D.schemaVersion = 1` now, with migration scaffold.**
+*Why*: with public release on the horizon, saved hashes become an ABI. A version field plus a `migrate(D)` function is the escape hatch for future breaking changes. ~15 minutes of work.
 
-### Schema and naming
+**Rename `frank`/`moon` → `p1`/`p2` and clear placeholder names.**
+*Why*: vestigial bespoke names look weird in a public repo; the cost of renaming only grows. Schema versioning makes the migration safe — pair the rename with a v1→v2 migration step so any existing local hashes still work.
 
-- **Rename `frank`/`moon` → `p1`/`p2`?** Breaks saved hashes. Opinion pending.
-- **Add `D.schemaVersion` now or later?** Later is cheaper; sooner enables migrations.
+**RRSP contribution room: soft validation, not hard enforcement.**
+*Why*: faithfully modelling the real CRA rule (18% of prior earned income minus pension adjustment minus carry-forward) is days of work and still won't match a user's actual NOA. A yellow inline warning when contributions exceed 18% of salary gives non-experts a guard rail without forcing every user to dig out their NOA.
 
-### Modelling
+**CPP contribution accrual: defer indefinitely; rely on Service Canada.**
+*Why*: Service Canada is authoritative. A parallel estimator would silently disagree with their number. Add clear instructions on the form pointing users to their Service Canada account, plus a tooltip with rough delay/early heuristics (~7%/yr) for users modelling staggered CPP timing.
 
-- **Enforce RRSP contribution room?** Currently trust-user.
-- **Add CPP contribution accrual estimator?** Or keep relying on Service Canada statements?
-- **Should Monte Carlo be on by default** (automatic "Run MC" alongside deterministic) rather than opt-in? Would make the default UX more honest about uncertainty.
+**Default-on Monte Carlo with progressive rendering.**
+*Why*: hiding MC behind a button nudges users toward the rosy deterministic plan — exactly the framing the consumer calculators use. Show deterministic instantly, run MC in the background, replace banner with success rate when complete. "Skip stress test" toggle for the impatient.
 
-### UX
+**Long form with collapsible sections, sidebar nav, and per-section save/advance.**
+*Why*: full wizard is overkill for the sophisticated-DIY audience. Long form + sidebar tree showing per-section status (empty/partial/complete) + "Save & continue" button per section gives the guidance benefit of a wizard without a navigation layer. Half-day of vanilla JS, no framework.
 
-- **Guided intake vs current long-form?** Adds code, improves first-time UX. Worth the effort only if non-experts will use the tool.
-- **Collapsible sections as default?** Low effort, meaningful UX improvement.
-- **Inline help/tooltips: worth building?**
+**Section initial state: P1/P2 expanded; Assumptions, Tax, Inheritance, Survivor, Events collapsed.**
+*Why*: a first-time user should see the obvious "tell us about you and your spouse" sections and the rest as labelled drawers. Native `<details>` element is enough.
 
-### Technical
+**Inline tooltips on priority fields.**
+*Why*: a public tool can't assume the user knows the rules. 8–12 tooltips on fields like spousal-RRSP attribution, CPP-at-65 sourcing, DB bridge benefit, RRIF election, plan start vs retire year, real-vs-nominal toggle, and RRSP room. Highest UX-per-hour return.
 
-- **Formalise `D` as a TypeScript/JSDoc interface?** Adds tooling; makes refactors safer.
-- **Integrate probes into a pre-commit hook or CI?** Would catch regressions during UI edits.
+**`D` typed via inline JSDoc `@typedef` block.**
+*Why*: gives IDE autocomplete and refactor safety with zero build step. Preserves the "two static HTML files, click to open" pitch. Full TypeScript with a compile step is a Phase 8+ decision.
+
+**GitHub Actions CI for probes.**
+*Why*: free for public repos, ~20 lines of YAML, automatic green/red on every PR. README status badge is real signal to anyone evaluating the project. Pre-commit hook deferred unless we start pushing broken probes.
+
+## Open decisions (still unresolved)
+
+None as of 2026-04-25. Future decisions will be appended here.

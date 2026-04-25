@@ -1,56 +1,71 @@
 # TASKS.md
 
-Priority: **High** = do before anything else. **Medium** = next natural batch. **Low** = eventually / nice-to-have.
+The current plan came out of the 2026-04-25 decision session. See `DECISIONS.md` for the reasoning behind each pick. The live TaskList holds tasks #41–#59 (run `TaskList` in any chat to see status); this file is the readable plan view.
 
-## Immediate action items
+## Sprint 1 — Foundation (publishable code)
 
-### Stabilise
+The pass that takes the codebase from "private project" to "ready to be public." Order matters: schema versioning lands before the rename so the rename can use the migration system.
 
-- **[High]** Commit current working tree and tag it as `phase-5-complete`. The three verification probes (`probe_phase5.js`, `probe_phase5_e2e.js`, `probe_phase5_intake.js`) plus `probe_phase4_final.js` are the regression suite — keep them runnable.
-- **[High]** Write a short `README.md` that documents how to open the app (double-click `index.html` or serve the folder), how to run the probes (`node probe_*.js` from the outputs folder), and the data-flow diagram.
-- **[High]** Move `probe_*.js` files out of the ephemeral session outputs folder into the project directory (e.g. `./probes/`) so they survive session boundaries.
-- **[High]** Decide product direction (see `DECISIONS.md` Open). Blocks everything downstream.
+1. **#41** — Add MIT LICENSE
+2. **#42** — Add "not financial advice" disclaimer (README + dashboard footer)
+3. **#46** — Add `D.schemaVersion = 1` + `migrate(D)` scaffold
+4. **#47 + #48 + #49** — Rename `frank`/`moon` → `p1`/`p2`, clear placeholders, add v1→v2 migration (single bundled change with full probe re-run)
+5. **#58** — Replace auto-populated Alex/Sam data with blank form + 3–4 example presets (deep-linked via `?example=slug`)
+6. **#56** — Add JSDoc `@typedef` block for `D`
+7. **#57** — GitHub Actions CI for probes + README status badge
+8. **#43** — Polish README for public audience (intro pitch, screenshot, live link)
 
-### Gaps / bugs
+After Sprint 1 the project is technically publishable. Could open-source here.
 
-- **[Medium]** **Silent zero-defaults.** If the user submits with `frank.dob = ""`, the dashboard receives `0` and produces a nonsense projection. Add validation before encoding the hash in `index.html`.
-- **[Medium]** **`a_retireYear` fallback cleanup.** Phase 5.2 removed the `a_retireYear` input from the UI but left legacy `n('a_retireYear', 2027)` references in place (now just fallback to 2027). Fine as a safety net, but worth a cleanup pass to remove dead references.
-- **[Medium]** **Header `retireYear` in Real-mode deflation.** Per-spouse retire year is now shown in the header, but the "Real" toggle recomputes only KPIs/charts, not header sentences. Low-severity — just confirm nothing breaks.
-- **[Medium]** **CPP contribution accrual for working users.** Today the engine relies on the user supplying `cpp65_monthly` from a Service Canada statement. A user still 10 years from retirement doesn't have that number. Either document this clearly or add a CPP-accrual estimator.
-- **[Low]** **Monte Carlo in meltdown scenario is ~6× slower.** Acceptable for MVP but worth profiling if path count increases.
-- **[Low]** **Print PDF one-pager.** Works but is dense. Consider a two-page layout with key KPIs up front.
+## Sprint 2 — UX polish
 
-### Intake UX (if staying in MVP shape)
+9. **#53** — Collapsible sections (P1/P2 expanded, rest collapsed)
+10. **#54** — Tooltips on priority fields (8–12 fields with non-obvious meaning)
+11. **#59** — "Back to form" button on dashboard with hash decoder + round-trip probe
+12. **#50** — Soft RRSP contribution-room warning
+13. **#51** — Improve CPP-at-65 help text + Service Canada link
+14. **#52** — Default-on Monte Carlo with progressive rendering
 
-- **[Medium]** Add inline tooltips to every field with a `?` icon (BPA, OAS clawback, LIF max, ACB, spousal-RRSP attribution, CPP sharing).
-- **[Medium]** Collapsible sections — working years, DB pension, mortgage, LOC, one-off expenses should collapse by default.
-- **[Medium]** "Guided defaults" button — fills reasonable values for a pre-retiree couple.
-- **[Low]** Field validation with red underline + inline error message.
+## Sprint 3 — Guided form
+
+15. **#55** — Sidebar nav with per-section save/advance + status icons. The bigger UX investment.
+
+## Sprint 4 — Launch
+
+16. **#44** — Add donate / micro-pay button (Buy Me a Coffee or Stripe Buy Button)
+17. **#45** — Plan and post launch posts (r/PersonalFinanceCanada, HN)
+
+**Minimum viable launch sequence:** Sprint 1 + Sprint 4. Ship public, iterate UX (Sprints 2–3) in public.
+
+## Backlog (not yet in a sprint)
+
+### Validation / data hygiene
+
+- **Silent zero-defaults.** If the user submits with a critical field blank (dob, balances), the dashboard receives `0` and produces nonsense. Add validation before encoding the hash.
+- **`a_retireYear` fallback cleanup.** Phase 5.2 removed the input but left legacy `n('a_retireYear', 2027)` references as fallbacks. Worth a cleanup pass.
+- **Header sentences in Real-mode.** Real toggle recomputes KPIs/charts but not the header text. Low severity.
 
 ### Dashboard UX
 
-- **[Medium]** Year-by-year detail table: add a "Working?" column badge so readers can see pre-retirement years at a glance.
-- **[Medium]** Income chart: Salary series (added Phase 5.4) needs a legend-hover tooltip explaining it's gross pre-tax.
-- **[Low]** Mobile-friendly reflow.
-- **[Low]** Drilldown modal on year-click — explain every line item.
+- **"Working?" column badge** in year-by-year detail table for pre-retirement years.
+- **Salary chart series tooltip** explaining it's gross pre-tax.
+- **Print PDF improvements.** Works but is dense — two-page layout with KPIs up front.
+- **Drilldown modal** on year-click — explain every line item.
 
-## Strategic tasks
+### Performance
 
-- **[High]** Decide: personal tool / open source / commercial? (See `DECISIONS.md`.)
-- **[Medium]** Decide: rename `frank`/`moon` to neutral `p1`/`p2` in engine internals? Breaking change to saved hash URLs but cleaner going forward.
-- **[Medium]** Plan for schema versioning so we can migrate saved hashes.
-- **[Medium]** Evaluate whether a "Run All" button (deterministic + MC + stress in one go) makes sense as the default flow.
-- **[Low]** Quebec / BC / Alberta tax support. Largest scope: Quebec has its own pension plan (QPP) and a distinct tax structure.
-- **[Low]** Translation to French for Quebec.
+- **MC perf in meltdown scenario.** ~6× slower than baseline. Acceptable now; profile if path counts increase.
 
-## Backlog (future phases)
+### Future capability
 
-- **[Medium]** Save/load `.plan.json`.
-- **[Medium]** Named plans in localStorage.
-- **[Medium]** Plan comparison: two saved plans side-by-side.
-- **[Low]** Scenario authoring UI.
-- **[Low]** Withdrawal-order optimiser.
-- **[Low]** "What if I work N more years?" slider.
-- **[Low]** RDSP / DTC support if relevant.
-- **[Low]** Tax-loss-harvesting modelling.
-- **[Low]** Annual 2027 tax-update pass (recurring, due every year).
+- **Mobile-friendly reflow.** Sprint 3's sidebar nav (#55) is desktop-first; a mobile fallback (top progress bar / hamburger) is its own piece of work.
+- **Save/load `.plan.json`.** Beyond the hash URL.
+- **Named plans in localStorage.** Multiple plans per household.
+- **Plan comparison.** Two saved plans side-by-side.
+- **Multi-province.** BC and Alberta first; Quebec is largest scope (QPP, distinct tax structure).
+- **French translation** for Quebec market.
+- **Withdrawal-order optimiser.** Search over draw permutations for max after-tax.
+- **"What if I work N more years?" slider.**
+- **RDSP / DTC support** if relevant.
+- **Tax-loss-harvesting** in non-reg.
+- **Annual 2027 tax-update pass** (recurring, due every year — calendar reminder).
