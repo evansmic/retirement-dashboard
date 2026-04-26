@@ -2,6 +2,10 @@
 
 Browser-based Canadian retirement planning tool (Ontario tax rules, 2026). Self-contained: two static HTML files, no server, no database, no build step.
 
+## Disclaimer
+
+**This is not financial advice.** It is an educational planning tool, not a substitute for advice from a qualified financial planner, accountant, or tax professional. Projections depend on the inputs you supply and on simplifying assumptions about taxes, returns, inflation, and government benefits — actual outcomes will differ. The author makes no warranty as to the accuracy or completeness of the calculations and accepts no liability for decisions made on the basis of them. Tax rules and benefit thresholds change; verify current figures with the CRA, Service Canada, and your province before acting. Consult a licensed advisor for decisions involving real money.
+
 ## Quick start
 
 1. Open `index.html` in a browser. Fill in the intake form.
