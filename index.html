@@ -65,6 +65,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-discard{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 .btn-discard:hover{background:var(--light)}
 
+/* Sprint 1 #58: preset banner — surfaces the dashboard's example archetypes
+   at the top of the intake form so first-time visitors can preview a sample
+   plan before filling in their own numbers. */
+.preset-banner{background:#fef9e8;border:1px solid #f0d680;border-left:4px solid var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:16px}
+.preset-banner-text strong{font-size:14px;color:var(--navy)}
+.preset-banner-text p{font-size:12px;color:#6b5a30;margin:2px 0 10px;line-height:1.5}
+.preset-banner-list{display:flex;gap:8px;flex-wrap:wrap}
+.preset-pill{display:inline-block;padding:6px 12px;background:#fff;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;color:var(--navy3);text-decoration:none;transition:all .15s}
+.preset-pill:hover{border-color:var(--navy3);background:var(--navy3);color:#fff}
+
 .save-indicator{font-size:12px;color:#a8c8e8;opacity:0;transition:opacity .4s}
 .btn-clear{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-clear:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
@@ -87,6 +97,24 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <div class="body">
+  <!-- Sprint 1 #58: preset chooser. Each pill links to the dashboard with a
+       preset slug (`?example=<slug>`); the dashboard's PRESETS registry then
+       loads a fully-populated sample plan. Slugs/labels mirror PRESET_META in
+       retirement_dashboard.html — keep them in sync. -->
+  <div class="preset-banner">
+    <div class="preset-banner-text">
+      <strong>✨ Try an example plan first</strong>
+      <p>See how the dashboard works with sample data, then come back and fill in your own numbers below. Each example is a representative Canadian household built from public benchmarks (Service Canada CPP/OAS, FP Canada PAG, HOOPP / OTPP plan formulas).</p>
+    </div>
+    <div class="preset-banner-list">
+      <a class="preset-pill" href="retirement_dashboard.html?example=diy-couple">DIY couple, both working</a>
+      <a class="preset-pill" href="retirement_dashboard.html?example=db-pension-couple">Public-sector DB couple</a>
+      <a class="preset-pill" href="retirement_dashboard.html?example=single-late-career">Single, late-career</a>
+      <a class="preset-pill" href="retirement_dashboard.html?example=retired-traditional">Already retired</a>
+      <a class="preset-pill" href="retirement_dashboard.html?example=fire-couple">FIRE, retired early</a>
+    </div>
+  </div>
+
   <div id="restore-banner" class="restore-banner">
     <p>📋 <strong>Welcome back.</strong> We found your previously saved data — want to pick up where you left off?</p>
     <div class="restore-banner-btns">
