@@ -1,0 +1,31 @@
+# Sprint 1 #57 — runs the canonical regression probe suite on every push to
+# main and every pull request. The README badge points at this workflow.
+#
+# `probes/run_all.sh` already does the right thing on failure: it tallies pass
+# and fail counts across all six probes and exits 1 if any check fails — so
+# the CI job is just "checkout, get Node, run the script."
+name: probes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  probes:
+    name: Run regression probe suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # probes/README.md states "Node 18+"; we pin to the current LTS to
+          # match local dev expectations and to keep CI deterministic.
+          node-version: '20'
+
+      - name: Run canonical probes
+        run: bash probes/run_all.sh

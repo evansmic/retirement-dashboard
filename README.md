@@ -1,5 +1,7 @@
 # Retirement Plan Dashboard
 
+[![probes](https://github.com/evansmic/retirement-dashboard/actions/workflows/probes.yml/badge.svg?branch=main)](https://github.com/evansmic/retirement-dashboard/actions/workflows/probes.yml)
+
 Browser-based Canadian retirement planning tool (Ontario tax rules, 2026). Self-contained: two static HTML files, no server, no database, no build step.
 
 ## Disclaimer
@@ -34,7 +36,7 @@ cd probes
 ./run_all.sh
 ```
 
-119 checks across six canonical probes (Phase 4 final + three Phase 5 probes + schema-migrate + presets). All must pass before any merge.
+128 checks across six canonical probes (Phase 4 final + three Phase 5 probes + schema-migrate + presets). All must pass before any merge — enforced in CI by `.github/workflows/probes.yml`.
 
 ## Data flow
 

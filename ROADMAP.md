@@ -54,14 +54,15 @@
 
 **Active sprint: Sprint 1 — Foundation.**
 
-**Sprint 1 progress (as of 2026-04-27): 6/8 complete.**
+**Sprint 1 progress (as of 2026-04-27): 7/8 complete.**
 - ✅ #41 — MIT LICENSE at project root.
 - ✅ #42 — "Not financial advice" disclaimer in README + dashboard footer (with print-stylesheet rule so it carries to PDF export).
 - ✅ #46 — `D.schemaVersion = 1` + `migrate(D)` scaffold landed. Probe coverage 67/67 (added `probe_schema_migrate.js`). Unblocked the v1→v2 migration that shipped with #47–#49.
 - ✅ #47–#49 — `frank`/`moon` → `p1`/`p2` rename across engine, intake form, and probes. Default placeholder names cleared. `MIGRATIONS[1]` lifts legacy hashes forward; `SCHEMA_VERSION = 2`. Probe coverage now **74/74** (probe_schema_migrate grew 12 → 19 to cover the rename and end-to-end legacy-hash load).
 - ✅ #58 — Five Canadian-archetype presets shipped in the dashboard's `PRESETS` registry, deep-linked via `?example=<slug>`. Blank fallback + landing card; intake form prefill stripped to structural defaults only. Probe count now **119/119** (added `probe_presets.js`).
 - ✅ #56 — JSDoc `@typedef` block for `D` and its sub-shapes (`Person`, `Spending`, `Mortgage`, `Loc`, `CashWedge`, `Downsize`, `OneOff`, `SpousalRrsp`, `Assumptions`) at the top of the CLIENT DATA section in `retirement_dashboard.html`. `loadClientData()` / `migrate()` / `getBlankD()` / `getDefaultD()` annotated; `const D` carries `@type {D}`. Pure documentation — no runtime change.
-- ⏳ #57, #43 — pending.
+- ✅ #57 — GitHub Actions CI workflow at `.github/workflows/probes.yml` runs the canonical regression suite on every push to `main`, every pull request, and on manual dispatch. Ubuntu + Node 20 LTS; the existing `probes/run_all.sh` tally + `exit 1` is what gates the job. README badge added; stale per-probe counts in `probes/README.md` refreshed (total **119 → 128**, picking up the drift from phase4_final and presets).
+- ⏳ #43 — pending.
 
 ## Sprint plan (post-decision)
 

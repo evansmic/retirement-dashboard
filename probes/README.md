@@ -6,14 +6,14 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 
 | Probe | Scope | Checks |
 |---|---|---|
-| `probe_phase4_final.js` | Scenarios + Monte Carlo + sequence stress + POS + `cfg.returnRates` override | 17 |
+| `probe_phase4_final.js` | Scenarios + Monte Carlo + sequence stress + POS + `cfg.returnRates` override | 18 |
 | `probe_phase5.js` | Pre-retirement engine, staggered retirement, dual DB pensions | 14 |
 | `probe_phase5_e2e.js` | End-to-end with working years, MC, lifetime totals, transition continuity | 12 |
 | `probe_phase5_intake.js` | Intake-form payload → dashboard round-trip | 12 |
 | `probe_schema_migrate.js` | `schemaVersion` + `migrate(D)` + v1→v2 rename migration (Sprint 1 #46/#47–#49) | 19 |
-| `probe_presets.js` | Example-preset registry + blank-state loader + `?example=<slug>` routing (Sprint 1 #58) | 44 |
+| `probe_presets.js` | Example-preset registry + blank-state loader + `?example=<slug>` routing (Sprint 1 #58) | 53 |
 
-**Total: 119 checks. All must pass.**
+**Total: 128 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
 
 ## Run them
 
