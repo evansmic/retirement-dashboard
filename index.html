@@ -104,7 +104,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>First Name</label>
-        <input type="text" id="f_name" value="Alex" required>
+        <input type="text" id="f_name" value="" placeholder="Person 1" required>
       </div>
       <div class="field">
         <label>Birth Year</label>
@@ -244,7 +244,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>First Name</label>
-        <input type="text" id="m_name" value="Sam" required>
+        <input type="text" id="m_name" value="" placeholder="Person 2 (leave blank for single-person plan)">
       </div>
       <div class="field">
         <label>Birth Year</label>
@@ -576,7 +576,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Year Person 1 dies (Survivor scenario)</label>
-        <input type="number" id="a_frankDies" value="2028" min="2025" max="2060">
+        <input type="number" id="a_p1Dies" value="2028" min="2025" max="2060">
         <span class="hint">Used only in Survivor tab</span>
       </div>
     </div>
@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       // Only show banner if there's meaningful data (name filled in)
-      if (parsed.f_name && parsed.f_name.trim() && parsed.f_name !== 'Alex') {
+      if (parsed.f_name && parsed.f_name.trim()) {
         _savedData = parsed;
         document.getElementById('restore-banner').style.display = 'flex';
       }
@@ -820,7 +820,13 @@ function submitForm() {
   const m_cpp70_mo   = n('m_cpp70_monthly', 0);
 
   const D = {
-    frank: {
+    // Sprint 1 #46: schema version stamped on every payload at encode time.
+    // Bump when the shape of D changes in a way that older dashboards can't
+    // read directly. The dashboard's migrate(D) function lifts older payloads
+    // to the current version on load.
+    // v2 (Sprint 1 #47–#49): renamed frank→p1, moon→p2.
+    schemaVersion: 2,
+    p1: {
       name:         s('f_name', 'Person 1'),
       dob:          n('f_dob'),
       dobMonth:     n('f_dobMonth', 9),
@@ -849,7 +855,7 @@ function submitForm() {
       cpp65_monthly: f_cpp65_raw > 0 ? f_cpp65_raw : Math.round(f_cpp70_mo / 1.42),
       oas_monthly:   n('f_oas_monthly', 742.31),
     },
-    moon: {
+    p2: {
       name:         s('m_name', 'Person 2'),
       dob:          n('m_dob'),
       dobMonth:     n('m_dobMonth', 12),
@@ -933,7 +939,7 @@ function submitForm() {
       // Phase 5.2: explicit plan start (for modelling working years). Null => use retireYear.
       planStart:            (function(){ const v = n('a_planStart', 0); return v > 0 ? v : null; })(),
       planEnd:              n('a_planEnd', 2068),
-      frankDiesInSurvivor:  n('a_frankDies', 2028),
+      p1DiesInSurvivor:     n('a_p1Dies', 2028),
       returnRate:           n('a_returnRate', 0.05),
       inflation:            n('a_inflation', 0.025),
       // Phase 4.5: Monte Carlo volatility (passed through to dashboard's returnStdDev assumption).
@@ -951,8 +957,13 @@ function submitForm() {
         if(!c) return null;
         // Anchor the 3-year attribution window on the *annuitant's* retirement year —
         // the spouse who will eventually draw from the spousal RRSP.
-        const annuitantKey = (c === 'frank') ? 'moon' : 'frank';
-        const retYr = n(annuitantKey[0] + '_retireYear', 2027);
+        // NOTE: this comparison is intentionally preserved as-is from the pre-rename
+        // code. The form select emits 'f' or 'm', so this comparison never matches
+        // 'p1' (or the legacy 'frank'), and `annuitantKey` always defaulted to the
+        // first branch. Bug-for-bug compatibility — fixing the contributor/annuitant
+        // attribution is its own task in the backlog.
+        const annuitantKey = (c === 'p1') ? 'p2' : 'p1';
+        const retYr = n((annuitantKey === 'p1' ? 'f' : 'm') + '_retireYear', 2027);
         const contribs = {};
         const y1 = n('a_spousalContribY1', 0);
         const y2 = n('a_spousalContribY2', 0);

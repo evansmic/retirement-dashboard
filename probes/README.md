@@ -10,8 +10,9 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 | `probe_phase5.js` | Pre-retirement engine, staggered retirement, dual DB pensions | 14 |
 | `probe_phase5_e2e.js` | End-to-end with working years, MC, lifetime totals, transition continuity | 12 |
 | `probe_phase5_intake.js` | Intake-form payload → dashboard round-trip | 12 |
+| `probe_schema_migrate.js` | `schemaVersion` + `migrate(D)` + v1→v2 rename migration (Sprint 1 #46/#47–#49) | 19 |
 
-**Total: 55 checks. All must pass.**
+**Total: 74 checks. All must pass.**
 
 ## Run them
 

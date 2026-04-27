@@ -10,8 +10,9 @@ This project has **no database**. All state lives in-memory within the browser f
 
 ```
 D = {
-  frank:       Person,
-  moon:        Person,
+  schemaVersion: number,    // current = 2; bumped on breaking shape changes
+  p1:          Person,
+  p2:          Person,
   spending:    Spending,
   assumptions: Assumptions,
   mortgage?:   Mortgage,
@@ -22,7 +23,24 @@ D = {
 }
 ```
 
-### `Person` (used for both `frank` and `moon`)
+### Schema version + migration (Sprint 1 #46, #47–#49)
+
+Every payload carries a `schemaVersion`. The dashboard's `migrate(D)` function
+(in `retirement_dashboard.html`) walks an incoming payload forward through
+registered upgrade steps until it matches the current `SCHEMA_VERSION`. A
+payload without a `schemaVersion` field is treated as v1 (every saved hash
+from before this field was added is structurally v1).
+
+**Version history:**
+- **v1** — initial schema-versioned payload (Sprint 1 #46).
+- **v2** — Sprint 1 #47–#49: renamed `frank` → `p1`, `moon` → `p2`, and
+  `assumptions.frankDiesInSurvivor` → `assumptions.p1DiesInSurvivor`.
+  `MIGRATIONS[1]` performs the rename for any legacy hash.
+
+Adding a future migration: define `MIGRATIONS[N] = function(d) { ...; d.schemaVersion = N+1; return d; }`
+and bump `SCHEMA_VERSION`.
+
+### `Person` (used for both `p1` and `p2`)
 
 Required:
 - `name: string`
@@ -49,7 +67,7 @@ Optional — TFSA room tracking:
 - `tfsaRoom: number`
 - `tfsaAnnual: number` — prior-year contribution
 
-Optional — survivor fields (Moon only):
+Optional — survivor fields (P2 only):
 - `cppSurvivor_under65, cppSurvivor_over65: number`
 
 ### `Spending`
@@ -61,22 +79,22 @@ Optional — survivor fields (Moon only):
 
 ### `Assumptions`
 
-- `retireYear: number` — derived = `Math.min(frank.retireYear, moon.retireYear)` (advisory).
+- `retireYear: number` — derived = `Math.min(p1.retireYear, p2.retireYear)` (advisory).
 - `planStart: number | null` — optional earlier plan-start year (enables working-years modelling).
 - `planEnd: number`
-- `frankDiesInSurvivor: number` — survivor-scenario death year.
+- `p1DiesInSurvivor: number` — survivor-scenario death year.
 - `returnRate: number`, `inflation: number`, `returnStdDev: number`
 - `horizon: number` — max age to project.
 - `youngerSpouseRrif: boolean` — RRIF factor based on younger spouse's age.
 - `cppSharing: boolean`
 - `withdrawalOrder: 'default' | 'meltdown'` — CFM N→T→R or meltdown.
-- `spousalRrsp: { contributor: 'frank'|'moon', contribs: { [year]: amount } } | null`
+- `spousalRrsp: { contributor: 'f'|'m', contribs: { [year]: amount } } | null`
 - `monteCarloPaths: number` — default 1000.
 
 ### Year-row shape (dashboard engine output)
 
 Each simulated year emits an object with:
-- Core: `year, ageF, ageM, frankAlive`
+- Core: `year, ageF, ageM, p1Alive`
 - Phase 5: `salary_f, salary_m, working_f, working_m, rrspContrib_f/m, tfsaContrib_f/m, nregContrib_f/m`
 - Income: `dbPension, dbPension_m, dbSurvivor, cpp_f, cpp_m, oas_f, oas_m` (OAS net of clawback)
 - Draws: `rrif_draw_f, rrif_draw_m, lif_min_f/m, lif_draw, tfsa_draw_f/m, tfsa_draw, nonreg_draw_f/m, nonreg_draw, splitAmt, cash_draw`
@@ -90,8 +108,8 @@ None — the schema is a flat household document. Everything is nested under `D`
 
 ## Required fields (minimum viable payload)
 
-- `frank.dob, frank.retireYear`
-- At least one of `frank.rrsp/tfsa/nonreg` (non-zero, else plan can't meaningfully run)
+- `p1.dob, p1.retireYear`
+- At least one of `p1.rrsp/tfsa/nonreg` (non-zero, else plan can't meaningfully run)
 - `spending.gogo` (non-zero)
 - `assumptions.planEnd, returnRate, inflation`
 
@@ -99,14 +117,12 @@ All other fields default to 0 or a sensible value.
 
 ## Suggested improvements
 
-- **Introduce a `Household` wrapper** instead of hard-coded `frank` / `moon` keys. Today those are engine-internal; intake labels are user-provided (`Person 1` / `Person 2`). A `household.people[]` array would support single-person plans and could extend to >2 (e.g. adult-dependent scenarios) without renaming.
-- **Schema version field.** Add `D.schemaVersion: number`. When the hash-encoded payload changes shape, the dashboard can migrate or warn.
+- **Introduce a `Household` wrapper** instead of hard-coded `p1` / `p2` keys. Today those are engine-internal; intake labels are user-provided (`Person 1` / `Person 2`). A `household.people[]` array would support single-person plans and could extend to >2 (e.g. adult-dependent scenarios) without further schema changes.
 - **Field-level units.** Today callers must know that `cpp70_monthly` is monthly while `db_after65` is annual. A shared convention (always annual, documented) or explicit unit suffixes would prevent mistakes.
 - **Validation layer.** A `validate(D)` function that returns `{ errors, warnings }` before encoding. Missing required fields should surface in the UI, not silently default to zero.
 - **Save/load roundtrip.** A `.plan.json` export of `D` plus top-level metadata (last-saved date, schema version, plan name).
 
 ## Unknowns needing decisions
 
-- Do we formalise the `D` schema into a TypeScript/JSDoc interface, or keep it duck-typed?
-- Is `frank`/`moon` renaming to `person1`/`person2` (or `primary`/`spouse`) worth the breaking change to saved hashes?
+- Do we formalise the `D` schema into a TypeScript/JSDoc interface, or keep it duck-typed? *(Sprint 1 #56 picks the JSDoc `@typedef` route.)*
 - Should we ever persist outside the browser? (Local-file export is cheap; cloud sync is a product decision.)

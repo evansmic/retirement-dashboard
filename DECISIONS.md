@@ -31,7 +31,7 @@
 
 **Phase 5 per-spouse retirement years, not a single `retireYear`.**
 *Why*: working couples commonly have staggered retirements. `D.assumptions.retireYear` remains as advisory (min of per-spouse years); `D.assumptions.planStart` (nullable) lets users model pre-retirement.
-*Trade-off accepted*: the existing `calcDBPension` / CPP / OAS helpers had to gate by per-spouse `retireYear`; added `calcDBPension_Moon` helper for symmetry.
+*Trade-off accepted*: the existing `calcDBPension` / CPP / OAS helpers had to gate by per-spouse `retireYear`; added `calcDBPension_P2` helper for symmetry (renamed from `calcDBPension_Moon` in Sprint 1 #47–#49).
 
 **RRSP contribution during working years treated as a tax deduction (reduces taxable salary).**
 *Why*: matches real CRA treatment. TFSA/non-reg contributions are post-tax so they add to `totalNeeded` instead.
@@ -53,6 +53,7 @@
 
 **Genericise names (Person 1 / Person 2) in UI, keep `frank` / `moon` as engine-internal keys.**
 *Why*: the tool was initially built for one couple; generalising the UI is cheap; renaming engine internals would break saved hashes and is not yet worth it.
+*Superseded 2026-04-26 by Sprint 1 #47–#49.* Once schema versioning was in place (#46), the rename became safe — `MIGRATIONS[1]` lifts legacy `frank`/`moon` hashes forward to `p1`/`p2`. Engine, intake form, and probes all use the generic keys now.
 
 ### Scope cuts (deferred)
 

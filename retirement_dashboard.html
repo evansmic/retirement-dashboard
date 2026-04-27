@@ -158,8 +158,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <!-- INFO BAR -->
 <div class="info-bar" id="info-bar">
-  <span id="ib-frank">—</span>
-  <span id="ib-moon">—</span>
+  <span id="ib-p1">—</span>
+  <span id="ib-p2">—</span>
   <span id="ib-db">—</span>
   <span id="ib-rrsp">—</span>
   <span id="ib-return">—</span>
@@ -414,11 +414,74 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 // ════════════════════════════════════════════════════════
 //  CLIENT DATA — loaded from URL hash or default fallback
 // ════════════════════════════════════════════════════════
+// Sprint 1 #46: current schema version. Bumped whenever the shape of D
+// changes in a way that older payloads can't be read directly. The migrate(D)
+// function below is the upgrade path for older hashes.
+//
+// Version history:
+//   v1 — initial schema-versioned payload (Sprint 1 #46).
+//   v2 — Sprint 1 #47–#49: renamed `frank` → `p1`, `moon` → `p2`, and
+//        `assumptions.frankDiesInSurvivor` → `assumptions.p1DiesInSurvivor`.
+const SCHEMA_VERSION = 2;
+
+// Sprint 1 #46: migration scaffold. Takes any payload (with or without a
+// schemaVersion field), walks it forward through versioned upgrade steps, and
+// returns a payload at SCHEMA_VERSION. Each upgrade is a small function that
+// only knows how to go from version N to N+1; chaining them keeps each step
+// readable and lets us test transitions independently.
+//
+// Conventions:
+//  - A payload with no `schemaVersion` is treated as v1 (the version when this
+//    field was introduced — every older saved hash predates the field but was
+//    structurally v1).
+//  - Migrations mutate a copy and return it. Always set `schemaVersion` to the
+//    new version at the end of each step.
+//  - If a future migration is destructive (e.g. drops a field), document the
+//    loss with a console.warn so users know why their hash didn't carry over
+//    cleanly.
+const MIGRATIONS = {
+  // v1 → v2 (Sprint 1 #47–#49). Renamed the bespoke per-spouse keys to generic
+  // ones for the public release: `frank` → `p1`, `moon` → `p2`. The lone
+  // assumption that referenced the old name (`frankDiesInSurvivor`) moves to
+  // `p1DiesInSurvivor`. Any v1 hash still in the wild loads cleanly.
+  1: function(d) {
+    if (d.frank !== undefined) { d.p1 = d.frank; delete d.frank; }
+    if (d.moon  !== undefined) { d.p2 = d.moon;  delete d.moon;  }
+    if (d.assumptions && d.assumptions.frankDiesInSurvivor !== undefined) {
+      d.assumptions.p1DiesInSurvivor = d.assumptions.frankDiesInSurvivor;
+      delete d.assumptions.frankDiesInSurvivor;
+    }
+    d.schemaVersion = 2;
+    return d;
+  },
+};
+
+function migrate(D) {
+  if (!D || typeof D !== 'object') return D;
+  let v = D.schemaVersion || 1;          // missing => v1 (pre-versioning era)
+  if (v > SCHEMA_VERSION) {
+    console.warn(`Payload schemaVersion ${v} is newer than this dashboard supports (${SCHEMA_VERSION}). Loading as-is — newer fields may be ignored.`);
+    return D;
+  }
+  while (v < SCHEMA_VERSION) {
+    const step = MIGRATIONS[v];
+    if (!step) {
+      console.warn(`No migration registered for schemaVersion ${v} → ${v+1}. Loading payload as-is.`);
+      break;
+    }
+    D = step(D);
+    v = D.schemaVersion || (v + 1);
+  }
+  D.schemaVersion = SCHEMA_VERSION;
+  return D;
+}
+
 function getDefaultD() {
   // Typical middle-class Ontario couple — Person 1 retires at 60, no DB pension
   return {
-    frank: {
-      name:'Alex', dob:1966, dobMonth:6,
+    schemaVersion: SCHEMA_VERSION,
+    p1: {
+      name:'Person 1', dob:1966, dobMonth:6,
       retireYear:2027,
       // Phase 5.1: Pre-retirement employment. `salary` is gross annual income at
       // `salaryRefYear`, grown by `salaryRaise` each year until `retireYear`.
@@ -443,8 +506,8 @@ function getDefaultD() {
       cpp65: Math.round(1300 / 1.42) * 12,  // ~$10,986/yr at 65
       oasBase: 742 * 12,         // $8,904/yr at 65
     },
-    moon: {
-      name:'Sam', dob:1969, dobMonth:3,
+    p2: {
+      name:'Person 2', dob:1969, dobMonth:3,
       retireYear:2027,
       // Phase 5.1: Pre-retirement employment for Person 2.
       salary:           0,
@@ -494,7 +557,7 @@ function getDefaultD() {
       // retires, so working years are modelled explicitly (salary income, RRSP/
       // TFSA contributions). Null => auto-derive from min retireYear.
       retireYear: 2027, planStart: null, planEnd: 2064,
-      frankDiesInSurvivor: 2028,
+      p1DiesInSurvivor: 2028,
       returnRate: 0.05, inflation: 0.025, horizon: 95,
       // Phase 2.3: share of non-reg return that is paid out as taxable distributions each year
       // (interest + eligible dividends + realised CG distributions). Remainder is treated as
@@ -543,16 +606,19 @@ function loadClientData() {
   try {
     const hash = window.location.hash.slice(1);
     if (hash) {
-      const parsed = JSON.parse(decodeURIComponent(atob(hash)));
+      let parsed = JSON.parse(decodeURIComponent(atob(hash)));
+      // Sprint 1 #46: lift older payloads to the current schema version
+      // before the engine touches them. migrate() is a no-op on v1 payloads.
+      parsed = migrate(parsed);
       // Rehydrate computed fields that intake form stores as raw inputs
-      if (parsed.frank) {
-        const f = parsed.frank;
+      if (parsed.p1) {
+        const f = parsed.p1;
         if (f.cpp70_monthly)  { f.cpp70 = f.cpp70_monthly * 12; delete f.cpp70_monthly; }
         if (f.cpp65_monthly)  { f.cpp65 = f.cpp65_monthly * 12; delete f.cpp65_monthly; }
         if (f.oas_monthly)    { f.oasBase = f.oas_monthly * 12; delete f.oas_monthly; }
       }
-      if (parsed.moon) {
-        const m = parsed.moon;
+      if (parsed.p2) {
+        const m = parsed.p2;
         if (m.cpp70_monthly)  { m.cpp70 = m.cpp70_monthly * 12; delete m.cpp70_monthly; }
         if (m.cpp65_monthly)  { m.cpp65 = m.cpp65_monthly * 12; delete m.cpp65_monthly; }
         if (m.oas_monthly)    { m.oasBase = m.oas_monthly * 12; delete m.oas_monthly; }
@@ -562,8 +628,8 @@ function loadClientData() {
       if (parsed.inheritance == null) parsed.inheritance = 0;
       // Single-person support: if Name2 is blank, zero out Person 2's balances/benefits so
       // the couple-oriented engine degenerates cleanly to a single-person plan.
-      if (parsed.moon && (!parsed.moon.name || !parsed.moon.name.trim())) {
-        const m = parsed.moon;
+      if (parsed.p2 && (!parsed.p2.name || !parsed.p2.name.trim())) {
+        const m = parsed.p2;
         m.name = '—';
         m.rrsp = m.tfsa = m.lira = m.lif = m.nonreg = 0;
         m.cpp70 = m.cpp65 = m.oasBase = 0;
@@ -711,36 +777,36 @@ function oasClawback(netIncome, year){
 // ════════════════════════════════════════════════════════
 //  INCOME CALCULATORS
 // ════════════════════════════════════════════════════════
-function calcDBPension(year, frankAlive){
-  if(!frankAlive) return 0;
-  if(year < D.frank.retireYear) return 0;
-  const age = year - D.frank.dob;
-  const yrs = year - D.frank.db_startYear;
-  const idx = Math.pow(1+D.frank.db_index, yrs);
-  return (age < 65 ? D.frank.db_before65 : D.frank.db_after65) * idx;
+function calcDBPension(year, p1Alive){
+  if(!p1Alive) return 0;
+  if(year < D.p1.retireYear) return 0;
+  const age = year - D.p1.dob;
+  const yrs = year - D.p1.db_startYear;
+  const idx = Math.pow(1+D.p1.db_index, yrs);
+  return (age < 65 ? D.p1.db_before65 : D.p1.db_after65) * idx;
 }
 
-// Phase 5.2/5.3: Person 2 (Moon) DB pension — mirror of calcDBPension but keyed off
-// Moon's retireYear / db_startYear / db fields. Returns 0 if Moon has no DB pension
-// configured or has not yet retired. Independent from Frank's DB survivor benefit.
-function calcDBPension_Moon(year){
-  if(year < D.moon.retireYear) return 0;
-  const before = D.moon.db_before65 || 0;
-  const after  = D.moon.db_after65  || 0;
+// Phase 5.2/5.3: Person 2's DB pension — mirror of calcDBPension but keyed off
+// P2's retireYear / db_startYear / db fields. Returns 0 if P2 has no DB pension
+// configured or has not yet retired. Independent from P1's DB survivor benefit.
+function calcDBPension_P2(year){
+  if(year < D.p2.retireYear) return 0;
+  const before = D.p2.db_before65 || 0;
+  const after  = D.p2.db_after65  || 0;
   if(before === 0 && after === 0) return 0;
-  const age  = year - D.moon.dob;
-  const startY = D.moon.db_startYear || D.moon.retireYear;
-  const idx  = Math.pow(1 + (D.moon.db_index || 0.022), year - startY);
+  const age  = year - D.p2.dob;
+  const startY = D.p2.db_startYear || D.p2.retireYear;
+  const idx  = Math.pow(1 + (D.p2.db_index || 0.022), year - startY);
   return (age < 65 ? before : after) * idx;
 }
 
-// DB pension survivor (60% of base pension after Frank dies, no bridge)
-function calcDBSurvivor(year, frankDeathYear){
-  if(year <= frankDeathYear) return 0;
-  const yrs = frankDeathYear - D.frank.db_startYear;
-  const idx = Math.pow(1+D.frank.db_index, yrs);
+// DB pension survivor (60% of base pension after P1 dies, no bridge)
+function calcDBSurvivor(year, p1DeathYear){
+  if(year <= p1DeathYear) return 0;
+  const yrs = p1DeathYear - D.p1.db_startYear;
+  const idx = Math.pow(1+D.p1.db_index, yrs);
   // Survivor gets 60% of base (no bridge on survivor)
-  return D.frank.db_after65 * idx * 0.60 * Math.pow(1+D.frank.db_index, year-frankDeathYear);
+  return D.p1.db_after65 * idx * 0.60 * Math.pow(1+D.p1.db_index, year-p1DeathYear);
 }
 
 // ── CPP actuarial adjustment (−0.6%/mo before 65, +0.7%/mo after 65) ──
@@ -757,56 +823,56 @@ function cppMaxAtAge(year, age){
   return CPP_MAX65_2026 * adj * Math.pow(1 + cppIndex(), year - 2026);
 }
 
-function calcCPP_Frank(year, startAge){
-  const age = year - D.frank.dob;
+function calcCPP_P1(year, startAge){
+  const age = year - D.p1.dob;
   if(age < startAge) return 0;
-  const startYear = D.frank.dob + startAge;
-  const base = (D.frank.cpp65 || 0) * cppAdjFactor(startAge);
+  const startYear = D.p1.dob + startAge;
+  const base = (D.p1.cpp65 || 0) * cppAdjFactor(startAge);
   return base * Math.pow(1 + cppIndex(), year - startYear);
 }
 
-function calcCPP_Moon(year, startAge, frankAlive, frankDeathYear){
-  const age = year - D.moon.dob;
-  const startYear = D.moon.dob + startAge;
+function calcCPP_P2(year, startAge, p1Alive, p1DeathYear){
+  const age = year - D.p2.dob;
+  const startYear = D.p2.dob + startAge;
   let cpp = 0;
   if(age >= startAge) {
-    const base = (D.moon.cpp65 || 0) * cppAdjFactor(startAge);
+    const base = (D.p2.cpp65 || 0) * cppAdjFactor(startAge);
     cpp = base * Math.pow(1 + cppIndex(), year - startYear);
   }
-  // CPP survivor benefit if Frank has died
-  if(!frankAlive && frankDeathYear && year > frankDeathYear){
-    const survAge = year - D.moon.dob;
-    const survBase = survAge < 65 ? D.moon.cppSurvivor_under65 : D.moon.cppSurvivor_over65;
-    const survNow  = (survBase || 0) * Math.pow(1 + cppIndex(), year - frankDeathYear);
+  // CPP survivor benefit if P1 has died
+  if(!p1Alive && p1DeathYear && year > p1DeathYear){
+    const survAge = year - D.p2.dob;
+    const survBase = survAge < 65 ? D.p2.cppSurvivor_under65 : D.p2.cppSurvivor_over65;
+    const survNow  = (survBase || 0) * Math.pow(1 + cppIndex(), year - p1DeathYear);
     // Combined retirement + survivor capped at the single-person CPP maximum for the survivor's age.
     cpp = Math.min(cpp + survNow, cppMaxAtAge(year, Math.max(60, Math.min(70, survAge))));
   }
   return cpp;
 }
 
-function calcOAS_Frank(year, startAge, frankAlive){
-  if(!frankAlive) return 0;
-  const age = year - D.frank.dob;
+function calcOAS_P1(year, startAge, p1Alive){
+  if(!p1Alive) return 0;
+  const age = year - D.p1.dob;
   if(age < startAge) return 0;
   const bonus = 1 + (startAge-65)*0.006*12; // 0.6% per month of deferral past 65
-  const base = D.frank.oasBase * bonus;
+  const base = D.p1.oasBase * bonus;
   const age75bonus = age >= 75 ? 1.10 : 1.0;
-  const startYear = D.frank.dob + startAge;
+  const startYear = D.p1.dob + startAge;
   return base * age75bonus * Math.pow(1 + oasIndex(), year-startYear);
 }
 
-function calcOAS_Moon(year, startAge){
-  const age = year - D.moon.dob;
+function calcOAS_P2(year, startAge){
+  const age = year - D.p2.dob;
   if(age < startAge) return 0;
   const bonus = 1 + (startAge-65)*0.006*12;
-  const base = D.moon.oasBase * bonus;
+  const base = D.p2.oasBase * bonus;
   const age75bonus = age >= 75 ? 1.10 : 1.0;
-  const startYear = D.moon.dob + startAge;
+  const startYear = D.p2.dob + startAge;
   return base * age75bonus * Math.pow(1 + oasIndex(), year-startYear);
 }
 
 function calcSpending(year){
-  const frankAge  = year - D.frank.dob;
+  const p1Age  = year - D.p1.dob;
   // Phase 5.3: spending is quoted in "today's (= earliest plan year) dollars", so index from
   // min(planStart, retireYear). If the plan starts 2026 and retirement is 2035, the
   // user-supplied gogo/slowgo/nogo figures already represent 2026 purchasing power and should
@@ -820,8 +886,8 @@ function calcSpending(year){
   // Within each phase, spending is constant in real (today's) dollars
   // and grows by inflation nominally — smooth, consistent within each phase
   const idx = Math.pow(1 + inf, year - startYear);
-  if(frankAge <= D.spending.gogoEnd)   return D.spending.gogo   * idx;
-  if(frankAge <= D.spending.slowgoEnd) return D.spending.slowgo * idx;
+  if(p1Age <= D.spending.gogoEnd)   return D.spending.gogo   * idx;
+  if(p1Age <= D.spending.slowgoEnd) return D.spending.slowgo * idx;
   return D.spending.nogo * idx;
 }
 
@@ -862,21 +928,21 @@ function calcLOC(balance){
 
 // ════════════════════════════════════════════════════════
 //  PENSION INCOME SPLITTING OPTIMIZER
-//  Returns optimal split fraction (0–0.5) for Frank's eligible pension
+//  Returns optimal split fraction (0–0.5) for P1's eligible pension
 // ════════════════════════════════════════════════════════
-function optimalSplit(frankEligible, frankOther, moonIncome, frankAge, moonAge, year){
+function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year){
   // DB pension splittable at any age; RRIF/LIF only from 65+ (caller already handles eligibility)
   // Objective MINIMISES combined tax + OAS clawback (not tax alone) so the optimizer
   // does not accidentally push the receiving spouse into clawback territory.
-  if(frankEligible <= 0) return 0;
+  if(p1Eligible <= 0) return 0;
   let best=0, bestSplit=0;
   for(let f=0;f<=50;f+=2){               // tighter 2% grid for more precision
     const frac = f/100;
-    const split = frankEligible*frac;
-    const fInc = frankEligible*(1-frac)+frankOther;
-    const mInc = moonIncome+split;
-    const fTax = calcTax(fInc, frankAge, year, frankEligible>0);
-    const mTax = calcTax(mInc, moonAge, year, split>0);
+    const split = p1Eligible*frac;
+    const fInc = p1Eligible*(1-frac)+p1Other;
+    const mInc = p2Income+split;
+    const fTax = calcTax(fInc, p1Age, year, p1Eligible>0);
+    const mTax = calcTax(mInc, p2Age, year, split>0);
     const clawF = oasClawback(fInc, year);
     const clawM = oasClawback(mInc, year);
     const combined = fTax + mTax + clawF + clawM;
@@ -891,18 +957,18 @@ function optimalSplit(frankEligible, frankOther, moonIncome, frankAge, moonAge, 
 //    returns post-split tax, clawback and combined net.
 //    Single source of truth used by drawForGap solver AND the main loop.
 // ════════════════════════════════════════════════════════
-function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, frankAlive, cfg){
+function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg){
   let fInc = taxableF, mInc = taxableM, splitAmt = 0;
-  if(cfg.pensionSplit && frankAlive && eligF > 0){
+  if(cfg.pensionSplit && p1Alive && eligF > 0){
     const frac = optimalSplit(eligF, Math.max(0, taxableF - eligF), taxableM, ageF, ageM, year);
     splitAmt = eligF * frac;
     fInc = Math.max(0, taxableF - splitAmt);
     mInc = taxableM + splitAmt;
   }
   // Clawback and tax computed on POST-SPLIT income — fixes the reference-document §1.4 bug.
-  const clawF = frankAlive ? oasClawback(fInc, year) : 0;
+  const clawF = p1Alive ? oasClawback(fInc, year) : 0;
   const clawM = oasClawback(mInc, year);
-  const taxF  = frankAlive ? calcTax(Math.max(0,fInc), ageF, year, fInc>0) : 0;
+  const taxF  = p1Alive ? calcTax(Math.max(0,fInc), ageF, year, fInc>0) : 0;
   const taxM  = calcTax(Math.max(0,mInc), ageM, year, mInc>0);
   const total = taxF + taxM + clawF + clawM;
   return { fInc, mInc, splitAmt, clawF, clawM, taxF, taxM, totalTax: total,
@@ -915,14 +981,14 @@ function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, frankAliv
 //    such that post-tax, post-clawback combined income meets `targetNet`.
 //    Takes `baseF`/`baseM` (scenario-mandated draws such as RRIF mins or
 //    the flat meltdown target) and adds the minimum supplemental draw
-//    needed to fund spending. Supplemental draw is allocated to Moon's
+//    needed to fund spending. Supplemental draw is allocated to P2's
 //    RRSP first (she typically has lower fixed income → lower marginal
-//    rate), then Frank's. Applies in every scenario, fixing the prior
+//    rate), then P1's. Applies in every scenario, fixing the prior
 //    pre-65 income gap in Baseline and insufficiency in Meltdown.
 // ════════════════════════════════════════════════════════
 function drawForGap({targetNet, fixedF, fixedM, baseF, baseM, lifMinF, lifMinM,
-                     eligFnF, ageF, ageM, year, frankAlive, cfg, balanceF, balanceM}){
-  const availF = frankAlive ? Math.max(0, balanceF*0.98 - baseF) : 0;
+                     eligFnF, ageF, ageM, year, p1Alive, cfg, balanceF, balanceM}){
+  const availF = p1Alive ? Math.max(0, balanceF*0.98 - baseF) : 0;
   const availM = Math.max(0, balanceM*0.98 - baseM);
   // Equalize-taxable-income allocator: choose extraF and extraM so that
   //   (fixedF + baseF + extraF + lifMinF) == (fixedM + baseM + extraM + lifMinM)
@@ -930,11 +996,11 @@ function drawForGap({targetNet, fixedF, fixedM, baseF, baseM, lifMinF, lifMinM,
   // Rationale: identical marginal tax structure means equal taxable income is
   // tax-minimising pre-65 (both in lowest bracket). Post-65, pension splitting
   // on RRIF draws will fine-tune any residual imbalance. Better than naive
-  // "Moon first" or "Frank first" allocators that drive one spouse into the
+  // "P2 first" or "P1 first" allocators that drive one spouse into the
   // 26–29% federal bracket while the other sits at 0.
   function allocate(extra){
-    const lhsF = fixedF + baseF + lifMinF;     // Frank's taxable before supplement
-    const lhsM = fixedM + baseM + lifMinM;     // Moon's
+    const lhsF = fixedF + baseF + lifMinF;     // P1's taxable before supplement
+    const lhsM = fixedM + baseM + lifMinM;     // P2's
     let eF = (extra + lhsM - lhsF) / 2;
     let eM = (extra + lhsF - lhsM) / 2;
     if(eF < 0){ eM = extra; eF = 0; }
@@ -949,7 +1015,7 @@ function drawForGap({targetNet, fixedF, fixedM, baseF, baseM, lifMinF, lifMinM,
     const { dF, dM } = allocate(extra);
     const tF = fixedF + dF + lifMinF;
     const tM = fixedM + dM + lifMinM;
-    return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, frankAlive, cfg).net;
+    return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg).net;
   }
   if(netAt(0) >= targetNet) return allocate(0);
   const maxExtra = availF + availM;
@@ -969,10 +1035,10 @@ function runSimulation(cfg){
   /*  cfg = {
         cppAgeF: 65|70, cppAgeM: 65|70,
         oasAgeF: 65|70, oasAgeM: 65|70,
-        meltdown: bool,   meltdownTarget: number (target annual taxable income for Frank),
+        meltdown: bool,   meltdownTarget: number (target annual taxable income for P1),
         returnRate: 0.05|0,
         pensionSplit: bool,
-        frankDies: null | year (e.g. 2028)
+        p1Dies: null | year (e.g. 2028)
       }
   */
   // Phase 4.1: `cfg.returnRates` (array keyed by year-index) overrides the scalar
@@ -982,37 +1048,37 @@ function runSimulation(cfg){
   const R_default = cfg.returnRate;
   let R = R_default;
   const years = [];
-  // Phase 5.3: plan START = earliest of (assumptions.planStart, frank.retireYear, moon.retireYear).
+  // Phase 5.3: plan START = earliest of (assumptions.planStart, p1.retireYear, p2.retireYear).
   // `planStart` lets users model pre-retirement working years (salary income + contributions);
   // null => start from the earlier retirement.
   const PLAN_START_OVERRIDE = (D.assumptions.planStart != null && D.assumptions.planStart > 0)
     ? D.assumptions.planStart : Infinity;
   const START = Math.min(
     PLAN_START_OVERRIDE,
-    D.frank.retireYear || D.assumptions.retireYear || 2027,
-    D.moon.retireYear  || D.assumptions.retireYear || 2027
+    D.p1.retireYear || D.assumptions.retireYear || 2027,
+    D.p2.retireYear  || D.assumptions.retireYear || 2027
   );
   const END = D.assumptions.planEnd;
 
   // Mutable state (end-of-prior-year balances, so beginning-of-year for projection)
   // Phase 2.2: Person 2 now has her own non-reg account (`nonreg_m`/`nonreg_acb_m`).
-  // Survivor rollover (Phase 2.1) moves Frank's LIF into `lif_m`, his non-reg into
+  // Survivor rollover (Phase 2.1) moves P1's LIF into `lif_m`, the non-reg into
   // `nonreg_m` (ACB preserved — spousal rollover, no deemed disposition).
   let st = {
-    rrsp_f: D.frank.rrsp||0,
-    rrsp_m: D.moon.rrsp||0,
-    tfsa_f: D.frank.tfsa||0,
-    tfsa_m: D.moon.tfsa||0,
+    rrsp_f: D.p1.rrsp||0,
+    rrsp_m: D.p2.rrsp||0,
+    tfsa_f: D.p1.tfsa||0,
+    tfsa_m: D.p2.tfsa||0,
     // TFSA contribution room (annual accrual happens in the loop)
-    tfsa_room_f: Math.max(0, (D.frank.tfsaRoom||0) - 7000),  // loop adds +7k at start of year
-    tfsa_room_m: Math.max(0, (D.moon.tfsaRoom||0) - 7000),
-    lif_f:  D.frank.lif||0,
-    lif_m:  D.moon.lif||0,
-    lira_m: D.moon.lira||0,
-    nonreg_f:     D.frank.nonreg||0,
-    nonreg_acb_f: D.frank.nonregAcb || D.frank.nonreg || 0,
-    nonreg_m:     D.moon.nonreg||0,
-    nonreg_acb_m: D.moon.nonregAcb || D.moon.nonreg || 0,
+    tfsa_room_f: Math.max(0, (D.p1.tfsaRoom||0) - 7000),  // loop adds +7k at start of year
+    tfsa_room_m: Math.max(0, (D.p2.tfsaRoom||0) - 7000),
+    lif_f:  D.p1.lif||0,
+    lif_m:  D.p2.lif||0,
+    lira_m: D.p2.lira||0,
+    nonreg_f:     D.p1.nonreg||0,
+    nonreg_acb_f: D.p1.nonregAcb || D.p1.nonreg || 0,
+    nonreg_m:     D.p2.nonreg||0,
+    nonreg_acb_m: D.p2.nonregAcb || D.p2.nonreg || 0,
     mortgage: (D.mortgage && D.mortgage.balance)||0,
     loc: (D.loc && D.loc.balance)||0,
     // Phase 3.2: Cash wedge balance (post-tax, no ACB — already-taxed dollars).
@@ -1028,10 +1094,10 @@ function runSimulation(cfg){
   let shortfallYear='Never', depletionYear='Never';
 
   for(let year=START; year<=END; year++){
-    const ageF = year - D.frank.dob;
-    const ageM = year - D.moon.dob;
-    const frankAlive = cfg.frankDies ? year <= cfg.frankDies : true;
-    const isFirstDeathYear = cfg.frankDies && year === cfg.frankDies + 1;
+    const ageF = year - D.p1.dob;
+    const ageM = year - D.p2.dob;
+    const p1Alive = cfg.p1Dies ? year <= cfg.p1Dies : true;
+    const isFirstDeathYear = cfg.p1Dies && year === cfg.p1Dies + 1;
 
     // Phase 4.1: per-year return applies only to equity/balanced accounts (RRSP, TFSA, LIF,
     // LIRA, non-reg). Cash wedge always uses its own `cashWedge.returnRate`. Missing array
@@ -1047,7 +1113,7 @@ function runSimulation(cfg){
     // the surviving spouse with NO deemed disposition, preserving ACB and tax-deferred
     // status. DB survivor pension is handled independently (calcDBSurvivor), so it
     // must NOT be double-counted here.
-    if(isFirstDeathYear && cfg.frankDies){
+    if(isFirstDeathYear && cfg.p1Dies){
       st.rrsp_m += st.rrsp_f;           // RRSP → Person 2 RRSP (tax-deferred rollover)
       st.rrsp_f = 0;
       st.tfsa_m += st.tfsa_f;           // TFSA → Person 2 (successor-holder designation)
@@ -1061,7 +1127,7 @@ function runSimulation(cfg){
       st.nonreg_acb_f  = 0;
     }
 
-    // ── LIRA → LIF conversion at Moon age 55 ──
+    // ── LIRA → LIF conversion at P2 age 55 ──
     if(ageM === 55 && st.lira_m > 0){
       st.rrsp_m += st.lira_m * 0.50;  // 50% Ontario unlocking
       st.lif_m   = st.lira_m * 0.50;
@@ -1115,37 +1181,37 @@ function runSimulation(cfg){
     //
     // Retirement streams (CPP/OAS) are NOT force-disabled during working years — many Canadians
     // take CPP at 65 while still employed; the user controls the start age. DB pensions ARE
-    // gated by retireYear inside calcDBPension/_Moon (the typical case: pension vests at
+    // gated by retireYear inside calcDBPension/_P2 (the typical case: pension vests at
     // retirement from that employer).
-    const working_f = year < D.frank.retireYear;
-    const working_m = year < D.moon.retireYear;
+    const working_f = year < D.p1.retireYear;
+    const working_m = year < D.p2.retireYear;
     function _grownSalary(p, working){
       if(!working || !p.salary) return 0;
       const refY = p.salaryRefYear || 2026;
       return p.salary * Math.pow(1 + (p.salaryRaise || 0), year - refY);
     }
-    const salary_f = frankAlive ? _grownSalary(D.frank, working_f) : 0;
-    const salary_m = _grownSalary(D.moon, working_m);
+    const salary_f = p1Alive ? _grownSalary(D.p1, working_f) : 0;
+    const salary_m = _grownSalary(D.p2, working_m);
     // RRSP contribution is capped at salary (cannot deduct more than you earn as a first-order
     // check; real CRA limit is 18% of prior-year earned income up to the yearly max, but MVP
     // trusts the user-supplied figure).
-    const rrspContrib_f_pre = working_f ? Math.min(D.frank.annualRrspContrib || 0, salary_f) : 0;
-    const rrspContrib_m_pre = working_m ? Math.min(D.moon.annualRrspContrib  || 0, salary_m) : 0;
-    const tfsaContrib_f_pre = working_f ? (D.frank.annualTfsaContrib || 0) : 0;
-    const tfsaContrib_m_pre = working_m ? (D.moon.annualTfsaContrib  || 0) : 0;
-    const nregContrib_f_pre = working_f ? (D.frank.annualNonregContrib || 0) : 0;
-    const nregContrib_m_pre = working_m ? (D.moon.annualNonregContrib  || 0) : 0;
+    const rrspContrib_f_pre = working_f ? Math.min(D.p1.annualRrspContrib || 0, salary_f) : 0;
+    const rrspContrib_m_pre = working_m ? Math.min(D.p2.annualRrspContrib  || 0, salary_m) : 0;
+    const tfsaContrib_f_pre = working_f ? (D.p1.annualTfsaContrib || 0) : 0;
+    const tfsaContrib_m_pre = working_m ? (D.p2.annualTfsaContrib  || 0) : 0;
+    const nregContrib_f_pre = working_f ? (D.p1.annualNonregContrib || 0) : 0;
+    const nregContrib_m_pre = working_m ? (D.p2.annualNonregContrib  || 0) : 0;
     const postTaxContribs   = tfsaContrib_f_pre + tfsaContrib_m_pre + nregContrib_f_pre + nregContrib_m_pre;
     // Taxable salary after RRSP deduction; feeds into fixedF/fixedM alongside CPP/OAS/DB.
     const taxSalary_f = Math.max(0, salary_f - rrspContrib_f_pre);
     const taxSalary_m = Math.max(0, salary_m - rrspContrib_m_pre);
 
     // ── FIXED INCOME ──
-    const dbPension = calcDBPension(year, frankAlive);
-    const dbPension_m = calcDBPension_Moon(year);
-    const dbSurvivor = cfg.frankDies ? calcDBSurvivor(year, cfg.frankDies) : 0;
-    let cpp_f = frankAlive ? calcCPP_Frank(year, cfg.cppAgeF) : 0;
-    let cpp_m = calcCPP_Moon(year, cfg.cppAgeM, frankAlive, cfg.frankDies||0);
+    const dbPension = calcDBPension(year, p1Alive);
+    const dbPension_m = calcDBPension_P2(year);
+    const dbSurvivor = cfg.p1Dies ? calcDBSurvivor(year, cfg.p1Dies) : 0;
+    let cpp_f = p1Alive ? calcCPP_P1(year, cfg.cppAgeF) : 0;
+    let cpp_m = calcCPP_P2(year, cfg.cppAgeM, p1Alive, cfg.p1Dies||0);
     // ── PHASE 3.5: CPP PENSION SHARING ──
     // Distinct from pension income splitting (a tax-return election): CPP sharing is a
     // one-time Service Canada application where spouses apply to share their CPP retirement
@@ -1154,15 +1220,15 @@ function runSimulation(cfg){
     // throughout their working years this approaches an exact 50/50 split. Helpful when one
     // spouse has a much higher CPP and the other is in a lower bracket or would benefit from
     // the credit without triggering clawback. Sharing stops on death of a spouse.
-    if((D.assumptions && D.assumptions.cppSharing) && frankAlive && cpp_f > 0 && cpp_m > 0){
+    if((D.assumptions && D.assumptions.cppSharing) && p1Alive && cpp_f > 0 && cpp_m > 0){
       const combined = cpp_f + cpp_m;
       cpp_f = cpp_m = combined / 2;
     }
-    const oas_f = calcOAS_Frank(year, cfg.oasAgeF, frankAlive);
-    const oas_m = calcOAS_Moon(year, cfg.oasAgeM);
+    const oas_f = calcOAS_P1(year, cfg.oasAgeF, p1Alive);
+    const oas_m = calcOAS_P2(year, cfg.oasAgeM);
 
     // Total fixed taxable income per person (before RRSP/RRIF withdrawals).
-    // Phase 5.3: includes pre-retirement salary (net of RRSP deduction) and Moon's DB pension.
+    // Phase 5.3: includes pre-retirement salary (net of RRSP deduction) and P2's DB pension.
     const fixedF = dbPension + dbSurvivor + cpp_f + oas_f + taxSalary_f;
     const fixedM = cpp_m + oas_m + taxSalary_m + dbPension_m;
 
@@ -1170,22 +1236,22 @@ function runSimulation(cfg){
     // Phase 3.3: RRIF factor can be based on the younger spouse's age when both spouses are
     // alive and the election is on. The factor age floors at 60 (the lowest RRIF table age).
     const younger = Math.min(ageF, ageM);
-    const useYounger = (D.assumptions && D.assumptions.youngerSpouseRrif) && frankAlive && ageM >= 60;
+    const useYounger = (D.assumptions && D.assumptions.youngerSpouseRrif) && p1Alive && ageM >= 60;
     const factorAge = useYounger ? Math.max(60, Math.min(younger, 94)) : null;
     let rrif_min_f = 0, rrif_min_m = 0;
-    if(ageF >= 65 && frankAlive)
+    if(ageF >= 65 && p1Alive)
       rrif_min_f = Math.max(0, st.rrsp_f * rrif_min(factorAge!=null ? factorAge : Math.min(ageF,94)));
     if(ageM >= 65)
       rrif_min_m = Math.max(0, st.rrsp_m * rrif_min(factorAge!=null ? factorAge : Math.min(ageM,94)));
     let lif_min_f = 0, lif_min_m = 0;
-    if(ageF >= 60 && frankAlive) lif_min_f = Math.max(0, st.lif_f * rrif_min(Math.min(ageF,94)));
+    if(ageF >= 60 && p1Alive) lif_min_f = Math.max(0, st.lif_f * rrif_min(Math.min(ageF,94)));
     if(ageM >= 55 && st.lif_m>0) lif_min_m = Math.max(0, st.lif_m * rrif_min(Math.min(ageM,94)));
     // Phase 2.7: Ontario LIF maximum draw = 1.3× RRIF min (capped per regulation).
     // In meltdown scenarios we draw up to the LIF max to parallel RRSP decumulation; in
     // other scenarios the LIF tracks its statutory minimum. Using Math.min with the balance
     // guards against over-drawing a nearly-depleted LIF.
     let lif_max_f = 0, lif_max_m = 0;
-    if(ageF >= 60 && frankAlive) lif_max_f = Math.min(st.lif_f, st.lif_f * lif_max(Math.min(ageF,94)));
+    if(ageF >= 60 && p1Alive) lif_max_f = Math.min(st.lif_f, st.lif_f * lif_max(Math.min(ageF,94)));
     if(ageM >= 55 && st.lif_m>0) lif_max_m = Math.min(st.lif_m, st.lif_m * lif_max(Math.min(ageM,94)));
     if(cfg.meltdown){
       // Enforce LIF max in meltdown (Ontario rule — regulator permits up to ~8–10% typical).
@@ -1205,11 +1271,11 @@ function runSimulation(cfg){
     let rrif_draw_f = rrif_min_f;
     let rrif_draw_m = rrif_min_m;
 
-    // Pension-eligibility helper as a function of Frank's draw.
+    // Pension-eligibility helper as a function of P1's draw.
     // DB pension splittable at any age; RRIF/LIF only splittable from 65+.
     const eligFnF = (d) => dbPension + dbSurvivor + (ageF>=65 ? d + lif_min_f : 0);
 
-    if(cfg.meltdown && frankAlive && st.rrsp_f > 0){
+    if(cfg.meltdown && p1Alive && st.rrsp_f > 0){
       // Draw-based meltdown: nominal flat amounts (e.g. $20K pre-65, $40K 65+).
       // This is a FLOOR — the gap-fill solver below may add more if the meltdown target
       // is insufficient (e.g., pre-65 before CPP/OAS start).
@@ -1220,9 +1286,9 @@ function runSimulation(cfg){
     // Runs in every scenario. Sizes supplemental RRSP/RRIF draws so that post-split,
     // post-clawback combined net income meets `totalNeeded`. Delivers the "consistent
     // real net income" objective (roadmap §1.1–1.2) and generalises Snap Projections'
-    // taxable-income-target feature across both spouses. Moon's RRSP is drawn first
-    // (lower fixed income = lower marginal rate); Frank's RRSP is drawn only after
-    // Moon's is exhausted or to respect the meltdown floor.
+    // taxable-income-target feature across both spouses. P2's RRSP is drawn first
+    // (lower fixed income = lower marginal rate); P1's RRSP is drawn only after
+    // P2's is exhausted or to respect the meltdown floor.
     //
     // Phase 3.1: When `cfg.withdrawalOrder === 'default'` (CFM textbook N→T→R),
     // we reduce the net target drawForGap must hit by the amount non-reg + TFSA can
@@ -1236,7 +1302,7 @@ function runSimulation(cfg){
       const netAtMin = netAfterTaxSplit(
         fixedF + rrif_draw_f + lif_min_f,
         fixedM + rrif_draw_m + lif_min_m,
-        eligFnF(rrif_draw_f), ageF, ageM, year, frankAlive, cfg
+        eligFnF(rrif_draw_f), ageF, ageM, year, p1Alive, cfg
       ).net;
       const gapAtMin = Math.max(0, totalNeeded - netAtMin);
       // Non-reg principal is ~100% available post-tax (only the embedded gain gets
@@ -1251,7 +1317,7 @@ function runSimulation(cfg){
       fixedF, fixedM,
       baseF: rrif_draw_f, baseM: rrif_draw_m,
       lifMinF: lif_min_f, lifMinM: lif_min_m,
-      eligFnF, ageF, ageM, year, frankAlive, cfg,
+      eligFnF, ageF, ageM, year, p1Alive, cfg,
       balanceF: st.rrsp_f, balanceM: st.rrsp_m
     });
     rrif_draw_f = gf.dF;
@@ -1264,7 +1330,7 @@ function runSimulation(cfg){
     function estNet(dF){
       const tF = fixedF + dF + lif_min_f;
       const tM = fixedM + rrif_draw_m + lif_min_m;
-      return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, frankAlive, cfg).net;
+      return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg).net;
     }
     const provisionalNet = estNet(rrif_draw_f);
     let gapAfterRRSP = Math.max(0, totalNeeded - provisionalNet);
@@ -1320,8 +1386,8 @@ function runSimulation(cfg){
     // window elapses with no new contributions, attribution falls to zero and the annuitant
     // owns the full withdrawal as planned.
     const spRrsp = D.assumptions && D.assumptions.spousalRrsp;
-    let attrF_toM = 0;  // Frank's draw re-attributed to Moon's taxable (she contributed)
-    let attrM_toF = 0;  // Moon's draw re-attributed to Frank's taxable (he contributed)
+    let attrF_toM = 0;  // P1's draw re-attributed to P2's taxable (P2 contributed)
+    let attrM_toF = 0;  // P2's draw re-attributed to P1's taxable (P1 contributed)
     if(spRrsp && spRrsp.contribs){
       let winSum = 0;
       for(const [yStr, amt] of Object.entries(spRrsp.contribs)){
@@ -1330,10 +1396,10 @@ function runSimulation(cfg){
       }
       if(winSum > 0){
         if(spRrsp.contributor === 'm'){
-          // Moon contributed → Frank is annuitant → Frank's withdrawal attributed to Moon.
+          // P2 contributed → P1 is annuitant → P1's withdrawal attributed to P2.
           attrF_toM = Math.min(rrif_draw_f, winSum);
         } else if(spRrsp.contributor === 'f'){
-          // Frank contributed → Moon is annuitant → Moon's withdrawal attributed to Frank.
+          // P1 contributed → P2 is annuitant → P2's withdrawal attributed to P1.
           attrM_toF = Math.min(rrif_draw_m, winSum);
         }
       }
@@ -1347,7 +1413,7 @@ function runSimulation(cfg){
     // Single helper call computes split fraction, post-split clawF/clawM and taxes together.
     // This fixes the Phase 1.5 bug where clawback was calculated pre-split and never updated.
     const eligF = eligFnF(rrif_draw_f);
-    const tx = netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, frankAlive, cfg);
+    const tx = netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg);
     const splitAmt = tx.splitAmt;
     taxableF = tx.fInc;
     taxableM = tx.mInc;
@@ -1505,7 +1571,7 @@ function runSimulation(cfg){
     totalOasClawback += clawF + clawM;
 
     years.push({
-      year, ageF, ageM, frankAlive,
+      year, ageF, ageM, p1Alive,
       // Phase 5.3: pre-retirement fields (zero in fully retired years).
       salary_f, salary_m, working_f, working_m,
       rrspContrib_f: rrspContrib_f_pre, rrspContrib_m: rrspContrib_m_pre,
@@ -1691,10 +1757,10 @@ function sequenceOfReturnsStress(baseCfg){
 // ════════════════════════════════════════════════════════
 // Meltdown draw amounts scaled to Person 1's RRSP size
 // (~8% pre-65, ~16% from 65, rounded to nearest $5K, min $20K/$40K)
-const _meltDraw60 = Math.max(20000, Math.round(D.frank.rrsp * 0.08 / 5000) * 5000);
-const _meltDraw65 = Math.max(40000, Math.round(D.frank.rrsp * 0.16 / 5000) * 5000);
-const _survYear   = D.assumptions.frankDiesInSurvivor;
-const _survAge    = _survYear - D.frank.dob;
+const _meltDraw60 = Math.max(20000, Math.round(D.p1.rrsp * 0.08 / 5000) * 5000);
+const _meltDraw65 = Math.max(40000, Math.round(D.p1.rrsp * 0.16 / 5000) * 5000);
+const _survYear   = D.assumptions.p1DiesInSurvivor;
+const _survAge    = _survYear - D.p1.dob;
 
 // Base configurations for the four user-facing scenarios. The `maxs` (Max Spend)
 // scenario is always derived from the meltdown cfg by the solver below.
@@ -1714,14 +1780,14 @@ const _survAge    = _survYear - D.frank.dob;
 const _woUser = (D.assumptions && D.assumptions.withdrawalOrder) || 'default';
 const _cfgBase = { cppAgeF:65, cppAgeM:65, oasAgeF:65, oasAgeM:65,
                    meltdown:false,
-                   returnRate:0.05, pensionSplit:false, frankDies:null,
+                   returnRate:0.05, pensionSplit:false, p1Dies:null,
                    withdrawalOrder: _woUser };
 const _cfgMelt = { cppAgeF:70, cppAgeM:70, oasAgeF:70, oasAgeM:70,
                    meltdown:true, meltdownDraw60_64:_meltDraw60, meltdownDraw65plus:_meltDraw65,
-                   returnRate:0.05, pensionSplit:true, frankDies:null,
+                   returnRate:0.05, pensionSplit:true, p1Dies:null,
                    withdrawalOrder: 'meltdown' };
 const _cfgZero = Object.assign({}, _cfgMelt, { returnRate:0.0 });
-const _cfgSurv = Object.assign({}, _cfgMelt, { frankDies:_survYear });
+const _cfgSurv = Object.assign({}, _cfgMelt, { p1Dies:_survYear });
 
 // ════════════════════════════════════════════════════════
 //  SUSTAINABLE-SPEND SOLVER (never-shortfall guarantee)
@@ -1792,7 +1858,7 @@ const SCENARIOS = {
           cfg:_prepMelt.cfg, info:_prepMelt },
   zero: { label:'Net 0% Return', color:'#f5a623',
           cfg:_prepZero.cfg, info:_prepZero },
-  surv: { label:`Survivor (${D.frank.name} dies age ${_survAge})`, color:'#e74c3c',
+  surv: { label:`Survivor (${D.p1.name} dies age ${_survAge})`, color:'#e74c3c',
           cfg:_prepSurv.cfg, info:_prepSurv },
   maxs: { label:'Max Spend (Estate → 0)', color:'#9b59b6',
           cfg: Object.assign({}, _cfgMelt, {spendMultiplier: _maxsMult}),
@@ -1819,7 +1885,7 @@ let detailVisible = false;
 // Phase 3.8: display unit. 'nominal' = projected future dollars; 'real' = in today's (plan-start) dollars.
 let displayUnit = 'nominal';
 // Year a projected dollar is converted from (first year of the simulation).
-function planStartYear(){ return (D.frank && D.frank.retireYear) || (D.assumptions && D.assumptions.retireYear) || 2027; }
+function planStartYear(){ return (D.p1 && D.p1.retireYear) || (D.assumptions && D.assumptions.retireYear) || 2027; }
 // Phase 3.8: deflate a nominal amount from `year` back to plan-start dollars using CPI.
 function toReal(nominal, year){
   if(displayUnit === 'nominal' || nominal == null) return nominal;
@@ -2247,9 +2313,9 @@ function initCharts(){
     data:{ labels, datasets:[
       {label:'Salary',        data:y.map(r=>(r.salary_f||0)+(r.salary_m||0)), backgroundColor:'#f97316'},
       {label:'DB Pension',    data:y.map(r=>r.dbPension+(r.dbPension_m||0)+r.dbSurvivor), backgroundColor:'#3b82f6'},
-      {label:'CPP (Frank)',   data:y.map(r=>r.cpp_f), backgroundColor:'#06b6d4'},
-      {label:'OAS (Frank)',   data:y.map(r=>r.oas_f), backgroundColor:'#8b5cf6'},
-      {label:'CPP+OAS (Moon)',data:y.map(r=>r.cpp_m+r.oas_m), backgroundColor:'#a78bfa'},
+      {label:`CPP (${D.p1.name})`,        data:y.map(r=>r.cpp_f), backgroundColor:'#06b6d4'},
+      {label:`OAS (${D.p1.name})`,        data:y.map(r=>r.oas_f), backgroundColor:'#8b5cf6'},
+      {label:`CPP+OAS (${D.p2.name})`,    data:y.map(r=>r.cpp_m+r.oas_m), backgroundColor:'#a78bfa'},
       {label:'RRIF/LIF Draw', data:y.map(r=>r.rrif_draw_f+r.rrif_draw_m+r.lif_draw), backgroundColor:'#10b981'},
       {label:'TFSA (tax-free)',data:y.map(r=>r.tfsa_draw), backgroundColor:'#34d399'},
       {label:'Non-Reg',       data:y.map(r=>r.nonreg_draw), backgroundColor:'#6ee7b7'},
@@ -2409,19 +2475,19 @@ function buildComparisonTable(){
 
   tbody.innerHTML = renderCmpRows(rows);
 
-  // Initial snapshot at Frank age 75
+  // Initial snapshot at P1 age 75
   updateSnapshot(75);
 }
 
-function updateSnapshot(frankAge){
-  const year = D.frank.dob + frankAge;
-  const moonAge = year - D.moon.dob;
+function updateSnapshot(p1Age){
+  const year = D.p1.dob + p1Age;
+  const p2Age = year - D.p2.dob;
 
   // Update slider labels
-  document.getElementById('snapAgeLabel').textContent = frankAge;
+  document.getElementById('snapAgeLabel').textContent = p1Age;
   document.getElementById('snapYearLabel').textContent = year;
-  document.getElementById('snapAgeMLabel').textContent = moonAge;
-  document.getElementById('snapAge').value = frankAge;
+  document.getElementById('snapAgeMLabel').textContent = p2Age;
+  document.getElementById('snapAge').value = p1Age;
 
   // Phase 3.8: snapshot row deflated to today's dollars when Real is active.
   const snap = (r)=>{
@@ -2482,7 +2548,7 @@ function updateDetailTable(){
     const totSalary = (y.salary_f||0) + (y.salary_m||0);
     return `<tr class="${isMilestone?'milestone':''}">
       <td class="yr">${y.year}</td>
-      <td>${y.ageF}${y.frankAlive?'':' †'}/${y.ageM}</td>
+      <td>${y.ageF}${y.p1Alive?'':' †'}/${y.ageM}</td>
       <td>${totSalary > 0 ? fmtK(totSalary) : '—'}</td>
       <td>${fmtK(y.dbPension+(y.dbPension_m||0)+y.dbSurvivor)}</td>
       <td>${fmtK(y.cpp_f+y.cpp_m)}</td>
@@ -2510,7 +2576,7 @@ function updateDetailTable(){
 //  INIT
 // ════════════════════════════════════════════════════════
 function populateHeader() {
-  const f = D.frank, m = D.moon, a = D.assumptions;
+  const f = D.p1, m = D.p2, a = D.assumptions;
   const hasP2 = !!(m && m.name && m.name !== '—' && (m.rrsp+m.tfsa+m.lif+m.lira+m.nonreg > 0 || m.cpp65>0 || m.cpp70>0 || m.oasBase>0));
   // Phase 5.4: use per-spouse retire years (staggered retirement).
   const fRetY = f.retireYear || a.retireYear;
@@ -2527,9 +2593,9 @@ function populateHeader() {
     ? ` · Salary $${Math.round(f.salary/1000)}K/yr (${(f.salaryRaise*100||0).toFixed(1)}% raises)` : '';
   const salTxtM = (m.salary && m.salary > 0 && mRetY > planStartYr)
     ? ` · Salary $${Math.round(m.salary/1000)}K/yr (${(m.salaryRaise*100||0).toFixed(1)}% raises)` : '';
-  document.getElementById('ib-frank').innerHTML =
+  document.getElementById('ib-p1').innerHTML =
     `${f.name}: <strong>Born ${f.dob} · Retires ${fRetY} (age ${fRetAge})</strong>${salTxtF}`;
-  document.getElementById('ib-moon').innerHTML = hasP2
+  document.getElementById('ib-p2').innerHTML = hasP2
     ? `${m.name}: <strong>Born ${m.dob} · Retires ${mRetY} (age ${mRetAge})</strong>${salTxtM}`
     : `<strong>Single-person plan</strong>`;
   const dbStr = f.db_before65 > 0

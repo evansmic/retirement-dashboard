@@ -54,6 +54,13 @@
 
 **Active sprint: Sprint 1 — Foundation.**
 
+**Sprint 1 progress (as of 2026-04-26): 4/8 complete.**
+- ✅ #41 — MIT LICENSE at project root.
+- ✅ #42 — "Not financial advice" disclaimer in README + dashboard footer (with print-stylesheet rule so it carries to PDF export).
+- ✅ #46 — `D.schemaVersion = 1` + `migrate(D)` scaffold landed. Probe coverage 67/67 (added `probe_schema_migrate.js`). Unblocked the v1→v2 migration that shipped with #47–#49.
+- ✅ #47–#49 — `frank`/`moon` → `p1`/`p2` rename across engine, intake form, and probes. Default placeholder names cleared. `MIGRATIONS[1]` lifts legacy hashes forward; `SCHEMA_VERSION = 2`. Probe coverage now **74/74** (probe_schema_migrate grew 12 → 19 to cover the rename and end-to-end legacy-hash load).
+- ⏳ #56, #57, #58, #43 — pending.
+
 ## Sprint plan (post-decision)
 
 **Sprint 1 — Foundation.** Internal-cleanup pass that takes the codebase from "private project" to "ready to be public." Adds LICENSE, disclaimer, schema versioning + migration scaffold, `frank`/`moon` → `p1`/`p2` rename, blank form with example presets, JSDoc types on `D`, GitHub Actions CI, polished public README. *Estimated: one focused weekend.*
