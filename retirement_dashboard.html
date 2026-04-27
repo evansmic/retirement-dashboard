@@ -469,6 +469,162 @@ body.blank-mode .body { display:none !important }
 // ════════════════════════════════════════════════════════
 //  CLIENT DATA — loaded from URL hash or default fallback
 // ════════════════════════════════════════════════════════
+//
+// Sprint 1 #56 — JSDoc @typedef block for `D`.
+// `D` is the full client-side plan payload: what gets serialised into the URL
+// hash, what `migrate(D)` walks forward across schema versions, and what the
+// engine reads from. Every preset in `PRESETS` produces one of these, and so
+// does the intake form (`index.html`) before encoding.
+//
+// The typedefs below describe the v2 shape (current SCHEMA_VERSION). They are
+// pure documentation — no runtime effect — but they give editors/IDEs and
+// future readers a single place to look when answering "what fields does the
+// engine expect?". Optional fields are marked with `[brackets]`.
+//
+// Conventions:
+//   • Money fields are CAD, denominated nominal unless flagged otherwise.
+//   • Annual rates use decimals (0.05 = 5%).
+//   • `p1` is the higher-earning spouse and is the one who dies in the
+//     Survivor scenario; `p2` with `name === ''` flags single-household mode.
+
+/**
+ * One spouse's inputs. p1 is required; p2 is required structurally but its
+ * benefits/balances are zeroed out by `loadClientData()` when `p2.name` is
+ * blank, which is how the engine handles single-person households.
+ *
+ * @typedef {Object} Person
+ * @property {string} name                       Display name. Empty string on p2 = single-household mode.
+ * @property {number} dob                        Birth year (e.g. 1969).
+ * @property {number} [dobMonth]                 1–12; used for partial-year CPP/OAS adjustments.
+ * @property {number} retireYear                 Calendar year of full retirement.
+ * @property {number} salary                     Gross salary (CAD/yr) at `salaryRefYear`.
+ * @property {number} salaryRefYear              Year `salary` is denominated in.
+ * @property {number} salaryRaise                Annual nominal raise rate (e.g. 0.03).
+ * @property {number} annualRrspContrib          RRSP contribution per working year.
+ * @property {number} annualTfsaContrib          TFSA contribution per working year.
+ * @property {number} annualNonregContrib        Non-reg contribution per working year.
+ * @property {number} db_before65                DB pension (CAD/yr) before age 65 — includes any bridge benefit.
+ * @property {number} db_after65                 DB pension (CAD/yr) at/after 65 — post-CPP integration.
+ * @property {number} db_index                   Annual DB indexation (e.g. 0.022).
+ * @property {number} db_startYear               First year DB pension is paid.
+ * @property {number} rrsp                       RRSP balance at plan start.
+ * @property {number} [rrspRoom]                 Unused RRSP contribution room.
+ * @property {number} tfsa                       TFSA balance at plan start.
+ * @property {number} tfsaRoom                   Unused TFSA contribution room.
+ * @property {number} tfsaAnnual                 TFSA contribution per year.
+ * @property {number} [lira]                     LIRA balance at plan start (typically p2 only).
+ * @property {number} lif                        LIF balance at plan start.
+ * @property {number} nonreg                     Non-registered balance at plan start.
+ * @property {number} nonregAcb                  Non-reg adjusted cost base.
+ * @property {number} nonregAnnual               Annual non-reg contribution.
+ * @property {number} cpp65                      Annualised CPP at age 65 (CAD/yr).
+ * @property {number} cpp70                      Annualised CPP at age 70 (CAD/yr).
+ * @property {number} oasBase                    Annualised OAS at age 65 (CAD/yr).
+ * @property {number} [cppSurvivor_under65]      Survivor CPP benefit before 65 (p2 only — applies if p1 dies first).
+ * @property {number} [cppSurvivor_over65]       Survivor CPP benefit at/after 65 (p2 only).
+ */
+
+/**
+ * Phase-based household spending (go-go / slow-go / no-go) keyed off p1's age.
+ * @typedef {Object} Spending
+ * @property {number} gogo       Annual go-go spend (CAD).
+ * @property {number} gogoEnd    Last age in the go-go phase.
+ * @property {number} slowgo     Annual slow-go spend.
+ * @property {number} slowgoEnd  Last age in the slow-go phase.
+ * @property {number} nogo       Annual no-go spend.
+ */
+
+/**
+ * @typedef {Object} Mortgage
+ * @property {number} balance    Outstanding mortgage balance (CAD).
+ * @property {number} rate       Annual interest rate (e.g. 0.055).
+ * @property {number} monthly    Monthly payment (CAD).
+ */
+
+/**
+ * @typedef {Object} Loc
+ * @property {number} balance    Outstanding line-of-credit balance.
+ * @property {number} rate       Annual interest rate.
+ */
+
+/**
+ * @typedef {Object} CashWedge
+ * @property {number} balance       Current cash-wedge balance.
+ * @property {number} returnRate    Annual return on the wedge (e.g. 0.03).
+ * @property {number} targetYears   Target years of go-go spend held in the wedge.
+ */
+
+/**
+ * Principal-residence downsize event. `year === 0` means "no downsize".
+ * @typedef {Object} Downsize
+ * @property {number} year          Year of the downsize.
+ * @property {number} netProceeds   Net cash proceeds in `year` dollars.
+ */
+
+/**
+ * Discrete one-off expense (e.g. car replacement, large home repair).
+ * @typedef {Object} OneOff
+ * @property {number} year    Calendar year the expense lands.
+ * @property {number} amount  Amount in `year` dollars (CAD).
+ * @property {string} [label] Description, surfaced in the year-by-year detail table.
+ */
+
+/**
+ * Spousal-RRSP attribution scheme (Phase 3.4). `null` on `assumptions` = off.
+ * @typedef {Object} SpousalRrsp
+ * @property {number} amount       Annual contribution (CAD).
+ * @property {string} contributor  Who deducts it: 'p1' or 'p2'.
+ * @property {number} startYear    First contribution year.
+ * @property {number} endYear      Last contribution year.
+ */
+
+/**
+ * Plan-wide assumptions. Most fields have engine-side fallbacks — see
+ * `_defaultAssumptions()` for the canonical defaults.
+ *
+ * @typedef {Object} Assumptions
+ * @property {number} retireYear           Advisory plan-wide retirement year (real start derives from min(p1, p2)).
+ * @property {number} planStart            First year of the simulation.
+ * @property {number} planEnd              Last year of the simulation.
+ * @property {number} p1DiesInSurvivor     Year P1 dies in the Survivor scenario.
+ * @property {number} returnRate           Nominal portfolio return (e.g. 0.05).
+ * @property {number} inflation            Base inflation rate (e.g. 0.025).
+ * @property {number} horizon              Terminal age for the elder spouse.
+ * @property {number} nonRegDistShare      Share of non-reg return realised as taxable distributions (0–1).
+ * @property {?number} cpiIndex            Override for CPI indexation; `null` = fall back to `inflation`.
+ * @property {?number} cppIndex            Override for CPP indexation.
+ * @property {?number} oasIndex            Override for OAS indexation.
+ * @property {?number} fedTaxIndex         Override for federal tax-bracket indexation.
+ * @property {?number} onTaxIndex          Override for Ontario tax-bracket indexation.
+ * @property {boolean} youngerSpouseRrif   Base RRIF minimum on the younger spouse's age (Phase 3.3).
+ * @property {string} withdrawalOrder      Order preset: 'default' | 'meltdown' | … (Phase 3.1).
+ * @property {?SpousalRrsp} spousalRrsp    Spousal-RRSP scheme (`null` = off).
+ * @property {boolean} cppSharing          CPP pension sharing on (Phase 3.5; distinct from splitting).
+ * @property {number} returnStdDev         Annual return std dev for Monte Carlo (e.g. 0.10).
+ * @property {number} monteCarloPaths      Number of Monte Carlo paths.
+ * @property {number[]} [returnRates]      Per-year return override (used by MC + sequence-of-returns stress).
+ */
+
+/**
+ * The full client-side plan payload — what `loadClientData()` returns and
+ * what the engine consumes. Stamped with `schemaVersion` (currently 2);
+ * older payloads are walked forward by `migrate(D)` on load.
+ *
+ * @typedef {Object} D
+ * @property {number} schemaVersion  Version this payload conforms to (see SCHEMA_VERSION).
+ * @property {Person} p1             Higher-earning spouse; the one who dies in Survivor.
+ * @property {Person} p2             Second spouse; `name === ''` flags single-household mode.
+ * @property {Mortgage} mortgage
+ * @property {Loc} loc
+ * @property {CashWedge} cashWedge
+ * @property {Spending} spending
+ * @property {number} inheritance    Bequest goal in plan-end real CAD (0 = none).
+ * @property {Downsize} downsize
+ * @property {OneOff[]} oneOffs      Discrete one-off expenses.
+ * @property {Assumptions} assumptions
+ * @property {boolean} [_isBlank]    Internal flag set by `getBlankD()` so the UI shows the landing card.
+ */
+
 // Sprint 1 #46: current schema version. Bumped whenever the shape of D
 // changes in a way that older payloads can't be read directly. The migrate(D)
 // function below is the upgrade path for older hashes.
@@ -511,6 +667,14 @@ const MIGRATIONS = {
   },
 };
 
+/**
+ * Walk a payload forward through `MIGRATIONS` to the current SCHEMA_VERSION.
+ * Safe to call on already-current payloads (no-op) or on legacy/no-version
+ * payloads (treated as v1).
+ *
+ * @param {D} D
+ * @returns {D}
+ */
 function migrate(D) {
   if (!D || typeof D !== 'object') return D;
   let v = D.schemaVersion || 1;          // missing => v1 (pre-versioning era)
@@ -825,6 +989,7 @@ const PRESET_META = [
 // with placeholder values (cloned from `diy-couple`) so any code path that
 // reads D doesn't NaN — but `_isBlank: true` tells the UI to show the landing
 // card instead of a populated dashboard.
+/** @returns {D} */
 function getBlankD() {
   const d = PRESETS['diy-couple']();
   d.p1.name = '';
@@ -835,6 +1000,7 @@ function getBlankD() {
 
 // Backward-compat: probes call getDefaultD() to assert schemaVersion etc.
 // We now point it at the diy-couple preset so existing assertions still pass.
+/** @returns {D} */
 function getDefaultD() { return PRESETS['diy-couple'](); }
 
 // Sprint 1 #58: parse a `?example=<slug>` query param. Returns the slug or
@@ -850,6 +1016,14 @@ function _readExampleSlug() {
   }
 }
 
+/**
+ * Resolve the active plan payload, in priority order:
+ *   1. URL hash (a saved/shared plan, run through `migrate()`).
+ *   2. `?example=<slug>` query param (one of the registered PRESETS).
+ *   3. The blank stub from `getBlankD()` so the UI can render the landing card.
+ *
+ * @returns {D}
+ */
 function loadClientData() {
   // 1. URL hash — a saved/shared plan. Highest priority.
   try {
@@ -903,6 +1077,7 @@ function loadClientData() {
   return getBlankD();
 }
 
+/** @type {D} */
 const D = loadClientData();
 
 // ════════════════════════════════════════════════════════
