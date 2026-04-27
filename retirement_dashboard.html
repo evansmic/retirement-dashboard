@@ -798,7 +798,9 @@ const PRESETS = {
   oneOffs:  [],
   // Survivor: Alex (larger portfolio + higher CPP) dies 2 yrs into the plan
   // — Jordan continues with a 50-year horizon ahead, no DB safety net.
-  assumptions: Object.assign(_defaultAssumptions(2025, 2027), { planEnd: 2076 }),
+  // planStart matches retireYear (both 2025) since the couple is already
+  // retired — overrides the _defaultAssumptions hard-coded 2026.
+  assumptions: Object.assign(_defaultAssumptions(2025, 2027), { planStart: 2025, planEnd: 2076 }),
 }),
 
 };
