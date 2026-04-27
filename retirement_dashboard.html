@@ -174,7 +174,7 @@ body.blank-mode .body { display:none !important }
   <div class="preset-list" id="presetList"></div>
   <div class="form-cta">
     Already have your numbers? &nbsp;
-    <a href="retirement_intake_form.html">Open the intake form →</a>
+    <a href="index.html">Open the intake form →</a>
   </div>
   <div class="footnote">
     Examples are illustrative profiles built from publicly-available Canadian
@@ -1950,8 +1950,8 @@ function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
 // Sequence-of-returns risk: two plans with the *same* arithmetic mean return
 // can end with wildly different balances if the bad years cluster near
 // retirement (the portfolio is largest, so withdrawals lock in losses). This
-// matters enormously for Snap/Parallel Wealth-style plans that lean on RRSP
-// meltdowns early.
+// matters enormously for plans that lean on aggressive RRSP meltdowns early
+// in retirement.
 //
 // Rather than simulate arbitrary crashes, we replay four historical sequences
 // of real US-equity total returns, each starting at the plan's first retirement
@@ -2012,7 +2012,7 @@ const _survAge    = _survYear - D.p1.dob;
 // scenario is always derived from the meltdown cfg by the solver below.
 // Phase 3.1: `withdrawalOrder` controls which account is drawn first when a gap
 // between fixed income and spending emerges. Values:
-//   'default'  — CFM/Parallel Wealth textbook order: Non-Reg → TFSA → RRSP.
+//   'default'  — CFM textbook order: Non-Reg → TFSA → RRSP.
 //                Preserves registered tax shelters for later; better for modest
 //                plans where top-marginal-rate RRSP drains aren't tax-optimal.
 //   'meltdown' — Snap-style meltdown: RRSP/RRIF first (pre-65 emphasis), then

@@ -3,7 +3,7 @@
 
 **Prepared:** April 18, 2026  
 **Purpose:** Master reference for building an interactive retirement planning dashboard  
-**Scope:** Ontario-resident couple, Canadian tax/benefit rules, Snap Projections methodology, Parallel Wealth approach  
+**Scope:** Ontario-resident couple, Canadian tax/benefit rules, Snap Projections methodology, Canadian DIY-retirement planning best practices  
 **Dashboard Format:** Interactive HTML (front-end) + Excel (data source / backend)  
 **Use Case:** Personal use and generic enough for any Canadian couple to populate their own data
 
@@ -37,7 +37,7 @@
 - **CPP Sharing between spouses:** CRA determines eligible portion based on cohabitation period during working years
 - **CPP Survivor Benefit:** Under-65 spouses ~$740/month; 65+ spouses ~$809/month; combined retirement-survivor cap ~$1,294
 
-**Planning Insight (Parallel Wealth):** Delaying CPP from age 65 to 70 delivers 42% more income, indexed to inflation for life. For most Canadians with RRSP savings, the "RRSP meltdown + delayed CPP" combination produces the highest lifetime after-tax income.
+**Planning Insight:** Delaying CPP from age 65 to 70 delivers 42% more income, indexed to inflation for life. For most Canadians with RRSP savings, the "RRSP meltdown + delayed CPP" combination produces the highest lifetime after-tax income.
 
 ---
 
@@ -59,7 +59,7 @@
 Recovery Tax = (Net income − $95,323) × 15%
 ```
 
-**Planning Insight (Parallel Wealth):** OAS clawback avoidance is one of the primary reasons to draw down RRSPs early (pre-70) and transition to TFSA-sourced income. Income below $95,323 protects full OAS. TFSA withdrawals do NOT count as income for clawback purposes.
+**Planning Insight:** OAS clawback avoidance is one of the primary reasons to draw down RRSPs early (pre-70) and transition to TFSA-sourced income. Income below $95,323 protects full OAS. TFSA withdrawals do NOT count as income for clawback purposes.
 
 > **Note on figures:** OAS clawback threshold is indexed annually; the Q1 2026 threshold is $95,323. The reference document value of $93,454 was the prior period; always verify current quarter on Canada.ca.
 
@@ -131,7 +131,7 @@ Recovery Tax = (Net income − $95,323) × 15%
 - Younger spouse election: Can use younger spouse's age to reduce minimums (must be elected at RRIF setup; cannot be changed)
 - RRIF balance at death is fully included in the deceased's income in the year of death (major estate tax risk if large balance remains)
 
-**Parallel Wealth Insight:** The RRIF estate tax trap is one of the most common planning errors. A $500,000 RRIF triggers a potential $200,000+ tax bill at death. The RRSP meltdown strategy is designed specifically to eliminate this risk.
+**Planning Insight:** The RRIF estate tax trap is one of the most common planning errors. A $500,000 RRIF triggers a potential $200,000+ tax bill at death. The RRSP meltdown strategy is designed specifically to eliminate this risk.
 
 ---
 
@@ -149,7 +149,7 @@ Recovery Tax = (Net income − $95,323) × 15%
 **Strategic Role in Retirement:**
 - Primary buffer against OAS clawback (draw from TFSA instead of RRIF when income approaches $95,323)
 - Tax-free supplement in high-income years (one-time expenses, market gains)
-- Ideal for final phase of retirement when RRIF is depleted (Parallel Wealth strategy)
+- Ideal for final phase of retirement when RRIF is depleted
 - Passes to beneficiary or successor holder tax-free on death if properly designated
 
 **Dashboard Note:** TFSA balance should be modeled as available for withdrawal at zero marginal tax cost. Each $1 from TFSA vs. RRIF saves 15 cents of OAS clawback.
@@ -529,7 +529,7 @@ This is Snap's signature automation feature for tax-efficient retirement plannin
 | < $93,454–$95,323 | Avoid OAS clawback |
 | ~$105,775 | Stay below Ontario third bracket |
 
-**Parallel Wealth Application:** Adam Bornn sets taxable income targets in the RRSP meltdown window (ages 60–69) to aggressively draw down registered accounts while CPP/OAS are deferred, filling the lower brackets every year until the RRIF is at a manageable level.
+**Application:** Many Canadian DIY-retirement planners set taxable income targets in the RRSP meltdown window (ages 60–69) to aggressively draw down registered accounts while CPP/OAS are deferred, filling the lower brackets every year until the RRIF is at a manageable level.
 
 ---
 
@@ -564,41 +564,13 @@ The software automatically applies:
 
 ---
 
-## PART 4: PARALLEL WEALTH — METHODOLOGY & APPROACH
+## PART 4: CORE PLANNING METHODOLOGY
 
-### 4.1 Company Overview
+This section captures the typical end-to-end process and core strategies used in
+Canadian DIY-retirement planning, organised around Snap Projections as the
+modelling tool.
 
-| Attribute | Detail |
-|---|---|
-| Founded | 2006 by Adam Bornn, CFP® CLU® |
-| Focus | Exclusively retirement planning (pre-retirement and retirement) |
-| Locations | Greater Vancouver, Calgary, Greater Toronto (coast to coast) |
-| Credentials | All CFP®; many also hold CLU® and CIM® |
-| Planning software | Snap Projections for all plans |
-| YouTube | @ParallelWealth (138,000+ subscribers) |
-| Podcast | "Retirement Unpacked" (weekly, Spotify and Apple Podcasts) |
-| Service model | Fee-for-service (one-time) AND Retirement Income Program™ (ongoing) |
-
----
-
-### 4.2 Service Offerings
-
-#### Fee-For-Service Retirement Planning (One-Time)
-- **Household / Individual Plan:** ~$4,000; designed for couples/individuals within 2 years of retirement or already retired
-- **Corporate / Rental Plan:** For those 2+ years from retirement OR with multiple properties/corporations
-- **Plan Update:** $750 for a full recalculation after major life event or plan delivery
-- **Target client:** Any Canadian couple wanting a comprehensive one-time retirement roadmap
-
-#### Retirement Income Program™ (RIP) — Ongoing Service
-- Ongoing investment management + financial planning
-- Annual plan review and updates
-- Managed portfolio (likely model portfolios using ETFs)
-- Integration of all accounts into a unified retirement strategy
-- Designed for clients who want professional ongoing management post-retirement
-
----
-
-### 4.3 The Parallel Wealth Planning Process
+### 4.1 The Plan Construction Process
 
 #### Phase 1 — Data Gathering
 - Client completes a comprehensive Financial Planning Questionnaire
@@ -631,11 +603,11 @@ The software automatically applies:
 
 ---
 
-### 4.4 Core Planning Strategies
+### 4.2 Core Planning Strategies
 
 #### Strategy 1: The RRSP Meltdown (Signature Strategy)
 
-This is the central strategy Parallel Wealth recommends for most Canadian retirees with meaningful RRSP/RRIF balances.
+This is the central strategy commonly recommended for Canadian retirees with meaningful RRSP/RRIF balances.
 
 **The Problem It Solves:**
 - RRIF balances at death are 100% included in the deceased's income in the final year — at the highest marginal rate
@@ -737,9 +709,9 @@ If Spouse A has $90,000 taxable income and Spouse B has $40,000:
 
 ---
 
-### 4.5 Standard Scenario Structure (Every Parallel Wealth Plan)
+### 4.3 Standard Scenario Structure
 
-Every Parallel Wealth plan includes the default scenario plus two custom scenarios:
+A typical retirement plan includes the default scenario plus two custom scenarios:
 
 | Scenario | Description |
 |---|---|
@@ -748,41 +720,6 @@ Every Parallel Wealth plan includes the default scenario plus two custom scenari
 | 3. Custom What-If | Tailored to client's primary concern (e.g., early death of spouse, market crash, helping children financially) |
 
 ---
-
-### 4.6 Key YouTube Content Themes (@ParallelWealth — 138,000+ subscribers)
-
-**RRSP / RRIF Strategies:**
-- "Copy This RRSP Meltdown Strategy, It Will Save You Thousands" (March 2026)
-- "The RRSP Meltdown Strategy 99% Of Canadians Should Use (Save Thousands)" (March 2025)
-- "Was I Wrong About The RRSP Meltdown?"
-- "When Is The Best Time To Start An RRSP Meltdown?" (Retirement Unpacked Ep. 030)
-- "Too Much RRSP? RRIF Withdrawals, CPP Rumours, & Retirement Tax Strategies" (Retirement Unpacked Ep. 3)
-
-**CPP / OAS Timing:**
-- "If You're Retiring Early, What Happens To Your CPP?" (Retirement Unpacked Ep. 031)
-- CPP timing optimization (when to start for maximum lifetime benefit)
-- Deferred OAS strategies
-
-**Tax Planning:**
-- "The OAS Surprise That Can Cost Canadians Thousands" (Retirement Unpacked Ep. 025)
-- "Big RRSP Problems, OAS Clawback, & Drawdown Tips" (Retirement Unpacked Ep. 012)
-- Pension income splitting mechanics
-
-**Comprehensive Planning:**
-- "Master Canadian Retirement Planning In 36 Minutes"
-- "This Tool Will Save You THOUSANDS In Retirement"
-- Decumulation 101, LIRA Unlocking, & Reverse Mortgage (Retirement Unpacked Ep. 5)
-
-**Podcast "Retirement Unpacked" — Weekly Episodes (Adam Bornn + Brett):**
-- CPP and OAS Security, RRIF Taxes, Estate Planning (Ep. 011)
-- TFSA Timing Tips, RRSP Drawdowns, & CPP Survivor Rules (Ep. 004)
-- Retirement Spending, RRSP Deductions & TFSA Strategy (Ep. 002)
-
-**Other Resources:**
-- Sample plans: parallelwealth.com/sample-plans
-- Masterclass: parallelwealth.com/masterclass (10+ modules, 100+ videos)
-- Free tools: parallelwealth.com/tools
-- Retirement Ready Assessment: parallelwealth.com/retirementready
 
 ---
 
@@ -1128,7 +1065,7 @@ Function marginalRate(income):
 - Bridge benefit: ends at age 65 regardless of pension start age; model the income drop
 - DB pension indexation gap: between termination date and pension start, benefit may receive partial indexation
 
-### 8.4 Assumptions Best Practices (Parallel Wealth / Snap Approach)
+### 8.4 Assumptions Best Practices (Snap-aligned approach)
 
 - Always build the **no-tax-planning baseline** scenario first (default CFM order, no meltdown, CPP/OAS at 65)
 - Build the **optimized scenario** second (RRSP meltdown + CPP/OAS at 70 + income splitting)
@@ -1154,22 +1091,11 @@ Function marginalRate(income):
   - Retirement planning guide: snapprojections.com/blog/retirement-planning/
   - AI Data Assist: snapprojections.com/blog/ai-data-assist/
 
-### Parallel Wealth
-- **Website:** parallelwealth.com
-- **YouTube:** youtube.com/@ParallelWealth (138,000+ subscribers)
-- **Podcast:** "Retirement Unpacked" — Spotify and Apple Podcasts
-- **Clips Channel:** youtube.com/@ParallelWealthClips
-- **Masterclass:** parallelwealth.com/masterclass
-- **Sample Plans:** parallelwealth.com/sample-plans
-- **Free Tools:** parallelwealth.com/tools
-- **Retirement Ready Assessment:** parallelwealth.com/retirementready
-- **Founder:** Adam Bornn, CFP® CLU® — BC-based; also appeared on The Wealthy Barber Podcast (July 1, 2025) and various finance podcasts
-
 ### Government Resources
 - **My Service Canada Account:** CPP/OAS estimates, contribution history
 - **CRA My Account:** RRSP/TFSA room, Notice of Assessment, tax returns
 - **Canadian Retirement Income Calculator:** canada.ca (~30-minute tool for rough estimates)
-- **CPP Calculator (third-party):** cppcalculator.com (referenced by Parallel Wealth as more accurate than CRA basic tool)
+- **CPP Calculator (third-party):** cppcalculator.com (often cited as more accurate than the CRA basic tool)
 - **FP Canada Projection Assumption Guidelines:** fpcanada.ca (standard assumptions used by professional planners)
 - **Government CPP/OAS benefit tables:** canada.ca/en/employment-social-development/programs/pensions/pension/statistics
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retirement Plan Intake — Parallel Wealth Method</title>
+<title>Retirement Plan Intake</title>
 <style>
 :root{
   --navy:#0f2744;--navy2:#1a3a5c;--navy3:#234e7a;
@@ -83,7 +83,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <h1>Retirement Plan Intake</h1>
     <p>Fill in your details below to generate your personalised retirement dashboard</p>
   </div>
-  <div class="hdr-right">Parallel Wealth Method<br>Ontario · Canada</div>
+  <div class="hdr-right">Ontario · Canada</div>
 </div>
 
 <div class="body">
@@ -108,17 +108,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Birth Year</label>
-        <input type="number" id="f_dob" value="1966" min="1940" max="2005" required>
+        <input type="number" id="f_dob" value="" min="1940" max="2005" required>
       </div>
       <div class="field">
         <label>Birth Month (1–12)</label>
-        <input type="number" id="f_dobMonth" value="6" min="1" max="12" required>
+        <input type="number" id="f_dobMonth" value="" min="1" max="12" required>
       </div>
     </div>
     <div class="row three">
       <div class="field">
         <label>Retirement Year (last working year)</label>
-        <input type="number" id="f_retireYear" value="2027" min="2024" max="2050">
+        <input type="number" id="f_retireYear" value="" min="2024" max="2050">
         <span class="hint">Full salary earned through this year</span>
       </div>
     </div>
@@ -161,12 +161,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row four">
       <div class="field">
         <label>Annual Amount Before 65 ($)</label>
-        <input type="number" id="f_db_before65" value="0" min="0">
+        <input type="number" id="f_db_before65" value="" min="0">
         <span class="hint">Includes bridge benefit</span>
       </div>
       <div class="field">
         <label>Annual Amount After 65 ($)</label>
-        <input type="number" id="f_db_after65" value="0" min="0">
+        <input type="number" id="f_db_after65" value="" min="0">
       </div>
       <div class="field">
         <label>Indexation Rate (e.g. 0.022)</label>
@@ -174,7 +174,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Pension Start Year</label>
-        <input type="number" id="f_db_startYear" value="2027" min="2024" max="2040">
+        <input type="number" id="f_db_startYear" value="" min="2024" max="2040">
       </div>
     </div>
 
@@ -182,15 +182,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row four">
       <div class="field">
         <label>RRSP / RRIF ($)</label>
-        <input type="number" id="f_rrsp" value="500000" min="0">
+        <input type="number" id="f_rrsp" value="" min="0">
       </div>
       <div class="field">
         <label>TFSA ($)</label>
-        <input type="number" id="f_tfsa" value="75000" min="0">
+        <input type="number" id="f_tfsa" value="" min="0">
       </div>
       <div class="field">
         <label>TFSA Room Remaining ($)</label>
-        <input type="number" id="f_tfsaRoom" value="7000" min="0">
+        <input type="number" id="f_tfsaRoom" value="" min="0">
       </div>
       <div class="field">
         <label>TFSA Annual Contribution ($)</label>
@@ -200,15 +200,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row four">
       <div class="field">
         <label>LIF / LIRA ($)</label>
-        <input type="number" id="f_lif" value="50000" min="0">
+        <input type="number" id="f_lif" value="" min="0">
       </div>
       <div class="field">
         <label>Non-Reg Portfolio ($)</label>
-        <input type="number" id="f_nonreg" value="25000" min="0">
+        <input type="number" id="f_nonreg" value="" min="0">
       </div>
       <div class="field">
         <label>Non-Reg ACB ($)</label>
-        <input type="number" id="f_nonregAcb" value="20000" min="0">
+        <input type="number" id="f_nonregAcb" value="" min="0">
       </div>
       <div class="field">
         <label>Non-Reg Annual Contrib ($)</label>
@@ -220,12 +220,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>CPP at age 70 ($/mo)</label>
-        <input type="number" id="f_cpp70_monthly" value="1300" min="0">
+        <input type="number" id="f_cpp70_monthly" value="" min="0">
         <span class="hint">Your Statement of Contributions estimate</span>
       </div>
       <div class="field">
         <label>CPP at age 65 ($/mo)</label>
-        <input type="number" id="f_cpp65_monthly" value="916" min="0">
+        <input type="number" id="f_cpp65_monthly" value="" min="0">
         <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
       </div>
       <div class="field">
@@ -248,17 +248,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Birth Year</label>
-        <input type="number" id="m_dob" value="1969" min="1940" max="2005" required>
+        <input type="number" id="m_dob" value="" min="1940" max="2005" required>
       </div>
       <div class="field">
         <label>Birth Month (1–12)</label>
-        <input type="number" id="m_dobMonth" value="3" min="1" max="12" required>
+        <input type="number" id="m_dobMonth" value="" min="1" max="12" required>
       </div>
     </div>
     <div class="row three">
       <div class="field">
         <label>Retirement Year (last working year)</label>
-        <input type="number" id="m_retireYear" value="2027" min="2024" max="2050">
+        <input type="number" id="m_retireYear" value="" min="2024" max="2050">
         <span class="hint">Can differ from Person 1</span>
       </div>
     </div>
@@ -299,11 +299,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row four">
       <div class="field">
         <label>Annual Amount Before 65 ($)</label>
-        <input type="number" id="m_db_before65" value="0" min="0">
+        <input type="number" id="m_db_before65" value="" min="0">
       </div>
       <div class="field">
         <label>Annual Amount After 65 ($)</label>
-        <input type="number" id="m_db_after65" value="0" min="0">
+        <input type="number" id="m_db_after65" value="" min="0">
       </div>
       <div class="field">
         <label>Indexation Rate (e.g. 0.022)</label>
@@ -311,7 +311,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Pension Start Year</label>
-        <input type="number" id="m_db_startYear" value="2027" min="2024" max="2040">
+        <input type="number" id="m_db_startYear" value="" min="2024" max="2040">
       </div>
     </div>
 
@@ -319,19 +319,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row four">
       <div class="field">
         <label>RRSP ($)</label>
-        <input type="number" id="m_rrsp" value="125000" min="0">
+        <input type="number" id="m_rrsp" value="" min="0">
       </div>
       <div class="field">
         <label>RRSP Room Remaining ($)</label>
-        <input type="number" id="m_rrspRoom" value="50000" min="0">
+        <input type="number" id="m_rrspRoom" value="" min="0">
       </div>
       <div class="field">
         <label>TFSA ($)</label>
-        <input type="number" id="m_tfsa" value="60000" min="0">
+        <input type="number" id="m_tfsa" value="" min="0">
       </div>
       <div class="field">
         <label>TFSA Room Remaining ($)</label>
-        <input type="number" id="m_tfsaRoom" value="35000" min="0">
+        <input type="number" id="m_tfsaRoom" value="" min="0">
       </div>
     </div>
     <div class="row four">
@@ -341,22 +341,22 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>LIRA ($)</label>
-        <input type="number" id="m_lira" value="20000" min="0">
+        <input type="number" id="m_lira" value="" min="0">
         <span class="hint">Converts to LIF at age 55</span>
       </div>
       <div class="field">
         <label>LIF ($)</label>
-        <input type="number" id="m_lif" value="0" min="0">
+        <input type="number" id="m_lif" value="" min="0">
       </div>
       <div class="field">
         <label>Non-Reg Portfolio ($)</label>
-        <input type="number" id="m_nonreg" value="0" min="0">
+        <input type="number" id="m_nonreg" value="" min="0">
       </div>
     </div>
     <div class="row three">
       <div class="field">
         <label>Non-Reg ACB ($)</label>
-        <input type="number" id="m_nonregAcb" value="0" min="0">
+        <input type="number" id="m_nonregAcb" value="" min="0">
         <span class="hint">Adjusted cost base of the non-reg portfolio</span>
       </div>
       <div class="field">
@@ -370,11 +370,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>CPP at age 70 ($/mo)</label>
-        <input type="number" id="m_cpp70_monthly" value="900" min="0">
+        <input type="number" id="m_cpp70_monthly" value="" min="0">
       </div>
       <div class="field">
         <label>CPP at age 65 ($/mo)</label>
-        <input type="number" id="m_cpp65_monthly" value="634" min="0">
+        <input type="number" id="m_cpp65_monthly" value="" min="0">
         <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
       </div>
       <div class="field">
@@ -387,11 +387,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row">
       <div class="field">
         <label>CPP Survivor Benefit under 65 ($/mo)</label>
-        <input type="number" id="m_cppSurv_u65" value="530" min="0">
+        <input type="number" id="m_cppSurv_u65" value="" min="0">
       </div>
       <div class="field">
         <label>CPP Survivor Benefit 65+ ($/mo)</label>
-        <input type="number" id="m_cppSurv_o65" value="600" min="0">
+        <input type="number" id="m_cppSurv_o65" value="" min="0">
       </div>
     </div>
   </div>
@@ -404,7 +404,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>Balance ($)</label>
-        <input type="number" id="mort_balance" value="100000" min="0">
+        <input type="number" id="mort_balance" value="" min="0">
       </div>
       <div class="field">
         <label>Rate (e.g. 0.034)</label>
@@ -412,7 +412,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Monthly Payment ($)</label>
-        <input type="number" id="mort_monthly" value="1400" min="0">
+        <input type="number" id="mort_monthly" value="" min="0">
       </div>
     </div>
 
@@ -420,7 +420,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row">
       <div class="field">
         <label>Balance ($)</label>
-        <input type="number" id="loc_balance" value="10000" min="0">
+        <input type="number" id="loc_balance" value="" min="0">
       </div>
       <div class="field">
         <label>Rate (e.g. 0.0641)</label>
@@ -436,7 +436,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="row three">
       <div class="field">
         <label>Go-Go Annual Budget ($)</label>
-        <input type="number" id="sp_gogo" value="75000" min="0">
+        <input type="number" id="sp_gogo" value="" min="0">
         <span class="hint">Active retirement years</span>
       </div>
       <div class="field">
@@ -445,7 +445,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Slow-Go Annual Budget ($)</label>
-        <input type="number" id="sp_slowgo" value="65000" min="0">
+        <input type="number" id="sp_slowgo" value="" min="0">
         <span class="hint">Slower years</span>
       </div>
     </div>
@@ -456,7 +456,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>No-Go Annual Budget ($)</label>
-        <input type="number" id="sp_nogo" value="55000" min="0">
+        <input type="number" id="sp_nogo" value="" min="0">
         <span class="hint">Final years</span>
       </div>
     </div>
@@ -512,7 +512,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <div class="field">
         <label>Cash Wedge Balance ($)</label>
         <input type="number" id="a_cashWedge" value="0" min="0" step="5000">
-        <span class="hint">Parallel-Wealth-style reserve (HISA/GIC) drawn before equities during market-down years. Typically 1–3 years of spending. Leave 0 to skip.</span>
+        <span class="hint">A low-volatility reserve (HISA / GIC) drawn before equities during market-down years. Typically 1–3 years of spending. Leave 0 to skip.</span>
       </div>
       <div class="field">
         <label>Cash Wedge Return Rate</label>
@@ -576,7 +576,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       </div>
       <div class="field">
         <label>Year Person 1 dies (Survivor scenario)</label>
-        <input type="number" id="a_p1Dies" value="2028" min="2025" max="2060">
+        <input type="number" id="a_p1Dies" value="" min="2025" max="2060">
         <span class="hint">Used only in Survivor tab</span>
       </div>
     </div>
