@@ -34,7 +34,7 @@ cd probes
 ./run_all.sh
 ```
 
-67 checks across five canonical probes (Phase 4 final + three Phase 5 probes + schema-migrate). All must pass before any merge.
+119 checks across six canonical probes (Phase 4 final + three Phase 5 probes + schema-migrate + presets). All must pass before any merge.
 
 ## Data flow
 
