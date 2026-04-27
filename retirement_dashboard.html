@@ -559,17 +559,19 @@ function migrate(D) {
 //     reflects a 60/40 mix net of fees).
 //   • Median/typical balances: StatCan retirement income data + Globe & Mail /
 //     Fidelity surveys cited in research notes (2026).
-function _defaultAssumptions(retireYearHint) {
+function _defaultAssumptions(retireYearHint, survivorYearHint) {
   return {
     // `retireYear` is now advisory — the actual plan start is derived from the
     // earliest of planStart / each spouse's retireYear (whichever is first).
     // `planStart` lets the simulation begin BEFORE either spouse retires, so
     // working years are modelled explicitly (salary income, RRSP/TFSA contribs).
     retireYear: retireYearHint, planStart: 2026, planEnd: 2064,
-    // Survivor scenario trigger. Far-future default = scenario doesn't auto-fire
-    // for the preset; the survivor tab still works because the engine recomputes
-    // with a manual override when the user clicks it.
-    p1DiesInSurvivor: 2099,
+    // Survivor scenario trigger — the year P1 dies in the "Survivor" tab.
+    // Convention: P1 is the higher-earning spouse, and they die 1–2 years after
+    // plan start, so the survivor scenario shows the worst-case impact on the
+    // surviving (lower-earning) spouse. For single-household presets (no P2)
+    // the survivor tab self-hides so the value here is cosmetic.
+    p1DiesInSurvivor: survivorYearHint || 2099,
     returnRate: 0.05, inflation: 0.025, horizon: 95,
     // Share of non-reg return paid out as taxable distributions each year
     // (interest + eligible dividends + realised CG distributions). 0.5 ≈ a
@@ -627,39 +629,42 @@ const PRESETS = {
   inheritance: 0,
   downsize: { year: 0, netProceeds: 0 },
   oneOffs:  [],
-  assumptions: _defaultAssumptions(2031),
+  // Survivor: Sarah (higher CPP, higher salary) dies 2 yrs in (age 59).
+  assumptions: _defaultAssumptions(2031, 2028),
 }),
 
 // ── Public-sector DB couple, late-50s, retiring at 60 ──
-// HOOPP nurse + OTPP teacher. Modest personal savings because the DB pension
+// OTPP teacher + HOOPP nurse. Modest personal savings because the DB pension
 // does the heavy lifting. Tests DB pension with bridge benefit, early
-// retirement, CPP delay decision, lower personal-savings target.
+// retirement, CPP delay decision, lower personal-savings target. P1 is the
+// higher-earning OTPP teacher so the survivor scenario tests the worst-case
+// (loss of the larger DB + CPP).
 'db-pension-couple': () => ({
   schemaVersion: SCHEMA_VERSION,
   p1: {
+    name:'Robert', dob:1968, dobMonth:8, retireYear:2028,
+    salary:115000, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    // OTPP, 32 years × 2% × $105K avg ≈ $67,200/yr. CPP integration drops
+    // ~$14,260/yr at 65 (0.625% × YMPE × yrs). YMPE 2026 = $71,300.
+    db_before65:67200, db_after65:52940, db_index:0.022, db_startYear:2028,
+    rrsp:140000, tfsa:90000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70: 1775 * 12, cpp65: 1250 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
     name:'Margaret', dob:1967, dobMonth:5, retireYear:2027,
     salary:110000, salaryRefYear:2026, salaryRaise:0.03,
     annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
     // HOOPP, 30 years of service. Lifetime portion: 30 × (1.5%×YMPE +
     // 2%×(salary-YMPE)) = 30 × ($1,069 + $574) ≈ $49,300/yr. Bridge benefit
-    // to 65 adds ~$10,700/yr (≈ 0.5% × YMPE × yrs). YMPE 2026 = $71,300.
+    // to 65 adds ~$10,700/yr (≈ 0.5% × YMPE × yrs).
     db_before65:60000, db_after65:49300, db_index:0.022, db_startYear:2027,
-    rrsp:150000, tfsa:85000, tfsaRoom:7000, tfsaAnnual:7000,
-    lif:0, nonreg:20000, nonregAcb:18000, nonregAnnual:0,
+    rrsp:150000, rrspRoom:0, tfsa:85000, tfsaRoom:7000, tfsaAnnual:7000,
+    lira:0, lif:0, nonreg:20000, nonregAcb:18000, nonregAnnual:0,
     // Long full-career; ~95% of CPP max.
     cpp70: 1700 * 12, cpp65: 1200 * 12,
-    oasBase: Math.round(742.31 * 12),
-  },
-  p2: {
-    name:'Robert', dob:1968, dobMonth:8, retireYear:2028,
-    salary:115000, salaryRefYear:2026, salaryRaise:0.03,
-    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
-    // OTPP, 32 years × 2% × $105K avg ≈ $67,200/yr. CPP integration drops
-    // ~$14,260/yr at 65 (0.625% × YMPE × yrs).
-    db_before65:67200, db_after65:52940, db_index:0.022, db_startYear:2028,
-    rrsp:140000, rrspRoom:20000, tfsa:90000, tfsaRoom:7000, tfsaAnnual:7000,
-    lira:0, lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
-    cpp70: 1775 * 12, cpp65: 1250 * 12,
     oasBase: Math.round(742.31 * 12),
     cppSurvivor_under65: 530 * 12, cppSurvivor_over65: 600 * 12,
   },
@@ -670,7 +675,10 @@ const PRESETS = {
   inheritance: 0,
   downsize: { year: 0, netProceeds: 0 },
   oneOffs:  [],
-  assumptions: _defaultAssumptions(2027),
+  // Survivor: Robert (OTPP teacher, higher DB + CPP) dies 2 yrs in, just as
+  // his pension comes online — Margaret continues with HER DB + CPP + a
+  // survivor portion on Robert's pension.
+  assumptions: _defaultAssumptions(2028, 2028),
 }),
 
 // ── Single, late-career, late starter ──
@@ -710,6 +718,7 @@ const PRESETS = {
   inheritance: 0,
   downsize: { year: 0, netProceeds: 0 },
   oneOffs:  [],
+  // Single household — survivor tab self-hides via the engine's hasP2 check.
   assumptions: _defaultAssumptions(2038),
 }),
 
@@ -748,7 +757,8 @@ const PRESETS = {
   inheritance: 0,
   downsize: { year: 0, netProceeds: 0 },
   oneOffs:  [],
-  assumptions: _defaultAssumptions(2026),
+  // Survivor: Bill (higher RRSP + CPP, already drawing) dies 2 yrs in (age 70).
+  assumptions: _defaultAssumptions(2026, 2028),
 }),
 
 // ── FIRE couple, mid-40s, already retired ──
@@ -786,7 +796,9 @@ const PRESETS = {
   inheritance: 0,
   downsize: { year: 0, netProceeds: 0 },
   oneOffs:  [],
-  assumptions: Object.assign(_defaultAssumptions(2025), { planEnd: 2076 }),
+  // Survivor: Alex (larger portfolio + higher CPP) dies 2 yrs into the plan
+  // — Jordan continues with a 50-year horizon ahead, no DB safety net.
+  assumptions: Object.assign(_defaultAssumptions(2025, 2027), { planEnd: 2076 }),
 }),
 
 };

@@ -86,10 +86,14 @@ check(probe0.RESULTS && probe0.RESULTS.base && Array.isArray(probe0.RESULTS.base
 const probeDB = loadWithUrl({ search: '?example=db-pension-couple' });
 check(probeDB.D._isBlank !== true,
       `?example=db-pension-couple → D._isBlank is NOT set`);
-check(probeDB.D.p1.name === 'Margaret' && probeDB.D.p2.name === 'Robert',
-      `?example=db-pension-couple → P1=Margaret, P2=Robert`);
-check(probeDB.D.p1.db_before65 === 60000 && probeDB.D.p1.db_after65 === 49300,
-      `db-pension-couple P1: HOOPP-style bridge ($60K) and lifetime ($49.3K) DB`);
+// P1 must be the higher earner (Robert, OTPP teacher) so the survivor scenario
+// tests the worst case — loss of the larger DB + CPP.
+check(probeDB.D.p1.name === 'Robert' && probeDB.D.p2.name === 'Margaret',
+      `?example=db-pension-couple → P1=Robert (higher earner), P2=Margaret`);
+check(probeDB.D.p1.db_before65 === 67200 && probeDB.D.p1.db_after65 === 52940,
+      `db-pension-couple P1 (Robert): OTPP-style bridge ($67.2K) and lifetime ($52.9K) DB`);
+check(probeDB.D.p1.cpp70 > probeDB.D.p2.cpp70,
+      `db-pension-couple: P1's CPP70 ($${probeDB.D.p1.cpp70}/yr) > P2's ($${probeDB.D.p2.cpp70}/yr)`);
 const dbYears = probeDB.RESULTS.base.years;
 check(Array.isArray(dbYears) && dbYears.length > 20,
       `db-pension-couple: simulation produces >20 years of output (got ${dbYears.length})`);
@@ -133,6 +137,25 @@ check(probeSolo.D.p2.rrsp === 0 && probeSolo.D.p2.tfsa === 0
 const soloYears = probeSolo.RESULTS.base.years;
 check(soloYears.length > 0,
       `single-late-career: simulation runs cleanly (got ${soloYears.length} years)`);
+
+// ── 6.5 Survivor scenario: realistic death years (1-2 yrs after plan start),
+//        higher earner is P1, never produces age-128 labels.
+function survAge(P) {
+  return P.D.assumptions.p1DiesInSurvivor - P.D.p1.dob;
+}
+for (const slug of ['diy-couple','db-pension-couple','retired-traditional','fire-couple']) {
+  const p = loadWithUrl({ search: `?example=${slug}` });
+  const yr = p.D.assumptions.p1DiesInSurvivor;
+  const planStart = p.D.assumptions.planStart;
+  const yrsAfterStart = yr - planStart;
+  check(yrsAfterStart >= 0 && yrsAfterStart <= 3,
+        `${slug}: p1DiesInSurvivor (${yr}) is ${yrsAfterStart} yr(s) after planStart (${planStart})`);
+  const age = survAge(p);
+  check(age >= 40 && age <= 75,
+        `${slug}: P1 dies at a realistic age (${age}, not the old 128 placeholder)`);
+}
+// Single-late-career: survivor tab self-hides via hasP2 check, so the death
+// year is cosmetic — no assertion beyond "doesn't crash".
 
 // ── 7. Unknown slug falls through to blank ──
 const probeBad = loadWithUrl({ search: '?example=does-not-exist' });
