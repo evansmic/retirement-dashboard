@@ -55,6 +55,11 @@
 *Why*: the tool was initially built for one couple; generalising the UI is cheap; renaming engine internals would break saved hashes and is not yet worth it.
 *Superseded 2026-04-26 by Sprint 1 #47–#49.* Once schema versioning was in place (#46), the rename became safe — `MIGRATIONS[1]` lifts legacy `frank`/`moon` hashes forward to `p1`/`p2`. Engine, intake form, and probes all use the generic keys now.
 
+**Blank default + named example presets, instead of an auto-loaded sample household.**
+*Why* (resolved 2026-04-27 by Sprint 1 #58): with public release on the horizon, opening the dashboard to a fully-populated "Person 1 / Person 2" stranger's plan was misleading — it implied the tool already knew something about the visitor. The new behaviour: no payload + no `?example=<slug>` → a landing card explaining the tool and offering five representative Canadian (non-Quebec) archetypes — `diy-couple`, `db-pension-couple`, `single-late-career`, `retired-traditional`, `fire-couple`. Each archetype is a function in `PRESETS` returning a fully-populated D; `PRESET_META` carries the user-facing label/sub-label so the engine and UI stay in lock-step. Slugs are stable, so `?example=<slug>` URLs are bookmarkable.
+*Source rigour*: every headline figure cites a public Canadian benchmark — Service Canada CPP/OAS Apr–Jun 2026, FP Canada Projection Assumption Guidelines 2026, HOOPP / OTPP plan formulas, StatCan retirement income survey. Inline comments in `PRESETS` link each derivation.
+*Trade-off accepted*: the structurally-blank D is a clone of `diy-couple` with names cleared and `_isBlank: true` — the engine still computes scenarios under it (then the UI hides them). A truly empty D would have required defensive guards throughout the engine; the cloned-stub approach is one flag and zero engine changes. `getDefaultD()` now returns the `diy-couple` preset for backward-compat with probes.
+
 ### Scope cuts (deferred)
 
 - CPP contribution accrual for users still working — deferred; rely on Service Canada statement.

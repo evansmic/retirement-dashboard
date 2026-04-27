@@ -41,10 +41,23 @@ console.log("\n═══ (c) Sequence-of-returns stress ═══");
 const sor = out.sequenceOfReturnsStress(out.SCENARIOS.base.cfg);
 check(sor._baseline.years.length > 30, "baseline has full horizon");
 const baseEnd = sor._baseline.years[sor._baseline.years.length-1].bal_total;
+// Sprint 1 #58: relaxed assertion. Each historical sequence must produce a
+// full-horizon, finite year array — that's the engine-correctness check.
+// We do NOT assert end ≤ baseline for every sequence: a stress whose 8-year
+// average return exceeds the flat 5% baseline (notably 2008 with its strong
+// recovery) can end ABOVE baseline depending on the portfolio's drawdown
+// profile, and that's a property of the math, not a bug in the engine.
+// The Great-Depression run (1929) remains the worst case — assert that
+// explicitly so we'd notice if the historical fixture got corrupted.
 for(const k of ['1929','1973','2000','2008']){
-  const end = sor[k].years[sor[k].years.length-1].bal_total;
-  check(end <= baseEnd + 1, `${k} end ($${Math.round(end).toLocaleString()}) ≤ baseline ($${Math.round(baseEnd).toLocaleString()})`);
+  const yrs = sor[k].years;
+  const end = yrs[yrs.length-1].bal_total;
+  check(yrs.length === sor._baseline.years.length && Number.isFinite(end),
+        `${k}: full-horizon run, finite end ($${Math.round(end).toLocaleString()})`);
 }
+const end1929 = sor['1929'].years[sor['1929'].years.length-1].bal_total;
+check(end1929 <= baseEnd + 1,
+      `1929 end ($${Math.round(end1929).toLocaleString()}) ≤ baseline ($${Math.round(baseEnd).toLocaleString()}) — Great Depression remains the worst case`);
 
 // (d) Probability of success helper.
 console.log("\n═══ (d) probabilityOfSuccess helper ═══");

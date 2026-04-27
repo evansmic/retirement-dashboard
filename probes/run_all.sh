@@ -9,6 +9,7 @@ PROBES=(
   probe_phase5_e2e.js
   probe_phase5_intake.js
   probe_schema_migrate.js
+  probe_presets.js
 )
 
 total_pass=0

@@ -42,6 +42,12 @@ const savedP2 = Object.assign({}, D.p2);
 const savedAssum = Object.assign({}, D.assumptions);
 
 D.assumptions.planStart = 2026;
+// Sprint 1 #58: pin dob explicitly. The (f) check below asserts P2's
+// db_after65 income at 2035 — that requires P2 to be 66 in 2035, so dob=1969.
+// The new blank default (diy-couple-shaped) has different birth years, so
+// we no longer get those for free.
+D.p1.dob = 1966; D.p1.dobMonth = 6;
+D.p2.dob = 1969; D.p2.dobMonth = 3;
 D.p1.retireYear = 2031;
 D.p1.salary = 120000;
 D.p1.salaryRefYear = 2026;

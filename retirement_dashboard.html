@@ -99,6 +99,37 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .disclaimer{max-width:1400px;margin:0 auto;padding:18px 20px 32px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.5}
 .disclaimer strong{color:var(--text)}
 
+/* Sprint 1 #58: blank-state landing card.
+   Shown when the dashboard is opened with no hash AND no ?example=<slug>.
+   `body.blank-mode` hides the live dashboard chrome so only the landing card
+   is visible — schema-valid stub data still loads underneath, but never
+   surfaces in the UI. */
+.landing { max-width:760px; margin:48px auto; padding:32px 28px;
+           background:var(--card); border-radius:var(--r); box-shadow:var(--shadow);
+           border:1px solid var(--border); display:none }
+body.blank-mode .landing { display:block }
+body.blank-mode .hdr,
+body.blank-mode .info-bar,
+body.blank-mode .tabs,
+body.blank-mode .body { display:none !important }
+.landing h2 { font-size:22px; font-weight:700; color:var(--navy); margin-bottom:6px }
+.landing .lede { font-size:14px; color:var(--muted); margin-bottom:22px; line-height:1.55 }
+.landing .preset-list { display:grid; gap:10px; margin-bottom:22px }
+.landing .preset-link { display:block; padding:14px 16px; border:1.5px solid var(--border);
+                        border-radius:8px; text-decoration:none; color:var(--text);
+                        background:var(--light); transition:all .15s }
+.landing .preset-link:hover { border-color:var(--navy3); background:#fff;
+                              box-shadow:0 2px 8px rgba(15,39,68,.08) }
+.landing .preset-link strong { display:block; color:var(--navy); font-size:14px;
+                               font-weight:700; margin-bottom:2px }
+.landing .preset-link span { display:block; color:var(--muted); font-size:12px }
+.landing .form-cta { padding-top:18px; border-top:1px solid var(--border);
+                     font-size:13px; color:var(--muted) }
+.landing .form-cta a { color:var(--navy3); font-weight:600; text-decoration:none }
+.landing .form-cta a:hover { text-decoration:underline }
+.landing .footnote { margin-top:14px; font-size:11px; color:var(--muted);
+                     line-height:1.5; font-style:italic }
+
 /* Phase 4.4: Print / PDF export stylesheet.
    Strategy: keep the dashboard 'as-is' but hide interactive controls,
    force-expand the detail table, and use page-break-inside on cards so
@@ -128,6 +159,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </style>
 </head>
 <body>
+
+<!-- Sprint 1 #58: BLANK-STATE LANDING CARD.
+     Rendered when no hash and no ?example slug is in the URL. The preset
+     anchors below are populated by JS at DOMContentLoaded so the slug list
+     stays in lock-step with the PRESET_META registry in the engine. -->
+<div class="landing" id="blankLanding">
+  <h2>No plan loaded yet</h2>
+  <p class="lede">
+    This dashboard projects a Canadian retirement plan from the inputs you
+    provide. To get started, pick an example household to explore — or fill
+    in the intake form with your own numbers.
+  </p>
+  <div class="preset-list" id="presetList"></div>
+  <div class="form-cta">
+    Already have your numbers? &nbsp;
+    <a href="retirement_intake_form.html">Open the intake form →</a>
+  </div>
+  <div class="footnote">
+    Examples are illustrative profiles built from publicly-available Canadian
+    benchmarks (Service Canada CPP/OAS 2026, FP Canada Projection Assumption
+    Guidelines, HOOPP / OTPP plan formulas, StatCan retirement income data).
+    They are not financial advice.
+  </div>
+</div>
 
 <!-- HEADER -->
 <div class="hdr">
@@ -476,135 +531,315 @@ function migrate(D) {
   return D;
 }
 
-function getDefaultD() {
-  // Typical middle-class Ontario couple — Person 1 retires at 60, no DB pension
+// ════════════════════════════════════════════════════════
+//  Sprint 1 #58 — EXAMPLE PRESETS
+// ════════════════════════════════════════════════════════
+// Five Canadian (non-Quebec) household archetypes selected to (a) cover the
+// most common shapes the public will recognise and (b) exercise distinct slices
+// of the engine. Each preset returns a fully-populated D — slugs are stable so
+// `?example=<slug>` URLs are bookmarkable.
+//
+//   diy-couple          — mid-50s couple, both working, no DB pension
+//   db-pension-couple   — late-50s nurse + teacher, both with DB, retiring at 60
+//   single-late-career  — solo 55yo, late starter, working to 67
+//   retired-traditional — couple aged 68/65, already retired, drawing CPP+OAS
+//   fire-couple         — mid-40s already retired, large non-reg, RRSP meltdown candidate
+//
+// Sources for the headline figures:
+//   • CPP/OAS benefit amounts: Service Canada, "Maximum Benefit Amounts and
+//     Related Figures — CPP (2026) / OAS (Apr-Jun 2026)". Max CPP at 65 in 2026
+//     = $1,507.65/mo; average new beneficiary = $925.35/mo. OAS 65-74 =
+//     $742.31/mo.
+//   • DB pension formulas: HOOPP 1.5%×YMPE + 2%×(earnings-YMPE) per year of
+//     service; OTPP 2% × best-5 average × years of service, less CPP integration.
+//     YMPE 2026 = $71,300.
+//   • Default macro assumptions (returnRate 5%, inflation 2.5%) match the
+//     dashboard-wide engine defaults set out in DECISIONS.md (FP Canada PAG 2026
+//     gives 2.1% inflation / 6.3% Cdn equity / 3.2% fixed income — the 5% blend
+//     reflects a 60/40 mix net of fees).
+//   • Median/typical balances: StatCan retirement income data + Globe & Mail /
+//     Fidelity surveys cited in research notes (2026).
+function _defaultAssumptions(retireYearHint) {
   return {
-    schemaVersion: SCHEMA_VERSION,
-    p1: {
-      name:'Person 1', dob:1966, dobMonth:6,
-      retireYear:2027,
-      // Phase 5.1: Pre-retirement employment. `salary` is gross annual income at
-      // `salaryRefYear`, grown by `salaryRaise` each year until `retireYear`.
-      // The `annual*Contrib` fields are automatic savings made every working year
-      // into the respective accounts — typically these come out of salary before
-      // the "household surplus" calc. Zero-out to model a retiree already drawing.
-      salary:           0,
-      salaryRefYear:    2026,
-      salaryRaise:      0.03,
-      annualRrspContrib:   0,
-      annualTfsaContrib:   0,   // note: tfsaAnnual above is the legacy field, keep in sync
-      annualNonregContrib: 0,
-      // No DB pension
-      db_before65: 0, db_after65: 0, db_index: 0.02, db_startYear:2027,
-      // Accounts
-      rrsp: 500000,
-      tfsa: 75000, tfsaRoom: 7000, tfsaAnnual: 7000,
-      lif: 50000,   // old employer DCPP converted to LIF
-      nonreg: 25000, nonregAcb: 20000, nonregAnnual: 0,
-      // CPP / OAS
-      cpp70: 1300 * 12,          // $15,600/yr at 70
-      cpp65: Math.round(1300 / 1.42) * 12,  // ~$10,986/yr at 65
-      oasBase: 742 * 12,         // $8,904/yr at 65
-    },
-    p2: {
-      name:'Person 2', dob:1969, dobMonth:3,
-      retireYear:2027,
-      // Phase 5.1: Pre-retirement employment for Person 2.
-      salary:           0,
-      salaryRefYear:    2026,
-      salaryRaise:      0.03,
-      annualRrspContrib:   0,
-      annualTfsaContrib:   0,
-      annualNonregContrib: 0,
-      // Person 2 may also have a DB pension — add the same fields as Person 1.
-      db_before65: 0, db_after65: 0, db_index: 0.02, db_startYear:2027,
-      rrsp: 125000, rrspRoom: 50000,
-      tfsa: 60000, tfsaRoom: 35000, tfsaAnnual: 0,
-      lira: 20000, lif: 0, nonreg: 0,
-      cpp70: 900 * 12,           // $10,800/yr at 70
-      cpp65: Math.round(900 / 1.42) * 12,   // ~$7,606/yr at 65
-      oasBase: 742 * 12,
-      cppSurvivor_under65: 530 * 12,
-      cppSurvivor_over65:  600 * 12,
-    },
-    mortgage: { balance: 100000, rate: 0.055, monthly: 1400 },
-    loc:      { balance: 10000, rate: 0.07 },
-    // Phase 3.2: Parallel-Wealth-style cash wedge. A low-return account (HISA/GIC) holding
-    // ~2 years of spending that's drawn before equities in market-down years. For a
-    // deterministic plan with a flat return, the wedge is primarily a holding account at
-    // its own (lower) return rate, replenished from any surplus. For Monte Carlo / sequence
-    // stress testing (Phase 4), the wedge absorbs drawdowns while equities recover.
-    // `targetYears` controls the replenishment target (balance = targetYears × go-go spend).
-    cashWedge: { balance: 0, returnRate: 0.03, targetYears: 2 },
-    spending: { gogo: 75000, gogoEnd: 75, slowgo: 65000, slowgoEnd: 85, nogo: 55000 },
-    // Inheritance goal: minimum portfolio balance desired at plan end, in TODAY'S dollars.
-    // 0 = user wants to spend it all. Dashboard solves for max sustainable spend s.t. this floor.
-    inheritance: 0,
-    // Phase 3.6: principal-residence sale / downsize event. Year-specific net proceeds
-    // added to the non-reg account (fully tax-free under Canada's principal residence
-    // exemption). One-time by default; set year=0 to disable. Amount is in today's dollars
-    // and inflated to nominal at the sale year.
-    downsize: { year: 0, netProceeds: 0 },
-    // Phase 3.7: one-off expenses / bequest lines. Each entry is a planned cash outflow
-    // (wedding, renovation, RV, family gift, charitable bequest). Amount is in today's
-    // dollars and inflated at CPI to the event year. Expenses reduce the portfolio in the
-    // year of the event; bequests are treated as non-reg outflows (already post-tax).
-    oneOffs: [],
-    assumptions: {
-      // `retireYear` is now advisory — the actual plan start is derived from the
-      // earliest of planStart / each spouse's retireYear (whichever is first).
-      // Phase 5.1: `planStart` lets the simulation begin BEFORE either spouse
-      // retires, so working years are modelled explicitly (salary income, RRSP/
-      // TFSA contributions). Null => auto-derive from min retireYear.
-      retireYear: 2027, planStart: null, planEnd: 2064,
-      p1DiesInSurvivor: 2028,
-      returnRate: 0.05, inflation: 0.025, horizon: 95,
-      // Phase 2.3: share of non-reg return that is paid out as taxable distributions each year
-      // (interest + eligible dividends + realised CG distributions). Remainder is treated as
-      // unrealised capital gain that grows with the balance and is taxed only on draw. 0.5
-      // roughly matches a balanced Canadian portfolio.
-      nonRegDistShare: 0.5,
-      // Phase 2.4: unified indexation inputs. Each override falls back to `inflation` (CPI)
-      // unless the user sets it explicitly, so a single slider still drives the whole plan.
-      cpiIndex:     null,   // used for spending, OAS, OAS clawback
-      cppIndex:     null,   // CPP benefit indexation
-      oasIndex:     null,   // OAS benefit indexation (defaults to cpiIndex)
-      fedTaxIndex:  null,   // federal bracket / BPA / Age Amount indexation
-      onTaxIndex:   null,   // Ontario bracket / BPA / Age Amount indexation
-      // Phase 3.3: RRIF election to base the minimum-withdrawal factor on the younger spouse's
-      // age. CRA allows this as a one-time, irrevocable election at RRIF setup. Reduces the
-      // forced registered withdrawal and, with it, the annual tax bill.
-      youngerSpouseRrif: false,
-      // Phase 3.1: withdrawal order preset for the baseline scenario ('default' = CFM N→T→R,
-      // 'meltdown' = Snap-style RRSP-first). Scenario cards override this.
-      withdrawalOrder: 'default',
-      // Phase 3.4: spousal RRSP attribution. CRA rule: withdrawals from a spousal RRSP are
-      // attributed back to the CONTRIBUTOR (not the annuitant) if the contributor made any
-      // contribution to that RRSP in the current year or the two preceding calendar years.
-      // Prevents naive income-splitting via spousal RRSPs. The model re-routes the attributable
-      // portion of the annuitant's draw into the contributor's taxable income during the window.
-      //   contributor: 'f' | 'm'  — whichever spouse put money in (the OTHER is the annuitant)
-      //   contribs:    { [year]: amount } — only the last-3-years window is relevant
-      spousalRrsp: null,
-      // Phase 3.5: CPP pension sharing — splits each spouse's CPP 50/50 while both are alive
-      // (Service Canada form). Distinct from pension-income splitting, which is a per-year
-      // tax election. Useful when one spouse has materially higher CPP and splitting it
-      // reduces their OAS clawback or moves them to a lower bracket.
-      cppSharing: false,
-      // Phase 4.1: Monte Carlo — standard deviation of nominal annual returns used to
-      // sample each year's return from Normal(returnRate, returnStdDev). 0.10 roughly
-      // matches a balanced 60/40 portfolio; 0.18 approximates 100% equities.
-      returnStdDev: 0.10,
-      // Phase 4.1: Monte Carlo — number of independent simulation paths. 1,000 gives
-      // stable 10th/50th/90th percentile estimates while staying interactive.
-      monteCarloPaths: 1000
-    }
+    // `retireYear` is now advisory — the actual plan start is derived from the
+    // earliest of planStart / each spouse's retireYear (whichever is first).
+    // `planStart` lets the simulation begin BEFORE either spouse retires, so
+    // working years are modelled explicitly (salary income, RRSP/TFSA contribs).
+    retireYear: retireYearHint, planStart: 2026, planEnd: 2064,
+    // Survivor scenario trigger. Far-future default = scenario doesn't auto-fire
+    // for the preset; the survivor tab still works because the engine recomputes
+    // with a manual override when the user clicks it.
+    p1DiesInSurvivor: 2099,
+    returnRate: 0.05, inflation: 0.025, horizon: 95,
+    // Share of non-reg return paid out as taxable distributions each year
+    // (interest + eligible dividends + realised CG distributions). 0.5 ≈ a
+    // balanced Canadian portfolio.
+    nonRegDistShare: 0.5,
+    // Unified indexation inputs (Phase 2.4). Each override falls back to
+    // `inflation` unless explicitly set.
+    cpiIndex: null, cppIndex: null, oasIndex: null,
+    fedTaxIndex: null, onTaxIndex: null,
+    youngerSpouseRrif: false,
+    withdrawalOrder: 'default',
+    spousalRrsp: null,
+    cppSharing: false,
+    returnStdDev: 0.10,
+    monteCarloPaths: 1000
   };
 }
 
-function loadClientData() {
+const PRESETS = {
+
+// ── DIY couple, mid-50s, both working, no DB pension ──
+// The most common "in-progress" middle-class household: salaries growing,
+// RRSP/TFSA contributions ongoing, mortgage in flight, staggered retirement.
+// Exercises pre-retirement working years, salary growth, contribution flows,
+// CPP timing decision.
+'diy-couple': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Sarah', dob:1969, dobMonth:6, retireYear:2031,
+    salary:95000, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:14000, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2031,
+    rrsp:250000, tfsa:80000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:0, nonreg:40000, nonregAcb:35000, nonregAnnual:0,
+    // ~$1,400/mo at 70 ≈ $1,000/mo at 65 — solid 30-yr middle-class earner,
+    // a bit below max ($1,507.65/mo Service Canada 2026).
+    cpp70: 1400 * 12, cpp65: Math.round(1400 / 1.42) * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    name:'David', dob:1971, dobMonth:9, retireYear:2034,
+    salary:75000, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:11000, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2034,
+    rrsp:180000, rrspRoom:30000, tfsa:65000, tfsaRoom:7000, tfsaAnnual:0,
+    lira:0, lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70: 1200 * 12, cpp65: Math.round(1200 / 1.42) * 12,
+    oasBase: Math.round(742.31 * 12),
+    cppSurvivor_under65: 480 * 12, cppSurvivor_over65: 540 * 12,
+  },
+  mortgage: { balance: 150000, rate: 0.055, monthly: 1750 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 80000, gogoEnd: 75, slowgo: 65000, slowgoEnd: 85, nogo: 50000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: _defaultAssumptions(2031),
+}),
+
+// ── Public-sector DB couple, late-50s, retiring at 60 ──
+// HOOPP nurse + OTPP teacher. Modest personal savings because the DB pension
+// does the heavy lifting. Tests DB pension with bridge benefit, early
+// retirement, CPP delay decision, lower personal-savings target.
+'db-pension-couple': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Margaret', dob:1967, dobMonth:5, retireYear:2027,
+    salary:110000, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    // HOOPP, 30 years of service. Lifetime portion: 30 × (1.5%×YMPE +
+    // 2%×(salary-YMPE)) = 30 × ($1,069 + $574) ≈ $49,300/yr. Bridge benefit
+    // to 65 adds ~$10,700/yr (≈ 0.5% × YMPE × yrs). YMPE 2026 = $71,300.
+    db_before65:60000, db_after65:49300, db_index:0.022, db_startYear:2027,
+    rrsp:150000, tfsa:85000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:0, nonreg:20000, nonregAcb:18000, nonregAnnual:0,
+    // Long full-career; ~95% of CPP max.
+    cpp70: 1700 * 12, cpp65: 1200 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    name:'Robert', dob:1968, dobMonth:8, retireYear:2028,
+    salary:115000, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    // OTPP, 32 years × 2% × $105K avg ≈ $67,200/yr. CPP integration drops
+    // ~$14,260/yr at 65 (0.625% × YMPE × yrs).
+    db_before65:67200, db_after65:52940, db_index:0.022, db_startYear:2028,
+    rrsp:140000, rrspRoom:20000, tfsa:90000, tfsaRoom:7000, tfsaAnnual:7000,
+    lira:0, lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70: 1775 * 12, cpp65: 1250 * 12,
+    oasBase: Math.round(742.31 * 12),
+    cppSurvivor_under65: 530 * 12, cppSurvivor_over65: 600 * 12,
+  },
+  mortgage: { balance: 0, rate: 0.055, monthly: 0 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 90000, gogoEnd: 75, slowgo: 75000, slowgoEnd: 85, nogo: 55000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: _defaultAssumptions(2027),
+}),
+
+// ── Single, late-career, late starter ──
+// Solo 55yo earning $70K, plans to work to 67. Tests single-household
+// handling (engine zero-outs P2 when name is blank), lower-income territory,
+// late CPP start, GIS-adjacent zone.
+'single-late-career': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Lisa', dob:1971, dobMonth:4, retireYear:2038,
+    salary:70000, salaryRefYear:2026, salaryRaise:0.025,
+    annualRrspContrib:7000, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2038,
+    rrsp:120000, tfsa:35000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:0, nonreg:10000, nonregAcb:9000, nonregAnnual:0,
+    // Average new beneficiary at 65 (Service Canada Jan 2026 = $925/mo). At 70
+    // the same earnings history × 1.42 delay credit ≈ $1,313/mo, rounded to
+    // $1,207 for a slightly-below-average career.
+    cpp70: 1207 * 12, cpp65: 850 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    // Engine zero-outs P2's balances/benefits when name is blank.
+    name:'', dob:1971, dobMonth:1, retireYear:2038,
+    salary:0, salaryRefYear:2026, salaryRaise:0.03,
+    annualRrspContrib:0, annualTfsaContrib:0, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2038,
+    rrsp:0, rrspRoom:0, tfsa:0, tfsaRoom:0, tfsaAnnual:0,
+    lira:0, lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70:0, cpp65:0, oasBase:0,
+    cppSurvivor_under65:0, cppSurvivor_over65:0,
+  },
+  mortgage: { balance: 80000, rate: 0.055, monthly: 900 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 50000, gogoEnd: 75, slowgo: 42000, slowgoEnd: 85, nogo: 35000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: _defaultAssumptions(2038),
+}),
+
+// ── Already-retired traditional couple, late 60s ──
+// Both retired, drawing CPP+OAS, RRIF in motion (or imminent for P2). Tests
+// post-retirement starting state, RRIF minimums, both CPP/OAS active, pure
+// drawdown rather than accumulation.
+'retired-traditional': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Bill', dob:1958, dobMonth:2, retireYear:2023,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2023,
+    rrsp:400000, tfsa:130000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:50000, nonreg:200000, nonregAcb:130000, nonregAnnual:0,
+    // Already drawing CPP at 65; broad-average career.
+    cpp70: 1775 * 12, cpp65: 1250 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    name:'Linda', dob:1961, dobMonth:11, retireYear:2026,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2026,
+    rrsp:250000, rrspRoom:0, tfsa:95000, tfsaRoom:7000, tfsaAnnual:7000,
+    lira:30000, lif:0, nonreg:40000, nonregAcb:35000, nonregAnnual:0,
+    cpp70: 1490 * 12, cpp65: 1050 * 12,
+    oasBase: Math.round(742.31 * 12),
+    cppSurvivor_under65: 530 * 12, cppSurvivor_over65: 600 * 12,
+  },
+  mortgage: { balance: 0, rate: 0.055, monthly: 0 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 75000, gogoEnd: 75, slowgo: 65000, slowgoEnd: 85, nogo: 50000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: _defaultAssumptions(2026),
+}),
+
+// ── FIRE couple, mid-40s, already retired ──
+// Large taxable account, no salary, drawing down. Tests already-retired state
+// from a young age, the long pre-CPP gap (20+ years), RRSP-meltdown candidacy,
+// non-reg ACB handling, and the longest plan horizon.
+'fire-couple': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Alex', dob:1981, dobMonth:7, retireYear:2025,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2025,
+    rrsp:400000, tfsa:130000, tfsaRoom:7000, tfsaAnnual:7000,
+    lif:0, nonreg:600000, nonregAcb:400000, nonregAnnual:0,
+    // Limited contribution years (retired at 44) → CPP well below average.
+    cpp70: 900 * 12, cpp65: 635 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    name:'Jordan', dob:1983, dobMonth:3, retireYear:2025,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:7000, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2025,
+    rrsp:350000, rrspRoom:0, tfsa:115000, tfsaRoom:7000, tfsaAnnual:7000,
+    lira:0, lif:0, nonreg:50000, nonregAcb:40000, nonregAnnual:0,
+    cpp70: 850 * 12, cpp65: 600 * 12,
+    oasBase: Math.round(742.31 * 12),
+    cppSurvivor_under65: 380 * 12, cppSurvivor_over65: 425 * 12,
+  },
+  mortgage: { balance: 0, rate: 0.055, monthly: 0 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 60000, gogoEnd: 75, slowgo: 55000, slowgoEnd: 85, nogo: 45000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: Object.assign(_defaultAssumptions(2025), { planEnd: 2076 }),
+}),
+
+};
+
+// User-facing metadata for the preset chooser. Order here is the order shown
+// in the UI; keep slugs stable since they're part of bookmarkable URLs.
+const PRESET_META = [
+  { slug:'diy-couple',          label:'DIY couple, both working',
+    sub:'Mid-50s, no DB pension, staggered retirement at 62 / 65' },
+  { slug:'db-pension-couple',   label:'Public-sector couple with DB pensions',
+    sub:'Late-50s nurse + teacher (HOOPP / OTPP), retiring at 60' },
+  { slug:'single-late-career',  label:'Single, late-career',
+    sub:'Solo 55-year-old, late starter, working to 67' },
+  { slug:'retired-traditional', label:'Already retired (traditional)',
+    sub:'Couple aged 68 / 65, drawing CPP+OAS, RRIF in motion' },
+  { slug:'fire-couple',         label:'FIRE couple, retired early',
+    sub:'Mid-40s already retired, large non-reg, RRSP meltdown candidate' },
+];
+
+// Sprint 1 #58: blank fallback. Schema-valid stub used when the dashboard is
+// opened with no hash and no `?example=<slug>`. Engine fields are populated
+// with placeholder values (cloned from `diy-couple`) so any code path that
+// reads D doesn't NaN — but `_isBlank: true` tells the UI to show the landing
+// card instead of a populated dashboard.
+function getBlankD() {
+  const d = PRESETS['diy-couple']();
+  d.p1.name = '';
+  d.p2.name = '';
+  d._isBlank = true;
+  return d;
+}
+
+// Backward-compat: probes call getDefaultD() to assert schemaVersion etc.
+// We now point it at the diy-couple preset so existing assertions still pass.
+function getDefaultD() { return PRESETS['diy-couple'](); }
+
+// Sprint 1 #58: parse a `?example=<slug>` query param. Returns the slug or
+// null. Defensive against malformed search strings.
+function _readExampleSlug() {
   try {
-    const hash = window.location.hash.slice(1);
+    const search = (window.location.search || '');
+    const m = search.match(/[?&]example=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  } catch(e) {
+    console.warn('Could not parse ?example query param:', e);
+    return null;
+  }
+}
+
+function loadClientData() {
+  // 1. URL hash — a saved/shared plan. Highest priority.
+  try {
+    const hash = (window.location.hash || '').slice(1);
     if (hash) {
       let parsed = JSON.parse(decodeURIComponent(atob(hash)));
       // Sprint 1 #46: lift older payloads to the current schema version
@@ -638,9 +873,20 @@ function loadClientData() {
       return parsed;
     }
   } catch(e) {
-    console.warn('Could not parse URL hash data, using defaults:', e);
+    console.warn('Could not parse URL hash data:', e);
   }
-  return getDefaultD();
+
+  // 2. `?example=<slug>` deep-link (Sprint 1 #58). Falls through to blank if
+  // the slug isn't in the registry — better to show the landing card than to
+  // silently load a different preset.
+  const slug = _readExampleSlug();
+  if (slug) {
+    if (PRESETS[slug]) return PRESETS[slug]();
+    console.warn(`Unknown ?example=${slug} — falling back to blank state.`);
+  }
+
+  // 3. No payload at all. Return the blank stub; UI will render the landing card.
+  return getBlankD();
 }
 
 const D = loadClientData();
@@ -2652,8 +2898,26 @@ function populateHeader() {
   }
 }
 
+// Sprint 1 #58: render the blank-state landing card. Builds the preset link
+// list from PRESET_META so the engine and UI stay aligned. Each link sets
+// ?example=<slug>, which loadClientData() picks up on the subsequent load.
+function renderBlankLanding(){
+  const list = document.getElementById('presetList');
+  if (list && PRESET_META) {
+    list.innerHTML = PRESET_META.map(p =>
+      `<a class="preset-link" href="?example=${encodeURIComponent(p.slug)}">`
+      + `<strong>${p.label}</strong><span>${p.sub}</span></a>`
+    ).join('');
+  }
+  document.body.classList.add('blank-mode');
+}
+
 document.addEventListener('DOMContentLoaded', ()=>{
-  initCharts();       // charts first so populateHeader can rewrite their labels
+  if (D._isBlank) {
+    renderBlankLanding();
+    return;             // skip dashboard chrome entirely — landing card only
+  }
+  initCharts();         // charts first so populateHeader can rewrite their labels
   populateHeader();
   updateKPIs();
   buildComparisonTable();

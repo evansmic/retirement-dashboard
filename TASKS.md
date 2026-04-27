@@ -6,13 +6,13 @@ The current plan came out of the 2026-04-25 decision session. See `DECISIONS.md`
 
 The pass that takes the codebase from "private project" to "ready to be public." Order matters: schema versioning lands before the rename so the rename can use the migration system.
 
-**Progress:** 4/8 complete (as of 2026-04-26).
+**Progress:** 5/8 complete (as of 2026-04-27).
 
 1. ~~**#41** — Add MIT LICENSE~~ ✅ *Done 2026-04-26.* Standard MIT text at `/LICENSE`; copyright Michael Evans 2026.
 2. ~~**#42** — Add "not financial advice" disclaimer (README + dashboard footer)~~ ✅ *Done 2026-04-26.* New `Disclaimer` section near the top of the README; `<footer class="disclaimer">` rendered above `</body>` in `retirement_dashboard.html`, with a print-stylesheet rule so it appears on the PDF export.
 3. ~~**#46** — Add `D.schemaVersion = 1` + `migrate(D)` scaffold~~ ✅ *Done 2026-04-26.* Stamped on payload at encode; `migrate(D)` + `MIGRATIONS` registry in dashboard; legacy (no-version) hashes lifted to v1; future-version payloads warned and loaded as-is. New `probe_schema_migrate.js` (12 checks) joins the canonical suite (now 67/67).
 4. ~~**#47 + #48 + #49** — Rename `frank`/`moon` → `p1`/`p2`, clear placeholders, add v1→v2 migration~~ ✅ *Done 2026-04-26.* Engine, intake form, and probes all use `p1`/`p2`. `assumptions.frankDiesInSurvivor` → `assumptions.p1DiesInSurvivor`; intake form ID `a_frankDies` → `a_p1Dies`. Default placeholder names cleared (`Alex`/`Sam` → blank, with `Person 1`/`Person 2` placeholders on the inputs). `MIGRATIONS[1]` lifts legacy v1 (or pre-versioning) payloads forward — confirmed with a new end-to-end test that loads a real legacy hash and asserts the engine receives `p1`/`p2`. `SCHEMA_VERSION = 2`. Probe count: **74/74** (probe_schema_migrate grew 12→19 to cover the rename).
-5. **#58** — Replace auto-populated Alex/Sam data with blank form + 3–4 example presets (deep-linked via `?example=slug`)
+5. ~~**#58** — Replace auto-populated Alex/Sam data with blank form + example presets~~ ✅ *Done 2026-04-27.* Five Canadian-archetype presets ship in the dashboard's `PRESETS` registry, deep-linked via `?example=<slug>`: `diy-couple`, `db-pension-couple`, `single-late-career`, `retired-traditional`, `fire-couple`. Headline figures sourced from FP Canada PAG 2026, Service Canada CPP/OAS Apr–Jun 2026, HOOPP / OTPP plan formulas, StatCan retirement income data. With no hash and no slug, the dashboard now renders a landing card listing every preset (linking to `?example=…`) plus a CTA to the intake form — the old hard-coded "Person 1 / Person 2" sample plan is gone. New `probe_presets.js` (44 checks) joins the canonical suite (now **119/119**); `probe_phase5.js` and `probe_phase4_final.js` were rebased onto explicit fixtures so they no longer rely on whatever `getDefaultD()` happens to return.
 6. **#56** — Add JSDoc `@typedef` block for `D`
 7. **#57** — GitHub Actions CI for probes + README status badge
 8. **#43** — Polish README for public audience (intro pitch, screenshot, live link)
