@@ -208,6 +208,15 @@ body.blank-mode .body { display:none !important }
       style="background:#223a4a;border:1px solid #223a4a;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;color:#fff">
       Print / PDF
     </button>
+    &nbsp;
+    <!-- Sprint 2 #59: "Edit plan" — round-trip back to the intake form with
+         the current hash, so the form decoder pre-fills every field. Hidden
+         when no hash is present (preset/blank-state has nothing to round-trip).
+         Visibility is set in JS at the bottom of the file once D is resolved. -->
+    <button type="button" id="editPlanBtn" onclick="goBackToForm()"
+      style="display:none;background:#fff;border:1px solid #ccd;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;color:#234">
+      ← Edit plan
+    </button>
   </div>
 </div>
 
@@ -2436,6 +2445,19 @@ function printReport(){
   }
 }
 
+// Sprint 2 #59: round-trip back to the intake form. Pass the current hash
+// straight through — the form's DOMContentLoaded handler decodes it and
+// pre-fills every field. We deliberately don't touch presets/blank state
+// here: the button only renders when a hash was the load source (see
+// editPlanBtn visibility toggle in the DOMContentLoaded init below). For a
+// preset the user can hit the existing "Open the intake form →" landing-card
+// link to start from a blank form; forking a preset onto the form is its
+// own follow-up task.
+function goBackToForm(){
+  const h = window.location.hash || '';
+  window.location.href = 'index.html' + h;
+}
+
 // ════════════════════════════════════════════════════════
 //  PROBABILITY-OF-SUCCESS CACHE (Phase 4.3)
 // ════════════════════════════════════════════════════════
@@ -3111,6 +3133,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   updateKPIs();
   buildComparisonTable();
   updateDetailTable();
+  // Sprint 2 #59: only surface the "Edit plan" button when a hash drove the
+  // load. With a preset (?example=…), there's no source hash to round-trip.
+  if ((window.location.hash || '').length > 1) {
+    const btn = document.getElementById('editPlanBtn');
+    if (btn) btn.style.display = '';
+  }
 });
 </script>
 </body>

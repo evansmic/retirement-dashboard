@@ -840,13 +840,31 @@ document.addEventListener('input', () => {
   _saveTimer = setTimeout(saveToLocal, 600);
 });
 
-// On page load: check for saved data and offer restore
+// On page load: payload sources, in priority order:
+//   1. URL hash — typically set by the dashboard's "Edit plan" button (#59).
+//      Decode, run through migrate(), populate every field, persist a fresh
+//      autosave so subsequent visits' "Welcome back" matches the just-loaded
+//      plan. Skip the restore banner.
+//   2. localStorage — the existing "Welcome back" prompt for an in-progress
+//      draft (no hash present).
 document.addEventListener('DOMContentLoaded', () => {
+  const rawHash = (window.location.hash || '').slice(1);
+  if (rawHash) {
+    try {
+      let parsed = JSON.parse(decodeURIComponent(atob(rawHash)));
+      parsed = migrate(parsed);
+      populateFromD(parsed);
+      saveToLocal();
+      return;
+    } catch(e) {
+      console.warn('Could not decode plan hash on load:', e);
+      // Fall through to the localStorage restore prompt.
+    }
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Only show banner if there's meaningful data (name filled in)
       if (parsed.f_name && parsed.f_name.trim()) {
         _savedData = parsed;
         document.getElementById('restore-banner').style.display = 'flex';
@@ -936,38 +954,211 @@ function expandAllCards() {
   document.querySelectorAll('details.card').forEach(d => { d.open = true; });
 }
 
-function submitForm() {
-  const errEl = document.getElementById('error-msg');
-  errEl.style.display = 'none';
-
-  // Basic validation
-  if (!s('f_name') || !s('m_name')) {
-    expandAllCards();
-    errEl.textContent = 'Please enter names for both people.';
-    errEl.style.display = 'block';
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
+// Sprint 2 #59: schema version + migrate. Mirrors the dashboard's MIGRATIONS
+// registry so when a user clicks "Edit plan" from a bookmarked dashboard URL
+// pointing at an older payload, the form decodes it cleanly. Keep this in
+// lock-step with retirement_dashboard.html — both files are the only places
+// that need to know the upgrade path.
+const SCHEMA_VERSION = 2;
+const MIGRATIONS = {
+  // v1 → v2 (Sprint 1 #47–#49): renamed frank → p1, moon → p2.
+  1: function(d) {
+    if (d.frank !== undefined) { d.p1 = d.frank; delete d.frank; }
+    if (d.moon  !== undefined) { d.p2 = d.moon;  delete d.moon;  }
+    if (d.assumptions && d.assumptions.frankDiesInSurvivor !== undefined) {
+      d.assumptions.p1DiesInSurvivor = d.assumptions.frankDiesInSurvivor;
+      delete d.assumptions.frankDiesInSurvivor;
+    }
+    d.schemaVersion = 2;
+    return d;
+  },
+};
+function migrate(D) {
+  if (!D || typeof D !== 'object') return D;
+  let v = D.schemaVersion || 1;
+  if (v > SCHEMA_VERSION) {
+    console.warn(`Payload schemaVersion ${v} newer than this form supports (${SCHEMA_VERSION}). Loading as-is.`);
+    return D;
   }
-  if (n('f_dob') < 1940 || n('m_dob') < 1940) {
-    expandAllCards();
-    errEl.textContent = 'Please enter valid birth years for both people.';
-    errEl.style.display = 'block';
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
+  while (v < SCHEMA_VERSION) {
+    const step = MIGRATIONS[v];
+    if (!step) break;
+    D = step(D);
+    v = D.schemaVersion || (v + 1);
+  }
+  D.schemaVersion = SCHEMA_VERSION;
+  return D;
+}
+
+// Sprint 2 #59: write every form field from a decoded D. Strict inverse of
+// gatherD — for every field gatherD reads, populateFromD writes the same
+// value back. Used by the hash-decode handler on page load (Edit-plan flow)
+// and exercised by probe_intake_roundtrip.js. If you add a field to gatherD,
+// add the matching setter here too or the round-trip probe will fail.
+function populateFromD(D) {
+  if (!D || typeof D !== 'object') return;
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (val == null || (typeof val === 'number' && isNaN(val))) {
+      el.value = '';
+    } else {
+      el.value = String(val);
+    }
+  };
+  const setChecked = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = !!val;
+  };
+  const setSelect = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = (val == null ? '' : String(val));
+  };
+
+  const p1 = D.p1 || {};
+  setVal('f_name', p1.name);
+  setVal('f_dob', p1.dob);
+  setVal('f_dobMonth', p1.dobMonth);
+  setVal('f_retireYear', p1.retireYear);
+  setVal('f_salary', p1.salary);
+  setVal('f_salaryRefYear', p1.salaryRefYear);
+  setVal('f_salaryRaise', p1.salaryRaise);
+  setVal('f_annualRrspContrib', p1.annualRrspContrib);
+  setVal('f_annualTfsaContrib', p1.annualTfsaContrib);
+  setVal('f_annualNonregContrib', p1.annualNonregContrib);
+  setVal('f_db_before65', p1.db_before65);
+  setVal('f_db_after65', p1.db_after65);
+  setVal('f_db_index', p1.db_index);
+  setVal('f_db_startYear', p1.db_startYear);
+  setVal('f_rrsp', p1.rrsp);
+  setVal('f_tfsa', p1.tfsa);
+  setVal('f_tfsaRoom', p1.tfsaRoom);
+  setVal('f_tfsaAnnual', p1.tfsaAnnual);
+  setVal('f_lif', p1.lif);
+  setVal('f_nonreg', p1.nonreg);
+  setVal('f_nonregAcb', p1.nonregAcb);
+  setVal('f_nonregAnnual', p1.nonregAnnual);
+  setVal('f_cpp70_monthly', p1.cpp70_monthly);
+  setVal('f_cpp65_monthly', p1.cpp65_monthly);
+  setVal('f_oas_monthly', p1.oas_monthly);
+
+  const p2 = D.p2 || {};
+  setVal('m_name', p2.name);
+  setVal('m_dob', p2.dob);
+  setVal('m_dobMonth', p2.dobMonth);
+  setVal('m_retireYear', p2.retireYear);
+  setVal('m_salary', p2.salary);
+  setVal('m_salaryRefYear', p2.salaryRefYear);
+  setVal('m_salaryRaise', p2.salaryRaise);
+  setVal('m_annualRrspContrib', p2.annualRrspContrib);
+  setVal('m_annualTfsaContrib', p2.annualTfsaContrib);
+  setVal('m_annualNonregContrib', p2.annualNonregContrib);
+  setVal('m_db_before65', p2.db_before65);
+  setVal('m_db_after65', p2.db_after65);
+  setVal('m_db_index', p2.db_index);
+  setVal('m_db_startYear', p2.db_startYear);
+  setVal('m_rrsp', p2.rrsp);
+  setVal('m_rrspRoom', p2.rrspRoom);
+  setVal('m_tfsa', p2.tfsa);
+  setVal('m_tfsaRoom', p2.tfsaRoom);
+  setVal('m_tfsaAnnual', p2.tfsaAnnual);
+  setVal('m_lira', p2.lira);
+  setVal('m_lif', p2.lif);
+  setVal('m_nonreg', p2.nonreg);
+  setVal('m_nonregAcb', p2.nonregAcb);
+  setVal('m_nonregAnnual', p2.nonregAnnual);
+  setVal('m_cpp70_monthly', p2.cpp70_monthly);
+  setVal('m_cpp65_monthly', p2.cpp65_monthly);
+  setVal('m_oas_monthly', p2.oas_monthly);
+  setVal('m_cppSurv_u65', p2.cppSurv_u65_mo);
+  setVal('m_cppSurv_o65', p2.cppSurv_o65_mo);
+
+  const mort = D.mortgage || {};
+  setVal('mort_balance', mort.balance);
+  setVal('mort_rate', mort.rate);
+  setVal('mort_monthly', mort.monthly);
+
+  const lc = D.loc || {};
+  setVal('loc_balance', lc.balance);
+  setVal('loc_rate', lc.rate);
+
+  const sp = D.spending || {};
+  setVal('sp_gogo', sp.gogo);
+  setVal('sp_gogoEnd', sp.gogoEnd);
+  setVal('sp_slowgo', sp.slowgo);
+  setVal('sp_slowgoEnd', sp.slowgoEnd);
+  setVal('sp_nogo', sp.nogo);
+
+  setVal('a_inheritance', D.inheritance != null ? D.inheritance : 0);
+
+  const dz = D.downsize || {};
+  setVal('a_downsizeYear', dz.year || 0);
+  setVal('a_downsizeProceeds', dz.netProceeds || 0);
+
+  // One-offs: gatherD elides empty entries, so the array length can be 0/1/2.
+  // Map array index → form slot, and clear unused slots so a previously-filled
+  // form doesn't keep stale entries when populated from a smaller payload.
+  const oneOffs = D.oneOffs || [];
+  for (const i of [1, 2]) {
+    const o = oneOffs[i - 1] || { year: 0, amount: 0, label: '' };
+    setVal(`a_oneOff${i}Year`, o.year || 0);
+    setVal(`a_oneOff${i}Amt`, o.amount || 0);
+    setVal(`a_oneOff${i}Label`, o.label || '');
   }
 
+  const cw = D.cashWedge || {};
+  setVal('a_cashWedge', cw.balance != null ? cw.balance : 0);
+  setVal('a_cashWedgeReturn', cw.returnRate);
+  setVal('a_cashWedgeYears', cw.targetYears);
+
+  const a = D.assumptions || {};
+  // gatherD encodes planStart as null when the input is blank/zero. The
+  // input expects an empty string or a year — convert null → '' here.
+  setVal('a_planStart', a.planStart == null ? '' : a.planStart);
+  setVal('a_planEnd', a.planEnd);
+  setVal('a_horizon', a.horizon);
+  setVal('a_p1Dies', a.p1DiesInSurvivor);
+  setVal('a_returnRate', a.returnRate);
+  setVal('a_inflation', a.inflation);
+  setVal('a_returnStdDev', a.returnStdDev);
+  setChecked('a_youngerSpouseRrif', a.youngerSpouseRrif);
+  setChecked('a_cppSharing', a.cppSharing);
+  setSelect('a_withdrawalOrder', a.withdrawalOrder || 'default');
+
+  // Spousal RRSP: contributor select + Y1/Y2 amounts. Mirror gatherD's anchor
+  // year — the form's existing logic uses p1.retireYear (preserved bug-for-bug
+  // since the contributor/annuitant comparison never matches the rename).
+  const spr = a.spousalRrsp;
+  if (spr && spr.contributor) {
+    setSelect('a_spousalContributor', spr.contributor);
+    const retYr = (D.p1 && D.p1.retireYear) || 2027;
+    const contribs = spr.contribs || {};
+    setVal('a_spousalContribY1', contribs[retYr - 1] || 0);
+    setVal('a_spousalContribY2', contribs[retYr - 2] || 0);
+  } else {
+    setSelect('a_spousalContributor', '');
+    setVal('a_spousalContribY1', 0);
+    setVal('a_spousalContribY2', 0);
+  }
+}
+
+// Sprint 2 #59: build the plan payload from current field values. Pulled out
+// of submitForm so the round-trip probe can re-encode after populateFromD,
+// and so any future share/export flow can reuse the same shape. populateFromD
+// (defined below) is the strict inverse — keep the field-id mapping in sync.
+function gatherD() {
   const f_cpp65_raw  = n('f_cpp65_monthly', 0);
   const m_cpp65_raw  = n('m_cpp65_monthly', 0);
   const f_cpp70_mo   = n('f_cpp70_monthly', 0);
   const m_cpp70_mo   = n('m_cpp70_monthly', 0);
 
-  const D = {
+  return {
     // Sprint 1 #46: schema version stamped on every payload at encode time.
     // Bump when the shape of D changes in a way that older dashboards can't
     // read directly. The dashboard's migrate(D) function lifts older payloads
     // to the current version on load.
     // v2 (Sprint 1 #47–#49): renamed frank→p1, moon→p2.
-    schemaVersion: 2,
+    schemaVersion: SCHEMA_VERSION,
     p1: {
       name:         s('f_name', 'Person 1'),
       dob:          n('f_dob'),
@@ -1115,7 +1306,29 @@ function submitForm() {
       })(),
     }
   };
+}
 
+function submitForm() {
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  // Basic validation
+  if (!s('f_name') || !s('m_name')) {
+    expandAllCards();
+    errEl.textContent = 'Please enter names for both people.';
+    errEl.style.display = 'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+  if (n('f_dob') < 1940 || n('m_dob') < 1940) {
+    expandAllCards();
+    errEl.textContent = 'Please enter valid birth years for both people.';
+    errEl.style.display = 'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  const D = gatherD();
   try {
     const encoded = btoa(encodeURIComponent(JSON.stringify(D)));
     window.location.href = 'retirement_dashboard#' + encoded;

@@ -10,6 +10,7 @@ PROBES=(
   probe_phase5_intake.js
   probe_schema_migrate.js
   probe_presets.js
+  probe_intake_roundtrip.js
 )
 
 total_pass=0
