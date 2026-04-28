@@ -21,10 +21,10 @@ After Sprint 1 the project is technically publishable. Could open-source here.
 
 ## Sprint 2 — UX polish
 
-**Progress:** 1/6 complete.
+**Progress:** 2/6 complete.
 
 9. ~~**#53** — Collapsible sections (P1/P2 expanded, rest collapsed)~~ ✅ *Done 2026-04-27.* The five top-level intake-form cards (`Person 1`, `Person 2`, `Joint Assets & Liabilities`, `Spending Targets`, `Plan Assumptions`) are now native `<details>`/`<summary>` elements with a rotating chevron and hover affordance on the title bar. P1 + P2 ship `open`; the other three collapse by default to shorten the first-impression scroll. New `expandAllCards()` helper auto-expands every section on a submit-validation failure so an invalid value in a collapsed card still surfaces. No engine change — canonical probe suite still **128/128**. Implementation entirely in `index.html` (CSS block + summary/wrapper swaps + 3-line JS helper).
-10. **#54** — Tooltips on priority fields (8–12 fields with non-obvious meaning)
+10. ~~**#54** — Tooltips on priority fields (8–12 fields with non-obvious meaning)~~ ✅ *Done 2026-04-27.* New `.tip` component — a small navy `(?)` icon next to a label that reveals an explanation bubble on hover or keyboard focus (`role="button"` + `tabindex="0"` + `aria-label`). Tooltip text is read from `data-tip`, max 280px wide with a 4px navy arrow. `tip-start` / `tip-end` modifiers anchor the bubble left or right so it doesn't clip in edge columns. Twelve distinct fields covered (CPP@70, CPP@65, OAS@65, DB Indexation, Non-Reg ACB, TFSA Room Remaining, Salary Reference Year, CPP Survivor under-65, Plan Start Year, Year P1 Dies, Withdrawal Order, Return Std. Deviation) — 19 icons total since seven of those labels appear once on each spouse. Existing inline `.hint` spans stay untouched: hint = "what to type", tooltip = "what the concept means." Pure UI — canonical probe suite still **128/128**.
 11. **#59** — "Back to form" button on dashboard with hash decoder + round-trip probe
 12. **#50** — Soft RRSP contribution-room warning
 13. **#51** — Improve CPP-at-65 help text + Service Canada link

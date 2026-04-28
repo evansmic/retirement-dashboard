@@ -116,6 +116,60 @@ details.card > summary.card-title:hover{background:#fafbfc}
 details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 .card-body{padding:18px 26px 22px}
 
+/* Sprint 2 #54: inline tooltip on priority fields. The (?) icon next to a
+   label expands a deeper explanation on hover or keyboard focus. The
+   existing .hint span (rendered under the input) stays — hint says what to
+   type, tooltip explains the underlying concept. Keep tooltip text under
+   ~80 words so the bubble doesn't outgrow its 280px max-width. */
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--navy3);color:#fff;
+  font:700 10px/1 'Segoe UI',system-ui,sans-serif;
+  cursor:help;margin-left:4px;
+  position:relative;
+  flex-shrink:0;
+  vertical-align:1px;
+  text-transform:none;letter-spacing:0;
+}
+.tip:focus{outline:none}
+.tip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.tip::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);
+  background:var(--navy);color:#fff;
+  padding:9px 12px;border-radius:6px;
+  font:400 12px/1.5 'Segoe UI',system-ui,sans-serif;
+  white-space:normal;width:max-content;max-width:280px;
+  opacity:0;visibility:hidden;
+  transition:opacity .15s;
+  pointer-events:none;
+  z-index:20;
+  text-align:left;
+  text-transform:none;letter-spacing:0;
+  box-shadow:0 4px 14px rgba(15,39,68,.25);
+}
+.tip::before{
+  content:'';
+  position:absolute;
+  bottom:calc(100% + 2px);left:50%;
+  transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:var(--navy);
+  opacity:0;visibility:hidden;
+  transition:opacity .15s;
+  z-index:20;
+}
+.tip:hover::after,.tip:hover::before,
+.tip:focus::after,.tip:focus::before{opacity:1;visibility:visible}
+/* Anchor variants — avoid clipping at row edges. */
+.tip.tip-end::after{left:auto;right:-4px;transform:none}
+.tip.tip-end::before{left:auto;right:6px;transform:none}
+.tip.tip-start::after{left:-4px;transform:none}
+.tip.tip-start::before{left:6px;transform:none}
+
 @media(max-width:600px){
   .row,.row.three,.row.four{grid-template-columns:1fr}
   .restore-banner{flex-direction:column;align-items:flex-start}
@@ -199,7 +253,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="f_salary" value="0" min="0">
       </div>
       <div class="field">
-        <label>Salary Reference Year</label>
+        <label>Salary Reference Year <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="The year your stated salary applies to. The engine inflates the salary forward from this year using the Annual Raise rate. Example: $100,000 stated for 2026 with a 3% raise rate is modelled as $103,000 in 2027 and $106,090 in 2028.">?</span></label>
         <input type="number" id="f_salaryRefYear" value="2026" min="2020" max="2040">
         <span class="hint">Year the salary above is stated in</span>
       </div>
@@ -236,7 +290,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="f_db_after65" value="" min="0">
       </div>
       <div class="field">
-        <label>Indexation Rate (e.g. 0.022)</label>
+        <label>Indexation Rate (e.g. 0.022) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Annual COLA built into the pension. Public-sector plans (HOOPP, OTPP, OMERS, OPSEU) typically index at full CPI (~2.1%). Private-sector plans often index at a fraction of CPI or a fixed cap (1–2%). Check your plan's Member Booklet — defaulting to 0.02 is a reasonable mid-point if unsure.">?</span></label>
         <input type="number" id="f_db_index" value="0.02" step="0.001" min="0" max="0.10">
       </div>
       <div class="field">
@@ -256,7 +310,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="f_tfsa" value="" min="0">
       </div>
       <div class="field">
-        <label>TFSA Room Remaining ($)</label>
+        <label>TFSA Room Remaining ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Unused TFSA contribution room accumulated since 2009 (or since you turned 18). Withdrawals from prior years are added back to your room on January 1 of the next year. CRA tracks it in My Account, but the official figure can lag by ~6 months — your real room may be higher if you withdrew recently.">?</span></label>
         <input type="number" id="f_tfsaRoom" value="" min="0">
       </div>
       <div class="field">
@@ -274,7 +328,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="f_nonreg" value="" min="0">
       </div>
       <div class="field">
-        <label>Non-Reg ACB ($)</label>
+        <label>Non-Reg ACB ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Adjusted Cost Base — the tax basis of your non-registered portfolio. Capital gains tax is calculated on (proceeds − ACB), so a low ACB relative to market value means a large embedded gain. Find this on your broker's annual T5008 or capital gains summary; if you've reinvested distributions, your real ACB is higher than your original deposit.">?</span></label>
         <input type="number" id="f_nonregAcb" value="" min="0">
       </div>
       <div class="field">
@@ -286,17 +340,17 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
     <div class="row three">
       <div class="field">
-        <label>CPP at age 70 ($/mo)</label>
+        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="Find this on your Service Canada Statement of Contributions (sign in to My Service Canada Account → CPP estimates). Use the projection at age 70 — deferring CPP from 65 to 70 boosts the monthly amount by 42%, so the age-70 figure is the most reliable benchmark even if you plan to start earlier.">?</span></label>
         <input type="number" id="f_cpp70_monthly" value="" min="0">
         <span class="hint">Your Statement of Contributions estimate</span>
       </div>
       <div class="field">
-        <label>CPP at age 65 ($/mo)</label>
+        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Leave blank to auto-calculate from age 70 ÷ 1.42 (CPP grows 0.7% per month deferred past 65). Override only if your Service Canada Statement of Contributions shows a different age-65 estimate — for example, if your earnings dropped late in your career and the deferred-to-70 projection no longer reflects current contributions.">?</span></label>
         <input type="number" id="f_cpp65_monthly" value="" min="0">
         <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
       </div>
       <div class="field">
-        <label>OAS at age 65 ($/mo)</label>
+        <label>OAS at age 65 ($/mo) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Maximum 2026 OAS at age 65 is $742.31/mo. Reduce if you have less than 40 years of Canadian residency after age 18 (1/40 deduction per missing year). OAS clawback starts at $93,454 net income (2026); above roughly $153,000 the entire OAS is recovered.">?</span></label>
         <input type="number" id="f_oas_monthly" value="742.31" min="0">
         <span class="hint">Max 2026 = $742.31/mo</span>
       </div>
@@ -341,7 +395,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="m_salary" value="0" min="0">
       </div>
       <div class="field">
-        <label>Salary Reference Year</label>
+        <label>Salary Reference Year <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="The year your stated salary applies to. The engine inflates the salary forward from this year using the Annual Raise rate. Example: $100,000 stated for 2026 with a 3% raise rate is modelled as $103,000 in 2027 and $106,090 in 2028.">?</span></label>
         <input type="number" id="m_salaryRefYear" value="2026" min="2020" max="2040">
       </div>
       <div class="field">
@@ -376,7 +430,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="m_db_after65" value="" min="0">
       </div>
       <div class="field">
-        <label>Indexation Rate (e.g. 0.022)</label>
+        <label>Indexation Rate (e.g. 0.022) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Annual COLA built into the pension. Public-sector plans (HOOPP, OTPP, OMERS, OPSEU) typically index at full CPI (~2.1%). Private-sector plans often index at a fraction of CPI or a fixed cap (1–2%). Check your plan's Member Booklet — defaulting to 0.02 is a reasonable mid-point if unsure.">?</span></label>
         <input type="number" id="m_db_index" value="0.02" step="0.001" min="0" max="0.10">
       </div>
       <div class="field">
@@ -400,7 +454,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="m_tfsa" value="" min="0">
       </div>
       <div class="field">
-        <label>TFSA Room Remaining ($)</label>
+        <label>TFSA Room Remaining ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Unused TFSA contribution room accumulated since 2009 (or since you turned 18). Withdrawals from prior years are added back to your room on January 1 of the next year. CRA tracks it in My Account, but the official figure can lag by ~6 months — your real room may be higher if you withdrew recently.">?</span></label>
         <input type="number" id="m_tfsaRoom" value="" min="0">
       </div>
     </div>
@@ -425,7 +479,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     </div>
     <div class="row three">
       <div class="field">
-        <label>Non-Reg ACB ($)</label>
+        <label>Non-Reg ACB ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Adjusted Cost Base — the tax basis of your non-registered portfolio. Capital gains tax is calculated on (proceeds − ACB), so a low ACB relative to market value means a large embedded gain. Find this on your broker's annual T5008 or capital gains summary; if you've reinvested distributions, your real ACB is higher than your original deposit.">?</span></label>
         <input type="number" id="m_nonregAcb" value="" min="0">
         <span class="hint">Adjusted cost base of the non-reg portfolio</span>
       </div>
@@ -439,16 +493,16 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
     <div class="row three">
       <div class="field">
-        <label>CPP at age 70 ($/mo)</label>
+        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="Find this on your Service Canada Statement of Contributions (sign in to My Service Canada Account → CPP estimates). Use the projection at age 70 — deferring CPP from 65 to 70 boosts the monthly amount by 42%, so the age-70 figure is the most reliable benchmark even if you plan to start earlier.">?</span></label>
         <input type="number" id="m_cpp70_monthly" value="" min="0">
       </div>
       <div class="field">
-        <label>CPP at age 65 ($/mo)</label>
+        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Leave blank to auto-calculate from age 70 ÷ 1.42 (CPP grows 0.7% per month deferred past 65). Override only if your Service Canada Statement of Contributions shows a different age-65 estimate — for example, if your earnings dropped late in your career and the deferred-to-70 projection no longer reflects current contributions.">?</span></label>
         <input type="number" id="m_cpp65_monthly" value="" min="0">
         <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
       </div>
       <div class="field">
-        <label>OAS at age 65 ($/mo)</label>
+        <label>OAS at age 65 ($/mo) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Maximum 2026 OAS at age 65 is $742.31/mo. Reduce if you have less than 40 years of Canadian residency after age 18 (1/40 deduction per missing year). OAS clawback starts at $93,454 net income (2026); above roughly $153,000 the entire OAS is recovered.">?</span></label>
         <input type="number" id="m_oas_monthly" value="742.31" min="0">
       </div>
     </div>
@@ -456,7 +510,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <div class="section-label">Survivor CPP (if Person 1 dies first)</div>
     <div class="row">
       <div class="field">
-        <label>CPP Survivor Benefit under 65 ($/mo)</label>
+        <label>CPP Survivor Benefit under 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="What the surviving spouse would receive if Person 1 dies first. CRA pays a portion of the deceased's CPP, but the survivor's combined CPP can't exceed the maximum single-person CPP (~$1,433/mo in 2026), so high own-CPP earners get a smaller top-up. Service Canada's Statement of Contributions shows your projected survivor amount.">?</span></label>
         <input type="number" id="m_cppSurv_u65" value="" min="0">
       </div>
       <div class="field">
@@ -640,7 +694,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
              a legacy compatibility field — prefer the per-spouse retirement year
              inputs at the top of each Person section. Derived automatically on
              submit if both per-spouse years are set to the same value. -->
-        <label>Plan Start Year</label>
+        <label>Plan Start Year <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="First year of the simulation. Leave blank to auto-start at the earliest spouse's retirement year. Override to model pre-retirement working years — e.g., set to 2026 to include this year's salary, RRSP/TFSA contributions, and balance accumulation in the projection.">?</span></label>
         <input type="number" id="a_planStart" value="" min="2024" max="2050" placeholder="auto">
         <span class="hint">Leave blank to use earliest retirement year. Set earlier to model working years.</span>
       </div>
@@ -654,7 +708,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="a_horizon" value="95" min="80" max="100">
       </div>
       <div class="field">
-        <label>Year Person 1 dies (Survivor scenario)</label>
+        <label>Year Person 1 dies (Survivor scenario) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Used only by the Survivor scenario tab in the dashboard, which stress-tests the surviving spouse's plan after Person 1 dies. Doesn't affect Baseline or Meltdown projections. Common choice: Person 1's life expectancy (e.g., age 82–85) so the survivor lives roughly 10 years on a single CPP/OAS.">?</span></label>
         <input type="number" id="a_p1Dies" value="" min="2025" max="2060">
         <span class="hint">Used only in Survivor tab</span>
       </div>
@@ -670,7 +724,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
       </div>
       <div class="field">
         <!-- Phase 4.5: Return volatility — used by Monte Carlo + stress tests. -->
-        <label>Return Std. Deviation (Monte Carlo)</label>
+        <label>Return Std. Deviation (Monte Carlo) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Annual volatility of portfolio returns — used only by Monte Carlo and sequence-of-returns stress tests. Doesn't affect the Baseline projection. Reference values: 60/40 portfolio ≈ 0.10, 80/20 ≈ 0.13, 100% equity ≈ 0.18. Higher volatility lowers probability-of-success even if the average return is unchanged.">?</span></label>
         <input type="number" id="a_returnStdDev" value="0.10" step="0.01" min="0" max="0.30">
         <span class="hint">60/40 ≈ 0.10; 80/20 ≈ 0.13; 100% equity ≈ 0.18</span>
       </div>
@@ -691,7 +745,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <span class="hint">Service Canada election that splits each spouse's CPP 50/50 while both are alive. Distinct from pension splitting — CPP sharing changes who actually receives the money.</span>
       </div>
       <div class="field">
-        <label>Withdrawal order (baseline scenario)</label>
+        <label>Withdrawal order (baseline scenario) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Default (Non-Reg → TFSA → RRSP) preserves the registered shelter — the textbook recommendation. Meltdown drains the RRSP first to reduce future RRIF minimums and shrink the deemed-disposition tax bill at last death. Meltdown wins for high RRSP balances ($1M+ each); Default usually wins for moderate ones. The Meltdown scenario card always uses meltdown.">?</span></label>
         <select id="a_withdrawalOrder">
           <option value="default" selected>Default — Non-Reg → TFSA → RRSP (CFM textbook)</option>
           <option value="meltdown">Meltdown — RRSP/RRIF first (Snap-style)</option>
