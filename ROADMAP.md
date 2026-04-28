@@ -52,9 +52,7 @@
 
 **Phase 5 shipped (2026-04-25).** Decision session held same day resolved every open question (see `DECISIONS.md` — Open decisions section is now empty). Forward path is broken into four sprints (`TASKS.md`, tasks #41–#59).
 
-**Active sprint: Sprint 1 — Foundation.**
-
-**Sprint 1 progress (as of 2026-04-27): 7/8 complete.**
+**Sprint 1 — Foundation: complete (2026-04-27). 8/8 done.** The project is now technically publishable.
 - ✅ #41 — MIT LICENSE at project root.
 - ✅ #42 — "Not financial advice" disclaimer in README + dashboard footer (with print-stylesheet rule so it carries to PDF export).
 - ✅ #46 — `D.schemaVersion = 1` + `migrate(D)` scaffold landed. Probe coverage 67/67 (added `probe_schema_migrate.js`). Unblocked the v1→v2 migration that shipped with #47–#49.
@@ -62,7 +60,9 @@
 - ✅ #58 — Five Canadian-archetype presets shipped in the dashboard's `PRESETS` registry, deep-linked via `?example=<slug>`. Blank fallback + landing card; intake form prefill stripped to structural defaults only. Probe count now **119/119** (added `probe_presets.js`).
 - ✅ #56 — JSDoc `@typedef` block for `D` and its sub-shapes (`Person`, `Spending`, `Mortgage`, `Loc`, `CashWedge`, `Downsize`, `OneOff`, `SpousalRrsp`, `Assumptions`) at the top of the CLIENT DATA section in `retirement_dashboard.html`. `loadClientData()` / `migrate()` / `getBlankD()` / `getDefaultD()` annotated; `const D` carries `@type {D}`. Pure documentation — no runtime change.
 - ✅ #57 — GitHub Actions CI workflow at `.github/workflows/probes.yml` runs the canonical regression suite on every push to `main`, every pull request, and on manual dispatch. Ubuntu + Node 20 LTS; the existing `probes/run_all.sh` tally + `exit 1` is what gates the job. README badge added; stale per-probe counts in `probes/README.md` refreshed (total **119 → 128**, picking up the drift from phase4_final and presets).
-- ⏳ #43 — pending.
+- ✅ #43 — `README.md` rewritten for a public reader: live-demo button to `retirement-dashboard-two.vercel.app` with `/example/<slug>` deep-links for all five presets, customer-tone intro pitch (adapted from PITCH.md), "What it models" feature table, privacy note, CI + MIT badges. Repo guide and full disclaimer retained but moved below the public-facing material. Screenshot is a placeholder at `docs/screenshot.png`; real shot is in the backlog.
+
+**Active sprint: Sprint 2 — UX polish.** See `TASKS.md` items #53, #54, #59, #50, #51, #52.
 
 ## Sprint plan (post-decision)
 
