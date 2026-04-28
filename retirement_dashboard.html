@@ -95,6 +95,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tag-o{background:#fef3dc;color:#b87800}
 .note{font-size:11px;color:var(--muted);font-style:italic;margin-top:6px}
 
+/* Sprint 2 #52: top-of-page Monte Carlo status banner. Three visual states
+   (running / complete / skipped) controlled by the `data-state` attribute.
+   Sits above the sustainability banner so the user can see "stress test in
+   progress" without scrolling. The progress bar fills smoothly via a CSS
+   transition keyed off the inline `--mc-pct` custom property. */
+.mc-banner{display:none;background:#f4f8fc;border:1.5px solid #c9d8ea;border-left:5px solid var(--navy3);border-radius:10px;padding:11px 16px;margin-bottom:12px;box-shadow:var(--shadow);font-size:13px;color:var(--navy2);align-items:center;gap:14px;flex-wrap:wrap}
+.mc-banner.show{display:flex}
+.mc-banner .mc-icon{font-size:18px;line-height:1}
+.mc-banner .mc-text{flex:1;min-width:200px}
+.mc-banner .mc-text strong{color:var(--navy);font-weight:700}
+.mc-banner .mc-bar{flex-basis:200px;height:6px;background:#dde7f1;border-radius:3px;overflow:hidden;position:relative}
+.mc-banner .mc-bar::after{content:'';position:absolute;inset:0;width:var(--mc-pct,0%);background:linear-gradient(90deg,var(--navy3),var(--gold));border-radius:3px;transition:width .25s ease}
+.mc-banner .mc-actions{display:flex;gap:8px;flex-shrink:0}
+.mc-banner button{background:#fff;border:1px solid #c9d8ea;color:var(--navy2);font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:inherit}
+.mc-banner button:hover{background:var(--light);border-color:var(--navy3)}
+.mc-banner[data-state="complete"]{background:#eef8f1;border-color:#c4e3d2;border-left-color:var(--green)}
+.mc-banner[data-state="complete"] .mc-bar{display:none}
+.mc-banner[data-state="skipped"]{background:#fef9e8;border-color:#f0d680;border-left-color:var(--gold)}
+.mc-banner[data-state="skipped"] .mc-bar{display:none}
+.mc-banner .mc-rate{font-weight:700;color:var(--green);font-size:14px}
+.mc-banner[data-state="skipped"] .mc-rate{color:#7a5d10}
+
 /* DISCLAIMER FOOTER */
 .disclaimer{max-width:1400px;margin:0 auto;padding:18px 20px 32px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.5}
 .disclaimer strong{color:var(--text)}
@@ -140,7 +162,11 @@ body.blank-mode .body { display:none !important }
   .hdr, .body, .disclaimer { max-width: 100% !important; padding: 8mm !important; }
   .disclaimer { break-inside: avoid; page-break-inside: avoid; color: #333 !important; }
   .tabs, #unitToggle, #printBtn,
-  #mcRunBtn, #seqRunBtn, #cmpPosBtn { display: none !important; }
+  #mcRunBtn, #seqRunBtn, #cmpPosBtn,
+  .mc-banner .mc-actions { display: none !important; }
+  /* The MC banner itself prints when complete (it carries the headline
+     success rate the print reader most wants); the progress controls don't. */
+  .mc-banner[data-state="running"] { display: none !important; }
   .detail-card .detail-hdr .toggle { display: none !important; }
   .hidden { display: block !important; }    /* force-show collapsed detail */
   .chart-card, .detail-card, .cmp-card, .kpi, .kpi-row {
@@ -240,6 +266,21 @@ body.blank-mode .body { display:none !important }
 
 <!-- BODY -->
 <div class="body">
+
+  <!-- Sprint 2 #52: Monte Carlo status banner. Surfaces the background stress
+       test for the active scenario, then reveals the headline success rate
+       once complete. States are toggled by `data-state` (running/complete/
+       skipped) — see CSS in the head. The MC panel further down still owns
+       the full fan chart + percentile KPIs; this banner is a one-line summary
+       at the top. -->
+  <div id="mcBanner" class="mc-banner" data-state="running" role="status" aria-live="polite">
+    <span class="mc-icon">🎲</span>
+    <div class="mc-text" id="mcBannerText">Running stress test in the background — your dashboard is fully ready to explore.</div>
+    <div class="mc-bar" id="mcBannerBar" style="--mc-pct:0%"></div>
+    <div class="mc-actions" id="mcBannerActions">
+      <button type="button" id="mcSkipBtn" onclick="cancelAutoMonteCarlo()">Skip stress test</button>
+    </div>
+  </div>
 
   <!-- SUSTAINABILITY BANNER (shown when target spend exceeds sustainable) -->
   <div id="sustBanner" style="display:none;background:#fef3dc;border:1.5px solid #e8a020;border-left:5px solid #e8a020;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);font-size:13px;color:#6b4d00">
@@ -2060,36 +2101,50 @@ function runSimulation(cfg){
 // Cost: ~1000 × 38-year sim. Each sim reuses all the existing Phase 2/3 logic
 // (tax, OAS clawback, splitting, spousal attribution, one-offs). The per-path
 // overhead is dominated by the simulation itself, not the Normal draw.
-function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
+// Sprint 2 #52: split the run into three phases (begin/step/finish) so the
+// synchronous wrapper below AND the chunked progressive runner used by the
+// dashboard's auto-MC both share the same per-path math. Calling `mcBegin`
+// followed by a single `mcStep(state, state.nPaths)` and `mcFinish(state)`
+// returns identical-shape output to the original single-pass implementation.
+function _mcNormalSampler(){
+  // Box-Muller transform — converts two U(0,1) samples into one N(0,1) sample.
+  // No seed control here by design; results will differ each click. If reproducibility
+  // is required, replace Math.random with a seeded PRNG (mulberry32 etc.).
+  return function(){
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+}
+
+function mcBegin(baseCfg, nPaths, meanReturn, stdDev){
   nPaths     = nPaths     || (D.assumptions && D.assumptions.monteCarloPaths) || 1000;
   meanReturn = (meanReturn != null) ? meanReturn
                                     : (baseCfg.returnRate != null ? baseCfg.returnRate : 0.05);
   stdDev     = (stdDev != null) ? stdDev
                                 : ((D.assumptions && D.assumptions.returnStdDev) || 0.10);
-
-  // Box-Muller transform — converts two U(0,1) samples into one N(0,1) sample.
-  // No seed control here by design; results will differ each click. If reproducibility
-  // is required, replace Math.random with a seeded PRNG (mulberry32 etc.).
-  function normal(){
-    let u = 0, v = 0;
-    while(u === 0) u = Math.random();
-    while(v === 0) v = Math.random();
-    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-  }
-
   // Run one deterministic reference path to learn plan length. Using the scalar
   // `returnRate` on its own matches what the baseline scenario would produce,
   // which also serves as the MC "deterministic comparator" in the probe.
   const refRun = runSimulation(baseCfg);
   const nYears = refRun.years.length;
-
   // Column-major: balances[y] is a typed array of per-path balances at year y.
   // Typed arrays keep GC pressure low across 1,000 × 38 = 38,000 writes.
   const balances = Array.from({length:nYears}, () => new Float64Array(nPaths));
   const endPort  = new Float64Array(nPaths);
-  let nSuccess   = 0;
+  return {
+    baseCfg, nPaths, meanReturn, stdDev,
+    refRun, nYears, balances, endPort,
+    nSuccess: 0, pathsRun: 0,
+    normal: _mcNormalSampler()
+  };
+}
 
-  for(let p = 0; p < nPaths; p++){
+function mcStep(state, batch){
+  const { baseCfg, nPaths, meanReturn, stdDev, nYears, balances, endPort, normal } = state;
+  const end = Math.min(state.pathsRun + Math.max(1, batch|0), nPaths);
+  for(let p = state.pathsRun; p < end; p++){
     const rates = new Array(nYears);
     for(let i = 0; i < nYears; i++){
       rates[i] = meanReturn + stdDev * normal();
@@ -2101,9 +2156,13 @@ function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
       if(r.years[i].shortfall > 500) shortfallCount++;
     }
     endPort[p] = r.years[r.years.length - 1].bal_total;
-    if(shortfallCount === 0) nSuccess++;
+    if(shortfallCount === 0) state.nSuccess++;
   }
+  state.pathsRun = end;
+}
 
+function mcFinish(state){
+  const { nPaths, meanReturn, stdDev, refRun, nYears, balances, endPort, nSuccess } = state;
   function percentile(arr, q){
     const a = Array.from(arr).sort((x, y) => x - y);
     const idx = q * (a.length - 1);
@@ -2115,7 +2174,6 @@ function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
     for(let i = 0; i < arr.length; i++) s += arr[i];
     return s / arr.length;
   }
-
   const perYear = [];
   for(let i = 0; i < nYears; i++){
     perYear.push({
@@ -2127,7 +2185,6 @@ function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
       p90:  percentile(balances[i], 0.90)
     });
   }
-
   return {
     nPaths, meanReturn, stdDev,
     successRate: nSuccess / nPaths,
@@ -2139,6 +2196,51 @@ function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
     },
     perYear,
     refRun
+  };
+}
+
+function monteCarlo(baseCfg, nPaths, meanReturn, stdDev){
+  const state = mcBegin(baseCfg, nPaths, meanReturn, stdDev);
+  mcStep(state, state.nPaths);
+  return mcFinish(state);
+}
+
+// Sprint 2 #52: progressive Monte Carlo runner — kicks off after the
+// deterministic plan has rendered so the user sees their dashboard instantly.
+// Processes paths in batches of `batchSize` separated by `setTimeout(0)` so the
+// browser can paint between chunks and the page stays responsive. Returns a
+// handle with `.cancel()` so the caller can abort if the user clicks "Skip" or
+// switches scenarios mid-run. `onProgress(done, total)` fires after each batch;
+// `onComplete(mc)` fires once with the same shape as `monteCarlo()` returns.
+function monteCarloProgressive(baseCfg, opts){
+  opts = opts || {};
+  const nPaths     = opts.nPaths || (D.assumptions && D.assumptions.monteCarloPaths) || 1000;
+  const batchSize  = Math.max(10, opts.batchSize || 200);
+  const meanReturn = (opts.meanReturn != null) ? opts.meanReturn
+                                               : (baseCfg.returnRate != null ? baseCfg.returnRate : 0.05);
+  const stdDev     = (opts.stdDev != null) ? opts.stdDev
+                                           : ((D.assumptions && D.assumptions.returnStdDev) || 0.10);
+  const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : function(){};
+  const onComplete = typeof opts.onComplete === 'function' ? opts.onComplete : function(){};
+  const state = mcBegin(baseCfg, nPaths, meanReturn, stdDev);
+  let cancelled = false;
+  function tick(){
+    if(cancelled) return;
+    if(state.pathsRun >= state.nPaths){
+      onComplete(mcFinish(state));
+      return;
+    }
+    mcStep(state, batchSize);
+    onProgress(state.pathsRun, state.nPaths);
+    setTimeout(tick, 0);
+  }
+  // Kick off after a microtask so callers can finish setup (e.g. wire onProgress
+  // listeners) before the first batch fires.
+  setTimeout(tick, 0);
+  return {
+    cancel: function(){ cancelled = true; },
+    isCancelled: function(){ return cancelled; },
+    state: state,
   };
 }
 
@@ -2385,6 +2487,20 @@ function setScenario(key){
   updateCharts();
   updateDetailTable();
 
+  // Sprint 2 #52: cancel any in-flight auto-run if the user tab-switches
+  // mid-stress-test. The result was for baseline; rendering it under another
+  // scenario would mislabel the fan chart. The banner falls back to skipped
+  // so the user can re-run if they want.
+  if(_mcActiveRun){
+    _mcActiveRun.cancel();
+    _mcActiveRun = null;
+    _setMcBanner(
+      'skipped',
+      '<strong>Scenario changed</strong> — the in-progress baseline stress test was cancelled. Run a fresh test for the new scenario from the panel below.',
+      { actionsHtml: '<button type="button" onclick="dismissMcBanner()">Dismiss</button>' }
+    );
+  }
+
   // Phase 4.1: MC results are scenario-specific. Hide stale fan chart on tab
   // change so the user doesn't misread a Baseline MC result as a Meltdown one.
   const mcRes = document.getElementById('mcResults');
@@ -2395,7 +2511,7 @@ function setScenario(key){
     mcPlc.style.display = '';
     mcPlc.textContent = 'Scenario changed — click the button to re-run Monte Carlo for ' + SCENARIOS[key].label + '.';
   }
-  if(mcBtn) mcBtn.textContent = 'Run 1,000 paths';
+  if(mcBtn){ mcBtn.disabled = false; mcBtn.textContent = 'Run 1,000 paths'; }
   const lbl = document.getElementById('mcScenLabel');
   if(lbl) lbl.textContent = SCENARIOS[key].label;
 
@@ -2493,77 +2609,218 @@ function runProbOfSuccessUI(){
 // ════════════════════════════════════════════════════════
 //  MONTE CARLO UI (Phase 4.1)
 // ════════════════════════════════════════════════════════
-// Kicked off by the "Run 1,000 paths" button. Uses the *active* scenario's cfg
-// (which already has the sustainable spendMultiplier baked in by the solver),
-// so the chart answers: "given the plan I've been recommended, how robust is it
-// to volatile returns?" The answer is almost never 100% — the solver calibrates
-// to the deterministic mean, which sits at ~50th percentile of outcomes.
+// Sprint 2 #52: refactored — the heavy result rendering moved into
+// renderMonteCarloResults() so the on-load auto-run (`autoMonteCarlo`) and the
+// manual "Re-run" button share the same sink. `runMonteCarloUI` is now a thin
+// wrapper around the progressive runner, used when the user explicitly asks
+// for a fresh run after the auto-run has finished or been skipped.
+//
+// Why is this here? The sustainable-spend solver uses a deterministic 5%
+// return. This panel re-runs the active scenario under volatile returns to
+// show the uncertainty band around that point estimate.
+function renderMonteCarloResults(mc, scn){
+  const sd = (D.assumptions && D.assumptions.returnStdDev) || 0.10;
+  const place = document.getElementById('mcPlaceholder');
+  const results = document.getElementById('mcResults');
+
+  // Phase 4.3: stash per-scenario success rate for the comparison table.
+  POS_CACHE[activeScenario] = mc.successRate;
+  if(document.getElementById('cmpBody')) buildComparisonTable();
+
+  // KPI cards.
+  document.getElementById('mcSuccess').textContent = (mc.successRate * 100).toFixed(1) + '%';
+  document.getElementById('mcMedEnd').textContent  = fmtM(mc.endPortfolio.p50);
+  document.getElementById('mcP10End').textContent  = fmtM(mc.endPortfolio.p10);
+  document.getElementById('mcP90End').textContent  = fmtM(mc.endPortfolio.p90);
+  document.getElementById('mcScenLabel').textContent = scn.label;
+  document.getElementById('mcSdLabel').textContent   = (sd * 100).toFixed(0) + '%';
+
+  // Fan chart — three line datasets (p10 / p50 / p90). Area between p10 and
+  // p90 is filled via Chart.js 'fill: -1' (fill to previous dataset).
+  const labels = mc.perYear.map(y => y.year + ' (age ' + y.ageF + ')');
+  const cfg = {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: '10th percentile', data: mc.perYear.map(y=>y.p10),
+          borderColor: '#7ab8e0', borderWidth: 1, pointRadius: 0,
+          fill: false },
+        { label: '90th percentile', data: mc.perYear.map(y=>y.p90),
+          borderColor: '#7ab8e0', borderWidth: 1, pointRadius: 0,
+          backgroundColor: 'rgba(122,184,224,0.20)',
+          fill: '-1' },  // fill between p10 and p90
+        { label: 'Median',         data: mc.perYear.map(y=>y.p50),
+          borderColor: '#2db560', borderWidth: 2.5, pointRadius: 0, fill: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtM(ctx.parsed.y) } }
+      },
+      scales: {
+        y: { ticks: { callback: v => fmtM(v) }, title: { display: true, text: 'Portfolio ($)' } }
+      }
+    }
+  };
+  if(charts.mc){ charts.mc.destroy(); }
+  charts.mc = new Chart(document.getElementById('chartMC'), cfg);
+
+  if(place) place.style.display = 'none';
+  if(results) results.style.display = '';
+  const btn = document.getElementById('mcRunBtn');
+  if(btn){ btn.disabled = false; btn.textContent = 'Re-run 1,000 paths'; }
+}
+
 function runMonteCarloUI(){
+  // If the on-load auto-run is still in flight, cancel it — the user clicked
+  // the manual button (probably after a tab switch). Otherwise we'd race two
+  // progressive runs into the same render sink.
+  if(_mcActiveRun){ _mcActiveRun.cancel(); _mcActiveRun = null; }
+
   const scn = SCENARIOS[activeScenario];
   const btn = document.getElementById('mcRunBtn');
   const place = document.getElementById('mcPlaceholder');
-  const results = document.getElementById('mcResults');
   btn.disabled = true;
   btn.textContent = 'Running…';
-  place.textContent = 'Running 1,000 paths — this blocks the UI for ~1 second.';
+  place.style.display = '';
+  place.textContent = 'Running 1,000 paths — your dashboard stays interactive.';
 
-  // Yield to the browser so the button text repaints before the blocking run.
-  setTimeout(() => {
-    const nPaths = (D.assumptions && D.assumptions.monteCarloPaths) || 1000;
-    const sd     = (D.assumptions && D.assumptions.returnStdDev)    || 0.10;
-    const mc     = monteCarlo(scn.cfg, nPaths, scn.cfg.returnRate, sd);
+  const nPaths = (D.assumptions && D.assumptions.monteCarloPaths) || 1000;
+  const sd     = (D.assumptions && D.assumptions.returnStdDev)    || 0.10;
+  _mcActiveRun = monteCarloProgressive(scn.cfg, {
+    nPaths, stdDev: sd, batchSize: 200,
+    onProgress: function(done, total){
+      place.textContent = 'Running ' + total + ' paths — ' + done + '/' + total + ' (' + Math.round(100*done/total) + '%).';
+    },
+    onComplete: function(mc){
+      _mcActiveRun = null;
+      renderMonteCarloResults(mc, scn);
+    }
+  });
+}
 
-    // Phase 4.3: stash per-scenario success rate for the comparison table.
-    POS_CACHE[activeScenario] = mc.successRate;
-    if(document.getElementById('cmpBody')) buildComparisonTable();
+// ════════════════════════════════════════════════════════
+//  SPRINT 2 #52 · DEFAULT-ON MONTE CARLO + SKIP TOGGLE
+// ════════════════════════════════════════════════════════
+// On load, the deterministic plan renders instantly; this layer kicks off a
+// progressive Monte Carlo run for the *baseline* scenario in the background,
+// surfacing progress in the top banner. When complete, the banner shows the
+// success rate and the existing MC panel populates with the fan chart + KPIs.
+// "Skip stress test" cancels the run and persists the preference to
+// localStorage so the next visit honours the choice.
+let _mcActiveRun = null;
+const MC_SKIP_KEY = 'rpd_skip_mc';
 
-    // KPI cards.
-    document.getElementById('mcSuccess').textContent = (mc.successRate * 100).toFixed(1) + '%';
-    document.getElementById('mcMedEnd').textContent  = fmtM(mc.endPortfolio.p50);
-    document.getElementById('mcP10End').textContent  = fmtM(mc.endPortfolio.p10);
-    document.getElementById('mcP90End').textContent  = fmtM(mc.endPortfolio.p90);
-    document.getElementById('mcScenLabel').textContent = scn.label;
-    document.getElementById('mcSdLabel').textContent   = (sd * 100).toFixed(0) + '%';
+function _setMcBanner(state, html, opts){
+  opts = opts || {};
+  const banner = document.getElementById('mcBanner');
+  if(!banner) return;
+  banner.classList.add('show');
+  banner.setAttribute('data-state', state);
+  document.getElementById('mcBannerText').innerHTML = html;
+  const bar = document.getElementById('mcBannerBar');
+  if(bar){
+    if(opts.pct != null) bar.style.setProperty('--mc-pct', Math.round(opts.pct) + '%');
+  }
+  const actions = document.getElementById('mcBannerActions');
+  if(actions) actions.innerHTML = opts.actionsHtml || '';
+}
 
-    // Fan chart — three line datasets (p10 / p50 / p90). Area between p10 and
-    // p90 is filled via Chart.js 'fill: -2' which fills to the dataset 2 above.
-    const labels = mc.perYear.map(y => y.year + ' (age ' + y.ageF + ')');
-    const cfg = {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: '10th percentile', data: mc.perYear.map(y=>y.p10),
-            borderColor: '#7ab8e0', borderWidth: 1, pointRadius: 0,
-            fill: false },
-          { label: '90th percentile', data: mc.perYear.map(y=>y.p90),
-            borderColor: '#7ab8e0', borderWidth: 1, pointRadius: 0,
-            backgroundColor: 'rgba(122,184,224,0.20)',
-            fill: '-1' },  // fill between p10 and p90
-          { label: 'Median',         data: mc.perYear.map(y=>y.p50),
-            borderColor: '#2db560', borderWidth: 2.5, pointRadius: 0, fill: false },
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtM(ctx.parsed.y) } }
-        },
-        scales: {
-          y: { ticks: { callback: v => fmtM(v) }, title: { display: true, text: 'Portfolio ($)' } }
-        }
+function _hideMcBanner(){
+  const banner = document.getElementById('mcBanner');
+  if(banner){ banner.classList.remove('show'); banner.setAttribute('data-state', 'running'); }
+}
+
+function autoMonteCarlo(){
+  // Honour the persisted skip preference. The banner stays visible with a
+  // "Run anyway" affordance so the user can opt back in for this session.
+  let skipPref = false;
+  try { skipPref = localStorage.getItem(MC_SKIP_KEY) === '1'; } catch(_){}
+  if(skipPref){
+    _setMcBanner(
+      'skipped',
+      '<strong>Stress test skipped</strong> — run it any time from the Monte Carlo panel below.',
+      { actionsHtml: '<button type="button" onclick="resumeAutoMonteCarlo()">Run stress test now</button>' }
+    );
+    return;
+  }
+  _startAutoMonteCarlo();
+}
+
+function _startAutoMonteCarlo(){
+  // Always run against the baseline scenario on load — that's what the
+  // dashboard opens to. If the user switches scenarios, the MC panel resets
+  // and they re-run via the manual button (existing behaviour).
+  const scn = SCENARIOS['base'];
+  if(!scn || !scn.cfg) return;
+  const nPaths = (D.assumptions && D.assumptions.monteCarloPaths) || 1000;
+  const sd     = (D.assumptions && D.assumptions.returnStdDev)    || 0.10;
+
+  _setMcBanner(
+    'running',
+    '<strong>Running stress test in the background</strong> — ' + nPaths.toLocaleString() + ' random return sequences. Your dashboard is fully interactive while this runs.',
+    { pct: 0, actionsHtml: '<button type="button" id="mcSkipBtn" onclick="cancelAutoMonteCarlo()">Skip stress test</button>' }
+  );
+
+  // Repaint the MC panel placeholder to mirror the banner.
+  const place = document.getElementById('mcPlaceholder');
+  if(place){ place.style.display = ''; place.textContent = 'Running ' + nPaths + ' paths in the background…'; }
+  const btn = document.getElementById('mcRunBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Running…'; }
+
+  _mcActiveRun = monteCarloProgressive(scn.cfg, {
+    nPaths, stdDev: sd, batchSize: 200,
+    onProgress: function(done, total){
+      _setMcBanner(
+        'running',
+        '<strong>Running stress test</strong> — ' + done.toLocaleString() + ' / ' + total.toLocaleString() + ' paths sampled.',
+        { pct: 100*done/total, actionsHtml: '<button type="button" onclick="cancelAutoMonteCarlo()">Skip stress test</button>' }
+      );
+      if(place) place.textContent = 'Running ' + total + ' paths in the background — ' + done + '/' + total + ' done.';
+    },
+    onComplete: function(mc){
+      _mcActiveRun = null;
+      // Only render into the panel if the user is still on baseline. If they
+      // tab-switched mid-run, setScenario already reset the panel; respect it.
+      if(activeScenario === 'base'){
+        renderMonteCarloResults(mc, SCENARIOS['base']);
       }
-    };
-    if(charts.mc){ charts.mc.destroy(); }
-    charts.mc = new Chart(document.getElementById('chartMC'), cfg);
+      const pct = (mc.successRate * 100).toFixed(1);
+      _setMcBanner(
+        'complete',
+        '<strong>Stress test complete:</strong> your baseline plan succeeds in <span class="mc-rate">' + pct + '%</span> of ' + mc.nPaths.toLocaleString() + ' simulated return sequences. <a href="#chartMC" style="color:var(--navy3);font-weight:600">See the fan chart →</a>',
+        { actionsHtml: '<button type="button" onclick="dismissMcBanner()">Dismiss</button>' }
+      );
+    }
+  });
+}
 
-    place.style.display = 'none';
-    results.style.display = '';
-    btn.disabled = false;
-    btn.textContent = 'Re-run 1,000 paths';
-  }, 30);
+function cancelAutoMonteCarlo(){
+  if(_mcActiveRun){ _mcActiveRun.cancel(); _mcActiveRun = null; }
+  try { localStorage.setItem(MC_SKIP_KEY, '1'); } catch(_){}
+  _setMcBanner(
+    'skipped',
+    '<strong>Stress test skipped.</strong> You can run it any time from the Monte Carlo panel below.',
+    { actionsHtml: '<button type="button" onclick="resumeAutoMonteCarlo()">Run it now</button>' }
+  );
+  // Reset the MC panel placeholder so the existing button flow works.
+  const place = document.getElementById('mcPlaceholder');
+  if(place){ place.style.display = ''; place.textContent = 'No paths run yet. Click the button above to sample 1,000 random return sequences.'; }
+  const btn = document.getElementById('mcRunBtn');
+  if(btn){ btn.disabled = false; btn.textContent = 'Run 1,000 paths'; }
+}
+
+function resumeAutoMonteCarlo(){
+  try { localStorage.removeItem(MC_SKIP_KEY); } catch(_){}
+  _startAutoMonteCarlo();
+}
+
+function dismissMcBanner(){
+  _hideMcBanner();
 }
 
 // ════════════════════════════════════════════════════════
@@ -3139,6 +3396,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const btn = document.getElementById('editPlanBtn');
     if (btn) btn.style.display = '';
   }
+  // Sprint 2 #52: kick off Monte Carlo for the baseline scenario in the
+  // background. Deferred via setTimeout so the deterministic dashboard above
+  // paints first; the progressive runner then yields between batches so the
+  // page stays interactive throughout the ~1s simulation.
+  setTimeout(autoMonteCarlo, 80);
 });
 </script>
 </body>

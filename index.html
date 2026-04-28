@@ -40,6 +40,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .field input,.field select{padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;transition:border .15s}
 .field input:focus,.field select:focus{outline:none;border-color:var(--navy3)}
 .field .hint{font-size:11px;color:var(--muted);font-style:italic}
+/* Sprint 2 #51: in-hint links (e.g. Service Canada / CRA portals on the CPP
+   and RRSP fields). Keep the italic muted base style, but use a navy link
+   colour so it's clearly clickable; underline on hover. */
+.field .hint a{color:var(--navy3);text-decoration:none;font-style:normal;font-weight:600}
+.field .hint a:hover{text-decoration:underline}
 .field input[type=number]{-moz-appearance:textfield}
 .field input[type=number]::-webkit-outer-spin-button,
 .field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
@@ -55,6 +60,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .progress-step.active{background:var(--gold)}
 
 .error-msg{display:none;background:#fde8e8;color:#c0392b;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:14px;border:1px solid #f5c6cb}
+
+/* Sprint 2 #50: soft inline warning for fields that are legal-but-suspicious
+   (e.g. RRSP contribution > 18% of salary, the simplified CRA cap). Yellow
+   rather than red — we don't block submit. Hidden by default; the validator
+   toggles `display:block` when the field's threshold is breached. */
+.warn-inline{display:none;font-size:11px;line-height:1.5;color:#7a5d10;background:#fef9e8;border:1px solid #f0d680;border-left:3px solid var(--gold);border-radius:4px;padding:6px 10px;margin-top:4px}
+.warn-inline strong{color:#5e4309}
+.warn-inline a{color:var(--navy3)}
 
 .restore-banner{display:none;background:#e8f4fd;border:1px solid #b8d9f0;border-radius:8px;padding:12px 16px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px}
 .restore-banner p{font-size:13px;color:#1a3a5c;margin:0}
@@ -264,9 +277,10 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     </div>
     <div class="row four">
       <div class="field">
-        <label>Annual RRSP Contribution ($)</label>
+        <label>Annual RRSP Contribution ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="CRA caps RRSP room at 18% of prior-year earned income (less any pension adjustment), up to a hard ceiling — $32,490 for 2026. This soft warning compares your entry against 18% of the salary above. For your real, authoritative room (carry-forward + pension adjustment), check your latest CRA Notice of Assessment or sign in to CRA My Account.">?</span></label>
         <input type="number" id="f_annualRrspContrib" value="0" min="0">
         <span class="hint">Applied each year while working</span>
+        <span class="warn-inline" id="warn_f_rrspRoom"></span>
       </div>
       <div class="field">
         <label>Annual TFSA Contribution ($)</label>
@@ -340,14 +354,14 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
     <div class="row three">
       <div class="field">
-        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="Find this on your Service Canada Statement of Contributions (sign in to My Service Canada Account → CPP estimates). Use the projection at age 70 — deferring CPP from 65 to 70 boosts the monthly amount by 42%, so the age-70 figure is the most reliable benchmark even if you plan to start earlier.">?</span></label>
+        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="From your Service Canada Statement of Contributions: My Service Canada Account → Canada Pension Plan / Old Age Security → 'Estimated monthly CPP benefits'. Use the age-70 projection — deferring from 65 to 70 boosts the monthly amount by 42% (0.7%/month after 65), so the age-70 figure is the most reliable anchor even if you plan to start earlier.">?</span></label>
         <input type="number" id="f_cpp70_monthly" value="" min="0">
-        <span class="hint">Your Statement of Contributions estimate</span>
+        <span class="hint">From your <a href="https://www.canada.ca/en/employment-social-development/services/my-account.html" target="_blank" rel="noopener">My Service Canada Account</a> → Statement of Contributions</span>
       </div>
       <div class="field">
-        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Leave blank to auto-calculate from age 70 ÷ 1.42 (CPP grows 0.7% per month deferred past 65). Override only if your Service Canada Statement of Contributions shows a different age-65 estimate — for example, if your earnings dropped late in your career and the deferred-to-70 projection no longer reflects current contributions.">?</span></label>
+        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Use the age-65 estimate from your Service Canada Statement of Contributions if you have one. Leave blank and the dashboard auto-calculates from the age-70 figure (CPP grows ~7%/yr deferred after 65, ~7.2%/yr lost if started early). Override the auto-calc if your earnings dropped late in your career and the age-70 projection no longer reflects your contribution pattern, or if you've already chosen a non-65 start age.">?</span></label>
         <input type="number" id="f_cpp65_monthly" value="" min="0">
-        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
+        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42, or get the official figure from your <a href="https://www.canada.ca/en/employment-social-development/services/my-account.html" target="_blank" rel="noopener">My Service Canada Account</a></span>
       </div>
       <div class="field">
         <label>OAS at age 65 ($/mo) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Maximum 2026 OAS at age 65 is $742.31/mo. Reduce if you have less than 40 years of Canadian residency after age 18 (1/40 deduction per missing year). OAS clawback starts at $93,454 net income (2026); above roughly $153,000 the entire OAS is recovered.">?</span></label>
@@ -405,8 +419,9 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     </div>
     <div class="row four">
       <div class="field">
-        <label>Annual RRSP Contribution ($)</label>
+        <label>Annual RRSP Contribution ($) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="CRA caps RRSP room at 18% of prior-year earned income (less any pension adjustment), up to a hard ceiling — $32,490 for 2026. This soft warning compares your entry against 18% of the salary above. For your real, authoritative room (carry-forward + pension adjustment), check your latest CRA Notice of Assessment or sign in to CRA My Account.">?</span></label>
         <input type="number" id="m_annualRrspContrib" value="0" min="0">
+        <span class="warn-inline" id="warn_m_rrspRoom"></span>
       </div>
       <div class="field">
         <label>Annual TFSA Contribution ($)</label>
@@ -493,13 +508,14 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <div class="section-label">CPP &amp; OAS (monthly amounts)</div>
     <div class="row three">
       <div class="field">
-        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="Find this on your Service Canada Statement of Contributions (sign in to My Service Canada Account → CPP estimates). Use the projection at age 70 — deferring CPP from 65 to 70 boosts the monthly amount by 42%, so the age-70 figure is the most reliable benchmark even if you plan to start earlier.">?</span></label>
+        <label>CPP at age 70 ($/mo) <span class="tip tip-start" tabindex="0" role="button" aria-label="More info" data-tip="From your Service Canada Statement of Contributions: My Service Canada Account → Canada Pension Plan / Old Age Security → 'Estimated monthly CPP benefits'. Use the age-70 projection — deferring from 65 to 70 boosts the monthly amount by 42% (0.7%/month after 65), so the age-70 figure is the most reliable anchor even if you plan to start earlier.">?</span></label>
         <input type="number" id="m_cpp70_monthly" value="" min="0">
+        <span class="hint">From your <a href="https://www.canada.ca/en/employment-social-development/services/my-account.html" target="_blank" rel="noopener">My Service Canada Account</a> → Statement of Contributions</span>
       </div>
       <div class="field">
-        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Leave blank to auto-calculate from age 70 ÷ 1.42 (CPP grows 0.7% per month deferred past 65). Override only if your Service Canada Statement of Contributions shows a different age-65 estimate — for example, if your earnings dropped late in your career and the deferred-to-70 projection no longer reflects current contributions.">?</span></label>
+        <label>CPP at age 65 ($/mo) <span class="tip" tabindex="0" role="button" aria-label="More info" data-tip="Use the age-65 estimate from your Service Canada Statement of Contributions if you have one. Leave blank and the dashboard auto-calculates from the age-70 figure (CPP grows ~7%/yr deferred after 65, ~7.2%/yr lost if started early). Override the auto-calc if your earnings dropped late in your career and the age-70 projection no longer reflects your contribution pattern, or if you've already chosen a non-65 start age.">?</span></label>
         <input type="number" id="m_cpp65_monthly" value="" min="0">
-        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42</span>
+        <span class="hint">Leave blank to auto-calc from age-70 ÷ 1.42, or get the official figure from your <a href="https://www.canada.ca/en/employment-social-development/services/my-account.html" target="_blank" rel="noopener">My Service Canada Account</a></span>
       </div>
       <div class="field">
         <label>OAS at age 65 ($/mo) <span class="tip tip-end" tabindex="0" role="button" aria-label="More info" data-tip="Maximum 2026 OAS at age 65 is $742.31/mo. Reduce if you have less than 40 years of Canadian residency after age 18 (1/40 deduction per missing year). OAS clawback starts at $93,454 net income (2026); above roughly $153,000 the entire OAS is recovered.">?</span></label>
@@ -835,10 +851,53 @@ function clearForm() {
 
 // Auto-save 600ms after any input change
 let _saveTimer;
-document.addEventListener('input', () => {
+document.addEventListener('input', (e) => {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(saveToLocal, 600);
+  // Sprint 2 #50: soft RRSP-room validation on relevant input changes only
+  // (salary or RRSP contribution). Cheap to call broadly, but scoping avoids
+  // re-running the function on every keystroke in unrelated fields.
+  if (e.target && /^([fm])_(salary|annualRrspContrib)$/.test(e.target.id || '')) {
+    validateRrspRoom();
+  }
 });
+
+// Sprint 2 #50: soft RRSP contribution-room warning. CRA caps RRSP room at
+// 18% of prior-year earned income (with pension-adjustment subtraction and a
+// hard dollar ceiling — $32,490 for 2026). We deliberately do not enforce the
+// real rule because (a) prior-year earned income ≠ this-year salary, (b) the
+// pension adjustment requires plan-specific data the form doesn't collect, and
+// (c) carry-forward room is invisible to us. The simplified 18%-of-current-
+// salary check is a guard rail for the most common error: someone fat-fingers
+// a $32K contribution against a $50K salary. Hint that they should verify
+// against their NOA / CRA My Account; never block submit.
+const RRSP_DOLLAR_CAP_2026 = 32490;
+function validateRrspRoom() {
+  for (const prefix of ['f', 'm']) {
+    const warn = document.getElementById('warn_' + prefix + '_rrspRoom');
+    if (!warn) continue;
+    const salary = n(prefix + '_salary', 0);
+    const contrib = n(prefix + '_annualRrspContrib', 0);
+    if (contrib <= 0) { warn.style.display = 'none'; continue; }
+    const room18 = salary * 0.18;
+    // Two trip-wires: (1) contribution exceeds 18% of stated salary, OR
+    // (2) contribution exceeds the 2026 dollar cap regardless of salary.
+    // Skip the 18% check entirely if salary is 0 (already-retired user with
+    // no current earned income — they're presumably drawing on carry-forward
+    // room, which we can't model here).
+    const overPct = salary > 0 && contrib > room18 + 100;  // small tolerance for rounding
+    const overCap = contrib > RRSP_DOLLAR_CAP_2026;
+    if (!overPct && !overCap) { warn.style.display = 'none'; continue; }
+    let msg = '';
+    if (overCap) {
+      msg = `<strong>Heads up:</strong> $${contrib.toLocaleString()} exceeds the 2026 RRSP dollar cap of $${RRSP_DOLLAR_CAP_2026.toLocaleString()}. CRA limits the deductible amount even if you have carry-forward room. Verify against your <a href="https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services/cra-my-account.html" target="_blank" rel="noopener">CRA My Account</a> or latest Notice of Assessment.`;
+    } else if (overPct) {
+      msg = `<strong>Heads up:</strong> $${contrib.toLocaleString()} is ~${Math.round((contrib/salary)*100)}% of the salary above — CRA caps current-year RRSP room at 18% of prior-year earned income (less pension adjustment). This may still be valid if you have carry-forward room. Confirm against your <a href="https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services/cra-my-account.html" target="_blank" rel="noopener">CRA My Account</a> or latest Notice of Assessment.`;
+    }
+    warn.innerHTML = msg;
+    warn.style.display = 'block';
+  }
+}
 
 // On page load: payload sources, in priority order:
 //   1. URL hash — typically set by the dashboard's "Edit plan" button (#59).
@@ -855,6 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
       parsed = migrate(parsed);
       populateFromD(parsed);
       saveToLocal();
+      validateRrspRoom();   // Sprint 2 #50: surface warning if a loaded plan exceeds 18% of salary.
       return;
     } catch(e) {
       console.warn('Could not decode plan hash on load:', e);

@@ -13,8 +13,9 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 | `probe_schema_migrate.js` | `schemaVersion` + `migrate(D)` + v1→v2 rename migration (Sprint 1 #46/#47–#49) | 19 |
 | `probe_presets.js` | Example-preset registry + blank-state loader + `?example=<slug>` routing (Sprint 1 #58) | 53 |
 | `probe_intake_roundtrip.js` | `gatherD(populateFromD(D)) === D` deep-equality across the form's full payload (Sprint 2 #59) | 22 |
+| `probe_mc_progressive.js` | `mcBegin`/`mcStep`/`mcFinish` decomposition + `monteCarloProgressive` lifecycle, batching, and cancellation (Sprint 2 #52) | 29 |
 
-**Total: 150 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
+**Total: 179 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
 
 ## Run them
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Canonical regression suite. All 67 checks must pass.
+# Canonical regression suite. All 180 checks must pass.
 set -e
 cd "$(dirname "$0")"
 
@@ -11,6 +11,7 @@ PROBES=(
   probe_schema_migrate.js
   probe_presets.js
   probe_intake_roundtrip.js
+  probe_mc_progressive.js
 )
 
 total_pass=0
