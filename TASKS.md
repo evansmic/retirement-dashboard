@@ -49,7 +49,6 @@ After Sprint 1 the project is technically publishable. Could open-source here.
 
 ### Dashboard UX
 
-- **Real dashboard screenshot for README.** `docs/screenshot.png` is a placeholder (committed Sprint 1 #43). Capture a 1600×900 shot of the live dashboard — best frame is the income-stack chart at full width on `?example=db-pension-couple` or `?example=diy-couple` — and overwrite the file. No README change needed; the path is stable.
 - **"Working?" column badge** in year-by-year detail table for pre-retirement years.
 - **Salary chart series tooltip** explaining it's gross pre-tax.
 - **Print PDF improvements.** Works but is dense — two-page layout with KPIs up front.
