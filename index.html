@@ -79,6 +79,43 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-clear{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-clear:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
 
+/* Sprint 2 #53: collapsible card sections.
+   Each top-level form card is a <details> element. Person 1 + Person 2
+   ship with `open` so first-time visitors land on the most-edited fields;
+   Joint, Spending, and Assumptions collapse by default to shorten the
+   first-impression scroll. Submit failures auto-expand all cards so any
+   hidden invalid field is brought into view. */
+details.card{padding:0;overflow:hidden}
+details.card > summary.card-title{
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+  margin:0;
+  padding:18px 56px 16px 26px;
+  border-bottom:none;
+  position:relative;
+}
+details.card[open] > summary.card-title{
+  border-bottom:2px solid var(--border);
+}
+details.card > summary.card-title::-webkit-details-marker{display:none}
+details.card > summary.card-title::after{
+  content:'';
+  position:absolute;
+  right:26px;top:50%;
+  width:9px;height:9px;
+  border-right:2px solid var(--navy3);
+  border-bottom:2px solid var(--navy3);
+  transform:translate(0,-70%) rotate(-45deg);
+  transition:transform .15s ease;
+}
+details.card[open] > summary.card-title::after{
+  transform:translate(0,-25%) rotate(45deg);
+}
+details.card > summary.card-title:hover{background:#fafbfc}
+details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.card-body{padding:18px 26px 22px}
+
 @media(max-width:600px){
   .row,.row.three,.row.four{grid-template-columns:1fr}
   .restore-banner{flex-direction:column;align-items:flex-start}
@@ -125,8 +162,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   <div id="error-msg" class="error-msg"></div>
 
   <!-- ══ SECTION 1: WHO ARE YOU ══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">👤</span> Person 1 (Primary — usually the pension earner)</div>
+  <!-- Sprint 2 #53: <details open> — Person 1 expanded by default. -->
+  <details class="card" open>
+    <summary class="card-title"><span class="icon">👤</span> Person 1 (Primary — usually the pension earner)</summary>
+    <div class="card-body">
 
     <div class="section-label">Identity &amp; Retirement</div>
     <div class="row three">
@@ -262,11 +301,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <span class="hint">Max 2026 = $742.31/mo</span>
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <!-- ══ SECTION 2: PERSON 2 ══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">👤</span> Person 2 (Spouse / Partner)</div>
+  <!-- Sprint 2 #53: <details open> — Person 2 expanded by default. -->
+  <details class="card" open>
+    <summary class="card-title"><span class="icon">👤</span> Person 2 (Spouse / Partner)</summary>
+    <div class="card-body">
 
     <div class="section-label">Identity &amp; Retirement</div>
     <div class="row three">
@@ -422,11 +464,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <input type="number" id="m_cppSurv_o65" value="" min="0">
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <!-- ══ SECTION 3: JOINT / LIABILITIES ══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">🏠</span> Joint Assets &amp; Liabilities</div>
+  <!-- Sprint 2 #53: collapsed by default. -->
+  <details class="card">
+    <summary class="card-title"><span class="icon">🏠</span> Joint Assets &amp; Liabilities</summary>
+    <div class="card-body">
 
     <div class="section-label">Mortgage (0 if none / paid off at retirement)</div>
     <div class="row three">
@@ -455,11 +500,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <input type="number" id="loc_rate" value="0.07" step="0.001" min="0" max="0.30">
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <!-- ══ SECTION 4: SPENDING ══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">💳</span> Spending Targets (annual, today's dollars)</div>
+  <!-- Sprint 2 #53: collapsed by default. -->
+  <details class="card">
+    <summary class="card-title"><span class="icon">💳</span> Spending Targets (annual, today's dollars)</summary>
+    <div class="card-body">
 
     <div class="row three">
       <div class="field">
@@ -553,11 +601,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <span class="hint">Surplus income refills the wedge up to this many years of go-go spending before spilling into the non-registered account.</span>
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <!-- ══ SECTION 5: ASSUMPTIONS ══ -->
-  <div class="card">
-    <div class="card-title"><span class="icon">⚙️</span> Plan Assumptions</div>
+  <!-- Sprint 2 #53: collapsed by default. -->
+  <details class="card">
+    <summary class="card-title"><span class="icon">⚙️</span> Plan Assumptions</summary>
+    <div class="card-body">
 
     <!-- Phase 4.5: FP Canada Projection Assumption Guidelines.
          Annual publication from FP Canada used by certified financial planners
@@ -669,7 +720,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <span class="hint">Amount contributed two calendar years ago.</span>
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 </div>
 
 <div class="submit-bar">
@@ -824,18 +876,26 @@ function s(id, fallback='') {
   return el ? (el.value.trim() || fallback) : fallback;
 }
 
+// Sprint 2 #53: open every collapsible card. Called on validation failure so a
+// user with an invalid value in a collapsed section can see it without hunting.
+function expandAllCards() {
+  document.querySelectorAll('details.card').forEach(d => { d.open = true; });
+}
+
 function submitForm() {
   const errEl = document.getElementById('error-msg');
   errEl.style.display = 'none';
 
   // Basic validation
   if (!s('f_name') || !s('m_name')) {
+    expandAllCards();
     errEl.textContent = 'Please enter names for both people.';
     errEl.style.display = 'block';
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
   if (n('f_dob') < 1940 || n('m_dob') < 1940) {
+    expandAllCards();
     errEl.textContent = 'Please enter valid birth years for both people.';
     errEl.style.display = 'block';
     window.scrollTo({top:0,behavior:'smooth'});

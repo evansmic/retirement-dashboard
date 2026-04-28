@@ -62,7 +62,8 @@
 - ✅ #57 — GitHub Actions CI workflow at `.github/workflows/probes.yml` runs the canonical regression suite on every push to `main`, every pull request, and on manual dispatch. Ubuntu + Node 20 LTS; the existing `probes/run_all.sh` tally + `exit 1` is what gates the job. README badge added; stale per-probe counts in `probes/README.md` refreshed (total **119 → 128**, picking up the drift from phase4_final and presets).
 - ✅ #43 — `README.md` rewritten for a public reader: live-demo button to `retirement-dashboard-two.vercel.app` with `/example/<slug>` deep-links for all five presets, customer-tone intro pitch (adapted from PITCH.md), "What it models" feature table, privacy note, CI + MIT badges. Repo guide and full disclaimer retained but moved below the public-facing material. Screenshot is a placeholder at `docs/screenshot.png`; real shot is in the backlog.
 
-**Active sprint: Sprint 2 — UX polish.** See `TASKS.md` items #53, #54, #59, #50, #51, #52.
+**Active sprint: Sprint 2 — UX polish.** See `TASKS.md` items #53, #54, #59, #50, #51, #52. **Progress: 1/6.**
+- ✅ #53 — Top-level intake-form cards are now native `<details>`/`<summary>` elements with a rotating chevron. Person 1 + Person 2 ship `open`; Joint, Spending, and Assumptions collapse by default to shorten the first-impression scroll. Submit-validation failures auto-expand every card via a new `expandAllCards()` helper so a hidden invalid field is brought into view. Pure UI change — canonical probe suite still 128/128.
 
 ## Sprint plan (post-decision)
 
