@@ -72,6 +72,7 @@
 
 **Product direction: hybrid — open-source (MIT) with optional commercialisation later.**
 *Why*: solo developer, no appetite to run a software business; the engine is the hard and already-done part; helping more Canadians is the goal. A donate / micro-pay button (Buy Me a Coffee or Stripe Buy Button — no backend) lets users who appreciate the tool contribute. Door left open for B2B white-label if planner interest emerges unprompted.
+*Updated 2026-04-30*: superseded by the consumer-first local-first product direction below. Open-source/free-public roots remain compatible with the plan, but the preferred monetization path is now local-first paid capability rather than donate-first.
 
 **Add `D.schemaVersion = 1` now, with migration scaffold.**
 *Why*: with public release on the horizon, saved hashes become an ABI. A version field plus a `migrate(D)` function is the escape hatch for future breaking changes. ~15 minutes of work.
@@ -103,6 +104,24 @@
 **GitHub Actions CI for probes.**
 *Why*: free for public repos, ~20 lines of YAML, automatic green/red on every PR. README status badge is real signal to anyone evaluating the project. Pre-commit hook deferred unless we start pushing broken probes.
 
+### Resolved in 2026-04-30 product reset
+
+**Consumer-first product direction.**
+*Why*: the most differentiated opportunity is a Canadian household planner that feels trustworthy without requiring an advisor relationship. Advisor workflows can come later, but the product should first make sophisticated planning usable by consumers.
+*Trade-off accepted*: some advisor-only conveniences, such as multi-client workspaces and white-label reports, stay behind the consumer trust and engine-readiness work.
+
+**Local-first monetization.**
+*Why*: privacy is a core differentiator. Monetization should reinforce that promise, not undermine it with mandatory cloud accounts or uploaded plan data.
+*Decision*: core planning, local save/load, import/export, and anonymous trial should not require an account. Paid features can unlock locally through a one-time purchase or local license. Accounts are optional for encrypted sync, license recovery, sharing, or advisor collaboration.
+*Trade-off accepted*: local licensing and accountless purchase flows are more operationally awkward than SaaS subscriptions, but they align better with the product's trust story.
+
+**Sprint 0 before UI rebuild.**
+*Why*: the next limiting factor is trust, not layout. The free/public validation run found strong accumulation alignment but also a real tax-credit question and inconsistent sustainability comparators.
+*Decision*: prioritize tax accuracy, Monte Carlo/stress-test language, validation exports, and engine-readiness before rebuilding the UI or adding launch monetization.
+*Trade-off accepted*: the visible app may improve more slowly in the short term, but the foundation becomes safer for a ProjectionLab-scale product.
+
 ## Open decisions (still unresolved)
 
-None as of 2026-04-25. Future decisions will be appended here.
+- Which exact advanced features are paid Plus versus free public?
+- Which local license mechanism best balances user privacy, purchase recovery, and implementation simplicity?
+- Whether optional sync should be first-party encrypted sync, user-owned storage, or deferred.

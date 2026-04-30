@@ -50,7 +50,7 @@
 
 ## Current phase
 
-**Phase 5 shipped (2026-04-25).** Decision session held same day resolved every open question (see `DECISIONS.md` — Open decisions section is now empty). Forward path is broken into four sprints (`TASKS.md`, tasks #41–#59).
+**Phase 5 shipped (2026-04-25).** Decision session held same day resolved the initial public-release questions. A later product reset on 2026-04-30 set the next direction: consumer-first, local-first monetization, optional accounts only, and trust/engine readiness before a broader UI rebuild.
 
 **Sprint 1 — Foundation: complete (2026-04-27). 8/8 done.** The project is now technically publishable.
 - ✅ #41 — MIT LICENSE at project root.
@@ -70,25 +70,27 @@
 - ✅ #51 — CPP-at-65 help text upgraded. Both spouses' CPP@70 and CPP@65 hints now carry a live link to canada.ca's My Service Canada Account portal, plus precise navigation guidance ("MSCA → Canada Pension Plan / Old Age Security → Estimated monthly CPP benefits"). Tooltips spell out the rough delay/early heuristics (~7%/yr deferred, ~7.2%/yr early). New `.field .hint a` styling — navy + bold + non-italic — so the link reads as clickable inside the muted italic hint baseline. Canonical probe suite unaffected.
 - ✅ #52 — Default-on Monte Carlo with progressive rendering. `monteCarlo()` refactored into `mcBegin → mcStep(state, nPaths) → mcFinish(state)`, and a new `monteCarloProgressive(baseCfg, opts)` runs the same per-path math in 200-path batches separated by `setTimeout(0)` so the page paints between chunks. Auto-runs the baseline scenario 80ms after `DOMContentLoaded`; new top-of-page banner shows progress (`--mc-pct` CSS variable) and fills with the headline success rate when done. "Skip stress test" cancels the in-flight run and persists `rpd_skip_mc=1` in localStorage; tab-switching mid-run cancels too (otherwise the baseline result would mislabel the new scenario's panel). The existing MC panel rendering was extracted into `renderMonteCarloResults()` so the manual button reuses the same sink. New `probe_mc_progressive.js` (29 checks) covers the begin/step/finish decomposition, batch accumulation/clamping, percentile ordering of progressive output, and pre-tick cancellation. Canonical probe suite **150 → 179**.
 
-## Sprint plan (post-decision)
+## Sprint plan
+
+**Sprint 0 — Trust and engine readiness.** Planned next. Fix or prove tax-credit eligibility, clarify Monte Carlo and stress-test language, expand validation exports, map/extract the engine, draft schema v3, and define local-first monetization boundaries. This supersedes the old "Sprint 3 next" ordering.
 
 **Sprint 1 — Foundation.** Internal-cleanup pass that takes the codebase from "private project" to "ready to be public." Adds LICENSE, disclaimer, schema versioning + migration scaffold, `frank`/`moon` → `p1`/`p2` rename, blank form with example presets, JSDoc types on `D`, GitHub Actions CI, polished public README. *Estimated: one focused weekend.*
 
 **Sprint 2 — UX polish.** Collapsible sections, inline tooltips on key fields, back-to-form button + hash decoder, soft RRSP-room warning, improved CPP help text, default-on Monte Carlo with progressive rendering. *Estimated: one weekend.*
 
-**Sprint 3 — Guided form.** Sidebar nav with per-section save/advance and status icons. Turns the long form into something genuinely guided without going full wizard. *Estimated: half-day to a full day.*
+**Sprint 3 — Guided form.** Deferred until Sprint 0 trust work is done. Sidebar nav with per-section save/advance and status icons. Turns the long form into something genuinely guided without going full wizard. *Estimated: half-day to a full day.*
 
-**Sprint 4 — Launch.** Donate / micro-pay button + launch posts (r/PersonalFinanceCanada, HN). *Estimated: one evening.*
+**Sprint 4 — Launch.** Deferred until tax validation, risk language, and export baselines are in better shape. Launch may include local-first paid positioning rather than only donate/micro-pay. *Estimated: one evening once trust gates are green.*
 
-**Minimum viable launch sequence:** Sprint 1 + Sprint 4. Ship public, iterate UX (Sprints 2–3) in public. Choice between this and the full Sprint 1→2→3→4 sequence depends on whether you'd rather optimise for learning (ship sooner) or first-impression polish (ship later).
+**Minimum viable productization sequence:** Sprint 0 first, then decide whether to continue with guided-form UX, engine extraction, or launch packaging. Trust beats polish for the next decision point.
 
 ## Medium-term roadmap (post-launch, beyond the four sprints)
 
 **Phase 7 — Provinces.** Abstract Ontario-specific tax calc behind a province selector. BC and Alberta first; Quebec is largest scope due to QPP and distinct tax structure.
 
-**Phase 8 — Save/load.** Export/import `.plan.json` file. Optionally sync to user-owned cloud drive (privacy-preserving).
+**Phase 8 — Local-first persistence and paid unlocks.** Export/import `.plan.json`, named local plans, and optional local license unlocks. Accounts remain optional for sync, license recovery, sharing, or advisor collaboration.
 
-**Phase 9 — Advisor mode (gated on B2B interest).** Multi-household dashboard, side-by-side comparison, white-label branding. Per Decision 1's hybrid framing, only build if planner interest emerges unprompted.
+**Phase 9 — Advisor mode (gated on B2B interest).** Multi-household dashboard, side-by-side comparison, white-label branding, client-ready reports, and optional encrypted collaboration. Build only after the consumer workflow is stable.
 
 ## Nice-to-have future ideas
 

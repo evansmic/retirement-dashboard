@@ -2,7 +2,7 @@
 
 ## Project overview
 
-A self-contained, browser-based retirement planning dashboard for Canadian couples (Ontario tax rules, 2026). Users enter their financial picture through an intake form, and the tool produces a year-by-year projection across multiple scenarios (baseline, RRSP meltdown, 0% return, survivor, max-spend), plus Monte Carlo and sequence-of-returns stress tests, with real/nominal toggles and PDF export. Everything runs client-side; no server, no database.
+A self-contained, browser-based retirement planning dashboard for Canadian households (Ontario tax rules, 2026). Users enter their financial picture through an intake form, and the tool produces a year-by-year projection across multiple scenarios (baseline, RRSP meltdown, 0% return, survivor, max-spend), plus Monte Carlo and sequence-of-returns stress tests, with real/nominal toggles and PDF export. Everything runs client-side; no server, no database.
 
 ## Core problem being solved
 
@@ -10,18 +10,22 @@ Canadian retirement planning is genuinely complex (RRSP/RRIF minimums, LIF max, 
 
 ## Target users
 
-Currently a **single household** (built for personal use — see Open Questions). The primary user profile is a Canadian Ontario couple either in late-career working years or early retirement, comfortable with spreadsheet-level financial detail.
+The product direction is **consumer-first**. The primary user profile is a Canadian household, either single or couple, within roughly 5-15 years of retirement or already early-retired, comfortable enough with spreadsheet-level financial detail but looking for clearer guidance than a spreadsheet can provide.
+
+Secondary users include fee-only planners, adult children helping parents, and financially curious users comparing strategies before meeting an advisor. Advisor workflows are downstream of the consumer product, not the starting point.
 
 ## Value proposition
 
 - Models Canadian federal + Ontario 2026 tax law with precision competitors typically hide behind a paywall.
 - Handles couples fully: pension splitting, CPP sharing, spousal-RRSP attribution, survivor rollover, staggered retirements.
-- Stress-tests the plan three ways: Monte Carlo (fan chart + success rate), historical sequence-of-returns (1929 / 1973 / 2000 / 2008), and discrete scenarios.
-- Runs entirely in the browser — no data ever leaves the device, no subscription, no account.
+- Stress-tests the plan three ways: Monte Carlo (fan chart + full-spending-funded rate), historical sequence-of-returns (1929 / 1973 / 2000 / 2008), and discrete scenarios.
+- Runs entirely in the browser — no data ever leaves the device, and no account is required for core planning.
 
 ## Current product vision
 
-A precision-grade "projection engine + scenario explorer" for a Canadian couple, with the modelling fidelity of a professional planning tool (Snap Projections, RazorPlan) but usable without training. Over time: make the intake form friendlier, extend to non-Ontario provinces, and improve the explanation layer so a non-expert can understand *why* each scenario produces its result.
+A precision-grade "projection engine + scenario explorer" for Canadian households, with the modelling fidelity of a professional planning tool (Snap Projections, RazorPlan) but usable without training. Over time: make the intake form friendlier, extend to non-Ontario provinces, and improve the explanation layer so a non-expert can understand *why* each scenario produces its result.
+
+The longer-term ambition is a local-first Canadian retirement planner similar in ambition to ProjectionLab: scenario-driven, privacy-preserving, consumer-friendly, and deep on Canadian tax, benefits, couples, and survivor planning.
 
 ## Current feature set
 
@@ -34,7 +38,7 @@ A precision-grade "projection engine + scenario explorer" for a Canadian couple,
 - Five deterministic scenarios: Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend.
 - Charts: income stack (salary, DB, CPP, OAS, RRIF/LIF, TFSA, non-reg, spending line), balances, tax, estate.
 - KPIs: first shortfall year, portfolio depletion year, lifetime after-tax, lifetime tax, OAS clawback, estate.
-- Comparison table across scenarios with probability-of-success row.
+- Comparison table across scenarios with stress/funding metric row.
 - Year-by-year detail table with milestone highlighting.
 - Monte Carlo fan chart (p10/p50/p90) with success rate.
 - Sequence-of-returns stress panel (historical crash overlays).
@@ -59,14 +63,21 @@ A precision-grade "projection engine + scenario explorer" for a Canadian couple,
 
 ## Business model
 
-**Not yet defined.** Today the tool is built for a single household. Possible commercial paths (labelled as suggestions):
-- *Suggestion*: one-time purchase desktop app (no account, no data transfer — privacy as differentiator).
-- *Suggestion*: freemium with white-label for fee-only Canadian financial planners.
-- *Suggestion*: keep it free/open-source as a portfolio piece.
+Consumer-first and local-first.
+
+Preferred path:
+- Free public planner for core local planning and validation-visible outputs.
+- Optional one-time purchase or local license unlock for advanced consumer features.
+- Optional accounts only for encrypted sync, license recovery, sharing, or advisor collaboration.
+- Advisor/Pro mode later, gated on consumer workflow quality and real planner demand.
+
+Monetization should not require accounts by default, and plan data should not need to leave the user's device for the product to be valuable or paid.
 
 ## Current status
 
-Phase 5 complete. Engine verified with 38 passing checks across three probe scripts (engine-level, end-to-end integration, intake round-trip). All five deterministic scenarios return zero shortfall years. Monte Carlo and sequence-of-returns regression suite still clean (17/17).
+Phase 5 complete, followed by public-release foundation and UX-polish sprints. The current canonical probe suite is documented in `probes/README.md`.
+
+Next planned work is **Sprint 0 — trust and engine readiness**: tax accuracy, Monte Carlo/stress-test language, validation exports, engine extraction boundaries, schema-v3 output contract, and local-first monetization boundaries before a larger UI rebuild.
 
 Working files:
 - `index.html` — intake form
@@ -83,7 +94,7 @@ Working files:
 
 ## Open Questions
 
-- Is this a personal tool or a product? (Shapes roadmap dramatically.)
-- If product: who's the buyer — consumer, advisor, or both?
-- Should we extend beyond Ontario before polishing what exists?
-- Is there appetite for an "advisor mode" (multi-household view)?
+- Which advanced features belong in a paid local-first Plus tier versus the free public planner?
+- What is the simplest local license model that does not require accounts or plan-data upload?
+- Which tax/benefit validation gates must pass before broader public launch?
+- Which province follows Ontario after the engine boundary is clean?

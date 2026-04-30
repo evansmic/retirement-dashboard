@@ -1,0 +1,887 @@
+{
+  "generatedAt": "2026-04-29T01:03:40.415Z",
+  "source": "retirement_dashboard.html PRESETS registry",
+  "note": "Nominal CAD. These are deterministic engine outputs for external-tool validation, not financial advice.",
+  "presets": {
+    "diy-couple": {
+      "label": "DIY couple, both working",
+      "subtitle": "Mid-50s, no DB pension, staggered retirement at 62 / 65",
+      "household": {
+        "people": [
+          {
+            "name": "Sarah",
+            "birthYear": 1969,
+            "retireYear": 2031,
+            "salary": 95000,
+            "rrsp": 250000,
+            "tfsa": 80000,
+            "lif": 0,
+            "nonreg": 40000,
+            "cpp65Annual": 11832,
+            "cpp70Annual": 16800,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          },
+          {
+            "name": "David",
+            "birthYear": 1971,
+            "retireYear": 2034,
+            "salary": 75000,
+            "rrsp": 180000,
+            "tfsa": 65000,
+            "lif": 0,
+            "nonreg": 0,
+            "cpp65Annual": 10140,
+            "cpp70Annual": 14400,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          }
+        ],
+        "spending": {
+          "goGo": 80000,
+          "goGoEndAge": 75,
+          "slowGo": 65000,
+          "slowGoEndAge": 85,
+          "noGo": 50000
+        },
+        "assumptions": {
+          "planStart": 2026,
+          "planEnd": 2064,
+          "returnRate": 0.05,
+          "inflation": 0.025,
+          "returnStdDev": 0.1,
+          "withdrawalOrder": "default",
+          "cppSharing": false,
+          "youngerSpouseRrif": false
+        }
+      },
+      "scenarios": {
+        "base": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 940,
+          "lifetimeAfterTaxSpend": 4334988,
+          "lifetimeTax": 402350,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1809627,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 1575989,
+          "totalTfsaDraws": 338609,
+          "totalNonRegDraws": 51051,
+          "label": "Baseline (CPP/OAS at 65)",
+          "sustainableSpendMultiplier": 0.9591
+        },
+        "melt": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 4139388,
+          "lifetimeTax": 370545,
+          "lifetimeOasClawback": 5827,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1969100,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 827386,
+          "totalTfsaDraws": 667302,
+          "totalNonRegDraws": 79475,
+          "label": "RRSP Meltdown (CPP/OAS at 70)",
+          "sustainableSpendMultiplier": 0.9129
+        },
+        "zero": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2054,
+          "endingPortfolio": 64293,
+          "lifetimeAfterTaxSpend": 3447727,
+          "lifetimeTax": 315067,
+          "lifetimeOasClawback": 4998,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1969100,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 588000,
+          "totalTfsaDraws": 236000,
+          "totalNonRegDraws": 40000,
+          "label": "Net 0% Return",
+          "sustainableSpendMultiplier": 0.7492
+        },
+        "surv": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 3304017,
+          "lifetimeTax": 406069,
+          "lifetimeOasClawback": 20564,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1265541,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 777975,
+          "totalTfsaDraws": 755039,
+          "totalNonRegDraws": 85803,
+          "label": "Survivor (Sarah dies age 59)",
+          "sustainableSpendMultiplier": 0.7152
+        },
+        "maxs": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 4139388,
+          "lifetimeTax": 370545,
+          "lifetimeOasClawback": 5827,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1969100,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 827386,
+          "totalTfsaDraws": 667302,
+          "totalNonRegDraws": 79475,
+          "label": "Max Spend (Estate → 0)",
+          "sustainableSpendMultiplier": 0.9129
+        }
+      },
+      "sequenceStress": {
+        "1929": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2051,
+          "maxAnnualShortfall": 58535
+        },
+        "1973": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2047,
+          "maxAnnualShortfall": 58535
+        },
+        "2000": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2047,
+          "maxAnnualShortfall": 58535
+        },
+        "2008": {
+          "endingPortfolio": 165339,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "_baseline": {
+          "endingPortfolio": 940,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 500
+        }
+      }
+    },
+    "db-pension-couple": {
+      "label": "Public-sector couple with DB pensions",
+      "subtitle": "Late-50s nurse + teacher (HOOPP / OTPP), retiring at 60",
+      "household": {
+        "people": [
+          {
+            "name": "Robert",
+            "birthYear": 1968,
+            "retireYear": 2028,
+            "salary": 115000,
+            "rrsp": 140000,
+            "tfsa": 90000,
+            "lif": 0,
+            "nonreg": 0,
+            "cpp65Annual": 15000,
+            "cpp70Annual": 21300,
+            "oasAnnual": 8908,
+            "dbBefore65": 67200,
+            "dbAfter65": 52940
+          },
+          {
+            "name": "Margaret",
+            "birthYear": 1967,
+            "retireYear": 2027,
+            "salary": 110000,
+            "rrsp": 150000,
+            "tfsa": 85000,
+            "lif": 0,
+            "nonreg": 20000,
+            "cpp65Annual": 14400,
+            "cpp70Annual": 20400,
+            "oasAnnual": 8908,
+            "dbBefore65": 60000,
+            "dbAfter65": 49300
+          }
+        ],
+        "spending": {
+          "goGo": 90000,
+          "goGoEndAge": 75,
+          "slowGo": 75000,
+          "slowGoEndAge": 85,
+          "noGo": 55000
+        },
+        "assumptions": {
+          "planStart": 2026,
+          "planEnd": 2064,
+          "returnRate": 0.05,
+          "inflation": 0.025,
+          "returnStdDev": 0.1,
+          "withdrawalOrder": "default",
+          "cppSharing": false,
+          "youngerSpouseRrif": false
+        }
+      },
+      "scenarios": {
+        "base": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 7343459,
+          "lifetimeAfterTaxSpend": 4717055,
+          "lifetimeTax": 2036049,
+          "lifetimeOasClawback": 21751,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 2379205,
+          "totalDbPension": 5989789,
+          "totalRegisteredDraws": 784664,
+          "totalTfsaDraws": 0,
+          "totalNonRegDraws": 0,
+          "label": "Baseline (CPP/OAS at 65)",
+          "sustainableSpendMultiplier": 1
+        },
+        "melt": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 7215348,
+          "lifetimeAfterTaxSpend": 4717055,
+          "lifetimeTax": 2029464,
+          "lifetimeOasClawback": 14347,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 2646252,
+          "totalDbPension": 5989789,
+          "totalRegisteredDraws": 567465,
+          "totalTfsaDraws": 0,
+          "totalNonRegDraws": 0,
+          "label": "RRSP Meltdown (CPP/OAS at 70)",
+          "sustainableSpendMultiplier": 1
+        },
+        "zero": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 3448577,
+          "lifetimeAfterTaxSpend": 4717055,
+          "lifetimeTax": 1644831,
+          "lifetimeOasClawback": 14265,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 2646259,
+          "totalDbPension": 5989789,
+          "totalRegisteredDraws": 283177,
+          "totalTfsaDraws": 0,
+          "totalNonRegDraws": 0,
+          "label": "Net 0% Return",
+          "sustainableSpendMultiplier": 1
+        },
+        "surv": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 4285819,
+          "lifetimeAfterTaxSpend": 4717055,
+          "lifetimeTax": 1182038,
+          "lifetimeOasClawback": 14340,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 1760108,
+          "totalDbPension": 4759964,
+          "totalRegisteredDraws": 587769,
+          "totalTfsaDraws": 1750,
+          "totalNonRegDraws": 0,
+          "label": "Survivor (Robert dies age 60)",
+          "sustainableSpendMultiplier": 1
+        },
+        "maxs": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2043,
+          "endingPortfolio": 1376056,
+          "lifetimeAfterTaxSpend": 7049436,
+          "lifetimeTax": 1665013,
+          "lifetimeOasClawback": 14340,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 2646259,
+          "totalDbPension": 5989789,
+          "totalRegisteredDraws": 351823,
+          "totalTfsaDraws": 340067,
+          "totalNonRegDraws": 28900,
+          "label": "Max Spend (Estate → 0)",
+          "sustainableSpendMultiplier": 1.4968
+        }
+      },
+      "sequenceStress": {
+        "1929": {
+          "endingPortfolio": 6961301,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "1973": {
+          "endingPortfolio": 6684412,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "2000": {
+          "endingPortfolio": 6612932,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "2008": {
+          "endingPortfolio": 7366860,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "_baseline": {
+          "endingPortfolio": 7343459,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        }
+      }
+    },
+    "single-late-career": {
+      "label": "Single, late-career",
+      "subtitle": "Solo 55-year-old, late starter, working to 67",
+      "household": {
+        "people": [
+          {
+            "name": "Lisa",
+            "birthYear": 1971,
+            "retireYear": 2038,
+            "salary": 70000,
+            "rrsp": 120000,
+            "tfsa": 35000,
+            "lif": 0,
+            "nonreg": 10000,
+            "cpp65Annual": 10200,
+            "cpp70Annual": 14484,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          }
+        ],
+        "spending": {
+          "goGo": 50000,
+          "goGoEndAge": 75,
+          "slowGo": 42000,
+          "slowGoEndAge": 85,
+          "noGo": 35000
+        },
+        "assumptions": {
+          "planStart": 2026,
+          "planEnd": 2064,
+          "returnRate": 0.05,
+          "inflation": 0.025,
+          "returnStdDev": 0.1,
+          "withdrawalOrder": "default",
+          "cppSharing": false,
+          "youngerSpouseRrif": false
+        }
+      },
+      "scenarios": {
+        "base": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 173423,
+          "lifetimeAfterTaxSpend": 2337769,
+          "lifetimeTax": 200356,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 827096,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 513827,
+          "totalTfsaDraws": 380832,
+          "totalNonRegDraws": 10527,
+          "label": "Baseline (CPP/OAS at 65)",
+          "sustainableSpendMultiplier": 0.7668
+        },
+        "melt": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 2140148,
+          "lifetimeTax": 225064,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 893271,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 233411,
+          "totalTfsaDraws": 498523,
+          "totalNonRegDraws": 18856,
+          "label": "RRSP Meltdown (CPP/OAS at 70)",
+          "sustainableSpendMultiplier": 0.696
+        },
+        "zero": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2062,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 1833705,
+          "lifetimeTax": 216645,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 893271,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 204000,
+          "totalTfsaDraws": 203000,
+          "totalNonRegDraws": 10000,
+          "label": "Net 0% Return",
+          "sustainableSpendMultiplier": 0.5869
+        },
+        "surv": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 2140148,
+          "lifetimeTax": 225064,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 893271,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 233411,
+          "totalTfsaDraws": 498523,
+          "totalNonRegDraws": 18856,
+          "label": "Survivor (Lisa dies age 128)",
+          "sustainableSpendMultiplier": 0.696
+        },
+        "maxs": {
+          "startYear": 2026,
+          "endYear": 2064,
+          "years": 39,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2064,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 2140148,
+          "lifetimeTax": 225064,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 893271,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 233411,
+          "totalTfsaDraws": 498523,
+          "totalNonRegDraws": 18856,
+          "label": "Max Spend (Estate → 0)",
+          "sustainableSpendMultiplier": 0.696
+        }
+      },
+      "sequenceStress": {
+        "1929": {
+          "endingPortfolio": 179311,
+          "firstShortfallYear": 2028,
+          "maxAnnualShortfall": 656
+        },
+        "1973": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2029,
+          "maxAnnualShortfall": 29108
+        },
+        "2000": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2029,
+          "maxAnnualShortfall": 29112
+        },
+        "2008": {
+          "endingPortfolio": 246679,
+          "firstShortfallYear": 2028,
+          "maxAnnualShortfall": 656
+        },
+        "_baseline": {
+          "endingPortfolio": 173423,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 500
+        }
+      }
+    },
+    "retired-traditional": {
+      "label": "Already retired (traditional)",
+      "subtitle": "Couple aged 68 / 65, drawing CPP+OAS, RRIF in motion",
+      "household": {
+        "people": [
+          {
+            "name": "Bill",
+            "birthYear": 1958,
+            "retireYear": 2023,
+            "salary": 0,
+            "rrsp": 400000,
+            "tfsa": 130000,
+            "lif": 50000,
+            "nonreg": 200000,
+            "cpp65Annual": 15000,
+            "cpp70Annual": 21300,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          },
+          {
+            "name": "Linda",
+            "birthYear": 1961,
+            "retireYear": 2026,
+            "salary": 0,
+            "rrsp": 250000,
+            "tfsa": 95000,
+            "lif": 30000,
+            "nonreg": 40000,
+            "cpp65Annual": 12600,
+            "cpp70Annual": 17880,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          }
+        ],
+        "spending": {
+          "goGo": 75000,
+          "goGoEndAge": 75,
+          "slowGo": 65000,
+          "slowGoEndAge": 85,
+          "noGo": 50000
+        },
+        "assumptions": {
+          "planStart": 2026,
+          "planEnd": 2064,
+          "returnRate": 0.05,
+          "inflation": 0.025,
+          "returnStdDev": 0.1,
+          "withdrawalOrder": "default",
+          "cppSharing": false,
+          "youngerSpouseRrif": false
+        }
+      },
+      "scenarios": {
+        "base": {
+          "startYear": 2023,
+          "endYear": 2064,
+          "years": 42,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 4448793,
+          "lifetimeAfterTaxSpend": 3897507,
+          "lifetimeTax": 483863,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 3237441,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 1632137,
+          "totalTfsaDraws": 16409,
+          "totalNonRegDraws": 124378,
+          "label": "Baseline (CPP/OAS at 65)",
+          "sustainableSpendMultiplier": 1
+        },
+        "melt": {
+          "startYear": 2023,
+          "endYear": 2064,
+          "years": 42,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 4489039,
+          "lifetimeAfterTaxSpend": 3897507,
+          "lifetimeTax": 510699,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 3698122,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 976196,
+          "totalTfsaDraws": 42634,
+          "totalNonRegDraws": 0,
+          "label": "RRSP Meltdown (CPP/OAS at 70)",
+          "sustainableSpendMultiplier": 1
+        },
+        "zero": {
+          "startYear": 2023,
+          "endYear": 2064,
+          "years": 42,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 732841,
+          "lifetimeAfterTaxSpend": 3897507,
+          "lifetimeTax": 283774,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 3698122,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 699931,
+          "totalTfsaDraws": 4258,
+          "totalNonRegDraws": 113705,
+          "label": "Net 0% Return",
+          "sustainableSpendMultiplier": 1
+        },
+        "surv": {
+          "startYear": 2023,
+          "endYear": 2064,
+          "years": 42,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 690822,
+          "lifetimeAfterTaxSpend": 3897507,
+          "lifetimeTax": 356462,
+          "lifetimeOasClawback": 3731,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 2091110,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 893554,
+          "totalTfsaDraws": 794896,
+          "totalNonRegDraws": 488084,
+          "label": "Survivor (Bill dies age 70)",
+          "sustainableSpendMultiplier": 1
+        },
+        "maxs": {
+          "startYear": 2023,
+          "endYear": 2064,
+          "years": 42,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 233386,
+          "lifetimeAfterTaxSpend": 5294487,
+          "lifetimeTax": 359422,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 3698122,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 833246,
+          "totalTfsaDraws": 748221,
+          "totalNonRegDraws": 374320,
+          "label": "Max Spend (Estate → 0)",
+          "sustainableSpendMultiplier": 1.3605
+        }
+      },
+      "sequenceStress": {
+        "1929": {
+          "endingPortfolio": 1705378,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "1973": {
+          "endingPortfolio": 2230377,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "2000": {
+          "endingPortfolio": 2319639,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "2008": {
+          "endingPortfolio": 3714278,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        },
+        "_baseline": {
+          "endingPortfolio": 4448793,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        }
+      }
+    },
+    "fire-couple": {
+      "label": "FIRE couple, retired early",
+      "subtitle": "Mid-40s already retired, large non-reg, RRSP meltdown candidate",
+      "household": {
+        "people": [
+          {
+            "name": "Alex",
+            "birthYear": 1981,
+            "retireYear": 2025,
+            "salary": 0,
+            "rrsp": 400000,
+            "tfsa": 130000,
+            "lif": 0,
+            "nonreg": 600000,
+            "cpp65Annual": 7620,
+            "cpp70Annual": 10800,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          },
+          {
+            "name": "Jordan",
+            "birthYear": 1983,
+            "retireYear": 2025,
+            "salary": 0,
+            "rrsp": 350000,
+            "tfsa": 115000,
+            "lif": 0,
+            "nonreg": 50000,
+            "cpp65Annual": 7200,
+            "cpp70Annual": 10200,
+            "oasAnnual": 8908,
+            "dbBefore65": 0,
+            "dbAfter65": 0
+          }
+        ],
+        "spending": {
+          "goGo": 60000,
+          "goGoEndAge": 75,
+          "slowGo": 55000,
+          "slowGoEndAge": 85,
+          "noGo": 45000
+        },
+        "assumptions": {
+          "planStart": 2025,
+          "planEnd": 2076,
+          "returnRate": 0.05,
+          "inflation": 0.025,
+          "returnStdDev": 0.1,
+          "withdrawalOrder": "default",
+          "cppSharing": false,
+          "youngerSpouseRrif": false
+        }
+      },
+      "scenarios": {
+        "base": {
+          "startYear": 2025,
+          "endYear": 2076,
+          "years": 52,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 1247820,
+          "lifetimeAfterTaxSpend": 5669152,
+          "lifetimeTax": 321019,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 1492816,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 3522353,
+          "totalTfsaDraws": 504325,
+          "totalNonRegDraws": 858602,
+          "label": "Baseline (CPP/OAS at 65)",
+          "sustainableSpendMultiplier": 1
+        },
+        "melt": {
+          "startYear": 2025,
+          "endYear": 2076,
+          "years": 52,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": "Never",
+          "endingPortfolio": 215199,
+          "lifetimeAfterTaxSpend": 5669152,
+          "lifetimeTax": 240249,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 0,
+          "totalCppOas": 1618662,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 998544,
+          "totalTfsaDraws": 1406109,
+          "totalNonRegDraws": 1849386,
+          "label": "RRSP Meltdown (CPP/OAS at 70)",
+          "sustainableSpendMultiplier": 1
+        },
+        "zero": {
+          "startYear": 2025,
+          "endYear": 2076,
+          "years": 52,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2074,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 3190907,
+          "lifetimeTax": 72755,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1618662,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 750000,
+          "totalTfsaDraws": 245000,
+          "totalNonRegDraws": 650000,
+          "label": "Net 0% Return",
+          "sustainableSpendMultiplier": 0.5629
+        },
+        "surv": {
+          "startYear": 2025,
+          "endYear": 2076,
+          "years": 52,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2076,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 5404807,
+          "lifetimeTax": 375693,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1233395,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 1013113,
+          "totalTfsaDraws": 1436044,
+          "totalNonRegDraws": 2097655,
+          "label": "Survivor (Alex dies age 46)",
+          "sustainableSpendMultiplier": 0.9535
+        },
+        "maxs": {
+          "startYear": 2025,
+          "endYear": 2076,
+          "years": 52,
+          "firstShortfallYear": "Never",
+          "portfolioDepletionYear": 2076,
+          "endingPortfolio": 0,
+          "lifetimeAfterTaxSpend": 5725147,
+          "lifetimeTax": 237991,
+          "lifetimeOasClawback": 0,
+          "maxAnnualShortfall": 500,
+          "totalCppOas": 1618662,
+          "totalDbPension": 0,
+          "totalRegisteredDraws": 994608,
+          "totalTfsaDraws": 1497450,
+          "totalNonRegDraws": 1816199,
+          "label": "Max Spend (Estate → 0)",
+          "sustainableSpendMultiplier": 1.01
+        }
+      },
+      "sequenceStress": {
+        "1929": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2043,
+          "maxAnnualShortfall": 98311
+        },
+        "1973": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2048,
+          "maxAnnualShortfall": 96915
+        },
+        "2000": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2048,
+          "maxAnnualShortfall": 96915
+        },
+        "2008": {
+          "endingPortfolio": 0,
+          "firstShortfallYear": 2066,
+          "maxAnnualShortfall": 88694
+        },
+        "_baseline": {
+          "endingPortfolio": 1247820,
+          "firstShortfallYear": "Never",
+          "maxAnnualShortfall": 0
+        }
+      }
+    }
+  }
+}

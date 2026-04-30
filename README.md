@@ -1,8 +1,6 @@
-# Retirement Plan Dashboard
+# Canadian Retirement Planner Product Docs
 
-[![probes](https://github.com/evansmic/retirement-dashboard/actions/workflows/probes.yml/badge.svg?branch=main)](https://github.com/evansmic/retirement-dashboard/actions/workflows/probes.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-**[→ Try the live demo](https://retirement-dashboard-two.vercel.app/)** &nbsp;·&nbsp; jump to a worked example: [DIY couple](https://retirement-dashboard-two.vercel.app/example/diy-couple) · [public-sector DB pensions](https://retirement-dashboard-two.vercel.app/example/db-pension-couple) · [single, late-career](https://retirement-dashboard-two.vercel.app/example/single-late-career) · [already-retired traditional](https://retirement-dashboard-two.vercel.app/example/retired-traditional) · [FIRE couple](https://retirement-dashboard-two.vercel.app/example/fire-couple)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <!--
   Sprint 1 #43: this is a placeholder screenshot. Replace with a real shot of
@@ -30,23 +28,13 @@ Everything runs in your browser. Nothing is uploaded. No accounts. Close the tab
 | **Couples** | Staggered retirement, dual DB pensions, survivor rollover (registered + non-reg with ACB preserved), CPP survivor benefit. |
 | **Working years** | Pre-retirement salary growth, RRSP/TFSA/non-reg contributions, dual DB accruals. |
 | **Stress testing** | Five deterministic scenarios (Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend) + Monte Carlo (1,000 paths) + sequence-of-returns stress (1929/1973/2000/2008). |
-| **Output** | Income-stack, balances, tax, and estate charts; year-by-year detail table; comparison table with probability-of-success row; PDF print export. |
+| **Output** | Income-stack, balances, tax, and estate charts; year-by-year detail table; comparison table with stress/funding metrics; PDF print export. |
 
 Ontario only for now — Quebec, BC, and Alberta tax aren't yet supported. See [`ROADMAP.md`](ROADMAP.md) for what's next.
 
-## Quick start
+## About this repo
 
-The whole tool is two static HTML files — no build step, no install.
-
-**Online:** open the [live demo](https://retirement-dashboard-two.vercel.app/) and fill in the form. Submit redirects to the dashboard with the encoded payload in the URL hash; bookmark or share the URL to come back to the same plan.
-
-**Locally:** clone the repo and open `index.html` in a browser. That's it.
-
-```bash
-git clone https://github.com/evansmic/retirement-dashboard.git
-cd retirement-dashboard
-open index.html        # macOS — or just double-click in your file manager
-```
+This repository holds the product, architecture, validation, roadmap, and decision-making materials for evolving the retirement dashboard into a consumer-first, local-first Canadian retirement planner. The runnable HTML dashboard lives in its own project repository.
 
 ## Privacy
 
@@ -54,7 +42,7 @@ All computation happens client-side. Your inputs are encoded into the URL hash (
 
 ## Tested
 
-128 checks across six canonical Node-based regression probes cover the tax math, scenario behaviour, Monte Carlo + sequence-of-returns stress, schema migration, and the example-preset registry. Every push and pull request runs the full suite via [GitHub Actions](https://github.com/evansmic/retirement-dashboard/actions/workflows/probes.yml). Run it locally with:
+179 checks across the canonical Node-based regression probes cover the tax math, scenario behaviour, Monte Carlo + sequence-of-returns stress, schema migration, example-preset registry, intake round-trip, and progressive Monte Carlo lifecycle. Run the suite locally with:
 
 ```bash
 cd probes
@@ -68,7 +56,6 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 - HTML / CSS / vanilla JavaScript — no framework, no build step.
 - [Chart.js](https://www.chartjs.org/) is the only external runtime dependency, loaded from a CDN.
 - Node 18+ to run the probe suite locally; CI runs on Node 20.
-- Hosted on [Vercel](https://vercel.com/) per [`vercel.json`](vercel.json) — `/example/<slug>` deep-links to a preset.
 
 ## Repo guide
 
@@ -87,7 +74,7 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 
 ## Status
 
-Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 128-check regression suite covers the rules end-to-end. Sprint 1 (foundation for public release) is complete; Sprint 2 (UX polish — collapsible sections, tooltips, default-on Monte Carlo) is up next. See [`ROADMAP.md`](ROADMAP.md).
+Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 179-check regression suite covers the rules end-to-end. Sprint 1 and Sprint 2 are complete. The next planned work is Sprint 0: tax accuracy, risk-language clarity, validation exports, engine readiness, and local-first monetization boundaries before a broader UI rebuild. See [`ROADMAP.md`](ROADMAP.md).
 
 ## License
 

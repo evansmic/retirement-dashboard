@@ -1,6 +1,42 @@
 # TASKS.md
 
-The current plan came out of the 2026-04-25 decision session. See `DECISIONS.md` for the reasoning behind each pick. The live TaskList holds tasks #41–#59 (run `TaskList` in any chat to see status); this file is the readable plan view.
+The original publishable-code plan came out of the 2026-04-25 decision session. The 2026-04-30 product reset moves the next work back to trust and engine readiness before any broader UI rebuild. See `PRODUCT_VISION.md` and `DECISIONS.md` for the reasoning.
+
+## Sprint 0 — Trust and engine readiness
+
+**Status:** Planned next. This sprint supersedes the old "Sprint 3 next" ordering.
+
+Goal: make the planner credible, auditable, and ready for a consumer-first local-first product before investing in a larger app shell.
+
+### Tax accuracy
+
+- [ ] **S0-01 — Pension-income-credit eligibility audit.** Fix or prove the current `hasPension` path so ordinary RRSP withdrawals do not receive pension-income credits before they qualify. Add tests for DB pension, RRIF, LIF, ordinary RRSP, and mixed-income cases.
+- [ ] **S0-02 — Tax fixture pack for ages 64-72.** Add focused fixtures around CPP/OAS starts, RRIF conversion, OAS clawback, age credit, pension splitting, Ontario surtax, and Health Premium.
+- [ ] **S0-03 — Tax methodology note.** Document the 2026 federal/Ontario constants, known simplifications, and annual update checklist in one place linked from validation/reporting.
+
+### Risk language and stress tests
+
+- [ ] **S0-04 — Rename/qualify success metrics.** Replace bare "probability of success" language with a clearer measure such as "full spending funded in X% of paths" and explain what does not count as failure.
+- [ ] **S0-05 — Add stress severity metrics.** Report first shortfall year, max shortfall, total shortfall, depletion year, core-spending coverage, and ending-estate range for Monte Carlo and historical stress tests.
+- [ ] **S0-06 — Rewrite risk interpretation copy.** Remove advice-like verdicts and distinguish deterministic projection, random-return simulation, and historical sequence replay.
+
+### Validation exports
+
+- [ ] **S0-07 — Expand baseline export columns.** Include per-year account balances, withdrawals by account type, taxable income, tax, OAS clawback, CPP/OAS/DB income, real/nominal mode, and assumption metadata.
+- [ ] **S0-08 — Add public-comparator fixture.** Create a deliberately simple single-person case with flat spending, no non-reg complexity, no tax optimization, and ordinary benefit timing.
+- [ ] **S0-09 — Re-run official/public validation.** Retry the Government of Canada calculator manually, refresh the free/public comparison note, and keep paid-tool benchmarks out of the critical path until public baselines are stable.
+
+### Engine readiness
+
+- [ ] **S0-10 — Engine boundary map.** Mark which functions in `retirement_dashboard.html` are pure engine, UI rendering, persistence/hash loading, charting, and copy.
+- [ ] **S0-11 — Extract tax/benefit helpers first.** Move the safest pure helpers into an engine module with regression coverage while keeping the current dashboard working.
+- [ ] **S0-12 — Draft schema v3 output contract.** Define the minimum plan, scenario, person, account, income, expense, event, assumption, and result shapes the next UI can rely on.
+
+### Local-first commercial readiness
+
+- [ ] **S0-13 — Local monetization sketch.** Define free vs Plus vs Pro/advisor capabilities without requiring accounts by default.
+- [ ] **S0-14 — Account boundary decision.** Document that accounts are optional for sync, license recovery, sharing, or advisor collaboration only; core planning, local save/load, and import/export remain accountless.
+- [ ] **S0-15 — License/privacy threat model.** Identify what a local license check may store, what it must never upload, and how users can continue using local plan files.
 
 ## Sprint 1 — Foundation (publishable code)
 
@@ -19,7 +55,7 @@ The pass that takes the codebase from "private project" to "ready to be public."
 
 After Sprint 1 the project is technically publishable. Could open-source here.
 
-After Sprint 2 the dashboard has the full UX-polish pass — collapsible sections, tooltips, round-trip Edit-plan, soft RRSP-room guardrail, sharper CPP help text, and default-on stress test with skip-toggle. Sprint 3's sidebar nav is the next investment.
+After Sprint 2 the dashboard has the full UX-polish pass — collapsible sections, tooltips, round-trip Edit-plan, soft RRSP-room guardrail, sharper CPP help text, and default-on stress test with skip-toggle. Sprint 0 is now the next investment before Sprint 3's guided-form work.
 
 ## Sprint 2 — UX polish
 
@@ -38,10 +74,10 @@ After Sprint 2 the dashboard has the full UX-polish pass — collapsible section
 
 ## Sprint 4 — Launch
 
-16. **#44** — Add donate / micro-pay button (Buy Me a Coffee or Stripe Buy Button)
+16. **#44** — Replace donate-first launch idea with local-first paid/free positioning once Sprint 0 trust gates are green.
 17. **#45** — Plan and post launch posts (r/PersonalFinanceCanada, HN)
 
-**Minimum viable launch sequence:** Sprint 1 + Sprint 4. Ship public, iterate UX (Sprints 2–3) in public.
+**Minimum viable launch sequence:** Sprint 0 first, then decide whether launch packaging, guided-form UX, or deeper engine extraction is the next best move.
 
 ## Backlog (not yet in a sprint)
 
