@@ -141,8 +141,32 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 - [x] README badge/link check complete.
 - [x] Public repo description/topics ready for manual GitHub setup.
 - [x] Issues include a warning not to paste private financial data via `.github/ISSUE_TEMPLATE/bug_report.md`.
-- [ ] Release tag/version/date chosen. Deferred to final release/PR pass.
-- [ ] Launch branch/PR description includes probes and manual smoke-test summary. Deferred to final release/PR pass.
+- [x] Release tag/version/date chosen: `local-first-launch-2026-05-01`, dated 2026-05-01.
+- [x] Launch branch/PR description includes probes and manual smoke-test summary.
+
+## Final Release/PR Pass
+
+- Date: 2026-05-01
+- Commit: `a0281633ee48bb823dd10f5f6bf7a6f13512a7a2` (`Complete local-first launch package`)
+- Branch/repository: `origin/main` on `evansmic/retirement-dashboard`
+- Release tag to create when publishing: `local-first-launch-2026-05-01`
+- GitHub Actions: `probes` push run completed successfully on `main` at 2026-05-01T14:49:38Z.
+- Vercel deployment status: success for the same commit.
+- Local release hygiene: canonical probes pass 500/500; runtime `SCHEMA_VERSION` remains 2; `.gitignore` excludes `*.plan.json`; no local `.plan.json` files are present.
+- Known non-shipping scope remains deferred: full optimizer, cloud sync, account system, advisor workspace, multi-province support, AI reports, and schema v3 runtime migration.
+
+### Release Notes / PR Summary Draft
+
+This release packages the Canadian Retirement Planner for a local-first public launch. It keeps the core accountless workflow intact while adding local `.plan.json` save/load, guided intake navigation, critical blank-field validation, recommended-plan framing, refreshed public README/site copy, privacy/disclaimer language, launch screenshots, launch-post drafts, and public feedback guidance.
+
+Validation and release gates:
+
+- Canonical probes: 500 passed, 0 failed.
+- CI: GitHub Actions `probes` completed successfully on pushed `main`.
+- Deployment: Vercel status check succeeded on `a028163`.
+- Runtime schema: `SCHEMA_VERSION = 2`.
+
+Out of scope for this release: full recommended-plan optimizer, cloud sync, account system, advisor workspace, multi-province support, AI reports, and schema v3 runtime migration.
 
 Suggested GitHub description:
 

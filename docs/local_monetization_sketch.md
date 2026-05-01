@@ -77,8 +77,8 @@ Do not put these behind a mandatory account or paid-only wall:
 - Opening the planner and entering a household plan.
 - Seeing a recommended plan.
 - Basic stress context for the recommended plan.
-- Local save/load once local persistence exists.
-- `.plan.json` import/export once schema v3 lands.
+- Local save/load.
+- `.plan.json` import/export.
 - Exporting the user's own raw plan file.
 - Reading methodology, validation notes, and known limitations.
 - Continuing to open existing local plan files after a license expires.

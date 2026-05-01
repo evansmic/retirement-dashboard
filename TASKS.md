@@ -4,7 +4,7 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 ## Active Sprint — Sprint 4: Launch/Productization Package
 
-**Status:** Pre-release package complete as of 2026-05-01. Final release/PR pass remains separate.
+**Status:** Final release/PR pass complete as of 2026-05-01.
 
 Goal: make the current local-first planner launch-ready as a public/free product with honest positioning, clear privacy/disclaimer language, reproducible validation, manual smoke tests, screenshot/demo assets, release hygiene, and launch-post materials.
 
@@ -26,8 +26,8 @@ Detailed package: [`docs/sprint_4_launch_package.md`](docs/sprint_4_launch_packa
 
 - [x] **S4-07 — Manual browser smoke-test checklist.** ✅ *Pre-release complete 2026-05-01.* Verified local/static load, file-path load, first-open copy, all bundled presets, blank-field validation, valid dashboard load, recommended-plan framing, charts, stress diagnostics, year-by-year table expansion, real/nominal toggle, print button presence, accountless core flow, and current narrow-viewport content visibility. Local file round-trip, malformed file rejection, unsupported file rejection, single-person handling, couple handling, plan naming, and edit round-trip are covered by probes. Human OS file-picker and dedicated device-size passes are deferred to the final release/PR pass.
 - [x] **S4-08 — Validation/comparator checklist.** ✅ *Done 2026-05-01.* Confirmed baseline exports are current/unchanged for docs-only Sprint 4 work, `public-comparator-single` is present in the baseline export, README links methodology/comparator notes, and known validation gaps are visible.
-- [x] **S4-09 — GitHub/CI checklist.** ✅ *Pre-release complete 2026-05-01.* Confirmed local canonical suite passes **500/500**, remote GitHub Actions probe workflow is green on latest pushed `main`, restored README CI badge, added `.github/ISSUE_TEMPLATE/bug_report.md` with private-data warning, updated `.gitignore` for `*.plan.json`, drafted repo description/topics, and scanned for local `.plan.json` files. CI on the eventual pushed branch is deferred to the final release/PR pass.
-- [x] **S4-10 — Release checklist.** ✅ *Pre-release complete 2026-05-01.* Release gate exists in `docs/sprint_4_launch_execution.md`; screenshot, disclaimer, privacy copy, known limits, static local/localhost load, validation status, launch posts, feedback guidance, rollback/fix-forward rule, schema v2 boundary, and fresh **500/500** probe result are recorded. Final release tag/date, branch CI, and PR description are deferred to the final release/PR pass.
+- [x] **S4-09 — GitHub/CI checklist.** ✅ *Final release pass complete 2026-05-01.* Confirmed local canonical suite passes **500/500**, remote GitHub Actions probe workflow is green on pushed `main`, restored README CI badge, added `.github/ISSUE_TEMPLATE/bug_report.md` with private-data warning, updated `.gitignore` for `*.plan.json`, drafted repo description/topics, and scanned for local `.plan.json` files.
+- [x] **S4-10 — Release checklist.** ✅ *Final release pass complete 2026-05-01.* Release gate exists in `docs/sprint_4_launch_execution.md`; screenshot, disclaimer, privacy copy, known limits, static local/localhost load, validation status, launch posts, feedback guidance, rollback/fix-forward rule, schema v2 boundary, fresh **500/500** probe result, release tag/date, CI status, and release notes/PR summary are recorded.
 
 ### Launch Prep
 

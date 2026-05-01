@@ -22,6 +22,7 @@ Accounts remain optional infrastructure for sync, license recovery, sharing, adv
 - **Sprint 2 — UX polish, complete 2026-04-28.** Collapsible sections, tooltips, edit-plan round trip, RRSP room warning, CPP help text, and default-on progressive Monte Carlo.
 - **Sprint 0 — Trust and engine readiness, complete 2026-05-01.** Tax accuracy fixes, age 64-72 fixtures, methodology docs, stress severity metrics, validation exports, public-comparator rerun, engine boundary map, extracted tax/benefit helpers, schema v3 output contract, and local-first monetization/account/privacy boundaries. Canonical suite: **478/478**.
 - **Sprint 3 — Local-first planning workspace, complete 2026-05-01.** Local `.plan.json` save/load, plan naming, guided section navigation, critical blank-field validation, recommended-plan framing, local-file privacy copy, and two new probes. Canonical suite: **498/498**.
+- **Sprint 4 — Launch/productization package, pre-release complete 2026-05-01.** Public/free positioning, README/site copy, local-first paid/free boundaries, privacy/disclaimer language, screenshot/demo assets, manual smoke-test checklist, validation/comparator review, GitHub/CI/release checklist, launch-post drafts, and feedback triage guidance. Canonical suite: **500/500**.
 
 Key Sprint 0 docs:
 
@@ -31,11 +32,11 @@ Key Sprint 0 docs:
 - `docs/account_boundary_decision.md`
 - `docs/license_privacy_threat_model.md`
 
-## Active Next Sprint
+## Active Next Step
 
-Sprint 3 is complete. Sprint 4 is the active next track:
+Sprint 4 pre-release packaging is complete. The active next step is the final release/PR pass:
 
-- **Sprint 4 — Launch/productization package.** Package the current local-first product for public launch: final README/site copy, public/free positioning, local-first paid/free boundaries, privacy/disclaimer language, screenshot/demo assets, manual browser smoke tests, validation/comparator review, GitHub/CI/release checklist, and launch-post prep.
+- Confirm pushed `main`, CI, release hygiene, release tag/date, and release notes/PR summary.
 
 Sprint 4 is intentionally not an optimizer or account sprint. Full recommended-plan optimization, cloud sync, accounts, payment/licensing implementation, advisor workspace, multi-province support, AI reports, mobile redesign, and schema v3 migration remain deferred unless separately scoped.
 

@@ -239,8 +239,8 @@ Run in at least one Chromium-based browser before launch. If time allows, repeat
 - [x] MIT license present.
 - [x] Public repo description and topics are ready.
 - [x] Issues are enabled with a note not to paste private financial data.
-- [ ] Release tag/version/date are chosen. Deferred to final release/PR pass.
-- [ ] Launch branch/PR description includes probes run and manual smoke-test summary. Deferred to final release/PR pass.
+- [x] Release tag/version/date are chosen: `local-first-launch-2026-05-01`, dated 2026-05-01.
+- [x] Launch branch/PR summary is prepared in `docs/sprint_4_launch_execution.md`.
 
 ## Release Checklist
 
