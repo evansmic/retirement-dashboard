@@ -12,7 +12,7 @@ The product should help households answer:
 - Which decisions matter most: CPP timing, RRSP/RRIF drawdown, TFSA use, pension choices, downsizing, working longer, or spending flexibility?
 - What trade-offs am I making between lifestyle, risk, tax, and estate value?
 
-The current dashboard is the modelling prototype. The long-term product should become a scenario-driven planning workspace similar in ambition to ProjectionLab, but focused deeply on Canadian retirement rules and plain-language interpretation.
+The current dashboard is the modelling prototype. The long-term product should become an optimized-plan-first retirement planner similar in ambition to ProjectionLab, but focused deeply on Canadian retirement rules and plain-language interpretation. The prototype currently exposes multiple detailed scenario tabs; the product should usually present the best plan the engine can find, then make stress tests and alternatives available as supporting evidence rather than as equal competing choices.
 
 The product direction is **consumer-first and local-first**. It should feel like software a Canadian household can trust with sensitive financial questions without first creating an account, uploading private details, or accepting that cloud storage is the default business model.
 
@@ -38,8 +38,8 @@ Secondary:
 2. **Canadian rules first**
    CPP, OAS, GIS where relevant, RRSP/RRIF, LIRA/LIF, TFSA, non-registered ACB, pension splitting, CPP sharing, OAS clawback, provincial taxes, survivor rules, and DB pensions are core, not afterthoughts.
 
-3. **Scenario thinking over single answers**
-   The product should make it easy to compare decisions: retire earlier, delay CPP, downsize, sell a cottage, work part-time, reduce spending, change provinces, or plan for survivor outcomes.
+3. **Best plan first, scenarios second**
+   The consumer experience should present a recommended plan for the household: CPP/OAS timing, withdrawal order, RRSP/RRIF/LIF drawdown, TFSA use, pension splitting where relevant, and guardrails. Alternative scenarios should explain risk and trade-offs, not force users to choose between five equally detailed plans.
 
 4. **Risk is not binary**
    Avoid blunt "success/failure" framing. Distinguish full-lifestyle funding, core-spending funding, portfolio depletion, estate reduction, and temporary shortfalls.
@@ -60,7 +60,7 @@ Secondary:
 
 The preferred business model is local-first commercial software with a generous public/free path:
 
-- Free public planner for basic Canadian retirement exploration.
+- Free public planner for basic Canadian retirement exploration and a clear recommended plan.
 - Optional one-time purchase or local license unlock for advanced planning features.
 - Optional paid add-ons for deeper validation exports, expanded scenario tooling, more provinces, advanced tax strategy comparisons, polished reports, or implementation playbooks.
 - Optional account only for cloud sync, license recovery, sharing, advisor collaboration, or multi-device continuity.
@@ -70,8 +70,8 @@ This keeps privacy as a product advantage rather than a marketing claim. The pro
 
 Potential paid tiers should be designed around capability, not data capture:
 
-- **Free**: local planning, core Ontario engine, examples, basic scenario comparison, validation-visible outputs.
-- **Plus**: named local plans, richer scenario builder, advanced stress tests, flexible-spending / guardrail modes, polished PDF/report exports, expanded validation exports, and practical implementation packages.
+- **Free**: local planning, core Ontario engine, examples, optimized recommended plan, basic stress summary, validation-visible outputs.
+- **Plus**: named local plans, richer scenario builder, detailed alternative scenarios, advanced stress tests, flexible-spending / guardrail modes, polished PDF/report exports, expanded validation exports, and practical implementation packages.
 - **Pro / advisor**: client-ready reports, multi-household workspace, white-labeling, collaboration, and optional encrypted sync.
 
 Accounts may be useful later, but they should remain optional and explainable. If a user never wants cloud sync or sharing, the product should still be worth using and worth paying for.
@@ -82,14 +82,28 @@ Accounts may be useful later, but they should remain optional and explainable. I
 
 - Guided intake and editable plan summary.
 - Household planning for singles and couples.
+- Optimized recommended plan as the default result.
 - Named plans and named scenarios.
 - Local save/load.
 - Export/import `.plan.json`.
 - Shareable read-only plan links or reports, if privacy model permits.
 
+### Optimization Engine
+
+The engine should search the major retirement decisions and present one recommended household plan by default:
+
+- CPP and OAS start ages for each person.
+- RRSP/RRIF/LIF, TFSA, non-registered, and cash withdrawal order.
+- RRSP meltdown or bracket-capped drawdown strategy where it improves after-tax outcomes or risk.
+- Pension splitting and CPP sharing where relevant.
+- Spending level or guardrail adjustments when the target lifestyle cannot be fully funded.
+- Estate trade-offs when the user supplies a bequest target.
+
+The result should include a concise explanation of why the plan was chosen, what assumptions it depends on, and which risks still matter.
+
 ### Scenario Builder
 
-Users should be able to create scenarios without editing code:
+Scenario tooling should sit behind the recommended plan, not replace it as the default experience. Users should be able to create scenarios without editing code:
 
 - Retire earlier/later.
 - Work part-time for a period.
@@ -105,6 +119,8 @@ Users should be able to create scenarios without editing code:
 
 ### Results and Interpretation
 
+- Recommended plan summary.
+- Why this plan: CPP/OAS timing, withdrawal order, tax/risk/estate trade-offs.
 - Income stack by year.
 - Account balances by account type.
 - Taxes and OAS clawback.
@@ -112,7 +128,7 @@ Users should be able to create scenarios without editing code:
 - Estate value.
 - First shortfall year and magnitude.
 - Portfolio depletion year.
-- Monte Carlo fan chart.
+- Monte Carlo fan chart or compact stress summary.
 - Historical stress tests.
 - Plain-language interpretation with "why this happened."
 - Validation/export status for the active plan and engine version.
@@ -125,7 +141,8 @@ Users should be able to create scenarios without editing code:
 - Implementation package: account-by-account withdrawal instructions, tax/benefit checkpoints, and guardrail thresholds/actions.
 - Tax-aware withdrawal optimiser.
 - CPP/OAS timing optimiser.
-- RRSP meltdown comparison.
+- RRSP meltdown optimiser and comparison.
+- Detailed side-by-side scenario explorer.
 - Asset allocation and glide path modelling.
 - Inflation shock scenarios.
 - Long-term care / health spending module.
@@ -192,7 +209,7 @@ Before rebuilding the UI, run a trust-focused Sprint 0. The outcome should be a 
 ### Validation Exports
 
 - Expand exported baselines to include per-year account balances, withdrawals, taxable income, tax, benefits, and real/nominal flags.
-- Add a simple public-comparator fixture with flat assumptions and minimal tax optimization.
+- Maintain a simple public-comparator fixture with flat assumptions and minimal tax optimization.
 - Re-run the Government of Canada calculator manually where automation failed.
 - Keep paid-tool benchmarks secondary until free/public baselines are clean and reproducible.
 
@@ -211,11 +228,17 @@ Before rebuilding the UI, run a trust-focused Sprint 0. The outcome should be a 
 - Keep `.plan.json` import/export and local named plans in the free/core product path.
 - Reserve accounts for optional sync, license recovery, sharing, or advisor workflows only.
 
+Sprint 0 resolved the first product boundaries in:
+
+- `docs/local_monetization_sketch.md`
+- `docs/account_boundary_decision.md`
+- `docs/license_privacy_threat_model.md`
+
 ## Open Product Questions
 
-- Which advanced capabilities belong in a paid local-first Plus tier versus the free public planner?
-- What is the simplest local license mechanism that does not require user accounts or plan-data upload?
 - Should optional encrypted sync be built by this product, delegated to user-owned storage, or deferred indefinitely?
+- Should Plus be one-time purchase, annual maintenance, paid major-version upgrades, or a mix?
+- Which paid modules, if any, should be province-specific?
 - Which provinces come first after Ontario?
 - How much user education belongs inside the app versus separate articles?
 - Should the product optimize recommendations automatically, or mainly help users compare scenarios?

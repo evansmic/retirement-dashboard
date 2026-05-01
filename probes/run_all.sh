@@ -12,6 +12,7 @@ PROBES=(
   probe_presets.js
   probe_intake_roundtrip.js
   probe_mc_progressive.js
+  probe_tax_benefit_helpers.js
   probe_pension_credit.js
   probe_tax_ages_64_72.js
   probe_validation_exports.js

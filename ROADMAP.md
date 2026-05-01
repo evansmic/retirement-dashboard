@@ -72,25 +72,25 @@
 
 ## Sprint plan
 
-**Sprint 0 — Trust and engine readiness.** Underway. S0-01 fixed pension-income-credit eligibility, S0-02 added focused age 64-72 tax/benefit fixtures, S0-03 added the 2026 federal/Ontario tax methodology note, S0-04/S0-06 clarified stress-test metrics and interpretation language, and S0-07 expanded annual validation exports. Remaining work: public-comparator fixture/rerun, engine boundary mapping, schema v3 draft, and local-first monetization boundaries. This supersedes the old "Sprint 3 next" ordering.
+**Sprint 0 — Trust and engine readiness.** Complete (2026-05-01). S0-01 fixed pension-income-credit eligibility, S0-02 added focused age 64-72 tax/benefit fixtures, S0-03 added the 2026 federal/Ontario tax methodology note, S0-04/S0-06 clarified stress-test metrics and interpretation language, S0-07 expanded annual validation exports, S0-08 added a deliberately simple `public-comparator-single` baseline for free/public calculator checks, S0-09 reran the official Government of Canada calculator against that fixture, S0-10 mapped the dashboard's engine/UI/persistence/charting/copy boundaries in `docs/engine_boundary_map.md`, S0-11 extracted the first tax/benefit helpers into `engine/tax_benefit_helpers.js`, S0-12 drafted the schema v3 output contract in `docs/schema_v3_output_contract.md`, S0-13 defined Free/Plus/Pro local-first monetization in `docs/local_monetization_sketch.md`, S0-14 recorded optional-account boundaries in `docs/account_boundary_decision.md`, and S0-15 added the license/privacy threat model in `docs/license_privacy_threat_model.md`. This supersedes the old "Sprint 3 next" ordering.
 
 **Sprint 1 — Foundation.** Internal-cleanup pass that takes the codebase from "private project" to "ready to be public." Adds LICENSE, disclaimer, schema versioning + migration scaffold, `frank`/`moon` → `p1`/`p2` rename, blank form with example presets, JSDoc types on `D`, GitHub Actions CI, polished public README. *Estimated: one focused weekend.*
 
 **Sprint 2 — UX polish.** Collapsible sections, inline tooltips on key fields, back-to-form button + hash decoder, soft RRSP-room warning, improved CPP help text, default-on Monte Carlo with progressive rendering. *Estimated: one weekend.*
 
-**Sprint 3 — Guided form.** Deferred until Sprint 0 trust work is done. Sidebar nav with per-section save/advance and status icons. Turns the long form into something genuinely guided without going full wizard. *Estimated: half-day to a full day.*
+**Sprint 3 — Guided form.** Eligible now that Sprint 0 trust work is complete. Sidebar nav with per-section save/advance and status icons. Turns the long form into something genuinely guided without going full wizard. *Estimated: half-day to a full day.*
 
-**Sprint 4 — Launch.** Deferred until tax validation, risk language, and export baselines are in better shape. Launch may include local-first paid positioning rather than only donate/micro-pay. *Estimated: one evening once trust gates are green.*
+**Sprint 4 — Launch.** Eligible after deciding whether guided-form UX, engine extraction, or `.plan.json` persistence should land first. Launch may include local-first paid positioning rather than only donate/micro-pay. *Estimated: one evening once trust gates are green.*
 
-**Minimum viable productization sequence:** Sprint 0 first, then decide whether to continue with guided-form UX, engine extraction, or launch packaging. Trust beats polish for the next decision point.
+**Minimum viable productization sequence:** With Sprint 0 complete, choose next between guided-form UX, deeper engine extraction, local `.plan.json` persistence, or launch packaging. Trust still beats polish for the next decision point.
 
 ## Medium-term roadmap (post-launch, beyond the four sprints)
 
 **Phase 7 — Provinces.** Abstract Ontario-specific tax calc behind a province selector. BC and Alberta first; Quebec is largest scope due to QPP and distinct tax structure.
 
-**Phase 8 — Local-first persistence and paid unlocks.** Export/import `.plan.json`, named local plans, and optional local license unlocks. Accounts remain optional for sync, license recovery, sharing, or advisor collaboration.
+**Phase 8 — Local-first persistence and paid unlocks.** Export/import `.plan.json`, named local plans, and optional local license unlocks. Accounts remain optional for sync, license recovery, sharing, or advisor collaboration. See `docs/local_monetization_sketch.md`, `docs/account_boundary_decision.md`, and `docs/license_privacy_threat_model.md`.
 
-**Phase 8b — Implementation guidance package.** Turn a completed plan into a practical drawdown playbook: account-by-account withdrawal order, annual tax/benefit checkpoints, RRIF/LIF notes, CPP/OAS timing, and guardrail thresholds/actions. This is a strong Plus/Pro candidate, especially if AI-assisted explanations can be offered with explicit consent and a local-first privacy boundary.
+**Phase 8b — Optimized plan and implementation guidance package.** Move beyond the prototype's five equal scenario tabs. The default consumer result should be one recommended household plan: optimized CPP/OAS timing, withdrawal strategy, RRSP/RRIF/LIF/TFSA/non-reg ordering, pension splitting/CPP sharing, spending guardrails, and estate trade-offs. Turn that completed plan into a practical drawdown playbook: account-by-account withdrawal order, annual tax/benefit checkpoints, RRIF/LIF notes, CPP/OAS timing, and guardrail thresholds/actions. Detailed side-by-side scenario exploration is a strong Plus/Pro candidate, especially if AI-assisted explanations can be offered with explicit consent and a local-first privacy boundary.
 
 **Phase 9 — Advisor mode (gated on B2B interest).** Multi-household dashboard, side-by-side comparison, white-label branding, client-ready reports, and optional encrypted collaboration. Build only after the consumer workflow is stable.
 
@@ -101,6 +101,7 @@
 - Tax-loss-harvesting modelling in non-reg.
 - Flexible-spending Monte Carlo: protect core spending while allowing discretionary spending to adjust in bad markets.
 - Guardrail withdrawal mode with spending cuts/restores based on portfolio bands.
+- Recommended-plan optimiser: choose CPP/OAS timing, withdrawal order, pension split/share settings, and meltdown/guardrail strategy before presenting results.
 - Withdrawal-order optimiser (search over N→T→R permutations for max after-tax).
 - "What if I work one more year?" slider.
 - Estate tax optimisation (deemed disposition at last death).

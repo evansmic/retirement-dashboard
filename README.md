@@ -27,7 +27,7 @@ Everything runs in your browser. Nothing is uploaded. No accounts. Close the tab
 | **CPP / OAS** | Actuarial adjustment from 60–70, CPP sharing, OAS at 65 with 0.6%/mo deferral up to 70. |
 | **Couples** | Staggered retirement, dual DB pensions, survivor rollover (registered + non-reg with ACB preserved), CPP survivor benefit. |
 | **Working years** | Pre-retirement salary growth, RRSP/TFSA/non-reg contributions, dual DB accruals. |
-| **Stress testing** | Five deterministic scenarios (Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend) + Monte Carlo (1,000 paths) + sequence-of-returns stress (1929/1973/2000/2008). |
+| **Stress testing** | Prototype includes five deterministic scenarios (Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend) + Monte Carlo (1,000 paths) + sequence-of-returns stress (1929/1973/2000/2008). Product direction is recommended-plan first, with detailed scenarios becoming advanced diagnostics. |
 | **Output** | Income-stack, balances, tax, and estate charts; year-by-year detail table; comparison table with stress/funding metrics; PDF print export. |
 
 Ontario only for now — Quebec, BC, and Alberta tax aren't yet supported. See [`ROADMAP.md`](ROADMAP.md) for what's next.
@@ -42,7 +42,7 @@ All computation happens client-side. Your inputs are encoded into the URL hash (
 
 ## Tested
 
-414 checks across the canonical Node-based regression probes cover the tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, schema migration, example-preset registry, intake round-trip, and progressive Monte Carlo lifecycle. Run the suite locally with:
+478 checks across the canonical Node-based regression probes cover the extracted tax/benefit helper module, tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, public-comparator fixture, schema migration, example-preset registry, intake round-trip, and progressive Monte Carlo lifecycle. Run the suite locally with:
 
 ```bash
 cd probes
@@ -65,6 +65,10 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 | `retirement_dashboard.html` | Engine + dashboard. Reads the hash and renders scenarios + charts. |
 | `probes/` | Node-based regression suite. See [`probes/README.md`](probes/README.md). |
 | `validation/` | Baseline exports, public-comparator notes, and the [`2026 tax methodology`](validation/tax_methodology_2026.md). |
+| `docs/schema_v3_output_contract.md` | Draft local-first v3 plan/result contract for the recommended-plan-first product. |
+| `docs/local_monetization_sketch.md` | Free / Plus / Pro capability boundary for local-first paid packaging. |
+| `docs/account_boundary_decision.md` | Account boundary: optional infrastructure only, not required for core local planning. |
+| `docs/license_privacy_threat_model.md` | License and privacy threat model for local unlocks, sync, sharing, AI, analytics, and support exports. |
 | `PROJECT.md` | Project overview, problem, value proposition, tech stack. |
 | `ROADMAP.md` | Completed milestones, current phase, future ideas. |
 | `DB_SCHEMA.md` | The `D` payload contract (schema). |
@@ -75,7 +79,7 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 
 ## Status
 
-Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 414-check regression suite covers the rules end-to-end. Sprint 1 and Sprint 2 are complete. Sprint 0 is underway: tax accuracy, risk-language clarity, validation exports, engine readiness, and local-first monetization boundaries before a broader UI rebuild. See [`ROADMAP.md`](ROADMAP.md).
+Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 478-check regression suite covers the rules end-to-end. Sprint 1, Sprint 2, and Sprint 0 are complete: tax accuracy, risk-language clarity, validation exports, engine readiness, schema v3 direction, and local-first monetization/account/privacy boundaries are documented before a broader UI rebuild. See [`ROADMAP.md`](ROADMAP.md).
 
 ## License
 

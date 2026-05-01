@@ -2,7 +2,7 @@
 
 ## Project overview
 
-A self-contained, browser-based retirement planning dashboard for Canadian households (Ontario tax rules, 2026). Users enter their financial picture through an intake form, and the tool produces a year-by-year projection across multiple scenarios (baseline, RRSP meltdown, 0% return, survivor, max-spend), plus Monte Carlo and sequence-of-returns stress tests, with real/nominal toggles and PDF export. Everything runs client-side; no server, no database.
+A self-contained, browser-based retirement planning dashboard for Canadian households (Ontario tax rules, 2026). Users enter their financial picture through an intake form, and the prototype produces a year-by-year projection across multiple scenarios (baseline, RRSP meltdown, 0% return, survivor, max-spend), plus Monte Carlo and sequence-of-returns stress tests, with real/nominal toggles and PDF export. The product direction is to move beyond this prototype: present one optimized recommended plan first, then use scenarios and stress tests as supporting evidence. Everything runs client-side; no server, no database.
 
 ## Core problem being solved
 
@@ -19,13 +19,14 @@ Secondary users include fee-only planners, adult children helping parents, and f
 - Models Canadian federal + Ontario 2026 tax law with precision competitors typically hide behind a paywall.
 - Handles couples fully: pension splitting, CPP sharing, spousal-RRSP attribution, survivor rollover, staggered retirements.
 - Stress-tests the plan three ways: Monte Carlo (fan chart + full-spending-funded rate), historical sequence-of-returns (1929 / 1973 / 2000 / 2008), and discrete scenarios.
+- Future product target: optimize CPP/OAS timing and withdrawal strategy, then present the best household plan by default.
 - Runs entirely in the browser — no data ever leaves the device, and no account is required for core planning.
 
 ## Current product vision
 
-A precision-grade "projection engine + scenario explorer" for Canadian households, with the modelling fidelity of a professional planning tool (Snap Projections, RazorPlan) but usable without training. Over time: make the intake form friendlier, extend to non-Ontario provinces, and improve the explanation layer so a non-expert can understand *why* each scenario produces its result.
+A precision-grade "optimized retirement plan + scenario explorer" for Canadian households, with the modelling fidelity of a professional planning tool (Snap Projections, RazorPlan) but usable without training. Over time: make the intake form friendlier, extend to non-Ontario provinces, and improve the explanation layer so a non-expert can understand *why* the recommended plan was chosen and what risks still matter.
 
-The longer-term ambition is a local-first Canadian retirement planner similar in ambition to ProjectionLab: scenario-driven, privacy-preserving, consumer-friendly, and deep on Canadian tax, benefits, couples, and survivor planning.
+The longer-term ambition is a local-first Canadian retirement planner similar in ambition to ProjectionLab: optimized-plan-first, privacy-preserving, consumer-friendly, and deep on Canadian tax, benefits, couples, and survivor planning. Advanced users can still inspect or author scenarios, but that should not be the first screen a household has to interpret.
 
 ## Current feature set
 
@@ -35,10 +36,11 @@ The longer-term ambition is a local-first Canadian retirement planner similar in
 - Assumptions: return, inflation, return SD, horizon, withdrawal order, younger-spouse RRIF election, CPP sharing, spousal-RRSP contributions, FP Canada preset selector.
 
 **Dashboard (`retirement_dashboard.html`)**
-- Five deterministic scenarios: Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend.
+- Prototype only: five deterministic scenarios: Baseline, RRSP Meltdown, 0% Return, Survivor, Max Spend.
 - Charts: income stack (salary, DB, CPP, OAS, RRIF/LIF, TFSA, non-reg, spending line), balances, tax, estate.
 - KPIs: first shortfall year, portfolio depletion year, lifetime after-tax, lifetime tax, OAS clawback, estate.
 - Comparison table across scenarios with stress/funding metric row.
+- Product goal: collapse the consumer result into a recommended plan plus compact risk summary; reserve detailed side-by-side scenarios for advanced/paid workflows.
 - Year-by-year detail table with milestone highlighting.
 - Monte Carlo fan chart (p10/p50/p90) with success rate.
 - Sequence-of-returns stress panel (historical crash overlays).

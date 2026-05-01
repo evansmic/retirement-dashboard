@@ -4,12 +4,14 @@ const path = require("path");
 const root = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "retirement_dashboard.html"), "utf8");
 const match = html.match(/<script>([\s\S]*?)<\/script>/);
+const helper = fs.readFileSync(path.join(root, "engine", "tax_benefit_helpers.js"), "utf8");
 
 if (!match) {
   throw new Error("Could not find dashboard script block.");
 }
 
-const wrapper = `${match[1]}
+const wrapper = `${helper}
+${match[1]}
   return { D, PRESETS, PRESET_META, RESULTS, SCENARIOS, sequenceOfReturnsStress };
 `;
 

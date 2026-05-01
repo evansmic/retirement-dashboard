@@ -56,7 +56,7 @@
 *Superseded 2026-04-26 by Sprint 1 #47–#49.* Once schema versioning was in place (#46), the rename became safe — `MIGRATIONS[1]` lifts legacy `frank`/`moon` hashes forward to `p1`/`p2`. Engine, intake form, and probes all use the generic keys now.
 
 **Blank default + named example presets, instead of an auto-loaded sample household.**
-*Why* (resolved 2026-04-27 by Sprint 1 #58): with public release on the horizon, opening the dashboard to a fully-populated "Person 1 / Person 2" stranger's plan was misleading — it implied the tool already knew something about the visitor. The new behaviour: no payload + no `?example=<slug>` → a landing card explaining the tool and offering five representative Canadian (non-Quebec) archetypes — `diy-couple`, `db-pension-couple`, `single-late-career`, `retired-traditional`, `fire-couple`. Each archetype is a function in `PRESETS` returning a fully-populated D; `PRESET_META` carries the user-facing label/sub-label so the engine and UI stay in lock-step. Slugs are stable, so `?example=<slug>` URLs are bookmarkable.
+*Why* (resolved 2026-04-27 by Sprint 1 #58; expanded 2026-04-30 by Sprint 0 S0-08): with public release on the horizon, opening the dashboard to a fully-populated "Person 1 / Person 2" stranger's plan was misleading — it implied the tool already knew something about the visitor. The new behaviour: no payload + no `?example=<slug>` → a landing card explaining the tool and offering representative Canadian (non-Quebec) archetypes — `diy-couple`, `db-pension-couple`, `single-late-career`, `public-comparator-single`, `retired-traditional`, `fire-couple`. Each archetype is a function in `PRESETS` returning a fully-populated D; `PRESET_META` carries the user-facing label/sub-label so the engine and UI stay in lock-step. Slugs are stable, so `?example=<slug>` URLs are bookmarkable.
 *Source rigour*: every headline figure cites a public Canadian benchmark — Service Canada CPP/OAS Apr–Jun 2026, FP Canada Projection Assumption Guidelines 2026, HOOPP / OTPP plan formulas, StatCan retirement income survey. Inline comments in `PRESETS` link each derivation.
 *Trade-off accepted*: the structurally-blank D is a clone of `diy-couple` with names cleared and `_isBlank: true` — the engine still computes scenarios under it (then the UI hides them). A truly empty D would have required defensive guards throughout the engine; the cloned-stub approach is one flag and zero engine changes. `getDefaultD()` now returns the `diy-couple` preset for backward-compat with probes.
 
@@ -112,16 +112,31 @@
 
 **Local-first monetization.**
 *Why*: privacy is a core differentiator. Monetization should reinforce that promise, not undermine it with mandatory cloud accounts or uploaded plan data.
-*Decision*: core planning, local save/load, import/export, and anonymous trial should not require an account. Paid features can unlock locally through a one-time purchase or local license. Accounts are optional for encrypted sync, license recovery, sharing, or advisor collaboration.
+*Decision*: core planning, recommended-plan-first results, local save/load, import/export, opening existing local plan files, and anonymous trial should not require an account. Paid features can unlock locally through a one-time purchase or local license where feasible. Accounts are optional for encrypted sync, license recovery, purchase history, sharing, adult-child/advisor collaboration, multi-device continuity, or Pro team administration. Free/Plus/Pro boundaries are sketched in `docs/local_monetization_sketch.md`.
 *Trade-off accepted*: local licensing and accountless purchase flows are more operationally awkward than SaaS subscriptions, but they align better with the product's trust story.
+
+**Account boundary.**
+*Why*: account prompts can quietly turn a local-first product into SaaS by habit. The product needs a clear rule before sync, sharing, license recovery, or advisor workflows are designed.
+*Decision*: accounts are optional infrastructure only. They may support encrypted sync, license recovery, purchase history, sharing, advisor/adult-child collaboration, multi-device continuity, and Pro team administration. They must not be required for core planning, recommended results, anonymous trial, local save/load, `.plan.json` import/export, opening existing local plan files, basic validation/methodology visibility, or local paid unlock where feasible. See `docs/account_boundary_decision.md`.
+*Trade-off accepted*: some recovery and cross-device conveniences may be less seamless for accountless users, but the default planning path remains private and local.
+
+**License and privacy boundary.**
+*Why*: local paid unlocks can still create privacy risk if license checks, analytics, support exports, AI reports, or optional sync collect plan data indirectly.
+*Decision*: a local license check may store only minimum unlock metadata such as license key/token, tier, expiry/maintenance date, receipt ID, last successful verification, non-sensitive install/device identifier, optional purchase email, and verification keys/signatures. It must not upload plan files, URL hashes, decoded household payloads, account balances, income, spending, debts, pension/CPP/OAS values, tax/result rows, report contents, or support/debug logs unless the user explicitly exports or shares them. Local `.plan.json` files remain usable without an account and should open even when a paid license is expired, offline, or unrecovered. See `docs/license_privacy_threat_model.md`.
+*Trade-off accepted*: anti-fraud controls are intentionally limited. The privacy promise is more important than perfect license enforcement.
 
 **Sprint 0 before UI rebuild.**
 *Why*: the next limiting factor is trust, not layout. The free/public validation run found strong accumulation alignment but also a real tax-credit question and inconsistent sustainability comparators.
 *Decision*: prioritize tax accuracy, Monte Carlo/stress-test language, validation exports, and engine-readiness before rebuilding the UI or adding launch monetization.
 *Trade-off accepted*: the visible app may improve more slowly in the short term, but the foundation becomes safer for a ProjectionLab-scale product.
 
+**Optimized plan first; detailed scenario explorer second.**
+*Why*: the prototype exposes five detailed deterministic scenarios side by side, which is useful for engine development but too much cognitive load for a consumer retirement product. Most households want to know what plan the engine recommends, not choose among Baseline, Meltdown, 0% Return, Survivor, and Max Spend tabs as if they are equally actionable plans.
+*Decision*: the next product should present one recommended household plan by default: optimized CPP/OAS timing, withdrawal strategy, RRSP/RRIF/LIF/TFSA/non-reg order, pension splitting/CPP sharing where relevant, spending guardrails, and estate trade-offs. Stress cases remain visible as risk evidence, but not as competing plans.
+*Monetization implication*: detailed side-by-side scenarios, custom scenario authoring, advanced stress tests, estate variants, early-death cases, and lower-return comparison views are strong Plus/Pro features. The free/core product should still show a basic stress summary so the recommended plan is not presented as certainty.
+
 ## Open decisions (still unresolved)
 
-- Which exact advanced features are paid Plus versus free public?
-- Which local license mechanism best balances user privacy, purchase recovery, and implementation simplicity?
+- Exact pricing and purchase model for Plus: one-time purchase, annual maintenance, paid major-version upgrades, or a mix.
 - Whether optional sync should be first-party encrypted sync, user-owned storage, or deferred.
+- Whether AI-assisted report drafting can be offered locally or only through explicit opt-in upload.

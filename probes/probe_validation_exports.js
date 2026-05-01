@@ -28,7 +28,8 @@ function csvHeader(line){
 console.log("\n=== (a) Top-level baseline metadata ===");
 check(baselines.methodology === 'validation/tax_methodology_2026.md', 'methodology note linked');
 check(baselines.dollarMode === 'nominal', 'top-level dollarMode is nominal');
-check(Object.keys(baselines.presets || {}).length === 5, 'five preset baselines exported');
+check(Object.keys(baselines.presets || {}).length === 6, 'six preset baselines exported');
+check(!!baselines.presets['public-comparator-single'], 'public-comparator-single baseline exported');
 
 console.log("\n=== (b) Scenario config + annual JSON rows ===");
 const requiredAnnualFields = [
@@ -60,6 +61,22 @@ for(const [slug, preset] of Object.entries(baselines.presets)){
       `${slug}/${scenarioKey}: taxableIncomeTotal reconciles`);
     checkedShape = true; // Field-shape checks are identical for all scenarios in the preset.
   }
+}
+
+const publicComparator = baselines.presets['public-comparator-single'];
+if(publicComparator){
+  const p1 = publicComparator.household.people[0] || {};
+  const base = publicComparator.scenarios.base || {};
+  check(publicComparator.household.people.length === 1, 'public-comparator-single: one-person household metadata');
+  check(publicComparator.household.spending.goGo === 33000
+        && publicComparator.household.spending.slowGo === 33000
+        && publicComparator.household.spending.noGo === 33000,
+        'public-comparator-single: flat spending exported');
+  check(p1.nonreg === 0 && p1.dbBefore65 === 0 && p1.dbAfter65 === 0,
+        'public-comparator-single: no non-reg or DB pension in household snapshot');
+  check(base.config && base.config.cppAgeF === 65 && base.config.oasAgeF === 65
+        && base.config.pensionSplit === false && base.config.withdrawalOrder === 'default',
+        'public-comparator-single/base: ordinary CPP/OAS timing and no tax optimization');
 }
 
 console.log("\n=== (c) CSV artifacts ===");

@@ -1,6 +1,6 @@
 // Sprint 1 #58: example presets + blank-state preset loader.
 // Verifies:
-//   1. PRESETS registry exports 5 slugs and matches PRESET_META.
+//   1. PRESETS registry exports 6 slugs and matches PRESET_META.
 //   2. Each preset returns a fully-populated, schema-v2-stamped D that
 //      passes through migrate() unchanged.
 //   3. With no hash and no ?example, loadClientData() returns a blank D
@@ -8,7 +8,7 @@
 //   4. With ?example=<slug>, loadClientData() returns the preset payload
 //      (no _isBlank) and the engine produces non-degenerate output
 //      (positive total income across the year array).
-//   5. Single-household preset (`single-late-career`) wires P2 to blank-name
+//   5. Single-household presets wire P2 to blank-name
 //      with zeroed benefits — engine's hasP2 check should treat it as solo.
 //   6. Unknown slug (?example=does-not-exist) falls through to the blank
 //      state rather than silently picking a different preset.
@@ -20,7 +20,9 @@ const path = require("path");
 const html = fs.readFileSync(path.join(__dirname, "..", "retirement_dashboard.html"), "utf8");
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 const body = m[1];
-const wrapper = `${body}\n  return { migrate, SCHEMA_VERSION, getDefaultD, getBlankD, loadClientData, D, PRESETS, PRESET_META, RESULTS, SCENARIOS };`;
+const helper = fs.readFileSync(require("path").join(__dirname, "..", "engine", "tax_benefit_helpers.js"), "utf8");
+const wrapper = `${helper}
+${body}\n  return { migrate, SCHEMA_VERSION, getDefaultD, getBlankD, loadClientData, D, PRESETS, PRESET_META, RESULTS, SCENARIOS };`;
 
 function loadWithUrl({ hash = '', search = '' } = {}) {
   const fakeWin = { location: { hash, search }, addEventListener: () => {} };
@@ -42,15 +44,15 @@ const probe0 = loadWithUrl();   // no hash, no search → blank
 check(probe0.PRESETS && typeof probe0.PRESETS === 'object',
       `PRESETS registry is exported as an object`);
 const slugs = Object.keys(probe0.PRESETS);
-check(slugs.length === 5,
-      `PRESETS contains exactly 5 archetypes (got ${slugs.length}: ${slugs.join(', ')})`);
-const expectedSlugs = ['diy-couple','db-pension-couple','single-late-career','retired-traditional','fire-couple'];
+check(slugs.length === 6,
+      `PRESETS contains exactly 6 archetypes (got ${slugs.length}: ${slugs.join(', ')})`);
+const expectedSlugs = ['diy-couple','db-pension-couple','single-late-career','public-comparator-single','retired-traditional','fire-couple'];
 check(expectedSlugs.every(s => slugs.includes(s)),
       `PRESETS contains every expected slug`);
 
 // ── 2. PRESET_META alignment ──
-check(Array.isArray(probe0.PRESET_META) && probe0.PRESET_META.length === 5,
-      `PRESET_META is an array of 5 entries`);
+check(Array.isArray(probe0.PRESET_META) && probe0.PRESET_META.length === 6,
+      `PRESET_META is an array of 6 entries`);
 const metaSlugs = probe0.PRESET_META.map(p => p.slug);
 check(metaSlugs.every(s => probe0.PRESETS[s]),
       `every PRESET_META.slug points at a real preset`);
@@ -137,6 +139,28 @@ check(probeSolo.D.p2.rrsp === 0 && probeSolo.D.p2.tfsa === 0
 const soloYears = probeSolo.RESULTS.base.years;
 check(soloYears.length > 0,
       `single-late-career: simulation runs cleanly (got ${soloYears.length} years)`);
+
+// ── 6.25 public-comparator-single: deliberately simple validation fixture ──
+const probePublic = loadWithUrl({ search: '?example=public-comparator-single' });
+check(probePublic.D.p1.name === 'Pat' && probePublic.D.p2.name === '',
+      `?example=public-comparator-single → P1=Pat, P2 blank`);
+check(probePublic.D.spending.gogo === 33000
+      && probePublic.D.spending.slowgo === 33000
+      && probePublic.D.spending.nogo === 33000,
+      `public-comparator-single: spending is flat across all phases`);
+check(probePublic.D.p1.nonreg === 0 && probePublic.D.p1.nonregAcb === 0
+      && probePublic.D.p2.nonreg === 0 && probePublic.D.p2.nonregAcb === 0,
+      `public-comparator-single: no non-registered account complexity`);
+check(probePublic.D.p1.db_before65 === 0 && probePublic.D.p1.db_after65 === 0
+      && probePublic.D.p2.db_before65 === 0 && probePublic.D.p2.db_after65 === 0,
+      `public-comparator-single: no DB pension`);
+check(probePublic.SCENARIOS.base.cfg.cppAgeF === 65
+      && probePublic.SCENARIOS.base.cfg.oasAgeF === 65
+      && probePublic.SCENARIOS.base.cfg.pensionSplit === false
+      && probePublic.SCENARIOS.base.cfg.withdrawalOrder === 'default',
+      `public-comparator-single baseline: CPP/OAS at 65, no split, default withdrawal order`);
+check(probePublic.RESULTS.base.years.length === 31,
+      `public-comparator-single: 2026-2056 annual horizon exported (got ${probePublic.RESULTS.base.years.length})`);
 
 // ── 6.5 Survivor scenario: realistic death years (1-2 yrs after plan start),
 //        higher earner is P1, never produces age-128 labels.

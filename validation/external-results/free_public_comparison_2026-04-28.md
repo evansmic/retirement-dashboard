@@ -220,8 +220,82 @@ The higher lifetime tax is expected: ordinary RRSP-style gap withdrawals no long
 
 ## Recommended Next Steps
 
-1. Add the broader S0-02 age 64-72 tax fixture pack around CPP/OAS starts, RRIF conversion, age credit, surtax, Health Premium, clawback, and pension splitting.
-2. Export per-year account balances at retirement in the validation baseline so RRSP/TFSA/non-reg can be compared directly.
-3. Add a deliberately simple "public-comparator" preset with flat spending, no non-reg, no tax optimization, no CPP/OAS deferral, and no meltdown logic.
-4. Retry the official Government of Canada calculator manually in a normal browser, because it remains the most important public source even though it failed in this automation run.
-5. Add paid-tool benchmarks only after the free/public baseline is stable.
+1. Retry the official Government of Canada calculator manually in a normal browser, because it remains the most important public source even though it failed in this automation run.
+2. Use `public-comparator-single` / Baseline first: single age-65 retiree, flat $33K spending, no spouse, no non-reg, no DB pension, no tax optimization, CPP/OAS at 65.
+3. Add paid-tool benchmarks only after the free/public baseline is stable.
+
+## Sprint 0 Follow-up — S0-08
+
+S0-08 added `public-comparator-single` to the dashboard `PRESETS` registry and regenerated `preset_baselines.json`, `preset_baselines.csv`, and `preset_baselines_yearly.csv`.
+
+The fixture is intentionally simpler than `single-late-career`: one person, retired at 65 in 2026, flat $33,000 spending in every phase, $350,000 RRSP/RRIF-style registered savings, $80,000 TFSA, no spouse, no DB pension, no mortgage, no non-registered account, no special events, and ordinary CPP/OAS at 65 in the Baseline scenario.
+
+## Sprint 0 Follow-up — S0-09 Official Public Calculator Rerun
+
+Run date: 2026-05-01. The Government of Canada calculator session report labelled itself "Summary of the information provided on April 30, 2026", likely because the Canada.ca service timestamp was still on April 30 during the run.
+
+Tool: Government of Canada Canadian Retirement Income Calculator.
+
+URL: https://www.canada.ca/en/services/benefits/publicpensions/cpp/retirement-income-calculator.html
+
+Fixture used: `public-comparator-single` / Baseline.
+
+Inputs mapped:
+
+- Date of birth: January 1961.
+- Sex assigned at birth: male. This is only used by the calculator for default life expectancy; the run overrode life expectancy manually.
+- Current annual income: $0.
+- Annual retirement income goal: $33,000 before tax / in today's dollars.
+- Retirement income stop age: 95.
+- CPP: Canada Pension Plan, Statement of Contributions available, 2026 statement, $1,000/month at age 65, CPP start age 65, no work after CPP starts.
+- Employer pension: none.
+- RRSP: yes, current value $350,000, no future contributions, income from age 65 to 95, 5% return.
+- Other retirement savings: yes, current value $80,000, no future contributions, income from age 65 to 95, 5% return.
+- Other income: none.
+- OAS: living in Canada at 65, at least 40 years in Canada between age 18 and 65, OAS start age 65.
+
+Input mismatch notes:
+
+- The dashboard fixture has `dobMonth: 6`, but the dashboard engine uses annual ages (`year - birthYear`). January 1961 was used in the Government of Canada calculator so the official tool treats the person as age 65 in 2026.
+- The Government of Canada calculator asks for a before-tax retirement income goal and does not expose a year-by-year tax calculation. The dashboard's spending target is interpreted through the engine's after-tax spending/drawdown mechanics.
+- The Government of Canada calculator amortizes RRSP/other savings into a level annual retirement-savings income. The dashboard draws only what is needed each year after CPP/OAS, tax, account ordering, and indexed spending.
+
+Government of Canada results:
+
+| Metric | Government of Canada calculator |
+|---|---:|
+| CPP | $12,005/yr from age 65 |
+| OAS | $8,916/yr from age 65 to 74 |
+| OAS age-75 amount | $9,808/yr from age 75 to 95 |
+| Retirement savings income | $19,079/yr from age 65 |
+| Total estimated income, ages 65-74 | $40,000/yr |
+| Total estimated income, ages 75-95 | $40,892/yr |
+| Difference vs $33,000 goal, ages 65-74 | +$7,000/yr |
+| Difference vs $33,000 goal, ages 75-95 | +$7,892/yr |
+
+Dashboard comparable, nominal Baseline:
+
+| Metric | Dashboard |
+|---|---:|
+| CPP at age 65 / 2026 | $12,000 |
+| OAS at age 65 / 2026 | $8,908 |
+| Registered + TFSA draw at age 65 / 2026 | $14,293 |
+| Gross income incl. TFSA draw at age 65 / 2026 | $35,201 |
+| Total tax at age 65 / 2026 | $2,327 |
+| Actual spending funded at age 65 / 2026 | $32,874 |
+| First material shortfall year | Never |
+| Max annual shortfall | $126 |
+| Ending portfolio at age 95 / 2056 | $516,892 |
+
+Interpretation:
+
+This is a useful official public benchmark, but not an exact engine validation. CPP and OAS line up closely: CPP differs by $5/year and OAS differs by $8/year at age 65. That is excellent.
+
+The retirement-savings comparison diverges by design. The Government of Canada calculator turns the $350,000 RRSP plus $80,000 other savings into a level $19,079/year income from age 65 to 95. The dashboard draws less at age 65 because it funds a $33,000 spending target after tax and preserves the portfolio for later indexed spending, ending with $516,892 nominal at age 95. This should not be treated as a bug without a separate comparator that exposes tax, inflation, and account-draw sequencing.
+
+S0-09 conclusion:
+
+- The official public calculator now runs numerically for the S0-08 fixture.
+- CPP/OAS are validated tightly for the simple age-65 case.
+- Savings drawdown is directionally comparable but not apples-to-apples because the official calculator levelizes savings income and does not expose tax/account sequencing.
+- Paid/account-gated tools remain secondary until public baselines are stable.

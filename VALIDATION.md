@@ -11,6 +11,8 @@ For the consumer-first product direction, validation is part of the product surf
 
 The current tax/benefit assumptions are documented in [`validation/tax_methodology_2026.md`](validation/tax_methodology_2026.md). Keep that note beside every validation run so future tax-year updates can be audited without reverse-engineering the dashboard code.
 
+The draft schema v3 output contract is documented in [`docs/schema_v3_output_contract.md`](docs/schema_v3_output_contract.md). It defines the future structured result surface that should eventually replace the current flattened validation exporter while preserving the same audit columns.
+
 ## Baseline Principle
 
 Because this is a free public-use project, the first benchmark set should use public or free-tier tools wherever possible. Paid tools such as Optiml, Adviice, Snap Projections, NaviPlan, or Conquest are useful secondary benchmarks, but they should not be the only evidence that the model is reasonable.
@@ -48,10 +50,24 @@ The export uses the dashboard's `PRESETS` registry in `retirement_dashboard.html
 - `diy-couple`
 - `db-pension-couple`
 - `single-late-career`
+- `public-comparator-single`
 - `retired-traditional`
 - `fire-couple`
 
 All figures are nominal CAD unless noted otherwise.
+
+### Public Comparator Fixture
+
+Use `public-comparator-single` as the first free/public calculator case. It is intentionally plain:
+
+- single Ontario resident, age 65 in 2026
+- retired in 2026, no employment income
+- flat $33,000 annual spending target across all phases
+- $350,000 RRSP/RRIF-style registered savings and $80,000 TFSA
+- no spouse, no DB pension, no mortgage, no non-registered account, no inheritance, no downsizing, no one-off events
+- Baseline scenario uses CPP and OAS at 65, pension splitting off, and default withdrawal order
+
+For public/free calculators, compare the Baseline scenario first. The RRSP Meltdown, Max Spend, Survivor, and sequence-stress outputs are useful internal stress cases, but they are not apples-to-apples for simple public calculators.
 
 ## Recommended Free/Public Comparators
 
@@ -100,8 +116,8 @@ Before rebuilding the UI or adding broader product packaging, validation work sh
 - Keep the S0-01 pension-income-credit fix and S0-02 age 64-72 tax/benefit fixture pack covered by regression probes.
 - Keep the 2026 tax methodology note current when any tax, benefit, RRIF/LIF, or comparator assumption changes.
 - Keep per-year export fields for account balances, withdrawals, taxable income, tax, OAS clawback, CPP/OAS/DB income, and real/nominal mode covered by regression probes.
-- Add a simple public-comparator fixture that avoids tax optimization, non-registered complexity, and unusual benefit timing.
-- Re-run the Government of Canada Canadian Retirement Income Calculator manually in a normal browser.
+- Keep the simple `public-comparator-single` fixture current: flat spending, no tax optimization, no non-registered complexity, and ordinary CPP/OAS timing.
+- Keep the Government of Canada Canadian Retirement Income Calculator comparison current for the `public-comparator-single` fixture.
 - Record which outputs are exact comparisons, directional comparisons, or unsupported by the external tool.
 - Keep paid-tool comparisons secondary until free/public benchmarks are stable and reproducible.
 - Preserve methodology notes beside every exported baseline so a future tax-year update can be audited.
@@ -109,7 +125,7 @@ Before rebuilding the UI or adding broader product packaging, validation work sh
 ## Suggested Workflow
 
 1. Regenerate `validation/preset_baselines.json`.
-2. Pick the simplest preset first: `single-late-career`.
+2. Pick the simplest preset first: `public-comparator-single`.
 3. Enter the same assumptions into one free/public comparator.
 4. Record output in a new file under `validation/external-results/`.
 5. Compare only the metrics the external tool actually exposes.

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Retirement Planning Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="engine/tax_benefit_helpers.js"></script>
 <style>
 :root{
   --navy:#0f2744;--navy2:#1a3a5c;--navy3:#234e7a;
@@ -775,7 +776,7 @@ function migrate(D) {
 // ════════════════════════════════════════════════════════
 //  Sprint 1 #58 — EXAMPLE PRESETS
 // ════════════════════════════════════════════════════════
-// Five Canadian (non-Quebec) household archetypes selected to (a) cover the
+// Six Canadian (non-Quebec) household archetypes selected to (a) cover the
 // most common shapes the public will recognise and (b) exercise distinct slices
 // of the engine. Each preset returns a fully-populated D — slugs are stable so
 // `?example=<slug>` URLs are bookmarkable.
@@ -783,6 +784,7 @@ function migrate(D) {
 //   diy-couple          — mid-50s couple, both working, no DB pension
 //   db-pension-couple   — late-50s nurse + teacher, both with DB, retiring at 60
 //   single-late-career  — solo 55yo, late starter, working to 67
+//   public-comparator-single — solo 65yo, flat spending, RRSP/TFSA only
 //   retired-traditional — couple aged 68/65, already retired, drawing CPP+OAS
 //   fire-couple         — mid-40s already retired, large non-reg, RRSP meltdown candidate
 //
@@ -963,6 +965,43 @@ const PRESETS = {
   assumptions: _defaultAssumptions(2038),
 }),
 
+// ── Public-comparator single, age 65 ──
+// Deliberately plain validation case for public/free calculator comparisons:
+// one person, no spouse, no DB pension, no non-registered account, no mortgage,
+// flat spending in every phase, ordinary CPP/OAS at 65 in the Baseline scenario,
+// and default withdrawal order rather than a tax-optimised meltdown strategy.
+'public-comparator-single': () => ({
+  schemaVersion: SCHEMA_VERSION,
+  p1: {
+    name:'Pat', dob:1961, dobMonth:6, retireYear:2026,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:0, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2026,
+    rrsp:350000, tfsa:80000, tfsaRoom:0, tfsaAnnual:0,
+    lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70: 1420 * 12, cpp65: 1000 * 12,
+    oasBase: Math.round(742.31 * 12),
+  },
+  p2: {
+    name:'', dob:1961, dobMonth:1, retireYear:2026,
+    salary:0, salaryRefYear:2026, salaryRaise:0,
+    annualRrspContrib:0, annualTfsaContrib:0, annualNonregContrib:0,
+    db_before65:0, db_after65:0, db_index:0.022, db_startYear:2026,
+    rrsp:0, rrspRoom:0, tfsa:0, tfsaRoom:0, tfsaAnnual:0,
+    lira:0, lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
+    cpp70:0, cpp65:0, oasBase:0,
+    cppSurvivor_under65:0, cppSurvivor_over65:0,
+  },
+  mortgage: { balance: 0, rate: 0.055, monthly: 0 },
+  loc:      { balance: 0, rate: 0.07 },
+  cashWedge:{ balance: 0, returnRate: 0.03, targetYears: 2 },
+  spending: { gogo: 33000, gogoEnd: 75, slowgo: 33000, slowgoEnd: 85, nogo: 33000 },
+  inheritance: 0,
+  downsize: { year: 0, netProceeds: 0 },
+  oneOffs:  [],
+  assumptions: Object.assign(_defaultAssumptions(2026), { planEnd: 2056, withdrawalOrder: 'default' }),
+}),
+
 // ── Already-retired traditional couple, late 60s ──
 // Both retired, drawing CPP+OAS, RRIF in motion (or imminent for P2). Tests
 // post-retirement starting state, RRIF minimums, both CPP/OAS active, pure
@@ -1055,6 +1094,8 @@ const PRESET_META = [
     sub:'Late-50s nurse + teacher (HOOPP / OTPP), retiring at 60' },
   { slug:'single-late-career',  label:'Single, late-career',
     sub:'Solo 55-year-old, late starter, working to 67' },
+  { slug:'public-comparator-single', label:'Public comparator single',
+    sub:'Solo 65-year-old, flat $33K spending, RRSP/TFSA only, CPP+OAS at 65' },
   { slug:'retired-traditional', label:'Already retired (traditional)',
     sub:'Couple aged 68 / 65, drawing CPP+OAS, RRIF in motion' },
   { slug:'fire-couple',         label:'FIRE couple, retired early',
@@ -1158,285 +1199,16 @@ function loadClientData() {
 const D = loadClientData();
 
 // ════════════════════════════════════════════════════════
-//  CONSTANTS — RRIF MINIMUM RATES
+//  TAX AND BENEFIT HELPERS (S0-11 extraction)
 // ════════════════════════════════════════════════════════
-const RRIF_RATES = {
-  65:0.0400,66:0.0417,67:0.0435,68:0.0453,69:0.0473,70:0.0500,
-  71:0.0528,72:0.0540,73:0.0553,74:0.0567,75:0.0582,76:0.0598,
-  77:0.0617,78:0.0634,79:0.0655,80:0.0682,81:0.0706,82:0.0733,
-  83:0.0771,84:0.0802,85:0.0851,86:0.0899,87:0.0935,88:0.0964,
-  89:0.1000,90:0.1099,91:0.1192,92:0.1306,93:0.1449,94:0.1879,
-};
-function rrif_min(age){ if(age<71) return 1/(90-age); return RRIF_RATES[Math.min(age,94)] || 0.20; }
-
-// LIF maximum Ontario (approximate — using 130% of RRIF minimum as simplification)
-function lif_max(age){ return Math.min(rrif_min(age)*1.3, 0.40); }
-
-// ════════════════════════════════════════════════════════
-//  TAX ENGINE
-// ════════════════════════════════════════════════════════
-function calcBracketTax(income, brackets){
-  let tax=0, prev=0;
-  for(const [lim,rate] of brackets){
-    if(income<=prev) break;
-    tax += (Math.min(income,lim)-prev)*rate;
-    prev=lim;
-  }
-  return tax;
-}
-
-// ── PHASE 2.4: INDEXATION HELPERS ──
-// Every indexation factor falls back through a single chain:
-//   specific override → cpiIndex override → inflation → hard default.
-// This means one slider (inflation) drives them all unless the user sets something explicit.
-function idxRate(which){
-  const A = D.assumptions || {};
-  const v = A[which];
-  if(typeof v === 'number') return v;
-  if(typeof A.cpiIndex === 'number') return A.cpiIndex;
-  if(typeof A.inflation === 'number') return A.inflation;
-  return 0.025;
-}
-function cpiIndex(){    return idxRate('cpiIndex'); }
-function oasIndex(){    return idxRate('oasIndex'); }
-function fedTaxIndex(){ return idxRate('fedTaxIndex'); }
-function onTaxIndex(){  return idxRate('onTaxIndex'); }
-
-function calcTax(income, age, year, hasPension){
-  if(income<=0) return 0;
-  const fedIdx = Math.pow(1 + fedTaxIndex(), year-2026);
-  const onIdx  = Math.pow(1 + onTaxIndex(),  year-2026);
-
-  // ── FEDERAL ──
-  const fedBrk = [
-    [58523*fedIdx,  0.15],
-    [117045*fedIdx, 0.205],
-    [161733*fedIdx, 0.26],
-    [230451*fedIdx, 0.29],
-    [Infinity,      0.33]
-  ];
-  let fedTax = calcBracketTax(income, fedBrk);
-  // Phase 2.5: federal BPA phase-out ($181,440 → $258,482 in 2026$, all indexed).
-  const bpaHi  = 16129 * fedIdx;
-  const bpaLo  = 14156 * fedIdx;
-  const phaseStart = 181440 * fedIdx;
-  const phaseEnd   = 258482 * fedIdx;
-  let bpa = bpaHi;
-  if(income > phaseStart){
-    const frac = Math.min(1, (income - phaseStart) / Math.max(1, phaseEnd - phaseStart));
-    bpa = bpaHi - frac * (bpaHi - bpaLo);
-  }
-  let fedCred = bpa * 0.15;
-  if(hasPension) fedCred += 2000*0.15; // pension income credit
-  if(age>=65){
-    const aaMax = 8790*fedIdx;
-    const aaPhase = Math.max(0,(income-46432*fedIdx)*0.15);
-    fedCred += Math.max(0,aaMax-aaPhase)*0.15;
-  }
-  fedTax = Math.max(0, fedTax-fedCred);
-
-  // ── ONTARIO ── ($150K and $220K NOT indexed; surtax thresholds NOT indexed)
-  const ontBrk = [
-    [52886*onIdx, 0.0505],
-    [105775*onIdx,0.0915],
-    [150000,      0.1116],
-    [220000,      0.1216],
-    [Infinity,    0.1316]
-  ];
-  let ontTax = calcBracketTax(income, ontBrk);
-  let ontCred = 11141*onIdx*0.0505; // Ontario BPA
-  if(hasPension) ontCred += 1641*0.0505; // ON pension credit base is $1,641 (not $2,000)
-  if(age>=65){
-    const aaON = Math.max(0, 5725*onIdx - Math.max(0,(income-39546*onIdx)*0.15));
-    ontCred += aaON*0.0505;
-  }
-  ontTax = Math.max(0, ontTax-ontCred);
-  // Ontario surtax — surtax thresholds are NOT indexed in Ontario
-  const s1=5315, s2=6802;
-  let surtax=0;
-  if(ontTax>s1) surtax += (Math.min(ontTax,s2)-s1)*0.20;
-  if(ontTax>s2) surtax += (ontTax-s2)*0.36;
-  ontTax += surtax;
-
-  // Phase 2.6: Ontario Health Premium ($0–$900 on taxable income > $20,000; not indexed)
-  ontTax += ontarioHealthPremium(income);
-
-  return fedTax+ontTax;
-}
-
-// Phase 2.6: Ontario Health Premium — bracketed contribution, capped at $900/yr.
-// Thresholds are statute-fixed (not indexed).
-function ontarioHealthPremium(income){
-  if(income <= 20000) return 0;
-  if(income <= 25000) return Math.min(300, (income - 20000) * 0.06);
-  if(income <= 36000) return 300;
-  if(income <= 38500) return 300 + Math.min(150, (income - 36000) * 0.06);
-  if(income <= 48000) return 450;
-  if(income <= 48600) return 450 + Math.min(100, (income - 48000) * (100/600));
-  if(income <= 72000) return 600;
-  if(income <= 72600) return 600 + Math.min(150, (income - 72000) * (150/600));
-  if(income <= 200000) return 750;
-  if(income <= 200600) return 750 + Math.min(150, (income - 200000) * (150/600));
-  return 900;
-}
-
-// OAS recovery tax (clawback) — threshold indexed with CPI.
-function oasClawback(netIncome, year){
-  const thresh = 95323 * Math.pow(1 + cpiIndex(), year-2026);
-  return Math.max(0,(netIncome-thresh)*0.15);
-}
-
-// ════════════════════════════════════════════════════════
-//  INCOME CALCULATORS
-// ════════════════════════════════════════════════════════
-function calcDBPension(year, p1Alive){
-  if(!p1Alive) return 0;
-  if(year < D.p1.retireYear) return 0;
-  const age = year - D.p1.dob;
-  const yrs = year - D.p1.db_startYear;
-  const idx = Math.pow(1+D.p1.db_index, yrs);
-  return (age < 65 ? D.p1.db_before65 : D.p1.db_after65) * idx;
-}
-
-// Phase 5.2/5.3: Person 2's DB pension — mirror of calcDBPension but keyed off
-// P2's retireYear / db_startYear / db fields. Returns 0 if P2 has no DB pension
-// configured or has not yet retired. Independent from P1's DB survivor benefit.
-function calcDBPension_P2(year){
-  if(year < D.p2.retireYear) return 0;
-  const before = D.p2.db_before65 || 0;
-  const after  = D.p2.db_after65  || 0;
-  if(before === 0 && after === 0) return 0;
-  const age  = year - D.p2.dob;
-  const startY = D.p2.db_startYear || D.p2.retireYear;
-  const idx  = Math.pow(1 + (D.p2.db_index || 0.022), year - startY);
-  return (age < 65 ? before : after) * idx;
-}
-
-// DB pension survivor (60% of base pension after P1 dies, no bridge)
-function calcDBSurvivor(year, p1DeathYear){
-  if(year <= p1DeathYear) return 0;
-  const yrs = p1DeathYear - D.p1.db_startYear;
-  const idx = Math.pow(1+D.p1.db_index, yrs);
-  // Survivor gets 60% of base (no bridge on survivor)
-  return D.p1.db_after65 * idx * 0.60 * Math.pow(1+D.p1.db_index, year-p1DeathYear);
-}
-
-// ── CPP actuarial adjustment (−0.6%/mo before 65, +0.7%/mo after 65) ──
-function cppAdjFactor(startAge){
-  const months = (Math.max(60, Math.min(70, startAge)) - 65) * 12;
-  return months < 0 ? 1 + months*0.006 : 1 + months*0.007;
-}
-// CPP indexation rate — flows through idxRate() so cpiIndex/inflation cascade applies.
-function cppIndex(){ return idxRate('cppIndex'); }
-// 2026 single-person CPP max retirement pension at 65 (with enhanced CPP, approx.)
-const CPP_MAX65_2026 = 1433.44 * 12;
-function cppMaxAtAge(year, age){
-  const adj = cppAdjFactor(age);
-  return CPP_MAX65_2026 * adj * Math.pow(1 + cppIndex(), year - 2026);
-}
-
-function calcCPP_P1(year, startAge){
-  const age = year - D.p1.dob;
-  if(age < startAge) return 0;
-  const startYear = D.p1.dob + startAge;
-  const base = (D.p1.cpp65 || 0) * cppAdjFactor(startAge);
-  return base * Math.pow(1 + cppIndex(), year - startYear);
-}
-
-function calcCPP_P2(year, startAge, p1Alive, p1DeathYear){
-  const age = year - D.p2.dob;
-  const startYear = D.p2.dob + startAge;
-  let cpp = 0;
-  if(age >= startAge) {
-    const base = (D.p2.cpp65 || 0) * cppAdjFactor(startAge);
-    cpp = base * Math.pow(1 + cppIndex(), year - startYear);
-  }
-  // CPP survivor benefit if P1 has died
-  if(!p1Alive && p1DeathYear && year > p1DeathYear){
-    const survAge = year - D.p2.dob;
-    const survBase = survAge < 65 ? D.p2.cppSurvivor_under65 : D.p2.cppSurvivor_over65;
-    const survNow  = (survBase || 0) * Math.pow(1 + cppIndex(), year - p1DeathYear);
-    // Combined retirement + survivor capped at the single-person CPP maximum for the survivor's age.
-    cpp = Math.min(cpp + survNow, cppMaxAtAge(year, Math.max(60, Math.min(70, survAge))));
-  }
-  return cpp;
-}
-
-function calcOAS_P1(year, startAge, p1Alive){
-  if(!p1Alive) return 0;
-  const age = year - D.p1.dob;
-  if(age < startAge) return 0;
-  const bonus = 1 + (startAge-65)*0.006*12; // 0.6% per month of deferral past 65
-  const base = D.p1.oasBase * bonus;
-  const age75bonus = age >= 75 ? 1.10 : 1.0;
-  const startYear = D.p1.dob + startAge;
-  return base * age75bonus * Math.pow(1 + oasIndex(), year-startYear);
-}
-
-function calcOAS_P2(year, startAge){
-  const age = year - D.p2.dob;
-  if(age < startAge) return 0;
-  const bonus = 1 + (startAge-65)*0.006*12;
-  const base = D.p2.oasBase * bonus;
-  const age75bonus = age >= 75 ? 1.10 : 1.0;
-  const startYear = D.p2.dob + startAge;
-  return base * age75bonus * Math.pow(1 + oasIndex(), year-startYear);
-}
-
-function calcSpending(year){
-  const p1Age  = year - D.p1.dob;
-  // Phase 5.3: spending is quoted in "today's (= earliest plan year) dollars", so index from
-  // min(planStart, retireYear). If the plan starts 2026 and retirement is 2035, the
-  // user-supplied gogo/slowgo/nogo figures already represent 2026 purchasing power and should
-  // inflate forward from there, not backward into 2026 from 2035.
-  const a = D.assumptions;
-  const startYear = Math.min(
-    (a.planStart && a.planStart > 0) ? a.planStart : Infinity,
-    a.retireYear
-  );
-  const inf       = a.inflation;
-  // Within each phase, spending is constant in real (today's) dollars
-  // and grows by inflation nominally — smooth, consistent within each phase
-  const idx = Math.pow(1 + inf, year - startYear);
-  if(p1Age <= D.spending.gogoEnd)   return D.spending.gogo   * idx;
-  if(p1Age <= D.spending.slowgoEnd) return D.spending.slowgo * idx;
-  return D.spending.nogo * idx;
-}
-
-function calcMortgage(balance, year){
-  if(balance<=0) return {payment:0,interest:0,principal:0,newBalance:0};
-  const monthlyRate = D.mortgage.rate/12;
-  let bal = balance;
-  let annualInterest=0, annualPrincipal=0, annualPayment=0;
-  for(let m=0;m<12;m++){
-    if(bal <= 0) break;                              // payoff month: no further payments
-    const interest = bal*monthlyRate;
-    const principal = Math.min(bal, Math.max(0, D.mortgage.monthly - interest));
-    // Phase 2.8: in the payoff month, payment = interest + remaining principal (not a full
-    // scheduled payment). Prevents phantom cash outflow that was triggering false shortfalls.
-    const payment = interest + principal;
-    annualInterest  += interest;
-    annualPrincipal += principal;
-    annualPayment   += payment;
-    bal = Math.max(0, bal - principal);
-  }
-  return {payment: annualPayment, interest: annualInterest, principal: annualPrincipal, newBalance: bal};
-}
-
-// Phase 2.8: proper LOC amortisation — interest accrues, principal amortises over ~5 yr.
-// Returns the annual servicing cost so it can flow into the spending total.
-function calcLOC(balance){
-  if(balance <= 0) return { payment: 0, interest: 0, principal: 0, newBalance: 0 };
-  const rate = (D.loc && D.loc.rate) || 0.07;
-  const interest = balance * rate;
-  // Principal: straight-line 5-year amortisation, never more than remaining balance.
-  const principal = Math.min(balance, balance / 5);
-  const payment   = interest + principal;
-  return {
-    payment, interest, principal,
-    newBalance: Math.max(0, balance - principal)
-  };
-}
+const TAX_BENEFIT = RetirementTaxBenefitHelpers.createTaxBenefitHelpers(() => D);
+const {
+  RRIF_RATES, rrif_min, lif_max, calcBracketTax, idxRate, cpiIndex, oasIndex,
+  fedTaxIndex, onTaxIndex, calcTax, ontarioHealthPremium, oasClawback,
+  calcDBPension, calcDBPension_P2, calcDBSurvivor, cppAdjFactor, cppIndex,
+  CPP_MAX65_2026, cppMaxAtAge, calcCPP_P1, calcCPP_P2, calcOAS_P1, calcOAS_P2,
+  calcSpending, calcMortgage, calcLOC
+} = TAX_BENEFIT;
 
 // ════════════════════════════════════════════════════════
 //  PENSION INCOME SPLITTING OPTIMIZER

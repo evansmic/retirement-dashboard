@@ -13,7 +13,9 @@ const fs = require("fs");
 const html = fs.readFileSync(require("path").join(__dirname, "..", "retirement_dashboard.html") + "", "utf8");
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 const body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
-const wrapper = `${body}\n  return { runSimulation, monteCarlo, SCENARIOS, RESULTS, D };`;
+const helper = fs.readFileSync(require("path").join(__dirname, "..", "engine", "tax_benefit_helpers.js"), "utf8");
+const wrapper = `${helper}
+${body}\n  return { runSimulation, monteCarlo, SCENARIOS, RESULTS, D };`;
 const f = new Function("window", "document", wrapper);
 const out = f({location:{hash:""}, addEventListener:()=>{}}, {getElementById:()=>null, addEventListener:()=>{}});
 const D = out.D;

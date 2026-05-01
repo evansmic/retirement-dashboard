@@ -7,7 +7,9 @@ const path = require("path");
 const html = fs.readFileSync(path.join(__dirname, "..", "retirement_dashboard.html"), "utf8");
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 const body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
-const wrapper = `${body}
+const helper = fs.readFileSync(require("path").join(__dirname, "..", "engine", "tax_benefit_helpers.js"), "utf8");
+const wrapper = `${helper}
+${body}
 return { calcTax, netAfterTaxSplit };
 `;
 const f = new Function("window", "document", wrapper);
