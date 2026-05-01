@@ -1,117 +1,97 @@
 # TASKS.md
 
-The original publishable-code plan came out of the 2026-04-25 decision session. The 2026-04-30 product reset moves the next work back to trust and engine readiness before any broader UI rebuild. See `PRODUCT_VISION.md` and `DECISIONS.md` for the reasoning.
+The 2026-04-30 product reset made the planner consumer-first, local-first, and recommended-plan-first. Sprint 0 through Sprint 3 are complete; the next sprint should package the local-first planner for a credible public launch without introducing optimizer, account, sync, or advisor-workspace scope.
 
-## Sprint 0 — Trust and engine readiness
+## Active Sprint — Sprint 4: Launch/Productization Package
 
-**Status:** Complete as of 2026-05-01. This sprint supersedes the old "Sprint 3 next" ordering.
+**Status:** Pre-release package complete as of 2026-05-01. Final release/PR pass remains separate.
 
-Goal: make the planner credible, auditable, and ready for a consumer-first local-first product before investing in a larger app shell.
+Goal: make the current local-first planner launch-ready as a public/free product with honest positioning, clear privacy/disclaimer language, reproducible validation, manual smoke tests, screenshot/demo assets, release hygiene, and launch-post materials.
 
-### Tax accuracy
+Detailed package: [`docs/sprint_4_launch_package.md`](docs/sprint_4_launch_package.md).
 
-- [x] **S0-01 — Pension-income-credit eligibility audit.** ✅ *Done 2026-04-30.* Replaced the broad `hasPension = taxable income > 0` path with explicit eligible-pension amounts flowing through `optimalSplit()`, `netAfterTaxSplit()`, `drawForGap()`, and the main simulation loop. Ordinary supplemental RRSP withdrawals no longer unlock pension-income credits; DB pension remains eligible; RRIF/LIF-style minimum income is treated as eligible from 65+; P2's own eligible income and received split pension are handled explicitly. Added `probe_pension_credit.js` (8 checks) and regenerated validation baselines. Canonical suite now **187/187**.
-- [x] **S0-02 — Tax fixture pack for ages 64-72.** ✅ *Done 2026-04-30.* Added `probe_tax_ages_64_72.js` with 36 focused fixtures covering the 64-72 transition window: age credit at 65 and high-income phase-out, 2026 Ontario Health Premium thresholds, Ontario surtax/high-income tax fixtures, OAS clawback threshold and indexing, CPP/OAS start ages and deferral, OAS age-75 boost, RRIF/LIF minimum rows, and pension splitting tax/clawback reduction. Canonical suite now **223/223**.
-- [x] **S0-03 — Tax methodology note.** ✅ *Done 2026-04-30.* Added `validation/tax_methodology_2026.md` covering 2026 federal/Ontario constants, indexed vs non-indexed values, pension-credit treatment, OAS clawback, Ontario Health Premium, surtax, CPP/OAS assumptions, RRIF/LIF treatment, known simplifications, regression coverage, and the annual update checklist. Linked it from validation docs, README/reporting guide, and the free/public comparator note. Canonical suite still **223/223**.
+### Positioning And Copy
 
-### Risk language and stress tests
+- [x] **S4-01 — Finalize public/free positioning.** ✅ *Done 2026-05-01.* Launch promise, target user, supported scope, Ontario-only limitation, local-first privacy promise, and not-advice boundary are now explicit in README and launch materials. Recommended-plan language says the current product is recommendation-framed, not a full optimizer.
+- [x] **S4-02 — Finalize README and site copy.** ✅ *Done 2026-05-01.* README now has launch-ready opening copy, current limits, privacy, free/paid direction, validation links, local run instructions, and Sprint 4 status.
+- [x] **S4-03 — Finalize Free/Plus/Pro packaging notes.** ✅ *Done 2026-05-01.* README and Sprint 4 execution docs translate the Sprint 0 monetization boundary into public-safe local-first wording without implementing payment or licensing.
+- [x] **S4-04 — Privacy and disclaimer copy pass.** ✅ *Done 2026-05-01.* README and launch posts consistently cover no account, local plan ownership, URL-hash behaviour, Chart.js CDN, no household-input analytics, educational-only output, and user-controlled sharing/export risks.
 
-- [x] **S0-04 — Rename/qualify success metrics.** ✅ *Done 2026-04-30.* Replaced visible "probability of success" language with "Full Spending Funded" / "full spending is funded in X% of simulated return sequences." The metric now explicitly means paths with no material annual spending shortfall; it does not imply the plan is advisable, optimized, or free of depletion/estate risk. Kept `probabilityOfSuccess()` as a compatibility alias for existing probes/callers.
-- [x] **S0-05 — Add stress severity metrics.** ✅ *Done 2026-04-30.* Added shared `summarizeStressRun()` severity reporting and surfaced first shortfall year, max annual shortfall, total shortfall, portfolio depletion year, core-spending coverage, and ending-portfolio range/detail across Monte Carlo, historical sequence stress, and the comparison table. Expanded regression coverage in `probe_phase4_final.js` and `probe_mc_progressive.js`. Canonical suite now **236/236**.
-- [x] **S0-06 — Rewrite risk interpretation copy.** ✅ *Done 2026-04-30.* Reframed visible risk language around three distinct lenses: deterministic fixed-return funding, Monte Carlo random-return sampling, and historical sequence replay. Removed advice-like verdict copy from the funding KPI/banner and replaced "sustainable" table wording with funded-language. README stress-test copy now describes sensitivity to return paths and spending assumptions rather than declaring plans fragile/robust. Canonical suite still **236/236**.
+### Assets And Demo
 
-### Validation exports
+- [x] **S4-05 — Capture launch screenshots.** ✅ *Done 2026-05-01.* Replaced `docs/screenshot.png` with a real synthetic dashboard screenshot and added supporting launch screenshots for intake, validation, and stress diagnostics.
+- [x] **S4-06 — Prepare demo script.** ✅ *Done 2026-05-01.* Added a repeatable 3-5 minute demo script in `docs/sprint_4_launch_execution.md`.
 
-- [x] **S0-07 — Expand baseline export columns.** ✅ *Done 2026-04-30.* Added taxable-income fields to engine year rows and expanded `validation/export_preset_baselines.js` to export scenario config metadata plus annual rows in `preset_baselines.json`. Added `validation/preset_baselines_yearly.csv` with per-year balances, withdrawals by account type, taxable income, tax, OAS clawback, CPP/OAS/DB income, spending/shortfall, nominal dollar mode, and base-year metadata. Added `probe_validation_exports.js` to lock the export shape. Canonical suite now **414/414**.
-- [x] **S0-08 — Add public-comparator fixture.** ✅ *Done 2026-04-30.* Added `public-comparator-single` to the dashboard `PRESETS` registry: one age-65 single retiree, flat $33K spending, RRSP/TFSA only, no spouse, no DB pension, no mortgage, no non-registered account, no special events, and ordinary CPP/OAS at 65 in the Baseline scenario with pension splitting off and default withdrawal order. Regenerated `validation/preset_baselines.json`, `validation/preset_baselines.csv`, and `validation/preset_baselines_yearly.csv`; documented the fixture in validation docs and the free/public comparison note. Expanded preset/export probes to lock the comparator shape. Canonical suite now **462/462**.
-- [x] **S0-09 — Re-run official/public validation.** ✅ *Done 2026-05-01.* Re-ran the Government of Canada Canadian Retirement Income Calculator against `public-comparator-single` / Baseline using the synthetic age-65 single retiree. Official CPP/OAS matched tightly at age 65 (CPP $12,005 vs dashboard $12,000; OAS $8,916 vs dashboard $8,908). Official savings income is directional rather than exact because the Canada.ca tool levelizes RRSP/other savings into $19,079/year and does not expose tax/account sequencing, while the dashboard draws only what is needed after benefits, tax, ordering, and indexed spending. Refreshed `validation/external-results/free_public_comparison_2026-04-28.md`; paid-tool benchmarks remain secondary.
+### QA, Validation, And Release
 
-### Engine readiness
+- [x] **S4-07 — Manual browser smoke-test checklist.** ✅ *Pre-release complete 2026-05-01.* Verified local/static load, file-path load, first-open copy, all bundled presets, blank-field validation, valid dashboard load, recommended-plan framing, charts, stress diagnostics, year-by-year table expansion, real/nominal toggle, print button presence, accountless core flow, and current narrow-viewport content visibility. Local file round-trip, malformed file rejection, unsupported file rejection, single-person handling, couple handling, plan naming, and edit round-trip are covered by probes. Human OS file-picker and dedicated device-size passes are deferred to the final release/PR pass.
+- [x] **S4-08 — Validation/comparator checklist.** ✅ *Done 2026-05-01.* Confirmed baseline exports are current/unchanged for docs-only Sprint 4 work, `public-comparator-single` is present in the baseline export, README links methodology/comparator notes, and known validation gaps are visible.
+- [x] **S4-09 — GitHub/CI checklist.** ✅ *Pre-release complete 2026-05-01.* Confirmed local canonical suite passes **500/500**, remote GitHub Actions probe workflow is green on latest pushed `main`, restored README CI badge, added `.github/ISSUE_TEMPLATE/bug_report.md` with private-data warning, updated `.gitignore` for `*.plan.json`, drafted repo description/topics, and scanned for local `.plan.json` files. CI on the eventual pushed branch is deferred to the final release/PR pass.
+- [x] **S4-10 — Release checklist.** ✅ *Pre-release complete 2026-05-01.* Release gate exists in `docs/sprint_4_launch_execution.md`; screenshot, disclaimer, privacy copy, known limits, static local/localhost load, validation status, launch posts, feedback guidance, rollback/fix-forward rule, schema v2 boundary, and fresh **500/500** probe result are recorded. Final release tag/date, branch CI, and PR description are deferred to the final release/PR pass.
 
-- [x] **S0-10 — Engine boundary map.** ✅ *Done 2026-05-01.* Added `docs/engine_boundary_map.md` mapping `retirement_dashboard.html` into pure engine core, tax/benefit helpers, scenario configuration, validation/export surface, UI rendering, persistence/hash loading, charting, and copy/interpretation. Captured the key extraction constraint: much of the calculation code is side-effect-free in intent but still closes over global `D`, so S0-11 should first parameterize and extract tax/benefit helpers before moving the full simulation. Canonical suite still **462/462**.
-- [x] **S0-11 — Extract tax/benefit helpers first.** ✅ *Done 2026-05-01.* Added `engine/tax_benefit_helpers.js` as a browser-safe/CommonJS helper module and moved RRIF/LIF factors, 2026 federal/Ontario tax, indexation, OAS clawback, DB/CPP/OAS, spending, mortgage, and LOC helpers behind an explicit plan getter. `retirement_dashboard.html` now loads the module and keeps the old helper names as a thin bridge, preserving the current dashboard/probe surface. Added `probe_tax_benefit_helpers.js` with 16 direct module checks and updated the dashboard probe/export harnesses to prepend the helper module. Regenerated validation baselines. Canonical suite now **478/478**.
-- [x] **S0-12 — Draft schema v3 output contract.** ✅ *Done 2026-05-01.* Added `docs/schema_v3_output_contract.md` defining the draft v3 local-first plan/result contract: top-level `.plan.json`, household people, accounts, income sources, expenses, events, assumptions, preferences, recommended-plan result, annual rows, diagnostics, validation metadata, and v2→v3 mapping. The contract makes `recommendedPlanId` the default product surface while keeping alternatives and stress tests as diagnostics. No runtime schema bump yet; dashboard remains `SCHEMA_VERSION = 2` until migration and round-trip probes are added. Canonical suite still **478/478**.
+### Launch Prep
 
-### Local-first commercial readiness
+- [x] **S4-11 — Launch-post drafts.** ✅ *Done 2026-05-01.* Added launch drafts for r/PersonalFinanceCanada, Hacker News, LinkedIn, and a short personal/site post in `docs/launch_posts.md`.
+- [x] **S4-12 — Feedback intake and triage loop.** ✅ *Done 2026-05-01.* Added public-feedback guidance, safe bug-report guidance, labels, hotfix criteria, and deferral rules in `docs/launch_posts.md`.
+- [x] **S4-13 — Explicit non-shipping list.** ✅ *Done 2026-05-01.* Non-shipping list is explicit in `docs/sprint_4_launch_package.md`, `docs/sprint_4_launch_execution.md`, README limits, roadmap, and launch posts.
 
-- [x] **S0-13 — Local monetization sketch.** ✅ *Done 2026-05-01.* Added `docs/local_monetization_sketch.md` defining Free vs Plus vs Pro/advisor capability boundaries. Free/core keeps the recommended-plan-first experience, Ontario core engine, basic stress context, local use, and future `.plan.json` import/export. Plus is scoped to richer local DIY planning, detailed alternatives, advanced stress/estate/early-death scenarios, polished reports, implementation packages, validation exports, and extra provinces. Pro/advisor is reserved for multi-household, client-ready, branded, collaboration-heavy workflows. Accounts remain optional infrastructure, not a prerequisite for paid/local use. Canonical suite still **478/478**.
-- [x] **S0-14 — Account boundary decision.** ✅ *Done 2026-05-01.* Added `docs/account_boundary_decision.md` and updated `DECISIONS.md` to record accounts as optional infrastructure only: encrypted sync, license recovery, purchase history, sharing, advisor/adult-child collaboration, multi-device continuity, or Pro team administration. Core planner use, recommended results, anonymous trial, local save/load, `.plan.json` import/export, opening existing local files, and local paid unlock where feasible stay accountless. Canonical suite still **478/478**.
-- [x] **S0-15 — License/privacy threat model.** ✅ *Done 2026-05-01.* Added `docs/license_privacy_threat_model.md` identifying what local license checks may store, what they must never upload, how local plan files remain usable, and privacy risks/controls for optional sync, sharing, AI-assisted reports, analytics, and support/debug exports. Updated roadmap/docs links so the local-first commercial boundary is now explicit before launch packaging. Canonical suite still **478/478**.
+### Definition Of Done
 
-## Sprint 1 — Foundation (publishable code)
+- README/site/app copy accurately describes the product as local-first, Ontario-only, 2026-tax-year, educational, and accountless for core use.
+- Launch screenshots and demo script use synthetic/preset data only.
+- Manual browser smoke-test checklist is complete and any launch-blocking issues are fixed or explicitly deferred.
+- Validation/comparator notes are current enough for launch and known limitations are visible.
+- Canonical probes pass before release; no runtime schema bump occurs.
+- GitHub/CI/release checklist is complete.
+- Launch posts and feedback triage instructions are ready.
+- Full optimizer, sync, account system, advisor workspace, and schema v3 migration remain deferred.
 
-The pass that takes the codebase from "private project" to "ready to be public." Order matters: schema versioning lands before the rename so the rename can use the migration system.
+## Completed Sprints
 
-**Progress:** 8/8 complete — Sprint 1 done (2026-04-27).
+### Sprint 3 — Local-First Planning Workspace
 
-1. ~~**#41** — Add MIT LICENSE~~ ✅ *Done 2026-04-26.* Standard MIT text at `/LICENSE`; copyright Michael Evans 2026.
-2. ~~**#42** — Add "not financial advice" disclaimer (README + dashboard footer)~~ ✅ *Done 2026-04-26.* New `Disclaimer` section near the top of the README; `<footer class="disclaimer">` rendered above `</body>` in `retirement_dashboard.html`, with a print-stylesheet rule so it appears on the PDF export.
-3. ~~**#46** — Add `D.schemaVersion = 1` + `migrate(D)` scaffold~~ ✅ *Done 2026-04-26.* Stamped on payload at encode; `migrate(D)` + `MIGRATIONS` registry in dashboard; legacy (no-version) hashes lifted to v1; future-version payloads warned and loaded as-is. New `probe_schema_migrate.js` (12 checks) joins the canonical suite (now 67/67).
-4. ~~**#47 + #48 + #49** — Rename `frank`/`moon` → `p1`/`p2`, clear placeholders, add v1→v2 migration~~ ✅ *Done 2026-04-26.* Engine, intake form, and probes all use `p1`/`p2`. `assumptions.frankDiesInSurvivor` → `assumptions.p1DiesInSurvivor`; intake form ID `a_frankDies` → `a_p1Dies`. Default placeholder names cleared (`Alex`/`Sam` → blank, with `Person 1`/`Person 2` placeholders on the inputs). `MIGRATIONS[1]` lifts legacy v1 (or pre-versioning) payloads forward — confirmed with a new end-to-end test that loads a real legacy hash and asserts the engine receives `p1`/`p2`. `SCHEMA_VERSION = 2`. Probe count: **74/74** (probe_schema_migrate grew 12→19 to cover the rename).
-5. ~~**#58** — Replace auto-populated Alex/Sam data with blank form + example presets~~ ✅ *Done 2026-04-27.* Five Canadian-archetype presets ship in the dashboard's `PRESETS` registry, deep-linked via `?example=<slug>`: `diy-couple`, `db-pension-couple`, `single-late-career`, `retired-traditional`, `fire-couple`. Headline figures sourced from FP Canada PAG 2026, Service Canada CPP/OAS Apr–Jun 2026, HOOPP / OTPP plan formulas, StatCan retirement income data. With no hash and no slug, the dashboard renders a landing card listing every preset (linking to `?example=…`) plus a CTA to `index.html` — the old hard-coded "Person 1 / Person 2" sample plan is gone. **`index.html` is the single intake-form file** — the stale companion `retirement_intake_form.html` was deleted, and `index.html` now carries the same preset chooser as a banner above the form so first-time visitors can preview an example plan before filling in their own numbers. The intake form's bespoke prefill was stripped: 39 personal/financial `value="…"` attributes cleared (dob, balances, CPP/OAS draws, mortgage, spending phases, survivor-trigger year). Structural defaults retained — TFSA annual max $7000, OAS $742.31/mo, db_index 0.02, mortgage rate 5.5%, go-go/slow-go/no-go phase boundaries (75/85), and all macro assumptions. New `probe_presets.js` (44 checks) joins the canonical suite (now **119/119**); `probe_phase5.js` and `probe_phase4_final.js` were rebased onto explicit fixtures so they no longer rely on whatever `getDefaultD()` happens to return.
-6. ~~**#56** — Add JSDoc `@typedef` block for `D`~~ ✅ *Done 2026-04-27.* Self-contained `@typedef` block at the top of the CLIENT DATA section in `retirement_dashboard.html` documents the v2 plan payload — `D`, `Person`, `Spending`, `Mortgage`, `Loc`, `CashWedge`, `Downsize`, `OneOff`, `SpousalRrsp`, and `Assumptions`. Money/rate conventions (CAD nominal; rates as decimals) and the p1/p2 spousal convention (p1 is higher-earning + dies in Survivor; `p2.name === ''` flags single-household mode) are spelled out at the top. `loadClientData()`, `migrate()`, `getDefaultD()`, and `getBlankD()` carry `@returns {D}` (and `@param {D}` on migrate); the `const D = loadClientData()` declaration is annotated `@type {D}`. Pure documentation — no runtime change. Canonical probe suite still **128/128**.
-7. ~~**#57** — GitHub Actions CI for probes + README status badge~~ ✅ *Done 2026-04-27.* New `.github/workflows/probes.yml` runs `bash probes/run_all.sh` on every push to `main`, every pull request, and on manual `workflow_dispatch`. Single Ubuntu job pinned to Node 20 LTS — no install step needed since the probes have no npm dependencies. The script's existing pass/fail tally + `exit 1` on any failure is what gates the job. README badge added under the H1 pointing at the workflow runs page. Stale counts in `probes/README.md` refreshed (phase4_final 17 → 18, presets 44 → 53, total **119 → 128**) and the README's "Run the regression suite" line bumped to match. Badge will turn green once the workflow file lands on `main` and the first run completes.
-8. ~~**#43** — Polish README for public audience (intro pitch, screenshot, live link)~~ ✅ *Done 2026-04-27.* `README.md` rewritten for a public reader: live-demo link to `https://retirement-dashboard-two.vercel.app/` (with deep-links to all five `/example/<slug>` presets) at the very top, customer-tone intro pitch (adapted from PITCH.md's customer version, tightened to two paragraphs), "What it models" feature table, privacy note, badges (probes CI + MIT). Existing repo guide and disclaimer kept but moved below the public-facing material. Screenshot is a placeholder PNG at `docs/screenshot.png` (1600×900, navy/gold palette matching the dashboard) — real shot is the open follow-up below. Custom domain may swap in pre-launch; only spot to edit is the five example links + the live-demo button at the top of `README.md`.
+**Complete 2026-05-01.** Canonical suite: **498/498**. Added local `.plan.json` save/load, plan naming, guided form navigation, critical blank-field validation, recommended-plan framing, and local-file privacy copy without adding accounts or changing runtime schema.
 
-After Sprint 1 the project is technically publishable. Could open-source here.
+### Sprint 0 — Trust And Engine Readiness
 
-After Sprint 2 the dashboard has the full UX-polish pass — collapsible sections, tooltips, round-trip Edit-plan, soft RRSP-room guardrail, sharper CPP help text, and default-on stress test with skip-toggle. Sprint 0 is now the next investment before Sprint 3's guided-form work.
+**Complete 2026-05-01.** Canonical suite: **478/478**.
 
-## Sprint 2 — UX polish
+- [x] **S0-01 to S0-03 — Tax accuracy.** Fixed pension-income-credit eligibility, added age 64-72 tax/benefit fixtures, and documented 2026 federal/Ontario methodology.
+- [x] **S0-04 to S0-06 — Risk language and stress severity.** Reframed success metrics as full-spending-funded, added shortfall/depletion/core-coverage severity metrics, and removed advice-like risk verdicts.
+- [x] **S0-07 to S0-09 — Validation exports and public comparator.** Expanded annual baseline exports, added the `public-comparator-single` fixture, and reran the Government of Canada public calculator comparison.
+- [x] **S0-10 to S0-12 — Engine readiness.** Added `docs/engine_boundary_map.md`, extracted tax/benefit helpers into `engine/tax_benefit_helpers.js`, and drafted `docs/schema_v3_output_contract.md`.
+- [x] **S0-13 to S0-15 — Local-first commercial readiness.** Added `docs/local_monetization_sketch.md`, `docs/account_boundary_decision.md`, and `docs/license_privacy_threat_model.md`.
 
-**Progress:** 6/6 complete — Sprint 2 done (2026-04-28).
+### Sprint 1 — Foundation
 
-9. ~~**#53** — Collapsible sections (P1/P2 expanded, rest collapsed)~~ ✅ *Done 2026-04-27.* The five top-level intake-form cards (`Person 1`, `Person 2`, `Joint Assets & Liabilities`, `Spending Targets`, `Plan Assumptions`) are now native `<details>`/`<summary>` elements with a rotating chevron and hover affordance on the title bar. P1 + P2 ship `open`; the other three collapse by default to shorten the first-impression scroll. New `expandAllCards()` helper auto-expands every section on a submit-validation failure so an invalid value in a collapsed card still surfaces. No engine change — canonical probe suite still **128/128**. Implementation entirely in `index.html` (CSS block + summary/wrapper swaps + 3-line JS helper).
-10. ~~**#54** — Tooltips on priority fields (8–12 fields with non-obvious meaning)~~ ✅ *Done 2026-04-27.* New `.tip` component — a small navy `(?)` icon next to a label that reveals an explanation bubble on hover or keyboard focus (`role="button"` + `tabindex="0"` + `aria-label`). Tooltip text is read from `data-tip`, max 280px wide with a 4px navy arrow. `tip-start` / `tip-end` modifiers anchor the bubble left or right so it doesn't clip in edge columns. Twelve distinct fields covered (CPP@70, CPP@65, OAS@65, DB Indexation, Non-Reg ACB, TFSA Room Remaining, Salary Reference Year, CPP Survivor under-65, Plan Start Year, Year P1 Dies, Withdrawal Order, Return Std. Deviation) — 19 icons total since seven of those labels appear once on each spouse. Existing inline `.hint` spans stay untouched: hint = "what to type", tooltip = "what the concept means." Pure UI — canonical probe suite still **128/128**.
-11. ~~**#59** — "Back to form" button on dashboard with hash decoder + round-trip probe~~ ✅ *Done 2026-04-27.* Three pieces: (a) **Dashboard button.** New `← Edit plan` button in the dashboard header next to Print/PDF; only renders when `window.location.hash` is non-empty (preset/blank-state has nothing to round-trip). `goBackToForm()` passes the current hash through to `index.html` unchanged. (b) **Form hash decoder.** `index.html` grew `SCHEMA_VERSION` + `MIGRATIONS` + `migrate(D)` (mirroring the dashboard's registry so legacy v1 hashes load cleanly), plus a new `populateFromD(D)` that's the strict inverse of the existing payload construction. The DOMContentLoaded handler now resolves payload sources in priority order: URL hash → `populateFromD` + autosave; otherwise the existing localStorage "Welcome back" prompt. The old monolithic `submitForm` was split into a pure `gatherD()` (returns the payload) and a thin `submitForm()` that validates, calls `gatherD`, encodes, and navigates — same wire format, easier to reuse. (c) **Round-trip probe.** New `probe_intake_roundtrip.js` (22 checks) loads `index.html`'s script body, stubs a DOM with all 80+ field IDs, encodes a fully-populated fixture D, runs `populateFromD` → `gatherD`, and asserts `gatherD(populateFromD(D)) === D` deep-equal. Catches drift if a future field is added to one direction but not the other. Canonical probe suite **128 → 150** (added the 22 round-trip checks). `run_all.sh` updated to include the new probe.
-12. ~~**#50** — Soft RRSP contribution-room warning~~ ✅ *Done 2026-04-28.* New `.warn-inline` component (yellow, navy-text, gold left border) renders directly under both spouses' Annual RRSP Contribution fields when the entered amount exceeds either (a) 18% of the stated salary above (the simplified CRA prior-year-earned-income rule), or (b) the $32,490 hard 2026 dollar cap. Soft validation only — never blocks submit. `validateRrspRoom()` is fired from the existing `input` listener (scoped via regex to salary/contrib field changes only) and on every load path that populates fields (`populateFromD` from a hash, restore from localStorage). Inline `(?)` tooltip on the contribution label points users to CRA My Account / their Notice of Assessment for the authoritative number, since the form can't see carry-forward room or pension adjustment. No engine change — canonical probe suite still passes 150/150 unaffected.
-13. ~~**#51** — Improve CPP-at-65 help text + Service Canada link~~ ✅ *Done 2026-04-28.* Three field hints rewritten on each spouse: (a) **CPP@70** hint now reads "From your My Service Canada Account → Statement of Contributions" with a live link to canada.ca's MSCA portal, replacing the old generic "Your Statement of Contributions estimate"; (b) **CPP@65** hint kept the auto-calc note but appended "or get the official figure from your My Service Canada Account" with the same link; (c) tooltips on both fields rewritten to spell out the exact MSCA navigation path ("My Service Canada Account → Canada Pension Plan / Old Age Security → Estimated monthly CPP benefits") and the rough delay/early heuristics (~7%/yr deferred after 65, ~7.2%/yr lost if started early). New `.field .hint a` CSS so in-hint links read as navy + bold + non-italic against the muted italic hint base style. Pure UI — canonical probe suite unaffected.
-14. ~~**#52** — Default-on Monte Carlo with progressive rendering~~ ✅ *Done 2026-04-28.* Three pieces. (a) **Engine refactor.** `monteCarlo()` is now a thin `mcBegin → mcStep(state, nPaths) → mcFinish(state)` wrapper, and a new `monteCarloProgressive(baseCfg, opts)` runs the same per-path math in batches of 200 separated by `setTimeout(tick, 0)` so the page paints between chunks. Returns `{cancel, isCancelled, state}` so callers can abort. (b) **Auto-run on load.** `DOMContentLoaded` schedules `autoMonteCarlo()` 80ms after the deterministic dashboard renders; runs the baseline scenario in the background. New top-of-page banner (`.mc-banner`) shows progress via a CSS `--mc-pct` custom property and fills with the headline funded-path rate when done. Three states (`running`/`complete`/`skipped`) controlled by `data-state`. The existing MC panel below also populates with the fan chart + KPIs (rendering extracted into `renderMonteCarloResults()` which the manual button now reuses). (c) **Skip toggle + persistence.** "Skip stress test" button cancels the in-flight run, persists `rpd_skip_mc=1` in localStorage so subsequent visits honour the choice, and shows a "Run it now" affordance to opt back in. Tab-switching mid-run cancels the auto-run (otherwise the baseline result would mislabel the new scenario's panel) and shows a "Scenario changed" banner. New `probe_mc_progressive.js` originally verified the begin/step/finish decomposition, batch accumulation/clamping, percentile ordering of progressive output, and pre-tick cancellation; Sprint 0 later expanded it to 35 checks for stress-severity shape.
+**Complete 2026-04-27.** Made the repo technically publishable: MIT license, disclaimer, schema migration scaffold, `p1`/`p2` rename, blank form with example presets, inline JSDoc schema notes, probe CI, and public README polish.
 
-## Sprint 3 — Guided form
+### Sprint 2 — UX Polish
 
-15. **#55** — Sidebar nav with per-section save/advance + status icons. The bigger UX investment.
+**Complete 2026-04-28.** Added collapsible form sections, priority-field tooltips, dashboard-to-form round trip, RRSP contribution-room warning, stronger CPP help text, and default-on progressive Monte Carlo.
 
-## Sprint 4 — Launch
+## Backlog
 
-16. **#44** — Replace donate-first launch idea with local-first paid/free positioning once Sprint 0 trust gates are green.
-17. **#45** — Plan and post launch posts (r/PersonalFinanceCanada, HN)
+### Near-Term Candidates After Sprint 4
 
-**Minimum viable launch sequence:** Sprint 0 first, then decide whether launch packaging, guided-form UX, or deeper engine extraction is the next best move.
+- **Engine extraction continuation.** Move pension splitting and `netAfterTaxSplit()` after the strategy boundary is clear, then parameterize `runSimulation(plan, cfg, options)` so it no longer reads global `D`.
+- **Recommended-plan optimizer.** Search CPP/OAS timing, withdrawal order, pension split/share settings, RRSP/RRIF/LIF drawdown, guardrails, and estate trade-offs before presenting one recommended household plan.
+- **Launch feedback and hotfixes.** Triage public feedback after Sprint 4, fix launch-blocking issues, and avoid broad feature creep while the first public users test the product.
 
-## Backlog (not yet in a sprint)
+### Product Backlog
 
-### Validation / data hygiene
-
-- **Silent zero-defaults.** If the user submits with a critical field blank (dob, balances), the dashboard receives `0` and produces nonsense. Add validation before encoding the hash.
-- **`a_retireYear` fallback cleanup.** Phase 5.2 removed the input but left legacy `n('a_retireYear', 2027)` references as fallbacks. Worth a cleanup pass.
-- **Header sentences in Real-mode.** Real toggle recomputes KPIs/charts but not the header text. Low severity.
-
-### Dashboard UX
-
-- **"Working?" column badge** in year-by-year detail table for pre-retirement years.
-- **Salary chart series tooltip** explaining it's gross pre-tax.
-- **Print PDF improvements.** Works but is dense — two-page layout with KPIs up front.
-- **Drilldown modal** on year-click — explain every line item.
-
-### Performance
-
-- **MC perf in meltdown scenario.** ~6× slower than baseline. Acceptable now; profile if path counts increase.
-
-### Future capability
-
-- **Recommended-plan first UX.** Replace the prototype's five equal detailed scenario tabs with one engine-selected household plan as the default: optimal CPP/OAS timing, withdrawal order, meltdown/guardrail strategy, pension splitting/CPP sharing, and estate trade-off explanation. Keep detailed alternative scenarios as an advanced/paid diagnostic layer.
-- **Flexible-spending Monte Carlo.** Add a mode where discretionary go-go/slow-go spending can temporarily ratchet down in bad return paths while core/no-go spending is protected; report full-target funding, core funding, typical adjustment needed, and recovery behaviour separately.
-- **Guardrail withdrawal mode.** Add Guyton-Klinger-style guardrails or simpler portfolio-band rules: cut spending after portfolio drawdowns, restore/increase after strong returns, and measure whether core lifestyle survives.
-- **Implementation package / action plan.** Potential paid/local-first feature: produce a year-by-year withdrawal implementation package with account-specific draw instructions, CPP/OAS timing, RRIF/LIF constraints, tax notes, and guardrail thresholds/actions. If AI-assisted, never upload plan data without explicit consent and a clear privacy boundary.
-- **Mobile-friendly reflow.** Sprint 3's sidebar nav (#55) is desktop-first; a mobile fallback (top progress bar / hamburger) is its own piece of work.
-- **Save/load `.plan.json`.** Beyond the hash URL.
-- **Named plans in localStorage.** Multiple plans per household.
-- **Plan comparison.** Two saved plans side-by-side.
-- **Multi-province.** BC and Alberta first; Quebec is largest scope (QPP, distinct tax structure).
-- **French translation** for Quebec market.
-- **Withdrawal-order optimiser.** Search over draw permutations for max after-tax.
-- **"What if I work N more years?" slider.**
-- **RDSP / DTC support** if relevant.
-- **Tax-loss-harvesting** in non-reg.
-- **Annual 2027 tax-update pass** (recurring, due every year — calendar reminder).
+- Real-mode header sentence refresh.
+- Working-year badge in the year-by-year detail table.
+- Salary chart tooltip explaining gross pre-tax salary.
+- Print/PDF two-page report polish.
+- Drilldown modal on year-click explaining line items.
+- Flexible-spending Monte Carlo.
+- Guardrail withdrawal mode.
+- Implementation package / action plan.
+- Plan comparison for two saved local plans.
+- Multi-province support: BC and Alberta first; Quebec is larger scope because of QPP and distinct tax.
+- French translation for the Quebec market.
+- "What if I work N more years?" slider.
+- RDSP / DTC support if relevant.
+- Tax-loss-harvesting modelling in non-registered accounts.
+- Annual 2027 tax-update pass.

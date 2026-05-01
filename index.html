@@ -21,7 +21,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .hdr p{font-size:13px;color:#a8c8e8;margin-top:3px}
 .hdr-right{text-align:right;font-size:12px;color:#7ab8e0}
 
-.body{max-width:860px;margin:0 auto;padding:28px 20px 80px}
+.body{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
 
 .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 26px;margin-bottom:20px}
 .card-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px}
@@ -58,8 +58,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .progress-step{flex:1;height:4px;border-radius:2px;background:var(--border)}
 .progress-step.done{background:var(--navy3)}
 .progress-step.active{background:var(--gold)}
+.workspace{display:grid;grid-template-columns:220px minmax(0,860px);gap:20px;align-items:start}
+.section-nav{position:sticky;top:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:12px}
+.section-nav-title{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin:2px 4px 10px}
+.section-nav button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid transparent;border-radius:6px;padding:8px 9px;margin-bottom:6px;color:var(--navy);font:600 12px/1.3 'Segoe UI',system-ui,sans-serif;cursor:pointer;text-align:left}
+.section-nav button:hover{background:var(--light);border-color:var(--border)}
+.section-nav .nav-status{font-size:10px;font-weight:800;border-radius:999px;padding:2px 7px;background:var(--border);color:var(--muted);white-space:nowrap}
+.section-nav button[data-status="complete"] .nav-status{background:#d4f0e0;color:#135b2b}
+.section-nav button[data-status="partial"] .nav-status{background:#fef3c7;color:#7a5d10}
+.section-nav button[data-status="empty"] .nav-status{background:#edf1f5;color:#637282}
+.section-nav button[data-status="review"] .nav-status{background:#fde8e8;color:#a63024}
+.section-next{display:flex;justify-content:flex-end;margin-top:12px}
+.btn-section-next{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-section-next:hover{background:var(--navy3)}
 
 .error-msg{display:none;background:#fde8e8;color:#c0392b;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:14px;border:1px solid #f5c6cb}
+.field input.field-error,.field select.field-error{border-color:#c0392b;background:#fff7f7}
+.field-error-text{font-size:11px;color:#a63024;font-weight:600;margin-top:2px}
 
 /* Sprint 2 #50: soft inline warning for fields that are legal-but-suspicious
    (e.g. RRSP contribution > 18% of salary, the simplified CRA cap). Yellow
@@ -91,6 +106,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .save-indicator{font-size:12px;color:#a8c8e8;opacity:0;transition:opacity .4s}
 .btn-clear{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);font-weight:600;font-size:14px;padding:10px 20px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-clear:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
+.btn-local{background:#fff;color:var(--navy);border:1.5px solid rgba(255,255,255,.75);font-weight:700;font-size:14px;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-local:hover{background:var(--light)}
 
 /* Sprint 2 #53: collapsible card sections.
    Each top-level form card is a <details> element. Person 1 + Person 2
@@ -187,6 +204,13 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
   .row,.row.three,.row.four{grid-template-columns:1fr}
   .restore-banner{flex-direction:column;align-items:flex-start}
   .submit-bar{flex-wrap:wrap;gap:10px}
+  .workspace{display:block}
+  .section-nav{position:static;margin-bottom:16px}
+  .section-nav button{display:inline-flex;width:auto;margin-right:6px}
+}
+@media(max-width:900px){
+  .workspace{display:block}
+  .section-nav{position:static;margin-bottom:16px}
 }
 </style>
 </head>
@@ -220,7 +244,7 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
   </div>
 
   <div id="restore-banner" class="restore-banner">
-    <p>📋 <strong>Welcome back.</strong> We found your previously saved data — want to pick up where you left off?</p>
+    <p id="restore-text">📋 <strong>Welcome back.</strong> We found your previously saved data — want to pick up where you left off?</p>
     <div class="restore-banner-btns">
       <button class="btn-restore" onclick="confirmRestore()">Restore my data</button>
       <button class="btn-discard" onclick="dismissRestore()">Start fresh</button>
@@ -228,9 +252,36 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
   </div>
   <div id="error-msg" class="error-msg"></div>
 
+  <div class="workspace">
+  <nav class="section-nav" aria-label="Plan sections">
+    <div class="section-nav-title">Plan progress</div>
+    <button type="button" data-nav-section="sec-local" onclick="goToSection('sec-local')">Local file <span class="nav-status">Empty</span></button>
+    <button type="button" data-nav-section="sec-p1" onclick="goToSection('sec-p1')">Person 1 <span class="nav-status">Empty</span></button>
+    <button type="button" data-nav-section="sec-p2" onclick="goToSection('sec-p2')">Person 2 <span class="nav-status">Empty</span></button>
+    <button type="button" data-nav-section="sec-joint" onclick="goToSection('sec-joint')">Joint assets <span class="nav-status">Empty</span></button>
+    <button type="button" data-nav-section="sec-spending" onclick="goToSection('sec-spending')">Spending <span class="nav-status">Empty</span></button>
+    <button type="button" data-nav-section="sec-assumptions" onclick="goToSection('sec-assumptions')">Assumptions <span class="nav-status">Empty</span></button>
+  </nav>
+  <main class="form-main">
+
+  <div class="card" id="sec-local" data-section-label="Local file">
+    <div class="card-title"><span class="icon">▣</span> Local Plan File</div>
+    <div class="row solo">
+      <div class="field">
+        <label>Plan Name</label>
+        <input type="text" id="plan_title" value="" placeholder="Household retirement plan">
+        <span class="hint">Used for local `.plan.json` filenames and browser draft labels. Your plan still stays on this device unless you export or share it.</span>
+      </div>
+    </div>
+    <div class="section-label">Privacy</div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.6">
+      Save creates a local `.plan.json` file on your device. Load reads a file you choose. No account is needed, and the planner does not upload plan files, URL hashes, balances, income, spending, or results.
+    </p>
+  </div>
+
   <!-- ══ SECTION 1: WHO ARE YOU ══ -->
   <!-- Sprint 2 #53: <details open> — Person 1 expanded by default. -->
-  <details class="card" open>
+  <details class="card" id="sec-p1" data-section-label="Person 1" open>
     <summary class="card-title"><span class="icon">👤</span> Person 1 (Primary — usually the pension earner)</summary>
     <div class="card-body">
 
@@ -369,12 +420,13 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <span class="hint">Max 2026 = $742.31/mo</span>
       </div>
     </div>
+    <div class="section-next"><button type="button" class="btn-section-next" onclick="goToSection('sec-p2')">Save &amp; continue</button></div>
     </div>
   </details>
 
   <!-- ══ SECTION 2: PERSON 2 ══ -->
   <!-- Sprint 2 #53: <details open> — Person 2 expanded by default. -->
-  <details class="card" open>
+  <details class="card" id="sec-p2" data-section-label="Person 2" open>
     <summary class="card-title"><span class="icon">👤</span> Person 2 (Spouse / Partner)</summary>
     <div class="card-body">
 
@@ -534,12 +586,13 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="m_cppSurv_o65" value="" min="0">
       </div>
     </div>
+    <div class="section-next"><button type="button" class="btn-section-next" onclick="goToSection('sec-joint')">Save &amp; continue</button></div>
     </div>
   </details>
 
   <!-- ══ SECTION 3: JOINT / LIABILITIES ══ -->
   <!-- Sprint 2 #53: collapsed by default. -->
-  <details class="card">
+  <details class="card" id="sec-joint" data-section-label="Joint assets">
     <summary class="card-title"><span class="icon">🏠</span> Joint Assets &amp; Liabilities</summary>
     <div class="card-body">
 
@@ -570,12 +623,13 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <input type="number" id="loc_rate" value="0.07" step="0.001" min="0" max="0.30">
       </div>
     </div>
+    <div class="section-next"><button type="button" class="btn-section-next" onclick="goToSection('sec-spending')">Save &amp; continue</button></div>
     </div>
   </details>
 
   <!-- ══ SECTION 4: SPENDING ══ -->
   <!-- Sprint 2 #53: collapsed by default. -->
-  <details class="card">
+  <details class="card" id="sec-spending" data-section-label="Spending">
     <summary class="card-title"><span class="icon">💳</span> Spending Targets (annual, today's dollars)</summary>
     <div class="card-body">
 
@@ -671,12 +725,13 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <span class="hint">Surplus income refills the wedge up to this many years of go-go spending before spilling into the non-registered account.</span>
       </div>
     </div>
+    <div class="section-next"><button type="button" class="btn-section-next" onclick="goToSection('sec-assumptions')">Save &amp; continue</button></div>
     </div>
   </details>
 
   <!-- ══ SECTION 5: ASSUMPTIONS ══ -->
   <!-- Sprint 2 #53: collapsed by default. -->
-  <details class="card">
+  <details class="card" id="sec-assumptions" data-section-label="Assumptions">
     <summary class="card-title"><span class="icon">⚙️</span> Plan Assumptions</summary>
     <div class="card-body">
 
@@ -790,8 +845,11 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
         <span class="hint">Amount contributed two calendar years ago.</span>
       </div>
     </div>
+    <div class="section-next"><button type="button" class="btn-section-next" onclick="submitForm()">Generate dashboard</button></div>
     </div>
   </details>
+  </main>
+  </div>
 </div>
 
 <div class="submit-bar">
@@ -800,6 +858,9 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
     <span class="save-indicator" id="save-indicator">✓ Progress saved</span>
   </div>
   <div style="display:flex;gap:10px;align-items:center">
+    <input type="file" id="planFileInput" accept=".plan.json,application/json" style="display:none" onchange="importPlanFile(event)">
+    <button class="btn-local" onclick="document.getElementById('planFileInput').click()">Load .plan.json</button>
+    <button class="btn-local" onclick="exportPlanFile()">Save .plan.json</button>
     <button class="btn-clear" onclick="clearForm()">Clear Form</button>
     <button class="btn-submit" onclick="submitForm()">Generate Dashboard →</button>
   </div>
@@ -808,7 +869,132 @@ details.card > summary.card-title:focus-visible{outline:2px solid var(--gold);ou
 <script>
 // ── LOCAL STORAGE: save / restore / clear ──────────────────────────────────
 const STORAGE_KEY = 'retirement_intake_v1';
+const STORAGE_META_KEY = 'retirement_intake_meta_v1';
 let _savedData = null;   // raw saved values — only applied if user confirms
+
+const PLAN_FILE_TYPE = 'canadian-retirement-plan';
+const PLAN_FILE_VERSION = 1;
+
+function cloneJson(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function planTitleFromD(D) {
+  if (D && D.title && String(D.title).trim()) return String(D.title).trim();
+  const p1 = D && D.p1 && D.p1.name ? D.p1.name.trim() : '';
+  const p2 = D && D.p2 && D.p2.name ? D.p2.name.trim() : '';
+  if (p1 && p2) return `${p1} and ${p2} retirement plan`;
+  if (p1) return `${p1} retirement plan`;
+  return 'Retirement plan';
+}
+
+function safeFilenamePart(s) {
+  return String(s || 'retirement-plan')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'retirement-plan';
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function createPlanFile(D, now) {
+  const plan = migrate(cloneJson(D));
+  const stamp = now || new Date().toISOString();
+  return {
+    fileType: PLAN_FILE_TYPE,
+    fileVersion: PLAN_FILE_VERSION,
+    exportedAt: stamp,
+    app: {
+      name: 'Canadian Retirement Planner',
+      schemaVersion: SCHEMA_VERSION,
+      storage: 'local-plan-file'
+    },
+    title: planTitleFromD(plan),
+    plan
+  };
+}
+
+function extractPlanPayload(fileObj) {
+  if (!fileObj || typeof fileObj !== 'object') {
+    throw new Error('This does not look like a retirement plan file.');
+  }
+  const rawPlan = fileObj.fileType === PLAN_FILE_TYPE ? fileObj.plan : fileObj;
+  if (!rawPlan || typeof rawPlan !== 'object') {
+    throw new Error('The plan file is missing its plan payload.');
+  }
+  const D = migrate(cloneJson(rawPlan));
+  if (!D.p1 || !D.p2 || !D.assumptions) {
+    throw new Error('The plan file is missing required household fields.');
+  }
+  return D;
+}
+
+function exportPlanFile() {
+  const errEl = document.getElementById('error-msg');
+  if (errEl) errEl.style.display = 'none';
+  try {
+    const D = gatherD();
+    const file = createPlanFile(D);
+    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = safeFilenamePart(file.title) + '.plan.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    if (errEl) {
+      errEl.textContent = 'Could not save plan file: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  }
+}
+
+function importPlanFile(event) {
+  const input = event && event.target;
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  const errEl = document.getElementById('error-msg');
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || '{}'));
+      const D = extractPlanPayload(parsed);
+      populateFromD(D);
+      saveToLocal();
+      validateRrspRoom();
+      updateSectionStatuses();
+      expandAllCards();
+      if (errEl) {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch(e) {
+      if (errEl) {
+        errEl.textContent = 'Could not load plan file: ' + e.message;
+        errEl.style.display = 'block';
+      }
+    } finally {
+      if (input) input.value = '';
+    }
+  };
+  reader.onerror = () => {
+    if (errEl) {
+      errEl.textContent = 'Could not read the selected plan file.';
+      errEl.style.display = 'block';
+    }
+    if (input) input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 function getAllFieldValues() {
   const data = {};
@@ -824,7 +1010,12 @@ function applyFieldValues(data) {
 }
 
 function saveToLocal() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(getAllFieldValues()));
+  const values = getAllFieldValues();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+  localStorage.setItem(STORAGE_META_KEY, JSON.stringify({
+    title: values.plan_title || '',
+    savedAt: new Date().toISOString()
+  }));
   const ind = document.getElementById('save-indicator');
   if (ind) { ind.style.opacity = 1; setTimeout(() => { ind.style.opacity = 0; }, 2000); }
 }
@@ -838,12 +1029,14 @@ function confirmRestore() {
 function dismissRestore() {
   _savedData = null;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_META_KEY);
   document.getElementById('restore-banner').style.display = 'none';
 }
 
 function clearForm() {
   if (!confirm('Clear all fields and start fresh?')) return;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_META_KEY);
   document.querySelectorAll('input[id]').forEach(el => {
     el.value = el.type === 'text' ? '' : '0';
   });
@@ -854,6 +1047,7 @@ let _saveTimer;
 document.addEventListener('input', (e) => {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(saveToLocal, 600);
+  updateSectionStatuses();
   // Sprint 2 #50: soft RRSP-room validation on relevant input changes only
   // (salary or RRSP contribution). Cheap to call broadly, but scoping avoids
   // re-running the function on every keystroke in unrelated fields.
@@ -915,6 +1109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       populateFromD(parsed);
       saveToLocal();
       validateRrspRoom();   // Sprint 2 #50: surface warning if a loaded plan exceeds 18% of salary.
+      updateSectionStatuses();
       return;
     } catch(e) {
       console.warn('Could not decode plan hash on load:', e);
@@ -927,10 +1122,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const parsed = JSON.parse(raw);
       if (parsed.f_name && parsed.f_name.trim()) {
         _savedData = parsed;
+        try {
+          const meta = JSON.parse(localStorage.getItem(STORAGE_META_KEY) || '{}');
+          const label = meta.title || parsed.plan_title || parsed.f_name || 'your local draft';
+          const text = document.getElementById('restore-text');
+          if (text) text.innerHTML = `📋 <strong>Welcome back.</strong> We found a browser draft for “${escapeHtml(label)}” — want to pick up where you left off?`;
+        } catch(_) {}
         document.getElementById('restore-banner').style.display = 'flex';
       }
     }
   } catch(e) { /* ignore */ }
+  updateSectionStatuses();
 });
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -1014,6 +1216,183 @@ function expandAllCards() {
   document.querySelectorAll('details.card').forEach(d => { d.open = true; });
 }
 
+function fieldHasValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  if (el.type === 'checkbox') return el.checked;
+  const v = String(el.value || '').trim();
+  return v !== '' && v !== '0' && v !== '0.0' && v !== '0.00';
+}
+
+function isBlank(id) {
+  const el = document.getElementById(id);
+  return !el || String(el.value || '').trim() === '';
+}
+
+function numericValue(id) {
+  const el = document.getElementById(id);
+  if (!el || String(el.value || '').trim() === '') return null;
+  const v = Number(el.value);
+  return Number.isFinite(v) ? v : null;
+}
+
+function clearValidationErrors() {
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.field-error-text').forEach(el => el.remove());
+}
+
+function markFieldError(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('field-error');
+  const parent = el.closest ? el.closest('.field') : null;
+  if (parent && !parent.querySelector('.field-error-text')) {
+    const msg = document.createElement('span');
+    msg.className = 'field-error-text';
+    msg.textContent = message;
+    parent.appendChild(msg);
+  }
+}
+
+function validateRequiredNumber(errors, id, label, opts) {
+  opts = opts || {};
+  const v = numericValue(id);
+  if (v == null) {
+    errors.push({ id, label, message: `${label} is required. Enter 0 if it does not apply.` });
+    return;
+  }
+  if (opts.min != null && v < opts.min) {
+    errors.push({ id, label, message: `${label} must be at least ${opts.min}.` });
+  }
+  if (opts.max != null && v > opts.max) {
+    errors.push({ id, label, message: `${label} must be ${opts.max} or lower.` });
+  }
+}
+
+function validateRequiredText(errors, id, label) {
+  if (isBlank(id)) errors.push({ id, label, message: `${label} is required.` });
+}
+
+function p2IsInUse() {
+  const ids = ['m_name', 'm_dob', 'm_dobMonth', 'm_retireYear', 'm_rrsp', 'm_tfsa', 'm_lira', 'm_lif', 'm_nonreg', 'm_cpp70_monthly'];
+  return ids.some(fieldHasValue);
+}
+
+const VALIDATION_LABELS = {
+  f_rrsp: 'Person 1 RRSP/RRIF balance',
+  f_tfsa: 'Person 1 TFSA balance',
+  f_lif: 'Person 1 LIF/LIRA balance',
+  f_nonreg: 'Person 1 non-registered balance',
+  f_cpp70_monthly: 'Person 1 CPP at age 70',
+  f_oas_monthly: 'Person 1 OAS at age 65',
+  m_rrsp: 'Person 2 RRSP balance',
+  m_tfsa: 'Person 2 TFSA balance',
+  m_lira: 'Person 2 LIRA balance',
+  m_lif: 'Person 2 LIF balance',
+  m_nonreg: 'Person 2 non-registered balance',
+  m_cpp70_monthly: 'Person 2 CPP at age 70',
+  m_oas_monthly: 'Person 2 OAS at age 65',
+  mort_balance: 'Mortgage balance',
+  mort_monthly: 'Mortgage monthly payment',
+  loc_balance: 'Line of credit balance',
+};
+
+function validateForm() {
+  clearValidationErrors();
+  const errors = [];
+
+  validateRequiredText(errors, 'f_name', 'Person 1 first name');
+  validateRequiredNumber(errors, 'f_dob', 'Person 1 birth year', { min: 1940, max: 2005 });
+  validateRequiredNumber(errors, 'f_dobMonth', 'Person 1 birth month', { min: 1, max: 12 });
+  validateRequiredNumber(errors, 'f_retireYear', 'Person 1 retirement year', { min: 2024, max: 2050 });
+  ['f_rrsp', 'f_tfsa', 'f_lif', 'f_nonreg', 'f_cpp70_monthly', 'f_oas_monthly'].forEach(id => {
+    validateRequiredNumber(errors, id, VALIDATION_LABELS[id] || id, { min: 0 });
+  });
+
+  if (p2IsInUse()) {
+    validateRequiredText(errors, 'm_name', 'Person 2 first name');
+    validateRequiredNumber(errors, 'm_dob', 'Person 2 birth year', { min: 1940, max: 2005 });
+    validateRequiredNumber(errors, 'm_dobMonth', 'Person 2 birth month', { min: 1, max: 12 });
+    validateRequiredNumber(errors, 'm_retireYear', 'Person 2 retirement year', { min: 2024, max: 2050 });
+    ['m_rrsp', 'm_tfsa', 'm_lira', 'm_lif', 'm_nonreg', 'm_cpp70_monthly', 'm_oas_monthly'].forEach(id => {
+      validateRequiredNumber(errors, id, VALIDATION_LABELS[id] || id, { min: 0 });
+    });
+  }
+
+  ['mort_balance', 'mort_monthly', 'loc_balance'].forEach(id => {
+    validateRequiredNumber(errors, id, VALIDATION_LABELS[id] || id, { min: 0 });
+  });
+
+  validateRequiredNumber(errors, 'sp_gogo', 'Go-go annual budget', { min: 0 });
+  validateRequiredNumber(errors, 'sp_gogoEnd', 'Go-go end age', { min: 60, max: 95 });
+  validateRequiredNumber(errors, 'sp_slowgo', 'Slow-go annual budget', { min: 0 });
+  validateRequiredNumber(errors, 'sp_slowgoEnd', 'Slow-go end age', { min: 65, max: 95 });
+  validateRequiredNumber(errors, 'sp_nogo', 'No-go annual budget', { min: 0 });
+
+  validateRequiredNumber(errors, 'a_planEnd', 'Plan end year', { min: 2040, max: 2100 });
+  validateRequiredNumber(errors, 'a_horizon', 'Planning horizon age', { min: 80, max: 100 });
+  validateRequiredNumber(errors, 'a_returnRate', 'Portfolio return rate', { min: 0, max: 0.15 });
+  validateRequiredNumber(errors, 'a_inflation', 'Inflation rate', { min: 0, max: 0.10 });
+  validateRequiredNumber(errors, 'a_returnStdDev', 'Return standard deviation', { min: 0, max: 0.30 });
+
+  errors.forEach(e => markFieldError(e.id, e.message));
+  return errors;
+}
+
+function sectionStatus(requiredIds, optionalIds) {
+  const required = requiredIds || [];
+  const optional = optionalIds || [];
+  const requiredDone = required.filter(fieldHasValue).length;
+  const optionalDone = optional.filter(fieldHasValue).length;
+  if (required.length) {
+    if (requiredDone === required.length) return 'complete';
+    if (requiredDone > 0 || optionalDone > 0) return 'review';
+    return 'empty';
+  }
+  return optionalDone > 0 ? 'complete' : 'empty';
+}
+
+const SECTION_STATUS_FIELDS = {
+  'sec-local': { required: [], optional: ['plan_title'] },
+  'sec-p1': {
+    required: ['f_name', 'f_dob', 'f_dobMonth', 'f_retireYear'],
+    optional: ['f_salary', 'f_rrsp', 'f_tfsa', 'f_nonreg', 'f_cpp70_monthly', 'f_oas_monthly']
+  },
+  'sec-p2': {
+    required: [],
+    optional: ['m_name', 'm_dob', 'm_dobMonth', 'm_retireYear', 'm_rrsp', 'm_tfsa', 'm_cpp70_monthly']
+  },
+  'sec-joint': { required: [], optional: ['mort_balance', 'mort_monthly', 'loc_balance'] },
+  'sec-spending': {
+    required: ['sp_gogo', 'sp_gogoEnd', 'sp_slowgo', 'sp_slowgoEnd', 'sp_nogo'],
+    optional: ['a_inheritance', 'a_downsizeYear', 'a_downsizeProceeds', 'a_oneOff1Amt', 'a_cashWedge']
+  },
+  'sec-assumptions': {
+    required: ['a_planEnd', 'a_horizon', 'a_returnRate', 'a_inflation', 'a_returnStdDev'],
+    optional: ['a_planStart', 'a_p1Dies', 'a_withdrawalOrder']
+  },
+};
+
+function updateSectionStatuses() {
+  Object.entries(SECTION_STATUS_FIELDS).forEach(([sectionId, cfg]) => {
+    const status = sectionStatus(cfg.required, cfg.optional);
+    const btn = document.querySelector(`[data-nav-section="${sectionId}"]`);
+    if (!btn) return;
+    btn.dataset.status = status;
+    const pill = btn.querySelector('.nav-status');
+    if (pill) pill.textContent = status === 'review' ? 'Review' : status[0].toUpperCase() + status.slice(1);
+  });
+}
+
+function goToSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (!section) return;
+  if (section.tagName && section.tagName.toLowerCase() === 'details') section.open = true;
+  saveToLocal();
+  updateSectionStatuses();
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // Sprint 2 #59: schema version + migrate. Mirrors the dashboard's MIGRATIONS
 // registry so when a user clicks "Edit plan" from a bookmarked dashboard URL
 // pointing at an older payload, the form decodes it cleanly. Keep this in
@@ -1075,6 +1454,8 @@ function populateFromD(D) {
     if (el) el.value = (val == null ? '' : String(val));
   };
 
+  setVal('plan_title', D.title || '');
+
   const p1 = D.p1 || {};
   setVal('f_name', p1.name);
   setVal('f_dob', p1.dob);
@@ -1098,9 +1479,9 @@ function populateFromD(D) {
   setVal('f_nonreg', p1.nonreg);
   setVal('f_nonregAcb', p1.nonregAcb);
   setVal('f_nonregAnnual', p1.nonregAnnual);
-  setVal('f_cpp70_monthly', p1.cpp70_monthly);
-  setVal('f_cpp65_monthly', p1.cpp65_monthly);
-  setVal('f_oas_monthly', p1.oas_monthly);
+  setVal('f_cpp70_monthly', p1.cpp70_monthly != null ? p1.cpp70_monthly : (p1.cpp70 != null ? p1.cpp70 / 12 : null));
+  setVal('f_cpp65_monthly', p1.cpp65_monthly != null ? p1.cpp65_monthly : (p1.cpp65 != null ? p1.cpp65 / 12 : null));
+  setVal('f_oas_monthly', p1.oas_monthly != null ? p1.oas_monthly : (p1.oasBase != null ? p1.oasBase / 12 : null));
 
   const p2 = D.p2 || {};
   setVal('m_name', p2.name);
@@ -1127,11 +1508,11 @@ function populateFromD(D) {
   setVal('m_nonreg', p2.nonreg);
   setVal('m_nonregAcb', p2.nonregAcb);
   setVal('m_nonregAnnual', p2.nonregAnnual);
-  setVal('m_cpp70_monthly', p2.cpp70_monthly);
-  setVal('m_cpp65_monthly', p2.cpp65_monthly);
-  setVal('m_oas_monthly', p2.oas_monthly);
-  setVal('m_cppSurv_u65', p2.cppSurv_u65_mo);
-  setVal('m_cppSurv_o65', p2.cppSurv_o65_mo);
+  setVal('m_cpp70_monthly', p2.cpp70_monthly != null ? p2.cpp70_monthly : (p2.cpp70 != null ? p2.cpp70 / 12 : null));
+  setVal('m_cpp65_monthly', p2.cpp65_monthly != null ? p2.cpp65_monthly : (p2.cpp65 != null ? p2.cpp65 / 12 : null));
+  setVal('m_oas_monthly', p2.oas_monthly != null ? p2.oas_monthly : (p2.oasBase != null ? p2.oasBase / 12 : null));
+  setVal('m_cppSurv_u65', p2.cppSurv_u65_mo != null ? p2.cppSurv_u65_mo : (p2.cppSurvivor_under65 != null ? p2.cppSurvivor_under65 / 12 : null));
+  setVal('m_cppSurv_o65', p2.cppSurv_o65_mo != null ? p2.cppSurv_o65_mo : (p2.cppSurvivor_over65 != null ? p2.cppSurvivor_over65 / 12 : null));
 
   const mort = D.mortgage || {};
   setVal('mort_balance', mort.balance);
@@ -1212,7 +1593,7 @@ function gatherD() {
   const f_cpp70_mo   = n('f_cpp70_monthly', 0);
   const m_cpp70_mo   = n('m_cpp70_monthly', 0);
 
-  return {
+  const D = {
     // Sprint 1 #46: schema version stamped on every payload at encode time.
     // Bump when the shape of D changes in a way that older dashboards can't
     // read directly. The dashboard's migrate(D) function lifts older payloads
@@ -1366,23 +1747,20 @@ function gatherD() {
       })(),
     }
   };
+  const title = s('plan_title', '');
+  if (title) D.title = title;
+  return D;
 }
 
 function submitForm() {
   const errEl = document.getElementById('error-msg');
   errEl.style.display = 'none';
 
-  // Basic validation
-  if (!s('f_name') || !s('m_name')) {
+  const validationErrors = validateForm();
+  if (validationErrors.length) {
     expandAllCards();
-    errEl.textContent = 'Please enter names for both people.';
-    errEl.style.display = 'block';
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
-  }
-  if (n('f_dob') < 1940 || n('m_dob') < 1940) {
-    expandAllCards();
-    errEl.textContent = 'Please enter valid birth years for both people.';
+    updateSectionStatuses();
+    errEl.textContent = `Please review ${validationErrors.length} highlighted field${validationErrors.length === 1 ? '' : 's'}. Enter 0 when a balance or amount does not apply.`;
     errEl.style.display = 'block';
     window.scrollTo({top:0,behavior:'smooth'});
     return;

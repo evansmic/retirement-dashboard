@@ -236,6 +236,11 @@ body.blank-mode .body { display:none !important }
       Print / PDF
     </button>
     &nbsp;
+    <button type="button" id="savePlanBtn" onclick="exportPlanFile()"
+      style="background:#fff;border:1px solid #ccd;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;color:#234">
+      Save .plan.json
+    </button>
+    &nbsp;
     <!-- Sprint 2 #59: "Edit plan" — round-trip back to the intake form with
          the current hash, so the form decoder pre-fills every field. Hidden
          when no hash is present (preset/blank-state has nothing to round-trip).
@@ -258,11 +263,11 @@ body.blank-mode .body { display:none !important }
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab active" onclick="setScenario('base')"><span class="dot dot-base"></span>Baseline (CPP/OAS at 65)</button>
-  <button class="tab" onclick="setScenario('melt')"><span class="dot dot-melt"></span>RRSP Meltdown (CPP/OAS at 70)</button>
-  <button class="tab" onclick="setScenario('zero')"><span class="dot dot-zero"></span>Net 0% Return</button>
-  <button class="tab" id="tab-surv" onclick="setScenario('surv')"><span class="dot dot-surv"></span>Survivor</button>
-  <button class="tab" onclick="setScenario('maxs')"><span class="dot dot-maxs"></span>Max Spend (Estate → 0)</button>
+  <button class="tab active" onclick="setScenario('base')"><span class="dot dot-base"></span>Recommended Plan</button>
+  <button class="tab" onclick="setScenario('melt')"><span class="dot dot-melt"></span>Alternative: RRSP Meltdown</button>
+  <button class="tab" onclick="setScenario('zero')"><span class="dot dot-zero"></span>Stress: Net 0% Return</button>
+  <button class="tab" id="tab-surv" onclick="setScenario('surv')"><span class="dot dot-surv"></span>Stress: Survivor</button>
+  <button class="tab" onclick="setScenario('maxs')"><span class="dot dot-maxs"></span>Alternative: Max Spend</button>
 </div>
 
 <!-- BODY -->
@@ -354,7 +359,7 @@ body.blank-mode .body { display:none !important }
     <h3 style="display:flex;align-items:center;gap:10px">
       🎲 Monte Carlo — Portfolio Uncertainty
       <span style="font-weight:400;font-size:12px;color:#6b7b88">
-        Scenario:&nbsp;<strong id="mcScenLabel">Baseline</strong>
+        Plan view:&nbsp;<strong id="mcScenLabel">Recommended Plan</strong>
         &nbsp;·&nbsp; SD:&nbsp;<strong id="mcSdLabel">10%</strong>
       </span>
       <button type="button" id="mcRunBtn" onclick="runMonteCarloUI()"
@@ -427,7 +432,7 @@ body.blank-mode .body { display:none !important }
     <h3 style="display:flex;align-items:center;gap:10px">
       📉 Sequence-of-Returns Stress Test
       <span style="font-weight:400;font-size:12px;color:#6b7b88">
-        Scenario:&nbsp;<strong id="seqScenLabel">Baseline</strong>
+        Plan view:&nbsp;<strong id="seqScenLabel">Recommended Plan</strong>
         &nbsp;·&nbsp; Historical crashes replayed in years 1-8 of retirement
       </span>
       <button type="button" id="seqRunBtn" onclick="runSequenceStressUI()"
@@ -465,7 +470,7 @@ body.blank-mode .body { display:none !important }
   <!-- YEAR-BY-YEAR TABLE -->
   <div class="detail-card">
     <div class="detail-hdr" onclick="toggleDetail()">
-      <h3>📅 Year-by-Year Detail — <span id="detScenLabel">Baseline</span></h3>
+      <h3>📅 Year-by-Year Detail — <span id="detScenLabel">Recommended Plan</span></h3>
       <span class="toggle" id="detToggle">▼ Show</span>
     </div>
     <div class="detail-body hidden" id="detBody">
@@ -489,7 +494,7 @@ body.blank-mode .body { display:none !important }
   <!-- COMPARISON TABLE -->
   <div class="cmp-card">
     <div class="section-head" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <span>📋 Scenario Comparison</span>
+      <span>📋 Alternatives &amp; Stress Diagnostics</span>
       <!-- Phase 4.3 / Sprint 0 S0-04: fills the funded-path row below by
            running 250 MC paths per scenario. 250 is fast enough for five
            scenarios (~1s total) while still stable to ±3%. -->
@@ -502,7 +507,7 @@ body.blank-mode .body { display:none !important }
       <thead>
         <tr>
           <th>Metric</th>
-          <th><span class="dot dot-base" style="margin-right:4px"></span>Baseline</th>
+          <th><span class="dot dot-base" style="margin-right:4px"></span>Recommended</th>
           <th><span class="dot dot-melt" style="margin-right:4px"></span>RRSP Meltdown</th>
           <th><span class="dot dot-zero" style="margin-right:4px"></span>Net 0% Return</th>
           <th><span class="dot dot-surv" style="margin-right:4px"></span>Survivor</th>
@@ -525,7 +530,7 @@ body.blank-mode .body { display:none !important }
       <thead>
         <tr>
           <th>Snapshot Metric</th>
-          <th><span class="dot dot-base" style="margin-right:4px"></span>Baseline</th>
+          <th><span class="dot dot-base" style="margin-right:4px"></span>Recommended</th>
           <th><span class="dot dot-melt" style="margin-right:4px"></span>RRSP Meltdown</th>
           <th><span class="dot dot-zero" style="margin-right:4px"></span>Net 0% Return</th>
           <th><span class="dot dot-surv" style="margin-right:4px"></span>Survivor</th>
@@ -712,6 +717,8 @@ body.blank-mode .body { display:none !important }
 //   v2 — Sprint 1 #47–#49: renamed `frank` → `p1`, `moon` → `p2`, and
 //        `assumptions.frankDiesInSurvivor` → `assumptions.p1DiesInSurvivor`.
 const SCHEMA_VERSION = 2;
+const PLAN_FILE_TYPE = 'canadian-retirement-plan';
+const PLAN_FILE_VERSION = 1;
 
 // Sprint 1 #46: migration scaffold. Takes any payload (with or without a
 // schemaVersion field), walks it forward through versioned upgrade steps, and
@@ -771,6 +778,44 @@ function migrate(D) {
   }
   D.schemaVersion = SCHEMA_VERSION;
   return D;
+}
+
+function cloneJson(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function planTitleFromD(D) {
+  const p1 = D && D.p1 && D.p1.name && D.p1.name !== '—' ? D.p1.name.trim() : '';
+  const p2 = D && D.p2 && D.p2.name && D.p2.name !== '—' ? D.p2.name.trim() : '';
+  if (p1 && p2) return `${p1} and ${p2} retirement plan`;
+  if (p1) return `${p1} retirement plan`;
+  return 'Retirement plan';
+}
+
+function safeFilenamePart(s) {
+  return String(s || 'retirement-plan')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'retirement-plan';
+}
+
+function createPlanFile(D, now) {
+  const plan = migrate(cloneJson(D));
+  delete plan._isBlank;
+  const stamp = now || new Date().toISOString();
+  return {
+    fileType: PLAN_FILE_TYPE,
+    fileVersion: PLAN_FILE_VERSION,
+    exportedAt: stamp,
+    app: {
+      name: 'Canadian Retirement Planner',
+      schemaVersion: SCHEMA_VERSION,
+      storage: 'local-plan-file'
+    },
+    title: planTitleFromD(plan),
+    plan
+  };
 }
 
 // ════════════════════════════════════════════════════════
@@ -2291,7 +2336,7 @@ const _prepSurv = prepareScenario(_cfgSurv);
 const _maxsMult = solveSustainable(_cfgMelt, 0, 4.0);
 
 const SCENARIOS = {
-  base: { label:'Baseline (CPP/OAS at 65)', color:'#7ab8e0',
+  base: { label:'Recommended plan (CPP/OAS at 65)', color:'#7ab8e0',
           cfg:_prepBase.cfg, info:_prepBase },
   melt: { label:'RRSP Meltdown (CPP/OAS at 70)', color:'#2db560',
           cfg:_prepMelt.cfg, info:_prepMelt },
@@ -2391,13 +2436,13 @@ function setScenario(key){
     _mcActiveRun = null;
     _setMcBanner(
       'skipped',
-      '<strong>Scenario changed</strong> — the in-progress baseline stress test was cancelled. Run a fresh test for the new scenario from the panel below.',
+      '<strong>Plan view changed</strong> — the in-progress recommended-plan stress test was cancelled. Run a fresh test for the selected view from the panel below.',
       { actionsHtml: '<button type="button" onclick="dismissMcBanner()">Dismiss</button>' }
     );
   }
 
   // Phase 4.1: MC results are scenario-specific. Hide stale fan chart on tab
-  // change so the user doesn't misread a Baseline MC result as a Meltdown one.
+  // change so the user doesn't misread a Recommended Plan MC result as a Meltdown one.
   const mcRes = document.getElementById('mcResults');
   const mcPlc = document.getElementById('mcPlaceholder');
   const mcBtn = document.getElementById('mcRunBtn');
@@ -2454,6 +2499,19 @@ function printReport(){
     body.classList.add('hidden');
     document.getElementById('detToggle').textContent = '▼ Show';
   }
+}
+
+function exportPlanFile(){
+  const file = createPlanFile(D);
+  const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = safeFilenamePart(file.title) + '.plan.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // Sprint 2 #59: round-trip back to the intake form. Pass the current hash
@@ -2875,7 +2933,7 @@ function updateKPIs(){
   const atDelta = rAftax - bAftax;
   const atEl = document.getElementById('kd-aftax');
   if(activeScenario!=='base'){
-    atEl.textContent=(atDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(atDelta))+' vs. Baseline';
+    atEl.textContent=(atDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(atDelta))+' vs. recommended';
     atEl.className='delta '+(atDelta>=0?'pos':'neg');
   } else atEl.textContent='';
 
@@ -2884,7 +2942,7 @@ function updateKPIs(){
   const txDelta = rTax - bTax;
   const txEl = document.getElementById('kd-tax');
   if(activeScenario!=='base'){
-    txEl.textContent=(txDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(txDelta))+(txDelta<=0?' saved':' more')+' vs. Baseline';
+    txEl.textContent=(txDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(txDelta))+(txDelta<=0?' saved':' more')+' vs. recommended';
     txEl.className='delta '+(txDelta<=0?'pos':'neg');
   } else txEl.textContent='';
 
@@ -2897,7 +2955,7 @@ function updateKPIs(){
   const estDelta = rEstate - bEstate;
   const estEl = document.getElementById('kd-estate');
   if(activeScenario!=='base'){
-    estEl.textContent=(estDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(estDelta))+' vs. Baseline';
+    estEl.textContent=(estDelta>=0?'▲ +':' ▼ ')+fmtM(Math.abs(estDelta))+' vs. recommended';
     estEl.className='delta '+(estDelta>=0?'pos':'neg');
   } else estEl.textContent='';
 
@@ -2906,7 +2964,7 @@ function updateKPIs(){
   const oasDelta = rOas - bOas;
   const oasEl = document.getElementById('kd-oas');
   if(activeScenario!=='base'){
-    oasEl.textContent=(oasDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(oasDelta))+(oasDelta<=0?' less clawback':' more clawback')+' vs. Baseline';
+    oasEl.textContent=(oasDelta<=0?'▼ ':' ▲ ')+fmtM(Math.abs(oasDelta))+(oasDelta<=0?' less clawback':' more clawback')+' vs. recommended';
     oasEl.className='delta '+(oasDelta<=0?'pos':'neg');
   } else oasEl.textContent='';
 }

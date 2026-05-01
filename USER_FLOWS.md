@@ -13,13 +13,15 @@ Suggested future types (labelled as suggestions):
 ### Flow 1 — First-time household planner
 
 1. Open `index.html` in a browser.
-2. (Optional) Click FP Canada preset → fills `returnRate`, `inflation`, `returnStdDev` with the guideline-backed balanced-60 defaults.
-3. Enter Person 1 section: name, DOB, retire year, balances (RRSP/TFSA/LIF/non-reg + ACB), CPP at 65/70, OAS, DB pension (optional), pre-retirement salary + raises + annual contributions (optional).
-4. Enter Person 2 section (mirror of above; DB pension now supported on Person 2 too).
-5. Enter household spending by phase (go-go / slow-go / no-go), mortgage, LOC, inheritance goal.
-6. Enter assumptions: plan start (optional, for modelling working years), plan end, return, inflation, horizon, withdrawal order, CPP sharing, spousal RRSP contributions.
-7. Click Submit. Form encodes `D` to base64(URI(JSON)) on the hash and redirects to `retirement_dashboard.html`.
-8. Dashboard loads, computes the recommended household plan, renders the plan summary, key charts, risk summary, and year-by-year detail.
+2. Name the local plan and optionally load an existing `.plan.json`.
+3. Use the section navigation to move through Person 1, Person 2, joint assets, spending, and assumptions.
+4. Enter Person 1 section: name, DOB, retire year, balances (RRSP/TFSA/LIF/non-reg + ACB), CPP at 65/70, OAS, DB pension (optional), pre-retirement salary + raises + annual contributions (optional).
+5. Enter Person 2 section if applicable. Leave it blank for a single-person plan.
+6. Enter household spending by phase (go-go / slow-go / no-go), mortgage, LOC, inheritance goal.
+7. Enter assumptions: plan start (optional, for modelling working years), plan end, return, inflation, horizon, withdrawal order, CPP sharing, spousal RRSP contributions.
+8. Save a local `.plan.json` if desired.
+9. Click Generate Dashboard. Form validates critical blanks, encodes `D` to base64(URI(JSON)) on the hash, and redirects to `retirement_dashboard.html`.
+10. Dashboard loads, computes the recommended household plan, renders the plan summary, key charts, risk summary, and year-by-year detail.
 
 ### Flow 2 — Recommended Plan Review
 
@@ -48,31 +50,29 @@ Suggested future types (labelled as suggestions):
 
 ### Flow 6 — Edit and re-run
 
-1. Hit back in the browser or re-open `index.html`.
-2. Re-enter values (no persistence today — see friction).
-3. Re-submit.
+1. Click Edit plan from a hash-loaded dashboard, or reopen `index.html` and load a local `.plan.json`.
+2. Revise the form. Section status pills highlight empty or needs-review areas.
+3. Save a new local file if desired.
+4. Re-submit.
 
 ## Friction points
 
-- **No save/load.** Closing the tab loses the input unless the user bookmarked the hash URL. Hostile to iteration.
 - **Long intake form.** ~60+ fields. First-time users hit decision fatigue on CPP 65 vs 70, TFSA room, ACB basis, DB pension start year.
-- **Silent defaults.** Missing required fields (e.g. DOB) silently default to 0, producing nonsense projections rather than a clear "please fill this in".
 - **Jargon without inline help.** BPA, OAS clawback, spousal-RRSP attribution, LIF max — all technical terms appear with no tooltips.
 - **Single-flow visual.** There's no "intake → review → submit" step. Click submit and you're already in the dashboard; easy to miss a typo.
-- **Prototype shows too many scenario choices.** Five detailed plans are useful for validation but confusing as the consumer default. The future product should present one optimized plan first.
-- **No scenario naming.** Saved hash URLs don't carry a user-chosen label.
+- **No full optimizer yet.** The first dashboard view is now framed as the recommended plan, but the engine is not yet searching CPP/OAS timing, withdrawal order, guardrails, and estate trade-offs.
+- **Only one named browser draft.** Local `.plan.json` files are durable, but there is not yet a multi-plan local library.
 - **Mobile unusable.** Layout is desktop-first — charts + tables don't reflow.
 - **Print output is dense.** PDF is one long page; not reviewer-friendly.
 
 ## Missing flows we still need to design
 
-- **Guided intake.** A walk-through that asks one question at a time, with defaults and tooltips. Ideal for first-time users.
+- **Guided intake v2.** A deeper walk-through that asks one question at a time, with defaults and tooltips. Ideal for first-time users.
 - **Comparison of two saved plans.** e.g. "retire at 62 vs 65" side-by-side.
 - **Optimization-first result.** Engine chooses CPP/OAS timing and withdrawal strategy, then presents one recommended plan instead of five equal scenario tabs.
 - **Scenario authoring.** Advanced/paid users should be able to define "what if we move to BC and sell the house in 2035?" without editing JS.
 - **Explanation drilldown.** Click a year in the detail table → modal that explains every line item (e.g. "Why is 2034's tax $28K?").
-- **Error surfacing.** Validation bar after submit that lists missing or likely-wrong inputs.
-- **Plan persistence.** Save locally (localStorage is fine; no account needed) with a named list. Export/import `.plan.json`.
+- **Local plan library.** Multiple named plans in browser storage, with local files remaining the durable source of truth.
 - **Onboarding.** First-open state should introduce the tool, offer sample data, offer the preset defaults, offer the guided flow.
 
 ## Open Questions
