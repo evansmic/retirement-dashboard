@@ -14,7 +14,7 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 | `probe_presets.js` | Example-preset registry + blank-state loader + `?example=<slug>` routing + public-comparator fixture shape (Sprint 1 #58, Sprint 0 S0-08) | 62 |
 | `probe_intake_roundtrip.js` | `gatherD(populateFromD(D)) === D` deep-equality across the form's full payload (Sprint 2 #59) | 22 |
 | `probe_plan_file_roundtrip.js` | Local `.plan.json` wrapper/extract round-trip, raw v2 import support, dashboard-style annual CPP/OAS import back to monthly form fields, blank Person 2 normalization, and malformed/unsupported file rejection (Sprint 3 S3-01, Sprint 4 smoke coverage) | 17 |
-| `probe_single_plan_file_dashboard.js` | Dashboard regression for malformed single-person `.plan.json` exports where blank Person 2 was saved as a placeholder and zero retirement fields inflated spending/chart data | 8 |
+| `probe_single_plan_file_dashboard.js` | Dashboard regression for malformed single-person `.plan.json` exports where blank Person 2 was saved as a placeholder and zero retirement fields inflated spending/chart data, including cash-wedge source reconciliation | 10 |
 | `probe_intake_validation.js` | Critical blank-field validation, single-person Person 2 handling, and out-of-range assumption rejection (Sprint 3 S3-04) | 10 |
 | `probe_mc_progressive.js` | `mcBegin`/`mcStep`/`mcFinish` decomposition + `monteCarloProgressive` lifecycle, batching, cancellation, and stress-severity shape (Sprint 2 #52, Sprint 0 S0-05) | 35 |
 | `probe_tax_benefit_helpers.js` | Extracted tax/benefit helper module fixtures for RRIF/LIF factors, Ontario tax, OAS clawback, CPP/OAS, mortgage, and LOC helpers (Sprint 0 S0-11) | 16 |
@@ -22,7 +22,7 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 | `probe_tax_ages_64_72.js` | Age 64-72 tax/benefit fixtures for CPP/OAS starts, age credit, Health Premium, OAS clawback, RRIF/LIF minimums, and pension splitting (Sprint 0 S0-02) | 36 |
 | `probe_validation_exports.js` | Validation baseline export shape: annual rows, taxable income, balances, withdrawals, tax, benefits, dollar-mode metadata, public-comparator export shape (Sprint 0 S0-07/S0-08) | 217 |
 
-**Total: 513 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
+**Total: 515 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
 
 ## Run them
 

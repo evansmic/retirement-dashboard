@@ -34,7 +34,7 @@ const badSinglePayload = {
   },
   mortgage: { balance: 0, rate: 0, monthly: 0 },
   loc: { balance: 0, rate: 0 },
-  cashWedge: { balance: 0, returnRate: 0.03, targetYears: 2 },
+  cashWedge: { balance: 145000, returnRate: 0.03, targetYears: 2.5 },
   spending: { gogo: 70000, gogoEnd: 75, slowgo: 45000, slowgoEnd: 85, nogo: 40000 },
   inheritance: 0,
   downsize: { year: 2036, netProceeds: 100000 },
@@ -85,6 +85,10 @@ check(first.spending > 0 && first.spending < 100000, `first-year spending is fin
 check(finite(first.bal_total), 'first-year total portfolio is finite');
 check(finite(first.totalAftaxYear), 'first-year after-tax cash flow is finite');
 check(base.years.every(y => finite(y.spending) && finite(y.bal_total)), 'all base chart rows are finite');
+check(first.cash_draw > 0, `first-year cash wedge draw is surfaced as a funding source (${Math.round(first.cash_draw)})`);
+const firstSources = first.grossIncome + first.tfsa_draw + first.nonreg_draw + first.cash_draw;
+check(Math.abs((firstSources - first.totalTaxYear) - first.totalAftaxYear) < 1,
+      'first-year total sources minus tax reconciles to actual spend');
 
 console.log(`\n═══ SUMMARY ═══\nPassed: ${passed}\nFailed: ${failed}`);
 process.exit(failed > 0 ? 1 : 0);

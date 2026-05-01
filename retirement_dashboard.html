@@ -480,8 +480,8 @@ body.blank-mode .body { display:none !important }
             <th>Year</th><th>Age F/M</th>
             <th>Salary</th>
             <th>DB Pension</th><th>CPP (F+M)</th><th>OAS (F+M)</th>
-            <th>RRIF/LIF Draw</th><th>TFSA Draw</th><th>Non-Reg</th>
-            <th>Gross Income</th><th>Total Tax</th><th>OAS Clawback</th>
+            <th>RRIF/LIF Draw</th><th>TFSA Draw</th><th>Non-Reg</th><th>Cash Wedge</th>
+            <th>Total Sources</th><th>Total Tax</th><th>OAS Clawback</th>
             <th>Actual Spend</th><th>Monthly</th><th>Target</th><th>Mortgage</th><th>Shortfall</th>
             <th>RRSP/RRIF</th><th>TFSA Total</th><th>LIF</th><th>Non-Reg Bal</th>
           </tr>
@@ -3055,6 +3055,7 @@ function initCharts(){
       {label:'RRIF/LIF Draw', data:y.map(r=>r.rrif_draw_f+r.rrif_draw_m+r.lif_draw), backgroundColor:'#10b981'},
       {label:'TFSA (tax-free)',data:y.map(r=>r.tfsa_draw), backgroundColor:'#34d399'},
       {label:'Non-Reg',       data:y.map(r=>r.nonreg_draw), backgroundColor:'#6ee7b7'},
+      {label:'Cash Wedge',    data:y.map(r=>r.cash_draw), backgroundColor:'#fbbf24'},
       {label:'Spending',type:'line',data:y.map(r=>r.spending+r.mortgage),
        borderColor:'#e74c3c',backgroundColor:'transparent',borderWidth:2,
        pointRadius:0,stack:undefined,order:0}
@@ -3117,7 +3118,7 @@ function updateCharts(){
 
   charts.income.data.labels = labels;
   // Phase 5.4: datasets are [0]=Salary, [1]=DB, [2]=CPP_F, [3]=OAS_F, [4]=CPP+OAS_M,
-  // [5]=RRIF/LIF, [6]=TFSA, [7]=Non-Reg, [8]=Spending line.
+  // [5]=RRIF/LIF, [6]=TFSA, [7]=Non-Reg, [8]=Cash Wedge, [9]=Spending line.
   charts.income.data.datasets[0].data = y.map(r=>(r.salary_f||0)+(r.salary_m||0));
   charts.income.data.datasets[1].data = y.map(r=>r.dbPension+(r.dbPension_m||0)+r.dbSurvivor);
   charts.income.data.datasets[2].data = y.map(r=>r.cpp_f);
@@ -3126,7 +3127,8 @@ function updateCharts(){
   charts.income.data.datasets[5].data = y.map(r=>r.rrif_draw_f+r.rrif_draw_m+r.lif_draw);
   charts.income.data.datasets[6].data = y.map(r=>r.tfsa_draw);
   charts.income.data.datasets[7].data = y.map(r=>r.nonreg_draw);
-  charts.income.data.datasets[8].data = y.map(r=>r.spending+r.mortgage);
+  charts.income.data.datasets[8].data = y.map(r=>r.cash_draw);
+  charts.income.data.datasets[9].data = y.map(r=>r.spending+r.mortgage);
   charts.income.update();
 
   charts.balance.data.labels = labels;
@@ -3245,10 +3247,10 @@ function updateSnapshot(p1Age){
   const yr = year;
 
   const rows = [
-    [`Gross Income (${yr})`,
-      fv(yb,y=>fmtM(y.grossIncome+y.tfsa_draw)), fv(ym,y=>fmtM(y.grossIncome+y.tfsa_draw)),
-      fv(yz,y=>fmtM(y.grossIncome+y.tfsa_draw)), fv(ys,y=>fmtM(y.grossIncome+y.tfsa_draw)),
-      fv(yx,y=>fmtM(y.grossIncome+y.tfsa_draw)), false, 'higher'],
+    [`Total Sources (${yr})`,
+      fv(yb,y=>fmtM(y.grossIncome+y.tfsa_draw+y.nonreg_draw+y.cash_draw)), fv(ym,y=>fmtM(y.grossIncome+y.tfsa_draw+y.nonreg_draw+y.cash_draw)),
+      fv(yz,y=>fmtM(y.grossIncome+y.tfsa_draw+y.nonreg_draw+y.cash_draw)), fv(ys,y=>fmtM(y.grossIncome+y.tfsa_draw+y.nonreg_draw+y.cash_draw)),
+      fv(yx,y=>fmtM(y.grossIncome+y.tfsa_draw+y.nonreg_draw+y.cash_draw)), false, 'higher'],
     [`Monthly After-Tax (${yr})`,
       fv(yb,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()), fv(ym,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()),
       fv(yz,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()), fv(ys,y=>'$'+Math.round(y.totalAftaxYear/12).toLocaleString()),
@@ -3291,6 +3293,7 @@ function updateDetailTable(){
     const isMilestone = milestones.has(y.year);
     const totalDraw = y.rrif_draw_f+y.rrif_draw_m+y.lif_draw;
     const totSalary = (y.salary_f||0) + (y.salary_m||0);
+    const totalSources = y.grossIncome + y.tfsa_draw + y.nonreg_draw + y.cash_draw;
     return `<tr class="${isMilestone?'milestone':''}">
       <td class="yr">${y.year}</td>
       <td>${y.ageF}${y.p1Alive?'':' †'}/${y.ageM}</td>
@@ -3301,7 +3304,8 @@ function updateDetailTable(){
       <td>${fmtK(totalDraw)}</td>
       <td>${fmtK(y.tfsa_draw)}</td>
       <td>${fmtK(y.nonreg_draw)}</td>
-      <td><strong>${fmtK(y.grossIncome+y.tfsa_draw)}</strong></td>
+      <td>${fmtK(y.cash_draw)}</td>
+      <td><strong>${fmtK(totalSources)}</strong></td>
       <td class="neg">${fmtK(y.totalTaxYear)}</td>
       <td class="${y.totalOasClawY>0?'neg':''}">${y.totalOasClawY>100?fmtK(y.totalOasClawY):'—'}</td>
       <td class="${y.shortfall>0?'neg':'pos'}"><strong>${fmtK(y.totalAftaxYear)}</strong></td>
