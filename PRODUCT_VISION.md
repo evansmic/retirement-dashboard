@@ -62,7 +62,7 @@ The preferred business model is local-first commercial software with a generous 
 
 - Free public planner for basic Canadian retirement exploration.
 - Optional one-time purchase or local license unlock for advanced planning features.
-- Optional paid add-ons for deeper validation exports, expanded scenario tooling, more provinces, advanced tax strategy comparisons, or polished reports.
+- Optional paid add-ons for deeper validation exports, expanded scenario tooling, more provinces, advanced tax strategy comparisons, polished reports, or implementation playbooks.
 - Optional account only for cloud sync, license recovery, sharing, advisor collaboration, or multi-device continuity.
 - No account required for the core planner, local save/load, import/export, or anonymous trial.
 
@@ -71,7 +71,7 @@ This keeps privacy as a product advantage rather than a marketing claim. The pro
 Potential paid tiers should be designed around capability, not data capture:
 
 - **Free**: local planning, core Ontario engine, examples, basic scenario comparison, validation-visible outputs.
-- **Plus**: named local plans, richer scenario builder, advanced stress tests, polished PDF/report exports, expanded validation exports.
+- **Plus**: named local plans, richer scenario builder, advanced stress tests, flexible-spending / guardrail modes, polished PDF/report exports, expanded validation exports, and practical implementation packages.
 - **Pro / advisor**: client-ready reports, multi-household workspace, white-labeling, collaboration, and optional encrypted sync.
 
 Accounts may be useful later, but they should remain optional and explainable. If a user never wants cloud sync or sharing, the product should still be worth using and worth paying for.
@@ -122,6 +122,7 @@ Users should be able to create scenarios without editing code:
 
 - Flexible spending / guardrail Monte Carlo.
 - Core vs discretionary spending categories.
+- Implementation package: account-by-account withdrawal instructions, tax/benefit checkpoints, and guardrail thresholds/actions.
 - Tax-aware withdrawal optimiser.
 - CPP/OAS timing optimiser.
 - RRSP meltdown comparison.
@@ -218,3 +219,4 @@ Before rebuilding the UI, run a trust-focused Sprint 0. The outcome should be a 
 - Which provinces come first after Ontario?
 - How much user education belongs inside the app versus separate articles?
 - Should the product optimize recommendations automatically, or mainly help users compare scenarios?
+- Can an AI-assisted implementation package be offered in a way that preserves local-first privacy, makes consent explicit, and avoids crossing into regulated advice?

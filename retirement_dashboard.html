@@ -165,7 +165,7 @@ body.blank-mode .body { display:none !important }
   #mcRunBtn, #seqRunBtn, #cmpPosBtn,
   .mc-banner .mc-actions { display: none !important; }
   /* The MC banner itself prints when complete (it carries the headline
-     success rate the print reader most wants); the progress controls don't. */
+     funded-path rate the print reader most wants); the progress controls don't. */
   .mc-banner[data-state="running"] { display: none !important; }
   .detail-card .detail-hdr .toggle { display: none !important; }
   .hidden { display: block !important; }    /* force-show collapsed detail */
@@ -268,7 +268,7 @@ body.blank-mode .body { display:none !important }
 <div class="body">
 
   <!-- Sprint 2 #52: Monte Carlo status banner. Surfaces the background stress
-       test for the active scenario, then reveals the headline success rate
+       test for the active scenario, then reveals the headline funded-path rate
        once complete. States are toggled by `data-state` (running/complete/
        skipped) — see CSS in the head. The MC panel further down still owns
        the full fan chart + percentile KPIs; this banner is a one-line summary
@@ -282,12 +282,12 @@ body.blank-mode .body { display:none !important }
     </div>
   </div>
 
-  <!-- SUSTAINABILITY BANNER (shown when target spend exceeds sustainable) -->
+  <!-- FUNDING ADJUSTMENT BANNER (shown when target spend exceeds the deterministic funded level) -->
   <div id="sustBanner" style="display:none;background:#fef3dc;border:1.5px solid #e8a020;border-left:5px solid #e8a020;border-radius:10px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow);font-size:13px;color:#6b4d00">
     <div style="display:flex;align-items:flex-start;gap:12px">
       <div style="font-size:22px;line-height:1">⚠️</div>
       <div style="flex:1">
-        <div style="font-weight:700;color:#8a5a00;font-size:14px;margin-bottom:4px" id="sustBannerTitle">Target spend is not sustainable</div>
+        <div style="font-weight:700;color:#8a5a00;font-size:14px;margin-bottom:4px" id="sustBannerTitle">Target spend is above the deterministic funded level</div>
         <div id="sustBannerBody" style="color:#6b4d00;line-height:1.5"></div>
       </div>
     </div>
@@ -296,9 +296,9 @@ body.blank-mode .body { display:none !important }
   <!-- KPI ROW -->
   <div class="kpi-row">
     <div class="kpi" id="kpi-sustain">
-      <label>Plan Sustainability</label>
+      <label>Deterministic Funding</label>
       <div class="val" id="kv-sustain">—</div>
-      <div class="sub" id="ks-sustain">Age funds reach $0</div>
+      <div class="sub" id="ks-sustain">Fixed-return projection</div>
     </div>
     <div class="kpi g" id="kpi-aftax">
       <label>Total After-Tax Income</label>
@@ -347,10 +347,8 @@ body.blank-mode .body { display:none !important }
   </div>
 
   <!-- MONTE CARLO PANEL (Phase 4.1) -->
-  <!-- The sustainable-spend solver uses a deterministic 5% return. This panel
-       re-runs the active scenario under volatile returns to show the uncertainty
-       band around that point estimate. Click the button to run — it's opt-in
-       because 1,000 paths takes ~1s and blocks the main thread. -->
+  <!-- The deterministic scenario uses one fixed return path. This panel samples
+       random annual returns to show path sensitivity around that point estimate. -->
   <div class="chart-card" style="margin-bottom:16px">
     <h3 style="display:flex;align-items:center;gap:10px">
       🎲 Monte Carlo — Portfolio Uncertainty
@@ -363,16 +361,17 @@ body.blank-mode .body { display:none !important }
         Run 1,000 paths
       </button>
     </h3>
+    <div class="note">Random-return sample: same household assumptions, many possible annual return paths.</div>
     <div id="mcPlaceholder" style="padding:32px 16px;text-align:center;color:#6b7b88;font-size:13px">
       No paths run yet. Click the button to sample 1,000 random return sequences
-      and see the 10th / 50th / 90th percentile portfolio balance at each age.
+      and see the 10th / 50th / 90th percentile portfolio balance at each age. This is a range of simulated return paths, not a forecast or recommendation.
     </div>
     <div id="mcResults" style="display:none">
       <div class="kpi-row" style="margin-bottom:12px">
         <div class="kpi">
-          <label>Probability of Success</label>
+          <label>Full Spending Funded</label>
           <div class="val" id="mcSuccess">—</div>
-          <div class="sub">Paths finishing without shortfall</div>
+          <div class="sub">Paths with no shortfall years</div>
         </div>
         <div class="kpi">
           <label>Median End Portfolio</label>
@@ -389,6 +388,31 @@ body.blank-mode .body { display:none !important }
           <div class="val" id="mcP90End">—</div>
           <div class="sub">Upside tail</div>
         </div>
+        <div class="kpi">
+          <label>First Shortfall</label>
+          <div class="val" id="mcFirstShortfall">—</div>
+          <div class="sub">Earliest simulated path</div>
+        </div>
+        <div class="kpi">
+          <label>Total Shortfall</label>
+          <div class="val" id="mcTotalShortfall">—</div>
+          <div class="sub">90th percentile severity</div>
+        </div>
+        <div class="kpi">
+          <label>Max Shortfall</label>
+          <div class="val" id="mcMaxShortfall">—</div>
+          <div class="sub">90th percentile severity</div>
+        </div>
+        <div class="kpi">
+          <label>Core Coverage</label>
+          <div class="val" id="mcCoreCoverage">—</div>
+          <div class="sub">10th percentile path</div>
+        </div>
+        <div class="kpi">
+          <label>Portfolio Depletion</label>
+          <div class="val" id="mcDepletion">—</div>
+          <div class="sub">Earliest simulated path</div>
+        </div>
       </div>
       <div class="chart-wrap" style="height:380px"><canvas id="chartMC"></canvas></div>
     </div>
@@ -396,9 +420,8 @@ body.blank-mode .body { display:none !important }
 
   <!-- SEQUENCE-OF-RETURNS STRESS TEST (Phase 4.2) -->
   <!-- Replays four historical crash sequences starting the plan's first
-       retirement year. Same deterministic plan, just different early-year
-       returns. Exposes sequence-of-returns risk without guessing at
-       distributions. -->
+       retirement year. Same household assumptions, different early-year
+       returns. Distinct from random Monte Carlo. -->
   <div class="chart-card" style="margin-bottom:16px">
     <h3 style="display:flex;align-items:center;gap:10px">
       📉 Sequence-of-Returns Stress Test
@@ -411,9 +434,10 @@ body.blank-mode .body { display:none !important }
         Run stress test
       </button>
     </h3>
+    <div class="note">Historical replay: named past return sequences are applied to the early retirement years.</div>
     <div id="seqPlaceholder" style="padding:32px 16px;text-align:center;color:#6b7b88;font-size:13px">
       No stress test run yet. Click the button to replay 1929, 1973, 2000, and 2008 crashes
-      starting the first year of retirement — then see how much estate they cost and how many years go short.
+      starting the first year of retirement. This is a replay of specific historical return sequences, not a prediction that those crashes will repeat.
     </div>
     <div id="seqResults" style="display:none">
       <div class="chart-wrap" style="height:320px;margin-bottom:8px"><canvas id="chartSeq"></canvas></div>
@@ -424,8 +448,11 @@ body.blank-mode .body { display:none !important }
               <th style="padding:8px 10px;border-bottom:1px solid #dde3ea">Sequence</th>
               <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">End Portfolio</th>
               <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">Δ vs Mean</th>
-              <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">Shortfall Yrs</th>
               <th style="padding:8px 10px;border-bottom:1px solid #dde3ea">First Shortfall</th>
+              <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">Max Shortfall</th>
+              <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">Total Shortfall</th>
+              <th style="padding:8px 10px;border-bottom:1px solid #dde3ea">Depletion</th>
+              <th style="padding:8px 10px;border-bottom:1px solid #dde3ea;text-align:right">Core Coverage</th>
             </tr>
           </thead>
           <tbody id="seqTableBody"></tbody>
@@ -462,12 +489,12 @@ body.blank-mode .body { display:none !important }
   <div class="cmp-card">
     <div class="section-head" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
       <span>📋 Scenario Comparison</span>
-      <!-- Phase 4.3: Probability-of-success button. Fills the 'Prob of Success (MC)'
-           row below by running 250 MC paths per scenario. 250 is fast enough for
-           five scenarios (~1s total) while still stable to ±3%. -->
+      <!-- Phase 4.3 / Sprint 0 S0-04: fills the funded-path row below by
+           running 250 MC paths per scenario. 250 is fast enough for five
+           scenarios (~1s total) while still stable to ±3%. -->
       <button type="button" id="cmpPosBtn" onclick="runProbOfSuccessUI()"
         style="background:#2db560;color:#fff;border:0;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600">
-        Compute probabilities
+        Compute funded paths
       </button>
     </div>
     <table class="cmp-table">
@@ -1415,10 +1442,11 @@ function calcLOC(balance){
 //  PENSION INCOME SPLITTING OPTIMIZER
 //  Returns optimal split fraction (0–0.5) for P1's eligible pension
 // ════════════════════════════════════════════════════════
-function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year){
+function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year, p2Eligible){
   // DB pension splittable at any age; RRIF/LIF only from 65+ (caller already handles eligibility)
   // Objective MINIMISES combined tax + OAS clawback (not tax alone) so the optimizer
   // does not accidentally push the receiving spouse into clawback territory.
+  p2Eligible = Math.max(0, p2Eligible || 0);
   if(p1Eligible <= 0) return 0;
   let best=0, bestSplit=0;
   for(let f=0;f<=50;f+=2){               // tighter 2% grid for more precision
@@ -1426,8 +1454,8 @@ function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year){
     const split = p1Eligible*frac;
     const fInc = p1Eligible*(1-frac)+p1Other;
     const mInc = p2Income+split;
-    const fTax = calcTax(fInc, p1Age, year, p1Eligible>0);
-    const mTax = calcTax(mInc, p2Age, year, split>0);
+    const fTax = calcTax(fInc, p1Age, year, p1Eligible*(1-frac)>0);
+    const mTax = calcTax(mInc, p2Age, year, p2Eligible+split>0);
     const clawF = oasClawback(fInc, year);
     const clawM = oasClawback(mInc, year);
     const combined = fTax + mTax + clawF + clawM;
@@ -1442,10 +1470,12 @@ function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year){
 //    returns post-split tax, clawback and combined net.
 //    Single source of truth used by drawForGap solver AND the main loop.
 // ════════════════════════════════════════════════════════
-function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg){
+function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg, eligM){
   let fInc = taxableF, mInc = taxableM, splitAmt = 0;
+  eligF = Math.max(0, eligF || 0);
+  eligM = Math.max(0, eligM || 0);
   if(cfg.pensionSplit && p1Alive && eligF > 0){
-    const frac = optimalSplit(eligF, Math.max(0, taxableF - eligF), taxableM, ageF, ageM, year);
+    const frac = optimalSplit(eligF, Math.max(0, taxableF - eligF), taxableM, ageF, ageM, year, eligM);
     splitAmt = eligF * frac;
     fInc = Math.max(0, taxableF - splitAmt);
     mInc = taxableM + splitAmt;
@@ -1453,8 +1483,10 @@ function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, 
   // Clawback and tax computed on POST-SPLIT income — fixes the reference-document §1.4 bug.
   const clawF = p1Alive ? oasClawback(fInc, year) : 0;
   const clawM = oasClawback(mInc, year);
-  const taxF  = p1Alive ? calcTax(Math.max(0,fInc), ageF, year, fInc>0) : 0;
-  const taxM  = calcTax(Math.max(0,mInc), ageM, year, mInc>0);
+  const p1EligibleAfterSplit = Math.max(0, eligF - splitAmt);
+  const p2EligibleAfterSplit = eligM + splitAmt;
+  const taxF  = p1Alive ? calcTax(Math.max(0,fInc), ageF, year, p1EligibleAfterSplit>0) : 0;
+  const taxM  = calcTax(Math.max(0,mInc), ageM, year, p2EligibleAfterSplit>0);
   const total = taxF + taxM + clawF + clawM;
   return { fInc, mInc, splitAmt, clawF, clawM, taxF, taxM, totalTax: total,
            net: (taxableF + taxableM) - total };
@@ -1472,7 +1504,7 @@ function netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, 
 //    pre-65 income gap in Baseline and insufficiency in Meltdown.
 // ════════════════════════════════════════════════════════
 function drawForGap({targetNet, fixedF, fixedM, baseF, baseM, lifMinF, lifMinM,
-                     eligFnF, ageF, ageM, year, p1Alive, cfg, balanceF, balanceM}){
+                     eligFnF, eligM, ageF, ageM, year, p1Alive, cfg, balanceF, balanceM}){
   const availF = p1Alive ? Math.max(0, balanceF*0.98 - baseF) : 0;
   const availM = Math.max(0, balanceM*0.98 - baseM);
   // Equalize-taxable-income allocator: choose extraF and extraM so that
@@ -1500,7 +1532,7 @@ function drawForGap({targetNet, fixedF, fixedM, baseF, baseM, lifMinF, lifMinM,
     const { dF, dM } = allocate(extra);
     const tF = fixedF + dF + lifMinF;
     const tM = fixedM + dM + lifMinM;
-    return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg).net;
+    return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg, eligM).net;
   }
   if(netAt(0) >= targetNet) return allocate(0);
   const maxExtra = availF + availM;
@@ -1756,9 +1788,13 @@ function runSimulation(cfg){
     let rrif_draw_f = rrif_min_f;
     let rrif_draw_m = rrif_min_m;
 
-    // Pension-eligibility helper as a function of P1's draw.
-    // DB pension splittable at any age; RRIF/LIF only splittable from 65+.
-    const eligFnF = (d) => dbPension + dbSurvivor + (ageF>=65 ? d + lif_min_f : 0);
+    // Pension-credit / pension-splitting eligibility.
+    // DB pension is eligible at any age. RRIF/LIF income is treated as eligible
+    // from 65+. Ordinary supplemental RRSP withdrawals used to fill a cash-flow
+    // gap are deliberately excluded, so "has pension income" is never inferred
+    // from taxable income alone.
+    const eligFnF = (_d) => dbPension + dbSurvivor + (ageF>=65 ? rrif_min_f + lif_min_f : 0);
+    const eligM = dbPension_m + (ageM>=65 ? rrif_min_m + lif_min_m : 0);
 
     if(cfg.meltdown && p1Alive && st.rrsp_f > 0){
       // Draw-based meltdown: nominal flat amounts (e.g. $20K pre-65, $40K 65+).
@@ -1787,7 +1823,7 @@ function runSimulation(cfg){
       const netAtMin = netAfterTaxSplit(
         fixedF + rrif_draw_f + lif_min_f,
         fixedM + rrif_draw_m + lif_min_m,
-        eligFnF(rrif_draw_f), ageF, ageM, year, p1Alive, cfg
+        eligFnF(rrif_draw_f), ageF, ageM, year, p1Alive, cfg, eligM
       ).net;
       const gapAtMin = Math.max(0, totalNeeded - netAtMin);
       // Non-reg principal is ~100% available post-tax (only the embedded gain gets
@@ -1803,6 +1839,7 @@ function runSimulation(cfg){
       baseF: rrif_draw_f, baseM: rrif_draw_m,
       lifMinF: lif_min_f, lifMinM: lif_min_m,
       eligFnF, ageF, ageM, year, p1Alive, cfg,
+      eligM,
       balanceF: st.rrsp_f, balanceM: st.rrsp_m
     });
     rrif_draw_f = gf.dF;
@@ -1815,7 +1852,7 @@ function runSimulation(cfg){
     function estNet(dF){
       const tF = fixedF + dF + lif_min_f;
       const tM = fixedM + rrif_draw_m + lif_min_m;
-      return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg).net;
+      return netAfterTaxSplit(tF, tM, eligFnF(dF), ageF, ageM, year, p1Alive, cfg, eligM).net;
     }
     const provisionalNet = estNet(rrif_draw_f);
     let gapAfterRRSP = Math.max(0, totalNeeded - provisionalNet);
@@ -1898,7 +1935,7 @@ function runSimulation(cfg){
     // Single helper call computes split fraction, post-split clawF/clawM and taxes together.
     // This fixes the Phase 1.5 bug where clawback was calculated pre-split and never updated.
     const eligF = eligFnF(rrif_draw_f);
-    const tx = netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg);
+    const tx = netAfterTaxSplit(taxableF, taxableM, eligF, ageF, ageM, year, p1Alive, cfg, eligM);
     const splitAmt = tx.splitAmt;
     taxableF = tx.fInc;
     taxableM = tx.mInc;
@@ -2069,6 +2106,7 @@ function runSimulation(cfg){
       cash_draw, bal_cash: st.cash,
       downsize_proceeds, oneOff_outflow,
       grossIncome, totalTaxYear, clawF, clawM, totalOasClawY: clawF+clawM,
+      taxableIncomeF: taxableF, taxableIncomeM: taxableM, taxableIncome: taxableF + taxableM,
       afterTaxReg, totalAftaxYear, spending, mortgage:mtg.payment,
       cashFlow, surplus, shortfall,
       bal_rrsp_f:st.rrsp_f, bal_rrsp_m:st.rrsp_m,
@@ -2083,14 +2121,51 @@ function runSimulation(cfg){
   return { years, totalTax, totalAftax, totalOasClawback, sustainYear, shortfallYear, depletionYear };
 }
 
+// Shared stress-severity summary used by Monte Carlo, sequence replay, and
+// comparison output. "Full spending funded" means no annual shortfall above
+// the dashboard's existing $500 materiality threshold; portfolio depletion is
+// reported separately because fixed CPP/OAS/DB income can still cover spending
+// after financial assets are mostly gone.
+function summarizeStressRun(r){
+  const years = (r && r.years) || [];
+  let firstShortfallYear = 'Never';
+  let shortfallYears = 0;
+  let maxShortfall = 0;
+  let totalShortfall = 0;
+  let coreNeed = 0;
+  let coreCovered = 0;
+  for(const y of years){
+    const short = Math.max(0, y.shortfall || 0);
+    if(short > 500){
+      shortfallYears++;
+      if(firstShortfallYear === 'Never') firstShortfallYear = y.year;
+    }
+    maxShortfall = Math.max(maxShortfall, short);
+    totalShortfall += short;
+    const core = Math.max(0, (y.spending || 0) + (y.mortgage || 0));
+    coreNeed += core;
+    coreCovered += Math.min(core, Math.max(0, y.totalAftaxYear || 0));
+  }
+  const last = years[years.length - 1] || {};
+  return {
+    firstShortfallYear,
+    shortfallYears,
+    maxShortfall,
+    totalShortfall,
+    depletionYear: (r && r.depletionYear) || 'Never',
+    coreCoverage: coreNeed > 0 ? coreCovered / coreNeed : 1,
+    endPortfolio: last.bal_total || 0
+  };
+}
+
 // ════════════════════════════════════════════════════════
 //  MONTE CARLO ENGINE (Phase 4.1)
 // ════════════════════════════════════════════════════════
 // Runs `nPaths` simulations of `baseCfg`, each with its own per-year return
 // array sampled independently from Normal(meanReturn, stdDev). Leverages the
 // `cfg.returnRates` hook added earlier in Phase 4.1. Used directly by the fan
-// chart (10/50/90 percentile bands) and the probability-of-success metric
-// (Phase 4.3). Returns both aggregate statistics and per-year percentiles.
+// chart (10/50/90 percentile bands) and the full-spending-funded metric
+// (Sprint 0 S0-04). Returns both aggregate statistics and per-year percentiles.
 //
 // Why Normal rather than lognormal? For a ~40-year plan with mean 5% / SD 10%
 // the two are numerically close, and Normal keeps the math transparent when
@@ -2133,9 +2208,15 @@ function mcBegin(baseCfg, nPaths, meanReturn, stdDev){
   // Typed arrays keep GC pressure low across 1,000 × 38 = 38,000 writes.
   const balances = Array.from({length:nYears}, () => new Float64Array(nPaths));
   const endPort  = new Float64Array(nPaths);
+  const firstShortfall = new Float64Array(nPaths);
+  const maxShortfall = new Float64Array(nPaths);
+  const totalShortfall = new Float64Array(nPaths);
+  const depletionYear = new Float64Array(nPaths);
+  const coreCoverage = new Float64Array(nPaths);
   return {
     baseCfg, nPaths, meanReturn, stdDev,
     refRun, nYears, balances, endPort,
+    firstShortfall, maxShortfall, totalShortfall, depletionYear, coreCoverage,
     nSuccess: 0, pathsRun: 0,
     normal: _mcNormalSampler()
   };
@@ -2150,19 +2231,24 @@ function mcStep(state, batch){
       rates[i] = meanReturn + stdDev * normal();
     }
     const r = runSimulation(Object.assign({}, baseCfg, { returnRates: rates }));
-    let shortfallCount = 0;
     for(let i = 0; i < r.years.length; i++){
       balances[i][p] = r.years[i].bal_total;
-      if(r.years[i].shortfall > 500) shortfallCount++;
     }
+    const severity = summarizeStressRun(r);
     endPort[p] = r.years[r.years.length - 1].bal_total;
-    if(shortfallCount === 0) state.nSuccess++;
+    state.firstShortfall[p] = severity.firstShortfallYear === 'Never' ? 9999 : severity.firstShortfallYear;
+    state.maxShortfall[p] = severity.maxShortfall;
+    state.totalShortfall[p] = severity.totalShortfall;
+    state.depletionYear[p] = severity.depletionYear === 'Never' ? 9999 : severity.depletionYear;
+    state.coreCoverage[p] = severity.coreCoverage;
+    if(severity.shortfallYears === 0) state.nSuccess++;
   }
   state.pathsRun = end;
 }
 
 function mcFinish(state){
-  const { nPaths, meanReturn, stdDev, refRun, nYears, balances, endPort, nSuccess } = state;
+  const { nPaths, meanReturn, stdDev, refRun, nYears, balances, endPort, nSuccess,
+          firstShortfall, maxShortfall, totalShortfall, depletionYear, coreCoverage } = state;
   function percentile(arr, q){
     const a = Array.from(arr).sort((x, y) => x - y);
     const idx = q * (a.length - 1);
@@ -2173,6 +2259,11 @@ function mcFinish(state){
     let s = 0;
     for(let i = 0; i < arr.length; i++) s += arr[i];
     return s / arr.length;
+  }
+  function earliestYear(arr){
+    let y = 9999;
+    for(let i = 0; i < arr.length; i++) y = Math.min(y, arr[i]);
+    return y;
   }
   const perYear = [];
   for(let i = 0; i < nYears; i++){
@@ -2188,11 +2279,41 @@ function mcFinish(state){
   return {
     nPaths, meanReturn, stdDev,
     successRate: nSuccess / nPaths,
+    fullSpendingFundedRate: nSuccess / nPaths,
     endPortfolio: {
       p10:  percentile(endPort, 0.10),
       p50:  percentile(endPort, 0.50),
       p90:  percentile(endPort, 0.90),
       mean: mean(endPort)
+    },
+    severity: {
+      firstShortfallYear: {
+        earliest: earliestYear(firstShortfall),
+        p10: percentile(firstShortfall, 0.10),
+        p50: percentile(firstShortfall, 0.50),
+        p90: percentile(firstShortfall, 0.90)
+      },
+      maxShortfall: {
+        p10: percentile(maxShortfall, 0.10),
+        p50: percentile(maxShortfall, 0.50),
+        p90: percentile(maxShortfall, 0.90)
+      },
+      totalShortfall: {
+        p10: percentile(totalShortfall, 0.10),
+        p50: percentile(totalShortfall, 0.50),
+        p90: percentile(totalShortfall, 0.90)
+      },
+      depletionYear: {
+        earliest: earliestYear(depletionYear),
+        p10: percentile(depletionYear, 0.10),
+        p50: percentile(depletionYear, 0.50),
+        p90: percentile(depletionYear, 0.90)
+      },
+      coreCoverage: {
+        p10: percentile(coreCoverage, 0.10),
+        p50: percentile(coreCoverage, 0.50),
+        p90: percentile(coreCoverage, 0.90)
+      }
     },
     perYear,
     refRun
@@ -2476,6 +2597,8 @@ function fmt(n, prefix='$'){
 }
 function fmtM(n){ return fmt(n,'$'); }
 function fmtK(n){ return n>=1000?fmt(n,'$'):'$'+Math.round(n); }
+function fmtPct(n){ return n==null||isNaN(n) ? '—' : (n*100).toFixed(1)+'%'; }
+function fmtStressYear(y){ return !isFinite(y) || y >= 9999 || y === 'Never' ? 'Never' : String(Math.round(y)); }
 
 function setScenario(key){
   activeScenario = key;
@@ -2577,32 +2700,36 @@ function goBackToForm(){
 // ════════════════════════════════════════════════════════
 //  PROBABILITY-OF-SUCCESS CACHE (Phase 4.3)
 // ════════════════════════════════════════════════════════
-// Cached per-scenario success rates. Updated by the MC panel whenever it runs
+// Cached per-scenario full-spending-funded rates. Updated by the MC panel whenever it runs
 // for the active scenario, and by runProbOfSuccessUI() which runs a batch pass
 // across all five scenarios. Null = not yet computed (render as '—').
 const POS_CACHE = { base:null, melt:null, zero:null, surv:null, maxs:null };
 
-// Standalone helper: returns just the success fraction without any percentile
-// or fan-chart computation. Used by the batch button in the comparison table.
-function probabilityOfSuccess(cfg, nPaths){
+// Standalone helper: returns the fraction of paths with no material annual
+// spending shortfall. This is deliberately narrower than "success": it does
+// not mean the plan is advisable, optimal, or free of estate/depletion risk.
+function fullSpendingFundedRate(cfg, nPaths){
   nPaths = nPaths || 250;
   const sd = (D.assumptions && D.assumptions.returnStdDev) || 0.10;
-  return monteCarlo(cfg, nPaths, cfg.returnRate, sd).successRate;
+  return monteCarlo(cfg, nPaths, cfg.returnRate, sd).fullSpendingFundedRate;
 }
+
+// Compatibility alias retained for older probes / callers.
+function probabilityOfSuccess(cfg, nPaths){ return fullSpendingFundedRate(cfg, nPaths); }
 
 // Runs 250-path MC for all five scenarios, updates POS_CACHE, then rebuilds
 // the comparison table so the row fills in. ~1 second total on typical plans.
 function runProbOfSuccessUI(){
   const btn = document.getElementById('cmpPosBtn');
   btn.disabled = true;
-  btn.textContent = 'Computing…';
+  btn.textContent = 'Computing...';
   setTimeout(() => {
     for(const key of ['base','melt','zero','surv','maxs']){
-      POS_CACHE[key] = probabilityOfSuccess(SCENARIOS[key].cfg, 250);
+      POS_CACHE[key] = fullSpendingFundedRate(SCENARIOS[key].cfg, 250);
     }
     buildComparisonTable();
     btn.disabled = false;
-    btn.textContent = 'Re-compute probabilities';
+    btn.textContent = 'Re-compute funded paths';
   }, 30);
 }
 
@@ -2623,15 +2750,22 @@ function renderMonteCarloResults(mc, scn){
   const place = document.getElementById('mcPlaceholder');
   const results = document.getElementById('mcResults');
 
-  // Phase 4.3: stash per-scenario success rate for the comparison table.
-  POS_CACHE[activeScenario] = mc.successRate;
+  // Stash per-scenario funded-path rate for the comparison table.
+  const fundedRate = mc.fullSpendingFundedRate != null ? mc.fullSpendingFundedRate : mc.successRate;
+  POS_CACHE[activeScenario] = fundedRate;
   if(document.getElementById('cmpBody')) buildComparisonTable();
 
   // KPI cards.
-  document.getElementById('mcSuccess').textContent = (mc.successRate * 100).toFixed(1) + '%';
+  const sev = mc.severity || {};
+  document.getElementById('mcSuccess').textContent = fmtPct(fundedRate);
   document.getElementById('mcMedEnd').textContent  = fmtM(mc.endPortfolio.p50);
   document.getElementById('mcP10End').textContent  = fmtM(mc.endPortfolio.p10);
   document.getElementById('mcP90End').textContent  = fmtM(mc.endPortfolio.p90);
+  document.getElementById('mcFirstShortfall').textContent = fmtStressYear(sev.firstShortfallYear && sev.firstShortfallYear.earliest);
+  document.getElementById('mcTotalShortfall').textContent = fmtM(sev.totalShortfall && sev.totalShortfall.p90);
+  document.getElementById('mcMaxShortfall').textContent = fmtM(sev.maxShortfall && sev.maxShortfall.p90);
+  document.getElementById('mcCoreCoverage').textContent = fmtPct(sev.coreCoverage && sev.coreCoverage.p10);
+  document.getElementById('mcDepletion').textContent = fmtStressYear(sev.depletionYear && sev.depletionYear.earliest);
   document.getElementById('mcScenLabel').textContent = scn.label;
   document.getElementById('mcSdLabel').textContent   = (sd * 100).toFixed(0) + '%';
 
@@ -2709,7 +2843,7 @@ function runMonteCarloUI(){
 // On load, the deterministic plan renders instantly; this layer kicks off a
 // progressive Monte Carlo run for the *baseline* scenario in the background,
 // surfacing progress in the top banner. When complete, the banner shows the
-// success rate and the existing MC panel populates with the fan chart + KPIs.
+// funded-path rate and the existing MC panel populates with the fan chart + KPIs.
 // "Skip stress test" cancels the run and persists the preference to
 // localStorage so the next visit honours the choice.
 let _mcActiveRun = null;
@@ -2789,10 +2923,10 @@ function _startAutoMonteCarlo(){
       if(activeScenario === 'base'){
         renderMonteCarloResults(mc, SCENARIOS['base']);
       }
-      const pct = (mc.successRate * 100).toFixed(1);
+      const pct = ((mc.fullSpendingFundedRate != null ? mc.fullSpendingFundedRate : mc.successRate) * 100).toFixed(1);
       _setMcBanner(
         'complete',
-        '<strong>Stress test complete:</strong> your baseline plan succeeds in <span class="mc-rate">' + pct + '%</span> of ' + mc.nPaths.toLocaleString() + ' simulated return sequences. <a href="#chartMC" style="color:var(--navy3);font-weight:600">See the fan chart →</a>',
+        '<strong>Stress test complete:</strong> full spending is funded in <span class="mc-rate">' + pct + '%</span> of ' + mc.nPaths.toLocaleString() + ' simulated return sequences. <a href="#chartMC" style="color:var(--navy3);font-weight:600">See the fan chart →</a>',
         { actionsHtml: '<button type="button" onclick="dismissMcBanner()">Dismiss</button>' }
       );
     }
@@ -2828,8 +2962,8 @@ function dismissMcBanner(){
 // ════════════════════════════════════════════════════════
 // Runs the four historical sequences for the *active* scenario, plots each
 // portfolio trajectory against the mean-return baseline, and builds a summary
-// table (end $, Δ vs baseline, shortfall years, first shortfall year). Fast
-// enough to run synchronously — 5 sims total.
+// table (end $, Δ vs baseline, first shortfall, max/total shortfall, depletion,
+// and core spending coverage). Fast enough to run synchronously — 5 sims total.
 function runSequenceStressUI(){
   const scn = SCENARIOS[activeScenario];
   const btn = document.getElementById('seqRunBtn');
@@ -2890,7 +3024,7 @@ function runSequenceStressUI(){
       cells.forEach((c,i) => {
         const td = document.createElement('td');
         td.style.padding = '7px 10px';
-        if(i>0 && i<4) td.style.textAlign = 'right';
+        if([1,2,4,5,7].includes(i)) td.style.textAlign = 'right';
         if(c.html) td.innerHTML = c.html; else td.textContent = c;
         if(color && i===0){
           td.innerHTML = '<span style="display:inline-block;width:10px;height:10px;background:'+color+';border-radius:2px;margin-right:8px;vertical-align:middle"></span>' + (c.html || c);
@@ -2900,27 +3034,33 @@ function runSequenceStressUI(){
       tbody.appendChild(tr);
     };
 
-    const baseShort = baseline.years.filter(y=>y.shortfall>500);
+    const baseSeverity = summarizeStressRun(baseline);
     row([
       r._baseline.label,
       fmtM(baseEnd),
       '—',
-      baseShort.length.toString(),
-      baseShort.length ? baseShort[0].year.toString() : '—'
+      baseSeverity.firstShortfallYear.toString(),
+      fmtM(baseSeverity.maxShortfall),
+      fmtM(baseSeverity.totalShortfall),
+      baseSeverity.depletionYear.toString(),
+      fmtPct(baseSeverity.coreCoverage)
     ], '#223a4a');
 
     for(const key of ['1929','1973','2000','2008']){
       const sim = r[key];
       const end = sim.years[sim.years.length-1].bal_total;
       const delta = (end - baseEnd) / Math.max(1, baseEnd);
-      const short = sim.years.filter(y=>y.shortfall>500);
+      const severity = summarizeStressRun(sim);
       const deltaColor = delta < -0.10 ? '#c43d2a' : (delta < 0 ? '#8a5a00' : '#2d7a3a');
       row([
         sim.label,
         fmtM(end),
         { html: '<span style="color:'+deltaColor+';font-weight:600">' + (delta*100).toFixed(1) + '%</span>' },
-        short.length.toString(),
-        short.length ? short[0].year.toString() : '—'
+        severity.firstShortfallYear.toString(),
+        fmtM(severity.maxShortfall),
+        fmtM(severity.totalShortfall),
+        severity.depletionYear.toString(),
+        fmtPct(severity.coreCoverage)
       ], palette[key]);
     }
 
@@ -2939,16 +3079,16 @@ function updateKPIs(){
   const r = RESULTS[activeScenario];
   const base = RESULTS['base'];
 
-  // Sustainability — Phase 3.9: show 'First shortfall' (lifestyle failure) as the headline
-  // and 'Portfolio depletion' as the subtitle (informational only).
+  // Deterministic funding — Phase 3.9: show first shortfall under the fixed-return
+  // scenario as the headline and portfolio depletion as separate context.
   const firstShort = r.shortfallYear || 'Never';
   const deplete    = r.depletionYear || 'Never';
   document.getElementById('kv-sustain').textContent = firstShort==='Never'
-    ? '✓ Never' : firstShort;
+    ? 'No shortfall' : firstShort;
   document.getElementById('ks-sustain').textContent = firstShort==='Never'
-    ? (deplete==='Never' ? 'No shortfalls; portfolio remains'
-                         : `No shortfalls; portfolio depletes ${deplete}`)
-    : `Shortfall begins ${firstShort}`;
+    ? (deplete==='Never' ? 'Fixed-return path funds target spending'
+                         : `Spending funded; portfolio depletes ${deplete}`)
+    : `First shortfall in fixed-return path`;
 
   // Phase 3.8: deflate lifetime totals to today's dollars when Real is active.
   const rAftax  = toRealLifetime(r.totalAftax,         r.years);
@@ -3150,7 +3290,11 @@ function buildComparisonTable(){
   const lastZero = zero.years[zero.years.length-1];
   const lastSurv = surv.years[surv.years.length-1];
   const lastMaxs = maxs.years[maxs.years.length-1];
-  const sustain = (r)=>r.sustainYear ? '⚠ Depletes '+r.sustainYear : '✓ Sustainable';
+  const sustain = (r)=>{
+    const sev = summarizeStressRun(r);
+    return sev.firstShortfallYear === 'Never' ? 'Full target funded' : 'Shortfall in '+sev.firstShortfallYear;
+  };
+  const sev = (r)=>summarizeStressRun(r);
   const totalCPP_OAS = (r)=>r.years.reduce((s,y)=>s+y.cpp_f+y.cpp_m+y.oas_f+y.oas_m,0);
   const mult = SCENARIOS.maxs.cfg.spendMultiplier || 1;
   const maxsGoGo   = Math.round(D.spending.gogo   * mult);
@@ -3167,7 +3311,7 @@ function buildComparisonTable(){
     ['Total OAS Clawback Lost', fmtM(base.totalOasClawback), fmtM(melt.totalOasClawback), fmtM(zero.totalOasClawback), fmtM(surv.totalOasClawback), fmtM(maxs.totalOasClawback), false, 'lower'],
     ['Total CPP + OAS Collected', fmtM(totalCPP_OAS(base)), fmtM(totalCPP_OAS(melt)), fmtM(totalCPP_OAS(zero)), fmtM(totalCPP_OAS(surv)), fmtM(totalCPP_OAS(maxs)), false, 'higher'],
     ['─── SPENDING ───', null, null, null, null, null, true],
-    ['Go-Go Annual (Target / Max Sustainable)', fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo),
+    ['Go-Go Annual (Target / Max Funded)', fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo), fmtM(D.spending.gogo),
       maxsLabel, false, 'higher'],
     ['─── ESTATE ───', null, null, null, null, null, true],
     [`Portfolio at Plan End (${D.assumptions.planEnd})`, fmtM(lastBase.bal_total), fmtM(lastMelt.bal_total), fmtM(lastZero.bal_total), fmtM(lastSurv.bal_total),
@@ -3175,15 +3319,20 @@ function buildComparisonTable(){
     ['RRSP/RRIF at Plan End', fmtM(lastBase.bal_rrsp), fmtM(lastMelt.bal_rrsp), fmtM(lastZero.bal_rrsp), fmtM(lastSurv.bal_rrsp), fmtM(lastMaxs.bal_rrsp), false, 'lower'],
     ['TFSA at Plan End', fmtM(lastBase.bal_tfsa), fmtM(lastMelt.bal_tfsa), fmtM(lastZero.bal_tfsa), fmtM(lastSurv.bal_tfsa), fmtM(lastMaxs.bal_tfsa), false, 'higher'],
     ['─── SUSTAINABILITY ───', null, null, null, null, null, true],
-    ['Plan Sustainability', sustain(base), sustain(melt), sustain(zero), sustain(surv), sustain(maxs), false, null],
-    // Phase 4.3: Probability-of-success (% of Monte Carlo paths finishing with
-    // zero shortfalls). Populated on demand by runProbOfSuccessUI().
-    ['Probability of Success (MC)',
-      POS_CACHE.base !== null ? (POS_CACHE.base*100).toFixed(1)+'%' : '—',
-      POS_CACHE.melt !== null ? (POS_CACHE.melt*100).toFixed(1)+'%' : '—',
-      POS_CACHE.zero !== null ? (POS_CACHE.zero*100).toFixed(1)+'%' : '—',
-      POS_CACHE.surv !== null ? (POS_CACHE.surv*100).toFixed(1)+'%' : '—',
-      POS_CACHE.maxs !== null ? (POS_CACHE.maxs*100).toFixed(1)+'%' : '—',
+    ['Deterministic Funding', sustain(base), sustain(melt), sustain(zero), sustain(surv), sustain(maxs), false, null],
+    ['First Shortfall Year', sev(base).firstShortfallYear, sev(melt).firstShortfallYear, sev(zero).firstShortfallYear, sev(surv).firstShortfallYear, sev(maxs).firstShortfallYear, false, null],
+    ['Max Annual Shortfall', fmtM(sev(base).maxShortfall), fmtM(sev(melt).maxShortfall), fmtM(sev(zero).maxShortfall), fmtM(sev(surv).maxShortfall), fmtM(sev(maxs).maxShortfall), false, 'lower'],
+    ['Total Shortfall', fmtM(sev(base).totalShortfall), fmtM(sev(melt).totalShortfall), fmtM(sev(zero).totalShortfall), fmtM(sev(surv).totalShortfall), fmtM(sev(maxs).totalShortfall), false, 'lower'],
+    ['Portfolio Depletion Year', sev(base).depletionYear, sev(melt).depletionYear, sev(zero).depletionYear, sev(surv).depletionYear, sev(maxs).depletionYear, false, null],
+    ['Core Spending Coverage', fmtPct(sev(base).coreCoverage), fmtPct(sev(melt).coreCoverage), fmtPct(sev(zero).coreCoverage), fmtPct(sev(surv).coreCoverage), fmtPct(sev(maxs).coreCoverage), false, 'higher'],
+    // Sprint 0 S0-04: narrow MC metric — paths with no material spending
+    // shortfall, not a broad advice-like probability of plan success.
+    ['Full Spending Funded (MC)',
+      POS_CACHE.base !== null ? fmtPct(POS_CACHE.base) : '—',
+      POS_CACHE.melt !== null ? fmtPct(POS_CACHE.melt) : '—',
+      POS_CACHE.zero !== null ? fmtPct(POS_CACHE.zero) : '—',
+      POS_CACHE.surv !== null ? fmtPct(POS_CACHE.surv) : '—',
+      POS_CACHE.maxs !== null ? fmtPct(POS_CACHE.maxs) : '—',
       false, 'higher'],
   ];
 
@@ -3342,16 +3491,16 @@ function populateHeader() {
     const depletion  = baseInfo.depletionYearAtDesired;
     document.getElementById('sustBannerTitle').textContent =
       inh > 0
-        ? `Your target spend cannot fund the plan AND leave $${inh.toLocaleString()} inheritance.`
-        : `Your target spend will deplete the portfolio before the plan ends.`;
+        ? `Target spending is above the level that also leaves $${inh.toLocaleString()} inheritance.`
+        : `Target spending is above the level funded through the plan end.`;
     const monthly = Math.round(sustGoGo/12).toLocaleString();
     const depletionTxt = depletion
-      ? `At your target of $${targetGoGo.toLocaleString()}/yr, funds would run out in <strong>${depletion}</strong>.`
-      : `At your target of $${targetGoGo.toLocaleString()}/yr, the inheritance goal cannot be met.`;
+      ? `Under the fixed-return assumptions, the first spending shortfall appears in <strong>${depletion}</strong> at the target $${targetGoGo.toLocaleString()}/yr.`
+      : `Under the fixed-return assumptions, the inheritance goal is not met at the target $${targetGoGo.toLocaleString()}/yr.`;
     document.getElementById('sustBannerBody').innerHTML =
-      `${depletionTxt} The plan shown uses the <strong>maximum sustainable Go-Go spend of $${sustGoGo.toLocaleString()}/yr ` +
-      `($${monthly}/mo)</strong> — that's $${diff.toLocaleString()} less than target. All scenarios below have been adjusted ` +
-      `to stay above your inheritance floor with zero shortfall years.`;
+      `${depletionTxt} The displayed deterministic scenarios use the <strong>highest Go-Go spend that avoids material shortfalls: ` +
+      `$${sustGoGo.toLocaleString()}/yr ($${monthly}/mo)</strong>, which is $${diff.toLocaleString()} below target. ` +
+      `Monte Carlo and historical stress tests below are separate lenses on return-path risk.`;
     banner.style.display = 'block';
   } else if (banner) {
     banner.style.display = 'none';

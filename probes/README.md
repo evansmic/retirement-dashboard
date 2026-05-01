@@ -6,16 +6,19 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 
 | Probe | Scope | Checks |
 |---|---|---|
-| `probe_phase4_final.js` | Scenarios + Monte Carlo + sequence stress + POS + `cfg.returnRates` override | 18 |
+| `probe_phase4_final.js` | Scenarios + Monte Carlo + sequence stress + full-spending-funded metric + stress severity + `cfg.returnRates` override | 25 |
 | `probe_phase5.js` | Pre-retirement engine, staggered retirement, dual DB pensions | 14 |
 | `probe_phase5_e2e.js` | End-to-end with working years, MC, lifetime totals, transition continuity | 12 |
 | `probe_phase5_intake.js` | Intake-form payload → dashboard round-trip | 12 |
 | `probe_schema_migrate.js` | `schemaVersion` + `migrate(D)` + v1→v2 rename migration (Sprint 1 #46/#47–#49) | 19 |
 | `probe_presets.js` | Example-preset registry + blank-state loader + `?example=<slug>` routing (Sprint 1 #58) | 53 |
 | `probe_intake_roundtrip.js` | `gatherD(populateFromD(D)) === D` deep-equality across the form's full payload (Sprint 2 #59) | 22 |
-| `probe_mc_progressive.js` | `mcBegin`/`mcStep`/`mcFinish` decomposition + `monteCarloProgressive` lifecycle, batching, and cancellation (Sprint 2 #52) | 29 |
+| `probe_mc_progressive.js` | `mcBegin`/`mcStep`/`mcFinish` decomposition + `monteCarloProgressive` lifecycle, batching, cancellation, and stress-severity shape (Sprint 2 #52, Sprint 0 S0-05) | 35 |
+| `probe_pension_credit.js` | Pension-income-credit eligibility for ordinary taxable income, DB, RRIF/LIF-style income, P2 eligibility, and split pension (Sprint 0 S0-01) | 8 |
+| `probe_tax_ages_64_72.js` | Age 64-72 tax/benefit fixtures for CPP/OAS starts, age credit, Health Premium, OAS clawback, RRIF/LIF minimums, and pension splitting (Sprint 0 S0-02) | 36 |
+| `probe_validation_exports.js` | Validation baseline export shape: annual rows, taxable income, balances, withdrawals, tax, benefits, dollar-mode metadata (Sprint 0 S0-07) | 178 |
 
-**Total: 179 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
+**Total: 414 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
 
 ## Run them
 

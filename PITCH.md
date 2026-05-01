@@ -22,7 +22,7 @@ Risk: tax law changes yearly; scope grows province-by-province; we're solo today
 
 Planning your retirement in Canada is more complicated than most tools pretend. If you want to know whether to take CPP at 65 or 70, when to start pulling from RRSPs, how much the OAS clawback will really cost, whether pension splitting helps, what happens to your spouse if one of you passes first — most calculators wave their hands. Professional software does it properly but costs thousands and is built for advisors, not for you.
 
-This tool does the math the same way a good planner would: full 2026 federal + Ontario tax, CPP actuarial adjustments, OAS clawback, spousal-RRSP attribution, pension splitting, survivor rollover. You can model staggered retirements, pre-retirement working years with raises, two DB pensions, and a planned downsize. Then it stress-tests your plan against 1,000 random-return paths and four historical market crashes (1929, 1973, 2000, 2008), so you see how fragile or robust the plan really is.
+This tool does the math the same way a good planner would: full 2026 federal + Ontario tax, CPP actuarial adjustments, OAS clawback, spousal-RRSP attribution, pension splitting, survivor rollover. You can model staggered retirements, pre-retirement working years with raises, two DB pensions, and a planned downsize. Then it stress-tests your plan against 1,000 random-return paths and four historical market crashes (1929, 1973, 2000, 2008), so you can see where results are sensitive to market paths and spending assumptions.
 
 Everything runs in your browser. Nothing is uploaded. No accounts. You close the tab and the data is gone.
 

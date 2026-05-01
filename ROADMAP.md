@@ -36,7 +36,7 @@
 **Phase 4 — Stress testing + reporting**
 - 4.1 Monte Carlo engine with `cfg.returnRates` hook
 - 4.2 Sequence-of-returns stress (1929, 1973, 2000, 2008)
-- 4.3 Probability-of-success metric
+- 4.3 Full-spending-funded Monte Carlo metric
 - 4.4 PDF/print one-pager export
 - 4.5 FP Canada guideline defaults
 - 4-verify
@@ -68,11 +68,11 @@
 - ✅ #59 — Round-trip from dashboard to intake form. New `← Edit plan` button in the dashboard header passes `window.location.hash` straight through to `index.html`; only renders when a hash drove the load (preset/blank-state has nothing to round-trip). `index.html` gained `SCHEMA_VERSION` + `migrate(D)` mirroring the dashboard's, plus `populateFromD(D)` as the strict inverse of the existing payload construction (which was extracted into a pure `gatherD()`). The form's DOMContentLoaded handler now decodes a hash first, falls back to the localStorage "Welcome back" prompt otherwise. New `probe_intake_roundtrip.js` (22 checks) asserts `gatherD(populateFromD(D)) === D` deep-equal across a fully-populated fixture, catching drift if a future field gets added to one direction but not the other. Canonical probe suite **128 → 150**.
 - ✅ #50 — Soft RRSP contribution-room warning. Yellow inline banner (`.warn-inline`) renders under both spouses' Annual RRSP Contribution fields when the entered amount exceeds 18% of the stated salary OR the 2026 $32,490 dollar cap. Soft validation only — never blocks submit, since the form can't see carry-forward room or pension adjustment. Wired into the existing `input` listener (scoped to salary/contrib changes) and into `populateFromD` for hash-loaded plans. Tooltip on each contribution label points users to CRA My Account / NOA for the authoritative number. Pure UI — canonical probe suite unaffected.
 - ✅ #51 — CPP-at-65 help text upgraded. Both spouses' CPP@70 and CPP@65 hints now carry a live link to canada.ca's My Service Canada Account portal, plus precise navigation guidance ("MSCA → Canada Pension Plan / Old Age Security → Estimated monthly CPP benefits"). Tooltips spell out the rough delay/early heuristics (~7%/yr deferred, ~7.2%/yr early). New `.field .hint a` styling — navy + bold + non-italic — so the link reads as clickable inside the muted italic hint baseline. Canonical probe suite unaffected.
-- ✅ #52 — Default-on Monte Carlo with progressive rendering. `monteCarlo()` refactored into `mcBegin → mcStep(state, nPaths) → mcFinish(state)`, and a new `monteCarloProgressive(baseCfg, opts)` runs the same per-path math in 200-path batches separated by `setTimeout(0)` so the page paints between chunks. Auto-runs the baseline scenario 80ms after `DOMContentLoaded`; new top-of-page banner shows progress (`--mc-pct` CSS variable) and fills with the headline success rate when done. "Skip stress test" cancels the in-flight run and persists `rpd_skip_mc=1` in localStorage; tab-switching mid-run cancels too (otherwise the baseline result would mislabel the new scenario's panel). The existing MC panel rendering was extracted into `renderMonteCarloResults()` so the manual button reuses the same sink. New `probe_mc_progressive.js` (29 checks) covers the begin/step/finish decomposition, batch accumulation/clamping, percentile ordering of progressive output, and pre-tick cancellation. Canonical probe suite **150 → 179**.
+- ✅ #52 — Default-on Monte Carlo with progressive rendering. `monteCarlo()` refactored into `mcBegin → mcStep(state, nPaths) → mcFinish(state)`, and a new `monteCarloProgressive(baseCfg, opts)` runs the same per-path math in 200-path batches separated by `setTimeout(0)` so the page paints between chunks. Auto-runs the baseline scenario 80ms after `DOMContentLoaded`; new top-of-page banner shows progress (`--mc-pct` CSS variable) and fills with the headline funded-path rate when done. "Skip stress test" cancels the in-flight run and persists `rpd_skip_mc=1` in localStorage; tab-switching mid-run cancels too (otherwise the baseline result would mislabel the new scenario's panel). The existing MC panel rendering was extracted into `renderMonteCarloResults()` so the manual button reuses the same sink. New `probe_mc_progressive.js` (29 checks originally, now 35 after Sprint 0 stress-severity coverage) covers the begin/step/finish decomposition, batch accumulation/clamping, percentile ordering of progressive output, stress-severity shape, and pre-tick cancellation.
 
 ## Sprint plan
 
-**Sprint 0 — Trust and engine readiness.** Planned next. Fix or prove tax-credit eligibility, clarify Monte Carlo and stress-test language, expand validation exports, map/extract the engine, draft schema v3, and define local-first monetization boundaries. This supersedes the old "Sprint 3 next" ordering.
+**Sprint 0 — Trust and engine readiness.** Underway. S0-01 fixed pension-income-credit eligibility, S0-02 added focused age 64-72 tax/benefit fixtures, S0-03 added the 2026 federal/Ontario tax methodology note, S0-04/S0-06 clarified stress-test metrics and interpretation language, and S0-07 expanded annual validation exports. Remaining work: public-comparator fixture/rerun, engine boundary mapping, schema v3 draft, and local-first monetization boundaries. This supersedes the old "Sprint 3 next" ordering.
 
 **Sprint 1 — Foundation.** Internal-cleanup pass that takes the codebase from "private project" to "ready to be public." Adds LICENSE, disclaimer, schema versioning + migration scaffold, `frank`/`moon` → `p1`/`p2` rename, blank form with example presets, JSDoc types on `D`, GitHub Actions CI, polished public README. *Estimated: one focused weekend.*
 
@@ -90,6 +90,8 @@
 
 **Phase 8 — Local-first persistence and paid unlocks.** Export/import `.plan.json`, named local plans, and optional local license unlocks. Accounts remain optional for sync, license recovery, sharing, or advisor collaboration.
 
+**Phase 8b — Implementation guidance package.** Turn a completed plan into a practical drawdown playbook: account-by-account withdrawal order, annual tax/benefit checkpoints, RRIF/LIF notes, CPP/OAS timing, and guardrail thresholds/actions. This is a strong Plus/Pro candidate, especially if AI-assisted explanations can be offered with explicit consent and a local-first privacy boundary.
+
 **Phase 9 — Advisor mode (gated on B2B interest).** Multi-household dashboard, side-by-side comparison, white-label branding, client-ready reports, and optional encrypted collaboration. Build only after the consumer workflow is stable.
 
 ## Nice-to-have future ideas
@@ -97,6 +99,8 @@
 - CPP contribution accrual estimator (deferred per Decision 4b — rely on Service Canada).
 - RRSP/TFSA contribution-room auto-tracker year over year.
 - Tax-loss-harvesting modelling in non-reg.
+- Flexible-spending Monte Carlo: protect core spending while allowing discretionary spending to adjust in bad markets.
+- Guardrail withdrawal mode with spending cuts/restores based on portfolio bands.
 - Withdrawal-order optimiser (search over N→T→R permutations for max after-tax).
 - "What if I work one more year?" slider.
 - Estate tax optimisation (deemed disposition at last death).

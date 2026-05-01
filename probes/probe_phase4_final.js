@@ -3,13 +3,13 @@
 //   (a) All 5 deterministic scenarios still hit 0 shortfall years (Phase 1-3 regression).
 //   (b) Monte Carlo runs for each scenario, percentile ordering holds.
 //   (c) Sequence-of-returns test runs, each historical crash reduces end portfolio.
-//   (d) Probability-of-success helper returns [0,1].
+//   (d) Full-spending-funded helper returns [0,1] (legacy alias retained).
 //   (e) Engine `cfg.returnRates` override takes precedence over `returnRate` scalar.
 const fs = require("fs");
 const html = fs.readFileSync(require("path").join(__dirname, "..", "retirement_dashboard.html") + "", "utf8");
 const m = html.match(/<script>([\s\S]*?)<\/script>/);
 const body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
-const wrapper = `${body}\n  return { runSimulation, monteCarlo, sequenceOfReturnsStress, probabilityOfSuccess, HISTORICAL_SEQUENCES, SCENARIOS, RESULTS };`;
+const wrapper = `${body}\n  return { runSimulation, monteCarlo, sequenceOfReturnsStress, fullSpendingFundedRate, probabilityOfSuccess, summarizeStressRun, HISTORICAL_SEQUENCES, SCENARIOS, RESULTS };`;
 const f = new Function("window", "document", wrapper);
 const out = f({location:{hash:""}, addEventListener:()=>{}}, {getElementById:()=>null, addEventListener:()=>{}});
 
@@ -35,6 +35,8 @@ check(mc.perYear.every(y => y.p10 <= y.p50 && y.p50 <= y.p90), "p10 ≤ p50 ≤ 
 check(mc.endPortfolio.p10 <= mc.endPortfolio.p50, "end p10 ≤ p50");
 check(mc.endPortfolio.p50 <= mc.endPortfolio.p90, "end p50 ≤ p90");
 check(mc.successRate >= 0 && mc.successRate <= 1, `successRate = ${mc.successRate.toFixed(3)} ∈ [0,1]`);
+check(mc.fullSpendingFundedRate === mc.successRate, "fullSpendingFundedRate matches legacy successRate");
+check(mc.severity && mc.severity.maxShortfall && mc.severity.coreCoverage, "MC returns stress-severity metrics");
 
 // (c) Sequence-of-returns.
 console.log("\n═══ (c) Sequence-of-returns stress ═══");
@@ -54,15 +56,20 @@ for(const k of ['1929','1973','2000','2008']){
   const end = yrs[yrs.length-1].bal_total;
   check(yrs.length === sor._baseline.years.length && Number.isFinite(end),
         `${k}: full-horizon run, finite end ($${Math.round(end).toLocaleString()})`);
+  const sev = out.summarizeStressRun(sor[k]);
+  check(sev.firstShortfallYear === 'Never' || Number.isInteger(sev.firstShortfallYear),
+        `${k}: stress summary reports first shortfall year`);
 }
 const end1929 = sor['1929'].years[sor['1929'].years.length-1].bal_total;
 check(end1929 <= baseEnd + 1,
       `1929 end ($${Math.round(end1929).toLocaleString()}) ≤ baseline ($${Math.round(baseEnd).toLocaleString()}) — Great Depression remains the worst case`);
 
-// (d) Probability of success helper.
-console.log("\n═══ (d) probabilityOfSuccess helper ═══");
+// (d) Full-spending-funded helper.
+console.log("\n═══ (d) fullSpendingFundedRate helper ═══");
+const fsf = out.fullSpendingFundedRate(out.SCENARIOS.base.cfg, 100);
 const ps = out.probabilityOfSuccess(out.SCENARIOS.base.cfg, 100);
-check(ps >= 0 && ps <= 1, `probabilityOfSuccess = ${ps.toFixed(3)} ∈ [0,1]`);
+check(fsf >= 0 && fsf <= 1, `fullSpendingFundedRate = ${fsf.toFixed(3)} ∈ [0,1]`);
+check(ps >= 0 && ps <= 1, `legacy probabilityOfSuccess alias = ${ps.toFixed(3)} ∈ [0,1]`);
 
 // (e) returnRates override.
 console.log("\n═══ (e) cfg.returnRates override ═══");

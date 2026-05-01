@@ -12,7 +12,7 @@
 
 Planning your retirement in Canada is more complicated than most tools pretend. If you want to know whether to take CPP at 65 or 70, when to start drawing from RRSPs, how badly the OAS clawback will really bite, whether pension splitting helps, what happens to your spouse if one of you dies first — most calculators wave their hands. Professional software does it properly but costs thousands and is built for advisors, not for you.
 
-This tool does the math the way a good Canadian planner would. It models full 2026 federal + Ontario tax (with BPA phase-out, Ontario surtax, Health Premium), RRSP/RRIF minimums, LIF maximums, CPP actuarial adjustments, OAS clawback, pension splitting, spousal-RRSP attribution, CPP sharing, and survivor rollover. You can model staggered retirements, pre-retirement working years with raises and contributions, two DB pensions, a planned downsize, and one-off expenses. Then it stress-tests your plan against 1,000 random-return paths and four historical market crashes (1929, 1973, 2000, 2008), so you see how fragile or robust the plan really is.
+This tool does the math the way a good Canadian planner would. It models full 2026 federal + Ontario tax (with BPA phase-out, Ontario surtax, Health Premium), RRSP/RRIF minimums, LIF maximums, CPP actuarial adjustments, OAS clawback, pension splitting, spousal-RRSP attribution, CPP sharing, and survivor rollover. You can model staggered retirements, pre-retirement working years with raises and contributions, two DB pensions, a planned downsize, and one-off expenses. Then it stress-tests your plan against 1,000 random-return paths and four historical market crashes (1929, 1973, 2000, 2008), so you can see where results are sensitive to return paths and spending assumptions.
 
 Everything runs in your browser. Nothing is uploaded. No accounts. Close the tab and the data is gone.
 
@@ -42,14 +42,14 @@ All computation happens client-side. Your inputs are encoded into the URL hash (
 
 ## Tested
 
-179 checks across the canonical Node-based regression probes cover the tax math, scenario behaviour, Monte Carlo + sequence-of-returns stress, schema migration, example-preset registry, intake round-trip, and progressive Monte Carlo lifecycle. Run the suite locally with:
+414 checks across the canonical Node-based regression probes cover the tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, schema migration, example-preset registry, intake round-trip, and progressive Monte Carlo lifecycle. Run the suite locally with:
 
 ```bash
 cd probes
 ./run_all.sh
 ```
 
-See [`probes/README.md`](probes/README.md) for what each probe covers and how to add new ones.
+See [`probes/README.md`](probes/README.md) for what each probe covers and how to add new ones. The 2026 federal/Ontario tax methodology is documented in [`validation/tax_methodology_2026.md`](validation/tax_methodology_2026.md).
 
 ## Tech
 
@@ -64,6 +64,7 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 | `index.html` | Intake form. Encodes `D` (the household payload) into the URL hash. |
 | `retirement_dashboard.html` | Engine + dashboard. Reads the hash and renders scenarios + charts. |
 | `probes/` | Node-based regression suite. See [`probes/README.md`](probes/README.md). |
+| `validation/` | Baseline exports, public-comparator notes, and the [`2026 tax methodology`](validation/tax_methodology_2026.md). |
 | `PROJECT.md` | Project overview, problem, value proposition, tech stack. |
 | `ROADMAP.md` | Completed milestones, current phase, future ideas. |
 | `DB_SCHEMA.md` | The `D` payload contract (schema). |
@@ -74,7 +75,7 @@ See [`probes/README.md`](probes/README.md) for what each probe covers and how to
 
 ## Status
 
-Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 179-check regression suite covers the rules end-to-end. Sprint 1 and Sprint 2 are complete. The next planned work is Sprint 0: tax accuracy, risk-language clarity, validation exports, engine readiness, and local-first monetization boundaries before a broader UI rebuild. See [`ROADMAP.md`](ROADMAP.md).
+Engine models federal + Ontario 2026 tax law with what we believe is professional-grade precision; the 414-check regression suite covers the rules end-to-end. Sprint 1 and Sprint 2 are complete. Sprint 0 is underway: tax accuracy, risk-language clarity, validation exports, engine readiness, and local-first monetization boundaries before a broader UI rebuild. See [`ROADMAP.md`](ROADMAP.md).
 
 ## License
 

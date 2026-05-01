@@ -1,5 +1,7 @@
 # Free/Public Comparator Run — 2026-04-28
 
+Methodology reference: [`../tax_methodology_2026.md`](../tax_methodology_2026.md).
+
 ## Scenario Used
 
 Primary benchmark: `single-late-career` preset.
@@ -190,11 +192,36 @@ The free/public comparison is mixed but useful:
 4. **Tax treatment needs review.** CA Tax Tools calculates $1,742 of tax on the same real-dollar retirement income where the dashboard calculates about $556. The dashboard may be too generous because it appears to apply pension-income credits too broadly.
 5. **Most sophisticated free/public tools are not truly anonymous/free for full custom plans.** ProjectionLab, Loonie Nest full planner, and RetireZest require sign-up, payment, or email verification for deeper modelling.
 
+## Sprint 0 Follow-up — 2026-04-30
+
+S0-01 addressed the tax-treatment question exposed by the CA Tax Tools comparison.
+
+What changed:
+
+- `netAfterTaxSplit()` no longer passes `hasPension = income > 0` into `calcTax()`.
+- Pension-credit eligibility is now passed explicitly through the split optimiser, draw-for-gap helper, and main simulation loop.
+- Ordinary supplemental RRSP withdrawals used to fill spending gaps do not unlock pension-income credits.
+- DB pension remains eligible; RRIF/LIF-style minimum income is treated as eligible from 65+; P2's own eligible income and received split pension are handled separately.
+- `probe_pension_credit.js` adds 8 focused checks for ordinary taxable income, DB pension, RRIF/LIF-style income, P2 eligibility, and split pension.
+- `validation/preset_baselines.json` and `.csv` were regenerated after the fix.
+
+S0-03 added the 2026 tax methodology note linked above so future comparator runs have a single audit reference for federal/Ontario constants, indexed vs non-indexed values, pension-credit treatment, OAS clawback, CPP/OAS assumptions, RRIF/LIF treatment, known simplifications, and annual update steps.
+
+Effect on the `single-late-career` baseline:
+
+| Metric | Before S0-01 | After S0-01 |
+|---|---:|---:|
+| Ending portfolio, age 93 | $173,423 | $207,770 |
+| Lifetime tax | $200,356 | $204,182 |
+| Lifetime after-tax spend | $2,337,769 | $2,318,286 |
+| Sustainable spend multiplier | 0.7668 | 0.7599 |
+
+The higher lifetime tax is expected: ordinary RRSP-style gap withdrawals no longer receive pension-income credits. The higher ending portfolio occurs because the sustainable-spend solver slightly reduces spending to preserve the no-shortfall constraint under the corrected tax treatment.
+
 ## Recommended Next Steps
 
-1. Fix or verify pension-income-credit eligibility in `calcTax()` and `netAfterTaxSplit()`.
+1. Add the broader S0-02 age 64-72 tax fixture pack around CPP/OAS starts, RRIF conversion, age credit, surtax, Health Premium, clawback, and pension splitting.
 2. Export per-year account balances at retirement in the validation baseline so RRSP/TFSA/non-reg can be compared directly.
 3. Add a deliberately simple "public-comparator" preset with flat spending, no non-reg, no tax optimization, no CPP/OAS deferral, and no meltdown logic.
 4. Retry the official Government of Canada calculator manually in a normal browser, because it remains the most important public source even though it failed in this automation run.
 5. Add paid-tool benchmarks only after the free/public baseline is stable.
-

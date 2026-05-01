@@ -46,6 +46,8 @@ check(state.pathsRun === 0, `state.pathsRun starts at 0`);
 check(state.refRun && state.refRun.years && state.refRun.years.length > 30, 'refRun has full horizon');
 check(state.balances.length === state.nYears, `balances col count (${state.balances.length}) === nYears (${state.nYears})`);
 check(state.endPort.length === state.nPaths, `endPort length === nPaths`);
+check(state.totalShortfall.length === state.nPaths && state.coreCoverage.length === state.nPaths,
+      `severity arrays length === nPaths`);
 
 // ─── (b) mcStep accumulates and clamps ────────────────────────────────────
 out.mcStep(state, 20);
@@ -63,8 +65,18 @@ check(state.pathsRun === 50, `step on exhausted state is a no-op`);
 const finished = out.mcFinish(state);
 check(typeof finished.successRate === 'number' && finished.successRate >= 0 && finished.successRate <= 1,
       `successRate ∈ [0,1] (got ${finished.successRate.toFixed(3)})`);
+check(finished.fullSpendingFundedRate === finished.successRate,
+      `fullSpendingFundedRate aliases legacy successRate`);
 check(finished.endPortfolio.p10 <= finished.endPortfolio.p50 && finished.endPortfolio.p50 <= finished.endPortfolio.p90,
       `endPortfolio percentiles ordered`);
+check(finished.severity && finished.severity.totalShortfall.p10 <= finished.severity.totalShortfall.p50
+        && finished.severity.totalShortfall.p50 <= finished.severity.totalShortfall.p90,
+      `totalShortfall severity percentiles ordered`);
+check(finished.severity && finished.severity.coreCoverage.p10 <= finished.severity.coreCoverage.p50
+        && finished.severity.coreCoverage.p50 <= finished.severity.coreCoverage.p90,
+      `coreCoverage severity percentiles ordered`);
+check(finished.severity && finished.severity.firstShortfallYear.earliest >= 2026,
+      `firstShortfallYear earliest is sentinel or plan year`);
 check(finished.perYear.length === state.nYears, `perYear length matches nYears`);
 check(finished.perYear.every(y => y.p10 <= y.p50 && y.p50 <= y.p90),
       `every per-year row has p10 ≤ p50 ≤ p90`);
@@ -105,6 +117,8 @@ check(completed && completed.perYear && completed.perYear.length === state.nYear
       `completed.perYear length matches deterministic refRun`);
 check(completed && completed.successRate >= 0 && completed.successRate <= 1,
       `completed.successRate ∈ [0,1] (${completed && completed.successRate.toFixed(3)})`);
+check(completed && completed.severity && typeof completed.severity.maxShortfall.p90 === 'number',
+      `completed includes maxShortfall severity`);
 check(completed && completed.perYear.every(y => y.p10 <= y.p50 && y.p50 <= y.p90),
       `completed per-year percentiles ordered`);
 

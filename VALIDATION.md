@@ -9,6 +9,8 @@ The regression probes in `probes/` cover the first category. The `validation/` f
 
 For the consumer-first product direction, validation is part of the product surface, not just an internal QA activity. Users should eventually be able to export enough assumptions and yearly outputs to understand what the engine did, compare against public calculators, and see known limitations.
 
+The current tax/benefit assumptions are documented in [`validation/tax_methodology_2026.md`](validation/tax_methodology_2026.md). Keep that note beside every validation run so future tax-year updates can be audited without reverse-engineering the dashboard code.
+
 ## Baseline Principle
 
 Because this is a free public-use project, the first benchmark set should use public or free-tier tools wherever possible. Paid tools such as Optiml, Adviice, Snap Projections, NaviPlan, or Conquest are useful secondary benchmarks, but they should not be the only evidence that the model is reasonable.
@@ -37,8 +39,9 @@ node validation/export_preset_baselines.js
 
 This regenerates:
 
-- `validation/preset_baselines.json` — detailed deterministic outputs for every bundled preset.
-- `validation/preset_baselines.csv` — flat comparison table for spreadsheets.
+- `validation/preset_baselines.json` — detailed deterministic outputs for every bundled preset, including annual rows and scenario metadata.
+- `validation/preset_baselines.csv` — flat scenario summary table for spreadsheets.
+- `validation/preset_baselines_yearly.csv` — long-form annual rows for spreadsheet comparison of balances, withdrawals, taxable income, tax, OAS clawback, benefits, spending, and shortfalls.
 
 The export uses the dashboard's `PRESETS` registry in `retirement_dashboard.html`, so the validation cases stay aligned with the public examples:
 
@@ -87,15 +90,16 @@ Capture these where each external tool supports them:
 - lifetime registered withdrawals
 - lifetime TFSA withdrawals
 - lifetime non-registered withdrawals
-- probability of success / success score
+- full spending funded rate / external success score, with the calculator's definition recorded
 - year-by-year taxable income around ages 65 to 72
 
 ## Sprint 0 Validation Checklist
 
 Before rebuilding the UI or adding broader product packaging, validation work should close the current trust gaps:
 
-- Fix or verify pension-income-credit eligibility exposed by the CA Tax Tools comparison.
-- Add per-year export fields for account balances, withdrawals, taxable income, tax, OAS clawback, CPP/OAS/DB income, and real/nominal mode.
+- Keep the S0-01 pension-income-credit fix and S0-02 age 64-72 tax/benefit fixture pack covered by regression probes.
+- Keep the 2026 tax methodology note current when any tax, benefit, RRIF/LIF, or comparator assumption changes.
+- Keep per-year export fields for account balances, withdrawals, taxable income, tax, OAS clawback, CPP/OAS/DB income, and real/nominal mode covered by regression probes.
 - Add a simple public-comparator fixture that avoids tax optimization, non-registered complexity, and unusual benefit timing.
 - Re-run the Government of Canada Canadian Retirement Income Calculator manually in a normal browser.
 - Record which outputs are exact comparisons, directional comparisons, or unsupported by the external tool.
