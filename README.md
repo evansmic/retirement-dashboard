@@ -54,7 +54,7 @@ If paid features are added later, the intended boundary is local-first capabilit
 
 ## Tested
 
-500 checks across the canonical Node-based regression probes cover the extracted tax/benefit helper module, tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, public-comparator fixture, schema migration, example-preset registry, intake round-trip, local plan-file round-trip and malformed-file rejection, critical intake validation, and progressive Monte Carlo lifecycle. Run the suite locally with:
+513 checks across the canonical Node-based regression probes cover the extracted tax/benefit helper module, tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, public-comparator fixture, schema migration, example-preset registry, intake round-trip, local plan-file round-trip and malformed-file rejection, blank Person 2 plan-file normalization, critical intake validation, and progressive Monte Carlo lifecycle. Run the suite locally with:
 
 ```bash
 cd probes
@@ -100,7 +100,7 @@ Open [`index.html`](index.html) in a browser to start a plan, or open [`retireme
 
 ## Status
 
-Engine models federal + Ontario 2026 tax rules and the 500-check regression suite covers the core rules end-to-end. Sprint 1, Sprint 2, Sprint 0, and Sprint 3 are complete: trust gates, local `.plan.json` persistence, guided form navigation, blank-field validation, and recommended-plan framing are in place. Sprint 4 is the active launch/productization package. See [`ROADMAP.md`](ROADMAP.md).
+Engine models federal + Ontario 2026 tax rules and the 513-check regression suite covers the core rules end-to-end. Sprint 1, Sprint 2, Sprint 0, and Sprint 3 are complete: trust gates, local `.plan.json` persistence, guided form navigation, blank-field validation, and recommended-plan framing are in place. Sprint 4 is the active launch/productization package. See [`ROADMAP.md`](ROADMAP.md).
 
 ## License
 

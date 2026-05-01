@@ -12,6 +12,7 @@ PROBES=(
   probe_presets.js
   probe_intake_roundtrip.js
   probe_plan_file_roundtrip.js
+  probe_single_plan_file_dashboard.js
   probe_intake_validation.js
   probe_mc_progressive.js
   probe_tax_benefit_helpers.js

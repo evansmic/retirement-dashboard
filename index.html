@@ -879,10 +879,59 @@ function cloneJson(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+function _finiteNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function _p2LooksBlank(p2) {
+  if (!p2 || typeof p2 !== 'object') return true;
+  const name = String(p2.name || '').trim();
+  const placeholderName = !name || name === '—' || name.toLowerCase() === 'person 2';
+  const meaningfulFields = [
+    'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
+    'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
+    'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+    'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
+    'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
+    'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
+    'cppSurvivor_under65', 'cppSurvivor_over65'
+  ].some(k => _finiteNumber(p2[k]) > 0);
+  return placeholderName && !meaningfulFields;
+}
+
+function normalizePlanPayload(D) {
+  if (!D || typeof D !== 'object') return D;
+  if (!D.p2) D.p2 = {};
+  if (_p2LooksBlank(D.p2)) {
+    D.p2.name = '';
+    [
+      'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
+      'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
+      'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+      'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
+      'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
+      'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
+      'cppSurvivor_under65', 'cppSurvivor_over65'
+    ].forEach(k => { D.p2[k] = 0; });
+  }
+  if (D.assumptions) {
+    if (!Number.isFinite(Number(D.assumptions.retireYear)) || Number(D.assumptions.retireYear) <= 0) {
+      const p1Retire = _finiteNumber(D.p1 && D.p1.retireYear);
+      const p2Retire = _p2LooksBlank(D.p2) ? 0 : _finiteNumber(D.p2 && D.p2.retireYear);
+      D.assumptions.retireYear = p1Retire || p2Retire || 2027;
+    }
+    if (!Number.isFinite(Number(D.assumptions.planStart)) || Number(D.assumptions.planStart) <= 0) {
+      D.assumptions.planStart = null;
+    }
+  }
+  return D;
+}
+
 function planTitleFromD(D) {
   if (D && D.title && String(D.title).trim()) return String(D.title).trim();
   const p1 = D && D.p1 && D.p1.name ? D.p1.name.trim() : '';
-  const p2 = D && D.p2 && D.p2.name ? D.p2.name.trim() : '';
+  const p2 = D && D.p2 && !_p2LooksBlank(D.p2) && D.p2.name ? D.p2.name.trim() : '';
   if (p1 && p2) return `${p1} and ${p2} retirement plan`;
   if (p1) return `${p1} retirement plan`;
   return 'Retirement plan';
@@ -903,7 +952,7 @@ function escapeHtml(s) {
 }
 
 function createPlanFile(D, now) {
-  const plan = migrate(cloneJson(D));
+  const plan = normalizePlanPayload(migrate(cloneJson(D)));
   const stamp = now || new Date().toISOString();
   return {
     fileType: PLAN_FILE_TYPE,
@@ -927,7 +976,7 @@ function extractPlanPayload(fileObj) {
   if (!rawPlan || typeof rawPlan !== 'object') {
     throw new Error('The plan file is missing its plan payload.');
   }
-  const D = migrate(cloneJson(rawPlan));
+  const D = normalizePlanPayload(migrate(cloneJson(rawPlan)));
   if (!D.p1 || !D.p2 || !D.assumptions) {
     throw new Error('The plan file is missing required household fields.');
   }
@@ -1588,6 +1637,7 @@ function populateFromD(D) {
 // and so any future share/export flow can reuse the same shape. populateFromD
 // (defined below) is the strict inverse — keep the field-id mapping in sync.
 function gatherD() {
+  const hasP2 = p2IsInUse();
   const f_cpp65_raw  = n('f_cpp65_monthly', 0);
   const m_cpp65_raw  = n('m_cpp65_monthly', 0);
   const f_cpp70_mo   = n('f_cpp70_monthly', 0);
@@ -1630,10 +1680,10 @@ function gatherD() {
       oas_monthly:   n('f_oas_monthly', 742.31),
     },
     p2: {
-      name:         s('m_name', 'Person 2'),
-      dob:          n('m_dob'),
-      dobMonth:     n('m_dobMonth', 12),
-      retireYear:   n('m_retireYear', 2027),
+      name:         hasP2 ? s('m_name', 'Person 2') : '',
+      dob:          hasP2 ? n('m_dob') : 0,
+      dobMonth:     hasP2 ? n('m_dobMonth', 12) : 0,
+      retireYear:   hasP2 ? n('m_retireYear', 2027) : 0,
       // Phase 5.2: pre-retirement employment for Person 2.
       salary:             n('m_salary', 0),
       salaryRefYear:      n('m_salaryRefYear', 2026),
@@ -1658,7 +1708,7 @@ function gatherD() {
       nonregAnnual: n('m_nonregAnnual'),
       cpp70_monthly: n('m_cpp70_monthly', 0),
       cpp65_monthly: m_cpp65_raw > 0 ? m_cpp65_raw : Math.round(m_cpp70_mo / 1.42),
-      oas_monthly:   n('m_oas_monthly', 742.31),
+      oas_monthly:   hasP2 ? n('m_oas_monthly', 742.31) : 0,
       cppSurv_u65_mo: n('m_cppSurv_u65'),
       cppSurv_o65_mo: n('m_cppSurv_o65'),
     },
@@ -1708,7 +1758,7 @@ function gatherD() {
       // back-compat with downstream code that references it for labels.
       retireYear:           Math.min(
         n('f_retireYear', 2027),
-        n('m_retireYear', 2027)
+        hasP2 ? n('m_retireYear', 2027) : n('f_retireYear', 2027)
       ),
       // Phase 5.2: explicit plan start (for modelling working years). Null => use retireYear.
       planStart:            (function(){ const v = n('a_planStart', 0); return v > 0 ? v : null; })(),
@@ -1747,6 +1797,7 @@ function gatherD() {
       })(),
     }
   };
+  normalizePlanPayload(D);
   const title = s('plan_title', '');
   if (title) D.title = title;
   return D;

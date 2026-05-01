@@ -209,9 +209,12 @@ var RetirementTaxBenefitHelpers = (function(){
       const plan = D();
       const p1Age  = year - plan.p1.dob;
       const a = plan.assumptions;
+      const retireYear = (a.retireYear && a.retireYear > 0)
+        ? a.retireYear
+        : ((plan.p1 && plan.p1.retireYear) || 2027);
       const startYear = Math.min(
         (a.planStart && a.planStart > 0) ? a.planStart : Infinity,
-        a.retireYear
+        retireYear
       );
       const inf = a.inflation;
       const idx = Math.pow(1 + inf, year - startYear);

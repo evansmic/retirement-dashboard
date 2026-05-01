@@ -7,7 +7,7 @@ This file records Sprint 4 execution. It turns the package in `docs/sprint_4_lau
 - Started: 2026-05-01
 - Current phase: release-readiness checks
 - Runtime schema: dashboard `SCHEMA_VERSION = 2`
-- Probe result: canonical suite **500 passed, 0 failed** on 2026-05-01
+- Probe result: canonical suite **513 passed, 0 failed** on 2026-05-01
 - Launch scope: public/free, local-first, Ontario 2026, educational only
 
 ## Copy And Positioning
@@ -118,8 +118,8 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 
 ## Validation And Comparator
 
-- [x] Canonical probes pass before release: **500 passed, 0 failed** on 2026-05-01.
-- [x] README probe count matches the current documented suite result: 500 checks.
+- [x] Canonical probes pass before release: **513 passed, 0 failed** on 2026-05-01.
+- [x] README probe count matches the current documented suite result: 513 checks.
 - [x] README links `validation/tax_methodology_2026.md`.
 - [x] README links `validation/external-results/free_public_comparison_2026-04-28.md`.
 - [x] Confirm baseline exports are current or explicitly unchanged. Current baseline export files are dated 2026-05-01 and no engine output changed in Sprint 4.
@@ -135,7 +135,7 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 - [x] `.gitignore` excludes private local `*.plan.json` files.
 - [x] No private `.plan.json` files are present before commit/release.
 - [x] No screenshots with private names, balances, browser profile details, or local paths are committed.
-- [x] Probe suite passes locally: **500 passed, 0 failed** on 2026-05-01.
+- [x] Probe suite passes locally: **513 passed, 0 failed** on 2026-05-01.
 - [x] GitHub Actions probe workflow is green on the latest remote `main` run checked with `gh run list` on 2026-05-01. Note: local Sprint 3/4 changes have not been pushed, so CI has not run on this working tree yet.
 - [x] MIT license present.
 - [x] README badge/link check complete.
@@ -152,7 +152,7 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 - Release tag to create when publishing: `local-first-launch-2026-05-01`
 - GitHub Actions: `probes` push run completed successfully on `main` at 2026-05-01T14:49:38Z.
 - Vercel deployment status: success for the same commit.
-- Local release hygiene: canonical probes pass 500/500; runtime `SCHEMA_VERSION` remains 2; `.gitignore` excludes `*.plan.json`; no local `.plan.json` files are present.
+- Local release hygiene: canonical probes pass 513/513; runtime `SCHEMA_VERSION` remains 2; `.gitignore` excludes `*.plan.json`; no local `.plan.json` files are present.
 - Known non-shipping scope remains deferred: full optimizer, cloud sync, account system, advisor workspace, multi-province support, AI reports, and schema v3 runtime migration.
 
 ### Release Notes / PR Summary Draft
@@ -161,7 +161,7 @@ This release packages the Canadian Retirement Planner for a local-first public l
 
 Validation and release gates:
 
-- Canonical probes: 500 passed, 0 failed.
+- Canonical probes: 513 passed, 0 failed.
 - CI: GitHub Actions `probes` completed successfully on pushed `main`.
 - Deployment: Vercel status check succeeded on `a028163`.
 - Runtime schema: `SCHEMA_VERSION = 2`.
@@ -189,7 +189,7 @@ Suggested topics:
 - [x] Runtime dashboard `SCHEMA_VERSION` remains 2.
 - [x] Static files open locally.
 - [x] Static preview/public host works locally via `http://127.0.0.1:8765`.
-- [x] Canonical probe count recorded from a fresh run: **500 passed, 0 failed** on 2026-05-01.
+- [x] Canonical probe count recorded from a fresh run: **513 passed, 0 failed** on 2026-05-01.
 - [x] Manual smoke-test date/browser recorded.
 - [x] Validation/comparator status recorded.
 - [x] Launch posts drafted in `docs/launch_posts.md`.

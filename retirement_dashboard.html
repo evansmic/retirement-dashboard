@@ -784,9 +784,58 @@ function cloneJson(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+function _finiteNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function _p2LooksBlank(p2) {
+  if (!p2 || typeof p2 !== 'object') return true;
+  const name = String(p2.name || '').trim();
+  const placeholderName = !name || name === '—' || name.toLowerCase() === 'person 2';
+  const meaningfulFields = [
+    'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
+    'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
+    'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+    'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
+    'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
+    'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
+    'cppSurvivor_under65', 'cppSurvivor_over65'
+  ].some(k => _finiteNumber(p2[k]) > 0);
+  return placeholderName && !meaningfulFields;
+}
+
+function normalizePlanPayload(D) {
+  if (!D || typeof D !== 'object') return D;
+  if (!D.p2) D.p2 = {};
+  if (_p2LooksBlank(D.p2)) {
+    D.p2.name = '';
+    [
+      'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
+      'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
+      'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+      'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
+      'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
+      'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
+      'cppSurvivor_under65', 'cppSurvivor_over65'
+    ].forEach(k => { D.p2[k] = 0; });
+  }
+  if (D.assumptions) {
+    if (!Number.isFinite(Number(D.assumptions.retireYear)) || Number(D.assumptions.retireYear) <= 0) {
+      const p1Retire = _finiteNumber(D.p1 && D.p1.retireYear);
+      const p2Retire = _p2LooksBlank(D.p2) ? 0 : _finiteNumber(D.p2 && D.p2.retireYear);
+      D.assumptions.retireYear = p1Retire || p2Retire || 2027;
+    }
+    if (!Number.isFinite(Number(D.assumptions.planStart)) || Number(D.assumptions.planStart) <= 0) {
+      D.assumptions.planStart = null;
+    }
+  }
+  return D;
+}
+
 function planTitleFromD(D) {
   const p1 = D && D.p1 && D.p1.name && D.p1.name !== '—' ? D.p1.name.trim() : '';
-  const p2 = D && D.p2 && D.p2.name && D.p2.name !== '—' ? D.p2.name.trim() : '';
+  const p2 = D && D.p2 && !_p2LooksBlank(D.p2) && D.p2.name && D.p2.name !== '—' ? D.p2.name.trim() : '';
   if (p1 && p2) return `${p1} and ${p2} retirement plan`;
   if (p1) return `${p1} retirement plan`;
   return 'Retirement plan';
@@ -801,7 +850,7 @@ function safeFilenamePart(s) {
 }
 
 function createPlanFile(D, now) {
-  const plan = migrate(cloneJson(D));
+  const plan = normalizePlanPayload(migrate(cloneJson(D)));
   delete plan._isBlank;
   const stamp = now || new Date().toISOString();
   return {
@@ -1195,7 +1244,7 @@ function loadClientData() {
       let parsed = JSON.parse(decodeURIComponent(atob(hash)));
       // Sprint 1 #46: lift older payloads to the current schema version
       // before the engine touches them. migrate() is a no-op on v1 payloads.
-      parsed = migrate(parsed);
+      parsed = normalizePlanPayload(migrate(parsed));
       // Rehydrate computed fields that intake form stores as raw inputs
       if (parsed.p1) {
         const f = parsed.p1;
@@ -1217,6 +1266,9 @@ function loadClientData() {
       if (parsed.p2 && (!parsed.p2.name || !parsed.p2.name.trim())) {
         const m = parsed.p2;
         m.name = '—';
+        m.dob = parsed.p1 && parsed.p1.dob ? parsed.p1.dob : m.dob;
+        m.dobMonth = parsed.p1 && parsed.p1.dobMonth ? parsed.p1.dobMonth : m.dobMonth;
+        m.retireYear = parsed.p1 && parsed.p1.retireYear ? parsed.p1.retireYear : m.retireYear;
         m.rrsp = m.tfsa = m.lira = m.lif = m.nonreg = 0;
         m.cpp70 = m.cpp65 = m.oasBase = 0;
         m.cppSurvivor_under65 = m.cppSurvivor_over65 = 0;
