@@ -136,7 +136,7 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 - [x] No private `.plan.json` files are present before commit/release.
 - [x] No screenshots with private names, balances, browser profile details, or local paths are committed.
 - [x] Probe suite passes locally: **515 passed, 0 failed** on 2026-05-01.
-- [x] GitHub Actions probe workflow is green on the latest remote `main` run checked with `gh run list` on 2026-05-01. Note: local Sprint 3/4 changes have not been pushed, so CI has not run on this working tree yet.
+- [x] GitHub Actions probe workflow is green on the latest remote `main` run checked with `gh run list` on 2026-05-01.
 - [x] MIT license present.
 - [x] README badge/link check complete.
 - [x] Public repo description/topics ready for manual GitHub setup.
@@ -147,10 +147,10 @@ Note: the current Codex in-app browser viewport is narrow enough to catch obviou
 ## Final Release/PR Pass
 
 - Date: 2026-05-01
-- Commit: `a0281633ee48bb823dd10f5f6bf7a6f13512a7a2` (`Complete local-first launch package`)
+- Release code commit: `64bde5bbcc82c07f956ea8e20d6c633c01e0c174` (`Show cash wedge funding in plan results`)
 - Branch/repository: `origin/main` on `evansmic/retirement-dashboard`
-- Release tag to create when publishing: `local-first-launch-2026-05-01`
-- GitHub Actions: `probes` push run completed successfully on `main` at 2026-05-01T14:49:38Z.
+- Release tag: `local-first-launch-2026-05-01`
+- GitHub Actions: `probes` push run completed successfully on `main` at 2026-05-01T18:23:38Z.
 - Vercel deployment status: success for the same commit.
 - Local release hygiene: canonical probes pass 515/515; runtime `SCHEMA_VERSION` remains 2; `.gitignore` excludes `*.plan.json`; no local `.plan.json` files are present.
 - Known non-shipping scope remains deferred: full optimizer, cloud sync, account system, advisor workspace, multi-province support, AI reports, and schema v3 runtime migration.
@@ -163,7 +163,7 @@ Validation and release gates:
 
 - Canonical probes: 515 passed, 0 failed.
 - CI: GitHub Actions `probes` completed successfully on pushed `main`.
-- Deployment: Vercel status check succeeded on `a028163`.
+- Deployment: Vercel status check succeeded on `64bde5b`.
 - Runtime schema: `SCHEMA_VERSION = 2`.
 
 Out of scope for this release: full recommended-plan optimizer, cloud sync, account system, advisor workspace, multi-province support, AI reports, and schema v3 runtime migration.

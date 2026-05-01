@@ -34,9 +34,9 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 4 pre-release packaging is complete. The active next step is the final release/PR pass:
+Sprint 4 final release/PR pass is complete as of 2026-05-01:
 
-- Confirm pushed `main`, CI, release hygiene, release tag/date, and release notes/PR summary.
+- Pushed `main`, CI, release hygiene, release tag/date, and release notes/PR summary are confirmed.
 
 Sprint 4 is intentionally not an optimizer or account sprint. Full recommended-plan optimization, cloud sync, accounts, payment/licensing implementation, advisor workspace, multi-province support, AI reports, mobile redesign, and schema v3 migration remain deferred unless separately scoped.
 
