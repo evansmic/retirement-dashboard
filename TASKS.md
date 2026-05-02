@@ -1,52 +1,58 @@
 # TASKS.md
 
-The 2026-04-30 product reset made the planner consumer-first, local-first, and recommended-plan-first. Sprint 0 through Sprint 3 are complete; the next sprint should package the local-first planner for a credible public launch without introducing optimizer, account, sync, or advisor-workspace scope.
+The 2026-04-30 product reset made the planner consumer-first, local-first, and recommended-plan-first. Sprint 0 through Sprint 4 are complete. Sprint 5 starts the React UI/navigation migration while preserving the stable local-first static app as the fallback.
 
-## Active Sprint — Sprint 4: Launch/Productization Package
+## Active Sprint — Sprint 5: UI / Navigation Redesign Discovery
 
-**Status:** Final release/PR pass complete as of 2026-05-01.
+**Status:** Hybrid navigation selected and route/state shell started 2026-05-01. UI gate is open because the React preview has v2 `.plan.json` adapters and an extracted simulation module behind parity probes.
 
-Goal: make the current local-first planner launch-ready as a public/free product with honest positioning, clear privacy/disclaimer language, reproducible validation, manual smoke tests, screenshot/demo assets, release hygiene, and launch-post materials.
+Goal: design and then implement the first guided-intake/navigation slice for the React app without changing persisted runtime schema, breaking the static release fallback, or adding accounts/cloud/full optimizer scope.
 
-Detailed package: [`docs/sprint_4_launch_package.md`](docs/sprint_4_launch_package.md).
+Discovery doc: [`docs/sprint_5_ui_navigation_discovery.md`](docs/sprint_5_ui_navigation_discovery.md).
 
-### Positioning And Copy
+### Discovery And Scope
 
-- [x] **S4-01 — Finalize public/free positioning.** ✅ *Done 2026-05-01.* Launch promise, target user, supported scope, Ontario-only limitation, local-first privacy promise, and not-advice boundary are now explicit in README and launch materials. Recommended-plan language says the current product is recommendation-framed, not a full optimizer.
-- [x] **S4-02 — Finalize README and site copy.** ✅ *Done 2026-05-01.* README now has launch-ready opening copy, current limits, privacy, free/paid direction, validation links, local run instructions, and Sprint 4 status.
-- [x] **S4-03 — Finalize Free/Plus/Pro packaging notes.** ✅ *Done 2026-05-01.* README and Sprint 4 execution docs translate the Sprint 0 monetization boundary into public-safe local-first wording without implementing payment or licensing.
-- [x] **S4-04 — Privacy and disclaimer copy pass.** ✅ *Done 2026-05-01.* README and launch posts consistently cover no account, local plan ownership, URL-hash behaviour, Chart.js CDN, no household-input analytics, educational-only output, and user-controlled sharing/export risks.
+- [x] **S5-01 — Discovery doc and screen map.** ✅ *Seeded 2026-05-01.* Created the Sprint 5 UI/navigation discovery doc with user jobs, workspace split, candidate navigation models, screen map, file model, real estate/assets model, result hierarchy, mobile/desktop stance, non-shipping list, candidate tickets, and open decisions.
+- [x] **S5-02 — Choose initial navigation model.** ✅ *Done 2026-05-01.* Selected the hybrid model: guided setup first, then a persistent workspace shell with Start, Guided Intake, Review, and Results Handoff.
+- [x] **S5-03 — Resolve Sprint 5 real estate scope.** ✅ *Done 2026-05-01.* Sprint 5 will capture primary residence/downsize only where it maps to existing v2 fields. Second/vacation property and richer asset records are deferred until a scoped schema update so future asset/property needs can be handled together.
+- [x] **S5-04 — Define guided-intake validation rules.** ✅ *Done 2026-05-01.* Blocking issues are limited to incoherent or unsafe-to-run values; advisory completeness issues appear as warnings and do not block result generation.
+- [ ] **S5-05 — Define local file state UX.** Current plan name, import errors, dirty state, last exported time, and local `.plan.json` save/load behavior.
 
-### Assets And Demo
+### Candidate Implementation Tickets
 
-- [x] **S4-05 — Capture launch screenshots.** ✅ *Done 2026-05-01.* Replaced `docs/screenshot.png` with a real synthetic dashboard screenshot and added supporting launch screenshots for intake, validation, and stress diagnostics.
-- [x] **S4-06 — Prepare demo script.** ✅ *Done 2026-05-01.* Added a repeatable 3-5 minute demo script in `docs/sprint_4_launch_execution.md`.
-
-### QA, Validation, And Release
-
-- [x] **S4-07 — Manual browser smoke-test checklist.** ✅ *Pre-release complete 2026-05-01.* Verified local/static load, file-path load, first-open copy, all bundled presets, blank-field validation, valid dashboard load, recommended-plan framing, charts, stress diagnostics, year-by-year table expansion, real/nominal toggle, print button presence, accountless core flow, and current narrow-viewport content visibility. Local file round-trip, malformed file rejection, unsupported file rejection, single-person handling, couple handling, plan naming, and edit round-trip are covered by probes. Human OS file-picker and dedicated device-size passes are deferred to the final release/PR pass.
-- [x] **S4-08 — Validation/comparator checklist.** ✅ *Done 2026-05-01.* Confirmed baseline exports are current/unchanged for docs-only Sprint 4 work, `public-comparator-single` is present in the baseline export, README links methodology/comparator notes, and known validation gaps are visible.
-- [x] **S4-09 — GitHub/CI checklist.** ✅ *Final release pass complete 2026-05-01.* Confirmed local canonical suite passes **515/515**, remote GitHub Actions probe workflow is green on pushed `main`, restored README CI badge, added `.github/ISSUE_TEMPLATE/bug_report.md` with private-data warning, updated `.gitignore` for `*.plan.json`, drafted repo description/topics, and scanned for local `.plan.json` files.
-- [x] **S4-10 — Release checklist.** ✅ *Final release pass complete 2026-05-01.* Release gate exists in `docs/sprint_4_launch_execution.md`; screenshot, disclaimer, privacy copy, known limits, static local/localhost load, validation status, launch posts, feedback guidance, rollback/fix-forward rule, schema v2 boundary, fresh **515/515** probe result, release tag/date, CI status, and release notes/PR summary are recorded.
-
-### Launch Prep
-
-- [x] **S4-11 — Launch-post drafts.** ✅ *Done 2026-05-01.* Added launch drafts for r/PersonalFinanceCanada, Hacker News, LinkedIn, and a short personal/site post in `docs/launch_posts.md`.
-- [x] **S4-12 — Feedback intake and triage loop.** ✅ *Done 2026-05-01.* Added public-feedback guidance, safe bug-report guidance, labels, hotfix criteria, and deferral rules in `docs/launch_posts.md`.
-- [x] **S4-13 — Explicit non-shipping list.** ✅ *Done 2026-05-01.* Non-shipping list is explicit in `docs/sprint_4_launch_package.md`, `docs/sprint_4_launch_execution.md`, README limits, roadmap, and launch posts.
+- [x] **S5-06 — Guided intake route shell.** ✅ *Initial shell done 2026-05-01.* Added Start, Intake, Review, and Results Handoff views inside the React preview with a persistent workspace sidebar and guided step rail.
+- [x] **S5-07 — Intake state model.** ✅ *Initial model done 2026-05-01.* Added reducer-backed local plan state, import label, dirty state, export timestamp, active view, and active intake step.
+- [ ] **S5-08 — Household step.** Build single/couple handling with true inactive Person 2 behavior.
+- [ ] **S5-09 — Income step.** Capture salary, DB, CPP, OAS, and survivor fields from v2.
+- [ ] **S5-10 — Accounts step.** Capture RRSP/LIRA/LIF/TFSA/non-reg/cash wedge fields from v2.
+- [ ] **S5-11 — Real estate and debts step.** Add primary residence/downsize mapping and debt entry; do not collect second/vacation property until scoped schema support exists.
+- [ ] **S5-12 — Spending and events step.** Capture spending phases, one-offs, and inheritance goal.
+- [ ] **S5-13 — Assumptions step.** Capture plan years, rates, withdrawal order, CPP sharing, RRIF election, and spousal RRSP fields.
+- [ ] **S5-14 — Review and handoff.** Show summary, validation issues, save `.plan.json`, run extracted engine preview, and open stable dashboard.
+- [ ] **S5-15 — Browser smoke pass.** Test new guided intake with Larry, a couple preset, malformed file import, and single-person blank Person 2 behavior.
 
 ### Definition Of Done
 
-- README/site/app copy accurately describes the product as local-first, Ontario-only, 2026-tax-year, educational, and accountless for core use.
-- Launch screenshots and demo script use synthetic/preset data only.
-- Manual browser smoke-test checklist is complete and any launch-blocking issues are fixed or explicitly deferred.
-- Validation/comparator notes are current enough for launch and known limitations are visible.
-- Canonical probes pass before release; no runtime schema bump occurs.
-- GitHub/CI/release checklist is complete.
-- Launch posts and feedback triage instructions are ready.
-- Full optimizer, sync, account system, advisor workspace, and schema v3 migration remain deferred.
+- Sprint 5 navigation model is chosen and documented.
+- Guided intake route/state architecture is implemented in React preview.
+- `.plan.json` v2 import/export remains compatible.
+- Runtime dashboard schema remains `SCHEMA_VERSION = 2`.
+- Static `index.html` and `retirement_dashboard.html` remain available as fallback.
+- Real estate fields do not silently persist unsupported second-property data.
+- Single-person plans keep Person 2 truly inactive/blank.
+- Canonical probes pass and no private `.plan.json` files are committed.
 
 ## Completed Sprints
+
+### Sprint 4: Launch/Productization Package
+
+**Complete 2026-05-01.** Final release/PR pass complete. Release package: [`docs/sprint_4_launch_package.md`](docs/sprint_4_launch_package.md). Execution record: [`docs/sprint_4_launch_execution.md`](docs/sprint_4_launch_execution.md).
+
+- [x] Public/free positioning, README/site copy, privacy/disclaimer copy, Free/Plus/Pro local-first packaging notes.
+- [x] Launch screenshots and demo script.
+- [x] Manual smoke-test checklist, validation/comparator checklist, GitHub/CI/release checklist.
+- [x] Launch-post drafts, feedback triage loop, explicit non-shipping list.
+- [x] Runtime dashboard `SCHEMA_VERSION = 2`; no optimizer, sync, account system, advisor workspace, or schema v3 migration shipped.
 
 ### Sprint 3 — Local-First Planning Workspace
 
@@ -74,7 +80,7 @@ Detailed package: [`docs/sprint_4_launch_package.md`](docs/sprint_4_launch_packa
 
 ### Near-Term Candidates After Sprint 4
 
-- **Engine extraction continuation.** Move pension splitting and `netAfterTaxSplit()` after the strategy boundary is clear, then parameterize `runSimulation(plan, cfg, options)` so it no longer reads global `D`.
+- **Engine extraction continuation.** Continue moving extracted simulation code toward native TypeScript/ESM and remove the remaining dashboard-source ownership.
 - **Recommended-plan optimizer.** Search CPP/OAS timing, withdrawal order, pension split/share settings, RRSP/RRIF/LIF drawdown, guardrails, and estate trade-offs before presenting one recommended household plan.
 - **Launch feedback and hotfixes.** Triage public feedback after Sprint 4, fix launch-blocking issues, and avoid broad feature creep while the first public users test the product.
 

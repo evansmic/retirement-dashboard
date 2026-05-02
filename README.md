@@ -54,7 +54,13 @@ If paid features are added later, the intended boundary is local-first capabilit
 
 ## Tested
 
-515 checks across the canonical Node-based regression probes cover the extracted tax/benefit helper module, tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, public-comparator fixture, schema migration, example-preset registry, intake round-trip, local plan-file round-trip and malformed-file rejection, blank Person 2 plan-file normalization, cash-wedge source reconciliation, critical intake validation, and progressive Monte Carlo lifecycle. Run the suite locally with:
+The canonical Node-based regression probes cover the extracted tax/benefit helper module, the extracted simulation module, tax math, pension-income-credit eligibility, age 64-72 tax/benefit fixtures, scenario behaviour, Monte Carlo + sequence-of-returns stress severity, validation export shape, public-comparator fixture, schema migration, example-preset registry, intake round-trip, local plan-file round-trip and malformed-file rejection, blank Person 2 plan-file normalization, cash-wedge source reconciliation, the migration engine bridge, critical intake validation, and progressive Monte Carlo lifecycle.
+
+The migration preview also includes a Node-side engine bridge at [`engine/legacy_engine_bridge.cjs`](engine/legacy_engine_bridge.cjs). It exposes the target `runSimulation(plan, cfg)` boundary while still evaluating the legacy dashboard engine internally. This is a parity bridge, not the final browser-safe engine module.
+
+The first standalone simulation module now lives at [`engine/simulation_engine.js`](engine/simulation_engine.js). It is mechanically extracted from the dashboard engine and guarded by parity probes while callers move over.
+
+Run the suite locally with:
 
 ```bash
 cd probes
@@ -69,10 +75,24 @@ The current free/public comparator run is documented in [`validation/external-re
 
 Open [`index.html`](index.html) in a browser to start a plan, or open [`retirement_dashboard.html`](retirement_dashboard.html) to view bundled examples. Because this is static HTML, no build step is required. If your browser blocks local file behaviours, serve the folder with any local static server and open the same files from `localhost`.
 
+### React app preview
+
+A parallel Vite + React + TypeScript app shell now lives under [`app/`](app/). It is a migration preview, not the release entry point yet. The preview can validate existing v2 `.plan.json` files, normalize the same blank Person 2 edge cases as the static app, run the current dashboard engine through a browser-safe harness, and hand a loaded plan back to the stable dashboard.
+
+Run it locally with:
+
+```bash
+npm install
+npm run dev
+```
+
+The UI gate for the guided intake migration is now open: the preview has v2 plan-file adapters and an extracted simulation module behind parity probes. The existing `index.html` and `retirement_dashboard.html` files remain the stable local-first product until the guided intake reaches replacement parity.
+
 ## Tech
 
-- HTML / CSS / vanilla JavaScript — no framework, no build step.
-- [Chart.js](https://www.chartjs.org/) is the only external runtime dependency, loaded from a CDN.
+- Stable app: HTML / CSS / vanilla JavaScript — no framework, no build step.
+- Migration preview: Vite + React + TypeScript, built in parallel under [`app/`](app/).
+- [Chart.js](https://www.chartjs.org/) remains the charting dependency; the stable dashboard currently loads it from a CDN.
 - Node 18+ to run the probe suite locally; CI runs on Node 20.
 
 ## Repo guide

@@ -1,0 +1,382 @@
+:root {
+  color: #17211f;
+  background: #f4f6f2;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #17211f;
+  --muted: #64736d;
+  --line: #d9dfd7;
+  --paper: #ffffff;
+  --wash: #eef3ec;
+  --navy: #243b53;
+  --green: #2f6f55;
+  --green-dark: #245741;
+  --amber: #b77a22;
+  --red: #a43b2f;
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button:disabled,
+.disabled-link {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.app-shell {
+  width: min(1240px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--green-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  color: var(--navy);
+  font-size: clamp(1.75rem, 2.8vw, 2.8rem);
+}
+
+h2 {
+  color: var(--ink);
+  font-size: 1.35rem;
+}
+
+h3 {
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.top-actions,
+.actions,
+.review-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button,
+button,
+.file-picker {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  padding: 0 15px;
+  background: var(--green);
+  color: #ffffff;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.secondary,
+button.secondary,
+.ghost {
+  border-color: var(--line);
+  background: #ffffff;
+  color: var(--navy);
+}
+
+.text-button {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.status-strip {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.status-strip div,
+.summary-grid div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 14px;
+}
+
+.status-strip span,
+.summary-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  margin-bottom: 5px;
+}
+
+.status-strip strong,
+.summary-grid strong {
+  display: block;
+  color: var(--ink);
+}
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+.sidebar {
+  display: grid;
+  gap: 8px;
+  position: sticky;
+  top: 18px;
+}
+
+.nav-item,
+.step-button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 12px;
+}
+
+.nav-item.active,
+.step-button.active {
+  border-color: var(--green);
+  background: var(--wash);
+}
+
+.nav-item span,
+.step-button span {
+  display: block;
+  font-weight: 800;
+}
+
+.nav-item small,
+.step-button small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 3px;
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 18px;
+}
+
+.panel,
+.intro-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 22px;
+}
+
+.intro-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faf6 100%);
+}
+
+.clean-list {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clean-list li {
+  border-left: 4px solid var(--green);
+  background: var(--wash);
+  padding: 8px 10px;
+}
+
+.intake-shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.step-rail {
+  display: grid;
+  gap: 8px;
+}
+
+.intake-panel {
+  min-height: 360px;
+}
+
+.placeholder-box {
+  display: grid;
+  gap: 6px;
+  border: 1px dashed #b9c4b5;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  margin: 22px 0;
+  padding: 18px;
+}
+
+.placeholder-box span {
+  color: var(--muted);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.review-links {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  margin-bottom: 18px;
+}
+
+.error {
+  color: var(--red);
+  font-weight: 750;
+}
+
+.validation-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #e0c08d;
+  border-radius: var(--radius);
+  background: #fff9ee;
+  margin: 18px 0;
+  padding: 16px;
+}
+
+.validation-panel.ok {
+  border-color: #b9d2c5;
+  background: #f1f7f3;
+}
+
+.validation-panel strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.validation-panel ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.validation-panel li {
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.validation-panel li span {
+  color: var(--muted);
+  display: inline-block;
+  font-weight: 750;
+  margin-right: 8px;
+}
+
+@media (max-width: 920px) {
+  .workspace-layout,
+  .page-grid,
+  .intake-shell,
+  .status-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .step-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header,
+  .top-actions,
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .step-rail,
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
