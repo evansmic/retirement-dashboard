@@ -40,17 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 15 should be **Entry Point And Handoff Reliability**.
+Sprint 16 should be **React Stress Tests Parity**.
 
-Goal: make the stable intake, stable dashboard, and React preview entry points explicit, reliable, and regression-tested across local dev and Vercel preview deployment.
+Goal: deepen the React Stress Tests tab so users can see what can go wrong, when it first appears, how severe it is, and which React detail area to review next.
 
-Candidate Sprint 15 slices:
+Candidate Sprint 16 slices:
 
-- React stable URL helpers.
-- Stable intake/dashboard link audit.
-- Vite legacy route probe.
-- Vercel preview staging for React plus stable fallback files.
-- README and sprint documentation updates.
+- Baseline stress summary.
+- Spending shortfall, depletion, cushion, tax pressure, and source reconciliation rows.
+- Review-action handoffs into Annual Detail, Accounts, Taxes, and Cash Flow.
+- Stable dashboard fallback for Monte Carlo, sequence stress, print/PDF, and legacy charts.
 
 ## Medium-Term Roadmap
 
@@ -63,6 +62,7 @@ Candidate Sprint 15 slices:
 - **Sprint 13 — React results chart parity.** Add bounded chart-ready visuals for portfolio, spending/tax/shortfall, and account bucket balances without adding export/reporting scope.
 - **Sprint 14 — React results polish and handoff audit.** Tighten Results workspace spacing, chart/table readability, and stable-dashboard handoff copy before adding more feature surface.
 - **Sprint 15 — Entry point and handoff reliability.** Make React preview, stable intake, stable dashboard, and Vercel preview routes explicit and regression-tested.
+- **Sprint 16 — React stress tests parity.** Deepen the Stress Tests tab with runtime-only baseline stress summary, evidence rows, review actions, and stable-dashboard handoff.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

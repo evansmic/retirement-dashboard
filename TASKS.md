@@ -4,13 +4,38 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 15: Entry Point And Handoff Reliability
+## Active Sprint — Sprint 16: React Stress Tests Parity
 
-**Status:** Implementation in progress 2026-05-07 after Sprint 14 checkpoint.
+**Status:** Implementation in progress 2026-05-08 after Sprint 15 checkpoint.
 
-Goal: make the stable intake, stable dashboard, and React preview entry points explicit, reliable, and regression-tested across local dev and Vercel preview deployment.
+Goal: deepen the React Stress Tests tab so users can see what can go wrong, when it first appears, how severe it is, and which React detail area to review next.
 
-Non-scope: schema v3, cloud sync, accounts, advisor workspace, AI reports, optimizer, report/PDF migration, stable-dashboard rewrite, or persisted React result state.
+Non-scope: Monte Carlo migration, historical sequence stress migration, optimizer, schema v3, persisted stress output, account/cloud/advisor/AI/multi-province scope, or print/PDF migration.
+
+Sprint 16 checkpoint doc: [`docs/sprint_16_react_stress_tests_parity.md`](docs/sprint_16_react_stress_tests_parity.md).
+
+### Sprint 16 Candidate Implementation Tickets
+
+- [x] **S16-01 — Stress summary selector.** ✅ *Done 2026-05-08.* Added runtime-only summary for status, funded years, first stress year, and main item.
+- [x] **S16-02 — Stress evidence rows.** ✅ *Done 2026-05-08.* Added spending shortfall, depletion, cushion, tax pressure, and source reconciliation stress rows.
+- [x] **S16-03 — React Stress Tests panel.** ✅ *Done 2026-05-08.* Added summary, evidence rows, review actions, and existing baseline indicators.
+- [x] **S16-04 — Stable dashboard handoff.** ✅ *Done 2026-05-08.* Kept full Monte Carlo, sequence stress, print/PDF, and legacy charts in stable dashboard copy.
+- [x] **S16-05 — Tests and docs.** ✅ *Done 2026-05-08.* Added selector/smoke coverage and Sprint 16 documentation.
+
+### Sprint 16 Definition Of Done
+
+- Stress Tests explains what can go wrong, when it first appears, and where to review.
+- Stress output is runtime-only and derived from existing simulation rows.
+- Language remains review-oriented, not advice.
+- Stable dashboard remains the full stress-test fallback.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+## Completed Sprints
+
+### Sprint 15: Entry Point And Handoff Reliability
+
+**Complete 2026-05-07.** Made the stable intake, stable dashboard, and React preview entry points explicit, reliable, and regression-tested across local dev and Vercel preview deployment.
 
 Sprint 15 checkpoint doc: [`docs/sprint_15_entrypoint_handoff_reliability.md`](docs/sprint_15_entrypoint_handoff_reliability.md).
 
@@ -31,8 +56,6 @@ Sprint 15 checkpoint doc: [`docs/sprint_15_entrypoint_handoff_reliability.md`](d
 - A route probe prevents stable-dashboard links from falling back to React.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
-
-## Completed Sprints
 
 ### Sprint 14: React Results Polish And Handoff Audit
 

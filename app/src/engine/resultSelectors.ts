@@ -109,6 +109,30 @@ export type StressIndicatorRow = {
   severity: 'ok' | 'watch';
 };
 
+export type StressSeverity = 'ok' | 'review' | 'watch';
+
+export type StressTestSummary = {
+  status: StressSeverity;
+  headline: string;
+  detail: string;
+  totalYears: number;
+  fundedYears: number;
+  firstStressYear: number | null;
+  worstStressLabel: string;
+  stableDashboardHandoff: string;
+};
+
+export type StressTestRow = {
+  id: 'spendingShortfall' | 'portfolioDepletion' | 'portfolioCushion' | 'taxPressure' | 'sourceReconciliation';
+  label: string;
+  severity: StressSeverity;
+  year: number | null;
+  value: string;
+  evidence: string;
+  reviewAction: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
 export type ChartReadyYear = {
   year: number;
   spending: number;
@@ -681,6 +705,148 @@ export function selectStressIndicatorRows(result: SimulationResult | null | unde
       severity: shortfallRows.length > 0 ? 'watch' : 'ok'
     }
   ];
+}
+
+function stressSeverityRank(severity: StressSeverity): number {
+  if (severity === 'watch') return 2;
+  if (severity === 'review') return 1;
+  return 0;
+}
+
+function stressPriority(row: StressTestRow): number {
+  if (row.id === 'sourceReconciliation') return 5;
+  if (row.id === 'spendingShortfall') return 4;
+  if (row.id === 'portfolioDepletion') return 3;
+  if (row.id === 'portfolioCushion') return 2;
+  if (row.id === 'taxPressure') return 1;
+  return 0;
+}
+
+export function selectStressTestRows(result: SimulationResult | null | undefined): StressTestRow[] {
+  const rows = rowsFrom(result);
+  const overview = selectOverviewMetrics(result);
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const taxPressureRows = selectTaxPressureRows(result);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const worstShortfall = rows.reduce((worst, row) => Math.max(worst, n(row.shortfall)), 0);
+  const depletionRow = rows.find((row) => n(row.bal_total) <= RECONCILIATION_TOLERANCE);
+  const minimumPortfolioRow = rows.reduce<AnnualSimulationRow | null>((min, row) => {
+    if (!min || n(row.bal_total) < n(min.bal_total)) return row;
+    return min;
+  }, null);
+  const lowestPortfolio = n(minimumPortfolioRow?.bal_total);
+  const firstYearSpending = Math.max(n(rows[0]?.totalAftaxYear || rows[0]?.spending), 1);
+  const cushionYears = lowestPortfolio / firstYearSpending;
+  const highTaxPressure = taxPressureRows.find((row) => row.pressure === 'high');
+  const firstTaxPressure = highTaxPressure || taxPressureRows[0];
+
+  return [
+    {
+      id: 'spendingShortfall',
+      label: 'Spending shortfall',
+      severity: firstShortfall ? 'watch' : 'ok',
+      year: firstShortfall?.year ?? null,
+      value: firstShortfall ? `$${Math.round(worstShortfall).toLocaleString()}` : 'None',
+      evidence: firstShortfall
+        ? `The first visible shortfall appears in ${firstShortfall.year}.`
+        : `All ${overview.projectionYears || 0} projection years fund planned spending within tolerance.`,
+      reviewAction: firstShortfall ? 'Review Annual Detail and test spending or timing changes.' : 'No spending shortfall review is needed from this baseline run.',
+      detailArea: 'annualDetail'
+    },
+    {
+      id: 'portfolioDepletion',
+      label: 'Portfolio depletion',
+      severity: depletionRow ? 'watch' : 'ok',
+      year: depletionRow?.year ?? null,
+      value: depletionRow ? String(depletionRow.year) : 'Not depleted',
+      evidence: depletionRow
+        ? `Total portfolio reaches zero or below tolerance in ${depletionRow.year}.`
+        : 'The total portfolio remains above zero through the visible projection.',
+      reviewAction: depletionRow ? 'Review the depletion year and nearby withdrawal rows.' : 'Use this as a baseline check, then compare richer stress runs in the stable dashboard.',
+      detailArea: 'accounts'
+    },
+    {
+      id: 'portfolioCushion',
+      label: 'Lowest portfolio cushion',
+      severity: lowestPortfolio <= RECONCILIATION_TOLERANCE ? 'watch' : cushionYears < 2 ? 'review' : 'ok',
+      year: minimumPortfolioRow?.year ?? null,
+      value: minimumPortfolioRow ? `$${Math.round(lowestPortfolio).toLocaleString()}` : '-',
+      evidence: minimumPortfolioRow
+        ? `Lowest visible portfolio is about ${cushionYears.toFixed(1)}x first-year after-tax spending.`
+        : 'No portfolio rows are available yet.',
+      reviewAction:
+        lowestPortfolio <= RECONCILIATION_TOLERANCE
+          ? 'Review depletion and shortfall rows before relying on the path.'
+          : cushionYears < 2
+            ? 'Review whether the terminal cushion is comfortable enough for uncertainty.'
+            : 'Cushion looks adequate in the baseline projection; stress scenarios may still change that.',
+      detailArea: 'accounts'
+    },
+    {
+      id: 'taxPressure',
+      label: 'Tax pressure',
+      severity: highTaxPressure ? 'watch' : taxPressureRows.length > 0 ? 'review' : 'ok',
+      year: firstTaxPressure?.year ?? null,
+      value: firstTaxPressure ? `${firstTaxPressure.pressure} pressure` : 'None detected',
+      evidence: firstTaxPressure
+        ? `${firstTaxPressure.reason} in ${firstTaxPressure.year}.`
+        : 'No major OAS clawback or registered-withdrawal tax pressure was detected.',
+      reviewAction: firstTaxPressure ? 'Review the Taxes tab and check whether timing or withdrawal order matters.' : 'No tax stress item surfaced from the baseline run.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'sourceReconciliation',
+      label: 'Source reconciliation',
+      severity: diagnostics.status === 'warning' ? 'watch' : 'ok',
+      year: diagnostics.firstWarningYear,
+      value: diagnostics.status === 'warning' ? `$${Math.round(diagnostics.maxReconciliationGap).toLocaleString()} gap` : 'Clean',
+      evidence:
+        diagnostics.status === 'warning'
+          ? `First reconciliation warning appears in ${diagnostics.firstWarningYear}.`
+          : `${diagnostics.rowsChecked} annual rows reconcile within tolerance.`,
+      reviewAction:
+        diagnostics.status === 'warning'
+          ? 'Review Cash Flow before trusting stress conclusions.'
+          : 'Reconciliation is clean enough for the baseline stress read.',
+      detailArea: 'cashFlow'
+    }
+  ];
+}
+
+export function selectStressTestSummary(result: SimulationResult | null | undefined): StressTestSummary {
+  const rows = rowsFrom(result);
+  const stressRows = selectStressTestRows(result);
+  const sorted = [...stressRows].sort(
+    (a, b) => stressSeverityRank(b.severity) - stressSeverityRank(a.severity) || stressPriority(b) - stressPriority(a)
+  );
+  const worst = sorted[0];
+  const watchCount = stressRows.filter((row) => row.severity === 'watch').length;
+  const reviewCount = stressRows.filter((row) => row.severity === 'review').length;
+  const shortfallRows = rows.filter((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const firstStressYear = sorted
+    .filter((row) => row.severity !== 'ok' && row.year)
+    .map((row) => row.year as number)
+    .sort((a, b) => a - b)[0] ?? null;
+  const status: StressSeverity = watchCount > 0 ? 'watch' : reviewCount > 0 ? 'review' : 'ok';
+
+  return {
+    status,
+    headline:
+      status === 'watch'
+        ? 'The baseline projection has stress points to review before relying on it.'
+        : status === 'review'
+          ? 'The baseline projection is funded, with cushion or tax items worth reviewing.'
+          : 'The baseline projection has no major stress flags in the visible years.',
+    detail:
+      status === 'ok'
+        ? 'Use this as the first read, then use the stable dashboard for Monte Carlo and historical sequence stress.'
+        : `Review ${watchCount + reviewCount} stress item${watchCount + reviewCount === 1 ? '' : 's'} before treating the path as durable.`,
+    totalYears: rows.length,
+    fundedYears: rows.length - shortfallRows.length,
+    firstStressYear,
+    worstStressLabel: worst?.severity !== 'ok' ? worst.label : 'No major stress item',
+    stableDashboardHandoff: 'Full Monte Carlo, historical sequence stress, print/PDF, and legacy stress charts remain in the stable dashboard.'
+  };
 }
 
 export function selectChartReadyData(result: SimulationResult | null | undefined): ChartReadyYear[] {

@@ -25,6 +25,8 @@ import {
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
+  selectStressTestRows,
+  selectStressTestSummary,
   selectSurvivorComparison,
   selectSurvivorViewSummary,
   selectTaxPressureRows,
@@ -194,6 +196,8 @@ describe('Sprint 6 results workspace smoke', () => {
     const accountChartRows = selectAccountBucketChartSeries(result);
     const taxSummary = selectTaxSummaryMetrics(result);
     const stressRows = selectStressIndicatorRows(result);
+    const stressTestRows = selectStressTestRows(result);
+    const stressTestSummary = selectStressTestSummary(result);
     const milestones = selectProjectionMilestones(result);
     const diagnostics = selectReconciliationDiagnostics(result);
     const firstFundingRows = selectFundingSourceRows(result.years[0]);
@@ -226,6 +230,9 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(accountChartRows).toHaveLength(result.years.length);
     expect(taxSummary.lifetimeTax).toBeGreaterThanOrEqual(0);
     expect(stressRows.find((row) => row.id === 'fundedYears')?.value).toContain('/');
+    expect(stressTestRows).toHaveLength(5);
+    expect(['ok', 'review', 'watch']).toContain(stressTestSummary.status);
+    expect(stressTestSummary.stableDashboardHandoff).toContain('stable dashboard');
     expect(milestones.length).toBeGreaterThanOrEqual(2);
     expect(diagnostics.rowsChecked).toBe(result.years.length);
     expect(firstFundingRows.some((row) => row.id === 'cash-wedge')).toBe(true);

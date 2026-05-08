@@ -42,6 +42,8 @@ import {
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
+  selectStressTestRows,
+  selectStressTestSummary,
   selectSurvivorComparison,
   selectSurvivorViewSummary,
   selectTaxDetailRows,
@@ -1987,6 +1989,8 @@ function ResultsHandoffPanel({
   const taxPressureRows = selectTaxPressureRows(result);
   const taxPressureExplanation = selectTaxPressureExplanation(result);
   const stressIndicatorRows = selectStressIndicatorRows(result);
+  const stressTestRows = selectStressTestRows(result);
+  const stressTestSummary = selectStressTestSummary(result);
   const planHealth = selectPlanHealthExplainer(result);
   const sourceStory = selectSourceReconciliationStory(firstRow);
   const decisionChecklist = selectDecisionChecklist(result, plan);
@@ -2053,7 +2057,7 @@ function ResultsHandoffPanel({
         ) : activeSection === 'assumptions' ? (
           <AssumptionsResultsPanel plan={plan} />
         ) : activeSection === 'stressTests' ? (
-          <StressTestsPanel loading={loading} rows={stressIndicatorRows} />
+          <StressTestsPanel indicatorRows={stressIndicatorRows} loading={loading} rows={stressTestRows} summary={stressTestSummary} />
         ) : activeSection === 'taxes' ? (
           <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} summary={taxSummary} />
         ) : activeSection === 'accounts' ? (
@@ -3023,26 +3027,70 @@ function TaxesResultsPanel({
 }
 
 function StressTestsPanel({
+  indicatorRows,
   loading,
-  rows
+  rows,
+  summary
 }: {
+  indicatorRows: ReturnType<typeof selectStressIndicatorRows>;
   loading: boolean;
-  rows: ReturnType<typeof selectStressIndicatorRows>;
+  rows: ReturnType<typeof selectStressTestRows>;
+  summary: ReturnType<typeof selectStressTestSummary>;
 }) {
+  type StressTestPanelRow = ReturnType<typeof selectStressTestRows>[number];
+  type StressIndicatorPanelRow = ReturnType<typeof selectStressIndicatorRows>[number];
+
   return (
     <div className="stress-tests-panel">
+      <section className={`stress-summary-panel stress-${summary.status}`}>
+        <div>
+          <p className="eyebrow">Baseline stress read</p>
+          <h3>{loading ? 'Calculating stress read' : summary.headline}</h3>
+          <p>{summary.detail}</p>
+        </div>
+        <div className="summary-grid">
+          <Metric label="Funded years" value={`${summary.fundedYears}/${summary.totalYears || 0}`} />
+          <Metric label="First stress year" value={summary.firstStressYear ? String(summary.firstStressYear) : 'None'} />
+          <Metric label="Main item" value={summary.worstStressLabel} />
+        </div>
+      </section>
+
+      <div className="stress-row-list">
+        {rows.map((row: StressTestPanelRow) => (
+          <section className={`stress-row stress-row-${row.severity}`} key={row.id}>
+            <div>
+              <small>{row.severity}</small>
+              <h3>{row.label}</h3>
+              <p>{row.evidence}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Year</dt>
+                <dd>{row.year || '-'}</dd>
+              </div>
+              <div>
+                <dt>Value</dt>
+                <dd>{row.value}</dd>
+              </div>
+              <div>
+                <dt>Review</dt>
+                <dd>{resultsSectionTitle(row.detailArea)}</dd>
+              </div>
+            </dl>
+            <p className="table-note">{row.reviewAction}</p>
+          </section>
+        ))}
+      </div>
+
       <div className="result-overview-grid">
-        {rows.map((row) => (
+        {indicatorRows.map((row: StressIndicatorPanelRow) => (
           <section className={`result-card ${row.severity === 'watch' ? 'watch-card' : ''}`} key={row.id}>
             <h3>{row.label}</h3>
             <p className={row.severity === 'watch' ? 'bad-value' : 'ok-value'}>{loading ? 'Calculating' : row.value}</p>
           </section>
         ))}
       </div>
-      <p className="table-note">
-        This preview reports baseline indicators and the Overview confidence layer. Full stress details, annual rows, charts,
-        and print/PDF remain in the stable dashboard.
-      </p>
+      <p className="table-note">{summary.stableDashboardHandoff}</p>
     </div>
   );
 }

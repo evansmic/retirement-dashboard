@@ -25,6 +25,8 @@ import {
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
+  selectStressTestRows,
+  selectStressTestSummary,
   selectSurvivorComparison,
   selectSurvivorViewSummary,
   selectTaxDetailRows,
@@ -195,6 +197,23 @@ describe('result selectors', () => {
       value: 'Not depleted',
       severity: 'ok'
     });
+    expect(selectStressTestSummary(fixture)).toMatchObject({
+      status: 'watch',
+      fundedYears: 2,
+      totalYears: 2,
+      firstStressYear: 2028
+    });
+    expect(selectStressTestRows(fixture).map((row) => row.id)).toEqual([
+      'spendingShortfall',
+      'portfolioDepletion',
+      'portfolioCushion',
+      'taxPressure',
+      'sourceReconciliation'
+    ]);
+    expect(selectStressTestRows(fixture).find((row) => row.id === 'sourceReconciliation')).toMatchObject({
+      severity: 'ok',
+      detailArea: 'cashFlow'
+    });
     expect(selectProjectionMilestones(fixture).map((row) => row.label)).toEqual(['First year', 'Final year']);
     expect(selectProjectionMilestones(fixture)[0]).toMatchObject({ year: 2028, portfolio: 512960.825107529 });
     expect(selectChartReadyData(fixture)[1]).toMatchObject({ year: 2029, portfolio: 500000, funding: 71470 });
@@ -261,6 +280,11 @@ describe('result selectors', () => {
       warningCount: 1,
       firstWarningYear: 2028,
       status: 'warning'
+    });
+    expect(selectStressTestSummary({ years: [{ ...fixture.years[0], cash_draw: 0 }] })).toMatchObject({
+      status: 'watch',
+      firstStressYear: 2028,
+      worstStressLabel: 'Source reconciliation'
     });
   });
 
