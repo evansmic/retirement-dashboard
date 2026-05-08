@@ -16,6 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["app/src", "vite.config.mts"],
+  "include": ["app/src"],
   "references": []
 }

@@ -1820,7 +1820,7 @@ function submitForm() {
   const D = gatherD();
   try {
     const encoded = btoa(encodeURIComponent(JSON.stringify(D)));
-    window.location.href = 'retirement_dashboard#' + encoded;
+    window.location.href = 'retirement_dashboard.html#' + encoded;
   } catch(e) {
     errEl.textContent = 'Encoding error: ' + e.message;
     errEl.style.display = 'block';

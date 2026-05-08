@@ -88,6 +88,17 @@ npm run dev
 
 The UI gate for the guided intake migration is now open: the preview has v2 plan-file adapters and an extracted simulation module behind parity probes. The existing `index.html` and `retirement_dashboard.html` files remain the stable local-first product until the guided intake reaches replacement parity.
 
+React preview entry points:
+
+| Route | Surface |
+|---|---|
+| `/` | React guided intake and Results workspace |
+| `/stable-intake.html` | Stable static intake fallback |
+| `/retirement_dashboard.html` | Stable dashboard fallback |
+| `/dashboard` | Stable dashboard alias |
+
+For Vercel preview deployments, run `npm run build:vercel-preview`. That builds the React app and stages the stable dashboard, stable intake, and engine helpers into `dist/react-app` so handoff links work away from localhost.
+
 ## Tech
 
 - Stable app: HTML / CSS / vanilla JavaScript — no framework, no build step.

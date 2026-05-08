@@ -1,37 +1,302 @@
 # TASKS.md
 
-The 2026-04-30 product reset made the planner consumer-first, local-first, and recommended-plan-first. Sprint 0 through Sprint 4 are complete. Sprint 5 starts the React UI/navigation migration while preserving the stable local-first static app as the fallback.
+The 2026-04-30 product reset made the planner consumer-first, local-first, and recommended-plan-first. Sprint 0 through Sprint 6 established the local-first app, React guided intake, and first React results workspace. The product direction is now the **Canadian retirement decision engine**: more Canada-specific, more explainable, and more decision-oriented than broad modelling labs like ProjectionLab.
 
-## Active Sprint — Sprint 5: UI / Navigation Redesign Discovery
+Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-**Status:** Hybrid navigation selected and route/state shell started 2026-05-01. UI gate is open because the React preview has v2 `.plan.json` adapters and an extracted simulation module behind parity probes.
+## Active Sprint — Sprint 15: Entry Point And Handoff Reliability
+
+**Status:** Implementation in progress 2026-05-07 after Sprint 14 checkpoint.
+
+Goal: make the stable intake, stable dashboard, and React preview entry points explicit, reliable, and regression-tested across local dev and Vercel preview deployment.
+
+Non-scope: schema v3, cloud sync, accounts, advisor workspace, AI reports, optimizer, report/PDF migration, stable-dashboard rewrite, or persisted React result state.
+
+Sprint 15 checkpoint doc: [`docs/sprint_15_entrypoint_handoff_reliability.md`](docs/sprint_15_entrypoint_handoff_reliability.md).
+
+### Sprint 15 Candidate Implementation Tickets
+
+- [x] **S15-01 — Entry point contract.** ✅ *Done 2026-05-07.* Documented React preview, stable intake, stable dashboard, and engine helper routes.
+- [x] **S15-02 — React stable URL helpers.** ✅ *Done 2026-05-07.* Centralized stable intake and stable dashboard links in React.
+- [x] **S15-03 — Stable intake link audit.** ✅ *Done 2026-05-07.* Confirmed dashboard hash handoff uses `retirement_dashboard.html#`.
+- [x] **S15-04 — Legacy route probe.** ✅ *Done 2026-05-07.* Added Vite route coverage for stable dashboard, stable intake, aliases, and engine helpers.
+- [x] **S15-05 — Vercel preview staging.** ✅ *Done 2026-05-07.* Added React preview build staging so stable handoffs work on Vercel preview URLs.
+- [x] **S15-06 — Docs and verification.** ✅ *Done 2026-05-07.* Added Sprint 15 docs, README notes, and canonical probe coverage.
+
+### Sprint 15 Definition Of Done
+
+- React preview links open the real stable dashboard and stable intake.
+- Vite dev/preview serves stable dashboard, stable intake, and engine helper routes.
+- Vercel preview build stages React plus stable fallback files.
+- A route probe prevents stable-dashboard links from falling back to React.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+## Completed Sprints
+
+### Sprint 14: React Results Polish And Handoff Audit
+
+**Complete 2026-05-07.** Tightened the migrated React Results workspace so navigation, charts, tables, and stable-dashboard handoff copy feel consistent before adding more feature surface.
+
+Sprint 14 checkpoint doc: [`docs/sprint_14_react_results_polish_handoff_audit.md`](docs/sprint_14_react_results_polish_handoff_audit.md).
+
+### Sprint 14 Candidate Implementation Tickets
+
+- [x] **S14-01 — Results navigation spacing.** ✅ *Done 2026-05-07.* Increased tab button height, spacing, and responsive wrapping so helper text sits clearly below titles.
+- [x] **S14-02 — Handoff copy audit.** ✅ *Done 2026-05-07.* Centralized React tab intro and stable-dashboard handoff copy.
+- [x] **S14-03 — Chart readability pass.** ✅ *Done 2026-05-07.* Improved chart panel spacing and responsive chart heights.
+- [x] **S14-04 — Table readability pass.** ✅ *Done 2026-05-07.* Tightened table framing, row spacing, and first-column emphasis.
+- [x] **S14-05 — Tests and docs.** ✅ *Done 2026-05-07.* Added Sprint 14 documentation and ran the standard verification suite.
+
+### Sprint 14 Definition Of Done
+
+- React Results navigation spacing is consistent across tab title/helper text.
+- Handoff copy clearly distinguishes React coverage from stable-dashboard fallback.
+- Charts and tables are more readable on desktop and narrow widths.
+- No new result output or UI state is persisted.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 13: React Results Chart Parity
+
+**Complete 2026-05-07.** Added a bounded React chart layer around the migrated results panels so users can inspect the main projection visuals without jumping immediately to the stable dashboard.
+
+Sprint 13 checkpoint doc: [`docs/sprint_13_react_results_chart_parity.md`](docs/sprint_13_react_results_chart_parity.md).
+
+### Sprint 13 Candidate Implementation Tickets
+
+- [x] **S13-01 — Chart selector contract.** ✅ *Done 2026-05-07.* Added runtime-only portfolio, spending/tax/shortfall, and account bucket chart series selectors.
+- [x] **S13-02 — Annual Detail charts.** ✅ *Done 2026-05-07.* Added portfolio and spending/tax/shortfall charts above the annual table.
+- [x] **S13-03 — Accounts chart.** ✅ *Done 2026-05-07.* Added an account bucket balance chart above the Accounts result tables.
+- [x] **S13-04 — Stable dashboard handoff.** ✅ *Done 2026-05-07.* Kept print/PDF, reporting, and legacy audit surfaces anchored in the stable dashboard.
+- [x] **S13-05 — Tests and docs.** ✅ *Done 2026-05-07.* Added selector/smoke coverage and Sprint 13 documentation.
+
+### Sprint 13 Definition Of Done
+
+- React renders key chart parity surfaces for annual projection and account buckets.
+- Chart series are derived from existing simulation output and selectors.
+- Chart output and view state are runtime-only and not persisted.
+- Stable dashboard remains available for print/PDF, richer charting, and legacy audit surfaces.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 12: React Annual Detail Parity
+
+**Complete 2026-05-07.** Added a first-class React Annual Detail tab so users can inspect full year-by-year projection rows without jumping immediately to the stable dashboard.
+
+Sprint 12 checkpoint doc: [`docs/sprint_12_react_annual_detail_parity.md`](docs/sprint_12_react_annual_detail_parity.md).
+
+### Sprint 12 Candidate Implementation Tickets
+
+- [x] **S12-01 — Annual detail navigation.** ✅ *Done 2026-05-07.* Added `Annual Detail` as a first-class Results tab after Overview.
+- [x] **S12-02 — Annual detail selectors.** ✅ *Done 2026-05-07.* Added runtime-only annual detail rows and summary metrics derived from existing simulation output.
+- [x] **S12-03 — Simple view controls.** ✅ *Done 2026-05-07.* Added Summary, Income, Withdrawals, Tax, and Balances table views without persisted UI state.
+- [x] **S12-04 — Full-year React table.** ✅ *Done 2026-05-07.* Rendered all projection years in a scrollable table while preserving stable dashboard handoff for charts and print/PDF.
+- [x] **S12-05 — Tests and docs.** ✅ *Done 2026-05-07.* Added selector/smoke coverage and Sprint 12 documentation.
+
+### Sprint 12 Definition Of Done
+
+- Annual Detail shows all available projection years in React.
+- Annual Detail values reconcile with existing Cash Flow selectors.
+- Annual Detail output and view state are runtime-only and not persisted.
+- Stable dashboard remains available for charts, print/PDF, and legacy audit surfaces.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 11: Recommended Path Implementation Checklist
+
+**Complete 2026-05-07.** Turned selected-path confidence, stress, and drilldown evidence into a runtime-only implementation checklist users can review before relying on a preview path.
+
+Sprint 11 checkpoint doc: [`docs/sprint_11_recommended_path_implementation_checklist.md`](docs/sprint_11_recommended_path_implementation_checklist.md).
+
+### Sprint 11 Candidate Implementation Tickets
+
+- [x] **S11-01 — Checklist selector contract.** ✅ *Done 2026-05-07.* Added typed runtime-only checklist items to the recommended-path summary.
+- [x] **S11-02 — Evidence-grounded checklist rules.** ✅ *Done 2026-05-07.* Checklist status uses validation blockers, break risks, confidence, stress context, and survivor comparison.
+- [x] **S11-03 — React checklist panel.** ✅ *Done 2026-05-07.* Added an Overview checklist below the break-risk drilldowns.
+- [x] **S11-04 — Tests and docs.** ✅ *Done 2026-05-07.* Added selector coverage and Sprint 11 documentation.
+
+### Sprint 11 Definition Of Done
+
+- Checklist output is runtime-only and not persisted.
+- Checklist items remain review-oriented and avoid financial-advice language.
+- Stable dashboard handoff remains explicit.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 10: Recommended Path Detail Drilldowns
+
+**Complete 2026-05-07.** Users can drill from high-level recommended-path break risks into focused selected-path evidence without persisting recommendation output or replacing the stable dashboard detail surface.
+
+Sprint 10 checkpoint doc: [`docs/sprint_10_recommended_path_detail_drilldowns_proposal.md`](docs/sprint_10_recommended_path_detail_drilldowns_proposal.md).
+
+### Sprint 10 Candidate Implementation Tickets
+
+- [x] **S10-01 — Risk detail selector contract.** ✅ *Done 2026-05-07.* Added runtime-only risk detail rows, default risk selection, metric rows, and evidence rows to the recommended-path summary.
+- [x] **S10-02 — Source, shortfall, and terminal cushion details.** ✅ *Done 2026-05-07.* Added focused selected-path evidence for reconciliation, funding pressure, and portfolio cushion.
+- [x] **S10-03 — Spending, retirement date, and benefit timing details.** ✅ *Done 2026-05-07.* Added bounded scenario comparison evidence for the three local reruns.
+- [x] **S10-04 — Tax and survivor details.** ✅ *Done 2026-05-07.* Added tax pressure and household resilience detail rows.
+- [x] **S10-05 — Overview interaction.** ✅ *Done 2026-05-07.* Made break risks selectable and rendered the selected detail panel.
+- [x] **S10-06 — Tests and documentation.** ✅ *Done 2026-05-07.* Added selector coverage and Sprint 10 documentation.
+
+### Sprint 10 Definition Of Done
+
+- Users can select a break risk and see focused selected-path evidence.
+- Selected-path details are runtime-only and not persisted.
+- Detail copy clearly points users to the stable dashboard for complete schedules.
+- The React Overview remains readable and does not turn into a dense spreadsheet.
+- Stable dashboard remains the full fallback.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 9: Recommended Path Stress & Confidence
+
+**Complete 2026-05-07.** Added a bounded confidence and stress layer around the selected recommended path so users can see how robust or fragile the preview choice is.
+
+Sprint 9 checkpoint doc: [`docs/sprint_9_recommended_path_stress_confidence.md`](docs/sprint_9_recommended_path_stress_confidence.md).
+
+### Sprint 9 Candidate Implementation Tickets
+
+- [x] **S9-01 — Recommended path confidence selector.** ✅ *Done 2026-05-07.* Added runtime-only confidence levels based on selected-path blockers, shortfalls, watch risks, tax pressure, and review items.
+- [x] **S9-02 — Selected-path stress context.** ✅ *Done 2026-05-07.* Added selected candidate stress context for funded years, first shortfall, lowest portfolio, terminal portfolio, tax pressure, and survivor status.
+- [x] **S9-03 — What could break this plan panel.** ✅ *Done 2026-05-07.* Added Overview risks for source reconciliation, spending sensitivity, retirement timing, CPP/OAS timing, shortfall, terminal cushion, tax pressure, and survivor resilience.
+- [x] **S9-04 — Stable dashboard detail handoff copy.** ✅ *Done 2026-05-07.* Updated Overview, Stress Tests, and Export/Save copy so detailed inspection stays anchored in the stable dashboard.
+- [x] **S9-05 — Stress/confidence tests and docs.** ✅ *Done 2026-05-07.* Added selector tests and Sprint 9 documentation.
+
+### Sprint 9 Definition Of Done
+
+- Confidence and stress output are computed at runtime only and are not persisted into `.plan.json`.
+- Selected-path stress context is visible in React Overview.
+- Overview shows bounded break risks and stable dashboard handoff copy.
+- Stable dashboard remains the full fallback.
+- Runtime dashboard schema remains `SCHEMA_VERSION = 2`.
+- Canonical probes pass and no private `.plan.json` files are committed.
+
+### Sprint 8: Recommended Plan Pathway v0
+
+**Complete 2026-05-07.** The React Overview selects the strongest preview candidate from the current plan, retire two years later, spend 10% less in go-go, and delay CPP/OAS to 70. The recommendation remains runtime-only and is not persisted.
+
+Sprint 8 checkpoint doc: [`docs/sprint_8_recommended_pathway.md`](docs/sprint_8_recommended_pathway.md).
+
+### Sprint 8 Candidate Implementation Tickets
+
+- [x] **S8-01 — Recommendation selector layer.** ✅ *Done 2026-05-07.* Added typed runtime-only recommended-path selectors for baseline, retire-later, lower-spending, and delayed-benefit candidates.
+- [x] **S8-02 — Recommended Path Overview panel.** ✅ *Done 2026-05-07.* Added a React Overview panel showing the strongest preview candidate, reasons, tradeoffs, and trust checks.
+- [x] **S8-03 — Candidate ranking table.** ✅ *Done 2026-05-07.* Added candidate rows with funded-through year, first shortfall, end-portfolio delta, lifetime tax delta, spending-funded years, and review status.
+- [x] **S8-04 — Why not the others.** ✅ *Done 2026-05-07.* Added transparent explanations for why non-selected candidates did not overtake the recommended path.
+- [x] **S8-05 — Recommended pathway tests and docs.** ✅ *Done 2026-05-07.* Added selector/smoke coverage and Sprint 8 continuity documentation.
+
+### Sprint 8 Definition Of Done
+
+- Recommended path is computed at runtime only and is not persisted into `.plan.json`.
+- Source reconciliation warnings block a candidate from recommendation.
+- Recommendation rules prefer no shortfall, then later funded-through year, then ending portfolio, then lower lifetime tax.
+- Survivor issues are review warnings, not automatic disqualifiers.
+- Stable dashboard remains the full fallback.
+- Runtime dashboard schema remains `SCHEMA_VERSION = 2`.
+- Canonical probes pass and no private `.plan.json` files are committed.
+
+### Sprint 7: Results Clarity And Decision Readiness
+
+**Complete 2026-05-07.** The React Overview explains plan health, traces money flow, surfaces decision review candidates, compares simple local scenarios, explains Canadian tax pressure, and starts household survivor resilience while preserving stable dashboard fallback and schema v2.
+
+Sprint 7 checkpoint doc: [`docs/sprint_7_results_clarity.md`](docs/sprint_7_results_clarity.md).
+
+### Sprint 7 Candidate Implementation Tickets
+
+- [x] **S7-01 — Plan Health Explainer.** ✅ *First slice done 2026-05-07.* Added typed plan-health selector and React Overview panel for funded-through year, first pressure point, largest review item, and stable dashboard fallback.
+- [x] **S7-02 — Source Reconciliation Story.** ✅ *First slice done 2026-05-07.* Turned first-year reconciliation into a user-facing source-to-tax-to-spending flow while preserving the all-years diagnostics.
+- [x] **S7-03 — Decision Checklist.** ✅ *First slice done 2026-05-07.* Added review-candidate checklist for source reconciliation, CPP/OAS timing, cash wedge, OAS clawback, registered tax spikes, survivor risk, and estate target.
+- [x] **S7-04 — Tax Pressure Timeline.** ✅ *First slice done 2026-05-07.* Added selector and Overview table for high-signal tax pressure years, including taxable income, tax, OAS clawback, and registered withdrawals.
+- [x] **S7-05 — First Scenario Cards.** ✅ *First slice done 2026-05-07.* Added computed local decision cards for retire two years later, spend 10% less in go-go, and delay CPP/OAS to 70. Cards show end-portfolio delta and funded-through year without becoming a full optimizer.
+- [x] **S7-06 — Survivor View Discovery/First Slice.** ✅ *First slice done 2026-05-07.* Added typed survivor summary that distinguishes single plans, two-person plans needing a survivor year, and plans ready for survivor comparison.
+- [x] **S7-07 — Decision Readiness Smoke.** ✅ *Done 2026-05-07.* Extended results smoke coverage for Larry-style single, couple, blank Person 2, source reconciliation, decision checklist, scenario cards, survivor summary, and dashboard handoff.
+- [x] **S7-08 — Scenario Comparison Detail.** ✅ *Done 2026-05-07.* Added a selector and Overview table comparing the three simple local reruns by end portfolio delta, first-year spending delta, lifetime tax delta, funded-through year, and first shortfall.
+- [x] **S7-09 — Decision Detail Panel.** ✅ *Done 2026-05-07.* Added evidence, affected years, and fallback result area for each decision checklist item so review candidates are explainable without becoming advice.
+- [x] **S7-10 — Scenario Assumption Summary.** ✅ *Done 2026-05-07.* Added a scenario assumptions table showing exactly what changes from baseline for each local rerun.
+- [x] **S7-11 — Tax Pressure Explanation.** ✅ *Done 2026-05-07.* Added plain-language tax pressure explanations for OAS clawback, registered withdrawals, and peak taxable-income years.
+- [x] **S7-12 — Survivor View Deepening.** ✅ *Done 2026-05-07.* Added baseline-versus-survivor comparison using the existing survivor simulation boundary when a couple plan has a survivor year.
+- [x] **S7-13 — Results UX Checkpoint.** ✅ *Done 2026-05-07.* Grouped the Overview into Plan Health, Money Flow, Decision Checks, Scenario Tests, and Household Resilience sections.
+
+### Sprint 7 Definition Of Done
+
+- React results tell a coherent plan story before asking users to inspect charts.
+- Source reconciliation remains visible and catches impossible rows.
+- Decision checklist is framed as review candidates, not regulated advice.
+- Stable dashboard remains the complete fallback.
+- Runtime dashboard schema remains `SCHEMA_VERSION = 2`.
+- No cloud sync/accounts/advisor/AI/multi-province/schema-v3 persistence creep.
+- Canonical probes pass and no private `.plan.json` files are committed.
+
+### Sprint 7 Checkpoint
+
+Sprint 7 is ready for checkpoint review once verification is green: the React Overview now explains plan health, traces money flow, surfaces decision review candidates, compares simple local scenarios, explains Canadian tax pressure, and starts household survivor resilience while preserving stable dashboard fallback and schema v2.
+
+### Sprint 6: Results Workspace Migration
+
+**Complete initial map 2026-05-07.** Started after Sprint 5 guided intake smoke passed locally. The React preview can now open/create v2 `.plan.json` files, edit guided intake, lazy-load the extracted simulation engine, review inputs, hand off to the stable dashboard, and render the initial results workspace map.
+
+Sprint 5 discovery doc: [`docs/sprint_5_ui_navigation_discovery.md`](docs/sprint_5_ui_navigation_discovery.md). Sprint 6 workspace decision: [`docs/sprint_6_results_workspace.md`](docs/sprint_6_results_workspace.md).
+
+### Sprint 6 Candidate Implementation Tickets
+
+- [x] **S6-01 — Results workspace screen map.** ✅ *First slice done 2026-05-06.* Recorded the React results navigation map: Overview, Cash Flow, Income Sources, Accounts, Taxes, Stress Tests, Assumptions, and Export/Save.
+- [x] **S6-02 — Result data selectors.** ✅ *First slice done 2026-05-06.* Added typed selectors for overview metrics, funding-source rows, account balance series, chart-ready data, and cash-flow reconciliation without changing engine output or persisted schema.
+- [x] **S6-03 — Overview results panel.** ✅ *First slice done 2026-05-06.* React Results now opens on Overview with projection years, end portfolio, first-year source reconciliation, warnings/blockers, and stable dashboard fallback.
+- [x] **S6-04 — Cash-flow/source reconciliation panel.** ✅ *First slice done 2026-05-06.* Added a Cash Flow results tab that checks annual source reconciliation and flags gap/cash-flow deltas while keeping full detail in the stable dashboard.
+- [x] **S6-05 — Results navigation shell.** ✅ *First slice done 2026-05-06.* Results tab state now lives in the workspace reducer. Overview and Cash Flow render React previews; all remaining mapped tabs are selectable placeholders that point users back to the stable dashboard until parity work is done.
+- [x] **S6-06 — Results smoke pass.** ✅ *Done 2026-05-06.* Added automated results smoke coverage for Larry-style single, couple, single-person blank Person 2, Overview selectors, Cash Flow reconciliation rows, navigation map, and v2 dashboard handoff packaging.
+- [x] **S6-07 — Income Sources preview panel.** ✅ *Done 2026-05-06.* Added typed income-source selectors and a React Income Sources tab with first-year, lifetime taxable, lifetime flexible, source rows, and stable dashboard fallback preserved.
+- [x] **S6-08 — Accounts preview panel.** ✅ *Done 2026-05-07.* Added account summary selectors and a React Accounts tab with start/end balances, peak portfolio, account bucket rows, and stable dashboard fallback preserved.
+- [x] **S6-09 — Taxes preview panel.** ✅ *Done 2026-05-07.* Added tax summary/detail selectors and a React Taxes tab with first-year tax, lifetime tax, peak tax year, OAS clawback, effective rates, and stable dashboard fallback preserved.
+- [x] **S6-10 — Stress Tests preview panel.** ✅ *Done 2026-05-07.* Added baseline stress indicator selectors and a React Stress Tests tab for shortfall, depletion, minimum portfolio, terminal portfolio, and funded-year indicators while leaving full scenario tests in the stable dashboard.
+- [x] **S6-11 — Assumptions preview panel.** ✅ *Done 2026-05-07.* Added a read-only React Assumptions tab summarizing run assumptions and strategy settings from the v2 plan without adding a new persistence surface.
+- [x] **S6-12 — Export/Save preview panel.** ✅ *Done 2026-05-07.* Added a local-first Export/Save tab summarizing v2 plan-file context and stable dashboard fallback without adding sync, accounts, or schema changes.
+- [x] **S6-13 — Overview projection path.** ✅ *Done 2026-05-07.* Added projection milestone selectors and a React Overview projection path table for first/mid/final year spending, tax, portfolio, and shortfall.
+- [x] **S6-14 — Export/Save action parity.** ✅ *Done 2026-05-07.* Added the local `.plan.json` save action directly inside the Export/Save tab while preserving the shared stable dashboard fallback.
+- [x] **S6-15 — Reconciliation diagnostics.** ✅ *Done 2026-05-07.* Added all-years source reconciliation diagnostics with rows checked, warning count, first warning year, max funding gap, and max cash-flow delta surfaced in Overview and Cash Flow.
+- [x] **S6-16 — Account drawdown summary.** ✅ *Done 2026-05-07.* Added account net-change values and an Accounts tab summary table for start, end, peak, and drawdown/growth by bucket.
+
+### Definition Of Done
+
+- React results workspace has a scoped first slice without replacing the stable dashboard.
+- Result selectors are deterministic and covered by tests.
+- Source reconciliation is visible and catches impossible cash-flow rows.
+- `.plan.json` v2 import/export remains compatible.
+- Runtime dashboard schema remains `SCHEMA_VERSION = 2`.
+- Static `index.html` and `retirement_dashboard.html` remain available as fallback.
+- Canonical probes pass and no private `.plan.json` files are committed.
+
+### Sprint 5: UI / Navigation Redesign Discovery
+
+**Complete 2026-05-06.** Hybrid guided intake implemented and browser smoke passed locally after the simulation engine was moved off the first page load.
 
 Goal: design and then implement the first guided-intake/navigation slice for the React app without changing persisted runtime schema, breaking the static release fallback, or adding accounts/cloud/full optimizer scope.
 
 Discovery doc: [`docs/sprint_5_ui_navigation_discovery.md`](docs/sprint_5_ui_navigation_discovery.md).
 
-### Discovery And Scope
+#### Discovery And Scope
 
 - [x] **S5-01 — Discovery doc and screen map.** ✅ *Seeded 2026-05-01.* Created the Sprint 5 UI/navigation discovery doc with user jobs, workspace split, candidate navigation models, screen map, file model, real estate/assets model, result hierarchy, mobile/desktop stance, non-shipping list, candidate tickets, and open decisions.
 - [x] **S5-02 — Choose initial navigation model.** ✅ *Done 2026-05-01.* Selected the hybrid model: guided setup first, then a persistent workspace shell with Start, Guided Intake, Review, and Results Handoff.
 - [x] **S5-03 — Resolve Sprint 5 real estate scope.** ✅ *Done 2026-05-01.* Sprint 5 will capture primary residence/downsize only where it maps to existing v2 fields. Second/vacation property and richer asset records are deferred until a scoped schema update so future asset/property needs can be handled together.
 - [x] **S5-04 — Define guided-intake validation rules.** ✅ *Done 2026-05-01.* Blocking issues are limited to incoherent or unsafe-to-run values; advisory completeness issues appear as warnings and do not block result generation.
-- [ ] **S5-05 — Define local file state UX.** Current plan name, import errors, dirty state, last exported time, and local `.plan.json` save/load behavior.
+- [x] **S5-05 — Define local file state UX.** ✅ *Done 2026-05-02.* `.plan.json` is the durable source of truth; browser state is a temporary working copy. Defined current plan title, loaded filename, import success/errors, dirty state, last export timestamp, save/export, and stable-dashboard handoff behavior.
 
-### Candidate Implementation Tickets
+#### Candidate Implementation Tickets
 
 - [x] **S5-06 — Guided intake route shell.** ✅ *Initial shell done 2026-05-01.* Added Start, Intake, Review, and Results Handoff views inside the React preview with a persistent workspace sidebar and guided step rail.
 - [x] **S5-07 — Intake state model.** ✅ *Initial model done 2026-05-01.* Added reducer-backed local plan state, import label, dirty state, export timestamp, active view, and active intake step.
-- [ ] **S5-08 — Household step.** Build single/couple handling with true inactive Person 2 behavior.
-- [ ] **S5-09 — Income step.** Capture salary, DB, CPP, OAS, and survivor fields from v2.
-- [ ] **S5-10 — Accounts step.** Capture RRSP/LIRA/LIF/TFSA/non-reg/cash wedge fields from v2.
-- [ ] **S5-11 — Real estate and debts step.** Add primary residence/downsize mapping and debt entry; do not collect second/vacation property until scoped schema support exists.
-- [ ] **S5-12 — Spending and events step.** Capture spending phases, one-offs, and inheritance goal.
-- [ ] **S5-13 — Assumptions step.** Capture plan years, rates, withdrawal order, CPP sharing, RRIF election, and spousal RRSP fields.
-- [ ] **S5-14 — Review and handoff.** Show summary, validation issues, save `.plan.json`, run extracted engine preview, and open stable dashboard.
-- [ ] **S5-15 — Browser smoke pass.** Test new guided intake with Larry, a couple preset, malformed file import, and single-person blank Person 2 behavior.
+- [x] **S5-08 — Household step.** ✅ *Done 2026-05-02.* Added editable plan name, single/couple mode, Person 1 birth/retirement fields, and Person 2 fields that remain disabled/blank for single-person plans without writing placeholder values.
+- [x] **S5-09 — Income step.** ✅ *Done 2026-05-02.* Added editable salary, salary year, raise rate, DB pension, CPP, OAS, and Person 2 survivor CPP fields from v2, with Person 2 income disabled while the household is single.
+- [x] **S5-10 — Accounts step.** ✅ *Done 2026-05-02.* Added editable RRSP/RRIF, RRSP room, LIRA, LIF, TFSA, TFSA room, annual contributions, non-registered balance/ACB/contributions, and cash wedge fields from v2.
+- [x] **S5-11 — Real estate and debts step.** ✅ *Done 2026-05-02.* Added v2 primary-residence downsize year/net proceeds plus mortgage and LOC entry. Second/vacation property remains deferred until scoped schema support exists.
+- [x] **S5-12 — Spending and events step.** ✅ *Done 2026-05-02.* Added spending phases, phase ages, one-time expenses, and inheritance/bequest target fields from v2.
+- [x] **S5-13 — Assumptions step.** ✅ *Done 2026-05-02.* Added plan years, return/inflation/volatility, withdrawal order, CPP sharing, younger-spouse RRIF election, spousal RRSP attribution toggle/contributor, and survivor year fields.
+- [x] **S5-14 — Review and handoff.** ✅ *Done 2026-05-05.* Review now shows a broader input summary across household, income, accounts, real estate/debt, spending/events, and assumptions, keeps validation visible, runs the extracted engine preview, saves normalized `.plan.json`, and hands off to the stable dashboard.
+- [x] **S5-15 — Browser smoke pass.** ✅ *Done 2026-05-06.* Local browser run now loads cleanly after lazy-loading the simulation engine. Confirmed the guided intake runs smoothly enough to continue; `.json` plan-file selection accepts Larry-style filenames.
 
-### Definition Of Done
+#### Definition Of Done
 
 - Sprint 5 navigation model is chosen and documented.
 - Guided intake route/state architecture is implemented in React preview.
@@ -41,8 +306,6 @@ Discovery doc: [`docs/sprint_5_ui_navigation_discovery.md`](docs/sprint_5_ui_nav
 - Real estate fields do not silently persist unsupported second-property data.
 - Single-person plans keep Person 2 truly inactive/blank.
 - Canonical probes pass and no private `.plan.json` files are committed.
-
-## Completed Sprints
 
 ### Sprint 4: Launch/Productization Package
 

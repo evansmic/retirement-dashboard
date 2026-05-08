@@ -13,6 +13,7 @@ PROBES=(
   probe_intake_roundtrip.js
   probe_plan_file_roundtrip.js
   probe_single_plan_file_dashboard.js
+  probe_react_legacy_routes.js
   probe_engine_bridge_parity.js
   probe_simulation_engine_parity.js
   probe_intake_validation.js
