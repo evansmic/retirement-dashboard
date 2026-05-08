@@ -3,7 +3,7 @@ import { V2PlanPayload } from '../types/plan';
 export function createBlankPlan(): V2PlanPayload {
   return {
     schemaVersion: 2,
-    title: 'Untitled retirement plan',
+    title: '',
     p1: {
       name: '',
       dob: 1965,

@@ -1,0 +1,2363 @@
+import { AnnualSimulationRow, SimulationResult, V2PlanPayload } from '../types/plan';
+
+export type ResultsWorkspaceSection =
+  | 'overview'
+  | 'annualDetail'
+  | 'cashFlow'
+  | 'incomeSources'
+  | 'accounts'
+  | 'taxes'
+  | 'stressTests'
+  | 'assumptions'
+  | 'exportSave';
+
+export type ResultsNavItem = {
+  id: ResultsWorkspaceSection;
+  label: string;
+  helper?: string;
+};
+
+export const resultsWorkspaceMap: ResultsNavItem[] = [
+  { id: 'overview', label: 'Overview', helper: 'Decision view' },
+  { id: 'annualDetail', label: 'Annual Detail', helper: 'Year-by-year' },
+  { id: 'cashFlow', label: 'Cash Flow', helper: 'Reconciliation' },
+  { id: 'incomeSources', label: 'Income Sources', helper: 'Source mix' },
+  { id: 'accounts', label: 'Accounts', helper: 'Balances' },
+  { id: 'taxes', label: 'Taxes', helper: 'Tax rows' },
+  { id: 'stressTests', label: 'Stress Tests', helper: 'Risk indicators' },
+  { id: 'assumptions', label: 'Assumptions', helper: 'Run settings' },
+  { id: 'exportSave', label: 'Export/Save', helper: 'Local file' }
+];
+
+export type OverviewMetrics = {
+  firstYear: number | null;
+  lastYear: number | null;
+  projectionYears: number;
+  endPortfolio: number;
+  firstYearSpending: number;
+  firstYearTax: number;
+  firstYearFunding: number;
+  firstYearFundingGap: number;
+  hasShortfall: boolean;
+};
+
+export type FundingSourceRow = {
+  id: string;
+  label: string;
+  amount: number;
+  taxTreatment: 'taxable' | 'tax-free' | 'cash' | 'other';
+};
+
+export type IncomeSourceCategory =
+  | 'salary'
+  | 'pension'
+  | 'cpp'
+  | 'oas'
+  | 'registeredWithdrawals'
+  | 'taxFreeWithdrawals'
+  | 'cashWedge'
+  | 'other';
+
+export type IncomeSourceRow = {
+  id: IncomeSourceCategory;
+  label: string;
+  firstYearAmount: number;
+  lifetimeAmount: number;
+  taxable: boolean;
+};
+
+export type AccountBalancePoint = {
+  year: number;
+  rrsp: number;
+  tfsa: number;
+  lif: number;
+  nonRegistered: number;
+  cash: number;
+  total: number;
+};
+
+export type AccountSummaryRow = {
+  id: 'rrsp' | 'tfsa' | 'lif' | 'nonRegistered' | 'cash' | 'total';
+  label: string;
+  firstYearBalance: number;
+  endBalance: number;
+  peakBalance: number;
+  netChange: number;
+};
+
+export type TaxSummaryMetrics = {
+  firstYearTax: number;
+  lifetimeTax: number;
+  peakTaxYear: number | null;
+  peakTax: number;
+  lifetimeOasClawback: number;
+  firstYearTaxableIncome: number;
+};
+
+export type TaxDetailRow = {
+  year: number;
+  taxableIncome: number;
+  tax: number;
+  oasClawback: number;
+  effectiveRate: number;
+};
+
+export type StressIndicatorRow = {
+  id: 'shortfall' | 'depletion' | 'minimumPortfolio' | 'terminalPortfolio' | 'fundedYears';
+  label: string;
+  value: string;
+  severity: 'ok' | 'watch';
+};
+
+export type ChartReadyYear = {
+  year: number;
+  spending: number;
+  afterTaxSpending: number;
+  tax: number;
+  portfolio: number;
+  funding: number;
+  shortfall: number;
+};
+
+export type ProjectionMilestoneRow = ChartReadyYear & {
+  label: 'First year' | 'Midpoint' | 'Final year';
+};
+
+export type CashFlowReconciliation = {
+  year: number | null;
+  incomeAndWithdrawals: number;
+  taxFreeWithdrawals: number;
+  cashWedgeFunding: number;
+  otherInflows: number;
+  tax: number;
+  afterTaxSpending: number;
+  oneOffOutflows: number;
+  reconciledAfterTaxSpending: number;
+  reconciliationDelta: number;
+  cashFlowDelta: number;
+  status: 'ok' | 'warning';
+};
+
+export type CashFlowReconciliationRow = CashFlowReconciliation & {
+  spending: number;
+  fundingBeforeTax: number;
+  portfolio: number;
+  shortfall: number;
+};
+
+export type AnnualDetailView = 'summary' | 'income' | 'withdrawals' | 'tax' | 'balances';
+
+export type AnnualDetailRow = {
+  year: number;
+  ages: string;
+  spending: number;
+  afterTaxSpending: number;
+  fundingBeforeTax: number;
+  tax: number;
+  shortfall: number;
+  portfolio: number;
+  salary: number;
+  dbPension: number;
+  cpp: number;
+  oas: number;
+  registeredWithdrawals: number;
+  tfsaWithdrawals: number;
+  nonRegisteredWithdrawals: number;
+  cashWedgeWithdrawals: number;
+  otherInflows: number;
+  taxableIncome: number;
+  effectiveRate: number;
+  oasClawback: number;
+  rrsp: number;
+  tfsa: number;
+  lif: number;
+  nonRegistered: number;
+  cash: number;
+  total: number;
+  reconciliationGap: number;
+  cashFlowDelta: number;
+  reconciliationStatus: CashFlowReconciliation['status'];
+};
+
+export type AnnualDetailSummary = {
+  firstYear: number | null;
+  finalYear: number | null;
+  totalYears: number;
+  fundedYears: number;
+  firstShortfallYear: number | null;
+  endPortfolio: number;
+};
+
+export type PortfolioChartPoint = {
+  year: number;
+  portfolio: number;
+};
+
+export type SpendingTaxChartPoint = {
+  year: number;
+  afterTaxSpending: number;
+  tax: number;
+  shortfall: number;
+};
+
+export type AccountBucketChartPoint = AccountBalancePoint;
+
+export type ReconciliationDiagnostics = {
+  rowsChecked: number;
+  warningCount: number;
+  firstWarningYear: number | null;
+  maxReconciliationGap: number;
+  maxCashFlowDelta: number;
+  status: 'ok' | 'warning';
+};
+
+export type PlanHealthExplainer = {
+  status: 'ready' | 'watch' | 'blocked';
+  headline: string;
+  fundedThroughYear: number | null;
+  firstPressurePoint: string;
+  largestReviewItem: string;
+  detailFallback: string;
+};
+
+export type SourceReconciliationStory = {
+  year: number | null;
+  headline: string;
+  sourcesBeforeTax: number;
+  tax: number;
+  fundedSpending: number;
+  gap: number;
+  steps: Array<{
+    id: string;
+    label: string;
+    amount: number;
+    tone: 'inflow' | 'outflow' | 'result' | 'watch';
+  }>;
+};
+
+export type DecisionChecklistItem = {
+  id:
+    | 'sourceReconciliation'
+    | 'cppOasTiming'
+    | 'cashWedge'
+    | 'oasClawback'
+    | 'registeredTaxSpike'
+    | 'survivorRisk'
+    | 'estateTarget';
+  label: string;
+  status: 'ok' | 'review' | 'watch';
+  reason: string;
+  detail: string;
+};
+
+export type DecisionDetailRow = DecisionChecklistItem & {
+  evidence: string;
+  years: string;
+  fallbackArea: ResultsWorkspaceSection;
+};
+
+export type TaxPressureRow = {
+  year: number;
+  taxableIncome: number;
+  tax: number;
+  oasClawback: number;
+  registeredWithdrawals: number;
+  pressure: 'low' | 'medium' | 'high';
+  reason: string;
+};
+
+export type TaxPressureExplanation = {
+  headline: string;
+  rows: Array<TaxPressureRow & { explanation: string }>;
+};
+
+export type ScenarioCard = {
+  id: 'retireLater' | 'spendLessGogo' | 'delayBenefits';
+  label: string;
+  status: 'ready' | 'needsInput' | 'fallback';
+  lever: string;
+  baseline: string;
+  detail: string;
+  endPortfolioDelta?: number;
+  fundedThroughYear?: number | null;
+};
+
+export type ScenarioAssumptionRow = {
+  id: ScenarioCard['id'];
+  label: string;
+  baseline: string;
+  scenario: string;
+  changed: boolean;
+};
+
+export type ScenarioComparisonRow = {
+  id: ScenarioCard['id'];
+  label: string;
+  endPortfolioDelta: number;
+  firstYearSpendingDelta: number;
+  lifetimeTaxDelta: number;
+  firstShortfallYear: number | null;
+  fundedThroughYear: number | null;
+  status: 'improves' | 'mixed' | 'worse' | 'notAvailable';
+};
+
+export type SurvivorViewSummary = {
+  status: 'single' | 'ready' | 'needsInput';
+  headline: string;
+  survivorYear: number | null;
+  incomeAtRisk: number;
+  detail: string;
+};
+
+export type SurvivorComparison = {
+  status: 'single' | 'needsInput' | 'ready' | 'notAvailable';
+  survivorYear: number | null;
+  baselineEndPortfolio: number;
+  survivorEndPortfolio: number;
+  endPortfolioDelta: number;
+  baselineLifetimeTax: number;
+  survivorLifetimeTax: number;
+  lifetimeTaxDelta: number;
+  firstShortfallYear: number | null;
+  fundedThroughYear: number | null;
+  spendingFundedYears: string;
+};
+
+export type RecommendedCandidateId = 'baseline' | ScenarioCard['id'];
+
+export type RecommendationReason =
+  | 'sourceReconciliationBlocked'
+  | 'validationBlocked'
+  | 'noShortfall'
+  | 'laterFundedThrough'
+  | 'higherEndPortfolio'
+  | 'lowerLifetimeTax'
+  | 'survivorNeedsReview'
+  | 'baselineTie';
+
+export type RecommendedCandidateRow = {
+  id: RecommendedCandidateId;
+  label: string;
+  score: number;
+  recommended: boolean;
+  blocked: boolean;
+  reviewStatus: 'recommended' | 'review' | 'blocked';
+  fundedThroughYear: number | null;
+  firstShortfallYear: number | null;
+  endPortfolio: number;
+  endPortfolioDelta: number;
+  lifetimeTax: number;
+  lifetimeTaxDelta: number;
+  spendingFundedYears: string;
+  reasons: RecommendationReason[];
+  tradeoffs: string[];
+};
+
+export type RecommendedConfidence = {
+  level: 'higher' | 'moderate' | 'low';
+  label: string;
+  detail: string;
+  drivers: string[];
+};
+
+export type RecommendedStressContext = {
+  candidateId: RecommendedCandidateId | null;
+  candidateLabel: string;
+  sourceStatus: 'ok' | 'warning' | 'notAvailable';
+  fundedThroughYear: number | null;
+  firstShortfallYear: number | null;
+  firstYearSpending: number;
+  terminalPortfolio: number;
+  lowestPortfolioYear: number | null;
+  lowestPortfolio: number;
+  fundedYears: number;
+  totalYears: number;
+  taxPressureCount: number;
+  survivorStatus: SurvivorComparison['status'];
+  summary: string;
+};
+
+export type RecommendedBreakRisk = {
+  id:
+    | 'sourceReconciliation'
+    | 'spendingSensitivity'
+    | 'retirementTiming'
+    | 'benefitTiming'
+    | 'shortfall'
+    | 'terminalCushion'
+    | 'taxPressure'
+    | 'survivor';
+  label: string;
+  severity: 'ok' | 'review' | 'watch' | 'blocked';
+  detail: string;
+  handoff: string;
+};
+
+export type RecommendedRiskDetail = {
+  id: RecommendedBreakRisk['id'];
+  label: string;
+  severity: RecommendedBreakRisk['severity'];
+  candidateLabel: string;
+  headline: string;
+  detail: string;
+  metrics: Array<{
+    id: string;
+    label: string;
+    value: string;
+    tone: 'neutral' | 'ok' | 'watch';
+  }>;
+  evidenceRows: Array<{
+    id: string;
+    label: string;
+    value: string;
+    detail: string;
+  }>;
+  handoff: string;
+};
+
+export type RecommendedChecklistItem = {
+  id:
+    | 'clearBlockers'
+    | 'reviewStress'
+    | 'confirmSpending'
+    | 'confirmTiming'
+    | 'inspectTaxes'
+    | 'testSurvivor'
+    | 'openStableDashboard'
+    | 'savePlan';
+  label: string;
+  status: 'ready' | 'review' | 'blocked';
+  priority: 'now' | 'next' | 'later';
+  detail: string;
+  handoff: string;
+};
+
+export type RecommendedPathSummary = {
+  recommendedCandidateId: RecommendedCandidateId | null;
+  recommendedLabel: string;
+  headline: string;
+  confidence: RecommendedConfidence;
+  stressContext: RecommendedStressContext;
+  breakRisks: RecommendedBreakRisk[];
+  defaultRiskDetailId: RecommendedBreakRisk['id'] | null;
+  riskDetails: RecommendedRiskDetail[];
+  checklistItems: RecommendedChecklistItem[];
+  reasons: string[];
+  tradeoffs: string[];
+  trustChecks: Array<{
+    id: 'sourceReconciliation' | 'shortfall' | 'taxPressure' | 'survivor';
+    label: string;
+    status: 'ok' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  candidateRows: RecommendedCandidateRow[];
+  whyNotRows: Array<{
+    id: RecommendedCandidateId;
+    label: string;
+    reason: string;
+  }>;
+};
+
+export type RecommendationValidation = {
+  canGenerate?: boolean;
+  blockers?: unknown[];
+} | null | undefined;
+
+const RECONCILIATION_TOLERANCE = 1;
+const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
+
+function n(value: number | undefined): number {
+  return Number.isFinite(value) ? Number(value) : 0;
+}
+
+function rowsFrom(result: SimulationResult | null | undefined): AnnualSimulationRow[] {
+  return result?.years || [];
+}
+
+function personLooksBlank(person: V2PlanPayload['p2'] | null | undefined): boolean {
+  if (!person) return true;
+  return (
+    !person.name &&
+    !n(person.dob) &&
+    !n(person.retireYear) &&
+    !n(person.salary) &&
+    !n(person.rrsp) &&
+    !n(person.tfsa) &&
+    !n(person.lif) &&
+    !n(person.nonreg) &&
+    !n(person.cpp65_monthly) &&
+    !n(person.oas_monthly)
+  );
+}
+
+export function selectOverviewMetrics(result: SimulationResult | null | undefined): OverviewMetrics {
+  const rows = rowsFrom(result);
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const reconciliation = selectCashFlowReconciliation(first);
+
+  return {
+    firstYear: first?.year ?? null,
+    lastYear: last?.year ?? null,
+    projectionYears: rows.length,
+    endPortfolio: n(last?.bal_total),
+    firstYearSpending: n(first?.totalAftaxYear || first?.spending),
+    firstYearTax: n(first?.totalTaxYear),
+    firstYearFunding: reconciliation.reconciledAfterTaxSpending,
+    firstYearFundingGap: reconciliation.reconciliationDelta,
+    hasShortfall: rows.some((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE)
+  };
+}
+
+export function selectFundingSourceRows(row: AnnualSimulationRow | null | undefined): FundingSourceRow[] {
+  if (!row) return [];
+
+  const taxableIncome = n(row.grossIncome);
+  const taxFreeWithdrawals = n(row.tfsa_draw) + n(row.nonreg_draw);
+  const cashFunding = n(row.cash_draw);
+  const otherInflows = n(row.downsize_proceeds);
+
+  return [
+    { id: 'taxable-income', label: 'Taxable income and registered withdrawals', amount: taxableIncome, taxTreatment: 'taxable' },
+    { id: 'tax-free', label: 'TFSA and non-registered withdrawals', amount: taxFreeWithdrawals, taxTreatment: 'tax-free' },
+    { id: 'cash-wedge', label: 'Cash wedge funding', amount: cashFunding, taxTreatment: 'cash' },
+    { id: 'other-inflows', label: 'Other inflows', amount: otherInflows, taxTreatment: 'other' }
+  ];
+}
+
+export function selectIncomeSourceRows(result: SimulationResult | null | undefined): IncomeSourceRow[] {
+  const rows = rowsFrom(result);
+  const first = rows[0];
+
+  function annual(row: AnnualSimulationRow | undefined, category: IncomeSourceCategory): number {
+    if (!row) return 0;
+    switch (category) {
+      case 'salary':
+        return n(row.salary_f) + n(row.salary_m);
+      case 'pension':
+        return n(row.dbPension) + n(row.dbPension_m) + n(row.dbSurvivor);
+      case 'cpp':
+        return n(row.cpp_f) + n(row.cpp_m);
+      case 'oas':
+        return n(row.oas_f) + n(row.oas_m);
+      case 'registeredWithdrawals':
+        return n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw);
+      case 'taxFreeWithdrawals':
+        return n(row.tfsa_draw) + n(row.nonreg_draw);
+      case 'cashWedge':
+        return n(row.cash_draw);
+      case 'other':
+        return n(row.downsize_proceeds);
+      default:
+        return 0;
+    }
+  }
+
+  const definitions: Array<{ id: IncomeSourceCategory; label: string; taxable: boolean }> = [
+    { id: 'salary', label: 'Employment income', taxable: true },
+    { id: 'pension', label: 'DB pension income', taxable: true },
+    { id: 'cpp', label: 'CPP benefits', taxable: true },
+    { id: 'oas', label: 'OAS benefits', taxable: true },
+    { id: 'registeredWithdrawals', label: 'Registered withdrawals', taxable: true },
+    { id: 'taxFreeWithdrawals', label: 'TFSA and non-registered withdrawals', taxable: false },
+    { id: 'cashWedge', label: 'Cash wedge funding', taxable: false },
+    { id: 'other', label: 'Other inflows', taxable: false }
+  ];
+
+  return definitions.map((definition) => ({
+    ...definition,
+    firstYearAmount: annual(first, definition.id),
+    lifetimeAmount: rows.reduce((total, row) => total + annual(row, definition.id), 0)
+  }));
+}
+
+export function selectAccountBalanceSeries(result: SimulationResult | null | undefined): AccountBalancePoint[] {
+  return rowsFrom(result).map((row) => ({
+    year: row.year,
+    rrsp: n(row.bal_rrsp),
+    tfsa: n(row.bal_tfsa),
+    lif: n(row.bal_lif),
+    nonRegistered: n(row.bal_nonreg),
+    cash: n(row.bal_cash),
+    total: n(row.bal_total)
+  }));
+}
+
+export function selectAccountSummaryRows(result: SimulationResult | null | undefined): AccountSummaryRow[] {
+  const series = selectAccountBalanceSeries(result);
+  const first = series[0];
+  const last = series[series.length - 1];
+  const definitions: Array<{ id: AccountSummaryRow['id']; label: string }> = [
+    { id: 'rrsp', label: 'RRSP / RRIF' },
+    { id: 'tfsa', label: 'TFSA' },
+    { id: 'lif', label: 'LIF' },
+    { id: 'nonRegistered', label: 'Non-registered' },
+    { id: 'cash', label: 'Cash wedge' },
+    { id: 'total', label: 'Total portfolio' }
+  ];
+
+  return definitions.map(({ id, label }) => ({
+    id,
+    label,
+    firstYearBalance: first ? first[id] : 0,
+    endBalance: last ? last[id] : 0,
+    peakBalance: series.reduce((peak, point) => Math.max(peak, point[id]), 0),
+    netChange: (last ? last[id] : 0) - (first ? first[id] : 0)
+  }));
+}
+
+export function selectTaxDetailRows(result: SimulationResult | null | undefined): TaxDetailRow[] {
+  return rowsFrom(result).map((row) => {
+    const taxableIncome = n(row.taxableIncome);
+    const tax = n(row.totalTaxYear);
+    const oasClawback = n(row.totalOasClawY);
+    return {
+      year: row.year,
+      taxableIncome,
+      tax,
+      oasClawback,
+      effectiveRate: taxableIncome > 0 ? tax / taxableIncome : 0
+    };
+  });
+}
+
+export function selectTaxSummaryMetrics(result: SimulationResult | null | undefined): TaxSummaryMetrics {
+  const rows = selectTaxDetailRows(result);
+  const peak = rows.reduce<TaxDetailRow | null>((currentPeak, row) => {
+    if (!currentPeak || row.tax > currentPeak.tax) return row;
+    return currentPeak;
+  }, null);
+
+  return {
+    firstYearTax: rows[0]?.tax || 0,
+    lifetimeTax: rows.reduce((total, row) => total + row.tax, 0),
+    peakTaxYear: peak?.year ?? null,
+    peakTax: peak?.tax || 0,
+    lifetimeOasClawback: rows.reduce((total, row) => total + row.oasClawback, 0),
+    firstYearTaxableIncome: rows[0]?.taxableIncome || 0
+  };
+}
+
+export function selectStressIndicatorRows(result: SimulationResult | null | undefined): StressIndicatorRow[] {
+  const rows = rowsFrom(result);
+  const shortfallRows = rows.filter((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const depletionRow = rows.find((row) => n(row.bal_total) <= RECONCILIATION_TOLERANCE);
+  const minimumPortfolioRow = rows.reduce<AnnualSimulationRow | null>((min, row) => {
+    if (!min || n(row.bal_total) < n(min.bal_total)) return row;
+    return min;
+  }, null);
+  const terminalPortfolio = n(rows[rows.length - 1]?.bal_total);
+  const worstShortfall = shortfallRows.reduce((worst, row) => Math.max(worst, n(row.shortfall)), 0);
+
+  return [
+    {
+      id: 'shortfall',
+      label: 'First shortfall year',
+      value: shortfallRows[0] ? `${shortfallRows[0].year} (${Math.round(worstShortfall).toLocaleString()})` : 'None',
+      severity: shortfallRows.length > 0 ? 'watch' : 'ok'
+    },
+    {
+      id: 'depletion',
+      label: 'Portfolio depletion',
+      value: depletionRow ? String(depletionRow.year) : 'Not depleted',
+      severity: depletionRow ? 'watch' : 'ok'
+    },
+    {
+      id: 'minimumPortfolio',
+      label: 'Lowest portfolio',
+      value: minimumPortfolioRow ? `${minimumPortfolioRow.year} (${Math.round(n(minimumPortfolioRow.bal_total)).toLocaleString()})` : '-',
+      severity: n(minimumPortfolioRow?.bal_total) <= RECONCILIATION_TOLERANCE ? 'watch' : 'ok'
+    },
+    {
+      id: 'terminalPortfolio',
+      label: 'Terminal portfolio',
+      value: `$${Math.round(terminalPortfolio).toLocaleString()}`,
+      severity: terminalPortfolio <= RECONCILIATION_TOLERANCE ? 'watch' : 'ok'
+    },
+    {
+      id: 'fundedYears',
+      label: 'Years with full funding',
+      value: `${rows.length - shortfallRows.length}/${rows.length || 0}`,
+      severity: shortfallRows.length > 0 ? 'watch' : 'ok'
+    }
+  ];
+}
+
+export function selectChartReadyData(result: SimulationResult | null | undefined): ChartReadyYear[] {
+  return rowsFrom(result).map((row) => {
+    const reconciliation = selectCashFlowReconciliation(row);
+    return {
+      year: row.year,
+      spending: n(row.spending),
+      afterTaxSpending: n(row.totalAftaxYear),
+      tax: n(row.totalTaxYear),
+      portfolio: n(row.bal_total),
+      funding: reconciliation.reconciledAfterTaxSpending,
+      shortfall: n(row.shortfall)
+    };
+  });
+}
+
+export function selectProjectionMilestones(result: SimulationResult | null | undefined): ProjectionMilestoneRow[] {
+  const rows = selectChartReadyData(result);
+  if (rows.length === 0) return [];
+
+  const indexes = Array.from(new Set([0, Math.floor((rows.length - 1) / 2), rows.length - 1]));
+  const labels: ProjectionMilestoneRow['label'][] =
+    indexes.length === 1 ? ['First year'] : indexes.length === 2 ? ['First year', 'Final year'] : ['First year', 'Midpoint', 'Final year'];
+
+  return indexes.map((index, labelIndex) => ({
+    ...rows[index],
+    label: labels[labelIndex]
+  }));
+}
+
+export function selectCashFlowReconciliationRows(
+  result: SimulationResult | null | undefined
+): CashFlowReconciliationRow[] {
+  return rowsFrom(result).map((row) => {
+    const reconciliation = selectCashFlowReconciliation(row);
+    return {
+      ...reconciliation,
+      spending: n(row.spending),
+      fundingBeforeTax:
+        reconciliation.incomeAndWithdrawals +
+        reconciliation.taxFreeWithdrawals +
+        reconciliation.cashWedgeFunding +
+        reconciliation.otherInflows,
+      portfolio: n(row.bal_total),
+      shortfall: n(row.shortfall)
+    };
+  });
+}
+
+export function selectAnnualDetailRows(result: SimulationResult | null | undefined): AnnualDetailRow[] {
+  return rowsFrom(result).map((row) => {
+    const reconciliation = selectCashFlowReconciliation(row);
+    const salary = n(row.salary_f) + n(row.salary_m);
+    const dbPension = n(row.dbPension) + n(row.dbPension_m) + n(row.dbSurvivor);
+    const cpp = n(row.cpp_f) + n(row.cpp_m);
+    const oas = n(row.oas_f) + n(row.oas_m);
+    const registeredWithdrawals = n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw);
+    const taxableIncome = n(row.taxableIncome);
+    const tax = n(row.totalTaxYear);
+
+    return {
+      year: row.year,
+      ages: n(row.ageM) > 0 ? `${row.ageF} / ${row.ageM}` : String(row.ageF),
+      spending: n(row.spending),
+      afterTaxSpending: n(row.totalAftaxYear),
+      fundingBeforeTax:
+        reconciliation.incomeAndWithdrawals +
+        reconciliation.taxFreeWithdrawals +
+        reconciliation.cashWedgeFunding +
+        reconciliation.otherInflows,
+      tax,
+      shortfall: n(row.shortfall),
+      portfolio: n(row.bal_total),
+      salary,
+      dbPension,
+      cpp,
+      oas,
+      registeredWithdrawals,
+      tfsaWithdrawals: n(row.tfsa_draw),
+      nonRegisteredWithdrawals: n(row.nonreg_draw),
+      cashWedgeWithdrawals: n(row.cash_draw),
+      otherInflows: n(row.downsize_proceeds),
+      taxableIncome,
+      effectiveRate: taxableIncome > 0 ? tax / taxableIncome : 0,
+      oasClawback: n(row.totalOasClawY),
+      rrsp: n(row.bal_rrsp),
+      tfsa: n(row.bal_tfsa),
+      lif: n(row.bal_lif),
+      nonRegistered: n(row.bal_nonreg),
+      cash: n(row.bal_cash),
+      total: n(row.bal_total),
+      reconciliationGap: reconciliation.reconciliationDelta,
+      cashFlowDelta: reconciliation.cashFlowDelta,
+      reconciliationStatus: reconciliation.status
+    };
+  });
+}
+
+export function selectAnnualDetailSummary(result: SimulationResult | null | undefined): AnnualDetailSummary {
+  const rows = selectAnnualDetailRows(result);
+  const first = rows[0];
+  const last = rows[rows.length - 1];
+  const firstShortfall = rows.find((row) => row.shortfall > RECONCILIATION_TOLERANCE);
+
+  return {
+    firstYear: first?.year ?? null,
+    finalYear: last?.year ?? null,
+    totalYears: rows.length,
+    fundedYears: rows.filter((row) => row.shortfall <= RECONCILIATION_TOLERANCE).length,
+    firstShortfallYear: firstShortfall?.year ?? null,
+    endPortfolio: last?.portfolio ?? 0
+  };
+}
+
+export function selectPortfolioChartSeries(result: SimulationResult | null | undefined): PortfolioChartPoint[] {
+  return selectAnnualDetailRows(result).map((row) => ({
+    year: row.year,
+    portfolio: row.portfolio
+  }));
+}
+
+export function selectSpendingTaxChartSeries(result: SimulationResult | null | undefined): SpendingTaxChartPoint[] {
+  return selectAnnualDetailRows(result).map((row) => ({
+    year: row.year,
+    afterTaxSpending: row.afterTaxSpending,
+    tax: row.tax,
+    shortfall: row.shortfall
+  }));
+}
+
+export function selectAccountBucketChartSeries(result: SimulationResult | null | undefined): AccountBucketChartPoint[] {
+  return selectAccountBalanceSeries(result);
+}
+
+export function selectReconciliationDiagnostics(result: SimulationResult | null | undefined): ReconciliationDiagnostics {
+  const rows = selectCashFlowReconciliationRows(result);
+  const warningRows = rows.filter((row) => row.status === 'warning');
+  const maxReconciliationGap = rows.reduce((max, row) => Math.max(max, Math.abs(row.reconciliationDelta)), 0);
+  const maxCashFlowDelta = rows.reduce((max, row) => Math.max(max, Math.abs(row.cashFlowDelta)), 0);
+
+  return {
+    rowsChecked: rows.length,
+    warningCount: warningRows.length,
+    firstWarningYear: warningRows[0]?.year ?? null,
+    maxReconciliationGap,
+    maxCashFlowDelta,
+    status: warningRows.length > 0 ? 'warning' : 'ok'
+  };
+}
+
+export function selectPlanHealthExplainer(result: SimulationResult | null | undefined): PlanHealthExplainer {
+  const rows = rowsFrom(result);
+  const overview = selectOverviewMetrics(result);
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const shortfallRow = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const depletionRow = rows.find((row) => n(row.bal_total) <= RECONCILIATION_TOLERANCE);
+  const taxSummary = selectTaxSummaryMetrics(result);
+  const taxPressureRows = selectTaxPressureRows(result);
+  const firstPressureRow = shortfallRow || depletionRow || taxPressureRows[0];
+  const fundedThroughYear = shortfallRow ? shortfallRow.year - 1 : overview.lastYear;
+
+  const reviewCandidates = [
+    {
+      label: diagnostics.status === 'warning' ? 'source reconciliation' : '',
+      amount: diagnostics.maxReconciliationGap
+    },
+    { label: shortfallRow ? 'first projection shortfall' : '', amount: n(shortfallRow?.shortfall) },
+    { label: taxSummary.peakTaxYear ? 'peak annual tax' : '', amount: taxSummary.peakTax },
+    { label: taxSummary.lifetimeOasClawback > 0 ? 'OAS clawback' : '', amount: taxSummary.lifetimeOasClawback }
+  ]
+    .filter((item) => item.label)
+    .sort((a, b) => b.amount - a.amount);
+
+  const status: PlanHealthExplainer['status'] =
+    diagnostics.status === 'warning' ? 'blocked' : shortfallRow || depletionRow || taxPressureRows.length > 0 ? 'watch' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'The projection needs reconciliation review before relying on this preview.'
+        : status === 'watch'
+          ? 'The plan runs, with review points worth testing before deciding.'
+          : 'The plan funds the visible projection without reconciliation warnings.',
+    fundedThroughYear,
+    firstPressurePoint: firstPressureRow
+      ? `${firstPressureRow.year}: ${
+          shortfallRow
+            ? 'spending shortfall'
+            : depletionRow
+              ? 'portfolio depletion'
+              : (firstPressureRow as TaxPressureRow).reason
+        }`
+      : 'No pressure point in the preview horizon',
+    largestReviewItem: reviewCandidates[0]
+      ? `${reviewCandidates[0].label} (${Math.round(reviewCandidates[0].amount).toLocaleString()})`
+      : 'No major review item surfaced',
+    detailFallback: 'Open the stable dashboard for full schedules, charts, stress tests, and print/PDF.'
+  };
+}
+
+export function selectSourceReconciliationStory(
+  row: AnnualSimulationRow | null | undefined
+): SourceReconciliationStory {
+  const reconciliation = selectCashFlowReconciliation(row);
+  const sourcesBeforeTax =
+    reconciliation.incomeAndWithdrawals +
+    reconciliation.taxFreeWithdrawals +
+    reconciliation.cashWedgeFunding +
+    reconciliation.otherInflows;
+
+  return {
+    year: reconciliation.year,
+    headline:
+      reconciliation.status === 'ok'
+        ? 'First-year spending is traced from sources to taxes to funded spending.'
+        : 'First-year spending does not fully reconcile to extracted sources.',
+    sourcesBeforeTax,
+    tax: reconciliation.tax,
+    fundedSpending: reconciliation.reconciledAfterTaxSpending,
+    gap: reconciliation.reconciliationDelta,
+    steps: [
+      { id: 'income', label: 'Taxable income and registered withdrawals', amount: reconciliation.incomeAndWithdrawals, tone: 'inflow' },
+      { id: 'taxFree', label: 'TFSA and non-registered withdrawals', amount: reconciliation.taxFreeWithdrawals, tone: 'inflow' },
+      { id: 'cash', label: 'Cash wedge funding', amount: reconciliation.cashWedgeFunding, tone: 'inflow' },
+      { id: 'other', label: 'Other inflows', amount: reconciliation.otherInflows, tone: 'inflow' },
+      { id: 'tax', label: 'Tax', amount: -reconciliation.tax, tone: 'outflow' },
+      { id: 'funded', label: 'After-tax spending funded', amount: reconciliation.reconciledAfterTaxSpending, tone: 'result' },
+      { id: 'gap', label: 'Reconciliation gap', amount: reconciliation.reconciliationDelta, tone: reconciliation.status === 'ok' ? 'result' : 'watch' }
+    ]
+  };
+}
+
+export function selectDecisionChecklist(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): DecisionChecklistItem[] {
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const taxSummary = selectTaxSummaryMetrics(result);
+  const taxPressureRows = selectTaxPressureRows(result);
+  const rows = rowsFrom(result);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const firstCashDraw = rows.find((row) => n(row.cash_draw) > 0);
+  const couple = Boolean(plan && !personLooksBlank(plan.p2));
+  const estateTarget = n(plan?.inheritance);
+  const hasCppOrOas = Boolean(
+    plan && (n(plan.p1.cpp65_monthly) || n(plan.p1.cpp70_monthly) || n(plan.p1.oas_monthly) || n(plan.p2.cpp65_monthly) || n(plan.p2.oas_monthly))
+  );
+
+  return [
+    {
+      id: 'sourceReconciliation',
+      label: 'Source reconciliation',
+      status: diagnostics.status === 'ok' ? 'ok' : 'watch',
+      reason: diagnostics.status === 'ok' ? 'All extracted annual rows reconcile within tolerance.' : 'At least one annual row has a funding gap.',
+      detail: diagnostics.firstWarningYear ? `First warning year: ${diagnostics.firstWarningYear}.` : 'Use this as the first trust check.'
+    },
+    {
+      id: 'cppOasTiming',
+      label: 'CPP/OAS timing',
+      status: hasCppOrOas ? 'review' : 'watch',
+      reason: hasCppOrOas ? 'Benefits are present and timing should be tested as a decision lever.' : 'CPP/OAS estimates are missing or zero.',
+      detail: 'Compare 65 versus 70 before treating the baseline as final.'
+    },
+    {
+      id: 'cashWedge',
+      label: 'Cash wedge',
+      status: firstCashDraw ? 'review' : 'ok',
+      reason: firstCashDraw ? `Cash wedge starts funding spending in ${firstCashDraw.year}.` : 'No cash wedge draw appears in the extracted rows.',
+      detail: plan?.cashWedge?.targetYears ? `Target: ${plan.cashWedge.targetYears} years.` : 'Target years are not set.'
+    },
+    {
+      id: 'oasClawback',
+      label: 'OAS clawback',
+      status: taxSummary.lifetimeOasClawback > OAS_CLAWBACK_WATCH_THRESHOLD ? 'review' : 'ok',
+      reason:
+        taxSummary.lifetimeOasClawback > OAS_CLAWBACK_WATCH_THRESHOLD
+          ? 'The projection contains OAS recovery tax.'
+          : 'No material OAS clawback is visible in this preview.',
+      detail: `Lifetime clawback: ${Math.round(taxSummary.lifetimeOasClawback).toLocaleString()}.`
+    },
+    {
+      id: 'registeredTaxSpike',
+      label: 'Registered tax spike',
+      status: taxPressureRows.some((row) => row.registeredWithdrawals > 0) ? 'review' : 'ok',
+      reason: taxPressureRows[0] ? `Tax pressure first appears in ${taxPressureRows[0].year}.` : 'No major tax pressure year was detected.',
+      detail: taxSummary.peakTaxYear ? `Peak tax year: ${taxSummary.peakTaxYear}.` : 'No peak tax year available.'
+    },
+    {
+      id: 'survivorRisk',
+      label: 'Survivor risk',
+      status: couple ? 'review' : 'ok',
+      reason: couple ? 'Two-person plans should test income and tax after the first death.' : 'Single-person plan; survivor view is not applicable.',
+      detail: plan?.assumptions?.p1DiesInSurvivor ? `Survivor year set to ${plan.assumptions.p1DiesInSurvivor}.` : 'No survivor year is set.'
+    },
+    {
+      id: 'estateTarget',
+      label: 'Estate target',
+      status: firstShortfall ? 'watch' : estateTarget > 0 ? 'review' : 'ok',
+      reason: firstShortfall ? 'Shortfalls should be reviewed before preserving estate targets.' : estateTarget > 0 ? 'An estate target is part of the plan.' : 'No estate target entered.',
+      detail: estateTarget > 0 ? `Target: ${Math.round(estateTarget).toLocaleString()}.` : 'Estate target is optional.'
+    }
+  ];
+}
+
+export function selectDecisionDetailRows(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): DecisionDetailRow[] {
+  const checklist = selectDecisionChecklist(result, plan);
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const taxSummary = selectTaxSummaryMetrics(result);
+  const taxPressureRows = selectTaxPressureRows(result);
+  const rows = rowsFrom(result);
+  const firstCashDraw = rows.find((row) => n(row.cash_draw) > 0);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const firstTaxPressure = taxPressureRows[0];
+  const couple = Boolean(plan && !personLooksBlank(plan.p2));
+
+  return checklist.map((item) => {
+    switch (item.id) {
+      case 'sourceReconciliation':
+        return {
+          ...item,
+          evidence:
+            diagnostics.status === 'ok'
+              ? `${diagnostics.rowsChecked} rows checked with no funding gaps.`
+              : `${diagnostics.warningCount} warnings; max gap ${Math.round(diagnostics.maxReconciliationGap).toLocaleString()}.`,
+          years: diagnostics.firstWarningYear ? String(diagnostics.firstWarningYear) : 'All preview years',
+          fallbackArea: 'cashFlow'
+        };
+      case 'cppOasTiming':
+        return {
+          ...item,
+          evidence: 'The scenario cards compare current timing against age 70 benefits where estimates exist.',
+          years: 'Benefit start years',
+          fallbackArea: 'incomeSources'
+        };
+      case 'cashWedge':
+        return {
+          ...item,
+          evidence: firstCashDraw
+            ? `First cash wedge draw is ${Math.round(n(firstCashDraw.cash_draw)).toLocaleString()} in ${firstCashDraw.year}.`
+            : 'No cash wedge draw appears in the extracted projection.',
+          years: firstCashDraw ? String(firstCashDraw.year) : '-',
+          fallbackArea: 'cashFlow'
+        };
+      case 'oasClawback':
+        return {
+          ...item,
+          evidence: `Lifetime OAS clawback is ${Math.round(taxSummary.lifetimeOasClawback).toLocaleString()}.`,
+          years: taxPressureRows.filter((row) => row.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD).map((row) => row.year).join(', ') || '-',
+          fallbackArea: 'taxes'
+        };
+      case 'registeredTaxSpike':
+        return {
+          ...item,
+          evidence: firstTaxPressure
+            ? `${firstTaxPressure.reason} in ${firstTaxPressure.year}; tax ${Math.round(firstTaxPressure.tax).toLocaleString()}.`
+            : 'No major tax pressure year was detected.',
+          years: taxPressureRows.map((row) => row.year).join(', ') || '-',
+          fallbackArea: 'taxes'
+        };
+      case 'survivorRisk':
+        return {
+          ...item,
+          evidence: couple ? 'Two-person household; survivor resilience should be compared against baseline.' : 'Single-person plan.',
+          years: plan?.assumptions?.p1DiesInSurvivor ? String(plan.assumptions.p1DiesInSurvivor) : '-',
+          fallbackArea: 'stressTests'
+        };
+      case 'estateTarget':
+        return {
+          ...item,
+          evidence: firstShortfall
+            ? `First shortfall appears in ${firstShortfall.year}.`
+            : `Estate target ${Math.round(n(plan?.inheritance)).toLocaleString()}.`,
+          years: firstShortfall ? String(firstShortfall.year) : 'Final projection year',
+          fallbackArea: 'accounts'
+        };
+      default:
+        return { ...item, evidence: item.reason, years: '-', fallbackArea: 'overview' };
+    }
+  });
+}
+
+export function selectTaxPressureRows(result: SimulationResult | null | undefined): TaxPressureRow[] {
+  const rows = rowsFrom(result);
+  if (rows.length === 0) return [];
+  const taxRows = rows.map((row) => ({
+    row,
+    tax: n(row.totalTaxYear),
+    taxableIncome: n(row.taxableIncome),
+    oasClawback: n(row.totalOasClawY),
+    registeredWithdrawals: n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw)
+  }));
+  const peakTax = taxRows.reduce((max, row) => Math.max(max, row.tax), 0);
+  const peakTaxableIncome = taxRows.reduce((max, row) => Math.max(max, row.taxableIncome), 0);
+
+  return taxRows
+    .filter((item) => {
+      if (item.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD) return true;
+      if (peakTax > 0 && item.tax >= peakTax * 0.9 && item.tax > 1000) return true;
+      if (peakTaxableIncome > 0 && item.taxableIncome >= peakTaxableIncome * 0.9 && item.taxableIncome > 10000) return true;
+      return item.registeredWithdrawals > 0 && item.tax > 0 && item.tax >= peakTax * 0.75;
+    })
+    .slice(0, 8)
+    .map((item) => {
+      const pressure: TaxPressureRow['pressure'] =
+        item.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD || (peakTax > 0 && item.tax >= peakTax * 0.95)
+          ? 'high'
+          : item.tax >= peakTax * 0.8
+            ? 'medium'
+            : 'low';
+      return {
+        year: item.row.year,
+        taxableIncome: item.taxableIncome,
+        tax: item.tax,
+        oasClawback: item.oasClawback,
+        registeredWithdrawals: item.registeredWithdrawals,
+        pressure,
+        reason:
+          item.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD
+            ? 'OAS clawback'
+            : item.registeredWithdrawals > 0
+              ? 'registered withdrawals and tax'
+              : 'peak taxable income'
+      };
+    });
+}
+
+export function selectTaxPressureExplanation(result: SimulationResult | null | undefined): TaxPressureExplanation {
+  const rows = selectTaxPressureRows(result);
+  return {
+    headline:
+      rows.length > 0
+        ? 'Tax pressure is driven by peak taxable income, registered withdrawals, or OAS clawback.'
+        : 'No major tax pressure years were detected in the preview.',
+    rows: rows.map((row) => ({
+      ...row,
+      explanation:
+        row.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD
+          ? 'OAS recovery tax is active in this year, so taxable income is high enough to reduce benefits.'
+          : row.registeredWithdrawals > 0
+            ? 'Registered withdrawals are contributing to taxable income and annual tax.'
+            : 'This year is near the projection peak for taxable income or tax.'
+    }))
+  };
+}
+
+export function selectScenarioCards(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>> = {}
+): ScenarioCard[] {
+  const overview = selectOverviewMetrics(result);
+  const retireYear = n(plan?.assumptions?.retireYear) || n(plan?.p1?.retireYear);
+  const gogoSpending = n(plan?.spending?.gogo);
+  const hasBenefitTiming = Boolean(
+    plan && (n(plan.p1.cpp65_monthly) || n(plan.p1.cpp70_monthly) || n(plan.p1.oas_monthly) || n(plan.p2.cpp65_monthly) || n(plan.p2.oas_monthly))
+  );
+
+  return [
+    {
+      id: 'retireLater',
+      label: 'Retire two years later',
+      status: retireYear ? 'ready' : 'needsInput',
+      lever: retireYear ? `${retireYear} to ${retireYear + 2}` : 'Set a retirement year',
+      baseline: overview.lastYear ? `Baseline funded through ${overview.lastYear}` : 'Baseline not available',
+      detail: scenarioDetail(result, comparisons.retireLater),
+      ...scenarioComparison(result, comparisons.retireLater)
+    },
+    {
+      id: 'spendLessGogo',
+      label: 'Spend 10% less in go-go',
+      status: gogoSpending ? 'ready' : 'needsInput',
+      lever: gogoSpending ? `${Math.round(gogoSpending).toLocaleString()} to ${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Set go-go spending',
+      baseline: `End portfolio ${Math.round(overview.endPortfolio).toLocaleString()}`,
+      detail: scenarioDetail(result, comparisons.spendLessGogo),
+      ...scenarioComparison(result, comparisons.spendLessGogo)
+    },
+    {
+      id: 'delayBenefits',
+      label: 'Delay CPP/OAS to 70',
+      status: hasBenefitTiming ? 'ready' : 'needsInput',
+      lever: hasBenefitTiming ? 'Compare age 65 to age 70' : 'Enter CPP/OAS estimates',
+      baseline: 'Baseline uses the current preview timing',
+      detail: scenarioDetail(result, comparisons.delayBenefits),
+      ...scenarioComparison(result, comparisons.delayBenefits)
+    }
+  ];
+}
+
+export function selectScenarioComparisonRows(
+  baseline: SimulationResult | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>
+): ScenarioComparisonRow[] {
+  const baselineOverview = selectOverviewMetrics(baseline);
+  const baselineTax = selectTaxSummaryMetrics(baseline);
+  const definitions: Array<{ id: ScenarioCard['id']; label: string }> = [
+    { id: 'retireLater', label: 'Retire two years later' },
+    { id: 'spendLessGogo', label: 'Spend 10% less in go-go' },
+    { id: 'delayBenefits', label: 'Delay CPP/OAS to 70' }
+  ];
+
+  return definitions.map(({ id, label }) => {
+    const scenario = comparisons[id];
+    if (!baseline || !scenario) {
+      return {
+        id,
+        label,
+        endPortfolioDelta: 0,
+        firstYearSpendingDelta: 0,
+        lifetimeTaxDelta: 0,
+        firstShortfallYear: null,
+        fundedThroughYear: null,
+        status: 'notAvailable'
+      };
+    }
+
+    const scenarioOverview = selectOverviewMetrics(scenario);
+    const scenarioTax = selectTaxSummaryMetrics(scenario);
+    const firstShortfall = rowsFrom(scenario).find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+    const endPortfolioDelta = scenarioOverview.endPortfolio - baselineOverview.endPortfolio;
+    const firstYearSpendingDelta = scenarioOverview.firstYearSpending - baselineOverview.firstYearSpending;
+    const lifetimeTaxDelta = scenarioTax.lifetimeTax - baselineTax.lifetimeTax;
+    const status: ScenarioComparisonRow['status'] =
+      endPortfolioDelta > RECONCILIATION_TOLERANCE && !firstShortfall
+        ? 'improves'
+        : endPortfolioDelta < -RECONCILIATION_TOLERANCE || Boolean(firstShortfall)
+          ? 'worse'
+          : 'mixed';
+
+    return {
+      id,
+      label,
+      endPortfolioDelta,
+      firstYearSpendingDelta,
+      lifetimeTaxDelta,
+      firstShortfallYear: firstShortfall?.year ?? null,
+      fundedThroughYear: firstShortfall ? firstShortfall.year - 1 : scenarioOverview.lastYear,
+      status
+    };
+  });
+}
+
+export function selectScenarioAssumptionRows(plan: V2PlanPayload | null | undefined): ScenarioAssumptionRow[] {
+  const retireYear = n(plan?.assumptions?.retireYear) || n(plan?.p1?.retireYear);
+  const gogoSpending = n(plan?.spending?.gogo);
+  const benefitBaseline = 'CPP/OAS age 65';
+
+  return [
+    {
+      id: 'retireLater',
+      label: 'Retire two years later',
+      baseline: retireYear ? String(retireYear) : 'Not set',
+      scenario: retireYear ? String(retireYear + 2) : 'Needs retirement year',
+      changed: Boolean(retireYear)
+    },
+    {
+      id: 'spendLessGogo',
+      label: 'Spend 10% less in go-go',
+      baseline: gogoSpending ? `${Math.round(gogoSpending).toLocaleString()}` : 'Not set',
+      scenario: gogoSpending ? `${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Needs go-go spending',
+      changed: Boolean(gogoSpending)
+    },
+    {
+      id: 'delayBenefits',
+      label: 'Delay CPP/OAS to 70',
+      baseline: benefitBaseline,
+      scenario: 'CPP/OAS age 70',
+      changed: true
+    }
+  ];
+}
+
+function scenarioComparison(
+  baseline: SimulationResult | null | undefined,
+  scenario: SimulationResult | null | undefined
+): Pick<ScenarioCard, 'endPortfolioDelta' | 'fundedThroughYear'> {
+  if (!baseline || !scenario) return {};
+  const baselineEnd = n(baseline.years[baseline.years.length - 1]?.bal_total);
+  const scenarioOverview = selectOverviewMetrics(scenario);
+  const firstShortfall = rowsFrom(scenario).find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  return {
+    endPortfolioDelta: scenarioOverview.endPortfolio - baselineEnd,
+    fundedThroughYear: firstShortfall ? firstShortfall.year - 1 : scenarioOverview.lastYear
+  };
+}
+
+function scenarioDetail(
+  baseline: SimulationResult | null | undefined,
+  scenario: SimulationResult | null | undefined
+): string {
+  if (!baseline || !scenario) return 'Computed scenario preview will appear when the baseline preview is available.';
+  const comparison = scenarioComparison(baseline, scenario);
+  return `Computed preview: end portfolio ${comparison.endPortfolioDelta && comparison.endPortfolioDelta >= 0 ? '+' : ''}${Math.round(
+    comparison.endPortfolioDelta || 0
+  ).toLocaleString()}, funded through ${comparison.fundedThroughYear || '-'}.`;
+}
+
+export function selectSurvivorViewSummary(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): SurvivorViewSummary {
+  if (!plan || personLooksBlank(plan.p2)) {
+    return {
+      status: 'single',
+      headline: 'Survivor view is not needed for this single-person plan.',
+      survivorYear: null,
+      incomeAtRisk: 0,
+      detail: 'Single plans still use the stable dashboard for full result detail.'
+    };
+  }
+
+  const survivorYear = n(plan.assumptions.p1DiesInSurvivor) || null;
+  const rows = rowsFrom(result);
+  const referenceRow = rows.find((row) => row.year === survivorYear) || rows[0];
+  const p1Income = n(referenceRow?.salary_f) + n(referenceRow?.dbPension) + n(referenceRow?.cpp_f) + n(referenceRow?.oas_f);
+
+  return {
+    status: survivorYear ? 'ready' : 'needsInput',
+    headline: survivorYear
+      ? 'Survivor view has a starting year and should be compared against baseline funding.'
+      : 'Set a survivor year to test household resilience after first death.',
+    survivorYear,
+    incomeAtRisk: p1Income,
+    detail: survivorYear
+      ? `Approximate Person 1 income visible in ${survivorYear}: ${Math.round(p1Income).toLocaleString()}.`
+      : 'Future slice should compare survivor income, taxes, portfolio path, and spending funded.'
+  };
+}
+
+export function selectSurvivorComparison(
+  baseline: SimulationResult | null | undefined,
+  survivor: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): SurvivorComparison {
+  if (!plan || personLooksBlank(plan.p2)) {
+    return {
+      status: 'single',
+      survivorYear: null,
+      baselineEndPortfolio: 0,
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      baselineLifetimeTax: 0,
+      survivorLifetimeTax: 0,
+      lifetimeTaxDelta: 0,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      spendingFundedYears: '-'
+    };
+  }
+
+  const survivorYear = n(plan.assumptions.p1DiesInSurvivor) || null;
+  if (!survivorYear) {
+    return {
+      status: 'needsInput',
+      survivorYear: null,
+      baselineEndPortfolio: n(baseline?.years[baseline.years.length - 1]?.bal_total),
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      baselineLifetimeTax: selectTaxSummaryMetrics(baseline).lifetimeTax,
+      survivorLifetimeTax: 0,
+      lifetimeTaxDelta: 0,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      spendingFundedYears: '-'
+    };
+  }
+
+  if (!baseline || !survivor) {
+    return {
+      status: 'notAvailable',
+      survivorYear,
+      baselineEndPortfolio: 0,
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      baselineLifetimeTax: 0,
+      survivorLifetimeTax: 0,
+      lifetimeTaxDelta: 0,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      spendingFundedYears: '-'
+    };
+  }
+
+  const baselineTax = selectTaxSummaryMetrics(baseline);
+  const survivorTax = selectTaxSummaryMetrics(survivor);
+  const baselineEndPortfolio = n(baseline.years[baseline.years.length - 1]?.bal_total);
+  const survivorEndPortfolio = n(survivor.years[survivor.years.length - 1]?.bal_total);
+  const survivorRows = rowsFrom(survivor);
+  const firstShortfall = survivorRows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const fundedYears = survivorRows.filter((row) => n(row.shortfall) <= RECONCILIATION_TOLERANCE).length;
+
+  return {
+    status: 'ready',
+    survivorYear,
+    baselineEndPortfolio,
+    survivorEndPortfolio,
+    endPortfolioDelta: survivorEndPortfolio - baselineEndPortfolio,
+    baselineLifetimeTax: baselineTax.lifetimeTax,
+    survivorLifetimeTax: survivorTax.lifetimeTax,
+    lifetimeTaxDelta: survivorTax.lifetimeTax - baselineTax.lifetimeTax,
+    firstShortfallYear: firstShortfall?.year ?? null,
+    fundedThroughYear: firstShortfall ? firstShortfall.year - 1 : survivorRows[survivorRows.length - 1]?.year ?? null,
+    spendingFundedYears: `${fundedYears}/${survivorRows.length || 0}`
+  };
+}
+
+export function selectRecommendedPath(
+  baseline: SimulationResult | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>,
+  survivor: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  validation: RecommendationValidation = null
+): RecommendedPathSummary {
+  const baselineOverview = selectOverviewMetrics(baseline);
+  const baselineTax = selectTaxSummaryMetrics(baseline);
+  const survivorComparison = selectSurvivorComparison(baseline, survivor, plan);
+  const scenarioDefinitions: Array<{ id: RecommendedCandidateId; label: string; result: SimulationResult | null | undefined }> = [
+    { id: 'baseline', label: 'Current plan', result: baseline },
+    { id: 'retireLater', label: 'Retire two years later', result: comparisons.retireLater },
+    { id: 'spendLessGogo', label: 'Spend 10% less in go-go', result: comparisons.spendLessGogo },
+    { id: 'delayBenefits', label: 'Delay CPP/OAS to 70', result: comparisons.delayBenefits }
+  ];
+
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const candidateRows = scenarioDefinitions.map(({ id, label, result }) =>
+    selectRecommendedCandidateRow(id, label, result, baselineOverview, baselineTax, validationBlocked, survivorComparison)
+  );
+  const eligibleRows = candidateRows.filter((row) => !row.blocked);
+  const recommended = eligibleRows.length > 0 ? [...eligibleRows].sort(compareRecommendedCandidates)[0] : null;
+  const rowsWithRecommendation: RecommendedCandidateRow[] = candidateRows.map((row) => {
+    const reviewStatus: RecommendedCandidateRow['reviewStatus'] = row.blocked
+      ? 'blocked'
+      : recommended && row.id === recommended.id
+        ? 'recommended'
+        : 'review';
+    return {
+      ...row,
+      recommended: Boolean(recommended && row.id === recommended.id),
+      reviewStatus
+    };
+  });
+
+  const recommendedRow = rowsWithRecommendation.find((row) => row.recommended) || null;
+  const recommendedResult = scenarioDefinitions.find((definition) => definition.id === recommendedRow?.id)?.result || null;
+  const stressContext = selectRecommendedStressContext(recommendedRow, recommendedResult, survivorComparison);
+  const breakRisks = selectRecommendedBreakRisks(recommendedRow, stressContext, rowsWithRecommendation, survivorComparison);
+  const confidence = selectRecommendedConfidence(recommendedRow, stressContext, breakRisks);
+  const riskDetails = selectRecommendedRiskDetails(
+    baseline,
+    comparisons,
+    survivor,
+    plan,
+    recommendedRow,
+    recommendedResult,
+    breakRisks,
+    confidence,
+    survivorComparison
+  );
+  const checklistItems = selectRecommendedChecklistItems(
+    recommendedRow,
+    breakRisks,
+    confidence,
+    stressContext,
+    survivorComparison,
+    validationBlocked
+  );
+  const recommendationReasons = recommendedRow ? recommendedReasonCopy(recommendedRow) : [];
+  const whyNotRows = rowsWithRecommendation
+    .filter((row) => !row.recommended)
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      reason: whyNotReason(row, recommendedRow)
+    }));
+
+  return {
+    recommendedCandidateId: recommendedRow?.id ?? null,
+    recommendedLabel: recommendedRow?.label ?? 'No recommended path',
+    headline: recommendedRow
+      ? `${recommendedRow.label} is the strongest preview candidate under the current trust checks.`
+      : 'No recommended path is available until blockers are cleared.',
+    confidence,
+    stressContext,
+    breakRisks,
+    defaultRiskDetailId: selectDefaultRecommendedRiskDetailId(breakRisks),
+    riskDetails,
+    checklistItems,
+    reasons: recommendationReasons,
+    tradeoffs: recommendedRow?.tradeoffs.length ? recommendedRow.tradeoffs : ['Review the stable dashboard before relying on this preview.'],
+    trustChecks: selectRecommendationTrustChecks(baseline, survivorComparison),
+    candidateRows: rowsWithRecommendation,
+    whyNotRows
+  };
+}
+
+function selectRecommendedStressContext(
+  recommended: RecommendedCandidateRow | null,
+  result: SimulationResult | null | undefined,
+  survivorComparison: SurvivorComparison
+): RecommendedStressContext {
+  const rows = rowsFrom(result);
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const taxPressure = selectTaxPressureRows(result);
+  const lowestPortfolioRow = rows.reduce<AnnualSimulationRow | null>((lowest, row) => {
+    if (!lowest || n(row.bal_total) < n(lowest.bal_total)) return row;
+    return lowest;
+  }, null);
+
+  if (!recommended || rows.length === 0) {
+    return {
+      candidateId: null,
+      candidateLabel: 'No recommended path',
+      sourceStatus: result ? diagnostics.status : 'notAvailable',
+      fundedThroughYear: null,
+      firstShortfallYear: null,
+      firstYearSpending: 0,
+      terminalPortfolio: 0,
+      lowestPortfolioYear: null,
+      lowestPortfolio: 0,
+      fundedYears: 0,
+      totalYears: 0,
+      taxPressureCount: 0,
+      survivorStatus: survivorComparison.status,
+      summary: 'Stress context is unavailable until a recommended preview candidate can be calculated.'
+    };
+  }
+
+  const fundedYears = rows.filter((row) => n(row.shortfall) <= RECONCILIATION_TOLERANCE).length;
+  const terminalPortfolio = n(rows[rows.length - 1]?.bal_total);
+  const firstYearSpending = n(rows[0]?.totalAftaxYear || rows[0]?.spending);
+  const sourceStatus = diagnostics.status;
+  const shortfallCopy = recommended.firstShortfallYear
+    ? `first shortfall in ${recommended.firstShortfallYear}`
+    : 'no shortfall in the preview horizon';
+
+  return {
+    candidateId: recommended.id,
+    candidateLabel: recommended.label,
+    sourceStatus,
+    fundedThroughYear: recommended.fundedThroughYear,
+    firstShortfallYear: recommended.firstShortfallYear,
+    firstYearSpending,
+    terminalPortfolio,
+    lowestPortfolioYear: lowestPortfolioRow?.year ?? null,
+    lowestPortfolio: n(lowestPortfolioRow?.bal_total),
+    fundedYears,
+    totalYears: rows.length,
+    taxPressureCount: taxPressure.length,
+    survivorStatus: survivorComparison.status,
+    summary: `${recommended.label} shows ${shortfallCopy}, funds ${fundedYears}/${rows.length} years, and ends with ${Math.round(terminalPortfolio).toLocaleString()} in portfolio value.`
+  };
+}
+
+function selectRecommendedBreakRisks(
+  recommended: RecommendedCandidateRow | null,
+  context: RecommendedStressContext,
+  rows: RecommendedCandidateRow[],
+  survivorComparison: SurvivorComparison
+): RecommendedBreakRisk[] {
+  if (!recommended) {
+    return [
+      {
+        id: 'sourceReconciliation',
+        label: 'Recommendation blockers',
+        severity: 'blocked',
+        detail: 'A recommended path is not available until validation and source reconciliation blockers are cleared.',
+        handoff: 'Fix intake blockers, then use the stable dashboard for full schedules.'
+      }
+    ];
+  }
+
+  const byId = (id: RecommendedCandidateId) => rows.find((row) => row.id === id);
+  const spendingCandidate = byId('spendLessGogo');
+  const retireLaterCandidate = byId('retireLater');
+  const delayBenefitsCandidate = byId('delayBenefits');
+  const terminalCushionYears = context.firstYearSpending > 0 ? context.terminalPortfolio / context.firstYearSpending : 0;
+  const risks: RecommendedBreakRisk[] = [];
+
+  risks.push({
+    id: 'sourceReconciliation',
+    label: 'Source reconciliation',
+    severity: context.sourceStatus === 'ok' ? 'ok' : 'blocked',
+    detail:
+      context.sourceStatus === 'ok'
+        ? 'The selected candidate reconciles income, withdrawals, tax, and spending in the preview rows.'
+        : 'The selected candidate has reconciliation warnings, so the recommendation should not be relied on yet.',
+    handoff: 'Stable dashboard: review annual cash-flow rows.'
+  });
+
+  risks.push({
+    id: 'spendingSensitivity',
+    label: 'Go-go spending',
+    severity:
+      spendingCandidate && !spendingCandidate.blocked && spendingCandidate.endPortfolioDelta > Math.max(25000, Math.abs(recommended.endPortfolio) * 0.05)
+        ? 'watch'
+        : 'review',
+    detail:
+      spendingCandidate && !spendingCandidate.blocked && spendingCandidate.endPortfolioDelta > 0
+        ? `A 10% go-go spending reduction improves terminal portfolio by ${Math.round(spendingCandidate.endPortfolioDelta).toLocaleString()} versus the current plan.`
+        : 'The spending reduction preview does not materially improve the selected trust metrics.',
+    handoff: 'Stable dashboard: compare detailed spending and withdrawal schedules.'
+  });
+
+  risks.push({
+    id: 'retirementTiming',
+    label: 'Retirement date',
+    severity: retireLaterCandidate?.recommended ? 'watch' : retireLaterCandidate && retireLaterCandidate.endPortfolioDelta > 0 ? 'review' : 'ok',
+    detail: retireLaterCandidate?.recommended
+      ? 'The recommendation depends on working two years longer than the current plan.'
+      : retireLaterCandidate && retireLaterCandidate.endPortfolioDelta > 0
+        ? `Retiring two years later improves terminal portfolio by ${Math.round(retireLaterCandidate.endPortfolioDelta).toLocaleString()}.`
+        : 'Retiring later does not overtake the selected path in this bounded preview.',
+    handoff: 'Stable dashboard: inspect year-by-year employment, tax, and withdrawal timing.'
+  });
+
+  risks.push({
+    id: 'benefitTiming',
+    label: 'CPP/OAS timing',
+    severity: delayBenefitsCandidate?.recommended ? 'watch' : delayBenefitsCandidate && delayBenefitsCandidate.endPortfolioDelta > 0 ? 'review' : 'ok',
+    detail: delayBenefitsCandidate?.recommended
+      ? 'The selected path depends on delayed CPP/OAS claiming assumptions.'
+      : delayBenefitsCandidate && delayBenefitsCandidate.endPortfolioDelta > 0
+        ? `Delaying CPP/OAS improves terminal portfolio by ${Math.round(delayBenefitsCandidate.endPortfolioDelta).toLocaleString()}.`
+        : 'Delayed public benefits do not overtake the selected path in this bounded preview.',
+    handoff: 'Stable dashboard: review benefit timing and taxable income by year.'
+  });
+
+  if (context.firstShortfallYear) {
+    risks.push({
+      id: 'shortfall',
+      label: 'Projection shortfall',
+      severity: 'watch',
+      detail: `The selected path first reports a shortfall in ${context.firstShortfallYear}.`,
+      handoff: 'Stable dashboard: inspect stress tests and annual shortfall rows.'
+    });
+  }
+
+  risks.push({
+    id: 'terminalCushion',
+    label: 'Terminal cushion',
+    severity: context.terminalPortfolio <= RECONCILIATION_TOLERANCE ? 'watch' : terminalCushionYears < 0.5 ? 'review' : 'ok',
+    detail:
+      context.terminalPortfolio <= RECONCILIATION_TOLERANCE
+        ? 'The selected path ends with little or no portfolio cushion.'
+        : `Lowest portfolio is ${Math.round(context.lowestPortfolio).toLocaleString()} in ${context.lowestPortfolioYear || '-'}.`,
+    handoff: 'Stable dashboard: review balance charts and ending estate trade-offs.'
+  });
+
+  if (context.taxPressureCount > 0) {
+    risks.push({
+      id: 'taxPressure',
+      label: 'Tax pressure',
+      severity: 'review',
+      detail: `${context.taxPressureCount} selected-path year${context.taxPressureCount === 1 ? '' : 's'} show elevated tax or OAS clawback pressure.`,
+      handoff: 'Stable dashboard: inspect tax schedules and OAS clawback rows.'
+    });
+  }
+
+  risks.push({
+    id: 'survivor',
+    label: 'Survivor resilience',
+    severity:
+      survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable'
+        ? 'review'
+        : survivorComparison.firstShortfallYear
+          ? 'watch'
+          : 'ok',
+    detail:
+      survivorComparison.status === 'single'
+        ? 'Single-person plan; survivor stress is not applicable.'
+        : survivorComparison.status === 'ready'
+          ? survivorComparison.firstShortfallYear
+            ? `Survivor comparison first reports a shortfall in ${survivorComparison.firstShortfallYear}.`
+            : `Survivor comparison remains funded through ${survivorComparison.fundedThroughYear || '-'}.`
+          : 'Set a survivor year to test household resilience.',
+    handoff: 'Stable dashboard: review survivor and household resilience detail.'
+  });
+
+  return risks;
+}
+
+function selectRecommendedConfidence(
+  recommended: RecommendedCandidateRow | null,
+  context: RecommendedStressContext,
+  breakRisks: RecommendedBreakRisk[]
+): RecommendedConfidence {
+  if (!recommended || recommended.blocked || context.sourceStatus !== 'ok') {
+    return {
+      level: 'low',
+      label: 'Low confidence',
+      detail: 'The recommendation has blockers or missing stress context.',
+      drivers: ['Clear validation and source reconciliation blockers before using the selected path.']
+    };
+  }
+
+  const watchCount = breakRisks.filter((risk) => risk.severity === 'watch' || risk.severity === 'blocked').length;
+  const reviewCount = breakRisks.filter((risk) => risk.severity === 'review').length;
+  const drivers: string[] = [];
+  if (!context.firstShortfallYear) drivers.push('No shortfall appears in the selected-path preview horizon.');
+  if (context.fundedYears === context.totalYears) drivers.push(`All ${context.totalYears} preview years are funded.`);
+  if (context.taxPressureCount > 0) drivers.push('Tax pressure still needs review.');
+  if (breakRisks.some((risk) => risk.id === 'survivor' && risk.severity !== 'ok')) drivers.push('Survivor resilience remains a review item.');
+
+  if (context.firstShortfallYear || watchCount > 0) {
+    return {
+      level: 'low',
+      label: 'Low confidence',
+      detail: 'The selected path is fragile under at least one visible stress check.',
+      drivers: drivers.length ? drivers : ['At least one selected-path stress check is in watch status.']
+    };
+  }
+
+  if (reviewCount > 1 || context.taxPressureCount > 0) {
+    return {
+      level: 'moderate',
+      label: 'Moderate confidence',
+      detail: 'The selected path is usable as a preview, with review items before acting on it.',
+      drivers: drivers.length ? drivers : ['The selected path has review items but no shortfall in the preview horizon.']
+    };
+  }
+
+  return {
+    level: 'higher',
+    label: 'Higher confidence',
+    detail: 'The selected path clears the bounded stress checks available in the React preview.',
+    drivers: drivers.length ? drivers : ['No major fragility appears in the bounded confidence layer.']
+  };
+}
+
+function selectDefaultRecommendedRiskDetailId(
+  breakRisks: RecommendedBreakRisk[]
+): RecommendedBreakRisk['id'] | null {
+  const severityRank: Record<RecommendedBreakRisk['severity'], number> = {
+    blocked: 0,
+    watch: 1,
+    review: 2,
+    ok: 3
+  };
+  return [...breakRisks].sort((a, b) => severityRank[a.severity] - severityRank[b.severity])[0]?.id ?? null;
+}
+
+function selectRecommendedRiskDetails(
+  baseline: SimulationResult | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>,
+  survivor: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  recommended: RecommendedCandidateRow | null,
+  selectedResult: SimulationResult | null | undefined,
+  breakRisks: RecommendedBreakRisk[],
+  confidence: RecommendedConfidence,
+  survivorComparison: SurvivorComparison
+): RecommendedRiskDetail[] {
+  return breakRisks.map((risk) => {
+    const candidateLabel = recommended?.label || 'No recommended path';
+    const selectedRows = rowsFrom(selectedResult);
+    const diagnostics = selectReconciliationDiagnostics(selectedResult);
+    const selectedTax = selectTaxSummaryMetrics(selectedResult);
+    const selectedTaxPressure = selectTaxPressureRows(selectedResult);
+    const selectedOverview = selectOverviewMetrics(selectedResult);
+    const firstShortfall = selectedRows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+    const worstShortfall = selectedRows.reduce<AnnualSimulationRow | null>((worst, row) => {
+      if (n(row.shortfall) <= RECONCILIATION_TOLERANCE) return worst;
+      if (!worst || n(row.shortfall) > n(worst.shortfall)) return row;
+      return worst;
+    }, null);
+    const lowestPortfolio = selectedRows.reduce<AnnualSimulationRow | null>((lowest, row) => {
+      if (!lowest || n(row.bal_total) < n(lowest.bal_total)) return row;
+      return lowest;
+    }, null);
+    const terminalPortfolio = n(selectedRows[selectedRows.length - 1]?.bal_total);
+    const firstYearSpending = n(selectedRows[0]?.totalAftaxYear || selectedRows[0]?.spending);
+    const terminalCushionYears = firstYearSpending > 0 ? terminalPortfolio / firstYearSpending : 0;
+    const spendingComparison = scenarioComparison(baseline, comparisons.spendLessGogo);
+    const retireComparison = scenarioComparison(baseline, comparisons.retireLater);
+    const delayComparison = scenarioComparison(baseline, comparisons.delayBenefits);
+    const selectedSourceStory = selectSourceReconciliationStory(selectedRows[0]);
+
+    switch (risk.id) {
+      case 'sourceReconciliation':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline:
+            diagnostics.status === 'ok'
+              ? 'Selected-path rows reconcile within tolerance.'
+              : 'Selected-path source rows need reconciliation review.',
+          detail: 'This checks whether spending can be traced from income, withdrawals, cash funding, other inflows, and tax.',
+          metrics: [
+            detailMetric('rowsChecked', 'Rows checked', String(diagnostics.rowsChecked), 'neutral'),
+            detailMetric('firstWarning', 'First warning', diagnostics.firstWarningYear ? String(diagnostics.firstWarningYear) : 'None', diagnostics.status === 'ok' ? 'ok' : 'watch'),
+            detailMetric('maxGap', 'Max reconciliation gap', moneyText(diagnostics.maxReconciliationGap), diagnostics.status === 'ok' ? 'ok' : 'watch')
+          ],
+          evidenceRows: selectedSourceStory.steps.slice(0, 7).map((step) => ({
+            id: step.id,
+            label: step.label,
+            value: signedMoneyText(step.amount),
+            detail: step.tone === 'watch' ? 'Review this source line.' : 'Included in first-year source reconciliation.'
+          })),
+          handoff: risk.handoff
+        };
+      case 'spendingSensitivity':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: 'This shows whether the recommendation is sensitive to go-go spending.',
+          detail: 'The bounded rerun lowers go-go spending by 10% and compares the result with the current plan.',
+          metrics: [
+            detailMetric('currentSpend', 'Current go-go spending', moneyText(plan?.spending?.gogo), 'neutral'),
+            detailMetric('scenarioSpend', '10% lower go-go', moneyText(Math.round(n(plan?.spending?.gogo) * 0.9)), 'neutral'),
+            detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(spendingComparison.endPortfolioDelta), n(spendingComparison.endPortfolioDelta) > 0 ? 'ok' : 'neutral'),
+            detailMetric('fundedThrough', 'Funded through', spendingComparison.fundedThroughYear ? String(spendingComparison.fundedThroughYear) : '-', 'neutral')
+          ],
+          evidenceRows: scenarioEvidenceRows('spending', 'Spend 10% less in go-go', comparisons.spendLessGogo, spendingComparison),
+          handoff: risk.handoff
+        };
+      case 'retirementTiming':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: 'This shows whether the path depends on working longer.',
+          detail: 'The bounded rerun moves the household retirement year two years later where retirement years are set.',
+          metrics: [
+            detailMetric('currentYear', 'Current retirement year', String(plan?.assumptions.retireYear || plan?.p1.retireYear || '-'), 'neutral'),
+            detailMetric('laterYear', 'Retire-later year', n(plan?.assumptions.retireYear || plan?.p1.retireYear) ? String(n(plan?.assumptions.retireYear || plan?.p1.retireYear) + 2) : '-', 'neutral'),
+            detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(retireComparison.endPortfolioDelta), n(retireComparison.endPortfolioDelta) > 0 ? 'ok' : 'neutral'),
+            detailMetric('fundedThrough', 'Funded through', retireComparison.fundedThroughYear ? String(retireComparison.fundedThroughYear) : '-', 'neutral')
+          ],
+          evidenceRows: scenarioEvidenceRows('retire', 'Retire two years later', comparisons.retireLater, retireComparison),
+          handoff: risk.handoff
+        };
+      case 'benefitTiming':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: 'This shows whether delayed public benefits materially change the result.',
+          detail: 'The bounded rerun delays CPP and OAS claiming to age 70 for the preview scenario.',
+          metrics: [
+            detailMetric('baselineTiming', 'Current preview timing', 'CPP/OAS at 65', 'neutral'),
+            detailMetric('scenarioTiming', 'Delay scenario', 'CPP/OAS at 70', 'neutral'),
+            detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(delayComparison.endPortfolioDelta), n(delayComparison.endPortfolioDelta) > 0 ? 'ok' : 'neutral'),
+            detailMetric('taxDelta', 'Lifetime tax delta', signedMoneyText(selectTaxSummaryMetrics(comparisons.delayBenefits).lifetimeTax - selectTaxSummaryMetrics(baseline).lifetimeTax), 'neutral')
+          ],
+          evidenceRows: scenarioEvidenceRows('benefit', 'Delay CPP/OAS to 70', comparisons.delayBenefits, delayComparison),
+          handoff: risk.handoff
+        };
+      case 'shortfall':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: firstShortfall ? `First selected-path shortfall appears in ${firstShortfall.year}.` : 'No selected-path shortfall appears in the preview horizon.',
+          detail: 'This isolates the first and worst annual funding pressure in the selected path.',
+          metrics: [
+            detailMetric('firstShortfall', 'First shortfall', firstShortfall ? String(firstShortfall.year) : 'None', firstShortfall ? 'watch' : 'ok'),
+            detailMetric('worstShortfall', 'Worst shortfall', worstShortfall ? moneyText(worstShortfall.shortfall) : '$0', worstShortfall ? 'watch' : 'ok'),
+            detailMetric('fundedYears', 'Funded years', `${selectedRows.filter((row) => n(row.shortfall) <= RECONCILIATION_TOLERANCE).length}/${selectedRows.length || 0}`, firstShortfall ? 'watch' : 'ok')
+          ],
+          evidenceRows: shortfallEvidenceRows(firstShortfall ?? null, worstShortfall),
+          handoff: risk.handoff
+        };
+      case 'terminalCushion':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: 'This shows the selected path’s ending and low-point portfolio cushion.',
+          detail: 'The cushion is a simple preview indicator, not an estate plan or probability result.',
+          metrics: [
+            detailMetric('terminalPortfolio', 'Terminal portfolio', moneyText(terminalPortfolio), terminalPortfolio > 0 ? 'ok' : 'watch'),
+            detailMetric('lowestPortfolio', 'Lowest portfolio', lowestPortfolio ? moneyText(lowestPortfolio.bal_total) : '-', n(lowestPortfolio?.bal_total) > 0 ? 'ok' : 'watch'),
+            detailMetric('cushionYears', 'Approx. cushion', `${terminalCushionYears.toFixed(1)}x first-year spending`, terminalCushionYears >= 0.5 ? 'ok' : 'watch'),
+            detailMetric('estateTarget', 'Estate target', moneyText(plan?.inheritance), 'neutral')
+          ],
+          evidenceRows: [
+            {
+              id: 'lowest',
+              label: lowestPortfolio ? `Lowest portfolio year ${lowestPortfolio.year}` : 'Lowest portfolio',
+              value: lowestPortfolio ? moneyText(lowestPortfolio.bal_total) : '-',
+              detail: 'Lowest selected-path balance in the preview horizon.'
+            },
+            {
+              id: 'final',
+              label: selectedOverview.lastYear ? `Final year ${selectedOverview.lastYear}` : 'Final year',
+              value: moneyText(terminalPortfolio),
+              detail: 'Ending selected-path portfolio value.'
+            }
+          ],
+          handoff: risk.handoff
+        };
+      case 'taxPressure':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: selectedTaxPressure[0] ? `First selected-path tax pressure appears in ${selectedTaxPressure[0].year}.` : 'No major selected-path tax pressure was detected.',
+          detail: 'This summarizes taxable-income, tax, OAS clawback, and registered-withdrawal pressure.',
+          metrics: [
+            detailMetric('firstPressure', 'First pressure', selectedTaxPressure[0] ? String(selectedTaxPressure[0].year) : 'None', selectedTaxPressure.length ? 'watch' : 'ok'),
+            detailMetric('peakTax', 'Peak tax', moneyText(selectedTax.peakTax), selectedTax.peakTax > 0 ? 'neutral' : 'ok'),
+            detailMetric('oasClawback', 'Lifetime OAS clawback', moneyText(selectedTax.lifetimeOasClawback), selectedTax.lifetimeOasClawback > OAS_CLAWBACK_WATCH_THRESHOLD ? 'watch' : 'ok')
+          ],
+          evidenceRows: selectedTaxPressure.slice(0, 4).map((row) => ({
+            id: String(row.year),
+            label: `${row.year}: ${row.reason}`,
+            value: moneyText(row.tax),
+            detail: `Taxable income ${moneyText(row.taxableIncome)}, OAS clawback ${moneyText(row.oasClawback)}, registered withdrawals ${moneyText(row.registeredWithdrawals)}.`
+          })),
+          handoff: risk.handoff
+        };
+      case 'survivor':
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline:
+            survivorComparison.status === 'ready'
+              ? 'Survivor comparison is available for this household.'
+              : survivorComparison.status === 'single'
+                ? 'Survivor stress is not applicable for this single-person plan.'
+                : 'Survivor resilience needs more input before comparison.',
+          detail: 'This uses the existing survivor preview boundary when a couple plan has a survivor year.',
+          metrics: [
+            detailMetric('status', 'Survivor status', survivorComparison.status, survivorComparison.status === 'ready' || survivorComparison.status === 'single' ? 'ok' : 'watch'),
+            detailMetric('survivorYear', 'Survivor year', survivorComparison.survivorYear ? String(survivorComparison.survivorYear) : '-', 'neutral'),
+            detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(survivorComparison.endPortfolioDelta), survivorComparison.endPortfolioDelta >= 0 ? 'ok' : 'watch'),
+            detailMetric('fundedThrough', 'Funded through', survivorComparison.fundedThroughYear ? String(survivorComparison.fundedThroughYear) : '-', survivorComparison.firstShortfallYear ? 'watch' : 'neutral')
+          ],
+          evidenceRows: survivorEvidenceRows(survivorComparison, survivor),
+          handoff: risk.handoff
+        };
+      default:
+        return {
+          id: risk.id,
+          label: risk.label,
+          severity: risk.severity,
+          candidateLabel,
+          headline: `${risk.label} detail is available for the selected path.`,
+          detail: confidence.detail,
+          metrics: [detailMetric('confidence', 'Confidence', confidence.label, confidence.level === 'low' ? 'watch' : 'ok')],
+          evidenceRows: [{ id: 'summary', label: risk.label, value: risk.severity, detail: risk.detail }],
+          handoff: risk.handoff
+        };
+    }
+  });
+}
+
+function selectRecommendedChecklistItems(
+  recommended: RecommendedCandidateRow | null,
+  breakRisks: RecommendedBreakRisk[],
+  confidence: RecommendedConfidence,
+  context: RecommendedStressContext,
+  survivorComparison: SurvivorComparison,
+  validationBlocked: boolean
+): RecommendedChecklistItem[] {
+  const blockedRisks = breakRisks.filter((risk) => risk.severity === 'blocked');
+  const watchRisks = breakRisks.filter((risk) => risk.severity === 'watch');
+  const taxRisk = breakRisks.find((risk) => risk.id === 'taxPressure');
+  const spendingRisk = breakRisks.find((risk) => risk.id === 'spendingSensitivity');
+  const timingRisk = breakRisks.find((risk) => risk.id === 'retirementTiming' || risk.id === 'benefitTiming');
+
+  const items: RecommendedChecklistItem[] = [
+    {
+      id: 'clearBlockers',
+      label: 'Clear blockers',
+      status: validationBlocked || blockedRisks.length > 0 || !recommended ? 'blocked' : 'ready',
+      priority: 'now',
+      detail:
+        validationBlocked || blockedRisks.length > 0 || !recommended
+          ? 'Resolve validation and source reconciliation blockers before relying on the selected path.'
+          : 'No validation or source reconciliation blocker is currently stopping the preview.',
+      handoff: 'Start with Guided Intake warnings and stable dashboard cash-flow rows.'
+    },
+    {
+      id: 'reviewStress',
+      label: 'Review watch risks',
+      status: watchRisks.length > 0 || confidence.level === 'low' ? 'review' : 'ready',
+      priority: watchRisks.length > 0 || confidence.level === 'low' ? 'now' : 'next',
+      detail:
+        watchRisks.length > 0
+          ? `${watchRisks.length} selected-path risk${watchRisks.length === 1 ? '' : 's'} need review before acting.`
+          : 'No watch-level selected-path risk is visible in the bounded preview.',
+      handoff: 'Use the break-risk drilldowns above, then inspect complete annual rows in the stable dashboard.'
+    },
+    {
+      id: 'confirmSpending',
+      label: 'Confirm spending comfort',
+      status: spendingRisk?.severity === 'watch' ? 'review' : 'ready',
+      priority: spendingRisk?.severity === 'watch' ? 'now' : 'next',
+      detail:
+        spendingRisk?.severity === 'watch'
+          ? 'The selected path is sensitive to go-go spending; confirm the lifestyle target before saving.'
+          : 'The 10% go-go spending rerun does not currently create a watch-level item.',
+      handoff: 'Review the spending sensitivity drilldown and stable dashboard withdrawal schedule.'
+    },
+    {
+      id: 'confirmTiming',
+      label: 'Confirm timing levers',
+      status: timingRisk?.severity === 'watch' || timingRisk?.severity === 'review' ? 'review' : 'ready',
+      priority: timingRisk?.severity === 'watch' ? 'now' : 'next',
+      detail: 'Retirement date and CPP/OAS timing are decision levers, not automatic instructions.',
+      handoff: 'Review retirement-date and CPP/OAS timing drilldowns before treating the preview as a plan.'
+    },
+    {
+      id: 'inspectTaxes',
+      label: 'Inspect tax pressure',
+      status: taxRisk ? 'review' : 'ready',
+      priority: taxRisk ? 'next' : 'later',
+      detail:
+        context.taxPressureCount > 0
+          ? `${context.taxPressureCount} selected-path year${context.taxPressureCount === 1 ? '' : 's'} show tax or OAS pressure.`
+          : 'No major selected-path tax pressure was detected in the bounded preview.',
+      handoff: 'Use the Taxes tab and stable dashboard tax schedules for year-by-year detail.'
+    },
+    {
+      id: 'testSurvivor',
+      label: 'Check household resilience',
+      status:
+        survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable' || survivorComparison.firstShortfallYear
+          ? 'review'
+          : 'ready',
+      priority: survivorComparison.status === 'single' ? 'later' : 'next',
+      detail:
+        survivorComparison.status === 'single'
+          ? 'Single-person plan; survivor comparison is not applicable.'
+          : survivorComparison.status === 'ready'
+            ? 'Survivor comparison is available; review it before relying on a two-person plan.'
+            : 'Set a survivor year to test household resilience.',
+      handoff: 'Use Household Resilience and the stable dashboard survivor detail.'
+    },
+    {
+      id: 'openStableDashboard',
+      label: 'Inspect complete detail',
+      status: 'review',
+      priority: 'next',
+      detail: 'The React result is still a preview. Complete schedules, charts, and print/PDF remain in the stable dashboard.',
+      handoff: 'Open stable dashboard before acting on the selected path.'
+    },
+    {
+      id: 'savePlan',
+      label: 'Save local plan file',
+      status: validationBlocked || blockedRisks.length > 0 ? 'blocked' : 'ready',
+      priority: 'later',
+      detail:
+        validationBlocked || blockedRisks.length > 0
+          ? 'Save after blockers are clear so the local plan file reflects reviewed inputs.'
+          : 'Save the reviewed v2 plan locally when you are ready to keep this version.',
+      handoff: 'Use Save .plan.json; recommendation and checklist output stay runtime-only.'
+    }
+  ];
+
+  return items;
+}
+
+function detailMetric(
+  id: string,
+  label: string,
+  value: string,
+  tone: RecommendedRiskDetail['metrics'][number]['tone']
+): RecommendedRiskDetail['metrics'][number] {
+  return { id, label, value, tone };
+}
+
+function moneyText(value: number | undefined): string {
+  return `$${Math.round(n(value)).toLocaleString()}`;
+}
+
+function signedMoneyText(value: number | undefined): string {
+  const rounded = Math.round(n(value));
+  if (rounded === 0) return '$0';
+  return `${rounded > 0 ? '+' : '-'}$${Math.abs(rounded).toLocaleString()}`;
+}
+
+function scenarioEvidenceRows(
+  prefix: string,
+  label: string,
+  result: SimulationResult | null | undefined,
+  comparison: { endPortfolioDelta?: number; fundedThroughYear?: number | null }
+): RecommendedRiskDetail['evidenceRows'] {
+  const rows = rowsFrom(result);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const tax = selectTaxSummaryMetrics(result);
+  return [
+    {
+      id: `${prefix}-availability`,
+      label,
+      value: rows.length ? 'Ready' : 'Not available',
+      detail: rows.length ? 'Scenario output is available for this bounded rerun.' : 'Scenario output has not been calculated.'
+    },
+    {
+      id: `${prefix}-end-portfolio`,
+      label: 'End portfolio delta',
+      value: signedMoneyText(comparison.endPortfolioDelta),
+      detail: `Funded through ${comparison.fundedThroughYear || '-'}; first shortfall ${firstShortfall?.year || 'none'}.`
+    },
+    {
+      id: `${prefix}-tax`,
+      label: 'Lifetime tax',
+      value: moneyText(tax.lifetimeTax),
+      detail: 'Use the stable dashboard to inspect annual tax rows.'
+    }
+  ];
+}
+
+function shortfallEvidenceRows(
+  firstShortfall: AnnualSimulationRow | null,
+  worstShortfall: AnnualSimulationRow | null
+): RecommendedRiskDetail['evidenceRows'] {
+  if (!firstShortfall && !worstShortfall) {
+    return [{ id: 'none', label: 'Shortfall', value: 'None', detail: 'No selected-path shortfall appears in the preview horizon.' }];
+  }
+  return [
+    firstShortfall
+      ? {
+          id: 'first',
+          label: `First shortfall year ${firstShortfall.year}`,
+          value: moneyText(firstShortfall.shortfall),
+          detail: `Portfolio balance ${moneyText(firstShortfall.bal_total)}.`
+        }
+      : null,
+    worstShortfall
+      ? {
+          id: 'worst',
+          label: `Worst shortfall year ${worstShortfall.year}`,
+          value: moneyText(worstShortfall.shortfall),
+          detail: `Portfolio balance ${moneyText(worstShortfall.bal_total)}.`
+        }
+      : null
+  ].filter((row): row is RecommendedRiskDetail['evidenceRows'][number] => Boolean(row));
+}
+
+function survivorEvidenceRows(
+  comparison: SurvivorComparison,
+  survivor: SimulationResult | null | undefined
+): RecommendedRiskDetail['evidenceRows'] {
+  if (comparison.status === 'single') {
+    return [{ id: 'single', label: 'Single-person plan', value: 'Not applicable', detail: 'Survivor stress is not needed for this household mode.' }];
+  }
+  if (comparison.status === 'needsInput') {
+    return [{ id: 'needs-input', label: 'Survivor year', value: 'Missing', detail: 'Set a survivor year in assumptions to run the household resilience comparison.' }];
+  }
+  if (comparison.status === 'notAvailable') {
+    return [{ id: 'not-available', label: 'Survivor result', value: 'Not available', detail: 'The survivor preview has not been calculated yet.' }];
+  }
+  const rows = rowsFrom(survivor);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  return [
+    {
+      id: 'end-portfolio',
+      label: 'Survivor end portfolio delta',
+      value: signedMoneyText(comparison.endPortfolioDelta),
+      detail: `Baseline ${moneyText(comparison.baselineEndPortfolio)}, survivor ${moneyText(comparison.survivorEndPortfolio)}.`
+    },
+    {
+      id: 'tax',
+      label: 'Survivor lifetime tax delta',
+      value: signedMoneyText(comparison.lifetimeTaxDelta),
+      detail: `Baseline ${moneyText(comparison.baselineLifetimeTax)}, survivor ${moneyText(comparison.survivorLifetimeTax)}.`
+    },
+    {
+      id: 'shortfall',
+      label: 'Survivor shortfall',
+      value: firstShortfall ? String(firstShortfall.year) : 'None',
+      detail: `Spending funded ${comparison.spendingFundedYears}.`
+    }
+  ];
+}
+
+function selectRecommendedCandidateRow(
+  id: RecommendedCandidateId,
+  label: string,
+  result: SimulationResult | null | undefined,
+  baselineOverview: OverviewMetrics,
+  baselineTax: TaxSummaryMetrics,
+  validationBlocked: boolean,
+  survivorComparison: SurvivorComparison
+): RecommendedCandidateRow {
+  if (!result) {
+    return {
+      id,
+      label,
+      score: Number.NEGATIVE_INFINITY,
+      recommended: false,
+      blocked: true,
+      reviewStatus: 'blocked',
+      fundedThroughYear: null,
+      firstShortfallYear: null,
+      endPortfolio: 0,
+      endPortfolioDelta: 0,
+      lifetimeTax: 0,
+      lifetimeTaxDelta: 0,
+      spendingFundedYears: '-',
+      reasons: ['sourceReconciliationBlocked'],
+      tradeoffs: ['Scenario result is not available yet.']
+    };
+  }
+
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const rows = rowsFrom(result);
+  const overview = selectOverviewMetrics(result);
+  const tax = selectTaxSummaryMetrics(result);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const fundedYears = rows.filter((row) => n(row.shortfall) <= RECONCILIATION_TOLERANCE).length;
+  const fundedThroughYear = firstShortfall ? firstShortfall.year - 1 : overview.lastYear;
+  const endPortfolioDelta = overview.endPortfolio - baselineOverview.endPortfolio;
+  const lifetimeTaxDelta = tax.lifetimeTax - baselineTax.lifetimeTax;
+  const blocked = validationBlocked || diagnostics.status === 'warning';
+  const reasons: RecommendationReason[] = [];
+  const tradeoffs: string[] = [];
+
+  if (validationBlocked) reasons.push('validationBlocked');
+  if (diagnostics.status === 'warning') reasons.push('sourceReconciliationBlocked');
+  if (!firstShortfall) reasons.push('noShortfall');
+  if ((fundedThroughYear || 0) > (baselineOverview.lastYear || 0)) reasons.push('laterFundedThrough');
+  if (endPortfolioDelta > RECONCILIATION_TOLERANCE) reasons.push('higherEndPortfolio');
+  if (lifetimeTaxDelta < -RECONCILIATION_TOLERANCE) reasons.push('lowerLifetimeTax');
+  if (survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable') reasons.push('survivorNeedsReview');
+  if (id === 'baseline') reasons.push('baselineTie');
+
+  if (firstShortfall) tradeoffs.push(`First shortfall appears in ${firstShortfall.year}.`);
+  if (lifetimeTaxDelta > RECONCILIATION_TOLERANCE) tradeoffs.push(`Lifetime tax is ${Math.round(lifetimeTaxDelta).toLocaleString()} higher than current plan.`);
+  if (endPortfolioDelta < -RECONCILIATION_TOLERANCE) tradeoffs.push(`End portfolio is ${Math.round(Math.abs(endPortfolioDelta)).toLocaleString()} lower than current plan.`);
+  if (survivorComparison.status === 'needsInput') tradeoffs.push('Survivor year is not set for this household.');
+
+  const noShortfallScore = firstShortfall ? 0 : 1_000_000;
+  const fundedScore = (fundedThroughYear || 0) * 1_000;
+  const endPortfolioScore = overview.endPortfolio / 10_000;
+  const taxScore = -tax.lifetimeTax / 100_000;
+  const baselineTieScore = id === 'baseline' ? 0.1 : 0;
+
+  return {
+    id,
+    label,
+    score: blocked ? Number.NEGATIVE_INFINITY : noShortfallScore + fundedScore + endPortfolioScore + taxScore + baselineTieScore,
+    recommended: false,
+    blocked,
+    reviewStatus: blocked ? 'blocked' : 'review',
+    fundedThroughYear,
+    firstShortfallYear: firstShortfall?.year ?? null,
+    endPortfolio: overview.endPortfolio,
+    endPortfolioDelta,
+    lifetimeTax: tax.lifetimeTax,
+    lifetimeTaxDelta,
+    spendingFundedYears: `${fundedYears}/${rows.length || 0}`,
+    reasons,
+    tradeoffs
+  };
+}
+
+function compareRecommendedCandidates(a: RecommendedCandidateRow, b: RecommendedCandidateRow): number {
+  if (a.firstShortfallYear && !b.firstShortfallYear) return 1;
+  if (!a.firstShortfallYear && b.firstShortfallYear) return -1;
+  if ((b.fundedThroughYear || 0) !== (a.fundedThroughYear || 0)) return (b.fundedThroughYear || 0) - (a.fundedThroughYear || 0);
+  if (b.endPortfolio !== a.endPortfolio) return b.endPortfolio - a.endPortfolio;
+  if (a.lifetimeTax !== b.lifetimeTax) return a.lifetimeTax - b.lifetimeTax;
+  return b.score - a.score;
+}
+
+function recommendedReasonCopy(row: RecommendedCandidateRow): string[] {
+  const reasons: string[] = [];
+  if (row.reasons.includes('noShortfall')) reasons.push('No shortfall appears in the preview horizon.');
+  if (row.reasons.includes('laterFundedThrough')) reasons.push('It keeps spending funded later than the current plan.');
+  if (row.reasons.includes('higherEndPortfolio')) reasons.push('It improves the ending portfolio versus the current plan.');
+  if (row.reasons.includes('lowerLifetimeTax')) reasons.push('It lowers lifetime tax versus the current plan.');
+  if (row.reasons.includes('baselineTie')) reasons.push('The current plan remains strongest when scenarios do not improve the trust metrics.');
+  if (reasons.length === 0) reasons.push('It has the strongest combination of funded years, ending portfolio, and tax among available candidates.');
+  return reasons;
+}
+
+function whyNotReason(row: RecommendedCandidateRow, recommended: RecommendedCandidateRow | null): string {
+  if (row.blocked) return 'Blocked by missing scenario output or source reconciliation warnings.';
+  if (!recommended) return 'No recommended candidate is available for comparison.';
+  if (row.firstShortfallYear && !recommended.firstShortfallYear) return `It has a shortfall in ${row.firstShortfallYear}.`;
+  if ((row.fundedThroughYear || 0) < (recommended.fundedThroughYear || 0)) return 'It funds fewer projection years.';
+  if (row.endPortfolio < recommended.endPortfolio) return 'It leaves a lower ending portfolio.';
+  if (row.lifetimeTax > recommended.lifetimeTax) return 'It has higher lifetime tax.';
+  return 'It did not improve the selected trust metrics enough to overtake the recommended path.';
+}
+
+function selectRecommendationTrustChecks(
+  baseline: SimulationResult | null | undefined,
+  survivorComparison: SurvivorComparison
+): RecommendedPathSummary['trustChecks'] {
+  const diagnostics = selectReconciliationDiagnostics(baseline);
+  const overview = selectOverviewMetrics(baseline);
+  const taxPressure = selectTaxPressureRows(baseline);
+  return [
+    {
+      id: 'sourceReconciliation',
+      label: 'Source reconciliation',
+      status: diagnostics.status === 'ok' ? 'ok' : 'blocked',
+      detail: diagnostics.status === 'ok' ? `${diagnostics.rowsChecked} rows reconcile.` : `First warning year ${diagnostics.firstWarningYear || '-'}.`
+    },
+    {
+      id: 'shortfall',
+      label: 'Shortfall',
+      status: overview.hasShortfall ? 'review' : 'ok',
+      detail: overview.hasShortfall ? 'At least one projection year has a shortfall.' : 'No shortfall appears in the current preview.'
+    },
+    {
+      id: 'taxPressure',
+      label: 'Tax pressure',
+      status: taxPressure.length > 0 ? 'review' : 'ok',
+      detail: taxPressure[0] ? `First pressure year ${taxPressure[0].year}: ${taxPressure[0].reason}.` : 'No major tax pressure years detected.'
+    },
+    {
+      id: 'survivor',
+      label: 'Survivor',
+      status: survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable' ? 'review' : 'ok',
+      detail:
+        survivorComparison.status === 'single'
+          ? 'Single-person plan.'
+          : survivorComparison.status === 'ready'
+            ? `Survivor comparison funded through ${survivorComparison.fundedThroughYear || '-'}.`
+            : 'Survivor review needs a survivor year.'
+    }
+  ];
+}
+
+export function selectCashFlowReconciliation(row: AnnualSimulationRow | null | undefined): CashFlowReconciliation {
+  if (!row) {
+    return {
+      year: null,
+      incomeAndWithdrawals: 0,
+      taxFreeWithdrawals: 0,
+      cashWedgeFunding: 0,
+      otherInflows: 0,
+      tax: 0,
+      afterTaxSpending: 0,
+      oneOffOutflows: 0,
+      reconciledAfterTaxSpending: 0,
+      reconciliationDelta: 0,
+      cashFlowDelta: 0,
+      status: 'ok'
+    };
+  }
+
+  const incomeAndWithdrawals = n(row.grossIncome);
+  const taxFreeWithdrawals = n(row.tfsa_draw) + n(row.nonreg_draw);
+  const cashWedgeFunding = n(row.cash_draw);
+  const otherInflows = n(row.downsize_proceeds);
+  const tax = n(row.totalTaxYear);
+  const afterTaxSpending = n(row.totalAftaxYear);
+  const reconciledAfterTaxSpending = incomeAndWithdrawals + taxFreeWithdrawals + cashWedgeFunding + otherInflows - tax;
+  const reconciliationDelta = reconciledAfterTaxSpending - afterTaxSpending;
+  const cashFlowDelta = n(row.cashFlow);
+
+  return {
+    year: row.year,
+    incomeAndWithdrawals,
+    taxFreeWithdrawals,
+    cashWedgeFunding,
+    otherInflows,
+    tax,
+    afterTaxSpending,
+    oneOffOutflows: n(row.oneOff_outflow),
+    reconciledAfterTaxSpending,
+    reconciliationDelta,
+    cashFlowDelta,
+    status:
+      Math.abs(reconciliationDelta) <= RECONCILIATION_TOLERANCE && Math.abs(cashFlowDelta) <= RECONCILIATION_TOLERANCE
+        ? 'ok'
+        : 'warning'
+  };
+}
