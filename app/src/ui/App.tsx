@@ -3356,12 +3356,13 @@ function spendingTaxChartData(rows: ReturnType<typeof selectSpendingTaxChartSeri
 }
 
 function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChartSeries>): LineChartData {
+  type AccountBucketChartRow = ReturnType<typeof selectAccountBucketChartSeries>[number];
   return {
-    labels: rows.map((row) => String(row.year)),
+    labels: rows.map((row: AccountBucketChartRow) => String(row.year)),
     datasets: [
       {
         label: 'RRSP/RRIF',
-        data: rows.map((row) => row.rrsp),
+        data: rows.map((row: AccountBucketChartRow) => row.rrsp),
         borderColor: '#243b53',
         backgroundColor: 'rgba(36, 59, 83, 0.12)',
         pointRadius: 1,
@@ -3369,7 +3370,7 @@ function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChart
       },
       {
         label: 'TFSA',
-        data: rows.map((row) => row.tfsa),
+        data: rows.map((row: AccountBucketChartRow) => row.tfsa),
         borderColor: '#2f6f55',
         backgroundColor: 'rgba(47, 111, 85, 0.12)',
         pointRadius: 1,
@@ -3377,7 +3378,7 @@ function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChart
       },
       {
         label: 'LIF',
-        data: rows.map((row) => row.lif),
+        data: rows.map((row: AccountBucketChartRow) => row.lif),
         borderColor: '#6d5fb8',
         backgroundColor: 'rgba(109, 95, 184, 0.12)',
         pointRadius: 1,
@@ -3385,7 +3386,7 @@ function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChart
       },
       {
         label: 'Non-registered',
-        data: rows.map((row) => row.nonRegistered),
+        data: rows.map((row: AccountBucketChartRow) => row.nonRegistered),
         borderColor: '#b77a22',
         backgroundColor: 'rgba(183, 122, 34, 0.12)',
         pointRadius: 1,
@@ -3393,7 +3394,7 @@ function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChart
       },
       {
         label: 'Cash',
-        data: rows.map((row) => row.cash),
+        data: rows.map((row: AccountBucketChartRow) => row.cash),
         borderColor: '#64736d',
         backgroundColor: 'rgba(100, 115, 109, 0.12)',
         pointRadius: 1,
@@ -3401,7 +3402,7 @@ function accountBucketChartData(rows: ReturnType<typeof selectAccountBucketChart
       },
       {
         label: 'Total',
-        data: rows.map((row) => row.total),
+        data: rows.map((row: AccountBucketChartRow) => row.total),
         borderColor: '#17211f',
         backgroundColor: 'rgba(23, 33, 31, 0.12)',
         borderWidth: 3,
@@ -3486,10 +3487,17 @@ function IncomeSourcesPanel({
   loading: boolean;
   rows: ReturnType<typeof selectIncomeSourceRows>;
 }) {
-  const activeRows = rows.filter((row) => Math.round(row.firstYearAmount) !== 0 || Math.round(row.lifetimeAmount) !== 0);
-  const taxableLifetime = rows.filter((row) => row.taxable).reduce((total, row) => total + row.lifetimeAmount, 0);
-  const flexibleLifetime = rows.filter((row) => !row.taxable).reduce((total, row) => total + row.lifetimeAmount, 0);
-  const firstYearTotal = rows.reduce((total, row) => total + row.firstYearAmount, 0);
+  type IncomeSourceResultRow = ReturnType<typeof selectIncomeSourceRows>[number];
+  const activeRows = rows.filter(
+    (row: IncomeSourceResultRow) => Math.round(row.firstYearAmount) !== 0 || Math.round(row.lifetimeAmount) !== 0
+  );
+  const taxableLifetime = rows
+    .filter((row: IncomeSourceResultRow) => row.taxable)
+    .reduce((total: number, row: IncomeSourceResultRow) => total + row.lifetimeAmount, 0);
+  const flexibleLifetime = rows
+    .filter((row: IncomeSourceResultRow) => !row.taxable)
+    .reduce((total: number, row: IncomeSourceResultRow) => total + row.lifetimeAmount, 0);
+  const firstYearTotal = rows.reduce((total: number, row: IncomeSourceResultRow) => total + row.firstYearAmount, 0);
 
   return (
     <div className="income-sources-panel">
@@ -3511,7 +3519,7 @@ function IncomeSourcesPanel({
           </thead>
           <tbody>
             {activeRows.length > 0 ? (
-              activeRows.map((row) => (
+              activeRows.map((row: IncomeSourceResultRow) => (
                 <tr key={row.id}>
                   <td>{row.label}</td>
                   <td>{formatMoney(row.firstYearAmount)}</td>
@@ -3540,6 +3548,7 @@ function CashFlowResultsPanel({
   loading: boolean;
   rows: ReturnType<typeof selectCashFlowReconciliationRows>;
 }) {
+  type CashFlowResultRow = ReturnType<typeof selectCashFlowReconciliationRows>[number];
   const visibleRows = rows.slice(0, 12);
 
   return (
@@ -3567,7 +3576,7 @@ function CashFlowResultsPanel({
           </thead>
           <tbody>
             {visibleRows.length > 0 ? (
-              visibleRows.map((row) => (
+              visibleRows.map((row: CashFlowResultRow) => (
                 <tr className={row.status === 'warning' ? 'warning-row' : ''} key={row.year || 'empty'}>
                   <td>{row.year}</td>
                   <td>{formatMoney(row.fundingBeforeTax)}</td>
