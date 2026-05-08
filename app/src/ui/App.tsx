@@ -494,6 +494,7 @@ export function App() {
               onUpdatePlan={updatePlan}
               householdMode={state.householdMode}
               plan={plan}
+              validation={validation}
             />
           ) : null}
 
@@ -588,7 +589,8 @@ function IntakePanel({
   onReview,
   onStep,
   onUpdatePlan,
-  plan
+  plan,
+  validation
 }: {
   currentStep: { id: IntakeStepId; label: string; helper: string };
   householdMode: 'single' | 'couple';
@@ -598,6 +600,7 @@ function IntakePanel({
   onStep: (step: IntakeStepId) => void;
   onUpdatePlan: (mutator: (draft: V2PlanPayload) => void) => void;
   plan: V2PlanPayload;
+  validation: PlanValidationResult | null;
 }) {
   const isHouseholdStep = currentStep.id === 'household';
   const isIncomeStep = currentStep.id === 'income';
@@ -606,26 +609,35 @@ function IntakePanel({
   const isDebtsStep = currentStep.id === 'debts';
   const isSpendingStep = currentStep.id === 'spending';
   const isAssumptionsStep = currentStep.id === 'assumptions';
+  const currentStepIssues = validationIssuesForStep(validation, currentStep.id);
   return (
     <section className="intake-shell">
       <div className="step-rail" aria-label="Guided intake steps">
-        {intakeSteps.map((step) => (
-          <button
-            className={`step-button ${step.id === currentStep.id ? 'active' : ''}`}
-            key={step.id}
-            type="button"
-            onClick={() => onStep(step.id)}
-          >
-            <span>{step.label}</span>
-            <small>{step.helper}</small>
-          </button>
-        ))}
+        {intakeSteps.map((step) => {
+          const issueCount = validationIssueCountForStep(validation, step.id);
+          const hasBlockers = issueCount.blockers > 0;
+          const hasWarnings = issueCount.warnings > 0;
+          const statusLabel = hasBlockers ? `${issueCount.blockers} blocker${issueCount.blockers === 1 ? '' : 's'}` : hasWarnings ? `${issueCount.warnings} warning${issueCount.warnings === 1 ? '' : 's'}` : '';
+          return (
+            <button
+              className={`step-button ${step.id === currentStep.id ? 'active' : ''} ${hasBlockers ? 'has-blockers' : hasWarnings ? 'has-warnings' : ''}`}
+              key={step.id}
+              type="button"
+              onClick={() => onStep(step.id)}
+            >
+              <span>{step.label}</span>
+              <small>{step.helper}</small>
+              {statusLabel ? <em>{statusLabel}</em> : null}
+            </button>
+          );
+        })}
       </div>
 
       <div className="panel intake-panel">
         <p className="eyebrow">Guided intake</p>
         <h2>{currentStep.label}</h2>
         <p>{stepCopy(currentStep.id, plan)}</p>
+        {currentStepIssues.length > 0 ? <SectionValidationSummary issues={currentStepIssues} /> : null}
         {isHouseholdStep ? (
           <HouseholdStep
             householdMode={householdMode}
@@ -3787,6 +3799,59 @@ function ValidationPanel({ validation }: { validation: PlanValidationResult }) {
           </ul>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function validationStepForField(field: string): IntakeStepId {
+  const normalized = field.toLowerCase();
+  if (normalized === 'household') return 'household';
+  if (normalized === 'income') return 'income';
+  if (normalized === 'accounts') return 'accounts';
+  if (normalized === 'real estate') return 'realEstate';
+  if (normalized === 'debts') return 'debts';
+  if (normalized === 'spending') return 'spending';
+  if (normalized === 'assumptions') return 'assumptions';
+  return 'review';
+}
+
+type IntakeValidationIssue = PlanValidationResult['blockers'][number] & { severity: 'blocker' | 'warning' };
+
+function validationIssuesForStep(validation: PlanValidationResult | null, step: IntakeStepId): IntakeValidationIssue[] {
+  if (!validation || step === 'review') return [];
+  const blockers = validation.blockers
+    .filter((issue) => validationStepForField(issue.field) === step)
+    .map((issue) => ({ ...issue, severity: 'blocker' as const }));
+  const warnings = validation.warnings
+    .filter((issue) => validationStepForField(issue.field) === step)
+    .map((issue) => ({ ...issue, severity: 'warning' as const }));
+  return [...blockers, ...warnings];
+}
+
+function validationIssueCountForStep(validation: PlanValidationResult | null, step: IntakeStepId): { blockers: number; warnings: number } {
+  if (!validation) return { blockers: 0, warnings: 0 };
+  if (step === 'review') {
+    return { blockers: validation.blockers.length, warnings: validation.warnings.length };
+  }
+  return {
+    blockers: validation.blockers.filter((issue) => validationStepForField(issue.field) === step).length,
+    warnings: validation.warnings.filter((issue) => validationStepForField(issue.field) === step).length
+  };
+}
+
+function SectionValidationSummary({ issues }: { issues: IntakeValidationIssue[] }) {
+  const blockerCount = issues.filter((issue) => issue.severity === 'blocker').length;
+  return (
+    <div className={`section-validation-summary ${blockerCount > 0 ? 'has-blockers' : 'has-warnings'}`}>
+      <strong>{blockerCount > 0 ? 'Fix this section before results' : 'Review this section'}</strong>
+      <ul>
+        {issues.map((issue) => (
+          <li key={issue.code}>
+            <span>{issue.severity}</span>
+            {issue.message}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -244,6 +244,37 @@ button.secondary,
   margin-top: 0;
 }
 
+.step-button em {
+  justify-self: start;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1;
+  padding: 6px 8px;
+}
+
+.step-button.has-blockers {
+  border-color: #d45a4d;
+  background: #fff3ee;
+}
+
+.step-button.has-blockers em {
+  background: #f7d6ce;
+  color: #8d2f25;
+}
+
+.step-button.has-warnings {
+  border-color: #d5a54c;
+  background: #fff9ee;
+}
+
+.step-button.has-warnings em {
+  background: #f3dfb8;
+  color: #7a4c0d;
+}
+
 .sidebar .nav-item,
 .step-rail .step-button {
   display: flex !important;
@@ -1541,6 +1572,44 @@ button.secondary,
   display: inline-block;
   font-weight: 750;
   margin-right: 8px;
+}
+
+.section-validation-summary {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #d5a54c;
+  border-radius: var(--radius);
+  background: #fff9ee;
+  padding: 14px;
+}
+
+.section-validation-summary.has-blockers {
+  border-color: #d45a4d;
+  background: #fff3ee;
+}
+
+.section-validation-summary strong {
+  color: var(--ink);
+}
+
+.section-validation-summary ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.section-validation-summary li {
+  line-height: 1.45;
+}
+
+.section-validation-summary li span {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  margin-right: 8px;
+  text-transform: uppercase;
 }
 
 @media (max-width: 920px) {
