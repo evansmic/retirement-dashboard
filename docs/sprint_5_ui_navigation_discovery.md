@@ -361,6 +361,57 @@ The UI should make the local file model explicit:
 
 Do not imply cloud autosave. Browser drafts may exist as convenience, but durable save remains user-controlled `.plan.json`.
 
+### Local File State UX
+
+Decision:
+
+The React preview should treat `.plan.json` as the durable source of truth and browser memory as a temporary working copy. Users should never need an account, cloud workspace, or hidden autosave to understand where their plan lives.
+
+Header/status bar:
+
+- Show the current plan title as the primary file label.
+- Show the loaded filename separately when a file has been opened.
+- Show one plain-language save state: `Saved locally`, `Unsaved local changes`, `Exported today at 2:15 PM`, or `Not exported yet`.
+- Keep the privacy/local-first reminder visible near file actions, not as a modal.
+
+New plan behavior:
+
+- `New plan` starts from the blank/default v2 payload.
+- The plan is immediately marked as a browser draft, not a saved file.
+- The UI should show `Not exported yet` until the user saves a `.plan.json`.
+
+Open behavior:
+
+- Opening a `.plan.json` validates the wrapper or raw v2 payload.
+- A successful open normalizes placeholder Person 2 into inactive/blank state and repairs compatible legacy defaults.
+- The loaded filename is shown, the dirty state resets, and the last exported timestamp is cleared unless the file wrapper provides a reliable export timestamp.
+- Import errors should be specific enough to act on, but not technical stack traces.
+
+Edit behavior:
+
+- Any field edit marks the plan as having unsaved local changes.
+- Navigation between intake steps must not reset dirty state.
+- Generating results does not count as saving.
+
+Save/export behavior:
+
+- `Save .plan.json` downloads a normalized v2 plan-file wrapper.
+- Saving records a local last-exported timestamp and clears the unsaved-changes indicator.
+- Save filenames should be generated from the plan title and sanitized for local file systems.
+- The app should not write private `.plan.json` files into the repo or any hidden app folder.
+
+Dashboard handoff behavior:
+
+- Opening the stable dashboard should use the current in-memory plan payload.
+- If the plan has unsaved changes, show that state in the React preview before handoff; do not block handoff.
+- The stable dashboard remains the fallback until React results reach replacement parity.
+
+Deferred:
+
+- Browser draft restore can be added later, after the file-state UI is visible and tested.
+- Native file-system write-back can be considered later, but should not replace explicit `.plan.json` export.
+- Cloud sync and accounts remain out of scope.
+
 ## Result Hierarchy
 
 The results workspace should answer these questions in order:
@@ -426,7 +477,8 @@ Design implication:
 - Hybrid navigation is selected: guided setup first, then a persistent workspace shell.
 - Second/vacation property is deferred until a scoped schema update.
 - Guided-intake validation blocks only incoherent or unsafe-to-run values. Advisory completeness issues appear as warnings and do not block result generation.
+- Local `.plan.json` files are the durable source of truth. Browser state is a temporary working copy, and save/open state must be shown explicitly without implying cloud autosave.
 
 ## Recommended Next Step
 
-Proceed with Model A as the implementation starting point: a guided wizard with a simple step rail and stable dashboard handoff. Keep Model C as the long-term direction once the intake can round-trip and rerun plans reliably.
+Proceed to the first field-level guided intake slice: the Household step with single/couple handling and true inactive Person 2 behavior.

@@ -21,6 +21,8 @@ import {
   resultsWorkspaceMap,
   selectAccountBucketChartSeries,
   selectAccountBalanceSeries,
+  selectAccountDrawdownReviewRows,
+  selectAccountDrawdownStory,
   selectAccountSummaryRows,
   selectAnnualDetailRows,
   selectAnnualDetailSummary,
@@ -49,6 +51,8 @@ import {
   selectTaxDetailRows,
   selectTaxPressureExplanation,
   selectTaxPressureRows,
+  selectTaxReviewRows,
+  selectTaxStorySummary,
   selectTaxSummaryMetrics
 } from '../engine/resultSelectors';
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
@@ -1984,8 +1988,12 @@ function ResultsHandoffPanel({
   const accountSummaryRows = selectAccountSummaryRows(result);
   const accountBalanceSeries = selectAccountBalanceSeries(result);
   const accountBucketChartSeries = selectAccountBucketChartSeries(result);
+  const accountDrawdownRows = selectAccountDrawdownReviewRows(result);
+  const accountDrawdownStory = selectAccountDrawdownStory(result);
   const taxSummary = selectTaxSummaryMetrics(result);
   const taxDetailRows = selectTaxDetailRows(result);
+  const taxReviewRows = selectTaxReviewRows(result);
+  const taxStorySummary = selectTaxStorySummary(result);
   const taxPressureRows = selectTaxPressureRows(result);
   const taxPressureExplanation = selectTaxPressureExplanation(result);
   const stressIndicatorRows = selectStressIndicatorRows(result);
@@ -2059,12 +2067,14 @@ function ResultsHandoffPanel({
         ) : activeSection === 'stressTests' ? (
           <StressTestsPanel indicatorRows={stressIndicatorRows} loading={loading} rows={stressTestRows} summary={stressTestSummary} />
         ) : activeSection === 'taxes' ? (
-          <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} summary={taxSummary} />
+          <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} reviewRows={taxReviewRows} story={taxStorySummary} summary={taxSummary} />
         ) : activeSection === 'accounts' ? (
           <AccountsResultsPanel
             balanceRows={accountBalanceSeries}
             chartRows={accountBucketChartSeries}
+            drawdownRows={accountDrawdownRows}
             loading={loading}
+            story={accountDrawdownStory}
             summaryRows={accountSummaryRows}
           />
         ) : activeSection === 'incomeSources' ? (
@@ -2831,22 +2841,42 @@ function DeferredResultsPanel({ section }: { section: string }) {
 function AccountsResultsPanel({
   balanceRows,
   chartRows,
+  drawdownRows,
   loading,
+  story,
   summaryRows
 }: {
   balanceRows: ReturnType<typeof selectAccountBalanceSeries>;
   chartRows: ReturnType<typeof selectAccountBucketChartSeries>;
+  drawdownRows: ReturnType<typeof selectAccountDrawdownReviewRows>;
   loading: boolean;
+  story: ReturnType<typeof selectAccountDrawdownStory>;
   summaryRows: ReturnType<typeof selectAccountSummaryRows>;
 }) {
+  type AccountBalancePanelRow = ReturnType<typeof selectAccountBalanceSeries>[number];
+  type AccountDrawdownPanelRow = ReturnType<typeof selectAccountDrawdownReviewRows>[number];
   const activeSummaryRows = summaryRows.filter((row) => Math.round(row.firstYearBalance) !== 0 || Math.round(row.endBalance) !== 0);
   const totalRow = summaryRows.find((row) => row.id === 'total');
   const firstYear = balanceRows[0]?.year;
   const lastYear = balanceRows[balanceRows.length - 1]?.year;
-  const visibleRows = balanceRows.slice(0, 12);
+  const visibleRows = balanceRows;
 
   return (
     <div className="accounts-results-panel">
+      <section className={`account-story-panel account-story-${story.status}`}>
+        <span className="eyebrow">Account story</span>
+        <h3>{loading ? 'Calculating account path' : story.headline}</h3>
+        <p>{loading ? 'Account movement will appear after the projection runs.' : story.detail}</p>
+        <div className="summary-grid">
+          <Metric label="Peak portfolio" value={formatMoney(story.peakPortfolio)} />
+          <Metric
+            label="Lowest year"
+            value={story.lowestPortfolioYear ? `${story.lowestPortfolioYear} (${formatMoney(story.lowestPortfolio)})` : '-'}
+          />
+          <Metric label="First depletion" value={story.firstDepletionYear ? String(story.firstDepletionYear) : 'Not shown'} />
+        </div>
+      </section>
+
       <div className="summary-grid">
         <Metric label="Balance years" value={firstYear && lastYear ? `${firstYear}-${lastYear}` : loading ? 'Calculating' : '-'} />
         <Metric label="End portfolio" value={formatMoney(totalRow?.endBalance)} />
@@ -2892,6 +2922,29 @@ function AccountsResultsPanel({
             ))}
           </dl>
         </section>
+      </div>
+
+      <div className="account-review-list" aria-label="Account review checks">
+        {drawdownRows.map((row: AccountDrawdownPanelRow) => (
+          <section className={`account-review-row account-review-${row.severity}`} key={row.id}>
+            <span className="status-pill">{row.severity}</span>
+            <div>
+              <h3>{row.label}</h3>
+              <p>{row.explanation}</p>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Year</dt>
+                  <dd>{row.year ?? '-'}</dd>
+                </div>
+                <div>
+                  <dt>Value</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              </dl>
+              <p className="table-note">{row.reviewAction}</p>
+            </div>
+          </section>
+        ))}
       </div>
 
       <div className="result-table-wrap">
@@ -2940,7 +2993,7 @@ function AccountsResultsPanel({
           </thead>
           <tbody>
             {visibleRows.length > 0 ? (
-              visibleRows.map((row) => (
+              visibleRows.map((row: AccountBalancePanelRow) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
                   <td>{formatMoney(row.rrsp)}</td>
@@ -2960,9 +3013,7 @@ function AccountsResultsPanel({
         </table>
       </div>
 
-      {balanceRows.length > visibleRows.length ? (
-        <p className="table-note">Showing the first {visibleRows.length} years. Full account detail remains in the stable dashboard.</p>
-      ) : null}
+      <p className="table-note">{story.stableDashboardHandoff}</p>
     </div>
   );
 }
@@ -2970,22 +3021,64 @@ function AccountsResultsPanel({
 function TaxesResultsPanel({
   detailRows,
   loading,
+  reviewRows,
+  story,
   summary
 }: {
   detailRows: ReturnType<typeof selectTaxDetailRows>;
   loading: boolean;
+  reviewRows: ReturnType<typeof selectTaxReviewRows>;
+  story: ReturnType<typeof selectTaxStorySummary>;
   summary: ReturnType<typeof selectTaxSummaryMetrics>;
 }) {
+  type TaxReviewPanelRow = ReturnType<typeof selectTaxReviewRows>[number];
+  type TaxDetailPanelRow = ReturnType<typeof selectTaxDetailRows>[number];
   const visibleRows = detailRows.slice(0, 12);
 
   return (
     <div className="taxes-results-panel">
+      <section className={`tax-story-panel tax-story-${story.status}`}>
+        <div>
+          <p className="eyebrow">Tax story</p>
+          <h3>{loading ? 'Calculating tax story' : story.headline}</h3>
+          <p>{story.detail}</p>
+        </div>
+        <div className="summary-grid">
+          <Metric label="Peak tax year" value={story.peakTaxYear ? `${story.peakTaxYear} (${formatMoney(story.peakTax)})` : '-'} />
+          <Metric label="Registered withdrawal years" value={String(story.registeredWithdrawalYears)} />
+          <Metric label="Lower-tax window" value={story.planningWindowYears} />
+        </div>
+      </section>
+
       <div className="summary-grid">
         <Metric label="First-year tax" value={loading ? 'Calculating' : formatMoney(summary.firstYearTax)} />
         <Metric label="Lifetime tax" value={formatMoney(summary.lifetimeTax)} />
         <Metric label="Peak tax year" value={summary.peakTaxYear ? `${summary.peakTaxYear} (${formatMoney(summary.peakTax)})` : '-'} />
         <Metric label="First-year taxable income" value={formatMoney(summary.firstYearTaxableIncome)} />
         <Metric label="Lifetime OAS clawback" value={formatMoney(summary.lifetimeOasClawback)} />
+      </div>
+
+      <div className="tax-review-list">
+        {reviewRows.map((row: TaxReviewPanelRow) => (
+          <section className={`tax-review-row tax-review-${row.severity}`} key={row.id}>
+            <div>
+              <small>{row.severity}</small>
+              <h3>{row.label}</h3>
+              <p>{row.explanation}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Year</dt>
+                <dd>{row.year || '-'}</dd>
+              </div>
+              <div>
+                <dt>Value</dt>
+                <dd>{row.value}</dd>
+              </div>
+            </dl>
+            <p className="table-note">{row.reviewAction}</p>
+          </section>
+        ))}
       </div>
 
       <div className="result-table-wrap">
@@ -3001,7 +3094,7 @@ function TaxesResultsPanel({
           </thead>
           <tbody>
             {visibleRows.length > 0 ? (
-              visibleRows.map((row) => (
+              visibleRows.map((row: TaxDetailPanelRow) => (
                 <tr key={row.year}>
                   <td>{row.year}</td>
                   <td>{formatMoney(row.taxableIncome)}</td>
@@ -3022,6 +3115,7 @@ function TaxesResultsPanel({
       {detailRows.length > visibleRows.length ? (
         <p className="table-note">Showing the first {visibleRows.length} years. Full tax detail remains in the stable dashboard.</p>
       ) : null}
+      <p className="table-note">{story.stableDashboardHandoff}</p>
     </div>
   );
 }

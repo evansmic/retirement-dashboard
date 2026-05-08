@@ -3,6 +3,8 @@ import {
   resultsWorkspaceMap,
   selectAccountBucketChartSeries,
   selectAccountBalanceSeries,
+  selectAccountDrawdownReviewRows,
+  selectAccountDrawdownStory,
   selectAccountSummaryRows,
   selectAnnualDetailRows,
   selectAnnualDetailSummary,
@@ -32,6 +34,8 @@ import {
   selectTaxDetailRows,
   selectTaxPressureExplanation,
   selectTaxPressureRows,
+  selectTaxReviewRows,
+  selectTaxStorySummary,
   selectTaxSummaryMetrics
 } from './resultSelectors';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
@@ -185,6 +189,26 @@ describe('result selectors', () => {
       peakBalance: 512960.825107529,
       netChange: -12960.825107529003
     });
+    expect(selectAccountDrawdownStory(fixture)).toMatchObject({
+      status: 'review',
+      firstYear: 2028,
+      finalYear: 2029,
+      startPortfolio: 512960.825107529,
+      endPortfolio: 500000,
+      firstDepletionYear: null
+    });
+    expect(selectAccountDrawdownReviewRows(fixture).map((row) => row.id)).toEqual([
+      'registeredDrawdown',
+      'tfsaDrawdown',
+      'nonRegisteredDrawdown',
+      'cashWedge',
+      'terminalPortfolio'
+    ]);
+    expect(selectAccountDrawdownReviewRows(fixture).find((row) => row.id === 'registeredDrawdown')).toMatchObject({
+      severity: 'review',
+      year: 2028,
+      detailArea: 'annualDetail'
+    });
     const taxSummary = selectTaxSummaryMetrics(fixture);
     expect(taxSummary).toMatchObject({
       firstYearTax: 6742.223779098051,
@@ -193,6 +217,22 @@ describe('result selectors', () => {
     });
     expect(taxSummary.lifetimeTax).toBeCloseTo(13527.903779098052, 6);
     expect(selectTaxDetailRows(fixture)[0].effectiveRate).toBeCloseTo(0.1223, 4);
+    expect(selectTaxStorySummary(fixture)).toMatchObject({
+      status: 'review',
+      peakTaxYear: 2029,
+      registeredWithdrawalYears: 2,
+      planningWindowYears: 'None detected'
+    });
+    expect(selectTaxReviewRows(fixture).map((row) => row.id)).toEqual([
+      'oasClawback',
+      'registeredWithdrawals',
+      'peakTax',
+      'planningWindow'
+    ]);
+    expect(selectTaxReviewRows(fixture).find((row) => row.id === 'registeredWithdrawals')).toMatchObject({
+      severity: 'review',
+      year: 2029
+    });
     expect(selectStressIndicatorRows(fixture).find((row) => row.id === 'depletion')).toMatchObject({
       value: 'Not depleted',
       severity: 'ok'

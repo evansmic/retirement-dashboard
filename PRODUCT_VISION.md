@@ -2,7 +2,7 @@
 
 ## North Star
 
-Build a Canadian-first retirement planning product with the modelling depth of advisor-grade software and the usability of a modern consumer planning app.
+Build the Canadian retirement decision engine: a local-first planning product with advisor-grade modelling depth, consumer-grade usability, and plain-language decision guidance.
 
 The product should help households answer:
 
@@ -12,7 +12,9 @@ The product should help households answer:
 - Which decisions matter most: CPP timing, RRSP/RRIF drawdown, TFSA use, pension choices, downsizing, working longer, or spending flexibility?
 - What trade-offs am I making between lifestyle, risk, tax, and estate value?
 
-The current dashboard is the modelling prototype. The long-term product should become an optimized-plan-first retirement planner similar in ambition to ProjectionLab, but focused deeply on Canadian retirement rules and plain-language interpretation. The prototype currently exposes multiple detailed scenario tabs; the product should usually present the best plan the engine can find, then make stress tests and alternatives available as supporting evidence rather than as equal competing choices.
+The current dashboard is the modelling prototype. The long-term product should become an optimized-plan-first retirement planner similar in ambition to ProjectionLab, but it should win by being more Canadian, more explainable, more local-first, and more decision-oriented. The prototype currently exposes multiple detailed scenario tabs; the product should usually present the best plan the engine can find, then make stress tests and alternatives available as supporting evidence rather than as equal competing choices.
+
+ProjectionLab is a broad modelling lab. This product should become the Canadian retirement cockpit: it should help households understand the next decision to revisit, not merely generate more charts.
 
 The product direction is **consumer-first and local-first**. It should feel like software a Canadian household can trust with sensitive financial questions without first creating an account, uploading private details, or accepting that cloud storage is the default business model.
 
@@ -55,6 +57,12 @@ Secondary:
 
 8. **Evidence over confidence theatre**
    The product should show validation status, methodology notes, known limitations, and benchmark exports plainly. Trust is earned through inspectable calculations, not through overly certain verdicts.
+
+9. **Decision clarity over feature sprawl**
+   The product should answer "what matters now?" before adding more configuration. Every major result surface should identify the next review candidate: CPP/OAS timing, tax spike, cash wedge, shortfall, survivor risk, withdrawal order, spending pressure, or estate trade-off.
+
+10. **Every dollar is traced**
+    Source reconciliation is a signature product pillar. After-tax spending should visibly reconcile to income, registered withdrawals, TFSA/non-registered withdrawals, cash wedge, one-offs/other inflows, and tax. If a row does not reconcile, the product should flag it before asking the user to trust downstream charts.
 
 ## Product Model
 
@@ -169,6 +177,8 @@ Compared with broad tools like ProjectionLab, this product should win by being:
 - Privacy-preserving and local-first.
 - Useful without an account.
 - Monetizable without turning user data into the product.
+- More explicit about source reconciliation and Canadian tax/benefit pressure points.
+- More opinionated about the next decision to test.
 
 Compared with advisor tools like Snap Projections, Adviice, RazorPlan, or NaviPlan, this product should win by being:
 
@@ -180,7 +190,18 @@ Compared with advisor tools like Snap Projections, Adviice, RazorPlan, or NaviPl
 
 ## Near-Term Product Goal
 
-Before building a large app, make the current prototype trustworthy:
+The product has moved past the first trust and migration milestones. The near-term goal is now to turn the React results workspace from a preview into a decision-readiness layer while the stable dashboard remains the complete fallback.
+
+The next product phase should make the planner explain the plan:
+
+1. Add a plain-language plan health explainer.
+2. Turn source reconciliation into a signature result panel.
+3. Add a decision checklist with review candidates, not advice.
+4. Add first simple scenario cards, not a full optimizer.
+5. Add a Canada-specific tax pressure timeline.
+6. Add a household survivor view.
+
+Before building broader features, make the current prototype trustworthy:
 
 1. Fix known tax accuracy issues.
 2. Clarify Monte Carlo and stress-test language.

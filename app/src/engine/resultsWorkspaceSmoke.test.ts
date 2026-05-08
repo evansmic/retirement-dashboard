@@ -5,6 +5,8 @@ import { runSimulation } from './runSimulation';
 import {
   resultsWorkspaceMap,
   selectAccountBucketChartSeries,
+  selectAccountDrawdownReviewRows,
+  selectAccountDrawdownStory,
   selectAccountSummaryRows,
   selectAnnualDetailRows,
   selectAnnualDetailSummary,
@@ -31,6 +33,8 @@ import {
   selectSurvivorViewSummary,
   selectTaxPressureRows,
   selectTaxPressureExplanation,
+  selectTaxReviewRows,
+  selectTaxStorySummary,
   selectTaxSummaryMetrics
 } from './resultSelectors';
 import { V2PlanPayload } from '../types/plan';
@@ -194,7 +198,11 @@ describe('Sprint 6 results workspace smoke', () => {
     const cashFlowRows = selectCashFlowReconciliationRows(result);
     const accountRows = selectAccountSummaryRows(result);
     const accountChartRows = selectAccountBucketChartSeries(result);
+    const accountDrawdownRows = selectAccountDrawdownReviewRows(result);
+    const accountDrawdownStory = selectAccountDrawdownStory(result);
     const taxSummary = selectTaxSummaryMetrics(result);
+    const taxReviewRows = selectTaxReviewRows(result);
+    const taxStorySummary = selectTaxStorySummary(result);
     const stressRows = selectStressIndicatorRows(result);
     const stressTestRows = selectStressTestRows(result);
     const stressTestSummary = selectStressTestSummary(result);
@@ -228,7 +236,13 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(cashFlowRows[0].status).toBe('ok');
     expect(accountRows.find((row) => row.id === 'total')?.endBalance).toBeGreaterThanOrEqual(0);
     expect(accountChartRows).toHaveLength(result.years.length);
+    expect(accountDrawdownRows).toHaveLength(5);
+    expect(['ok', 'review', 'watch']).toContain(accountDrawdownStory.status);
+    expect(accountDrawdownStory.stableDashboardHandoff).toContain('stable dashboard');
     expect(taxSummary.lifetimeTax).toBeGreaterThanOrEqual(0);
+    expect(taxReviewRows).toHaveLength(4);
+    expect(['ok', 'review', 'watch']).toContain(taxStorySummary.status);
+    expect(taxStorySummary.stableDashboardHandoff).toContain('stable dashboard');
     expect(stressRows.find((row) => row.id === 'fundedYears')?.value).toContain('/');
     expect(stressTestRows).toHaveLength(5);
     expect(['ok', 'review', 'watch']).toContain(stressTestSummary.status);

@@ -4,13 +4,61 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 16: React Stress Tests Parity
+## Active Sprint — Sprint 18: React Account Detail / Drawdown Parity
 
-**Status:** Implementation in progress 2026-05-08 after Sprint 15 checkpoint.
+**Status:** Complete 2026-05-08 after verification.
 
-Goal: deepen the React Stress Tests tab so users can see what can go wrong, when it first appears, how severe it is, and which React detail area to review next.
+Goal: deepen the React Accounts tab so users can understand account balance movement, drawdown sources, and terminal portfolio risk without using the stable dashboard for first-pass review.
 
-Non-scope: Monte Carlo migration, historical sequence stress migration, optimizer, schema v3, persisted stress output, account/cloud/advisor/AI/multi-province scope, or print/PDF migration.
+Non-scope: new drawdown engine, optimizer, account rebalancing model, export/reporting migration, schema v3, persisted React table state, account/cloud/advisor/AI scope, or print/PDF migration.
+
+Sprint 18 checkpoint doc: [`docs/sprint_18_react_account_drawdown_parity.md`](docs/sprint_18_react_account_drawdown_parity.md).
+
+### Sprint 18 Candidate Implementation Tickets
+
+- [x] **S18-01 — Account drawdown story selector.** ✅ *Done 2026-05-08.* Added runtime-only summary for status, first/final year, start/end portfolio, peak/lowest portfolio, and first depletion.
+- [x] **S18-02 — Account review rows.** ✅ *Done 2026-05-08.* Added registered drawdown, TFSA drawdown, non-registered drawdown, cash wedge, and terminal portfolio rows.
+- [x] **S18-03 — React Accounts panel.** ✅ *Done 2026-05-08.* Added story panel, review rows, metrics, chart, summary tables, and full-year balance rows.
+- [x] **S18-04 — Stable dashboard handoff.** ✅ *Done 2026-05-08.* Kept full account schedules, legacy charts, print/PDF, and audit views in stable dashboard copy.
+- [x] **S18-05 — Tests and docs.** ✅ *Done 2026-05-08.* Added selector/smoke coverage and Sprint 18 documentation.
+
+### Sprint 18 Definition Of Done
+
+- Accounts tab explains balance movement, active drawdowns, and terminal portfolio review items.
+- Account story output is runtime-only and derived from existing simulation rows.
+- Copy remains review-oriented, not advice.
+- Stable dashboard remains the full account audit/report fallback.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+## Completed Sprints
+
+### Sprint 17: React Tax Detail Parity
+
+**Complete 2026-05-08.** Deepened the React Taxes tab so users can understand why tax changes over time, which tax items deserve review, and where the stable dashboard remains the full audit surface.
+
+Sprint 17 checkpoint doc: [`docs/sprint_17_react_tax_detail_parity.md`](docs/sprint_17_react_tax_detail_parity.md).
+
+### Sprint 17 Candidate Implementation Tickets
+
+- [x] **S17-01 — Tax story summary selector.** ✅ *Done 2026-05-08.* Added runtime-only summary for status, peak tax, lifetime tax, OAS clawback, registered-withdrawal years, and planning windows.
+- [x] **S17-02 — Tax review rows.** ✅ *Done 2026-05-08.* Added OAS clawback, registered withdrawal pressure, peak tax, and lower-tax planning-window rows.
+- [x] **S17-03 — React Taxes panel.** ✅ *Done 2026-05-08.* Added story panel, review rows, metrics, and annual table.
+- [x] **S17-04 — Stable dashboard handoff.** ✅ *Done 2026-05-08.* Kept full tax schedules, print/PDF, and legacy audit views in stable dashboard copy.
+- [x] **S17-05 — Tests and docs.** ✅ *Done 2026-05-08.* Added selector/smoke coverage and Sprint 17 documentation.
+
+### Sprint 17 Definition Of Done
+
+- Taxes tab explains why tax changes over time and which items deserve review.
+- Tax story output is runtime-only and derived from existing simulation rows.
+- Copy remains review-oriented, not advice.
+- Stable dashboard remains the full tax audit/report fallback.
+- Runtime dashboard schema remains v2.
+- Verification passes and no private `.plan.json` files are created.
+
+### Sprint 16: React Stress Tests Parity
+
+**Complete 2026-05-08.** Deepened the React Stress Tests tab so users can see what can go wrong, when it first appears, how severe it is, and which React detail area to review next.
 
 Sprint 16 checkpoint doc: [`docs/sprint_16_react_stress_tests_parity.md`](docs/sprint_16_react_stress_tests_parity.md).
 
@@ -30,8 +78,6 @@ Sprint 16 checkpoint doc: [`docs/sprint_16_react_stress_tests_parity.md`](docs/s
 - Stable dashboard remains the full stress-test fallback.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
-
-## Completed Sprints
 
 ### Sprint 15: Entry Point And Handoff Reliability
 

@@ -85,6 +85,32 @@ export type AccountSummaryRow = {
   netChange: number;
 };
 
+export type AccountDrawdownStorySummary = {
+  status: StressSeverity;
+  headline: string;
+  detail: string;
+  firstYear: number | null;
+  finalYear: number | null;
+  startPortfolio: number;
+  endPortfolio: number;
+  peakPortfolio: number;
+  lowestPortfolioYear: number | null;
+  lowestPortfolio: number;
+  firstDepletionYear: number | null;
+  stableDashboardHandoff: string;
+};
+
+export type AccountDrawdownReviewRow = {
+  id: 'registeredDrawdown' | 'tfsaDrawdown' | 'nonRegisteredDrawdown' | 'cashWedge' | 'terminalPortfolio';
+  label: string;
+  severity: StressSeverity;
+  year: number | null;
+  value: string;
+  explanation: string;
+  reviewAction: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
 export type TaxSummaryMetrics = {
   firstYearTax: number;
   lifetimeTax: number;
@@ -293,6 +319,30 @@ export type TaxPressureRow = {
 export type TaxPressureExplanation = {
   headline: string;
   rows: Array<TaxPressureRow & { explanation: string }>;
+};
+
+export type TaxStorySummary = {
+  status: 'ok' | 'review' | 'watch';
+  headline: string;
+  detail: string;
+  firstYearTax: number;
+  peakTaxYear: number | null;
+  peakTax: number;
+  lifetimeTax: number;
+  lifetimeOasClawback: number;
+  registeredWithdrawalYears: number;
+  planningWindowYears: string;
+  stableDashboardHandoff: string;
+};
+
+export type TaxReviewRow = {
+  id: 'oasClawback' | 'registeredWithdrawals' | 'peakTax' | 'planningWindow';
+  label: string;
+  severity: 'ok' | 'review' | 'watch';
+  year: number | null;
+  value: string;
+  explanation: string;
+  reviewAction: string;
 };
 
 export type ScenarioCard = {
@@ -628,6 +678,182 @@ export function selectAccountSummaryRows(result: SimulationResult | null | undef
     peakBalance: series.reduce((peak, point) => Math.max(peak, point[id]), 0),
     netChange: (last ? last[id] : 0) - (first ? first[id] : 0)
   }));
+}
+
+function compactMoney(value: number): string {
+  return `$${Math.round(value).toLocaleString()}`;
+}
+
+function yearLabel(year: number | null): string {
+  return year ? String(year) : 'Not shown';
+}
+
+function lifetimeWithdrawals(rows: AnnualDetailRow[], field: keyof Pick<AnnualDetailRow, 'registeredWithdrawals' | 'tfsaWithdrawals' | 'nonRegisteredWithdrawals' | 'cashWedgeWithdrawals'>): number {
+  return rows.reduce((total, row) => total + row[field], 0);
+}
+
+export function selectAccountDrawdownReviewRows(result: SimulationResult | null | undefined): AccountDrawdownReviewRow[] {
+  const rows = selectAnnualDetailRows(result);
+  const balances = selectAccountBalanceSeries(result);
+  const summaryRows = selectAccountSummaryRows(result);
+  const firstBalance = balances[0];
+  const lastBalance = balances[balances.length - 1];
+  const registeredSummary = summaryRows.find((row) => row.id === 'rrsp');
+  const lifSummary = summaryRows.find((row) => row.id === 'lif');
+  const tfsaSummary = summaryRows.find((row) => row.id === 'tfsa');
+  const nonRegisteredSummary = summaryRows.find((row) => row.id === 'nonRegistered');
+  const cashSummary = summaryRows.find((row) => row.id === 'cash');
+  const totalSummary = summaryRows.find((row) => row.id === 'total');
+
+  const registeredWithdrawalTotal = lifetimeWithdrawals(rows, 'registeredWithdrawals');
+  const tfsaWithdrawalTotal = lifetimeWithdrawals(rows, 'tfsaWithdrawals');
+  const nonRegisteredWithdrawalTotal = lifetimeWithdrawals(rows, 'nonRegisteredWithdrawals');
+  const cashWithdrawalTotal = lifetimeWithdrawals(rows, 'cashWedgeWithdrawals');
+  const registeredEndBalance = (registeredSummary?.endBalance || 0) + (lifSummary?.endBalance || 0);
+  const registeredStartBalance = (registeredSummary?.firstYearBalance || 0) + (lifSummary?.firstYearBalance || 0);
+
+  const firstRegistered = rows.find((row) => row.registeredWithdrawals > RECONCILIATION_TOLERANCE);
+  const firstTfsa = rows.find((row) => row.tfsaWithdrawals > RECONCILIATION_TOLERANCE);
+  const firstNonRegistered = rows.find((row) => row.nonRegisteredWithdrawals > RECONCILIATION_TOLERANCE);
+  const firstCash = rows.find((row) => row.cashWedgeWithdrawals > RECONCILIATION_TOLERANCE);
+  const firstDepletion = balances.find((row) => row.total <= RECONCILIATION_TOLERANCE);
+
+  return [
+    {
+      id: 'registeredDrawdown',
+      label: 'Registered drawdown',
+      severity:
+        registeredWithdrawalTotal <= RECONCILIATION_TOLERANCE
+          ? 'ok'
+          : registeredStartBalance > RECONCILIATION_TOLERANCE && registeredEndBalance <= RECONCILIATION_TOLERANCE
+            ? 'watch'
+            : 'review',
+      year: firstRegistered?.year ?? null,
+      value: registeredWithdrawalTotal > RECONCILIATION_TOLERANCE ? compactMoney(registeredWithdrawalTotal) : 'None shown',
+      explanation:
+        registeredWithdrawalTotal > RECONCILIATION_TOLERANCE
+          ? `Registered withdrawals begin in ${yearLabel(firstRegistered?.year ?? null)} and total ${compactMoney(registeredWithdrawalTotal)} across the projection.`
+          : 'The projection does not show material RRSP/RRIF/LIF withdrawals.',
+      reviewAction: 'Review Annual Detail and Taxes when registered withdrawals begin because they usually affect taxable income.',
+      detailArea: 'annualDetail'
+    },
+    {
+      id: 'tfsaDrawdown',
+      label: 'TFSA drawdown',
+      severity:
+        tfsaWithdrawalTotal <= RECONCILIATION_TOLERANCE
+          ? 'ok'
+          : (tfsaSummary?.firstYearBalance || 0) > RECONCILIATION_TOLERANCE && (tfsaSummary?.endBalance || 0) <= RECONCILIATION_TOLERANCE
+            ? 'review'
+            : 'ok',
+      year: firstTfsa?.year ?? null,
+      value: tfsaWithdrawalTotal > RECONCILIATION_TOLERANCE ? compactMoney(tfsaWithdrawalTotal) : 'None shown',
+      explanation:
+        tfsaWithdrawalTotal > RECONCILIATION_TOLERANCE
+          ? `TFSA withdrawals begin in ${yearLabel(firstTfsa?.year ?? null)} and total ${compactMoney(tfsaWithdrawalTotal)}.`
+          : 'The TFSA bucket is not materially drawn in this projection.',
+      reviewAction: 'Use this as a tax-free funding check, then confirm the detailed annual pattern in the stable dashboard if needed.',
+      detailArea: 'annualDetail'
+    },
+    {
+      id: 'nonRegisteredDrawdown',
+      label: 'Non-registered drawdown',
+      severity:
+        nonRegisteredWithdrawalTotal <= RECONCILIATION_TOLERANCE
+          ? 'ok'
+          : (nonRegisteredSummary?.firstYearBalance || 0) > RECONCILIATION_TOLERANCE && (nonRegisteredSummary?.endBalance || 0) <= RECONCILIATION_TOLERANCE
+            ? 'review'
+            : 'ok',
+      year: firstNonRegistered?.year ?? null,
+      value: nonRegisteredWithdrawalTotal > RECONCILIATION_TOLERANCE ? compactMoney(nonRegisteredWithdrawalTotal) : 'None shown',
+      explanation:
+        nonRegisteredWithdrawalTotal > RECONCILIATION_TOLERANCE
+          ? `Non-registered withdrawals begin in ${yearLabel(firstNonRegistered?.year ?? null)} and total ${compactMoney(nonRegisteredWithdrawalTotal)}.`
+          : 'The non-registered bucket is not materially drawn in this projection.',
+      reviewAction: 'Review Cash Flow and Taxes together when non-registered withdrawals are active.',
+      detailArea: 'cashFlow'
+    },
+    {
+      id: 'cashWedge',
+      label: 'Cash wedge use',
+      severity:
+        cashWithdrawalTotal <= RECONCILIATION_TOLERANCE
+          ? 'ok'
+          : (cashSummary?.firstYearBalance || 0) > RECONCILIATION_TOLERANCE && (cashSummary?.endBalance || 0) <= RECONCILIATION_TOLERANCE
+            ? 'review'
+            : 'ok',
+      year: firstCash?.year ?? null,
+      value: cashWithdrawalTotal > RECONCILIATION_TOLERANCE ? compactMoney(cashWithdrawalTotal) : 'None shown',
+      explanation:
+        cashWithdrawalTotal > RECONCILIATION_TOLERANCE
+          ? `Cash wedge funding starts in ${yearLabel(firstCash?.year ?? null)} and totals ${compactMoney(cashWithdrawalTotal)}.`
+          : 'The projection does not rely on material cash wedge funding.',
+      reviewAction: 'Compare this with the first retirement years in Cash Flow to see whether cash is bridging early spending.',
+      detailArea: 'cashFlow'
+    },
+    {
+      id: 'terminalPortfolio',
+      label: 'End portfolio',
+      severity:
+        firstDepletion || (lastBalance?.total || 0) <= RECONCILIATION_TOLERANCE
+          ? 'watch'
+          : totalSummary && totalSummary.endBalance < totalSummary.firstYearBalance * 0.5
+            ? 'review'
+            : 'ok',
+      year: firstDepletion?.year ?? lastBalance?.year ?? null,
+      value: lastBalance ? compactMoney(lastBalance.total) : 'Not shown',
+      explanation:
+        firstBalance && lastBalance
+          ? `Portfolio changes from ${compactMoney(firstBalance.total)} to ${compactMoney(lastBalance.total)} by ${lastBalance.year}.`
+          : 'No portfolio balance path is available yet.',
+      reviewAction: 'Use Stress Tests for fragility and the stable dashboard for the complete account audit trail.',
+      detailArea: 'stressTests'
+    }
+  ];
+}
+
+export function selectAccountDrawdownStory(result: SimulationResult | null | undefined): AccountDrawdownStorySummary {
+  const balances = selectAccountBalanceSeries(result);
+  const reviewRows = selectAccountDrawdownReviewRows(result);
+  const first = balances[0];
+  const last = balances[balances.length - 1];
+  const peak = balances.reduce<AccountBalancePoint | null>((currentPeak, row) => {
+    if (!currentPeak || row.total > currentPeak.total) return row;
+    return currentPeak;
+  }, null);
+  const lowest = balances.reduce<AccountBalancePoint | null>((currentLowest, row) => {
+    if (!currentLowest || row.total < currentLowest.total) return row;
+    return currentLowest;
+  }, null);
+  const firstDepletion = balances.find((row) => row.total <= RECONCILIATION_TOLERANCE);
+  const status: StressSeverity = reviewRows.some((row) => row.severity === 'watch')
+    ? 'watch'
+    : reviewRows.some((row) => row.severity === 'review')
+      ? 'review'
+      : 'ok';
+
+  return {
+    status,
+    headline:
+      status === 'watch'
+        ? 'Account path needs a closer look.'
+        : status === 'review'
+          ? 'Account drawdowns are active and worth reviewing.'
+          : 'Account balances look orderly in this projection.',
+    detail:
+      first && last
+        ? `The portfolio starts at ${compactMoney(first.total)} and ends at ${compactMoney(last.total)} across ${balances.length} projection years.`
+        : 'Run the projection to see account balance movement.',
+    firstYear: first?.year ?? null,
+    finalYear: last?.year ?? null,
+    startPortfolio: first?.total ?? 0,
+    endPortfolio: last?.total ?? 0,
+    peakPortfolio: peak?.total ?? 0,
+    lowestPortfolioYear: lowest?.year ?? null,
+    lowestPortfolio: lowest?.total ?? 0,
+    firstDepletionYear: firstDepletion?.year ?? null,
+    stableDashboardHandoff: 'Full account schedules, legacy charts, print/PDF, and audit views remain in the stable dashboard.'
+  };
 }
 
 export function selectTaxDetailRows(result: SimulationResult | null | undefined): TaxDetailRow[] {
@@ -1294,6 +1520,107 @@ export function selectTaxPressureExplanation(result: SimulationResult | null | u
             ? 'Registered withdrawals are contributing to taxable income and annual tax.'
             : 'This year is near the projection peak for taxable income or tax.'
     }))
+  };
+}
+
+export function selectTaxReviewRows(result: SimulationResult | null | undefined): TaxReviewRow[] {
+  const rows = rowsFrom(result);
+  const taxSummary = selectTaxSummaryMetrics(result);
+  const detailRows = selectTaxDetailRows(result);
+  const oasRows = detailRows.filter((row) => row.oasClawback > OAS_CLAWBACK_WATCH_THRESHOLD);
+  const registeredRows = rows
+    .map((row) => ({
+      year: row.year,
+      registeredWithdrawals: n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw),
+      tax: n(row.totalTaxYear)
+    }))
+    .filter((row) => row.registeredWithdrawals > 0);
+  const largestRegistered = registeredRows.reduce<(typeof registeredRows)[number] | null>((largest, row) => {
+    if (!largest || row.registeredWithdrawals > largest.registeredWithdrawals) return row;
+    return largest;
+  }, null);
+  const lowTaxRows = detailRows.filter((row) => row.tax <= Math.max(taxSummary.peakTax * 0.35, 1000));
+  const firstLowTax = lowTaxRows[0];
+
+  return [
+    {
+      id: 'oasClawback',
+      label: 'OAS clawback',
+      severity: oasRows.length > 0 ? 'watch' : 'ok',
+      year: oasRows[0]?.year ?? null,
+      value: oasRows.length > 0 ? `$${Math.round(taxSummary.lifetimeOasClawback).toLocaleString()}` : 'None',
+      explanation:
+        oasRows.length > 0
+          ? `OAS recovery tax appears in ${oasRows.length} year${oasRows.length === 1 ? '' : 's'}.`
+          : 'No OAS clawback is visible in the baseline projection.',
+      reviewAction: oasRows.length > 0 ? 'Review benefit timing, taxable income, and registered withdrawals around these years.' : 'No OAS clawback review item surfaced.'
+    },
+    {
+      id: 'registeredWithdrawals',
+      label: 'Registered withdrawal pressure',
+      severity: largestRegistered && largestRegistered.tax > 0 ? 'review' : 'ok',
+      year: largestRegistered?.year ?? null,
+      value: largestRegistered ? `$${Math.round(largestRegistered.registeredWithdrawals).toLocaleString()}` : 'None',
+      explanation: largestRegistered
+        ? `Largest registered withdrawal appears in ${largestRegistered.year}.`
+        : 'No registered withdrawals are visible in the baseline projection.',
+      reviewAction: largestRegistered ? 'Review RRSP/RRIF/LIF draw timing and taxable-income spikes.' : 'No registered-withdrawal tax item surfaced.'
+    },
+    {
+      id: 'peakTax',
+      label: 'Peak tax year',
+      severity: taxSummary.peakTax > taxSummary.firstYearTax * 1.25 && taxSummary.peakTax > 1000 ? 'review' : 'ok',
+      year: taxSummary.peakTaxYear,
+      value: `$${Math.round(taxSummary.peakTax).toLocaleString()}`,
+      explanation: taxSummary.peakTaxYear
+        ? `The highest annual tax in the visible projection is in ${taxSummary.peakTaxYear}.`
+        : 'No peak tax year is available yet.',
+      reviewAction: 'Compare this year against Annual Detail, income sources, and registered withdrawals.'
+    },
+    {
+      id: 'planningWindow',
+      label: 'Lower-tax planning window',
+      severity: firstLowTax ? 'review' : 'ok',
+      year: firstLowTax?.year ?? null,
+      value: firstLowTax ? `$${Math.round(firstLowTax.tax).toLocaleString()}` : 'None',
+      explanation: firstLowTax
+        ? `Lower-tax years may be useful to review before larger taxable withdrawals begin.`
+        : 'No clear lower-tax window was detected in the visible projection.',
+      reviewAction: firstLowTax ? 'Review whether income timing or registered draws should be tested in this window.' : 'No lower-tax window review item surfaced.'
+    }
+  ];
+}
+
+export function selectTaxStorySummary(result: SimulationResult | null | undefined): TaxStorySummary {
+  const tax = selectTaxSummaryMetrics(result);
+  const reviewRows = selectTaxReviewRows(result);
+  const rows = rowsFrom(result);
+  const registeredWithdrawalYears = rows.filter((row) => n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw) > 0).length;
+  const watchCount = reviewRows.filter((row) => row.severity === 'watch').length;
+  const reviewCount = reviewRows.filter((row) => row.severity === 'review').length;
+  const status: TaxStorySummary['status'] = watchCount > 0 ? 'watch' : reviewCount > 0 ? 'review' : 'ok';
+  const planningWindowYears = reviewRows.find((row) => row.id === 'planningWindow')?.year;
+
+  return {
+    status,
+    headline:
+      status === 'watch'
+        ? 'The projection has tax pressure that should be reviewed before relying on the plan.'
+        : status === 'review'
+          ? 'The projection has tax timing items worth reviewing.'
+          : 'No major tax pressure item appears in the baseline projection.',
+    detail:
+      status === 'ok'
+        ? 'Use this as the first tax read, then open the stable dashboard for complete schedules.'
+        : `Review ${watchCount + reviewCount} tax item${watchCount + reviewCount === 1 ? '' : 's'} before treating the tax path as settled.`,
+    firstYearTax: tax.firstYearTax,
+    peakTaxYear: tax.peakTaxYear,
+    peakTax: tax.peakTax,
+    lifetimeTax: tax.lifetimeTax,
+    lifetimeOasClawback: tax.lifetimeOasClawback,
+    registeredWithdrawalYears,
+    planningWindowYears: planningWindowYears ? String(planningWindowYears) : 'None detected',
+    stableDashboardHandoff: 'Full tax schedules, print/PDF, and legacy audit views remain in the stable dashboard.'
   };
 }
 

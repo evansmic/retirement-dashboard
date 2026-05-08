@@ -1305,6 +1305,125 @@ button.secondary,
   background: #fff9ee;
 }
 
+.tax-story-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.tax-story-panel h3,
+.tax-story-panel p {
+  margin: 0;
+}
+
+.tax-story-review {
+  border-left-color: var(--amber);
+}
+
+.tax-story-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
+.tax-review-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tax-review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.34fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.tax-review-row h3,
+.tax-review-row p {
+  margin: 0;
+}
+
+.tax-review-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.tax-review-review {
+  border-left-color: var(--amber);
+}
+
+.tax-review-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
+.account-story-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.account-story-panel h3,
+.account-story-panel p {
+  margin: 0;
+}
+
+.account-story-review {
+  border-left-color: var(--amber);
+}
+
+.account-story-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
+.account-review-list {
+  display: grid;
+  gap: 10px;
+}
+
+.account-review-row {
+  display: grid;
+  grid-template-columns: minmax(108px, 0.22fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.account-review-row h3,
+.account-review-row p {
+  margin: 0;
+}
+
+.account-review-review {
+  border-left-color: var(--amber);
+}
+
+.account-review-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
 .deferred-results-panel {
   display: grid;
   gap: 8px;
@@ -1462,7 +1581,9 @@ button.secondary,
   .break-risk,
   .risk-evidence-list div,
   .recommended-checklist-item,
-  .stress-row {
+  .account-review-row,
+  .stress-row,
+  .tax-review-row {
     grid-template-columns: 1fr;
   }
 
