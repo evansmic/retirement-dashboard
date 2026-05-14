@@ -32,9 +32,13 @@ for p in "${PROBES[@]}"; do
   echo "  $p"
   echo "════════════════════════════════════════"
   out=$(node "$p" 2>&1) || true
-  echo "$out" | tail -4
   pass=$(echo "$out" | grep -E "^Passed:" | awk '{print $2}')
   fail=$(echo "$out" | grep -E "^Failed:" | awk '{print $2}')
+  if [ "${fail:-0}" -gt 0 ]; then
+    echo "$out"
+  else
+    echo "$out" | tail -4
+  fi
   total_pass=$((total_pass + pass))
   total_fail=$((total_fail + fail))
   echo
