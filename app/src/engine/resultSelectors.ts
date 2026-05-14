@@ -8,6 +8,7 @@ export type ResultsWorkspaceSection =
   | 'accounts'
   | 'taxes'
   | 'stressTests'
+  | 'householdResilience'
   | 'assumptions'
   | 'exportSave';
 
@@ -25,6 +26,7 @@ export const resultsWorkspaceMap: ResultsNavItem[] = [
   { id: 'accounts', label: 'Accounts', helper: 'Balances' },
   { id: 'taxes', label: 'Taxes', helper: 'Tax rows' },
   { id: 'stressTests', label: 'Stress Tests', helper: 'Risk indicators' },
+  { id: 'householdResilience', label: 'Household Resilience', helper: 'Survivor view' },
   { id: 'assumptions', label: 'Assumptions', helper: 'Run settings' },
   { id: 'exportSave', label: 'Export/Save', helper: 'Local file' }
 ];
@@ -397,6 +399,33 @@ export type SurvivorComparison = {
   spendingFundedYears: string;
 };
 
+export type SurvivorStorySummary = {
+  status: 'single' | 'needsInput' | 'notAvailable' | StressSeverity;
+  headline: string;
+  detail: string;
+  survivorYear: number | null;
+  readiness: string;
+  incomeAtRisk: number;
+  firstShortfallYear: number | null;
+  fundedThroughYear: number | null;
+  baselineEndPortfolio: number;
+  survivorEndPortfolio: number;
+  endPortfolioDelta: number;
+  lifetimeTaxDelta: number;
+  spendingFundedYears: string;
+  stableDashboardHandoff: string;
+};
+
+export type SurvivorReviewRow = {
+  id: 'setup' | 'incomeChange' | 'spendingFunding' | 'portfolioCushion' | 'lifetimeTax' | 'stressFollowup';
+  label: string;
+  severity: StressSeverity;
+  value: string;
+  explanation: string;
+  reviewAction: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
 export type RecommendedCandidateId = 'baseline' | ScenarioCard['id'];
 
 export type RecommendationReason =
@@ -536,6 +565,31 @@ export type RecommendationValidation = {
   canGenerate?: boolean;
   blockers?: unknown[];
 } | null | undefined;
+
+export type ResultsReadinessStatus = 'ready' | 'review' | 'blocked';
+
+export type ResultsReadinessSummary = {
+  status: ResultsReadinessStatus;
+  headline: string;
+  detail: string;
+  saveStatus: ResultsReadinessStatus;
+  stableDashboardStatus: 'ready' | 'blocked';
+  readyCount: number;
+  reviewCount: number;
+  blockedCount: number;
+  recommendedLabel: string;
+  stableDashboardHandoff: string;
+};
+
+export type ResultsReadinessRow = {
+  id: 'blockers' | 'watchRisks' | 'taxes' | 'householdResilience' | 'stableDashboard' | 'savePlan';
+  label: string;
+  status: ResultsReadinessStatus;
+  priority: 'now' | 'next' | 'later';
+  detail: string;
+  action: string;
+  detailArea: ResultsWorkspaceSection;
+};
 
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
@@ -1884,6 +1938,217 @@ export function selectSurvivorComparison(
   };
 }
 
+export function selectSurvivorStorySummary(
+  baseline: SimulationResult | null | undefined,
+  survivor: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): SurvivorStorySummary {
+  const summary = selectSurvivorViewSummary(baseline, plan);
+  const comparison = selectSurvivorComparison(baseline, survivor, plan);
+  const stableDashboardHandoff =
+    'Full survivor audit schedules, legacy charts, print/PDF, and report-style review remain in the stable dashboard.';
+
+  if (comparison.status === 'single') {
+    return {
+      status: 'single',
+      headline: 'Household resilience is not needed for this single-person plan.',
+      detail: 'The React preview keeps this tab calm for single plans while the stable dashboard remains available for full result review.',
+      survivorYear: null,
+      readiness: 'Not applicable',
+      incomeAtRisk: 0,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      baselineEndPortfolio: 0,
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      lifetimeTaxDelta: 0,
+      spendingFundedYears: '-',
+      stableDashboardHandoff
+    };
+  }
+
+  if (comparison.status === 'needsInput') {
+    return {
+      status: 'needsInput',
+      headline: 'Set a survivor year to compare household resilience.',
+      detail: 'A two-person plan needs a first-death year before the survivor preview can compare income, tax, funding, and portfolio outcomes.',
+      survivorYear: null,
+      readiness: 'Needs survivor year',
+      incomeAtRisk: summary.incomeAtRisk,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      baselineEndPortfolio: comparison.baselineEndPortfolio,
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      lifetimeTaxDelta: 0,
+      spendingFundedYears: '-',
+      stableDashboardHandoff
+    };
+  }
+
+  if (comparison.status === 'notAvailable') {
+    return {
+      status: 'notAvailable',
+      headline: 'Survivor comparison is waiting for the preview rerun.',
+      detail: 'The survivor year is set, but the survivor result is not available yet. Keep the stable dashboard as the complete fallback.',
+      survivorYear: comparison.survivorYear,
+      readiness: 'Calculating',
+      incomeAtRisk: summary.incomeAtRisk,
+      firstShortfallYear: null,
+      fundedThroughYear: null,
+      baselineEndPortfolio: 0,
+      survivorEndPortfolio: 0,
+      endPortfolioDelta: 0,
+      lifetimeTaxDelta: 0,
+      spendingFundedYears: '-',
+      stableDashboardHandoff
+    };
+  }
+
+  const status: StressSeverity = comparison.firstShortfallYear
+    ? 'watch'
+    : comparison.endPortfolioDelta < -RECONCILIATION_TOLERANCE
+      ? 'review'
+      : 'ok';
+
+  return {
+    status,
+    headline:
+      status === 'watch'
+        ? 'The survivor preview has funding pressure to review.'
+        : status === 'review'
+          ? 'The survivor preview is funded, with portfolio trade-offs to review.'
+          : 'The survivor preview stays funded in the visible years.',
+    detail:
+      status === 'ok'
+        ? 'Use this as a bounded household-resilience read before opening full survivor audit detail in the stable dashboard.'
+        : 'Review the rows below before treating the two-person plan as durable.',
+    survivorYear: comparison.survivorYear,
+    readiness: 'Ready',
+    incomeAtRisk: summary.incomeAtRisk,
+    firstShortfallYear: comparison.firstShortfallYear,
+    fundedThroughYear: comparison.fundedThroughYear,
+    baselineEndPortfolio: comparison.baselineEndPortfolio,
+    survivorEndPortfolio: comparison.survivorEndPortfolio,
+    endPortfolioDelta: comparison.endPortfolioDelta,
+    lifetimeTaxDelta: comparison.lifetimeTaxDelta,
+    spendingFundedYears: comparison.spendingFundedYears,
+    stableDashboardHandoff
+  };
+}
+
+export function selectSurvivorReviewRows(
+  baseline: SimulationResult | null | undefined,
+  survivor: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): SurvivorReviewRow[] {
+  const summary = selectSurvivorStorySummary(baseline, survivor, plan);
+  const comparison = selectSurvivorComparison(baseline, survivor, plan);
+  const baselineRows = rowsFrom(baseline);
+  const survivorRows = rowsFrom(survivor);
+  const survivorYear = comparison.survivorYear || summary.survivorYear;
+  const baselineReference = baselineRows.find((row) => row.year === survivorYear) || baselineRows[0];
+  const survivorReference = survivorRows.find((row) => row.year === survivorYear) || survivorRows[0];
+  const baselineFunding = selectCashFlowReconciliation(baselineReference).reconciledAfterTaxSpending;
+  const survivorFunding = selectCashFlowReconciliation(survivorReference).reconciledAfterTaxSpending;
+  const fundingDelta = survivorFunding - baselineFunding;
+  const firstSurvivorShortfall = survivorRows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const survivorLowestPortfolio = survivorRows.reduce<AnnualSimulationRow | null>((lowest, row) => {
+    if (!lowest || n(row.bal_total) < n(lowest.bal_total)) return row;
+    return lowest;
+  }, null);
+  const survivorTerminalPortfolio = comparison.survivorEndPortfolio;
+  const taxSeverity: StressSeverity =
+    comparison.status === 'ready' && comparison.lifetimeTaxDelta > RECONCILIATION_TOLERANCE ? 'review' : 'ok';
+  const portfolioSeverity: StressSeverity =
+    comparison.status === 'ready' && (survivorTerminalPortfolio <= RECONCILIATION_TOLERANCE || firstSurvivorShortfall)
+      ? 'watch'
+      : comparison.status === 'ready' && comparison.endPortfolioDelta < -RECONCILIATION_TOLERANCE
+        ? 'review'
+        : 'ok';
+
+  return [
+    {
+      id: 'setup',
+      label: 'Survivor setup',
+      severity: comparison.status === 'needsInput' || comparison.status === 'notAvailable' ? 'watch' : 'ok',
+      value: summary.readiness,
+      explanation:
+        comparison.status === 'single'
+          ? 'Single-person plan; no survivor year is needed.'
+          : comparison.status === 'needsInput'
+            ? 'A survivor year is required before the household-resilience rerun can be compared.'
+            : comparison.status === 'notAvailable'
+              ? 'The survivor year is set, but the survivor rerun is not available yet.'
+              : `Survivor comparison uses ${comparison.survivorYear}.`,
+      reviewAction: comparison.status === 'needsInput' ? 'Set the survivor year in Assumptions.' : 'Confirm the scenario setup before relying on the comparison.',
+      detailArea: 'assumptions'
+    },
+    {
+      id: 'incomeChange',
+      label: 'Income at risk',
+      severity: summary.incomeAtRisk > RECONCILIATION_TOLERANCE && comparison.status !== 'single' ? 'review' : 'ok',
+      value: moneyText(summary.incomeAtRisk),
+      explanation:
+        summary.incomeAtRisk > RECONCILIATION_TOLERANCE
+          ? `Approximate Person 1 income visible around the survivor year is ${moneyText(summary.incomeAtRisk)}.`
+          : 'No Person 1 income-at-risk estimate is visible from the current preview rows.',
+      reviewAction: 'Review income sources before relying on the survivor comparison.',
+      detailArea: 'incomeSources'
+    },
+    {
+      id: 'spendingFunding',
+      label: 'Survivor funding',
+      severity: firstSurvivorShortfall ? 'watch' : comparison.status === 'ready' ? 'ok' : 'review',
+      value: comparison.status === 'ready' ? comparison.spendingFundedYears : '-',
+      explanation:
+        comparison.status === 'ready'
+          ? firstSurvivorShortfall
+            ? `First survivor shortfall appears in ${firstSurvivorShortfall.year}.`
+            : `Survivor spending remains funded through ${comparison.fundedThroughYear || '-'}.`
+          : 'Funding comparison appears after the survivor preview is ready.',
+      reviewAction: firstSurvivorShortfall ? 'Review Annual Detail around the first shortfall year.' : 'Use Annual Detail to inspect the survivor-year neighborhood.',
+      detailArea: 'annualDetail'
+    },
+    {
+      id: 'portfolioCushion',
+      label: 'Portfolio cushion',
+      severity: portfolioSeverity,
+      value: comparison.status === 'ready' ? signedMoneyText(comparison.endPortfolioDelta) : '-',
+      explanation:
+        comparison.status === 'ready'
+          ? `Survivor ending portfolio is ${moneyText(comparison.survivorEndPortfolio)}; lowest visible survivor portfolio is ${moneyText(n(survivorLowestPortfolio?.bal_total))}.`
+          : 'Portfolio comparison appears after the survivor preview is ready.',
+      reviewAction: portfolioSeverity === 'ok' ? 'Review Accounts for the balance path.' : 'Review Accounts and Stress Tests before relying on the survivor path.',
+      detailArea: 'accounts'
+    },
+    {
+      id: 'lifetimeTax',
+      label: 'Lifetime tax change',
+      severity: taxSeverity,
+      value: comparison.status === 'ready' ? signedMoneyText(comparison.lifetimeTaxDelta) : '-',
+      explanation:
+        comparison.status === 'ready'
+          ? `Baseline lifetime tax ${moneyText(comparison.baselineLifetimeTax)}, survivor lifetime tax ${moneyText(comparison.survivorLifetimeTax)}.`
+          : 'Tax comparison appears after the survivor preview is ready.',
+      reviewAction: taxSeverity === 'review' ? 'Review Taxes for survivor-year and later tax pressure.' : 'Use Taxes for year-by-year survivor context if needed.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'stressFollowup',
+      label: 'Stress follow-up',
+      severity: firstSurvivorShortfall || portfolioSeverity === 'watch' ? 'watch' : comparison.status === 'ready' ? 'ok' : 'review',
+      value: comparison.firstShortfallYear ? String(comparison.firstShortfallYear) : comparison.status === 'ready' ? 'No shortfall' : summary.readiness,
+      explanation:
+        comparison.status === 'ready'
+          ? `Survivor funding delta near the scenario year is ${signedMoneyText(fundingDelta)} after tax.`
+          : 'Use the stable dashboard if React cannot calculate the survivor rerun.',
+      reviewAction: 'Use Stress Tests for bounded fragility context and the stable dashboard for full survivor stress surfaces.',
+      detailArea: 'stressTests'
+    }
+  ];
+}
+
 export function selectRecommendedPath(
   baseline: SimulationResult | null | undefined,
   comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>,
@@ -1971,6 +2236,116 @@ export function selectRecommendedPath(
     candidateRows: rowsWithRecommendation,
     whyNotRows
   };
+}
+
+export function selectResultsReadinessSummary(
+  recommended: RecommendedPathSummary,
+  validation: RecommendationValidation = null
+): ResultsReadinessSummary {
+  const rows = selectResultsReadinessRows(recommended, validation);
+  const blockedCount = rows.filter((row) => row.status === 'blocked').length;
+  const reviewCount = rows.filter((row) => row.status === 'review').length;
+  const readyCount = rows.filter((row) => row.status === 'ready').length;
+  const saveRow = rows.find((row) => row.id === 'savePlan');
+  const stableDashboardRow = rows.find((row) => row.id === 'stableDashboard');
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const blockingRows = rows.filter((row) => row.status === 'blocked' && row.id !== 'stableDashboard');
+  const reviewRows = rows.filter((row) => row.status === 'review' && row.id !== 'stableDashboard');
+  const status: ResultsReadinessStatus = validationBlocked || blockingRows.length > 0 ? 'blocked' : reviewRows.length > 0 ? 'review' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'Clear blockers before saving this plan as reviewed.'
+        : status === 'review'
+          ? 'The plan can be saved, with review items still visible.'
+          : 'The React preview is ready for local save and stable-dashboard inspection.',
+    detail:
+      status === 'blocked'
+        ? 'Use the rows below to clear validation or source blockers first.'
+        : status === 'review'
+          ? 'Save can remain available, but the preview still has review items to inspect before relying on it.'
+          : 'No blocker or review item is currently visible in the bounded React readiness checks.',
+    saveStatus: saveRow?.status ?? 'blocked',
+    stableDashboardStatus: stableDashboardRow?.status === 'blocked' ? 'blocked' : 'ready',
+    readyCount,
+    reviewCount,
+    blockedCount,
+    recommendedLabel: recommended.recommendedLabel,
+    stableDashboardHandoff: 'Use the stable dashboard for complete schedules, legacy audit views, report-style inspection, and print/PDF.'
+  };
+}
+
+export function selectResultsReadinessRows(
+  recommended: RecommendedPathSummary,
+  validation: RecommendationValidation = null
+): ResultsReadinessRow[] {
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const item = (id: RecommendedChecklistItem['id']) => recommended.checklistItems.find((check) => check.id === id);
+  const blockers = item('clearBlockers');
+  const stress = item('reviewStress');
+  const taxes = item('inspectTaxes');
+  const survivor = item('testSurvivor');
+  const dashboard = item('openStableDashboard');
+  const save = item('savePlan');
+
+  return [
+    {
+      id: 'blockers',
+      label: 'Blockers',
+      status: validationBlocked ? 'blocked' : blockers?.status ?? 'blocked',
+      priority: 'now',
+      detail: blockers?.detail ?? 'Validation and source reconciliation must be available before final review.',
+      action: blockers?.handoff ?? 'Review Guided Intake warnings and Cash Flow.',
+      detailArea: 'cashFlow'
+    },
+    {
+      id: 'watchRisks',
+      label: 'Watch risks',
+      status: stress?.status ?? 'review',
+      priority: stress?.priority ?? 'next',
+      detail: stress?.detail ?? 'Review stress items before relying on the preview.',
+      action: stress?.handoff ?? 'Use Stress Tests and Overview risk details.',
+      detailArea: 'stressTests'
+    },
+    {
+      id: 'taxes',
+      label: 'Tax review',
+      status: taxes?.status ?? 'review',
+      priority: taxes?.priority ?? 'next',
+      detail: taxes?.detail ?? 'Inspect tax pressure before final save.',
+      action: taxes?.handoff ?? 'Use the Taxes tab and stable dashboard tax schedules.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'householdResilience',
+      label: 'Household resilience',
+      status: survivor?.status ?? 'review',
+      priority: survivor?.priority ?? 'next',
+      detail: survivor?.detail ?? 'Review household resilience for two-person plans.',
+      action: survivor?.handoff ?? 'Use Household Resilience and the stable dashboard survivor detail.',
+      detailArea: 'householdResilience'
+    },
+    {
+      id: 'stableDashboard',
+      label: 'Stable dashboard inspection',
+      status: validationBlocked ? 'blocked' : 'review',
+      priority: dashboard?.priority ?? 'next',
+      detail: dashboard?.detail ?? 'The stable dashboard remains the complete audit and reporting surface.',
+      action: dashboard?.handoff ?? 'Open stable dashboard before acting on the selected path.',
+      detailArea: 'exportSave'
+    },
+    {
+      id: 'savePlan',
+      label: 'Save local plan',
+      status: validationBlocked ? 'blocked' : save?.status ?? 'blocked',
+      priority: save?.priority ?? 'later',
+      detail: save?.detail ?? 'Save the normalized v2 plan locally after review.',
+      action: save?.handoff ?? 'Use Save .plan.json; result readiness stays runtime-only.',
+      detailArea: 'exportSave'
+    }
+  ];
 }
 
 function selectRecommendedStressContext(

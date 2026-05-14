@@ -38,6 +38,8 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectResultsReadinessRows,
+  selectResultsReadinessSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -47,6 +49,8 @@ import {
   selectStressTestRows,
   selectStressTestSummary,
   selectSurvivorComparison,
+  selectSurvivorReviewRows,
+  selectSurvivorStorySummary,
   selectSurvivorViewSummary,
   selectTaxDetailRows,
   selectTaxPressureExplanation,
@@ -2020,7 +2024,11 @@ function ResultsHandoffPanel({
   const scenarioAssumptionRows = selectScenarioAssumptionRows(plan);
   const survivorSummary = selectSurvivorViewSummary(result, plan);
   const survivorComparison = selectSurvivorComparison(result, survivor, plan);
+  const survivorStory = selectSurvivorStorySummary(result, survivor, plan);
+  const survivorReviewRows = selectSurvivorReviewRows(result, survivor, plan);
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
+  const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
+  const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -2030,6 +2038,7 @@ function ResultsHandoffPanel({
     'accounts',
     'taxes',
     'stressTests',
+    'householdResilience',
     'assumptions',
     'exportSave'
   ];
@@ -2073,11 +2082,27 @@ function ResultsHandoffPanel({
             summary={annualDetailSummary}
           />
         ) : activeSection === 'exportSave' ? (
-          <ExportSavePanel onDownload={onDownload} plan={plan} validation={validation} />
+          <ExportSavePanel onDownload={onDownload} plan={plan} readinessRows={readinessRows} readinessSummary={readinessSummary} validation={validation} />
         ) : activeSection === 'assumptions' ? (
           <AssumptionsResultsPanel plan={plan} />
         ) : activeSection === 'stressTests' ? (
-          <StressTestsPanel indicatorRows={stressIndicatorRows} loading={loading} rows={stressTestRows} summary={stressTestSummary} />
+          <StressTestsPanel
+            indicatorRows={stressIndicatorRows}
+            loading={loading}
+            rows={stressTestRows}
+            scenarioRows={scenarioComparisonRows}
+            summary={stressTestSummary}
+            survivorComparison={survivorComparison}
+            survivorSummary={survivorSummary}
+          />
+        ) : activeSection === 'householdResilience' ? (
+          <HouseholdResiliencePanel
+            comparison={survivorComparison}
+            loading={loading}
+            rows={survivorReviewRows}
+            story={survivorStory}
+            summary={survivorSummary}
+          />
         ) : activeSection === 'taxes' ? (
           <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} reviewRows={taxReviewRows} story={taxStorySummary} summary={taxSummary} />
         ) : activeSection === 'accounts' ? (
@@ -2181,6 +2206,7 @@ function ResultsHandoffPanel({
             <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
             <div className="result-section-label">Household Resilience</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
+            <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
           </>
         ) : (
           <DeferredResultsPanel section={sectionTitle} />
@@ -2257,8 +2283,13 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'stressTests':
       return {
-        summary: 'Stress Tests shows baseline risk indicators and keeps the selected-path confidence context nearby in Overview.',
-        handoff: 'Use the stable dashboard for full scenario, Monte Carlo, and print/PDF stress surfaces.'
+        summary: 'Stress Tests combines baseline risk indicators, bounded scenario reruns, and household resilience detail in React.',
+        handoff: 'Use the stable dashboard for full Monte Carlo, historical sequence, legacy charts, audit schedules, and print/PDF stress surfaces.'
+      };
+    case 'householdResilience':
+      return {
+        summary: 'Household Resilience compares the baseline projection with the survivor preview for two-person plans.',
+        handoff: 'Use the stable dashboard for full survivor audit schedules, legacy charts, print/PDF, and report-style review.'
       };
     case 'assumptions':
       return {
@@ -2750,7 +2781,7 @@ function SurvivorSummaryPanel({
 }) {
   return (
     <section className={`decision-panel survivor-panel survivor-${summary.status}`}>
-      <h3>Survivor view first slice</h3>
+      <h3>Survivor view snapshot</h3>
       <p>{summary.headline}</p>
       <div className="summary-grid">
         <Metric label="Survivor year" value={summary.survivorYear ? String(summary.survivorYear) : '-'} />
@@ -2766,8 +2797,78 @@ function SurvivorSummaryPanel({
           <Metric label="First survivor shortfall" value={comparison.firstShortfallYear ? String(comparison.firstShortfallYear) : '-'} />
         </div>
       ) : null}
-      <p className="table-note">{summary.detail}</p>
+      <p className="table-note">{summary.detail} Use Household Resilience for the fuller React review.</p>
     </section>
+  );
+}
+
+function HouseholdResiliencePanel({
+  comparison,
+  loading,
+  rows,
+  story,
+  summary
+}: {
+  comparison: ReturnType<typeof selectSurvivorComparison>;
+  loading: boolean;
+  rows: ReturnType<typeof selectSurvivorReviewRows>;
+  story: ReturnType<typeof selectSurvivorStorySummary>;
+  summary: ReturnType<typeof selectSurvivorViewSummary>;
+}) {
+  type SurvivorReviewPanelRow = ReturnType<typeof selectSurvivorReviewRows>[number];
+
+  return (
+    <div className="household-resilience-panel">
+      <section className={`survivor-story-panel survivor-story-${story.status}`}>
+        <div>
+          <p className="eyebrow">Household resilience</p>
+          <h3>{loading ? 'Calculating household resilience' : story.headline}</h3>
+          <p>{story.detail}</p>
+        </div>
+        <div className="summary-grid">
+          <Metric label="Readiness" value={loading && story.status === 'notAvailable' ? 'Calculating' : story.readiness} />
+          <Metric label="Survivor year" value={story.survivorYear ? String(story.survivorYear) : '-'} />
+          <Metric label="Income at risk" value={formatMoney(story.incomeAtRisk)} />
+          <Metric label="First shortfall" value={story.firstShortfallYear ? String(story.firstShortfallYear) : 'None'} />
+        </div>
+        <div className="summary-grid">
+          <Metric label="End portfolio delta" value={formatSignedMoney(story.endPortfolioDelta)} />
+          <Metric label="Survivor end portfolio" value={formatMoney(story.survivorEndPortfolio)} />
+          <Metric label="Lifetime tax delta" value={formatSignedMoney(story.lifetimeTaxDelta)} />
+          <Metric label="Spending funded" value={story.spendingFundedYears} />
+          <Metric label="Funded through" value={story.fundedThroughYear ? String(story.fundedThroughYear) : '-'} />
+        </div>
+      </section>
+
+      <div className="survivor-review-list">
+        {rows.map((row: SurvivorReviewPanelRow) => (
+          <section className={`survivor-review-row survivor-review-${row.severity}`} key={row.id}>
+            <div>
+              <small>{row.severity}</small>
+              <h3>{row.label}</h3>
+              <p>{row.explanation}</p>
+              <p className="table-note">{row.reviewAction}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Value</dt>
+                <dd>{loading && comparison.status === 'notAvailable' ? 'Calculating' : row.value}</dd>
+              </div>
+              <div>
+                <dt>Review</dt>
+                <dd>{resultsSectionTitle(row.detailArea)}</dd>
+              </div>
+            </dl>
+          </section>
+        ))}
+      </div>
+
+      <section className="decision-panel">
+        <h3>Stable dashboard fallback</h3>
+        <p>{story.stableDashboardHandoff}</p>
+        <p className="table-note">{summary.detail}</p>
+      </section>
+    </div>
   );
 }
 
@@ -3136,12 +3237,18 @@ function StressTestsPanel({
   indicatorRows,
   loading,
   rows,
-  summary
+  scenarioRows,
+  summary,
+  survivorComparison,
+  survivorSummary
 }: {
   indicatorRows: ReturnType<typeof selectStressIndicatorRows>;
   loading: boolean;
   rows: ReturnType<typeof selectStressTestRows>;
+  scenarioRows: ReturnType<typeof selectScenarioComparisonRows>;
   summary: ReturnType<typeof selectStressTestSummary>;
+  survivorComparison: ReturnType<typeof selectSurvivorComparison>;
+  survivorSummary: ReturnType<typeof selectSurvivorViewSummary>;
 }) {
   type StressTestPanelRow = ReturnType<typeof selectStressTestRows>[number];
   type StressIndicatorPanelRow = ReturnType<typeof selectStressIndicatorRows>[number];
@@ -3196,6 +3303,28 @@ function StressTestsPanel({
           </section>
         ))}
       </div>
+      <section className="stress-scenario-panel">
+        <div>
+          <p className="eyebrow">Bounded scenario tests</p>
+          <h3>Compare the main fragility levers</h3>
+          <p>
+            These local reruns keep the stress read close to the baseline without changing the saved plan or replacing the
+            stable dashboard stress tools.
+          </p>
+        </div>
+        <ScenarioComparisonPanel loading={loading} rows={scenarioRows} />
+      </section>
+      <section className="stress-household-panel">
+        <div>
+          <p className="eyebrow">Household resilience</p>
+          <h3>Survivor stress check</h3>
+          <p>
+            This keeps the survivor comparison visible beside baseline stress indicators so a couple plan can be reviewed
+            before relying on the preview path.
+          </p>
+        </div>
+        <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
+      </section>
       <p className="table-note">{summary.stableDashboardHandoff}</p>
     </div>
   );
@@ -3230,15 +3359,21 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 function ExportSavePanel({
   onDownload,
   plan,
+  readinessRows,
+  readinessSummary,
   validation
 }: {
   onDownload: () => void;
   plan: V2PlanPayload;
+  readinessRows: ReturnType<typeof selectResultsReadinessRows>;
+  readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   validation: PlanValidationResult | null;
 }) {
   const hasBlockers = Boolean(validation && !validation.canGenerate);
   return (
     <div className="export-save-panel">
+      <ResultsReadinessPanel rows={readinessRows} summary={readinessSummary} />
+
       <div className="result-overview-grid">
         <section className="result-card">
           <h3>Local plan file</h3>
@@ -3252,11 +3387,16 @@ function ExportSavePanel({
               <dd>{plan.title || 'Not named yet'}</dd>
             </div>
             <div>
+              <dt>Save readiness</dt>
+              <dd>{readinessSummary.saveStatus}</dd>
+            </div>
+            <div>
               <dt>Storage</dt>
               <dd>Local .plan.json</dd>
             </div>
           </dl>
-          <button className="ghost" type="button" onClick={onDownload}>
+          <p>{readinessSummary.detail}</p>
+          <button className="ghost" type="button" onClick={onDownload} disabled={readinessSummary.saveStatus === 'blocked'}>
             Save .plan.json
           </button>
         </section>
@@ -3264,9 +3404,8 @@ function ExportSavePanel({
         <section className="result-card">
           <h3>Dashboard fallback</h3>
           <p>
-            The stable dashboard remains the complete detail surface for annual cash-flow rows, tax schedules, account
-            balances, stress tests, charts, and print/PDF. Use it to inspect any confidence or break-plan item before
-            relying on the React preview.
+            {readinessSummary.stableDashboardHandoff} Use it to inspect any confidence, readiness, or break-plan item
+            before relying on the React preview.
           </p>
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}
@@ -3278,6 +3417,62 @@ function ExportSavePanel({
         </section>
       </div>
     </div>
+  );
+}
+
+function ResultsReadinessPanel({
+  compact = false,
+  rows,
+  summary
+}: {
+  compact?: boolean;
+  rows: ReturnType<typeof selectResultsReadinessRows>;
+  summary: ReturnType<typeof selectResultsReadinessSummary>;
+}) {
+  const visibleRows = compact ? rows.filter((row) => row.status !== 'ready').slice(0, 4) : rows;
+
+  return (
+    <section className={`results-readiness-panel readiness-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Final readiness</p>
+        <h3>{summary.headline}</h3>
+        <p>{summary.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Recommended path" value={summary.recommendedLabel} />
+        <Metric label="Ready" value={String(summary.readyCount)} />
+        <Metric label="Review" value={String(summary.reviewCount)} />
+        <Metric label="Blocked" value={String(summary.blockedCount)} />
+        <Metric label="Save" value={summary.saveStatus} />
+      </div>
+      {visibleRows.length > 0 ? (
+        <div className="readiness-row-list">
+          {visibleRows.map((row) => (
+            <section className={`readiness-row readiness-row-${row.status}`} key={row.id}>
+              <div>
+                <small>{row.status}</small>
+                <h3>{row.label}</h3>
+                <p>{row.detail}</p>
+                <p className="table-note">{row.action}</p>
+              </div>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Priority</dt>
+                  <dd>{row.priority}</dd>
+                </div>
+                <div>
+                  <dt>Review</dt>
+                  <dd>{resultsSectionTitle(row.detailArea)}</dd>
+                </div>
+              </dl>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p className="table-note">No review or blocker rows are visible in the bounded React readiness checks.</p>
+      )}
+      {compact ? <p className="table-note">Use Export/Save for the full readiness handoff.</p> : null}
+    </section>
   );
 }
 
