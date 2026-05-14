@@ -365,6 +365,32 @@ describe('result selectors', () => {
     });
   });
 
+  it('does not block recommendation when source rows produce an after-tax surplus', () => {
+    const surplusResult = withRows([
+      {
+        grossIncome: 200000,
+        totalTaxYear: 40000,
+        totalAftaxYear: 70000,
+        cashFlow: 90000,
+        shortfall: 0
+      },
+      fixture.years[1]
+    ]);
+    const reconciliation = selectCashFlowReconciliation(surplusResult.years[0]);
+    const recommended = selectRecommendedPath(surplusResult, {}, null, planFixture);
+
+    expect(reconciliation.reconciliationDelta).toBeGreaterThan(0);
+    expect(reconciliation.cashFlowDelta).toBeGreaterThan(0);
+    expect(reconciliation.status).toBe('ok');
+    expect(selectReconciliationDiagnostics(surplusResult)).toMatchObject({
+      warningCount: 0,
+      status: 'ok'
+    });
+    expect(recommended.candidateRows.find((row) => row.id === 'baseline')).toMatchObject({
+      blocked: false
+    });
+  });
+
   it('normalizes annual detail tax and balance fields safely', () => {
     const zeroTaxable = withRows([
       {

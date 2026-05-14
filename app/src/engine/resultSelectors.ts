@@ -3210,6 +3210,7 @@ export function selectCashFlowReconciliation(row: AnnualSimulationRow | null | u
   const reconciledAfterTaxSpending = incomeAndWithdrawals + taxFreeWithdrawals + cashWedgeFunding + otherInflows - tax;
   const reconciliationDelta = reconciledAfterTaxSpending - afterTaxSpending;
   const cashFlowDelta = n(row.cashFlow);
+  const underfundedSpending = reconciliationDelta < -RECONCILIATION_TOLERANCE;
 
   return {
     year: row.year,
@@ -3223,9 +3224,6 @@ export function selectCashFlowReconciliation(row: AnnualSimulationRow | null | u
     reconciledAfterTaxSpending,
     reconciliationDelta,
     cashFlowDelta,
-    status:
-      Math.abs(reconciliationDelta) <= RECONCILIATION_TOLERANCE && Math.abs(cashFlowDelta) <= RECONCILIATION_TOLERANCE
-        ? 'ok'
-        : 'warning'
+    status: underfundedSpending ? 'warning' : 'ok'
   };
 }
