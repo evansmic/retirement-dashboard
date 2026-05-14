@@ -21,6 +21,8 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectResultsReadinessRows,
+  selectResultsReadinessSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -591,6 +593,14 @@ describe('result selectors', () => {
       canGenerate: false,
       blockers: [{ field: 'p1.name' }]
     });
+    const readinessSummary = selectResultsReadinessSummary(recommended, {
+      canGenerate: false,
+      blockers: [{ field: 'p1.name' }]
+    });
+    const readinessRows = selectResultsReadinessRows(recommended, {
+      canGenerate: false,
+      blockers: [{ field: 'p1.name' }]
+    });
 
     expect(recommended.recommendedCandidateId).toBeNull();
     expect(recommended.checklistItems.find((item) => item.id === 'clearBlockers')).toMatchObject({
@@ -600,7 +610,17 @@ describe('result selectors', () => {
     expect(recommended.checklistItems.find((item) => item.id === 'savePlan')).toMatchObject({
       status: 'blocked'
     });
+    expect(readinessSummary).toMatchObject({
+      status: 'blocked',
+      saveStatus: 'blocked',
+      stableDashboardStatus: 'blocked'
+    });
+    expect(readinessRows.find((row) => row.id === 'savePlan')).toMatchObject({
+      status: 'blocked',
+      detailArea: 'exportSave'
+    });
     expect(Object.keys(planFixture)).not.toContain('checklistItems');
+    expect(Object.keys(planFixture)).not.toContain('readinessSummary');
   });
 
   it('shows lower tax as a reason without letting tax alone beat shortfall safety', () => {
@@ -687,5 +707,30 @@ describe('result selectors', () => {
       detailArea: 'stressTests'
     });
     expect(Object.keys(couplePlan)).not.toContain('survivorStory');
+  });
+
+  it('builds Sprint 20 readiness handoff rows without persisting output', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const summary = selectResultsReadinessSummary(recommended);
+    const rows = selectResultsReadinessRows(recommended);
+
+    expect(['ready', 'review', 'blocked']).toContain(summary.status);
+    expect(['ready', 'review', 'blocked']).toContain(summary.saveStatus);
+    expect(summary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(rows.map((row) => row.id)).toEqual([
+      'blockers',
+      'watchRisks',
+      'taxes',
+      'householdResilience',
+      'stableDashboard',
+      'savePlan'
+    ]);
+    expect(rows.find((row) => row.id === 'stableDashboard')).toMatchObject({
+      status: 'review',
+      detailArea: 'exportSave'
+    });
+    expect(rows.find((row) => row.id === 'taxes')?.detailArea).toBe('taxes');
+    expect(rows.find((row) => row.id === 'householdResilience')?.detailArea).toBe('householdResilience');
+    expect(Object.keys(planFixture)).not.toContain('resultsReadiness');
   });
 });

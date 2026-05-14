@@ -21,6 +21,8 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectResultsReadinessRows,
+  selectResultsReadinessSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -226,6 +228,8 @@ describe('Sprint 6 results workspace smoke', () => {
     const survivorStory = selectSurvivorStorySummary(result, null, plan);
     const survivorReviewRows = selectSurvivorReviewRows(result, null, plan);
     const recommendedPath = selectRecommendedPath(result, {}, null, plan);
+    const readinessSummary = selectResultsReadinessSummary(recommendedPath);
+    const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
 
     expect(overview.projectionYears).toBeGreaterThan(10);
@@ -272,7 +276,12 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(survivorReviewRows.find((row) => row.id === 'setup')?.detailArea).toBe('assumptions');
     expect(recommendedPath.candidateRows.find((row) => row.id === 'baseline')).toBeTruthy();
     expect(recommendedPath.recommendedCandidateId === null || typeof recommendedPath.recommendedCandidateId === 'string').toBe(true);
+    expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
+    expect(readinessSummary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(readinessRows).toHaveLength(6);
+    expect(readinessRows.find((row) => row.id === 'savePlan')?.detailArea).toBe('exportSave');
     expect(planFile.plan.schemaVersion).toBe(2);
+    expect(Object.keys(planFile.plan)).not.toContain('resultsReadiness');
   });
 
   it('keeps the Sprint 6 navigation shell mapped while only first previews are implemented', () => {

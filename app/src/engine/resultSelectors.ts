@@ -566,6 +566,31 @@ export type RecommendationValidation = {
   blockers?: unknown[];
 } | null | undefined;
 
+export type ResultsReadinessStatus = 'ready' | 'review' | 'blocked';
+
+export type ResultsReadinessSummary = {
+  status: ResultsReadinessStatus;
+  headline: string;
+  detail: string;
+  saveStatus: ResultsReadinessStatus;
+  stableDashboardStatus: 'ready' | 'blocked';
+  readyCount: number;
+  reviewCount: number;
+  blockedCount: number;
+  recommendedLabel: string;
+  stableDashboardHandoff: string;
+};
+
+export type ResultsReadinessRow = {
+  id: 'blockers' | 'watchRisks' | 'taxes' | 'householdResilience' | 'stableDashboard' | 'savePlan';
+  label: string;
+  status: ResultsReadinessStatus;
+  priority: 'now' | 'next' | 'later';
+  detail: string;
+  action: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -2211,6 +2236,116 @@ export function selectRecommendedPath(
     candidateRows: rowsWithRecommendation,
     whyNotRows
   };
+}
+
+export function selectResultsReadinessSummary(
+  recommended: RecommendedPathSummary,
+  validation: RecommendationValidation = null
+): ResultsReadinessSummary {
+  const rows = selectResultsReadinessRows(recommended, validation);
+  const blockedCount = rows.filter((row) => row.status === 'blocked').length;
+  const reviewCount = rows.filter((row) => row.status === 'review').length;
+  const readyCount = rows.filter((row) => row.status === 'ready').length;
+  const saveRow = rows.find((row) => row.id === 'savePlan');
+  const stableDashboardRow = rows.find((row) => row.id === 'stableDashboard');
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const blockingRows = rows.filter((row) => row.status === 'blocked' && row.id !== 'stableDashboard');
+  const reviewRows = rows.filter((row) => row.status === 'review' && row.id !== 'stableDashboard');
+  const status: ResultsReadinessStatus = validationBlocked || blockingRows.length > 0 ? 'blocked' : reviewRows.length > 0 ? 'review' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'Clear blockers before saving this plan as reviewed.'
+        : status === 'review'
+          ? 'The plan can be saved, with review items still visible.'
+          : 'The React preview is ready for local save and stable-dashboard inspection.',
+    detail:
+      status === 'blocked'
+        ? 'Use the rows below to clear validation or source blockers first.'
+        : status === 'review'
+          ? 'Save can remain available, but the preview still has review items to inspect before relying on it.'
+          : 'No blocker or review item is currently visible in the bounded React readiness checks.',
+    saveStatus: saveRow?.status ?? 'blocked',
+    stableDashboardStatus: stableDashboardRow?.status === 'blocked' ? 'blocked' : 'ready',
+    readyCount,
+    reviewCount,
+    blockedCount,
+    recommendedLabel: recommended.recommendedLabel,
+    stableDashboardHandoff: 'Use the stable dashboard for complete schedules, legacy audit views, report-style inspection, and print/PDF.'
+  };
+}
+
+export function selectResultsReadinessRows(
+  recommended: RecommendedPathSummary,
+  validation: RecommendationValidation = null
+): ResultsReadinessRow[] {
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const item = (id: RecommendedChecklistItem['id']) => recommended.checklistItems.find((check) => check.id === id);
+  const blockers = item('clearBlockers');
+  const stress = item('reviewStress');
+  const taxes = item('inspectTaxes');
+  const survivor = item('testSurvivor');
+  const dashboard = item('openStableDashboard');
+  const save = item('savePlan');
+
+  return [
+    {
+      id: 'blockers',
+      label: 'Blockers',
+      status: validationBlocked ? 'blocked' : blockers?.status ?? 'blocked',
+      priority: 'now',
+      detail: blockers?.detail ?? 'Validation and source reconciliation must be available before final review.',
+      action: blockers?.handoff ?? 'Review Guided Intake warnings and Cash Flow.',
+      detailArea: 'cashFlow'
+    },
+    {
+      id: 'watchRisks',
+      label: 'Watch risks',
+      status: stress?.status ?? 'review',
+      priority: stress?.priority ?? 'next',
+      detail: stress?.detail ?? 'Review stress items before relying on the preview.',
+      action: stress?.handoff ?? 'Use Stress Tests and Overview risk details.',
+      detailArea: 'stressTests'
+    },
+    {
+      id: 'taxes',
+      label: 'Tax review',
+      status: taxes?.status ?? 'review',
+      priority: taxes?.priority ?? 'next',
+      detail: taxes?.detail ?? 'Inspect tax pressure before final save.',
+      action: taxes?.handoff ?? 'Use the Taxes tab and stable dashboard tax schedules.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'householdResilience',
+      label: 'Household resilience',
+      status: survivor?.status ?? 'review',
+      priority: survivor?.priority ?? 'next',
+      detail: survivor?.detail ?? 'Review household resilience for two-person plans.',
+      action: survivor?.handoff ?? 'Use Household Resilience and the stable dashboard survivor detail.',
+      detailArea: 'householdResilience'
+    },
+    {
+      id: 'stableDashboard',
+      label: 'Stable dashboard inspection',
+      status: validationBlocked ? 'blocked' : 'review',
+      priority: dashboard?.priority ?? 'next',
+      detail: dashboard?.detail ?? 'The stable dashboard remains the complete audit and reporting surface.',
+      action: dashboard?.handoff ?? 'Open stable dashboard before acting on the selected path.',
+      detailArea: 'exportSave'
+    },
+    {
+      id: 'savePlan',
+      label: 'Save local plan',
+      status: validationBlocked ? 'blocked' : save?.status ?? 'blocked',
+      priority: save?.priority ?? 'later',
+      detail: save?.detail ?? 'Save the normalized v2 plan locally after review.',
+      action: save?.handoff ?? 'Use Save .plan.json; result readiness stays runtime-only.',
+      detailArea: 'exportSave'
+    }
+  ];
 }
 
 function selectRecommendedStressContext(

@@ -1337,6 +1337,72 @@ button.secondary,
   background: #fff9ee;
 }
 
+.results-readiness-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  margin: 18px 0;
+  padding: 16px;
+}
+
+.results-readiness-panel h3,
+.results-readiness-panel p {
+  margin: 0;
+}
+
+.readiness-review {
+  border-left-color: var(--amber);
+  background: #fff9ee;
+}
+
+.readiness-blocked {
+  border-left-color: var(--red);
+  background: #fff8f6;
+}
+
+.readiness-row-list {
+  display: grid;
+  gap: 10px;
+}
+
+.readiness-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.32fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.readiness-row h3,
+.readiness-row p {
+  margin: 0;
+}
+
+.readiness-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.readiness-row-review {
+  border-left-color: var(--amber);
+}
+
+.readiness-row-blocked {
+  border-left-color: var(--red);
+  background: #fff8f6;
+}
+
 .stress-scenario-panel,
 .stress-household-panel {
   display: grid;
@@ -1742,6 +1808,7 @@ button.secondary,
   .risk-evidence-list div,
   .recommended-checklist-item,
   .account-review-row,
+  .readiness-row,
   .survivor-review-row,
   .stress-row,
   .tax-review-row {

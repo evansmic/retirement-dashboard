@@ -38,6 +38,8 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectResultsReadinessRows,
+  selectResultsReadinessSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -2025,6 +2027,8 @@ function ResultsHandoffPanel({
   const survivorStory = selectSurvivorStorySummary(result, survivor, plan);
   const survivorReviewRows = selectSurvivorReviewRows(result, survivor, plan);
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
+  const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
+  const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -2078,7 +2082,7 @@ function ResultsHandoffPanel({
             summary={annualDetailSummary}
           />
         ) : activeSection === 'exportSave' ? (
-          <ExportSavePanel onDownload={onDownload} plan={plan} validation={validation} />
+          <ExportSavePanel onDownload={onDownload} plan={plan} readinessRows={readinessRows} readinessSummary={readinessSummary} validation={validation} />
         ) : activeSection === 'assumptions' ? (
           <AssumptionsResultsPanel plan={plan} />
         ) : activeSection === 'stressTests' ? (
@@ -2202,6 +2206,7 @@ function ResultsHandoffPanel({
             <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
             <div className="result-section-label">Household Resilience</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
+            <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
           </>
         ) : (
           <DeferredResultsPanel section={sectionTitle} />
@@ -3354,15 +3359,21 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 function ExportSavePanel({
   onDownload,
   plan,
+  readinessRows,
+  readinessSummary,
   validation
 }: {
   onDownload: () => void;
   plan: V2PlanPayload;
+  readinessRows: ReturnType<typeof selectResultsReadinessRows>;
+  readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   validation: PlanValidationResult | null;
 }) {
   const hasBlockers = Boolean(validation && !validation.canGenerate);
   return (
     <div className="export-save-panel">
+      <ResultsReadinessPanel rows={readinessRows} summary={readinessSummary} />
+
       <div className="result-overview-grid">
         <section className="result-card">
           <h3>Local plan file</h3>
@@ -3376,11 +3387,16 @@ function ExportSavePanel({
               <dd>{plan.title || 'Not named yet'}</dd>
             </div>
             <div>
+              <dt>Save readiness</dt>
+              <dd>{readinessSummary.saveStatus}</dd>
+            </div>
+            <div>
               <dt>Storage</dt>
               <dd>Local .plan.json</dd>
             </div>
           </dl>
-          <button className="ghost" type="button" onClick={onDownload}>
+          <p>{readinessSummary.detail}</p>
+          <button className="ghost" type="button" onClick={onDownload} disabled={readinessSummary.saveStatus === 'blocked'}>
             Save .plan.json
           </button>
         </section>
@@ -3388,9 +3404,8 @@ function ExportSavePanel({
         <section className="result-card">
           <h3>Dashboard fallback</h3>
           <p>
-            The stable dashboard remains the complete detail surface for annual cash-flow rows, tax schedules, account
-            balances, stress tests, charts, and print/PDF. Use it to inspect any confidence or break-plan item before
-            relying on the React preview.
+            {readinessSummary.stableDashboardHandoff} Use it to inspect any confidence, readiness, or break-plan item
+            before relying on the React preview.
           </p>
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}
@@ -3402,6 +3417,62 @@ function ExportSavePanel({
         </section>
       </div>
     </div>
+  );
+}
+
+function ResultsReadinessPanel({
+  compact = false,
+  rows,
+  summary
+}: {
+  compact?: boolean;
+  rows: ReturnType<typeof selectResultsReadinessRows>;
+  summary: ReturnType<typeof selectResultsReadinessSummary>;
+}) {
+  const visibleRows = compact ? rows.filter((row) => row.status !== 'ready').slice(0, 4) : rows;
+
+  return (
+    <section className={`results-readiness-panel readiness-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Final readiness</p>
+        <h3>{summary.headline}</h3>
+        <p>{summary.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Recommended path" value={summary.recommendedLabel} />
+        <Metric label="Ready" value={String(summary.readyCount)} />
+        <Metric label="Review" value={String(summary.reviewCount)} />
+        <Metric label="Blocked" value={String(summary.blockedCount)} />
+        <Metric label="Save" value={summary.saveStatus} />
+      </div>
+      {visibleRows.length > 0 ? (
+        <div className="readiness-row-list">
+          {visibleRows.map((row) => (
+            <section className={`readiness-row readiness-row-${row.status}`} key={row.id}>
+              <div>
+                <small>{row.status}</small>
+                <h3>{row.label}</h3>
+                <p>{row.detail}</p>
+                <p className="table-note">{row.action}</p>
+              </div>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Priority</dt>
+                  <dd>{row.priority}</dd>
+                </div>
+                <div>
+                  <dt>Review</dt>
+                  <dd>{resultsSectionTitle(row.detailArea)}</dd>
+                </div>
+              </dl>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p className="table-note">No review or blocker rows are visible in the bounded React readiness checks.</p>
+      )}
+      {compact ? <p className="table-note">Use Export/Save for the full readiness handoff.</p> : null}
+    </section>
   );
 }
 
