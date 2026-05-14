@@ -30,6 +30,8 @@ import {
   selectStressTestRows,
   selectStressTestSummary,
   selectSurvivorComparison,
+  selectSurvivorReviewRows,
+  selectSurvivorStorySummary,
   selectSurvivorViewSummary,
   selectTaxPressureRows,
   selectTaxPressureExplanation,
@@ -221,6 +223,8 @@ describe('Sprint 6 results workspace smoke', () => {
     const scenarioAssumptions = selectScenarioAssumptionRows(plan);
     const survivorSummary = selectSurvivorViewSummary(result, plan);
     const survivorComparison = selectSurvivorComparison(result, null, plan);
+    const survivorStory = selectSurvivorStorySummary(result, null, plan);
+    const survivorReviewRows = selectSurvivorReviewRows(result, null, plan);
     const recommendedPath = selectRecommendedPath(result, {}, null, plan);
     const planFile = createPlanFile(plan);
 
@@ -262,6 +266,10 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(scenarioAssumptions).toHaveLength(3);
     expect(['single', 'ready', 'needsInput']).toContain(survivorSummary.status);
     expect(['single', 'needsInput', 'ready', 'notAvailable']).toContain(survivorComparison.status);
+    expect(['single', 'needsInput', 'notAvailable', 'ok', 'review', 'watch']).toContain(survivorStory.status);
+    expect(survivorStory.stableDashboardHandoff).toContain('stable dashboard');
+    expect(survivorReviewRows).toHaveLength(6);
+    expect(survivorReviewRows.find((row) => row.id === 'setup')?.detailArea).toBe('assumptions');
     expect(recommendedPath.candidateRows.find((row) => row.id === 'baseline')).toBeTruthy();
     expect(recommendedPath.recommendedCandidateId === null || typeof recommendedPath.recommendedCandidateId === 'string').toBe(true);
     expect(planFile.plan.schemaVersion).toBe(2);
@@ -276,6 +284,7 @@ describe('Sprint 6 results workspace smoke', () => {
       'Accounts',
       'Taxes',
       'Stress Tests',
+      'Household Resilience',
       'Assumptions',
       'Export/Save'
     ]);

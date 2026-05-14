@@ -47,6 +47,8 @@ import {
   selectStressTestRows,
   selectStressTestSummary,
   selectSurvivorComparison,
+  selectSurvivorReviewRows,
+  selectSurvivorStorySummary,
   selectSurvivorViewSummary,
   selectTaxDetailRows,
   selectTaxPressureExplanation,
@@ -2020,6 +2022,8 @@ function ResultsHandoffPanel({
   const scenarioAssumptionRows = selectScenarioAssumptionRows(plan);
   const survivorSummary = selectSurvivorViewSummary(result, plan);
   const survivorComparison = selectSurvivorComparison(result, survivor, plan);
+  const survivorStory = selectSurvivorStorySummary(result, survivor, plan);
+  const survivorReviewRows = selectSurvivorReviewRows(result, survivor, plan);
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
@@ -2030,6 +2034,7 @@ function ResultsHandoffPanel({
     'accounts',
     'taxes',
     'stressTests',
+    'householdResilience',
     'assumptions',
     'exportSave'
   ];
@@ -2077,7 +2082,23 @@ function ResultsHandoffPanel({
         ) : activeSection === 'assumptions' ? (
           <AssumptionsResultsPanel plan={plan} />
         ) : activeSection === 'stressTests' ? (
-          <StressTestsPanel indicatorRows={stressIndicatorRows} loading={loading} rows={stressTestRows} summary={stressTestSummary} />
+          <StressTestsPanel
+            indicatorRows={stressIndicatorRows}
+            loading={loading}
+            rows={stressTestRows}
+            scenarioRows={scenarioComparisonRows}
+            summary={stressTestSummary}
+            survivorComparison={survivorComparison}
+            survivorSummary={survivorSummary}
+          />
+        ) : activeSection === 'householdResilience' ? (
+          <HouseholdResiliencePanel
+            comparison={survivorComparison}
+            loading={loading}
+            rows={survivorReviewRows}
+            story={survivorStory}
+            summary={survivorSummary}
+          />
         ) : activeSection === 'taxes' ? (
           <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} reviewRows={taxReviewRows} story={taxStorySummary} summary={taxSummary} />
         ) : activeSection === 'accounts' ? (
@@ -2257,8 +2278,13 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'stressTests':
       return {
-        summary: 'Stress Tests shows baseline risk indicators and keeps the selected-path confidence context nearby in Overview.',
-        handoff: 'Use the stable dashboard for full scenario, Monte Carlo, and print/PDF stress surfaces.'
+        summary: 'Stress Tests combines baseline risk indicators, bounded scenario reruns, and household resilience detail in React.',
+        handoff: 'Use the stable dashboard for full Monte Carlo, historical sequence, legacy charts, audit schedules, and print/PDF stress surfaces.'
+      };
+    case 'householdResilience':
+      return {
+        summary: 'Household Resilience compares the baseline projection with the survivor preview for two-person plans.',
+        handoff: 'Use the stable dashboard for full survivor audit schedules, legacy charts, print/PDF, and report-style review.'
       };
     case 'assumptions':
       return {
@@ -2750,7 +2776,7 @@ function SurvivorSummaryPanel({
 }) {
   return (
     <section className={`decision-panel survivor-panel survivor-${summary.status}`}>
-      <h3>Survivor view first slice</h3>
+      <h3>Survivor view snapshot</h3>
       <p>{summary.headline}</p>
       <div className="summary-grid">
         <Metric label="Survivor year" value={summary.survivorYear ? String(summary.survivorYear) : '-'} />
@@ -2766,8 +2792,78 @@ function SurvivorSummaryPanel({
           <Metric label="First survivor shortfall" value={comparison.firstShortfallYear ? String(comparison.firstShortfallYear) : '-'} />
         </div>
       ) : null}
-      <p className="table-note">{summary.detail}</p>
+      <p className="table-note">{summary.detail} Use Household Resilience for the fuller React review.</p>
     </section>
+  );
+}
+
+function HouseholdResiliencePanel({
+  comparison,
+  loading,
+  rows,
+  story,
+  summary
+}: {
+  comparison: ReturnType<typeof selectSurvivorComparison>;
+  loading: boolean;
+  rows: ReturnType<typeof selectSurvivorReviewRows>;
+  story: ReturnType<typeof selectSurvivorStorySummary>;
+  summary: ReturnType<typeof selectSurvivorViewSummary>;
+}) {
+  type SurvivorReviewPanelRow = ReturnType<typeof selectSurvivorReviewRows>[number];
+
+  return (
+    <div className="household-resilience-panel">
+      <section className={`survivor-story-panel survivor-story-${story.status}`}>
+        <div>
+          <p className="eyebrow">Household resilience</p>
+          <h3>{loading ? 'Calculating household resilience' : story.headline}</h3>
+          <p>{story.detail}</p>
+        </div>
+        <div className="summary-grid">
+          <Metric label="Readiness" value={loading && story.status === 'notAvailable' ? 'Calculating' : story.readiness} />
+          <Metric label="Survivor year" value={story.survivorYear ? String(story.survivorYear) : '-'} />
+          <Metric label="Income at risk" value={formatMoney(story.incomeAtRisk)} />
+          <Metric label="First shortfall" value={story.firstShortfallYear ? String(story.firstShortfallYear) : 'None'} />
+        </div>
+        <div className="summary-grid">
+          <Metric label="End portfolio delta" value={formatSignedMoney(story.endPortfolioDelta)} />
+          <Metric label="Survivor end portfolio" value={formatMoney(story.survivorEndPortfolio)} />
+          <Metric label="Lifetime tax delta" value={formatSignedMoney(story.lifetimeTaxDelta)} />
+          <Metric label="Spending funded" value={story.spendingFundedYears} />
+          <Metric label="Funded through" value={story.fundedThroughYear ? String(story.fundedThroughYear) : '-'} />
+        </div>
+      </section>
+
+      <div className="survivor-review-list">
+        {rows.map((row: SurvivorReviewPanelRow) => (
+          <section className={`survivor-review-row survivor-review-${row.severity}`} key={row.id}>
+            <div>
+              <small>{row.severity}</small>
+              <h3>{row.label}</h3>
+              <p>{row.explanation}</p>
+              <p className="table-note">{row.reviewAction}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Value</dt>
+                <dd>{loading && comparison.status === 'notAvailable' ? 'Calculating' : row.value}</dd>
+              </div>
+              <div>
+                <dt>Review</dt>
+                <dd>{resultsSectionTitle(row.detailArea)}</dd>
+              </div>
+            </dl>
+          </section>
+        ))}
+      </div>
+
+      <section className="decision-panel">
+        <h3>Stable dashboard fallback</h3>
+        <p>{story.stableDashboardHandoff}</p>
+        <p className="table-note">{summary.detail}</p>
+      </section>
+    </div>
   );
 }
 
@@ -3136,12 +3232,18 @@ function StressTestsPanel({
   indicatorRows,
   loading,
   rows,
-  summary
+  scenarioRows,
+  summary,
+  survivorComparison,
+  survivorSummary
 }: {
   indicatorRows: ReturnType<typeof selectStressIndicatorRows>;
   loading: boolean;
   rows: ReturnType<typeof selectStressTestRows>;
+  scenarioRows: ReturnType<typeof selectScenarioComparisonRows>;
   summary: ReturnType<typeof selectStressTestSummary>;
+  survivorComparison: ReturnType<typeof selectSurvivorComparison>;
+  survivorSummary: ReturnType<typeof selectSurvivorViewSummary>;
 }) {
   type StressTestPanelRow = ReturnType<typeof selectStressTestRows>[number];
   type StressIndicatorPanelRow = ReturnType<typeof selectStressIndicatorRows>[number];
@@ -3196,6 +3298,28 @@ function StressTestsPanel({
           </section>
         ))}
       </div>
+      <section className="stress-scenario-panel">
+        <div>
+          <p className="eyebrow">Bounded scenario tests</p>
+          <h3>Compare the main fragility levers</h3>
+          <p>
+            These local reruns keep the stress read close to the baseline without changing the saved plan or replacing the
+            stable dashboard stress tools.
+          </p>
+        </div>
+        <ScenarioComparisonPanel loading={loading} rows={scenarioRows} />
+      </section>
+      <section className="stress-household-panel">
+        <div>
+          <p className="eyebrow">Household resilience</p>
+          <h3>Survivor stress check</h3>
+          <p>
+            This keeps the survivor comparison visible beside baseline stress indicators so a couple plan can be reviewed
+            before relying on the preview path.
+          </p>
+        </div>
+        <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
+      </section>
       <p className="table-note">{summary.stableDashboardHandoff}</p>
     </div>
   );

@@ -4,34 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 18: React Account Detail / Drawdown Parity
+## Active Sprint — Sprint 19: React Survivor Detail Parity
 
-**Status:** Complete 2026-05-08 after verification.
+**Status:** Complete 2026-05-14 after verification.
 
-Goal: deepen the React Accounts tab so users can understand account balance movement, drawdown sources, and terminal portfolio risk without using the stable dashboard for first-pass review.
+Goal: deepen Household Resilience so two-person plans can understand survivor scenario readiness, funding, tax, and portfolio outcomes without using the stable dashboard for first-pass review.
 
-Non-scope: new drawdown engine, optimizer, account rebalancing model, export/reporting migration, schema v3, persisted React table state, account/cloud/advisor/AI scope, or print/PDF migration.
+Non-scope: new survivor modelling rules, optimizer changes, export/reporting migration, schema v3, persisted survivor output or UI state, account/cloud/advisor/AI scope, or print/PDF migration.
 
-Sprint 18 checkpoint doc: [`docs/sprint_18_react_account_drawdown_parity.md`](docs/sprint_18_react_account_drawdown_parity.md).
+Sprint 19 checkpoint doc: [`docs/sprint_19_react_survivor_detail_parity.md`](docs/sprint_19_react_survivor_detail_parity.md).
 
-### Sprint 18 Candidate Implementation Tickets
+### Sprint 19 Candidate Implementation Tickets
 
-- [x] **S18-01 — Account drawdown story selector.** ✅ *Done 2026-05-08.* Added runtime-only summary for status, first/final year, start/end portfolio, peak/lowest portfolio, and first depletion.
-- [x] **S18-02 — Account review rows.** ✅ *Done 2026-05-08.* Added registered drawdown, TFSA drawdown, non-registered drawdown, cash wedge, and terminal portfolio rows.
-- [x] **S18-03 — React Accounts panel.** ✅ *Done 2026-05-08.* Added story panel, review rows, metrics, chart, summary tables, and full-year balance rows.
-- [x] **S18-04 — Stable dashboard handoff.** ✅ *Done 2026-05-08.* Kept full account schedules, legacy charts, print/PDF, and audit views in stable dashboard copy.
-- [x] **S18-05 — Tests and docs.** ✅ *Done 2026-05-08.* Added selector/smoke coverage and Sprint 18 documentation.
+- [x] **S19-01 — Navigation and tab contract.** ✅ *Done 2026-05-14.* Added `Household Resilience` as a first-class Results tab.
+- [x] **S19-02 — Survivor story selector.** ✅ *Done 2026-05-14.* Added runtime-only summary for readiness, survivor year, shortfall, funding, portfolio, and tax deltas.
+- [x] **S19-03 — Survivor review rows.** ✅ *Done 2026-05-14.* Added setup, income, funding, portfolio, tax, and stress follow-up review rows.
+- [x] **S19-04 — React Household Resilience panel.** ✅ *Done 2026-05-14.* Added story panel, metrics, review rows, and stable-dashboard fallback copy.
+- [x] **S19-05 — Cross-tab handoffs.** ✅ *Done 2026-05-14.* Kept compact survivor snapshots in Overview and Stress Tests and pointed fuller review to Household Resilience.
+- [x] **S19-06 — Tests and docs.** ✅ *Done 2026-05-14.* Added selector/smoke coverage and Sprint 19 documentation.
 
-### Sprint 18 Definition Of Done
+### Sprint 19 Definition Of Done
 
-- Accounts tab explains balance movement, active drawdowns, and terminal portfolio review items.
-- Account story output is runtime-only and derived from existing simulation rows.
+- Household Resilience explains survivor setup, income at risk, funding, portfolio, tax, and follow-up review items.
+- Survivor story output is runtime-only and derived from existing simulation rows.
 - Copy remains review-oriented, not advice.
-- Stable dashboard remains the full account audit/report fallback.
+- Stable dashboard remains the full survivor audit/report fallback.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 18: React Account Detail / Drawdown Parity
+
+**Complete 2026-05-08.** Deepened the React Accounts tab so users can understand account balance movement, drawdown sources, and terminal portfolio risk without using the stable dashboard for first-pass review.
+
+Sprint 18 checkpoint doc: [`docs/sprint_18_react_account_drawdown_parity.md`](docs/sprint_18_react_account_drawdown_parity.md).
 
 ### Sprint 17: React Tax Detail Parity
 

@@ -739,6 +739,7 @@ button.secondary,
 .accounts-results-panel,
 .taxes-results-panel,
 .stress-tests-panel,
+.household-resilience-panel,
 .assumptions-results-panel,
 .export-save-panel {
   display: grid;
@@ -1336,6 +1337,96 @@ button.secondary,
   background: #fff9ee;
 }
 
+.stress-scenario-panel,
+.stress-household-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.stress-scenario-panel h3,
+.stress-scenario-panel p,
+.stress-household-panel h3,
+.stress-household-panel p {
+  margin: 0;
+}
+
+.stress-scenario-panel .decision-panel,
+.stress-household-panel .decision-panel {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.survivor-story-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.survivor-story-panel h3,
+.survivor-story-panel p {
+  margin: 0;
+}
+
+.survivor-story-review,
+.survivor-story-needsInput,
+.survivor-story-notAvailable {
+  border-left-color: var(--amber);
+  background: #fff9ee;
+}
+
+.survivor-story-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
+.survivor-review-list {
+  display: grid;
+  gap: 10px;
+}
+
+.survivor-review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.34fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.survivor-review-row h3,
+.survivor-review-row p {
+  margin: 0;
+}
+
+.survivor-review-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.survivor-review-review {
+  border-left-color: var(--amber);
+}
+
+.survivor-review-watch {
+  border-left-color: var(--red);
+  background: #fff9ee;
+}
+
 .tax-story-panel {
   display: grid;
   gap: 12px;
@@ -1651,6 +1742,7 @@ button.secondary,
   .risk-evidence-list div,
   .recommended-checklist-item,
   .account-review-row,
+  .survivor-review-row,
   .stress-row,
   .tax-review-row {
     grid-template-columns: 1fr;

@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 18 is complete. Suggested Sprint 19 should be **React Survivor Detail Parity**.
+Sprint 19 is complete. Suggested Sprint 20 should be **React Results Readiness And Save Handoff Polish**.
 
-Goal: reduce the next stable-dashboard dependency by making household resilience and survivor outcomes easier to understand in React.
+Goal: tighten the end-of-results workflow now that Annual Detail, Stress Tests, Taxes, Accounts, and Household Resilience have deeper React preview surfaces.
 
-Candidate Sprint 19 slices:
+Candidate Sprint 20 slices:
 
-- Survivor story summary for current household projection.
-- Survivor comparison rows with plain-language evidence and review actions.
-- Clear links from Household Resilience to Annual Detail, Accounts, Taxes, and Stress Tests.
-- Stable dashboard fallback for full survivor audit schedules, print/PDF, and legacy reports.
+- Final review summary across the React result tabs.
+- Clear save/export readiness states for reviewed vs blocked plans.
+- Stable dashboard handoff copy for report, print/PDF, and audit workflows.
+- No persisted recommendation, checklist, or result UI state.
 
 ## Medium-Term Roadmap
 
@@ -65,7 +65,7 @@ Candidate Sprint 19 slices:
 - **Sprint 16 — React stress tests parity.** Deepen the Stress Tests tab with runtime-only baseline stress summary, evidence rows, review actions, and stable-dashboard handoff.
 - **Sprint 17 — React tax detail parity.** Complete 2026-05-08. Deepened the Taxes tab with runtime-only tax story, review rows, and stable-dashboard audit handoff.
 - **Sprint 18 — React account detail / drawdown parity.** Complete 2026-05-08. Made account balance and withdrawal movement easier to review in React without adding export/reporting or persisted UI state.
-- **Sprint 19 — React survivor detail parity.** Deepen Household Resilience with survivor story, comparison rows, and review handoffs while keeping full audit views in the stable dashboard.
+- **Sprint 19 — React survivor detail parity.** Complete 2026-05-14. Deepened Household Resilience with survivor story, comparison rows, and review handoffs while keeping full audit views in the stable dashboard.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

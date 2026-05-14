@@ -30,6 +30,8 @@ import {
   selectStressTestRows,
   selectStressTestSummary,
   selectSurvivorComparison,
+  selectSurvivorReviewRows,
+  selectSurvivorStorySummary,
   selectSurvivorViewSummary,
   selectTaxDetailRows,
   selectTaxPressureExplanation,
@@ -147,6 +149,7 @@ describe('result selectors', () => {
       'Accounts',
       'Taxes',
       'Stress Tests',
+      'Household Resilience',
       'Assumptions',
       'Export/Save'
     ]);
@@ -253,6 +256,38 @@ describe('result selectors', () => {
     expect(selectStressTestRows(fixture).find((row) => row.id === 'sourceReconciliation')).toMatchObject({
       severity: 'ok',
       detailArea: 'cashFlow'
+    });
+    const stressScenarioRows = selectScenarioComparisonRows(fixture, {
+      retireLater: withRows([{ bal_total: 492000 }, { bal_total: 480000 }]),
+      spendLessGogo: withRows([{ spending: 63000, totalAftaxYear: 63000, bal_total: 520000 }, { bal_total: 540000 }]),
+      delayBenefits: withRows([{ cpp_f: 0, oas_f: 0 }, { bal_total: 500000 }])
+    });
+    const couplePlan: V2PlanPayload = {
+      ...planFixture,
+      p2: {
+        ...planFixture.p2,
+        name: 'Morgan',
+        dob: 1964,
+        retireYear: 2028,
+        cpp65_monthly: 900,
+        oas_monthly: 742
+      },
+      assumptions: { ...planFixture.assumptions, p1DiesInSurvivor: 2035 }
+    };
+    const survivorStress = selectSurvivorComparison(
+      fixture,
+      withRows([{ bal_total: 490000 }, { bal_total: 470000, totalTaxYear: 5200 }]),
+      couplePlan
+    );
+    expect(stressScenarioRows).toHaveLength(3);
+    expect(stressScenarioRows.find((row) => row.id === 'spendLessGogo')).toMatchObject({
+      status: 'improves',
+      fundedThroughYear: 2029
+    });
+    expect(survivorStress).toMatchObject({
+      status: 'ready',
+      survivorYear: 2035,
+      spendingFundedYears: '2/2'
     });
     expect(selectProjectionMilestones(fixture).map((row) => row.label)).toEqual(['First year', 'Final year']);
     expect(selectProjectionMilestones(fixture)[0]).toMatchObject({ year: 2028, portfolio: 512960.825107529 });
@@ -580,5 +615,77 @@ describe('result selectors', () => {
     expect(recommended.recommendedCandidateId).toBe('baseline');
     expect(taxRow?.reasons).toContain('lowerLifetimeTax');
     expect(taxRow?.firstShortfallYear).toBe(2029);
+  });
+
+  it('builds Sprint 19 survivor story and review states without changing plan output', () => {
+    const couplePlan: V2PlanPayload = {
+      ...planFixture,
+      p2: {
+        ...planFixture.p2,
+        name: 'Morgan',
+        dob: 1964,
+        retireYear: 2028,
+        cpp65_monthly: 900,
+        oas_monthly: 742
+      },
+      assumptions: { ...planFixture.assumptions, p1DiesInSurvivor: 2029 }
+    };
+    const couplePlanMissingYear: V2PlanPayload = {
+      ...couplePlan,
+      assumptions: { ...couplePlan.assumptions, p1DiesInSurvivor: 0 }
+    };
+    const survivorWithShortfall = withRows([
+      { year: 2028, bal_total: 470000, totalTaxYear: 8000, shortfall: 0, grossIncome: 42000, cash_draw: 26000 },
+      { year: 2029, bal_total: 420000, totalTaxYear: 12000, shortfall: 5000, grossIncome: 38000, cash_draw: 20000 }
+    ]);
+
+    expect(selectSurvivorStorySummary(fixture, null, planFixture)).toMatchObject({
+      status: 'single',
+      readiness: 'Not applicable'
+    });
+    expect(selectSurvivorReviewRows(fixture, null, planFixture).find((row) => row.id === 'setup')).toMatchObject({
+      severity: 'ok',
+      detailArea: 'assumptions'
+    });
+    expect(selectSurvivorStorySummary(fixture, null, couplePlanMissingYear)).toMatchObject({
+      status: 'needsInput',
+      readiness: 'Needs survivor year'
+    });
+    expect(selectSurvivorReviewRows(fixture, null, couplePlanMissingYear).find((row) => row.id === 'setup')).toMatchObject({
+      severity: 'watch',
+      detailArea: 'assumptions'
+    });
+
+    const readyStory = selectSurvivorStorySummary(fixture, survivorWithShortfall, couplePlan);
+    const readyRows = selectSurvivorReviewRows(fixture, survivorWithShortfall, couplePlan);
+
+    expect(readyStory).toMatchObject({
+      status: 'watch',
+      survivorYear: 2029,
+      firstShortfallYear: 2029,
+      fundedThroughYear: 2028,
+      spendingFundedYears: '1/2'
+    });
+    expect(readyStory.endPortfolioDelta).toBeLessThan(0);
+    expect(readyStory.lifetimeTaxDelta).toBeGreaterThan(0);
+    expect(readyRows).toHaveLength(6);
+    expect(readyRows.find((row) => row.id === 'spendingFunding')).toMatchObject({
+      severity: 'watch',
+      detailArea: 'annualDetail'
+    });
+    expect(readyRows.find((row) => row.id === 'portfolioCushion')).toMatchObject({
+      severity: 'watch',
+      value: '-$80,000',
+      detailArea: 'accounts'
+    });
+    expect(readyRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({
+      severity: 'review',
+      detailArea: 'taxes'
+    });
+    expect(readyRows.find((row) => row.id === 'lifetimeTax')?.value.startsWith('+$')).toBe(true);
+    expect(readyRows.find((row) => row.id === 'stressFollowup')).toMatchObject({
+      detailArea: 'stressTests'
+    });
+    expect(Object.keys(couplePlan)).not.toContain('survivorStory');
   });
 });
