@@ -111,14 +111,14 @@ type BridgePreview = {
 };
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
-  { id: 'household', label: 'Household', helper: 'People, ages, retirement timing' },
-  { id: 'income', label: 'Income', helper: 'Salary, DB pensions, CPP, OAS' },
-  { id: 'accounts', label: 'Accounts', helper: 'RRSP, TFSA, LIF, non-registered, cash' },
-  { id: 'realEstate', label: 'Real Estate', helper: 'Primary home and downsize' },
-  { id: 'debts', label: 'Debts', helper: 'Mortgage and LOC cash-flow impact' },
-  { id: 'spending', label: 'Spending', helper: 'Lifestyle phases, one-offs, estate target' },
-  { id: 'assumptions', label: 'Assumptions', helper: 'Return, inflation, tax strategy choices' },
-  { id: 'review', label: 'Review', helper: 'Validate, save, generate results' }
+  { id: 'household', label: 'Household', helper: 'Who this plan supports' },
+  { id: 'income', label: 'Income', helper: 'Work, pensions, CPP, OAS' },
+  { id: 'accounts', label: 'Accounts', helper: 'Savings and investments' },
+  { id: 'realEstate', label: 'Real Estate', helper: 'Home sale or downsize cash' },
+  { id: 'debts', label: 'Debts', helper: 'Payments that affect spending room' },
+  { id: 'spending', label: 'Spending', helper: 'Lifestyle, one-offs, estate wishes' },
+  { id: 'assumptions', label: 'Assumptions', helper: 'Planning horizon and strategy choices' },
+  { id: 'review', label: 'Review', helper: 'Check, save, generate results' }
 ];
 
 const initialState: WorkspaceState = {
@@ -780,6 +780,7 @@ function AccountsPersonCard({
 
       <div className="field-section">
         <strong>Registered accounts</strong>
+        <p className="field-hint">Use current balances. RRSP/RRIF are taxable when withdrawn; LIRA/LIF are locked-in pension accounts.</p>
         <div className="field-row">
           <label className="field">
             <span>RRSP/RRIF balance</span>
@@ -805,6 +806,7 @@ function AccountsPersonCard({
         <div className="field-row">
           <label className="field">
             <span>LIRA balance</span>
+            <small>Locked-in money from a former pension that has not started LIF withdrawals.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -815,6 +817,7 @@ function AccountsPersonCard({
           </label>
           <label className="field">
             <span>LIF balance</span>
+            <small>Locked-in retirement income account after withdrawals have started.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -838,6 +841,7 @@ function AccountsPersonCard({
 
       <div className="field-section">
         <strong>TFSA</strong>
+        <p className="field-hint">TFSA withdrawals are tax-free in this plan and can help fund spending without increasing taxable income.</p>
         <div className="field-row">
           <label className="field">
             <span>TFSA balance</span>
@@ -886,6 +890,7 @@ function AccountsPersonCard({
 
       <div className="field-section">
         <strong>Non-registered</strong>
+        <p className="field-hint">Taxable investment accounts need an adjusted cost base so future capital gains are not overstated.</p>
         <div className="field-row">
           <label className="field">
             <span>Balance</span>
@@ -899,6 +904,7 @@ function AccountsPersonCard({
           </label>
           <label className="field">
             <span>Adjusted cost base</span>
+            <small>Usually the original cost of taxable investments, adjusted for purchases, sales, and reinvested distributions.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -945,10 +951,10 @@ function RealEstateStep({
   return (
     <div className="real-estate-form">
       <fieldset className="field-group single-column">
-        <legend>Primary residence / downsize</legend>
+        <legend>Home sale or downsizing</legend>
         <p>
-          Schema v2 safely supports only the net proceeds and year for a future primary-residence sale or downsize.
-          Current home value and second/vacation property records wait for a scoped schema update.
+          If selling or downsizing is part of the plan, enter the year and estimated cash left after selling costs,
+          moving costs, and buying the next home. Leave blank if the home is not expected to fund retirement spending.
         </p>
         <div className="field-row">
           <label className="field">
@@ -962,7 +968,8 @@ function RealEstateStep({
             />
           </label>
           <label className="field">
-            <span>Net proceeds</span>
+            <span>Cash added to retirement</span>
+            <small>Cash available to the plan after the sale and replacement-home decision.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -975,10 +982,10 @@ function RealEstateStep({
       </fieldset>
 
       <div className="validation-panel ok">
-        <strong>Deferred property detail</strong>
+        <strong>Real estate note</strong>
         <span>
-          Primary residence value, second/vacation property, ownership, and sale-cost detail are intentionally not
-          collected here because they do not fit the current v2 plan-file schema.
+          This planner currently uses the net cash from a future sale or downsize. Keep separate property appraisals,
+          ownership details, and sale-cost estimates with your detailed records.
         </span>
       </div>
     </div>
@@ -1126,10 +1133,15 @@ function SpendingEventsStep({
   return (
     <div className="spending-form">
       <fieldset className="field-group single-column">
-        <legend>Spending phases</legend>
+        <legend>Retirement lifestyle spending</legend>
+        <p>
+          Enter annual after-tax lifestyle spending for each phase. These are the numbers the Results page uses to
+          judge comfort, flexibility, and whether the plan is preserving more estate than intended.
+        </p>
         <div className="field-row three">
           <label className="field">
-            <span>Go-go annual</span>
+            <span>Early retirement spending</span>
+            <small>Travel, projects, hobbies, and active years after work stops.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1139,7 +1151,7 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>Go-go ends age</span>
+            <span>Early spending ends at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -1149,7 +1161,8 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>Slow-go annual</span>
+            <span>Later retirement spending</span>
+            <small>A steadier phase when travel or large discretionary spending may slow.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1161,7 +1174,7 @@ function SpendingEventsStep({
         </div>
         <div className="field-row">
           <label className="field">
-            <span>Slow-go ends age</span>
+            <span>Later spending ends at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -1171,7 +1184,8 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>No-go annual</span>
+            <span>Late-life spending</span>
+            <small>Ongoing lifestyle spending in later years; care costs should be added as one-time or separate estimates if needed.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1185,8 +1199,12 @@ function SpendingEventsStep({
 
       <fieldset className="field-group single-column">
         <legend>Estate goal</legend>
+        <p>
+          Optional: enter the money you intentionally want left at the end of the plan. Leave this at zero if you want
+          Results to flag a large projected estate as a choice to review.
+        </p>
         <label className="field full">
-          <span>Inheritance / bequest target</span>
+          <span>Money you want to leave</span>
           <input
             inputMode="numeric"
             type="number"
@@ -1199,6 +1217,10 @@ function SpendingEventsStep({
 
       <fieldset className="field-group single-column">
         <legend>One-time expenses</legend>
+        <p>
+          Add large goals or costs that do not repeat every year, such as travel, a vehicle, renovations, gifts, or
+          family support.
+        </p>
         <div className="event-list">
           {(plan.oneOffs || []).map((event, index) => (
             <div className="event-row" key={`${index}-${event.label || 'event'}`}>
@@ -1284,6 +1306,10 @@ function AssumptionsStep({
     <div className="assumptions-form">
       <fieldset className="field-group single-column">
         <legend>Plan years</legend>
+        <p>
+          Choose the first year to model, the retirement year to test, and the year the plan should support spending
+          through.
+        </p>
         <div className="field-row three">
           <label className="field">
             <span>Plan start</span>
@@ -1320,6 +1346,10 @@ function AssumptionsStep({
 
       <fieldset className="field-group single-column">
         <legend>Returns and inflation</legend>
+        <p>
+          These assumptions shape every projection. Use conservative long-term estimates rather than a best-case market
+          guess.
+        </p>
         <div className="field-row three">
           <label className="field">
             <span>Return %</span>
@@ -1356,8 +1386,13 @@ function AssumptionsStep({
 
       <fieldset className="field-group single-column">
         <legend>Strategy options</legend>
+        <p>
+          These are planning switches for tax and withdrawal timing. If unsure, leave the defaults and review the Results
+          tax and estate sections first.
+        </p>
         <label className="field full">
           <span>Withdrawal order</span>
+          <small>Controls which account type is drawn first in the preview.</small>
           <select
             value={plan.assumptions.withdrawalOrder || 'default'}
             onChange={(event) => updateAssumption('withdrawalOrder', event.target.value, 'text')}
@@ -1378,6 +1413,7 @@ function AssumptionsStep({
               onChange={(event) => updateAssumption('cppSharing', event.target.checked, 'boolean')}
             />
             <span>CPP sharing</span>
+            <small>For eligible couples, CPP sharing can shift taxable income between spouses.</small>
           </label>
           <label className={`toggle-row ${!coupleMode ? 'disabled' : ''}`}>
             <input
@@ -1387,10 +1423,12 @@ function AssumptionsStep({
               onChange={(event) => updateAssumption('youngerSpouseRrif', event.target.checked, 'boolean')}
             />
             <span>Use younger spouse age for RRIF minimum</span>
+            <small>Can lower required registered withdrawals when one spouse is younger.</small>
           </label>
           <label className={`toggle-row ${!coupleMode ? 'disabled' : ''}`}>
             <input checked={spousalRrspOn} disabled={!coupleMode} type="checkbox" onChange={(event) => toggleSpousalRrsp(event.target.checked)} />
             <span>Spousal RRSP attribution</span>
+            <small>Use only if spousal RRSP contributions affect withdrawal tax attribution.</small>
           </label>
         </div>
         {spousalRrspOn ? (
@@ -1416,8 +1454,12 @@ function AssumptionsStep({
 
       <fieldset className={`field-group single-column ${!coupleMode ? 'disabled' : ''}`} disabled={!coupleMode}>
         <legend>Survivor scenario</legend>
+        <p>
+          Optional for couples: choose a year to test whether the surviving spouse still has enough income and assets.
+          Use a year that would feel important to understand before relying on the plan.
+        </p>
         <label className="field full">
-          <span>Person 1 dies in year</span>
+          <span>Person 1 death year to test</span>
           <input
             inputMode="numeric"
             type="number"
@@ -1487,8 +1529,8 @@ function IncomeStep({
       <fieldset className={`field-group survivor-fields ${!person2Enabled ? 'disabled' : ''}`} disabled={!person2Enabled}>
         <legend>Person 2 survivor CPP</legend>
         <p>
-          Optional monthly survivor CPP estimates for the survivor scenario. These stay inactive for single-person
-          plans.
+          Optional monthly survivor CPP estimates for the survivor scenario. Use Service Canada or CPP survivor
+          estimates if available; otherwise leave blank and review survivor impact as an assumption.
         </p>
         <div className="field-row">
           <label className="field">
@@ -1521,7 +1563,7 @@ function IncomePersonCard({
   blankZero = false,
   disabled = false,
   heading,
-  helper = 'Salary, pension, CPP, and OAS inputs for this person.',
+  helper = 'Use annual employment and pension amounts plus monthly government benefit estimates. Leave items blank if they do not apply.',
   onChange,
   person
 }: {
@@ -1539,6 +1581,7 @@ function IncomePersonCard({
 
       <div className="field-section">
         <strong>Employment</strong>
+        <p className="field-hint">Use current employment income if this person is still working. Leave salary at zero if already retired.</p>
         <label className="field full">
           <span>Annual salary</span>
           <input
@@ -1575,6 +1618,7 @@ function IncomePersonCard({
 
       <div className="field-section">
         <strong>Defined benefit pension</strong>
+        <p className="field-hint">Some pensions include a temporary bridge before 65. Enter the before-65 and 65+ annual amounts from the pension estimate.</p>
         <div className="field-row">
           <label className="field">
             <span>Before 65 annual</span>
@@ -1623,9 +1667,11 @@ function IncomePersonCard({
 
       <div className="field-section">
         <strong>CPP and OAS estimates</strong>
+        <p className="field-hint">Use Service Canada estimates where possible. CPP fields are monthly amounts before tax; OAS is the estimated monthly benefit before any clawback.</p>
         <div className="field-row three">
           <label className="field">
             <span>CPP 65 monthly</span>
+            <small>Your estimated monthly CPP if started at 65.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1636,6 +1682,7 @@ function IncomePersonCard({
           </label>
           <label className="field">
             <span>CPP 70 monthly</span>
+            <small>Your estimated monthly CPP if delayed to 70.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1646,6 +1693,7 @@ function IncomePersonCard({
           </label>
           <label className="field">
             <span>OAS monthly</span>
+            <small>Use today’s monthly OAS estimate before income-tested recovery tax.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -1867,7 +1915,7 @@ function ReviewPanel({
       </div>
       <div className="actions">
         <button type="button" onClick={onResults} disabled={hasBlockers}>
-          Continue to results handoff
+          Continue to results
         </button>
         <button className="ghost" type="button" onClick={onDownload}>
           Save .plan.json
@@ -1918,7 +1966,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
       <ReviewSummaryCard
         title="Spending & events"
         rows={[
-          ['Go-go / slow-go / no-go', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
+          ['Early / later / late-life spending', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
           ['One-time expenses', String((plan.oneOffs || []).length)],
           ['Bequest target', formatMoney(plan.inheritance)]
         ]}
@@ -2280,7 +2328,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
     case 'accounts':
       return {
         summary: 'Accounts shows projected account bucket balances, start/end summaries, and a runtime balance chart.',
-        handoff: 'Use the stable dashboard for legacy account schedules, print/PDF, and any richer chart surfaces.'
+        handoff: 'Use the detailed report for complete account schedules, printable rows, and richer chart surfaces.'
       };
     case 'taxes':
       return {
@@ -4324,21 +4372,21 @@ function stepCopy(step: IntakeStepId, plan: V2PlanPayload): string {
   const p1Name = plan.p1.name || 'Person 1';
   switch (step) {
     case 'household':
-      return `Set household shape, names, ages, and retirement timing. Current primary person: ${p1Name}.`;
+      return `Tell the planner who this retirement plan supports. Current primary person: ${p1Name}.`;
     case 'income':
-      return 'Capture salary, pensions, CPP, OAS, and survivor income without overwhelming the first-time flow.';
+      return 'Add work income, pensions, CPP, OAS, and survivor estimates so Results can show how much spending is supported.';
     case 'accounts':
-      return 'Separate investment accounts from real estate and debts so balances, ownership, and tax treatment stay clear.';
+      return 'Add savings and investment balances by owner so withdrawals, taxes, and future estate values can be reviewed clearly.';
     case 'realEstate':
-      return 'Primary residence and downsizing map to v2 fields. Second/vacation property is deferred until a scoped schema update.';
+      return 'Enter expected cash from a future home sale or downsize only if it is part of the retirement plan.';
     case 'debts':
-      return 'Mortgage and LOC fields affect annual cash flow and should be visibly tied to the plan.';
+      return 'Add mortgage or line-of-credit payments that may reduce retirement spending room.';
     case 'spending':
-      return 'Lifestyle phases, one-time events, and inheritance goals are reviewed separately from account balances.';
+      return 'Tell the planner what lifestyle you want to fund, which large one-time goals matter, and whether leaving money is intentional.';
     case 'assumptions':
-      return 'Return, inflation, withdrawal order, CPP sharing, RRIF election, and spousal RRSP settings live here.';
+      return 'Set the planning horizon, return and inflation assumptions, and optional tax or withdrawal strategy choices.';
     case 'review':
-      return 'Review key inputs, save locally, and generate the results handoff.';
+      return 'Check the plan inputs, save your local plan file, and generate Results.';
     default:
       return '';
   }
@@ -4346,7 +4394,7 @@ function stepCopy(step: IntakeStepId, plan: V2PlanPayload): string {
 
 function stepStatusCopy(step: IntakeStepId): string {
   if (step === 'realEstate') {
-    return 'Sprint 5 scope: primary residence/downsize only. Second/vacation property waits for a scoped schema update.';
+    return 'Enter only the net cash you expect a future home sale or downsize to add to retirement spending.';
   }
-  return 'Field implementation follows this route shell; this step currently defines structure and expected scope.';
+  return 'This step is ready for review.';
 }

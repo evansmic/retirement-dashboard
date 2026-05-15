@@ -4,34 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 25: Estate Intent And Tax Efficiency
+## Active Sprint — Sprint 26: Intake UX And Help Text
 
-**Status:** Complete 2026-05-14 after verification.
+**Status:** Complete 2026-05-15 after verification.
 
-Goal: make estate wishes and tax-efficiency review visible in the consumer Results story without adding legal estate planning, new tax rules, or optimizer behaviour.
+Goal: make the guided intake easier for non-expert households by explaining complex Canadian retirement inputs in plain language.
 
-Non-scope: legal estate planning, full tax optimizer, new simulation math, schema v3, custom scenario builder, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
+Non-scope: new simulation math, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 25 checkpoint doc: [`docs/sprint_25_estate_intent_tax_efficiency.md`](docs/sprint_25_estate_intent_tax_efficiency.md).
+Sprint 26 checkpoint doc: [`docs/sprint_26_intake_ux_help_text.md`](docs/sprint_26_intake_ux_help_text.md).
 
-### Sprint 25 Candidate Implementation Tickets
+### Sprint 26 Candidate Implementation Tickets
 
-- [x] **S25-01 — Estate intent selector.** ✅ *Done 2026-05-15.* Added runtime-only estate/tax review states for cannot tell, needs intent, tax review, survivor review, and aligned.
-- [x] **S25-02 — Estate and tax-efficiency panel.** ✅ *Done 2026-05-15.* Added projected estate, estate goal, estate gap, lifetime tax, OAS recovery tax, and final registered assets to Overview.
-- [x] **S25-03 — Large estate intent prompt.** ✅ *Done 2026-05-15.* Reframed large projected estates without a goal as an intent question rather than an automatically better result.
-- [x] **S25-04 — Tax-efficiency prompts.** ✅ *Done 2026-05-15.* Surfaced OAS recovery tax, tax-pressure rows, and final registered balances as review prompts.
-- [x] **S25-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 25 documentation.
+- [x] **S26-01 — Spending and estate language.** ✅ *Done 2026-05-15.* Reframed go-go/slow-go/no-go as early, later, and late-life retirement spending, with estate goals described as intentional money left.
+- [x] **S26-02 — Income help text.** ✅ *Done 2026-05-15.* Added plain CPP/OAS, defined-benefit bridge, employment, and survivor CPP guidance.
+- [x] **S26-03 — Account help text.** ✅ *Done 2026-05-15.* Added RRSP/RRIF, LIRA/LIF, TFSA, non-registered, and adjusted-cost-base guidance.
+- [x] **S26-04 — Real estate/downsize copy.** ✅ *Done 2026-05-15.* Reframed home-sale input as net cash added to retirement spending and removed intake-facing schema language.
+- [x] **S26-05 — Assumptions and survivor help.** ✅ *Done 2026-05-15.* Added planning horizon, return/inflation, strategy-switch, and survivor scenario guidance.
+- [x] **S26-06 — Tests and docs.** ✅ *Done 2026-05-15.* Added Sprint 26 documentation and ran the standard verification suite.
 
-### Sprint 25 Definition Of Done
+### Sprint 26 Definition Of Done
 
-- Overview makes estate intent explicit when projected wealth left is large or meaningfully different from the entered goal.
-- Tax-efficiency review is framed as preserving household choices and reducing avoidable drag, not as advice.
-- Survivor estate impact remains visible for couple plans.
-- Output remains runtime-only and does not change simulation math.
+- Intake language explains why complex Canadian retirement inputs matter without exposing implementation scaffolding.
+- Spending phases read as consumer lifestyle phases, not planner jargon.
+- Real estate and estate-goal copy helps households decide whether these choices are intentional.
+- Output remains runtime-only and no simulation math changes.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 25: Estate Intent And Tax Efficiency
+
+**Complete 2026-05-15.** Made estate wishes and tax-efficiency review visible in the consumer Results story without adding legal estate planning, new tax rules, or optimizer behaviour.
+
+Sprint 25 checkpoint doc: [`docs/sprint_25_estate_intent_tax_efficiency.md`](docs/sprint_25_estate_intent_tax_efficiency.md).
 
 ### Sprint 24: Spending Capacity Layer
 

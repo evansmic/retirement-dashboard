@@ -535,9 +535,10 @@ button.secondary,
 }
 
 .toggle-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
-  align-items: center;
+  align-items: flex-start;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
@@ -547,13 +548,44 @@ button.secondary,
 }
 
 .toggle-row input {
+  flex: 0 0 auto;
+  grid-row: 1 / span 2;
+  margin-top: 2px;
   width: 18px;
   height: 18px;
   accent-color: var(--green);
 }
 
 .toggle-row span {
+  grid-column: 2;
   font-weight: 750;
+}
+
+.field small,
+.toggle-row small,
+.field-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.toggle-row small {
+  grid-column: 2;
+  margin-top: -6px;
+}
+
+.field small {
+  margin-top: -2px;
+}
+
+.field-hint {
+  margin: 4px 0 0;
+}
+
+.field-section .field-hint {
+  margin-bottom: 8px;
 }
 
 .toggle-row.disabled {

@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 25 is complete. Suggested Sprint 26 should focus on **Intake UX And Help Text**.
+Sprint 26 is complete. Suggested Sprint 27 should focus on **Scenario Choice Redesign**.
 
-Goal: make the guided intake easier for non-expert households by explaining complex Canadian retirement inputs in plain language.
+Goal: make scenario comparison feel like household decision-making rather than model diagnostics.
 
-Candidate Sprint 26 slices:
+Candidate Sprint 27 slices:
 
-- Add contextual help text for CPP/OAS estimates, DB bridge pensions, LIRA/LIF, non-registered ACB, survivor CPP, real estate/downsize, and estate goals.
-- Replace remaining schema/prototype language in intake with consumer planning language.
-- Clarify spending phases as early, later, and late-life retirement spending.
-- Keep the current v2 schema and avoid adding new saved fields unless separately scoped.
+- Reframe scenario cards as household choices: keep current plan, spend more/less early, work longer, delay benefits, and review estate trade-off.
+- Add "best for" and "trade-off" language to help households understand why a path may fit their goals.
+- Reduce technical deltas on first-read cards while preserving full comparison detail in the supporting table.
+- Keep current scenario rerun boundaries and avoid custom scenario builder scope.
 - Preserve schema v2, stable dashboard parity, and runtime-only recommendation output.
 
 ## Consumer Roadmap Sequence
@@ -84,6 +84,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 23 — Consumer results simplification.** Complete 2026-05-14. Consolidated advanced diagnostic result pages behind a Details hub so the top-level Results journey stays consumer-focused.
 - **Sprint 24 — Spending capacity layer.** Complete 2026-05-15. Added a first-pass spending capacity answer for flexible, balanced, tight, and repair-needed plans using existing scenario output.
 - **Sprint 25 — Estate intent and tax efficiency.** Complete 2026-05-15. Added a first-pass estate/tax-efficiency review connecting projected estate, estate goals, OAS recovery tax, final registered assets, and survivor review prompts.
+- **Sprint 26 — Intake UX and help text.** Complete 2026-05-15. Reframed guided intake language around household planning choices and added plain help for CPP/OAS, DB bridges, locked-in accounts, ACB, real estate/downsize, survivor assumptions, and estate goals.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
