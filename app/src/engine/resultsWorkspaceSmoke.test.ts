@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../data/defaultPlan';
 import { createPlanFile } from '../data/planFile';
-import { runSimulation } from './runSimulation';
+import { runResultsPreviewBundle } from './previewScenarios';
 import {
   resultsWorkspaceMap,
   selectAccountBucketChartSeries,
@@ -173,27 +173,14 @@ function blankSinglePlan(): V2PlanPayload {
   return plan;
 }
 
-function runPreview(plan: V2PlanPayload) {
-  return runSimulation(plan, {
-    cppAgeF: 65,
-    cppAgeM: 65,
-    oasAgeF: 65,
-    oasAgeM: 65,
-    meltdown: false,
-    returnRate: 0.05,
-    pensionSplit: false,
-    p1Dies: null,
-    withdrawalOrder: plan.assumptions.withdrawalOrder || 'default'
-  });
-}
-
 describe('Sprint 6 results workspace smoke', () => {
   it.each([
     ['Larry-style single plan', larryPlan],
     ['couple plan', couplePlan()],
     ['single-person blank Person 2 plan', blankSinglePlan()]
   ])('runs %s through result selectors and dashboard handoff packaging', (_label, plan) => {
-    const result = runPreview(plan);
+    const preview = runResultsPreviewBundle(plan);
+    const result = preview.result;
     const overview = selectOverviewMetrics(result);
     const annualRows = selectAnnualDetailRows(result);
     const annualSummary = selectAnnualDetailSummary(result);
@@ -220,14 +207,14 @@ describe('Sprint 6 results workspace smoke', () => {
     const decisionDetails = selectDecisionDetailRows(result, plan);
     const taxPressureRows = selectTaxPressureRows(result);
     const taxPressureExplanation = selectTaxPressureExplanation(result);
-    const scenarioCards = selectScenarioCards(result, plan);
-    const scenarioComparisonRows = selectScenarioComparisonRows(result, {});
+    const scenarioCards = selectScenarioCards(result, plan, preview.scenarios);
+    const scenarioComparisonRows = selectScenarioComparisonRows(result, preview.scenarios);
     const scenarioAssumptions = selectScenarioAssumptionRows(plan);
     const survivorSummary = selectSurvivorViewSummary(result, plan);
-    const survivorComparison = selectSurvivorComparison(result, null, plan);
-    const survivorStory = selectSurvivorStorySummary(result, null, plan);
-    const survivorReviewRows = selectSurvivorReviewRows(result, null, plan);
-    const recommendedPath = selectRecommendedPath(result, {}, null, plan);
+    const survivorComparison = selectSurvivorComparison(result, preview.survivor, plan);
+    const survivorStory = selectSurvivorStorySummary(result, preview.survivor, plan);
+    const survivorReviewRows = selectSurvivorReviewRows(result, preview.survivor, plan);
+    const recommendedPath = selectRecommendedPath(result, preview.scenarios, preview.survivor, plan);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -267,6 +254,7 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(taxPressureExplanation.headline.length).toBeGreaterThan(10);
     expect(scenarioCards).toHaveLength(3);
     expect(scenarioComparisonRows).toHaveLength(3);
+    expect(Object.keys(preview.scenarios).sort()).toEqual(['delayBenefits', 'retireLater', 'spendLessGogo']);
     expect(scenarioAssumptions).toHaveLength(3);
     expect(['single', 'ready', 'needsInput']).toContain(survivorSummary.status);
     expect(['single', 'needsInput', 'ready', 'notAvailable']).toContain(survivorComparison.status);

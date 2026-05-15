@@ -4,34 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 20: React Results Readiness And Save Handoff Polish
+## Active Sprint — Sprint 21: Engine Extraction Scenario And Survivor Runner
 
 **Status:** Complete 2026-05-14 after verification.
 
-Goal: tighten the end-of-results workflow so users can understand blockers, remaining review items, save readiness, and stable-dashboard handoff before keeping a local plan file.
+Goal: extract Results preview baseline, scenario, and survivor rerun orchestration from React into an engine-owned runtime helper so future optimizer work can use explicit plan-object boundaries.
 
-Non-scope: new engine rules, optimizer changes, export/reporting migration, schema v3, persisted readiness/recommendation/checklist output or UI state, account/cloud/advisor/AI scope, or print/PDF migration.
+Non-scope: new engine rules, optimizer changes, schema v3, persisted recommendation/readiness/scenario output, stable dashboard migration, account/cloud/advisor/AI scope, or print/PDF migration.
 
-Sprint 20 checkpoint doc: [`docs/sprint_20_react_results_readiness_save_handoff.md`](docs/sprint_20_react_results_readiness_save_handoff.md).
+Sprint 21 checkpoint doc: [`docs/sprint_21_engine_extraction_scenario_survivor_runner.md`](docs/sprint_21_engine_extraction_scenario_survivor_runner.md).
 
-### Sprint 20 Candidate Implementation Tickets
+### Sprint 21 Candidate Implementation Tickets
 
-- [x] **S20-01 — Readiness selector contract.** ✅ *Done 2026-05-14.* Added runtime-only summary and rows for blockers, watch risks, tax, household resilience, stable dashboard, and save.
-- [x] **S20-02 — Export/Save readiness panel.** ✅ *Done 2026-05-14.* Added final readiness handoff, save status, and stable-dashboard inspection copy.
-- [x] **S20-03 — Overview final readiness snapshot.** ✅ *Done 2026-05-14.* Added compact readiness review below the React result overview sections.
-- [x] **S20-04 — Runtime-only save boundary.** ✅ *Done 2026-05-14.* Kept readiness output out of `.plan.json` and preserved schema v2.
-- [x] **S20-05 — Tests and docs.** ✅ *Done 2026-05-14.* Added selector/smoke coverage and Sprint 20 documentation.
+- [x] **S21-01 — Preview runner boundary.** ✅ *Done 2026-05-14.* Added an engine helper for baseline, scenario, and survivor preview reruns.
+- [x] **S21-02 — Scenario transforms.** ✅ *Done 2026-05-14.* Extracted retire-later, spend-less, and delay-benefits runtime transforms.
+- [x] **S21-03 — Survivor preview gating.** ✅ *Done 2026-05-14.* Kept survivor reruns bounded to two-person plans with a survivor year.
+- [x] **S21-04 — React bridge hookup.** ✅ *Done 2026-05-14.* Replaced inline rerun orchestration in `App.tsx` with the engine preview bundle.
+- [x] **S21-05 — Tests, probe, and docs.** ✅ *Done 2026-05-14.* Added helper tests, smoke coverage, extraction probe, and Sprint 21 documentation.
 
-### Sprint 20 Definition Of Done
+### Sprint 21 Definition Of Done
 
-- Export/Save explains blocker, review, stable-dashboard, and local-save readiness.
-- Readiness output is runtime-only and derived from existing recommendation/checklist state.
-- Copy remains review-oriented, not advice.
-- Stable dashboard remains the full audit/report fallback.
+- React no longer constructs Results scenario or survivor reruns inline.
+- The engine helper returns the same `{ result, scenarios, survivor }` bundle shape.
+- Scenario and survivor output remains runtime-only.
+- Stable dashboard parity and fallback ownership remain unchanged.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 20: React Results Readiness And Save Handoff Polish
+
+**Complete 2026-05-14.** Tightened the end-of-results workflow so users can understand blockers, remaining review items, save readiness, and stable-dashboard handoff before keeping a local plan file.
+
+Sprint 20 checkpoint doc: [`docs/sprint_20_react_results_readiness_save_handoff.md`](docs/sprint_20_react_results_readiness_save_handoff.md).
 
 ### Sprint 19: React Survivor Detail Parity
 

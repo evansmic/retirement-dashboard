@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 20 is complete. Suggested Sprint 21 should be **Engine Extraction Continuation**.
+Sprint 21 is complete. Suggested Sprint 22 should continue **Engine Extraction Continuation**.
 
-Goal: continue pulling scenario and stress execution behind explicit plan-object boundaries so future optimizer work does not depend on React UI orchestration or legacy dashboard globals.
+Goal: continue pulling stress and readiness execution behind explicit plan-object boundaries so future optimizer work does not depend on React UI orchestration or legacy dashboard globals.
 
-Candidate Sprint 21 slices:
+Candidate Sprint 22 slices:
 
-- Extract bounded scenario rerun orchestration from `App.tsx` into an engine helper.
-- Extract survivor preview runner boundary beside the scenario runner.
-- Add parity probes for scenario and survivor helper output.
+- Extract bounded stress/readiness preview assembly behind an engine helper.
+- Move selected-path evidence bundle construction beside the scenario runner.
+- Add parity probes for recommended-path helper output.
 - Preserve schema v2, stable dashboard parity, and runtime-only recommendation output.
 
 ## Medium-Term Roadmap
@@ -67,6 +67,7 @@ Candidate Sprint 21 slices:
 - **Sprint 18 — React account detail / drawdown parity.** Complete 2026-05-08. Made account balance and withdrawal movement easier to review in React without adding export/reporting or persisted UI state.
 - **Sprint 19 — React survivor detail parity.** Complete 2026-05-14. Deepened Household Resilience with survivor story, comparison rows, and review handoffs while keeping full audit views in the stable dashboard.
 - **Sprint 20 — React results readiness and save handoff polish.** Complete 2026-05-14. Added runtime-only final readiness rows and clearer Export/Save handoff without persisting result state.
+- **Sprint 21 — Engine extraction scenario and survivor runner.** Complete 2026-05-14. Moved Results preview baseline, scenario, and survivor reruns behind an engine-owned runtime helper.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

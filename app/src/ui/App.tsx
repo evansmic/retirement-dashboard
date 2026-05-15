@@ -60,6 +60,7 @@ import {
   selectTaxSummaryMetrics
 } from '../engine/resultSelectors';
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
+import type { PreviewScenarioResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -100,7 +101,7 @@ type WorkspaceAction =
 
 type BridgePreview = {
   result: SimulationResult | null;
-  scenarios: Partial<Record<'retireLater' | 'spendLessGogo' | 'delayBenefits', SimulationResult>>;
+  scenarios: PreviewScenarioResults;
   survivor: SimulationResult | null;
   error: string;
   loading: boolean;
@@ -309,39 +310,10 @@ export function App() {
     }
 
     setBridgePreview((current) => ({ ...current, loading: true, error: '' }));
-    import('../engine/runSimulation')
-      .then(({ runSimulation }) => {
-        const baselineConfig = {
-          cppAgeF: 65,
-          cppAgeM: 65,
-          oasAgeF: 65,
-          oasAgeM: 65,
-          meltdown: false,
-          returnRate: 0.05,
-          pensionSplit: false,
-          p1Dies: null,
-          withdrawalOrder: plan.assumptions.withdrawalOrder || 'default'
-        } as const;
-        const result = runSimulation(plan, baselineConfig);
-        const retireLaterPlan = extractPlanPayload(plan);
-        const retireLaterYear = (retireLaterPlan.assumptions.retireYear || retireLaterPlan.p1.retireYear || 0) + 2;
-        if (retireLaterYear > 2) retireLaterPlan.assumptions.retireYear = retireLaterYear;
-        if (retireLaterPlan.p1.retireYear) retireLaterPlan.p1.retireYear += 2;
-        if (!p2LooksBlank(retireLaterPlan.p2) && retireLaterPlan.p2.retireYear) retireLaterPlan.p2.retireYear += 2;
-
-        const spendLessPlan = extractPlanPayload(plan);
-        spendLessPlan.spending.gogo = Math.round((spendLessPlan.spending.gogo || 0) * 0.9);
-
-        const scenarios = {
-          retireLater: runSimulation(retireLaterPlan, baselineConfig),
-          spendLessGogo: runSimulation(spendLessPlan, baselineConfig),
-          delayBenefits: runSimulation(plan, { ...baselineConfig, cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 })
-        };
-        const survivor =
-          !p2LooksBlank(plan.p2) && plan.assumptions.p1DiesInSurvivor
-            ? runSimulation(plan, { ...baselineConfig, p1Dies: plan.assumptions.p1DiesInSurvivor })
-            : null;
-        if (!cancelled) setBridgePreview({ result, scenarios, survivor, error: '', loading: false });
+    import('../engine/previewScenarios')
+      .then(({ runResultsPreviewBundle }) => {
+        const preview = runResultsPreviewBundle(plan);
+        if (!cancelled) setBridgePreview({ ...preview, error: '', loading: false });
       })
       .catch((err) => {
         if (!cancelled) {
