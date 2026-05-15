@@ -40,16 +40,28 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 21 is complete. Suggested Sprint 22 should continue **Engine Extraction Continuation**.
+Sprint 23 is complete. Suggested Sprint 24 should focus on the **Spending Capacity Layer**.
 
-Goal: continue pulling stress and readiness execution behind explicit plan-object boundaries so future optimizer work does not depend on React UI orchestration or legacy dashboard globals.
+Goal: answer the next consumer question directly: whether the household can spend more, needs to spend less, or should set a deliberate estate goal before optimizing lifestyle.
 
-Candidate Sprint 22 slices:
+Candidate Sprint 24 slices:
 
-- Extract bounded stress/readiness preview assembly behind an engine helper.
-- Move selected-path evidence bundle construction beside the scenario runner.
-- Add parity probes for recommended-path helper output.
+- Add a bounded sustainable-spending selector using existing scenario output and estate-heavy posture.
+- Show current early/later/late-life spending beside a plain-language spending capacity read.
+- Distinguish underspending, balanced spending, tight spending, and overspending.
+- Explain estate trade-offs when spending more would still leave a large projected balance.
 - Preserve schema v2, stable dashboard parity, and runtime-only recommendation output.
+
+## Consumer Roadmap Sequence
+
+Near-term product work should prioritize interpretation and journey simplification before adding more modelling surface:
+
+1. **Sprint 23 — Consumer results simplification.** Hide advanced diagnostics behind a Details path while keeping them available for deeper review.
+2. **Sprint 24 — Spending capacity layer.** Answer "How much can I spend?" and identify underspending, balanced spending, tight plans, and repair amounts.
+3. **Sprint 25 — Estate intent and tax efficiency.** Make estate wishes explicit and connect projected estate, registered assets, OAS clawback, giving, and later-life tax to household choices.
+4. **Sprint 26 — Intake UX and help text.** Add plain guidance for CPP/OAS, DB bridge pensions, LIRA/LIF, ACB, real estate, survivor assumptions, and estate goals.
+5. **Sprint 27 — Scenario choice redesign.** Reframe scenario cards as household choices with "best for" language and fewer technical deltas.
+6. **Sprint 28+ — Optimizer prep and optimizer.** Build spending, retirement timing, CPP/OAS timing, withdrawal order, tax-aware drawdown, estate target, and downsizing optimization after the answer model is clear.
 
 ## Medium-Term Roadmap
 
@@ -68,6 +80,8 @@ Candidate Sprint 22 slices:
 - **Sprint 19 — React survivor detail parity.** Complete 2026-05-14. Deepened Household Resilience with survivor story, comparison rows, and review handoffs while keeping full audit views in the stable dashboard.
 - **Sprint 20 — React results readiness and save handoff polish.** Complete 2026-05-14. Added runtime-only final readiness rows and clearer Export/Save handoff without persisting result state.
 - **Sprint 21 — Engine extraction scenario and survivor runner.** Complete 2026-05-14. Moved Results preview baseline, scenario, and survivor reruns behind an engine-owned runtime helper.
+- **Sprint 22 — Consumer retirement answer layer.** Complete 2026-05-14. Added a first Results answer for retirement readiness, spending fit, estate intent, and next review actions while softening estate-heavy recommendations.
+- **Sprint 23 — Consumer results simplification.** Complete 2026-05-14. Consolidated advanced diagnostic result pages behind a Details hub so the top-level Results journey stays consumer-focused.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

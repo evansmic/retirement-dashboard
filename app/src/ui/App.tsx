@@ -40,6 +40,7 @@ import {
   selectReconciliationDiagnostics,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
+  selectRetirementAnswerSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -211,7 +212,20 @@ function formatPercent(value: number | undefined): string {
 }
 
 function resultsSectionTitle(section: ResultsWorkspaceSection): string {
-  return resultsWorkspaceMap.find((item) => item.id === section)?.label || 'Overview';
+  const titles: Record<ResultsWorkspaceSection, string> = {
+    overview: 'Overview',
+    annualDetail: 'Year-by-year',
+    cashFlow: 'Money Flow',
+    incomeSources: 'Income',
+    accounts: 'Accounts',
+    taxes: 'Taxes',
+    stressTests: 'Risks',
+    householdResilience: 'Survivor Impact',
+    assumptions: 'Assumptions',
+    details: 'Details',
+    exportSave: 'Save & print'
+  };
+  return titles[section] || 'Overview';
 }
 
 function sumPeople(plan: V2PlanPayload, field: keyof PlanPerson): number {
@@ -395,15 +409,15 @@ export function App() {
     <main className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">Sprint 5 React preview</p>
+          <p className="eyebrow">Local retirement planning</p>
           <h1>Canadian Retirement Planner</h1>
         </div>
         <nav className="top-actions" aria-label="Stable app links">
           <a className="button secondary" href={stableIntakeUrl()}>
-            Open stable intake
+            Open classic intake
           </a>
           <a className="button secondary" href={stableDashboardUrl()}>
-            Open stable dashboard
+            Open detailed report
           </a>
         </nav>
       </header>
@@ -446,8 +460,8 @@ export function App() {
             type="button"
             onClick={() => dispatch({ type: 'setView', view: plan ? 'results' : 'start' })}
           >
-            <span>Results handoff</span>
-            <small>Preview and stable dashboard</small>
+            <span>Results</span>
+            <small>Answer and report</small>
           </button>
         </aside>
 
@@ -525,8 +539,8 @@ function StartPanel({
         <p className="eyebrow">Home / Start</p>
         <h2>Build a local retirement plan</h2>
         <p>
-          Start a new plan or open a `.plan.json` file from your device. This preview uses the hybrid model:
-          guided setup first, then a workspace for review and results handoff.
+          Start a new plan or open an editable plan file from your device. Your information stays local while the planner
+          helps you review retirement readiness, spending fit, taxes, and estate intent.
         </p>
         <div className="actions">
           <button type="button" onClick={onNewPlan}>
@@ -544,13 +558,13 @@ function StartPanel({
         <p className="eyebrow">Local-first boundary</p>
         <h3>No account. No upload. No cloud sync.</h3>
         <p>
-          Durable save remains a user-controlled `.plan.json` file. The stable static app stays available while the
-          guided intake reaches parity.
+          Durable save remains a user-controlled plan file. The detailed report stays available for printable charts and
+          complete annual tables.
         </p>
         <ul className="clean-list">
           <li>Ontario 2026 tax assumptions</li>
-          <li>Runtime dashboard schema stays at v2</li>
-          <li>ProjectionLab-inspired workflow, not account infrastructure</li>
+          <li>Editable local plan file</li>
+          <li>No account infrastructure required</li>
         </ul>
       </div>
     </section>
@@ -1707,7 +1721,7 @@ function HouseholdStep({
       <div className="person-grid">
         <PersonCard
           heading="Person 1"
-          helper="Primary person for retirement timing and dashboard handoff."
+          helper="Primary person for retirement timing and household planning."
           person={plan.p1}
           onChange={(field, value, numeric) => updatePerson('p1', field, value, numeric)}
         />
@@ -1999,6 +2013,7 @@ function ResultsHandoffPanel({
   const survivorStory = selectSurvivorStorySummary(result, survivor, plan);
   const survivorReviewRows = selectSurvivorReviewRows(result, survivor, plan);
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
+  const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -2012,8 +2027,10 @@ function ResultsHandoffPanel({
     'stressTests',
     'householdResilience',
     'assumptions',
+    'details',
     'exportSave'
   ];
+  const advancedSections: ResultsWorkspaceSection[] = ['annualDetail', 'cashFlow', 'incomeSources', 'accounts', 'assumptions'];
   const sectionTitle = resultsSectionTitle(activeSection);
   const intro = resultsSectionIntro(activeSection);
   return (
@@ -2021,9 +2038,10 @@ function ResultsHandoffPanel({
       <div className="results-nav" aria-label="Results workspace sections">
         {resultsWorkspaceMap.map((item) => {
           const implemented = implementedSections.includes(item.id);
+          const active = item.id === activeSection || (item.id === 'details' && advancedSections.includes(activeSection));
           return (
             <button
-              className={item.id === activeSection ? 'active' : ''}
+              className={active ? 'active' : ''}
               key={item.id}
               type="button"
               onClick={() => onSection(item.id)}
@@ -2045,6 +2063,14 @@ function ResultsHandoffPanel({
 
         {activeSection === 'cashFlow' ? (
           <CashFlowResultsPanel diagnostics={reconciliationDiagnostics} loading={loading} rows={cashFlowRows} />
+        ) : activeSection === 'details' ? (
+          <DetailsResultsPanel
+            loading={loading}
+            onSection={onSection}
+            overview={overview}
+            readinessSummary={readinessSummary}
+            validation={validation}
+          />
         ) : activeSection === 'annualDetail' ? (
           <AnnualDetailPanel
             loading={loading}
@@ -2090,6 +2116,8 @@ function ResultsHandoffPanel({
           <IncomeSourcesPanel loading={loading} rows={incomeSourceRows} />
         ) : activeSection === 'overview' ? (
           <>
+            <RetirementAnswerPanel answer={retirementAnswer} loading={loading} />
+
             <div className="summary-grid">
               <Metric
                 label="Projection"
@@ -2101,8 +2129,8 @@ function ResultsHandoffPanel({
                       : '-'
                 }
               />
-              <Metric label="End portfolio" value={formatMoney(overview.endPortfolio)} />
-              <Metric label="Dashboard schema" value="v2" />
+              <Metric label="Projected money left" value={formatMoney(overview.endPortfolio)} />
+              <Metric label="Early spending target" value={formatMoney(retirementAnswer.plannedEarlySpending)} />
             </div>
 
             <RecommendedPathPanel loading={loading} summary={recommendedPath} />
@@ -2176,7 +2204,7 @@ function ResultsHandoffPanel({
             <ScenarioCardsPanel cards={scenarioCards} />
             <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
             <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
-            <div className="result-section-label">Household Resilience</div>
+            <div className="result-section-label">Survivor Impact</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
             <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
           </>
@@ -2186,10 +2214,10 @@ function ResultsHandoffPanel({
 
         {reconciliationWarning ? (
           <div className="validation-panel">
-            <strong>Source reconciliation warning</strong>
+            <strong>Money-in / money-out check</strong>
             <span>
-              First-year funding does not reconcile cleanly to after-tax spending. Use the stable dashboard before
-              relying on this preview.
+              First-year funding does not reconcile cleanly to after-tax spending. Open the detailed report before
+              relying on this plan.
             </span>
           </div>
         ) : null}
@@ -2207,10 +2235,10 @@ function ResultsHandoffPanel({
             href={hasBlockers ? undefined : stableDashboardUrlForPlan(extractPlanPayload(plan))}
             aria-disabled={hasBlockers}
           >
-            Open stable dashboard
+            Open detailed report
           </a>
           <button className="ghost" type="button" onClick={onDownload}>
-            Save .plan.json
+            Save editable plan
           </button>
         </div>
       </div>
@@ -2219,29 +2247,29 @@ function ResultsHandoffPanel({
 }
 
 function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: string; handoff: string } {
-  const stableHandoff = 'Use the stable dashboard for print/PDF, legacy audit views, and any detail not yet migrated to React.';
+  const stableHandoff = 'Use the detailed report for printable charts, annual tables, and deeper tax or account detail.';
   switch (section) {
     case 'overview':
       return {
         summary:
-          'Overview explains the current plan, recommended preview path, confidence checks, scenario comparisons, and household resilience in React.',
+          'Overview starts with the retirement answer: whether the plan appears supportable, how spending fits, what estate choices may matter, and what to review next.',
         handoff: stableHandoff
       };
     case 'annualDetail':
       return {
-        summary: 'Annual Detail shows the full year-by-year projection with runtime charts and view controls.',
-        handoff: 'Use the stable dashboard for print/PDF and legacy audit surfaces that still sit outside the React table.'
+        summary: 'Year-by-year detail shows the projection rows behind the retirement answer.',
+        handoff: 'Use the detailed report when you want printable charts and complete annual schedules.'
       };
     case 'cashFlow':
       return {
-        summary: 'Cash Flow reconciles annual after-tax spending to income, withdrawals, cash wedge funding, other inflows, and tax.',
-        handoff: 'Use the stable dashboard when you need the older complete cash-flow audit surface beside the React checks.'
+        summary: 'Money Flow checks whether spending can be traced to income, withdrawals, cash funding, other inflows, and tax.',
+        handoff: 'Use the detailed report when you need complete money-flow rows.'
       };
     case 'incomeSources':
       return {
         summary:
-          'Income Sources groups taxable income, benefits, registered withdrawals, flexible withdrawals, cash wedge funding, and other inflows.',
-        handoff: 'Use the stable dashboard for legacy source schedules or report-style inspection.'
+          'Income groups salary, pensions, benefits, registered withdrawals, flexible withdrawals, cash funding, and other inflows.',
+        handoff: 'Use the detailed report for complete income schedules.'
       };
     case 'accounts':
       return {
@@ -2250,18 +2278,23 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'taxes':
       return {
-        summary: 'Taxes summarizes taxable income, annual tax, effective rates, and OAS clawback from the engine rows.',
-        handoff: 'Use the stable dashboard for full tax schedules, reporting, and legacy audit views.'
+        summary: 'Taxes shows where tax pressure appears and where timing choices may preserve more flexibility.',
+        handoff: 'Use the detailed report for full tax schedules and printable rows.'
       };
     case 'stressTests':
       return {
-        summary: 'Stress Tests combines baseline risk indicators, bounded scenario reruns, and household resilience detail in React.',
-        handoff: 'Use the stable dashboard for full Monte Carlo, historical sequence, legacy charts, audit schedules, and print/PDF stress surfaces.'
+        summary: 'Risks shows what could change the retirement answer: spending, timing, taxes, markets, and survivor impact.',
+        handoff: 'Use the detailed report for full stress tables and printable charts.'
       };
     case 'householdResilience':
       return {
-        summary: 'Household Resilience compares the baseline projection with the survivor preview for two-person plans.',
-        handoff: 'Use the stable dashboard for full survivor audit schedules, legacy charts, print/PDF, and report-style review.'
+        summary: 'Survivor Impact compares the household plan with the survivor preview for two-person plans.',
+        handoff: 'Use the detailed report for full survivor schedules and printable detail.'
+      };
+    case 'details':
+      return {
+        summary: 'Details keeps the advanced tables and assumptions available without making them the first thing a household has to understand.',
+        handoff: 'Use these views when a review action asks for deeper annual, money-flow, income, account, or assumption detail.'
       };
     case 'assumptions':
       return {
@@ -2270,8 +2303,8 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'exportSave':
       return {
-        summary: 'Export/Save keeps the local-first workflow explicit with a normalized v2 plan file and dashboard handoff.',
-        handoff: 'No account, cloud sync, or persisted React result state is added here.'
+        summary: 'Save & print keeps your editable plan file local and points to the printable detailed report.',
+        handoff: 'No account or cloud sync is required.'
       };
     default:
       return {
@@ -2279,6 +2312,155 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
         handoff: stableHandoff
       };
   }
+}
+
+function RetirementAnswerPanel({
+  answer,
+  loading
+}: {
+  answer: ReturnType<typeof selectRetirementAnswerSummary>;
+  loading: boolean;
+}) {
+  return (
+    <section className={`retirement-answer-panel retirement-answer-${answer.status}`}>
+      <div className="retirement-answer-lede">
+        <p className="eyebrow">Can I retire?</p>
+        <h3>{loading ? 'Calculating retirement answer' : answer.label}</h3>
+        <p>{answer.headline}</p>
+        <p>{answer.detail}</p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric
+          label="Funded through"
+          value={answer.fundedThroughYear ? String(answer.fundedThroughYear) : loading ? 'Calculating' : '-'}
+        />
+        <Metric label="Planned early spending" value={formatMoney(answer.plannedEarlySpending)} />
+        <Metric label="Projected money left" value={formatMoney(answer.projectedMoneyLeft)} />
+      </div>
+
+      <div className="retirement-answer-grid">
+        <section>
+          <h4>Spending fit</h4>
+          <strong>{answer.spendingHeadline}</strong>
+          <p>{answer.spendingDetail}</p>
+        </section>
+        <section>
+          <h4>Estate intent</h4>
+          <strong>{answer.estateHeadline}</strong>
+          <p>{answer.estateDetail}</p>
+        </section>
+      </div>
+
+      <section className="retirement-actions">
+        <h4>What to review next</h4>
+        <div>
+          {answer.actions.map((action) => (
+            <article key={action.id}>
+              <strong>{action.label}</strong>
+              <span>{action.detail}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function DetailsResultsPanel({
+  loading,
+  onSection,
+  overview,
+  readinessSummary,
+  validation
+}: {
+  loading: boolean;
+  onSection: (section: ResultsWorkspaceSection) => void;
+  overview: ReturnType<typeof selectOverviewMetrics>;
+  readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
+  validation: PlanValidationResult | null;
+}) {
+  const detailCards: Array<{
+    id: ResultsWorkspaceSection;
+    title: string;
+    eyebrow: string;
+    detail: string;
+    metric: string;
+  }> = [
+    {
+      id: 'annualDetail',
+      title: 'Year-by-year projection',
+      eyebrow: 'Annual table',
+      detail: 'Inspect spending, tax, withdrawals, shortfalls, and balances for each projection year.',
+      metric:
+        overview.firstYear && overview.lastYear
+          ? `${overview.firstYear}-${overview.lastYear}`
+          : loading
+            ? 'Calculating'
+            : '-'
+    },
+    {
+      id: 'cashFlow',
+      title: 'Money-in / money-out check',
+      eyebrow: 'Money Flow',
+      detail: 'Trace whether spending can be explained by income, withdrawals, cash funding, other inflows, and tax.',
+      metric: overview.firstYearFundingGap ? formatSignedMoney(overview.firstYearFundingGap) : '$0'
+    },
+    {
+      id: 'incomeSources',
+      title: 'Income sources',
+      eyebrow: 'Income',
+      detail: 'Review salary, pensions, CPP/OAS, registered withdrawals, flexible withdrawals, and cash funding.',
+      metric: formatMoney(overview.firstYearFunding)
+    },
+    {
+      id: 'accounts',
+      title: 'Account balances',
+      eyebrow: 'Accounts',
+      detail: 'Review account buckets, drawdown movement, projected money left, and estate-related balance questions.',
+      metric: formatMoney(overview.endPortfolio)
+    },
+    {
+      id: 'assumptions',
+      title: 'Plan assumptions',
+      eyebrow: 'Inputs',
+      detail: 'Review retirement timing, spending phases, return assumptions, survivor year, and local plan settings.',
+      metric: validation?.canGenerate === false ? 'Needs input' : 'Ready'
+    }
+  ];
+
+  return (
+    <div className="details-results-panel">
+      <section className="result-card details-lede">
+        <p className="eyebrow">Advanced detail</p>
+        <h3>Keep the answer simple, then open detail when needed.</h3>
+        <p>
+          The main Results pages are meant to help a household understand retirement readiness, risks, taxes, survivor
+          impact, and next actions. These detail views stay available for deeper review without crowding the first
+          answer.
+        </p>
+        <div className="summary-grid">
+          <Metric label="Projection" value={overview.firstYear && overview.lastYear ? `${overview.firstYear}-${overview.lastYear}` : loading ? 'Calculating' : '-'} />
+          <Metric label="Projected money left" value={formatMoney(overview.endPortfolio)} />
+          <Metric label="Save readiness" value={readinessSummary.saveStatus} />
+        </div>
+      </section>
+
+      <div className="details-card-grid">
+        {detailCards.map((card) => (
+          <article className="details-card" key={card.id}>
+            <p className="eyebrow">{card.eyebrow}</p>
+            <h3>{card.title}</h3>
+            <p>{card.detail}</p>
+            <strong>{card.metric}</strong>
+            <button className="ghost" type="button" onClick={() => onSection(card.id)}>
+              Open {card.title}
+            </button>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function RecommendedPathPanel({
@@ -2296,8 +2478,8 @@ function RecommendedPathPanel({
   return (
     <section className={`recommended-path-panel ${summary.recommendedCandidateId ? '' : 'watch-card'}`}>
       <div>
-        <p className="eyebrow">Recommended path</p>
-        <h3>{loading ? 'Calculating strongest preview candidate' : summary.recommendedLabel}</h3>
+        <p className="eyebrow">Suggested plan to review</p>
+        <h3>{loading ? 'Calculating plan choices' : summary.recommendedLabel}</h3>
         <p>{summary.headline}</p>
       </div>
 
@@ -2311,7 +2493,7 @@ function RecommendedPathPanel({
 
       <div className="stress-context-panel">
         <div>
-          <p className="eyebrow">Selected-path stress context</p>
+          <p className="eyebrow">What this choice is tested against</p>
           <h3>{summary.stressContext.candidateLabel}</h3>
           <p>{summary.stressContext.summary}</p>
         </div>
@@ -2352,7 +2534,7 @@ function RecommendedPathPanel({
       </div>
 
       <section className="result-card break-plan-panel">
-        <h3>What could break this plan?</h3>
+        <h3>What could change this answer?</h3>
         <div className="break-risk-layout">
           <div className="break-risk-list" role="list">
             {summary.breakRisks.map((risk) => (
@@ -2419,8 +2601,8 @@ function RecommendedPathPanel({
         ))}
       </div>
       <p className="table-note">
-        This is a bounded preview ranking with a runtime-only confidence layer, not a full optimizer or financial advice.
-        Open the stable dashboard for complete annual detail before acting on a path.
+        This is a first-pass planning comparison, not financial advice or a full optimizer. Open the detailed report for
+        complete annual detail before acting on a path.
       </p>
     </section>
   );
@@ -3351,10 +3533,6 @@ function ExportSavePanel({
           <h3>Local plan file</h3>
           <dl className="result-ledger">
             <div>
-              <dt>Schema</dt>
-              <dd>v{plan.schemaVersion}</dd>
-            </div>
-            <div>
               <dt>Plan title</dt>
               <dd>{plan.title || 'Not named yet'}</dd>
             </div>
@@ -3369,22 +3547,22 @@ function ExportSavePanel({
           </dl>
           <p>{readinessSummary.detail}</p>
           <button className="ghost" type="button" onClick={onDownload} disabled={readinessSummary.saveStatus === 'blocked'}>
-            Save .plan.json
+            Save editable plan
           </button>
         </section>
 
         <section className="result-card">
-          <h3>Dashboard fallback</h3>
+          <h3>Detailed report</h3>
           <p>
             {readinessSummary.stableDashboardHandoff} Use it to inspect any confidence, readiness, or break-plan item
-            before relying on the React preview.
+            before relying on the plan.
           </p>
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}
             href={hasBlockers ? undefined : stableDashboardUrlForPlan(extractPlanPayload(plan))}
             aria-disabled={hasBlockers}
           >
-            Open stable dashboard
+            Open detailed report
           </a>
         </section>
       </div>

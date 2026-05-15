@@ -23,6 +23,7 @@ import {
   selectReconciliationDiagnostics,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
+  selectRetirementAnswerSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -215,6 +216,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const survivorStory = selectSurvivorStorySummary(result, preview.survivor, plan);
     const survivorReviewRows = selectSurvivorReviewRows(result, preview.survivor, plan);
     const recommendedPath = selectRecommendedPath(result, preview.scenarios, preview.survivor, plan);
+    const retirementAnswer = selectRetirementAnswerSummary(result, plan, null, preview.survivor);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -264,8 +266,11 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(survivorReviewRows.find((row) => row.id === 'setup')?.detailArea).toBe('assumptions');
     expect(recommendedPath.candidateRows.find((row) => row.id === 'baseline')).toBeTruthy();
     expect(recommendedPath.recommendedCandidateId === null || typeof recommendedPath.recommendedCandidateId === 'string').toBe(true);
+    expect(['cannotTell', 'notReady', 'tight', 'onTrackReview', 'onTrack', 'estateHeavy']).toContain(retirementAnswer.status);
+    expect(retirementAnswer.headline.length).toBeGreaterThan(10);
+    expect(retirementAnswer.actions.length).toBeGreaterThanOrEqual(3);
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
-    expect(readinessSummary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
     expect(readinessRows).toHaveLength(6);
     expect(readinessRows.find((row) => row.id === 'savePlan')?.detailArea).toBe('exportSave');
     expect(planFile.plan.schemaVersion).toBe(2);
@@ -275,15 +280,11 @@ describe('Sprint 6 results workspace smoke', () => {
   it('keeps the Sprint 6 navigation shell mapped while only first previews are implemented', () => {
     expect(resultsWorkspaceMap.map((item) => item.label)).toEqual([
       'Overview',
-      'Annual Detail',
-      'Cash Flow',
-      'Income Sources',
-      'Accounts',
+      'Risks',
       'Taxes',
-      'Stress Tests',
-      'Household Resilience',
-      'Assumptions',
-      'Export/Save'
+      'Survivor Impact',
+      'Details',
+      'Save & print'
     ]);
   });
 });

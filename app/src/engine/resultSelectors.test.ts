@@ -23,6 +23,7 @@ import {
   selectReconciliationDiagnostics,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
+  selectRetirementAnswerSummary,
   selectScenarioCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
@@ -145,15 +146,11 @@ describe('result selectors', () => {
   it('records the first Sprint 6 results workspace map', () => {
     expect(resultsWorkspaceMap.map((item) => item.label)).toEqual([
       'Overview',
-      'Annual Detail',
-      'Cash Flow',
-      'Income Sources',
-      'Accounts',
+      'Risks',
       'Taxes',
-      'Stress Tests',
-      'Household Resilience',
-      'Assumptions',
-      'Export/Save'
+      'Survivor Impact',
+      'Details',
+      'Save & print'
     ]);
   });
 
@@ -389,6 +386,56 @@ describe('result selectors', () => {
     expect(recommended.candidateRows.find((row) => row.id === 'baseline')).toMatchObject({
       blocked: false
     });
+  });
+
+  it('frames estate-heavy plans around lifestyle fit instead of recommending lower spending', () => {
+    const estateHeavyResult = withRows([
+      {
+        ...fixture.years[0],
+        shortfall: 0,
+        bal_total: 6000000
+      },
+      {
+        ...fixture.years[1],
+        shortfall: 0,
+        bal_total: 7000000
+      }
+    ]);
+    const spendLessResult = withRows([
+      {
+        ...fixture.years[0],
+        shortfall: 0,
+        bal_total: 6500000
+      },
+      {
+        ...fixture.years[1],
+        shortfall: 0,
+        bal_total: 7600000
+      }
+    ]);
+    const answer = selectRetirementAnswerSummary(estateHeavyResult, { ...planFixture, inheritance: 0 });
+    const recommended = selectRecommendedPath(estateHeavyResult, { spendLessGogo: spendLessResult }, null, {
+      ...planFixture,
+      inheritance: 0
+    });
+
+    expect(answer.status).toBe('estateHeavy');
+    expect(answer.spendingHeadline).toContain('room to spend more');
+    expect(answer.estateHeadline).toContain('No estate target');
+    expect(recommended.recommendedCandidateId).toBe('baseline');
+    expect(recommended.headline).toContain('lifestyle and estate intent');
+  });
+
+  it('uses a tight retirement answer when the plan reaches the end with limited cushion', () => {
+    const tightResult = withRows([
+      { ...fixture.years[0], shortfall: 0, bal_total: 100000 },
+      { ...fixture.years[1], shortfall: 0, bal_total: 150000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(tightResult, planFixture);
+
+    expect(answer.status).toBe('tight');
+    expect(answer.headline).toContain('limited');
+    expect(answer.actions.find((action) => action.id === 'spending')).toBeTruthy();
   });
 
   it('normalizes annual detail tax and balance fields safely', () => {
@@ -742,7 +789,7 @@ describe('result selectors', () => {
 
     expect(['ready', 'review', 'blocked']).toContain(summary.status);
     expect(['ready', 'review', 'blocked']).toContain(summary.saveStatus);
-    expect(summary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(summary.stableDashboardHandoff).toContain('detailed report');
     expect(rows.map((row) => row.id)).toEqual([
       'blockers',
       'watchRisks',

@@ -4,34 +4,46 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 21: Engine Extraction Scenario And Survivor Runner
+## Active Sprint — Sprint 23: Consumer Results Simplification
 
 **Status:** Complete 2026-05-14 after verification.
 
-Goal: extract Results preview baseline, scenario, and survivor rerun orchestration from React into an engine-owned runtime helper so future optimizer work can use explicit plan-object boundaries.
+Goal: simplify the top-level Results journey so consumers see the retirement answer, risks, taxes, survivor impact, details, and save/print paths without being forced through every advanced diagnostic table.
 
-Non-scope: new engine rules, optimizer changes, schema v3, persisted recommendation/readiness/scenario output, stable dashboard migration, account/cloud/advisor/AI scope, or print/PDF migration.
+Non-scope: full optimizer, new simulation math, schema v3, paid advisor tooling, cloud accounts, persisted recommendation output, removing advanced views, or print/PDF migration.
 
-Sprint 21 checkpoint doc: [`docs/sprint_21_engine_extraction_scenario_survivor_runner.md`](docs/sprint_21_engine_extraction_scenario_survivor_runner.md).
+Sprint 23 checkpoint doc: [`docs/sprint_23_consumer_results_simplification.md`](docs/sprint_23_consumer_results_simplification.md).
 
-### Sprint 21 Candidate Implementation Tickets
+### Sprint 23 Candidate Implementation Tickets
 
-- [x] **S21-01 — Preview runner boundary.** ✅ *Done 2026-05-14.* Added an engine helper for baseline, scenario, and survivor preview reruns.
-- [x] **S21-02 — Scenario transforms.** ✅ *Done 2026-05-14.* Extracted retire-later, spend-less, and delay-benefits runtime transforms.
-- [x] **S21-03 — Survivor preview gating.** ✅ *Done 2026-05-14.* Kept survivor reruns bounded to two-person plans with a survivor year.
-- [x] **S21-04 — React bridge hookup.** ✅ *Done 2026-05-14.* Replaced inline rerun orchestration in `App.tsx` with the engine preview bundle.
-- [x] **S21-05 — Tests, probe, and docs.** ✅ *Done 2026-05-14.* Added helper tests, smoke coverage, extraction probe, and Sprint 21 documentation.
+- [x] **S23-01 — Primary Results nav.** ✅ *Done 2026-05-14.* Reduced top-level Results navigation to Overview, Risks, Taxes, Survivor Impact, Details, and Save & print.
+- [x] **S23-02 — Details hub.** ✅ *Done 2026-05-14.* Added a Details page that routes to Year-by-year, Money Flow, Income, Accounts, and Assumptions.
+- [x] **S23-03 — Preserve advanced views.** ✅ *Done 2026-05-14.* Kept advanced diagnostic sections implemented and accessible without making them first-class consumer tabs.
+- [x] **S23-04 — Consumer sequencing roadmap.** ✅ *Done 2026-05-14.* Updated roadmap sequence for spending capacity, estate/tax intent, intake help, scenario redesign, and optimizer prep.
+- [x] **S23-05 — Tests and docs.** ✅ *Done 2026-05-14.* Updated nav smoke coverage and added Sprint 23 documentation.
 
-### Sprint 21 Definition Of Done
+### Sprint 23 Definition Of Done
 
-- React no longer constructs Results scenario or survivor reruns inline.
-- The engine helper returns the same `{ result, scenarios, survivor }` bundle shape.
-- Scenario and survivor output remains runtime-only.
-- Stable dashboard parity and fallback ownership remain unchanged.
+- Top-level Results navigation is consumer-focused and no longer lists every diagnostic table.
+- Advanced annual, money-flow, income, account, and assumption views remain accessible from Details.
+- Existing selector output, schema v2, and stable/detailed report fallback remain unchanged.
+- Roadmap reflects the consumer-first sequencing through spending capacity, estate/tax intent, intake UX, scenarios, and optimizer.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 22: Consumer Retirement Answer Layer
+
+**Complete 2026-05-14.** Made the Results Overview answer the consumer's real retirement question first: whether the plan appears supportable, how spending fits, whether the estate outcome is intentional, and what to review next.
+
+Sprint 22 checkpoint doc: [`docs/sprint_22_consumer_retirement_answer_layer.md`](docs/sprint_22_consumer_retirement_answer_layer.md).
+
+### Sprint 21: Engine Extraction Scenario And Survivor Runner
+
+**Complete 2026-05-14.** Extracted Results preview baseline, scenario, and survivor rerun orchestration from React into an engine-owned runtime helper so future optimizer work can use explicit plan-object boundaries.
+
+Sprint 21 checkpoint doc: [`docs/sprint_21_engine_extraction_scenario_survivor_runner.md`](docs/sprint_21_engine_extraction_scenario_survivor_runner.md).
 
 ### Sprint 20: React Results Readiness And Save Handoff Polish
 

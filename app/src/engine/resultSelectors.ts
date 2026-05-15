@@ -10,6 +10,7 @@ export type ResultsWorkspaceSection =
   | 'stressTests'
   | 'householdResilience'
   | 'assumptions'
+  | 'details'
   | 'exportSave';
 
 export type ResultsNavItem = {
@@ -19,16 +20,12 @@ export type ResultsNavItem = {
 };
 
 export const resultsWorkspaceMap: ResultsNavItem[] = [
-  { id: 'overview', label: 'Overview', helper: 'Decision view' },
-  { id: 'annualDetail', label: 'Annual Detail', helper: 'Year-by-year' },
-  { id: 'cashFlow', label: 'Cash Flow', helper: 'Reconciliation' },
-  { id: 'incomeSources', label: 'Income Sources', helper: 'Source mix' },
-  { id: 'accounts', label: 'Accounts', helper: 'Balances' },
-  { id: 'taxes', label: 'Taxes', helper: 'Tax rows' },
-  { id: 'stressTests', label: 'Stress Tests', helper: 'Risk indicators' },
-  { id: 'householdResilience', label: 'Household Resilience', helper: 'Survivor view' },
-  { id: 'assumptions', label: 'Assumptions', helper: 'Run settings' },
-  { id: 'exportSave', label: 'Export/Save', helper: 'Local file' }
+  { id: 'overview', label: 'Overview', helper: 'Your answer' },
+  { id: 'stressTests', label: 'Risks', helper: 'What could change' },
+  { id: 'taxes', label: 'Taxes', helper: 'Tax picture' },
+  { id: 'householdResilience', label: 'Survivor Impact', helper: 'Couple plans' },
+  { id: 'details', label: 'Details', helper: 'Advanced views' },
+  { id: 'exportSave', label: 'Save & print', helper: 'Plan file' }
 ];
 
 export type OverviewMetrics = {
@@ -591,6 +588,38 @@ export type ResultsReadinessRow = {
   detailArea: ResultsWorkspaceSection;
 };
 
+export type RetirementAnswerStatus =
+  | 'cannotTell'
+  | 'notReady'
+  | 'tight'
+  | 'onTrackReview'
+  | 'onTrack'
+  | 'estateHeavy';
+
+export type RetirementAnswerAction = {
+  id: 'fixInputs' | 'spending' | 'estate' | 'tax' | 'survivor' | 'realEstate' | 'report';
+  label: string;
+  detail: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type RetirementAnswerSummary = {
+  status: RetirementAnswerStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  fundedThroughYear: number | null;
+  plannedEarlySpending: number;
+  projectedMoneyLeft: number;
+  lowestPortfolio: number;
+  estateTarget: number;
+  spendingHeadline: string;
+  spendingDetail: string;
+  estateHeadline: string;
+  estateDetail: string;
+  actions: RetirementAnswerAction[];
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -634,6 +663,167 @@ export function selectOverviewMetrics(result: SimulationResult | null | undefine
     firstYearFunding: reconciliation.reconciledAfterTaxSpending,
     firstYearFundingGap: reconciliation.reconciliationDelta,
     hasShortfall: rows.some((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE)
+  };
+}
+
+export function selectRetirementAnswerSummary(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  validation: RecommendationValidation = null,
+  survivor: SimulationResult | null | undefined = null
+): RetirementAnswerSummary {
+  const rows = rowsFrom(result);
+  const overview = selectOverviewMetrics(result);
+  const diagnostics = selectReconciliationDiagnostics(result);
+  const survivorComparison = selectSurvivorComparison(result, survivor, plan);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const fundedThroughYear = firstShortfall ? firstShortfall.year - 1 : overview.lastYear;
+  const lowestPortfolio = rows.reduce((lowest, row) => Math.min(lowest, n(row.bal_total)), Number.POSITIVE_INFINITY);
+  const safeLowestPortfolio = Number.isFinite(lowestPortfolio) ? lowestPortfolio : 0;
+  const plannedEarlySpending = n(plan?.spending?.gogo) || overview.firstYearSpending;
+  const estateTarget = n(plan?.inheritance);
+  const yearsOfSpendingLeft =
+    overview.firstYearSpending > 0 ? overview.endPortfolio / Math.max(overview.firstYearSpending, 1) : 0;
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const sourceNeedsReview = diagnostics.status === 'warning';
+  const hasEstateTarget = estateTarget > 0;
+  const estateHeavy =
+    !firstShortfall &&
+    !hasEstateTarget &&
+    overview.endPortfolio >= 1_000_000 &&
+    yearsOfSpendingLeft >= 20;
+  const tight =
+    !firstShortfall &&
+    !estateHeavy &&
+    overview.firstYearSpending > 0 &&
+    (safeLowestPortfolio < overview.firstYearSpending * 2 || overview.endPortfolio < overview.firstYearSpending * 5);
+  const hasRealEstateDecision = Boolean(
+    n(plan?.downsize?.year) || n(plan?.downsize?.netProceeds) || n(plan?.mortgage?.balance)
+  );
+
+  let status: RetirementAnswerStatus = 'onTrack';
+  if (!rows.length || validationBlocked) status = 'cannotTell';
+  else if (firstShortfall) status = 'notReady';
+  else if (estateHeavy) status = 'estateHeavy';
+  else if (tight) status = 'tight';
+  else if (sourceNeedsReview || survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable') {
+    status = 'onTrackReview';
+  }
+
+  const labelByStatus: Record<RetirementAnswerStatus, string> = {
+    cannotTell: 'Cannot tell yet',
+    notReady: 'Plan needs changes',
+    tight: 'Retirement looks tight',
+    onTrackReview: 'On track, with review items',
+    onTrack: 'On track',
+    estateHeavy: 'Strongly funded'
+  };
+  const headlineByStatus: Record<RetirementAnswerStatus, string> = {
+    cannotTell: 'A retirement answer needs the remaining input blockers cleared first.',
+    notReady: `This plan does not fully fund spending through the full projection; the first shortfall appears in ${firstShortfall?.year ?? 'a future year'}.`,
+    tight: 'The plan appears to reach the projection end, but the cushion is limited.',
+    onTrackReview: 'The plan appears funded through the projection, with a few assumptions worth reviewing.',
+    onTrack: 'The plan appears funded through the full projection under the current assumptions.',
+    estateHeavy: 'The plan appears strongly funded; the bigger question is how intentionally you want to use or preserve the surplus.'
+  };
+
+  const spendingHeadline =
+    status === 'estateHeavy'
+      ? 'You may have room to spend more, not less.'
+      : status === 'notReady'
+        ? 'Spending needs a repair plan.'
+        : status === 'tight'
+          ? 'Current spending looks possible, but with limited margin.'
+          : 'Current spending appears supportable under the base assumptions.';
+  const spendingDetail =
+    status === 'estateHeavy'
+      ? 'Because the plan leaves a large projected balance and no estate target is entered, review whether higher early-retirement spending, giving, or an earlier retirement date better matches the household goal.'
+      : status === 'notReady'
+        ? 'Use the scenario cards to compare lower early spending, working longer, or timing changes before treating the plan as ready.'
+        : status === 'tight'
+          ? 'Small changes in spending, markets, or timing may matter. Review the risk section before relying on this plan.'
+          : 'Confirm the entered early, later, and late-life spending targets reflect the lifestyle the household actually wants.';
+  const estateHeadline =
+    estateTarget > 0
+      ? 'An estate goal is part of this plan.'
+      : estateHeavy
+        ? 'No estate target is entered, but the plan leaves a large projected estate.'
+        : 'No specific estate target is entered.';
+  const estateDetail =
+    estateTarget > 0
+      ? 'Compare the projected money left with the intended estate goal and review whether spending, tax timing, or gifts should be adjusted.'
+      : estateHeavy
+        ? 'That may be exactly right, but it should be intentional. A large ending balance is not automatically better if the household would rather enjoy more of the money during retirement.'
+        : 'If leaving money is important, add a target. If not, the next review is whether spending and tax timing fit the desired lifestyle.';
+
+  const actions: RetirementAnswerAction[] = [];
+  if (status === 'cannotTell') {
+    actions.push({
+      id: 'fixInputs',
+      label: 'Clear input blockers',
+      detail: 'Finish the required inputs so the plan can produce a reliable retirement answer.',
+      detailArea: 'assumptions'
+    });
+  }
+  actions.push({
+    id: 'spending',
+    label: status === 'estateHeavy' ? 'Review spending capacity' : 'Confirm spending comfort',
+    detail: spendingDetail,
+    detailArea: 'stressTests'
+  });
+  actions.push({
+    id: 'estate',
+    label: estateHeavy || estateTarget > 0 ? 'Clarify estate wishes' : 'Decide whether an estate target matters',
+    detail: estateDetail,
+    detailArea: 'accounts'
+  });
+  if (hasRealEstateDecision) {
+    actions.push({
+      id: 'realEstate',
+      label: 'Review real estate choices',
+      detail: 'Mortgage, downsize timing, or home equity may change how much the household can enjoy earlier in retirement.',
+      detailArea: 'assumptions'
+    });
+  }
+  actions.push({
+    id: 'tax',
+    label: 'Look for tax efficiency',
+    detail: 'Review registered withdrawals, OAS recovery tax, and later-life tax pressure so less of the household wealth is wasted unnecessarily.',
+    detailArea: 'taxes'
+  });
+  if (!personLooksBlank(plan?.p2)) {
+    actions.push({
+      id: 'survivor',
+      label: 'Check survivor security',
+      detail: 'For a couple, confirm the surviving spouse still has enough income and flexibility.',
+      detailArea: 'householdResilience'
+    });
+  }
+  actions.push({
+    id: 'report',
+    label: 'Open the detailed report',
+    detail: 'Use the detailed report for printable charts, annual tables, account rows, and tax detail.',
+    detailArea: 'exportSave'
+  });
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail:
+      status === 'estateHeavy'
+        ? 'The model is no longer treating a larger ending balance as automatically better. Use this as a lifestyle and estate-intent conversation.'
+        : 'Use this answer as a first planning read, then review the items below before relying on the plan.',
+    fundedThroughYear,
+    plannedEarlySpending,
+    projectedMoneyLeft: overview.endPortfolio,
+    lowestPortfolio: safeLowestPortfolio,
+    estateTarget,
+    spendingHeadline,
+    spendingDetail,
+    estateHeadline,
+    estateDetail,
+    actions: actions.slice(0, 6)
   };
 }
 
@@ -2161,8 +2351,8 @@ export function selectRecommendedPath(
   const survivorComparison = selectSurvivorComparison(baseline, survivor, plan);
   const scenarioDefinitions: Array<{ id: RecommendedCandidateId; label: string; result: SimulationResult | null | undefined }> = [
     { id: 'baseline', label: 'Current plan', result: baseline },
-    { id: 'retireLater', label: 'Retire two years later', result: comparisons.retireLater },
-    { id: 'spendLessGogo', label: 'Spend 10% less in go-go', result: comparisons.spendLessGogo },
+    { id: 'retireLater', label: 'Work two years longer', result: comparisons.retireLater },
+    { id: 'spendLessGogo', label: 'Spend a little less early', result: comparisons.spendLessGogo },
     { id: 'delayBenefits', label: 'Delay CPP/OAS to 70', result: comparisons.delayBenefits }
   ];
 
@@ -2171,7 +2361,16 @@ export function selectRecommendedPath(
     selectRecommendedCandidateRow(id, label, result, baselineOverview, baselineTax, validationBlocked, survivorComparison)
   );
   const eligibleRows = candidateRows.filter((row) => !row.blocked);
-  const recommended = eligibleRows.length > 0 ? [...eligibleRows].sort(compareRecommendedCandidates)[0] : null;
+  const baselineRow = eligibleRows.find((row) => row.id === 'baseline') || null;
+  const baselineEstateHeavy =
+    baselineRow &&
+    !baselineRow.firstShortfallYear &&
+    !n(plan?.inheritance) &&
+    baselineOverview.firstYearSpending > 0 &&
+    baselineOverview.endPortfolio >= 1_000_000 &&
+    baselineOverview.endPortfolio / baselineOverview.firstYearSpending >= 20;
+  const recommended =
+    baselineEstateHeavy && baselineRow ? baselineRow : eligibleRows.length > 0 ? [...eligibleRows].sort(compareRecommendedCandidates)[0] : null;
   const rowsWithRecommendation: RecommendedCandidateRow[] = candidateRows.map((row) => {
     const reviewStatus: RecommendedCandidateRow['reviewStatus'] = row.blocked
       ? 'blocked'
@@ -2220,10 +2419,12 @@ export function selectRecommendedPath(
 
   return {
     recommendedCandidateId: recommendedRow?.id ?? null,
-    recommendedLabel: recommendedRow?.label ?? 'No recommended path',
+    recommendedLabel: recommendedRow?.label ?? 'No suggested plan',
     headline: recommendedRow
-      ? `${recommendedRow.label} is the strongest preview candidate under the current trust checks.`
-      : 'No recommended path is available until blockers are cleared.',
+      ? baselineEstateHeavy
+        ? 'The current plan is strongly funded; review lifestyle and estate intent before cutting spending.'
+        : `${recommendedRow.label} is the strongest preview candidate under the current trust checks.`
+      : 'No suggested plan is available until blockers are cleared.',
     confidence,
     stressContext,
     breakRisks,
@@ -2260,7 +2461,7 @@ export function selectResultsReadinessSummary(
         ? 'Clear blockers before saving this plan as reviewed.'
         : status === 'review'
           ? 'The plan can be saved, with review items still visible.'
-          : 'The React preview is ready for local save and stable-dashboard inspection.',
+          : 'The plan is ready for local save and detailed-report inspection.',
     detail:
       status === 'blocked'
         ? 'Use the rows below to clear validation or source blockers first.'
@@ -2273,7 +2474,7 @@ export function selectResultsReadinessSummary(
     reviewCount,
     blockedCount,
     recommendedLabel: recommended.recommendedLabel,
-    stableDashboardHandoff: 'Use the stable dashboard for complete schedules, legacy audit views, report-style inspection, and print/PDF.'
+    stableDashboardHandoff: 'Use the detailed report for complete schedules, printable charts, annual rows, and tax/account detail.'
   };
 }
 
@@ -2315,7 +2516,7 @@ export function selectResultsReadinessRows(
       status: taxes?.status ?? 'review',
       priority: taxes?.priority ?? 'next',
       detail: taxes?.detail ?? 'Inspect tax pressure before final save.',
-      action: taxes?.handoff ?? 'Use the Taxes tab and stable dashboard tax schedules.',
+      action: taxes?.handoff ?? 'Use the Taxes tab and detailed report tax schedules.',
       detailArea: 'taxes'
     },
     {
@@ -2324,7 +2525,7 @@ export function selectResultsReadinessRows(
       status: survivor?.status ?? 'review',
       priority: survivor?.priority ?? 'next',
       detail: survivor?.detail ?? 'Review household resilience for two-person plans.',
-      action: survivor?.handoff ?? 'Use Household Resilience and the stable dashboard survivor detail.',
+      action: survivor?.handoff ?? 'Use Survivor Impact and the detailed report survivor detail.',
       detailArea: 'householdResilience'
     },
     {
@@ -2332,8 +2533,8 @@ export function selectResultsReadinessRows(
       label: 'Stable dashboard inspection',
       status: validationBlocked ? 'blocked' : 'review',
       priority: dashboard?.priority ?? 'next',
-      detail: dashboard?.detail ?? 'The stable dashboard remains the complete audit and reporting surface.',
-      action: dashboard?.handoff ?? 'Open stable dashboard before acting on the selected path.',
+      detail: dashboard?.detail ?? 'The detailed report remains available for complete schedules and printable review.',
+      action: dashboard?.handoff ?? 'Open the detailed report before acting on the selected path.',
       detailArea: 'exportSave'
     },
     {
@@ -2342,7 +2543,7 @@ export function selectResultsReadinessRows(
       status: validationBlocked ? 'blocked' : save?.status ?? 'blocked',
       priority: save?.priority ?? 'later',
       detail: save?.detail ?? 'Save the normalized v2 plan locally after review.',
-      action: save?.handoff ?? 'Use Save .plan.json; result readiness stays runtime-only.',
+      action: save?.handoff ?? 'Save the editable local plan file after review.',
       detailArea: 'exportSave'
     }
   ];

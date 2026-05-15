@@ -741,6 +741,7 @@ button.secondary,
 .stress-tests-panel,
 .household-resilience-panel,
 .assumptions-results-panel,
+.details-results-panel,
 .export-save-panel {
   display: grid;
   gap: 14px;
@@ -829,6 +830,129 @@ button.secondary,
   background: #f1f7f3;
   margin: 18px 0;
   padding: 16px;
+}
+
+.retirement-answer-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #b9d2c5;
+  border-radius: var(--radius);
+  background: #f4f8f2;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.retirement-answer-panel h3,
+.retirement-answer-panel h4,
+.retirement-answer-panel p {
+  margin: 0;
+}
+
+.retirement-answer-lede {
+  display: grid;
+  gap: 8px;
+  max-width: 920px;
+}
+
+.retirement-answer-lede h3 {
+  color: var(--green-dark);
+  font-size: 1.45rem;
+}
+
+.retirement-answer-lede p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.retirement-answer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.retirement-answer-grid section,
+.retirement-actions {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.retirement-answer-grid strong {
+  color: var(--ink);
+}
+
+.retirement-actions > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.retirement-actions article {
+  display: grid;
+  gap: 6px;
+  border-left: 4px solid var(--green);
+  background: #fbfcfa;
+  padding: 10px 12px;
+}
+
+.retirement-actions span {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.retirement-answer-cannotTell,
+.retirement-answer-notReady {
+  border-color: #d79b92;
+  background: #fff4f1;
+}
+
+.retirement-answer-tight,
+.retirement-answer-onTrackReview {
+  border-color: #d8b676;
+  background: #fff9ee;
+}
+
+.details-lede h3,
+.details-lede p {
+  margin: 0;
+}
+
+.details-lede {
+  display: grid;
+  gap: 10px;
+}
+
+.details-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.details-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.details-card h3,
+.details-card p {
+  margin: 0;
+}
+
+.details-card strong {
+  color: var(--green-dark);
+  font-size: 1.05rem;
+}
+
+.details-card button {
+  justify-self: start;
 }
 
 .recommended-path-panel h3 {
@@ -1779,6 +1903,9 @@ button.secondary,
   .field-row.three,
   .review-summary,
   .result-overview-grid,
+  .retirement-answer-grid,
+  .retirement-actions > div,
+  .details-card-grid,
   .break-risk-layout,
   .decision-checklist,
   .decision-detail-grid,
