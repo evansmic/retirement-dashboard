@@ -28,6 +28,7 @@ import {
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
+  selectSpendingCapacitySummary,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -217,6 +218,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const survivorReviewRows = selectSurvivorReviewRows(result, preview.survivor, plan);
     const recommendedPath = selectRecommendedPath(result, preview.scenarios, preview.survivor, plan);
     const retirementAnswer = selectRetirementAnswerSummary(result, plan, null, preview.survivor);
+    const spendingCapacity = selectSpendingCapacitySummary(result, preview.scenarios, plan, retirementAnswer);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -269,6 +271,9 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['cannotTell', 'notReady', 'tight', 'onTrackReview', 'onTrack', 'estateHeavy']).toContain(retirementAnswer.status);
     expect(retirementAnswer.headline.length).toBeGreaterThan(10);
     expect(retirementAnswer.actions.length).toBeGreaterThanOrEqual(3);
+    expect(['cannotTell', 'needsReduction', 'tight', 'balanced', 'flexible']).toContain(spendingCapacity.status);
+    expect(spendingCapacity.headline.length).toBeGreaterThan(10);
+    expect(spendingCapacity.reviewActions.length).toBeGreaterThanOrEqual(2);
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
     expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
     expect(readinessRows).toHaveLength(6);

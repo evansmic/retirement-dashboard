@@ -28,6 +28,7 @@ import {
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
+  selectSpendingCapacitySummary,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -436,6 +437,38 @@ describe('result selectors', () => {
     expect(answer.status).toBe('tight');
     expect(answer.headline).toContain('limited');
     expect(answer.actions.find((action) => action.id === 'spending')).toBeTruthy();
+  });
+
+  it('summarizes flexible spending capacity for estate-heavy plans', () => {
+    const estateHeavyResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 6000000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 71470, bal_total: 7000000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(estateHeavyResult, { ...planFixture, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(estateHeavyResult, {}, { ...planFixture, inheritance: 0 }, answer);
+
+    expect(spending.status).toBe('flexible');
+    expect(spending.estimatedAnnualRoom).toBeGreaterThan(0);
+    expect(spending.headline).toContain('support more lifestyle spending');
+    expect(spending.reviewActions.find((action) => action.id === 'spendMore')).toBeTruthy();
+  });
+
+  it('summarizes a spending repair amount when the lower-spending scenario fixes a shortfall', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+
+    expect(spending.status).toBe('needsReduction');
+    expect(spending.repairEarlySpending).toBe(Math.round((planFixture.spending.gogo || 0) * 0.9));
+    expect(spending.detail).toContain('lower-spending test');
+    expect(spending.reviewActions.find((action) => action.id === 'spendLess')).toBeTruthy();
   });
 
   it('normalizes annual detail tax and balance fields safely', () => {

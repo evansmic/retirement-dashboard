@@ -620,6 +620,30 @@ export type RetirementAnswerSummary = {
   actions: RetirementAnswerAction[];
 };
 
+export type SpendingCapacityStatus = 'cannotTell' | 'needsReduction' | 'tight' | 'balanced' | 'flexible';
+
+export type SpendingCapacitySummary = {
+  status: SpendingCapacityStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  earlySpending: number;
+  laterSpending: number;
+  lateLifeSpending: number;
+  stressTestedEarlySpending: number;
+  estimatedAnnualRoom: number;
+  repairEarlySpending: number;
+  projectedMoneyLeft: number;
+  estateTarget: number;
+  estateTradeoff: string;
+  reviewActions: Array<{
+    id: 'spendMore' | 'spendLess' | 'estate' | 'tax' | 'scenario';
+    label: string;
+    detail: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -824,6 +848,130 @@ export function selectRetirementAnswerSummary(
     estateHeadline,
     estateDetail,
     actions: actions.slice(0, 6)
+  };
+}
+
+export function selectSpendingCapacitySummary(
+  baseline: SimulationResult | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>,
+  plan: V2PlanPayload | null | undefined,
+  retirementAnswer: RetirementAnswerSummary = selectRetirementAnswerSummary(baseline, plan)
+): SpendingCapacitySummary {
+  const overview = selectOverviewMetrics(baseline);
+  const rows = rowsFrom(baseline);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const spendLessOverview = selectOverviewMetrics(comparisons.spendLessGogo);
+  const spendLessRows = rowsFrom(comparisons.spendLessGogo);
+  const spendLessShortfall = spendLessRows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const earlySpending = n(plan?.spending?.gogo) || overview.firstYearSpending;
+  const laterSpending = n(plan?.spending?.slowgo);
+  const lateLifeSpending = n(plan?.spending?.nogo);
+  const stressTestedEarlySpending = earlySpending > 0 ? Math.round(earlySpending * 0.9) : 0;
+  const estateTarget = n(plan?.inheritance);
+  const minimumCushion = Math.max(overview.firstYearSpending * 5, estateTarget);
+  const spendableSurplus = Math.max(0, overview.endPortfolio - minimumCushion);
+  const estimatedAnnualRoom =
+    rows.length > 0 && retirementAnswer.status === 'estateHeavy'
+      ? Math.round(Math.min(earlySpending * 0.25, spendableSurplus / rows.length))
+      : 0;
+
+  let status: SpendingCapacityStatus = 'balanced';
+  if (!rows.length || retirementAnswer.status === 'cannotTell') status = 'cannotTell';
+  else if (firstShortfall) status = 'needsReduction';
+  else if (retirementAnswer.status === 'tight') status = 'tight';
+  else if (retirementAnswer.status === 'estateHeavy' || estimatedAnnualRoom > earlySpending * 0.05) status = 'flexible';
+
+  const labelByStatus: Record<SpendingCapacityStatus, string> = {
+    cannotTell: 'Cannot estimate yet',
+    needsReduction: 'Spending needs repair',
+    tight: 'Spending looks tight',
+    balanced: 'Spending looks supportable',
+    flexible: 'Spending may have room'
+  };
+  const headlineByStatus: Record<SpendingCapacityStatus, string> = {
+    cannotTell: 'Spending capacity needs the retirement answer to calculate first.',
+    needsReduction: spendLessRows.length && !spendLessShortfall
+      ? 'A lower early-spending test repairs the visible shortfall.'
+      : 'The current spending target is higher than the plan can comfortably support in the visible projection.',
+    tight: 'Current spending appears possible, but the cushion is limited.',
+    balanced: 'Current spending appears reasonable under the base assumptions.',
+    flexible: 'This plan may support more lifestyle spending, especially if the large projected estate is not intentional.'
+  };
+  const detailByStatus: Record<SpendingCapacityStatus, string> = {
+    cannotTell: 'Clear blockers first, then revisit spending capacity.',
+    needsReduction: spendLessRows.length && !spendLessShortfall
+      ? `The built-in lower-spending test uses about ${moneyText(stressTestedEarlySpending)} in early retirement and remains funded through ${spendLessOverview.lastYear ?? 'the projection end'}.`
+      : 'Review spending, work timing, real estate choices, and benefit timing together rather than relying on one spending cut.',
+    tight: 'Treat this as a caution flag: small changes in spending, taxes, markets, or timing could matter.',
+    balanced: 'The next review is whether the entered lifestyle target reflects the life the household actually wants.',
+    flexible: estimatedAnnualRoom > 0
+      ? `A bounded first-pass estimate suggests roughly ${moneyText(estimatedAnnualRoom)} of possible extra annual lifestyle room, subject to tax, market, estate, and survivor review.`
+      : 'There may be flexibility, but the exact amount should be tested with a dedicated spending scenario.'
+  };
+  const estateTradeoff =
+    status === 'flexible'
+      ? estateTarget > 0
+        ? 'Spending more should be tested against the estate target already entered.'
+        : 'Spending more may reduce a large projected estate, which may be desirable if the household wants more retirement enjoyment and does not have a firm estate target.'
+      : estateTarget > 0
+        ? 'Keep the estate target visible while reviewing spending changes.'
+        : 'If preserving money is important, add an estate target before increasing spending.';
+  const repairEarlySpending = status === 'needsReduction' && spendLessRows.length && !spendLessShortfall ? stressTestedEarlySpending : 0;
+  const reviewActions: SpendingCapacitySummary['reviewActions'] = [];
+
+  if (status === 'flexible') {
+    reviewActions.push({
+      id: 'spendMore',
+      label: 'Test more early-retirement spending',
+      detail: 'Consider whether travel, home projects, gifts, or earlier enjoyment would better match the household goal.',
+      detailArea: 'stressTests'
+    });
+  }
+  if (status === 'needsReduction' || status === 'tight') {
+    reviewActions.push({
+      id: 'spendLess',
+      label: status === 'needsReduction' ? 'Review a repair amount' : 'Protect the cushion',
+      detail:
+        repairEarlySpending > 0
+          ? `The first repair test uses ${moneyText(repairEarlySpending)} in early retirement.`
+          : 'Review spending together with work timing, benefits, tax, and real estate choices.',
+      detailArea: 'stressTests'
+    });
+  }
+  reviewActions.push({
+    id: 'estate',
+    label: 'Make the estate goal explicit',
+    detail: estateTradeoff,
+    detailArea: 'details'
+  });
+  reviewActions.push({
+    id: 'tax',
+    label: 'Check tax impact',
+    detail: 'More or less spending can change registered withdrawals, OAS recovery tax, and later-life tax pressure.',
+    detailArea: 'taxes'
+  });
+  reviewActions.push({
+    id: 'scenario',
+    label: 'Use scenarios as a first test',
+    detail: 'The current scenarios are directional checks, not a full spending optimizer.',
+    detailArea: 'stressTests'
+  });
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail: detailByStatus[status],
+    earlySpending,
+    laterSpending,
+    lateLifeSpending,
+    stressTestedEarlySpending,
+    estimatedAnnualRoom,
+    repairEarlySpending,
+    projectedMoneyLeft: overview.endPortfolio,
+    estateTarget,
+    estateTradeoff,
+    reviewActions: reviewActions.slice(0, 4)
   };
 }
 

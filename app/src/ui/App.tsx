@@ -46,6 +46,7 @@ import {
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
+  selectSpendingCapacitySummary,
   selectStressIndicatorRows,
   selectStressTestRows,
   selectStressTestSummary,
@@ -2014,6 +2015,7 @@ function ResultsHandoffPanel({
   const survivorReviewRows = selectSurvivorReviewRows(result, survivor, plan);
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
+  const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -2117,6 +2119,7 @@ function ResultsHandoffPanel({
         ) : activeSection === 'overview' ? (
           <>
             <RetirementAnswerPanel answer={retirementAnswer} loading={loading} />
+            <SpendingCapacityPanel loading={loading} summary={spendingCapacity} />
 
             <div className="summary-grid">
               <Metric
@@ -2363,6 +2366,63 @@ function RetirementAnswerPanel({
           ))}
         </div>
       </section>
+    </section>
+  );
+}
+
+function SpendingCapacityPanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectSpendingCapacitySummary>;
+}) {
+  return (
+    <section className={`spending-capacity-panel spending-capacity-${summary.status}`}>
+      <div className="spending-capacity-lede">
+        <p className="eyebrow">How much can I spend?</p>
+        <h3>{loading ? 'Calculating spending capacity' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Early retirement spending" value={formatMoney(summary.earlySpending)} />
+        <Metric label="Later retirement spending" value={formatMoney(summary.laterSpending)} />
+        <Metric label="Late-life spending" value={formatMoney(summary.lateLifeSpending)} />
+        <Metric
+          label={summary.status === 'needsReduction' ? 'Repair test' : 'Possible extra room'}
+          value={
+            summary.status === 'needsReduction'
+              ? summary.repairEarlySpending
+                ? formatMoney(summary.repairEarlySpending)
+                : 'Review'
+              : summary.estimatedAnnualRoom
+                ? formatMoney(summary.estimatedAnnualRoom)
+                : '-'
+          }
+        />
+        <Metric label="Projected money left" value={formatMoney(summary.projectedMoneyLeft)} />
+        <Metric label="Estate target" value={summary.estateTarget ? formatMoney(summary.estateTarget) : 'Not set'} />
+      </div>
+
+      <div className="spending-capacity-grid">
+        <section>
+          <h4>Estate trade-off</h4>
+          <p>{summary.estateTradeoff}</p>
+        </section>
+        <section>
+          <h4>Review next</h4>
+          <div>
+            {summary.reviewActions.map((action) => (
+              <article key={action.id}>
+                <strong>{action.label}</strong>
+                <span>{action.detail}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
     </section>
   );
 }

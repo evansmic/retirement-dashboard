@@ -4,34 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 23: Consumer Results Simplification
+## Active Sprint — Sprint 24: Spending Capacity Layer
 
 **Status:** Complete 2026-05-14 after verification.
 
-Goal: simplify the top-level Results journey so consumers see the retirement answer, risks, taxes, survivor impact, details, and save/print paths without being forced through every advanced diagnostic table.
+Goal: answer "How much can I spend?" with a bounded consumer-facing spending posture derived from existing projections and scenario output.
 
-Non-scope: full optimizer, new simulation math, schema v3, paid advisor tooling, cloud accounts, persisted recommendation output, removing advanced views, or print/PDF migration.
+Non-scope: full optimizer, new simulation math, schema v3, custom scenario builder, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 23 checkpoint doc: [`docs/sprint_23_consumer_results_simplification.md`](docs/sprint_23_consumer_results_simplification.md).
+Sprint 24 checkpoint doc: [`docs/sprint_24_spending_capacity_layer.md`](docs/sprint_24_spending_capacity_layer.md).
 
-### Sprint 23 Candidate Implementation Tickets
+### Sprint 24 Candidate Implementation Tickets
 
-- [x] **S23-01 — Primary Results nav.** ✅ *Done 2026-05-14.* Reduced top-level Results navigation to Overview, Risks, Taxes, Survivor Impact, Details, and Save & print.
-- [x] **S23-02 — Details hub.** ✅ *Done 2026-05-14.* Added a Details page that routes to Year-by-year, Money Flow, Income, Accounts, and Assumptions.
-- [x] **S23-03 — Preserve advanced views.** ✅ *Done 2026-05-14.* Kept advanced diagnostic sections implemented and accessible without making them first-class consumer tabs.
-- [x] **S23-04 — Consumer sequencing roadmap.** ✅ *Done 2026-05-14.* Updated roadmap sequence for spending capacity, estate/tax intent, intake help, scenario redesign, and optimizer prep.
-- [x] **S23-05 — Tests and docs.** ✅ *Done 2026-05-14.* Updated nav smoke coverage and added Sprint 23 documentation.
+- [x] **S24-01 — Spending capacity selector.** ✅ *Done 2026-05-15.* Added runtime-only status for cannot estimate, repair needed, tight, balanced, and flexible spending.
+- [x] **S24-02 — Spending capacity panel.** ✅ *Done 2026-05-15.* Added a consumer-facing Overview panel showing spending phases, possible room, repair amount, and estate trade-off.
+- [x] **S24-03 — Estate-heavy lifestyle room.** ✅ *Done 2026-05-15.* Added a bounded possible annual room estimate for strongly funded plans without an estate target.
+- [x] **S24-04 — Lower-spending repair read.** ✅ *Done 2026-05-15.* Used the existing 10% lower early-spending scenario to identify a first repair amount when it fixes a visible shortfall.
+- [x] **S24-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 24 documentation.
 
-### Sprint 23 Definition Of Done
+### Sprint 24 Definition Of Done
 
-- Top-level Results navigation is consumer-focused and no longer lists every diagnostic table.
-- Advanced annual, money-flow, income, account, and assumption views remain accessible from Details.
-- Existing selector output, schema v2, and stable/detailed report fallback remain unchanged.
-- Roadmap reflects the consumer-first sequencing through spending capacity, estate/tax intent, intake UX, scenarios, and optimizer.
+- Overview answers whether spending looks too high, tight, supportable, or potentially too conservative.
+- Estate-heavy plans surface lifestyle room as a review item, not a recommendation to preserve more estate.
+- Shortfall plans show whether the existing lower-spending scenario repairs the visible shortfall.
+- Output remains runtime-only and does not change simulation math.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 23: Consumer Results Simplification
+
+**Complete 2026-05-14.** Simplified the top-level Results journey so consumers see the retirement answer, risks, taxes, survivor impact, details, and save/print paths without being forced through every advanced diagnostic table.
+
+Sprint 23 checkpoint doc: [`docs/sprint_23_consumer_results_simplification.md`](docs/sprint_23_consumer_results_simplification.md).
 
 ### Sprint 22: Consumer Retirement Answer Layer
 

@@ -59,9 +59,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    pool: 'vmForks',
+    pool: 'forks',
     poolOptions: {
-      vmForks: {
+      forks: {
         singleFork: true
       }
     }

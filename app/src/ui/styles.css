@@ -915,6 +915,82 @@ button.secondary,
   background: #fff9ee;
 }
 
+.spending-capacity-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #cfd9c8;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.spending-capacity-panel h3,
+.spending-capacity-panel h4,
+.spending-capacity-panel p {
+  margin: 0;
+}
+
+.spending-capacity-lede {
+  display: grid;
+  gap: 8px;
+  max-width: 920px;
+}
+
+.spending-capacity-lede h3 {
+  color: var(--green-dark);
+  font-size: 1.3rem;
+}
+
+.spending-capacity-lede p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.spending-capacity-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+}
+
+.spending-capacity-grid section {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.spending-capacity-grid section > div {
+  display: grid;
+  gap: 8px;
+}
+
+.spending-capacity-grid article {
+  display: grid;
+  gap: 5px;
+  border-left: 4px solid var(--green);
+  background: #fbfcfa;
+  padding: 9px 11px;
+}
+
+.spending-capacity-grid span {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.spending-capacity-flexible {
+  border-color: #b9d2c5;
+  background: #f4f8f2;
+}
+
+.spending-capacity-needsReduction,
+.spending-capacity-tight {
+  border-color: #d8b676;
+  background: #fff9ee;
+}
+
 .details-lede h3,
 .details-lede p {
   margin: 0;
@@ -1905,6 +1981,7 @@ button.secondary,
   .result-overview-grid,
   .retirement-answer-grid,
   .retirement-actions > div,
+  .spending-capacity-grid,
   .details-card-grid,
   .break-risk-layout,
   .decision-checklist,
