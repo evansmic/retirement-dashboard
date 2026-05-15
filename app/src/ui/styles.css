@@ -991,6 +991,78 @@ button.secondary,
   background: #fff9ee;
 }
 
+.estate-intent-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #c8d5dc;
+  border-radius: var(--radius);
+  background: #f8fbfb;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.estate-intent-panel h3,
+.estate-intent-panel h4,
+.estate-intent-panel p {
+  margin: 0;
+}
+
+.estate-intent-lede {
+  display: grid;
+  gap: 8px;
+  max-width: 920px;
+}
+
+.estate-intent-lede h3 {
+  color: var(--navy);
+  font-size: 1.3rem;
+}
+
+.estate-intent-lede p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.estate-intent-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+}
+
+.estate-intent-grid section {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.estate-intent-grid section > div {
+  display: grid;
+  gap: 8px;
+}
+
+.estate-intent-grid article {
+  display: grid;
+  gap: 5px;
+  border-left: 4px solid var(--navy);
+  background: #fbfcfa;
+  padding: 9px 11px;
+}
+
+.estate-intent-grid span {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.estate-intent-needsIntent,
+.estate-intent-taxReview,
+.estate-intent-survivorReview {
+  border-color: #d8b676;
+  background: #fff9ee;
+}
+
 .details-lede h3,
 .details-lede p {
   margin: 0;
@@ -1982,6 +2054,7 @@ button.secondary,
   .retirement-answer-grid,
   .retirement-actions > div,
   .spending-capacity-grid,
+  .estate-intent-grid,
   .details-card-grid,
   .break-risk-layout,
   .decision-checklist,

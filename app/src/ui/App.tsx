@@ -30,6 +30,7 @@ import {
   selectCashFlowReconciliationRows,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOverviewMetrics,
@@ -2016,6 +2017,7 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -2120,6 +2122,7 @@ function ResultsHandoffPanel({
           <>
             <RetirementAnswerPanel answer={retirementAnswer} loading={loading} />
             <SpendingCapacityPanel loading={loading} summary={spendingCapacity} />
+            <EstateIntentPanel loading={loading} summary={estateIntent} />
 
             <div className="summary-grid">
               <Metric
@@ -2410,6 +2413,53 @@ function SpendingCapacityPanel({
         <section>
           <h4>Estate trade-off</h4>
           <p>{summary.estateTradeoff}</p>
+        </section>
+        <section>
+          <h4>Review next</h4>
+          <div>
+            {summary.reviewActions.map((action) => (
+              <article key={action.id}>
+                <strong>{action.label}</strong>
+                <span>{action.detail}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function EstateIntentPanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectEstateIntentSummary>;
+}) {
+  return (
+    <section className={`estate-intent-panel estate-intent-${summary.status}`}>
+      <div className="estate-intent-lede">
+        <p className="eyebrow">Estate wishes and tax efficiency</p>
+        <h3>{loading ? 'Calculating estate picture' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Projected estate" value={formatMoney(summary.projectedEstate)} />
+        <Metric label="Estate goal" value={summary.estateTarget ? formatMoney(summary.estateTarget) : 'Not set'} />
+        <Metric label="Estate gap" value={formatSignedMoney(summary.estateGap)} />
+        <Metric label="Lifetime tax" value={formatMoney(summary.lifetimeTax)} />
+        <Metric label="OAS recovery tax" value={formatMoney(summary.lifetimeOasClawback)} />
+        <Metric label="Registered assets at end" value={formatMoney(summary.finalRegisteredAssets)} />
+      </div>
+
+      <div className="estate-intent-grid">
+        <section>
+          <h4>Tax-efficiency read</h4>
+          <strong>{summary.taxEfficiencyHeadline}</strong>
+          <p>{summary.taxEfficiencyDetail}</p>
         </section>
         <section>
           <h4>Review next</h4>

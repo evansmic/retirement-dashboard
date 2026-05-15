@@ -13,6 +13,7 @@ import {
   selectChartReadyData,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOverviewMetrics,
@@ -469,6 +470,54 @@ describe('result selectors', () => {
     expect(spending.repairEarlySpending).toBe(Math.round((planFixture.spending.gogo || 0) * 0.9));
     expect(spending.detail).toContain('lower-spending test');
     expect(spending.reviewActions.find((action) => action.id === 'spendLess')).toBeTruthy();
+  });
+
+  it('flags estate intent when a large projected estate has no target', () => {
+    const estateHeavyResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_rrsp: 3000000, bal_lif: 0, bal_total: 6000000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 71470, bal_rrsp: 3500000, bal_lif: 0, bal_total: 7000000 }
+    ]);
+    const plan = { ...planFixture, inheritance: 0 };
+    const answer = selectRetirementAnswerSummary(estateHeavyResult, plan);
+    const estate = selectEstateIntentSummary(estateHeavyResult, plan, null, answer);
+
+    expect(estate.status).toBe('needsIntent');
+    expect(estate.headline).toContain('no estate goal');
+    expect(estate.finalRegisteredAssets).toBeGreaterThan(0);
+    expect(estate.reviewActions.find((action) => action.id === 'estateGoal')).toBeTruthy();
+  });
+
+  it('flags tax efficiency when registered assets and OAS clawback shape the estate picture', () => {
+    const taxHeavyResult = withRows([
+      {
+        ...fixture.years[0],
+        shortfall: 0,
+        totalTaxYear: 45000,
+        totalOasClawY: 5000,
+        rrif_draw_f: 80000,
+        bal_rrsp: 400000,
+        bal_lif: 0,
+        bal_total: 800000
+      },
+      {
+        ...fixture.years[1],
+        shortfall: 0,
+        totalTaxYear: 52000,
+        totalOasClawY: 7000,
+        rrif_draw_f: 90000,
+        bal_rrsp: 500000,
+        bal_lif: 0,
+        bal_total: 900000
+      }
+    ]);
+    const plan = { ...planFixture, inheritance: 900000 };
+    const answer = selectRetirementAnswerSummary(taxHeavyResult, plan);
+    const estate = selectEstateIntentSummary(taxHeavyResult, plan, null, answer);
+
+    expect(estate.status).toBe('taxReview');
+    expect(estate.lifetimeOasClawback).toBeGreaterThan(0);
+    expect(estate.taxEfficiencyHeadline).toContain('Tax timing');
+    expect(estate.reviewActions.find((action) => action.id === 'taxTiming')).toBeTruthy();
   });
 
   it('normalizes annual detail tax and balance fields safely', () => {

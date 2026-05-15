@@ -13,6 +13,7 @@ import {
   selectCashFlowReconciliationRows,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOverviewMetrics,
@@ -219,6 +220,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const recommendedPath = selectRecommendedPath(result, preview.scenarios, preview.survivor, plan);
     const retirementAnswer = selectRetirementAnswerSummary(result, plan, null, preview.survivor);
     const spendingCapacity = selectSpendingCapacitySummary(result, preview.scenarios, plan, retirementAnswer);
+    const estateIntent = selectEstateIntentSummary(result, plan, preview.survivor, retirementAnswer);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -274,6 +276,9 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['cannotTell', 'needsReduction', 'tight', 'balanced', 'flexible']).toContain(spendingCapacity.status);
     expect(spendingCapacity.headline.length).toBeGreaterThan(10);
     expect(spendingCapacity.reviewActions.length).toBeGreaterThanOrEqual(2);
+    expect(['cannotTell', 'needsIntent', 'taxReview', 'survivorReview', 'aligned']).toContain(estateIntent.status);
+    expect(estateIntent.headline.length).toBeGreaterThan(10);
+    expect(estateIntent.reviewActions.length).toBeGreaterThanOrEqual(1);
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
     expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
     expect(readinessRows).toHaveLength(6);

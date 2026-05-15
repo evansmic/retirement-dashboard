@@ -4,34 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 24: Spending Capacity Layer
+## Active Sprint — Sprint 25: Estate Intent And Tax Efficiency
 
 **Status:** Complete 2026-05-14 after verification.
 
-Goal: answer "How much can I spend?" with a bounded consumer-facing spending posture derived from existing projections and scenario output.
+Goal: make estate wishes and tax-efficiency review visible in the consumer Results story without adding legal estate planning, new tax rules, or optimizer behaviour.
 
-Non-scope: full optimizer, new simulation math, schema v3, custom scenario builder, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
+Non-scope: legal estate planning, full tax optimizer, new simulation math, schema v3, custom scenario builder, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 24 checkpoint doc: [`docs/sprint_24_spending_capacity_layer.md`](docs/sprint_24_spending_capacity_layer.md).
+Sprint 25 checkpoint doc: [`docs/sprint_25_estate_intent_tax_efficiency.md`](docs/sprint_25_estate_intent_tax_efficiency.md).
 
-### Sprint 24 Candidate Implementation Tickets
+### Sprint 25 Candidate Implementation Tickets
 
-- [x] **S24-01 — Spending capacity selector.** ✅ *Done 2026-05-15.* Added runtime-only status for cannot estimate, repair needed, tight, balanced, and flexible spending.
-- [x] **S24-02 — Spending capacity panel.** ✅ *Done 2026-05-15.* Added a consumer-facing Overview panel showing spending phases, possible room, repair amount, and estate trade-off.
-- [x] **S24-03 — Estate-heavy lifestyle room.** ✅ *Done 2026-05-15.* Added a bounded possible annual room estimate for strongly funded plans without an estate target.
-- [x] **S24-04 — Lower-spending repair read.** ✅ *Done 2026-05-15.* Used the existing 10% lower early-spending scenario to identify a first repair amount when it fixes a visible shortfall.
-- [x] **S24-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 24 documentation.
+- [x] **S25-01 — Estate intent selector.** ✅ *Done 2026-05-15.* Added runtime-only estate/tax review states for cannot tell, needs intent, tax review, survivor review, and aligned.
+- [x] **S25-02 — Estate and tax-efficiency panel.** ✅ *Done 2026-05-15.* Added projected estate, estate goal, estate gap, lifetime tax, OAS recovery tax, and final registered assets to Overview.
+- [x] **S25-03 — Large estate intent prompt.** ✅ *Done 2026-05-15.* Reframed large projected estates without a goal as an intent question rather than an automatically better result.
+- [x] **S25-04 — Tax-efficiency prompts.** ✅ *Done 2026-05-15.* Surfaced OAS recovery tax, tax-pressure rows, and final registered balances as review prompts.
+- [x] **S25-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 25 documentation.
 
-### Sprint 24 Definition Of Done
+### Sprint 25 Definition Of Done
 
-- Overview answers whether spending looks too high, tight, supportable, or potentially too conservative.
-- Estate-heavy plans surface lifestyle room as a review item, not a recommendation to preserve more estate.
-- Shortfall plans show whether the existing lower-spending scenario repairs the visible shortfall.
+- Overview makes estate intent explicit when projected wealth left is large or meaningfully different from the entered goal.
+- Tax-efficiency review is framed as preserving household choices and reducing avoidable drag, not as advice.
+- Survivor estate impact remains visible for couple plans.
 - Output remains runtime-only and does not change simulation math.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 24: Spending Capacity Layer
+
+**Complete 2026-05-15.** Answered "How much can I spend?" with a bounded consumer-facing spending posture derived from existing projections and scenario output.
+
+Sprint 24 checkpoint doc: [`docs/sprint_24_spending_capacity_layer.md`](docs/sprint_24_spending_capacity_layer.md).
 
 ### Sprint 23: Consumer Results Simplification
 

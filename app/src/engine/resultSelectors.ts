@@ -644,6 +644,29 @@ export type SpendingCapacitySummary = {
   }>;
 };
 
+export type EstateIntentStatus = 'cannotTell' | 'needsIntent' | 'taxReview' | 'survivorReview' | 'aligned';
+
+export type EstateIntentSummary = {
+  status: EstateIntentStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  projectedEstate: number;
+  estateTarget: number;
+  estateGap: number;
+  lifetimeTax: number;
+  lifetimeOasClawback: number;
+  finalRegisteredAssets: number;
+  taxEfficiencyHeadline: string;
+  taxEfficiencyDetail: string;
+  reviewActions: Array<{
+    id: 'estateGoal' | 'taxTiming' | 'registeredAssets' | 'survivor' | 'giving';
+    label: string;
+    detail: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -971,6 +994,121 @@ export function selectSpendingCapacitySummary(
     projectedMoneyLeft: overview.endPortfolio,
     estateTarget,
     estateTradeoff,
+    reviewActions: reviewActions.slice(0, 4)
+  };
+}
+
+export function selectEstateIntentSummary(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  survivor: SimulationResult | null | undefined = null,
+  retirementAnswer: RetirementAnswerSummary = selectRetirementAnswerSummary(baseline, plan, null, survivor)
+): EstateIntentSummary {
+  const rows = rowsFrom(baseline);
+  const overview = selectOverviewMetrics(baseline);
+  const tax = selectTaxSummaryMetrics(baseline);
+  const taxPressureRows = selectTaxPressureRows(baseline);
+  const survivorComparison = selectSurvivorComparison(baseline, survivor, plan);
+  const last = rows[rows.length - 1];
+  const estateTarget = n(plan?.inheritance);
+  const projectedEstate = overview.endPortfolio;
+  const estateGap = projectedEstate - estateTarget;
+  const finalRegisteredAssets = n(last?.bal_rrsp) + n(last?.bal_lif);
+  const hasLargeEstateWithoutTarget = retirementAnswer.status === 'estateHeavy' && estateTarget <= 0;
+  const hasEstateTargetGap = estateTarget > 0 && Math.abs(estateGap) > Math.max(estateTarget * 0.2, overview.firstYearSpending * 2);
+  const hasTaxPressure = tax.lifetimeOasClawback > 0 || taxPressureRows.length > 0 || finalRegisteredAssets > Math.max(projectedEstate * 0.35, overview.firstYearSpending * 8);
+  const survivorNeedsReview = survivorComparison.status === 'needsInput' || survivorComparison.status === 'notAvailable';
+
+  let status: EstateIntentStatus = 'aligned';
+  if (!rows.length || retirementAnswer.status === 'cannotTell') status = 'cannotTell';
+  else if (hasLargeEstateWithoutTarget || hasEstateTargetGap) status = 'needsIntent';
+  else if (survivorNeedsReview) status = 'survivorReview';
+  else if (hasTaxPressure) status = 'taxReview';
+
+  const labelByStatus: Record<EstateIntentStatus, string> = {
+    cannotTell: 'Cannot review yet',
+    needsIntent: 'Estate wishes need clarity',
+    taxReview: 'Tax efficiency deserves review',
+    survivorReview: 'Survivor estate picture needs review',
+    aligned: 'Estate picture looks intentional'
+  };
+  const headlineByStatus: Record<EstateIntentStatus, string> = {
+    cannotTell: 'Estate intent needs the retirement answer to calculate first.',
+    needsIntent: hasLargeEstateWithoutTarget
+      ? 'The plan leaves a large projected estate, but no estate goal is entered.'
+      : 'The projected estate is meaningfully different from the estate goal entered.',
+    taxReview: 'The estate picture may be shaped by tax timing and registered assets.',
+    survivorReview: 'For a couple, estate and tax choices should be checked against the survivor result.',
+    aligned: 'The projected estate does not raise a major intent or tax-efficiency flag in this bounded review.'
+  };
+  const taxEfficiencyHeadline =
+    hasTaxPressure
+      ? 'Tax timing may affect how much wealth supports the household versus tax.'
+      : 'No major estate-tax efficiency flag appears in the bounded review.';
+  const taxEfficiencyDetail =
+    hasTaxPressure
+      ? 'Review registered withdrawals, OAS recovery tax, and later-life registered balances before assuming the estate outcome is the best use of resources.'
+      : 'Still confirm whether preserving, spending, or giving assets best matches the household goal.';
+  const reviewActions: EstateIntentSummary['reviewActions'] = [];
+
+  if (status === 'needsIntent') {
+    reviewActions.push({
+      id: 'estateGoal',
+      label: estateTarget > 0 ? 'Compare estate goal to projection' : 'Set an estate intention',
+      detail:
+        estateTarget > 0
+          ? 'Decide whether the gap means spending, giving, tax timing, or preservation should change.'
+          : 'Decide whether the household wants to preserve this much wealth or enjoy more of it during retirement.',
+      detailArea: 'details'
+    });
+  }
+  if (hasTaxPressure) {
+    reviewActions.push({
+      id: 'taxTiming',
+      label: 'Review tax timing',
+      detail: 'Later-life taxable income, OAS recovery tax, or registered withdrawals may reduce estate efficiency.',
+      detailArea: 'taxes'
+    });
+  }
+  if (finalRegisteredAssets > 0) {
+    reviewActions.push({
+      id: 'registeredAssets',
+      label: 'Check registered assets at plan end',
+      detail: 'Large RRSP/RRIF/LIF balances late in life can affect taxes, estate flexibility, and survivor planning.',
+      detailArea: 'details'
+    });
+  }
+  if (!personLooksBlank(plan?.p2)) {
+    reviewActions.push({
+      id: 'survivor',
+      label: 'Confirm survivor estate impact',
+      detail: 'Estate wishes should still work after the first death, when income, tax, and accounts may change.',
+      detailArea: 'householdResilience'
+    });
+  }
+  reviewActions.push({
+    id: 'giving',
+    label: 'Consider lifetime giving or spending',
+    detail: 'If the projected estate is larger than intended, review whether gifting, family support, travel, or home projects fit the household values.',
+    detailArea: 'stressTests'
+  });
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail:
+      status === 'needsIntent'
+        ? 'The planner should not assume a larger estate is automatically better. Make the intent explicit before optimizing.'
+        : 'Use this as a first-pass estate and tax-efficiency review, not a legal estate plan.',
+    projectedEstate,
+    estateTarget,
+    estateGap,
+    lifetimeTax: tax.lifetimeTax,
+    lifetimeOasClawback: tax.lifetimeOasClawback,
+    finalRegisteredAssets,
+    taxEfficiencyHeadline,
+    taxEfficiencyDetail,
     reviewActions: reviewActions.slice(0, 4)
   };
 }

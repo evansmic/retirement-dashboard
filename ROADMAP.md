@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 24 is complete. Suggested Sprint 25 should focus on **Estate Intent And Tax Efficiency**.
+Sprint 25 is complete. Suggested Sprint 26 should focus on **Intake UX And Help Text**.
 
-Goal: make estate wishes explicit and connect projected estate, registered assets, OAS clawback, giving, spending, and later-life tax to household choices.
+Goal: make the guided intake easier for non-expert households by explaining complex Canadian retirement inputs in plain language.
 
-Candidate Sprint 25 slices:
+Candidate Sprint 26 slices:
 
-- Add a clearer estate-intent review selector using current projected money left, estate target, survivor result, and tax pressure.
-- Reframe estate target input/copy around "money you want to leave" instead of technical inheritance language.
-- Connect large registered balances and OAS clawback to tax-efficiency review prompts.
-- Surface giving/spending/preservation prompts without adding new modelling rules.
+- Add contextual help text for CPP/OAS estimates, DB bridge pensions, LIRA/LIF, non-registered ACB, survivor CPP, real estate/downsize, and estate goals.
+- Replace remaining schema/prototype language in intake with consumer planning language.
+- Clarify spending phases as early, later, and late-life retirement spending.
+- Keep the current v2 schema and avoid adding new saved fields unless separately scoped.
 - Preserve schema v2, stable dashboard parity, and runtime-only recommendation output.
 
 ## Consumer Roadmap Sequence
@@ -83,6 +83,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 22 — Consumer retirement answer layer.** Complete 2026-05-14. Added a first Results answer for retirement readiness, spending fit, estate intent, and next review actions while softening estate-heavy recommendations.
 - **Sprint 23 — Consumer results simplification.** Complete 2026-05-14. Consolidated advanced diagnostic result pages behind a Details hub so the top-level Results journey stays consumer-focused.
 - **Sprint 24 — Spending capacity layer.** Complete 2026-05-15. Added a first-pass spending capacity answer for flexible, balanced, tight, and repair-needed plans using existing scenario output.
+- **Sprint 25 — Estate intent and tax efficiency.** Complete 2026-05-15. Added a first-pass estate/tax-efficiency review connecting projected estate, estate goals, OAS recovery tax, final registered assets, and survivor review prompts.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
