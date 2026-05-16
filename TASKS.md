@@ -4,33 +4,39 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 32: Overview Simplification
+## Latest Sprint — Sprint 33: Save & Print Polish
 
 **Status:** Complete 2026-05-16.
 
-Goal: keep the Overview calm after the retirement answer by moving audit-style diagnostics into Details while preserving the evidence for deeper review.
+Goal: make the end-of-results actions clearer by separating the editable local plan file from the printable/readable report.
 
 Non-scope: full visual redesign, new simulation math, DB survivor pension modelling, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 32 checkpoint doc: [`docs/sprint_32_overview_simplification.md`](docs/sprint_32_overview_simplification.md).
+Sprint 33 checkpoint doc: [`docs/sprint_33_save_print_polish.md`](docs/sprint_33_save_print_polish.md).
 
-### Sprint 32 Candidate Implementation Tickets
+### Sprint 33 Candidate Implementation Tickets
 
-- [x] **S32-01 — Overview content audit.** Identified audit-style panels crowding the Overview after the consumer answer.
-- [x] **S32-02 — Details evidence surface.** Moved plan health, money-flow diagnostics, decision detail, projection path, tax pressure, scenario tables, and optimizer-prep panels into Details.
-- [x] **S32-03 — Calm Overview flow.** Kept retirement answer, spending capacity, estate intent, suggested plan, household scenario cards, survivor snapshot, and readiness on Overview.
-- [x] **S32-04 — First-year money-flow component.** Extracted first-year money-flow evidence so it can live in Details without duplicating Overview code.
-- [x] **S32-05 — Tests and docs.** Added structure coverage for the Overview/Details split and documented Sprint 32.
+- [x] **S33-01 — Save/report copy audit.** Found remaining places where save, export, detailed report, and file-extension language were blended.
+- [x] **S33-02 — Save editable plan action.** Reframed local plan saving as saving an editable plan, not primarily as exporting a file extension.
+- [x] **S33-03 — Open printable report action.** Reframed the readable detailed-report path as opening a printable report.
+- [x] **S33-04 — Save & print panel split.** Updated the Save & print panel so the save and report actions explain different purposes.
+- [x] **S33-05 — Tests and docs.** Added structure coverage for the two-action model and documented Sprint 33.
 
-### Sprint 32 Definition Of Done
+### Sprint 33 Definition Of Done
 
-- Overview starts with the household answer and avoids audit-style diagnostic panels.
-- Details keeps the moved evidence reachable without changing selectors or engine output.
-- Scenario and survivor summaries remain visible on Overview.
+- Save editable plan and Open printable report are visibly distinct actions.
+- `.plan.json` remains the underlying file format without being the primary consumer label.
+- The printable report route and editable plan save behavior are unchanged.
 - No simulation math, saved plan format, optimizer behavior, or report routing changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 33: Save & Print Polish
+
+**Complete 2026-05-16.** Split the end-of-results actions into consumer-facing Save editable plan and Open printable report paths while preserving the local plan file and detailed-report route.
+
+Sprint 33 checkpoint doc: [`docs/sprint_33_save_print_polish.md`](docs/sprint_33_save_print_polish.md).
 
 ### Sprint 32: Overview Simplification
 

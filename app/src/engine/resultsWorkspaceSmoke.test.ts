@@ -297,7 +297,7 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(Object.keys(planFile.plan)).not.toContain('optimizerBoundaries');
     expect(Object.keys(planFile.plan)).not.toContain('optimizerInputReview');
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
-    expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
+    expect(readinessSummary.stableDashboardHandoff).toContain('printable report');
     expect(readinessRows).toHaveLength(6);
     expect(readinessRows.find((row) => row.id === 'savePlan')?.detailArea).toBe('exportSave');
     expect(planFile.plan.schemaVersion).toBe(2);

@@ -934,7 +934,7 @@ describe('result selectors', () => {
 
     expect(['ready', 'review', 'blocked']).toContain(summary.status);
     expect(['ready', 'review', 'blocked']).toContain(summary.saveStatus);
-    expect(summary.stableDashboardHandoff).toContain('detailed report');
+    expect(summary.stableDashboardHandoff).toContain('printable report');
     expect(rows.map((row) => row.id)).toEqual([
       'blockers',
       'watchRisks',

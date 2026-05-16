@@ -25,7 +25,7 @@ export const resultsWorkspaceMap: ResultsNavItem[] = [
   { id: 'taxes', label: 'Taxes', helper: 'Tax picture' },
   { id: 'householdResilience', label: 'Survivor Impact', helper: 'Couple plans' },
   { id: 'details', label: 'Details', helper: 'Advanced views' },
-  { id: 'exportSave', label: 'Save & print', helper: 'Plan file' }
+  { id: 'exportSave', label: 'Save & print', helper: 'Editable plan and report' }
 ];
 
 export type OverviewMetrics = {
@@ -927,8 +927,8 @@ export function selectRetirementAnswerSummary(
   }
   actions.push({
     id: 'report',
-    label: 'Open the detailed report',
-    detail: 'Use the detailed report for printable charts, annual tables, account rows, and tax detail.',
+    label: 'Open printable report',
+    detail: 'Use the printable report for readable charts, annual tables, account rows, and tax detail.',
     detailArea: 'exportSave'
   });
 
@@ -3183,7 +3183,7 @@ export function selectResultsReadinessSummary(
     reviewCount,
     blockedCount,
     recommendedLabel: recommended.recommendedLabel,
-    stableDashboardHandoff: 'Use the detailed report for complete schedules, printable charts, annual rows, and tax/account detail.'
+    stableDashboardHandoff: 'Open the printable report for complete schedules, printable charts, annual rows, and tax/account detail.'
   };
 }
 
@@ -3239,20 +3239,20 @@ export function selectResultsReadinessRows(
     },
     {
       id: 'stableDashboard',
-      label: 'Detailed report inspection',
+      label: 'Printable report review',
       status: validationBlocked ? 'blocked' : 'review',
       priority: dashboard?.priority ?? 'next',
-      detail: dashboard?.detail ?? 'The detailed report remains available for complete schedules and printable review.',
-      action: dashboard?.handoff ?? 'Open the detailed report before acting on the selected path.',
+      detail: dashboard?.detail ?? 'The printable report remains available for complete schedules and readable review.',
+      action: dashboard?.handoff ?? 'Open the printable report before acting on the selected path.',
       detailArea: 'exportSave'
     },
     {
       id: 'savePlan',
-      label: 'Save local plan',
+      label: 'Save editable plan',
       status: validationBlocked ? 'blocked' : save?.status ?? 'blocked',
       priority: save?.priority ?? 'later',
       detail: save?.detail ?? 'Save the editable plan locally after review.',
-      action: save?.handoff ?? 'Save the editable local plan file after review.',
+      action: save?.handoff ?? 'Save the editable plan file after review.',
       detailArea: 'exportSave'
     }
   ];
@@ -3809,12 +3809,12 @@ function selectRecommendedChecklistItems(
       label: 'Inspect complete detail',
       status: 'review',
       priority: 'next',
-      detail: 'The Results page is still a preview. Complete schedules, charts, and print/PDF remain in the detailed report.',
-      handoff: 'Open detailed report before acting on the selected path.'
+      detail: 'The Results page is still a preview. Complete schedules, charts, and print/PDF remain in the printable report.',
+      handoff: 'Open printable report before acting on the selected path.'
     },
     {
       id: 'savePlan',
-      label: 'Save local plan file',
+      label: 'Save editable plan',
       status: validationBlocked || blockedRisks.length > 0 ? 'blocked' : 'ready',
       priority: 'later',
       detail:

@@ -91,7 +91,7 @@ type WorkspaceState = {
   error: string;
   importLabel: string;
   dirty: boolean;
-  lastExportedAt: string;
+  lastSavedAt: string;
 };
 
 type WorkspaceAction =
@@ -104,7 +104,7 @@ type WorkspaceAction =
   | { type: 'setStep'; step: IntakeStepId }
   | { type: 'setResultsSection'; section: ResultsWorkspaceSection }
   | { type: 'setError'; error: string }
-  | { type: 'markExported'; exportedAt: string };
+  | { type: 'markSaved'; savedAt: string };
 
 type BridgePreview = {
   result: SimulationResult | null;
@@ -134,7 +134,7 @@ const initialState: WorkspaceState = {
   error: '',
   importLabel: '',
   dirty: false,
-  lastExportedAt: ''
+  lastSavedAt: ''
 };
 
 function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
@@ -150,7 +150,7 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
         importLabel: 'New local plan',
         error: '',
         dirty: true,
-        lastExportedAt: ''
+        lastSavedAt: ''
       };
     case 'loadExample': {
       const plan = createExamplePlan(action.id);
@@ -164,7 +164,7 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
         importLabel: `Example: ${action.label}`,
         error: '',
         dirty: true,
-        lastExportedAt: ''
+        lastSavedAt: ''
       };
     }
     case 'openPlan':
@@ -178,7 +178,7 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
         importLabel: action.label,
         error: '',
         dirty: false,
-        lastExportedAt: ''
+        lastSavedAt: ''
       };
     case 'updatePlan':
       return { ...state, plan: action.plan, dirty: true, error: '' };
@@ -198,8 +198,8 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
       return { ...state, activeResultsSection: action.section, view: 'results' };
     case 'setError':
       return { ...state, error: action.error };
-    case 'markExported':
-      return { ...state, dirty: false, lastExportedAt: action.exportedAt };
+    case 'markSaved':
+      return { ...state, dirty: false, lastSavedAt: action.savedAt };
     default:
       return state;
   }
@@ -216,6 +216,10 @@ function stableDashboardUrl(): string {
 function stableDashboardUrlForPlan(plan: V2PlanPayload): string {
   const encoded = btoa(encodeURIComponent(JSON.stringify(plan)));
   return `${stableDashboardUrl()}#${encoded}`;
+}
+
+function printableReportUrlForPlan(plan: V2PlanPayload): string {
+  return stableDashboardUrlForPlan(plan);
 }
 
 function formatMoney(value: number | undefined): string {
@@ -411,7 +415,7 @@ export function App() {
     }
   }
 
-  function downloadNormalizedPlan() {
+  function saveEditablePlan() {
     if (!plan) return;
     const file = createPlanFile(plan);
     const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
@@ -423,7 +427,7 @@ export function App() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    dispatch({ type: 'markExported', exportedAt: new Date().toLocaleString() });
+    dispatch({ type: 'markSaved', savedAt: new Date().toLocaleString() });
   }
 
   return (
@@ -438,7 +442,7 @@ export function App() {
             Open classic intake
           </a>
           <a className="button secondary" href={stableDashboardUrl()}>
-            Open detailed report
+            Open printable report
           </a>
         </nav>
       </header>
@@ -453,8 +457,8 @@ export function App() {
           <strong>{state.importLabel || 'Local only'}</strong>
         </div>
         <div>
-          <span>Save state</span>
-          <strong>{state.dirty ? 'Unsaved local changes' : state.lastExportedAt ? `Exported ${state.lastExportedAt}` : 'No changes'}</strong>
+          <span>Editable plan</span>
+          <strong>{state.dirty ? 'Unsaved local changes' : state.lastSavedAt ? `Saved ${state.lastSavedAt}` : 'No changes'}</strong>
         </div>
       </section>
 
@@ -520,7 +524,7 @@ export function App() {
               endPortfolio={bridgeLastYear?.bal_total}
               firstYear={bridgeFirstYear?.year}
               lastYear={bridgeLastYear?.year}
-              onDownload={downloadNormalizedPlan}
+              onDownload={saveEditablePlan}
               onResults={() => dispatch({ type: 'setView', view: 'results' })}
               onStep={(step) => dispatch({ type: 'setStep', step })}
               plan={plan}
@@ -534,7 +538,7 @@ export function App() {
               activeSection={state.activeResultsSection}
               bridgeError={bridgePreview.error}
               loading={bridgePreview.loading}
-              onDownload={downloadNormalizedPlan}
+              onDownload={saveEditablePlan}
               onSection={(section) => dispatch({ type: 'setResultsSection', section })}
               plan={plan}
               result={bridgePreview.result}
@@ -576,7 +580,7 @@ function StartPanel({
           </button>
           <label className="button file-picker">
             <input type="file" accept=".plan.json,.json,application/json" onChange={onFileChange} />
-            Open .plan.json
+            Open editable plan
           </label>
         </div>
         {error ? <p className="error">{error}</p> : null}
@@ -586,8 +590,8 @@ function StartPanel({
         <p className="eyebrow">Local-first boundary</p>
         <h3>No account. No upload. No cloud sync.</h3>
         <p>
-          Durable save remains a user-controlled plan file. The detailed report stays available for printable charts and
-          complete annual tables.
+          Saving creates an editable local plan file. The printable report is separate and stays available for readable
+          charts and complete annual tables.
         </p>
         <ul className="clean-list">
           <li>Ontario 2026 tax assumptions</li>
@@ -1968,7 +1972,7 @@ function ReviewPanel({
           Continue to results
         </button>
         <button className="ghost" type="button" onClick={onDownload}>
-          Save .plan.json
+          Save editable plan
         </button>
       </div>
     </section>
@@ -2268,7 +2272,7 @@ function ResultsHandoffPanel({
           <div className="validation-panel">
             <strong>Money-in / money-out check</strong>
             <span>
-              First-year funding does not reconcile cleanly to after-tax spending. Open the detailed report before
+              First-year funding does not reconcile cleanly to after-tax spending. Open the printable report before
               relying on this plan.
             </span>
           </div>
@@ -2284,10 +2288,10 @@ function ResultsHandoffPanel({
         <div className="actions">
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}
-            href={hasBlockers ? undefined : stableDashboardUrlForPlan(extractPlanPayload(plan))}
+            href={hasBlockers ? undefined : printableReportUrlForPlan(extractPlanPayload(plan))}
             aria-disabled={hasBlockers}
           >
-            Open detailed report
+            Open printable report
           </a>
           <button className="ghost" type="button" onClick={onDownload}>
             Save editable plan
@@ -2355,8 +2359,8 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'exportSave':
       return {
-        summary: 'Save & print keeps your editable plan file local and points to the printable detailed report.',
-        handoff: 'No account or cloud sync is required.'
+        summary: 'Save & print separates the editable plan file from the printable report.',
+        handoff: 'Save editable plan keeps your inputs local. Open printable report gives you readable charts and tables.'
       };
     default:
       return {
@@ -2869,7 +2873,7 @@ function RecommendedPathPanel({
         ))}
       </div>
       <p className="table-note">
-        This is a first-pass planning comparison, not financial advice or a full optimizer. Open the detailed report for
+        This is a first-pass planning comparison, not financial advice or a full optimizer. Open the printable report for
         complete annual detail before acting on a path.
       </p>
     </section>
@@ -3922,7 +3926,12 @@ function ExportSavePanel({
 
       <div className="result-overview-grid">
         <section className="result-card">
-          <h3>Local plan file</h3>
+          <p className="eyebrow">Save your inputs</p>
+          <h3>Save editable plan</h3>
+          <p>
+            This saves the household inputs and assumptions so you can reopen and revise the plan later. It is not the
+            printable client report.
+          </p>
           <dl className="result-ledger">
             <div>
               <dt>Plan title</dt>
@@ -3933,8 +3942,8 @@ function ExportSavePanel({
               <dd>{readinessSummary.saveStatus}</dd>
             </div>
             <div>
-              <dt>Storage</dt>
-              <dd>Local .plan.json</dd>
+              <dt>File type</dt>
+              <dd>Editable local plan</dd>
             </div>
           </dl>
           <p>{readinessSummary.detail}</p>
@@ -3944,17 +3953,18 @@ function ExportSavePanel({
         </section>
 
         <section className="result-card">
-          <h3>Detailed report</h3>
+          <p className="eyebrow">Read and print</p>
+          <h3>Open printable report</h3>
           <p>
-            {readinessSummary.stableDashboardHandoff} Use it to inspect any confidence, readiness, or break-plan item
+            {readinessSummary.stableDashboardHandoff} Use it to review complete schedules, charts, and tax/account detail
             before relying on the plan.
           </p>
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}
-            href={hasBlockers ? undefined : stableDashboardUrlForPlan(extractPlanPayload(plan))}
+            href={hasBlockers ? undefined : printableReportUrlForPlan(extractPlanPayload(plan))}
             aria-disabled={hasBlockers}
           >
-            Open detailed report
+            Open printable report
           </a>
         </section>
       </div>

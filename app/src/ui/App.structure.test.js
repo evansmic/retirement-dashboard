@@ -27,4 +27,15 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
   });
+
+  it('keeps save and report actions distinct in the consumer UI', () => {
+    expect(appSource).toContain('Save editable plan');
+    expect(appSource).toContain('Open printable report');
+    expect(appSource).toContain('This saves the household inputs and assumptions');
+    expect(appSource).toContain('It is not the');
+    expect(appSource).toContain('printable client report');
+    expect(appSource).not.toContain('Save .plan.json');
+    expect(appSource).not.toContain('Local .plan.json');
+    expect(appSource).not.toContain('Open .plan.json');
+  });
 });
