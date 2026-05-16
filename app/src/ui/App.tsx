@@ -34,6 +34,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOptimizerDecisionBoundaries,
+  selectOptimizerInputReview,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -2068,6 +2069,7 @@ function ResultsHandoffPanel({
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
   const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
+  const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -2261,6 +2263,7 @@ function ResultsHandoffPanel({
             <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
             <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
             <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
+            <OptimizerInputReviewPanel summary={optimizerInputReview} />
             <div className="result-section-label">Survivor Impact</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
             <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
@@ -3155,6 +3158,58 @@ function OptimizerBoundaryPanel({
         ))}
       </div>
       <p className="table-note">{summary.nextStep}</p>
+    </section>
+  );
+}
+
+function OptimizerInputReviewPanel({ summary }: { summary: ReturnType<typeof selectOptimizerInputReview> }) {
+  return (
+    <section className={`optimizer-input-review optimizer-input-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Optimizer permissions review</p>
+        <h3>{summary.headline}</h3>
+        <p>{summary.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Can explore" value={String(summary.canExploreCount)} />
+        <Metric label="Must preserve" value={String(summary.mustPreserveCount)} />
+        <Metric label="Needs decision" value={String(summary.needsDecisionCount)} />
+      </div>
+      <div className="optimizer-permission-grid">
+        {summary.rows.map((row) => (
+          <article className={`optimizer-permission-card permission-${row.permission}`} key={row.id}>
+            <div>
+              <small>
+                {row.permission === 'canExplore'
+                  ? 'can explore'
+                  : row.permission === 'mustPreserve'
+                    ? 'must preserve'
+                    : 'needs decision'}
+              </small>
+              <h4>{row.label}</h4>
+              <p>{row.reviewQuestion}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Current</dt>
+                <dd>{row.currentSetting}</dd>
+              </div>
+              <div>
+                <dt>Guardrail</dt>
+                <dd>{row.guardrail}</dd>
+              </div>
+              <div>
+                <dt>Next review</dt>
+                <dd>{row.suggestedNextStep}</dd>
+              </div>
+              <div>
+                <dt>Review area</dt>
+                <dd>{resultsSectionTitle(row.detailArea)}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }

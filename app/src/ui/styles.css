@@ -1672,6 +1672,63 @@ button.secondary,
   border-left-color: var(--navy);
 }
 
+.optimizer-input-review {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 16px;
+}
+
+.optimizer-input-needsDecision {
+  border-left-color: var(--amber);
+  background: #fff9ee;
+}
+
+.optimizer-input-review h3,
+.optimizer-input-review p,
+.optimizer-permission-card h4,
+.optimizer-permission-card p {
+  margin: 0;
+}
+
+.optimizer-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.optimizer-permission-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 12px;
+}
+
+.optimizer-permission-card small {
+  color: var(--muted);
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.permission-canExplore {
+  border-left-color: var(--green);
+}
+
+.permission-mustPreserve {
+  border-left-color: var(--navy);
+}
+
+.permission-needsDecision {
+  border-left-color: var(--amber);
+  background: #fff9ee;
+}
+
 .stress-summary-panel {
   display: grid;
   gap: 12px;
@@ -2187,6 +2244,7 @@ button.secondary,
   .decision-checklist,
   .decision-detail-grid,
   .optimizer-boundary-row,
+  .optimizer-permission-grid,
   .scenario-card-grid,
   .status-strip {
     grid-template-columns: 1fr;

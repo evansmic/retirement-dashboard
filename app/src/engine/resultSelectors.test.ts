@@ -17,6 +17,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOptimizerDecisionBoundaries,
+  selectOptimizerInputReview,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -574,6 +575,7 @@ describe('result selectors', () => {
       }
     });
     const optimizerBoundaries = selectOptimizerDecisionBoundaries(fixture, planFixture);
+    const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
     const survivor = selectSurvivorViewSummary(fixture, planFixture);
     const survivorComparison = selectSurvivorComparison(fixture, fixture, planFixture);
     const recommended = selectRecommendedPath(fixture, { spendLessGogo: scenarioComparison.find((row) => row.id === 'spendLessGogo') ? {
@@ -620,6 +622,16 @@ describe('result selectors', () => {
       detailArea: 'taxes'
     });
     expect(optimizerBoundaries.availableCount).toBeGreaterThanOrEqual(4);
+    expect(optimizerInputReview.rows).toHaveLength(6);
+    expect(optimizerInputReview.rows.find((row) => row.id === 'spending')).toMatchObject({
+      permission: 'canExplore'
+    });
+    expect(optimizerInputReview.rows.find((row) => row.id === 'estateTarget')).toMatchObject({
+      permission: 'mustPreserve'
+    });
+    expect(optimizerInputReview.rows.find((row) => row.id === 'downsizing')).toMatchObject({
+      permission: 'mustPreserve'
+    });
     expect(survivor.status).toBe('single');
     expect(survivorComparison.status).toBe('single');
     expect(recommended.candidateRows.find((row) => row.id === 'baseline')?.reviewStatus).toBeTruthy();
@@ -641,12 +653,19 @@ describe('result selectors', () => {
     };
     const answer = selectRetirementAnswerSummary(fixture, plan);
     const boundaries = selectOptimizerDecisionBoundaries(fixture, plan, answer);
+    const review = selectOptimizerInputReview(boundaries);
 
     expect(boundaries.status).toBe('needsInput');
     expect(boundaries.rows.find((row) => row.id === 'spending')).toMatchObject({ status: 'needsInput' });
     expect(boundaries.rows.find((row) => row.id === 'retirementTiming')).toMatchObject({ status: 'needsInput' });
     expect(boundaries.rows.find((row) => row.id === 'benefitTiming')).toMatchObject({ status: 'needsInput' });
     expect(boundaries.nextStep).toContain('Clear missing inputs');
+    expect(review.status).toBe('needsDecision');
+    expect(review.needsDecisionCount).toBeGreaterThanOrEqual(3);
+    expect(review.rows.find((row) => row.id === 'benefitTiming')).toMatchObject({
+      permission: 'needsDecision',
+      suggestedNextStep: 'Add CPP/OAS estimates first.'
+    });
   });
 
   it('selects a no-shortfall candidate over a higher-portfolio candidate with a shortfall', () => {

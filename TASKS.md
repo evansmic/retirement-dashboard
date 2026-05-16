@@ -4,34 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 28: Optimizer Prep And Decision Boundaries
+## Active Sprint — Sprint 29: Optimizer Input Review And Guardrails
 
 **Status:** Complete 2026-05-15 after verification.
 
-Goal: prepare the consumer-facing optimizer by making the future search space explicit before adding optimization behaviour.
+Goal: turn the optimizer boundary map into a deliberate review step before any automatic search is introduced.
 
 Non-scope: new simulation math, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 28 checkpoint doc: [`docs/sprint_28_optimizer_prep_decision_boundaries.md`](docs/sprint_28_optimizer_prep_decision_boundaries.md).
+Sprint 29 checkpoint doc: [`docs/sprint_29_optimizer_input_review_guardrails.md`](docs/sprint_29_optimizer_input_review_guardrails.md).
 
-### Sprint 28 Candidate Implementation Tickets
+### Sprint 29 Candidate Implementation Tickets
 
-- [x] **S28-01 — Boundary selector contract.** ✅ *Done 2026-05-15.* Added runtime-only optimizer boundary types and selector output.
-- [x] **S28-02 — Lever readiness rows.** ✅ *Done 2026-05-15.* Covered spending, retirement timing, CPP/OAS timing, withdrawal order, estate target, and downsizing.
-- [x] **S28-03 — Consumer Overview panel.** ✅ *Done 2026-05-15.* Added future optimizer prep to Results without implying automatic optimization is running.
-- [x] **S28-04 — Runtime-only guardrails.** ✅ *Done 2026-05-15.* Confirmed boundary output does not enter saved plan files.
-- [x] **S28-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 28 documentation.
+- [x] **S29-01 — Permission review selector.** ✅ *Done 2026-05-15.* Added runtime-only optimizer input review rows derived from the Sprint 28 boundary map.
+- [x] **S29-02 — Can explore / must preserve / needs decision.** ✅ *Done 2026-05-15.* Classified future optimizer levers by household permission.
+- [x] **S29-03 — Guardrail copy.** ✅ *Done 2026-05-15.* Added plain-language guardrails and review questions for each future optimizer lever.
+- [x] **S29-04 — Overview review panel.** ✅ *Done 2026-05-15.* Added optimizer permissions review without saving choices or running optimization.
+- [x] **S29-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 29 documentation.
 
-### Sprint 28 Definition Of Done
+### Sprint 29 Definition Of Done
 
-- Future optimizer inputs are explicit and bounded.
-- Missing inputs and review-only levers are visible before optimization is attempted.
-- UI language makes clear that no optimizer is running yet.
+- Future optimizer permissions are visible before automatic search exists.
+- Must-preserve wishes are separated from can-explore levers.
+- Missing household decisions are clearly called out.
 - Output remains runtime-only and no simulation math changes.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 28: Optimizer Prep And Decision Boundaries
+
+**Complete 2026-05-15.** Added runtime-only optimizer boundary rows for spending, retirement timing, CPP/OAS timing, withdrawal order, estate target, and downsizing without adding optimizer execution.
+
+Sprint 28 checkpoint doc: [`docs/sprint_28_optimizer_prep_decision_boundaries.md`](docs/sprint_28_optimizer_prep_decision_boundaries.md).
 
 ### Sprint 27: Scenario Choice Redesign
 

@@ -706,6 +706,29 @@ export type OptimizerBoundarySummary = {
   rows: OptimizerBoundaryRow[];
 };
 
+export type OptimizerInputPermission = 'canExplore' | 'mustPreserve' | 'needsDecision';
+
+export type OptimizerInputReviewRow = {
+  id: OptimizerBoundaryRow['id'];
+  label: string;
+  permission: OptimizerInputPermission;
+  currentSetting: string;
+  guardrail: string;
+  reviewQuestion: string;
+  suggestedNextStep: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type OptimizerInputReviewSummary = {
+  status: 'ready' | 'needsDecision' | 'review';
+  headline: string;
+  detail: string;
+  canExploreCount: number;
+  mustPreserveCount: number;
+  needsDecisionCount: number;
+  rows: OptimizerInputReviewRow[];
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -1300,6 +1323,95 @@ export function selectOptimizerDecisionBoundaries(
         : 'Keep using the retirement choice cards while optimizer execution remains out of scope.',
     rows: boundaryRows
   };
+}
+
+export function selectOptimizerInputReview(
+  boundaries: OptimizerBoundarySummary
+): OptimizerInputReviewSummary {
+  const rows: OptimizerInputReviewRow[] = boundaries.rows.map((row) => {
+    const permission = optimizerPermissionForBoundary(row);
+    const copy = optimizerReviewCopy(row, permission);
+    return {
+      id: row.id,
+      label: row.label,
+      permission,
+      currentSetting: row.currentSetting,
+      guardrail: copy.guardrail,
+      reviewQuestion: copy.reviewQuestion,
+      suggestedNextStep: copy.suggestedNextStep,
+      detailArea: row.detailArea
+    };
+  });
+  const canExploreCount = rows.filter((row) => row.permission === 'canExplore').length;
+  const mustPreserveCount = rows.filter((row) => row.permission === 'mustPreserve').length;
+  const needsDecisionCount = rows.filter((row) => row.permission === 'needsDecision').length;
+  const status: OptimizerInputReviewSummary['status'] =
+    needsDecisionCount > 0 || boundaries.status === 'needsInput' ? 'needsDecision' : mustPreserveCount > 0 ? 'review' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'ready'
+        ? 'The future optimizer has clear permission boundaries.'
+        : status === 'review'
+          ? 'Some wishes should be preserved before any future optimizer searches.'
+          : 'Some choices need clearer household permission before optimization would be responsible.',
+    detail:
+      'This is a review checklist only. It does not save optimizer permissions and does not run an optimizer.',
+    canExploreCount,
+    mustPreserveCount,
+    needsDecisionCount,
+    rows
+  };
+}
+
+function optimizerPermissionForBoundary(row: OptimizerBoundaryRow): OptimizerInputPermission {
+  if (row.status === 'needsInput') return 'needsDecision';
+  if (row.id === 'estateTarget') return row.status === 'available' ? 'mustPreserve' : 'needsDecision';
+  if (row.id === 'withdrawalOrder') return 'mustPreserve';
+  if (row.id === 'downsizing' && row.status === 'reviewOnly') return 'mustPreserve';
+  if (row.status === 'reviewOnly') return 'mustPreserve';
+  return 'canExplore';
+}
+
+function optimizerReviewCopy(
+  row: OptimizerBoundaryRow,
+  permission: OptimizerInputPermission
+): Pick<OptimizerInputReviewRow, 'guardrail' | 'reviewQuestion' | 'suggestedNextStep'> {
+  const byId: Record<OptimizerBoundaryRow['id'], Pick<OptimizerInputReviewRow, 'guardrail' | 'reviewQuestion' | 'suggestedNextStep'>> = {
+    spending: {
+      guardrail: 'Explore spending only within a lifestyle range the household would actually enjoy.',
+      reviewQuestion: 'Could the household comfortably spend more or less than the current targets?',
+      suggestedNextStep: permission === 'needsDecision' ? 'Set early, later, and late-life spending first.' : 'Use Spending Capacity and Retirement Choices as the first review.'
+    },
+    retirementTiming: {
+      guardrail: 'Do not move retirement timing unless the household is genuinely willing to work longer or retire earlier.',
+      reviewQuestion: 'Is the retirement date flexible, or should it be preserved?',
+      suggestedNextStep: permission === 'needsDecision' ? 'Enter a retirement year first.' : 'Review Work two years longer as the bounded timing test.'
+    },
+    benefitTiming: {
+      guardrail: 'Explore CPP/OAS timing only after the monthly estimates are credible.',
+      reviewQuestion: 'Would the household consider delaying benefits if it improves later-life security?',
+      suggestedNextStep: permission === 'needsDecision' ? 'Add CPP/OAS estimates first.' : 'Review Delay CPP/OAS to 70 as the bounded benefit test.'
+    },
+    withdrawalOrder: {
+      guardrail: 'Preserve the current withdrawal-order setting until a tax-aware drawdown optimizer exists.',
+      reviewQuestion: 'Should drawdown order stay as a reviewed tax strategy rather than an automatic lever?',
+      suggestedNextStep: 'Use Taxes and Details before allowing future tax-aware drawdown search.'
+    },
+    estateTarget: {
+      guardrail: 'Preserve an entered estate goal; if no goal exists, do not assume a larger estate is always better.',
+      reviewQuestion: 'Is leaving this amount of money intentional, or can the plan trade estate for more retirement enjoyment?',
+      suggestedNextStep: permission === 'needsDecision' ? 'Set or confirm estate intent first.' : 'Use Estate Wishes and Tax Efficiency to confirm the target.'
+    },
+    downsizing: {
+      guardrail: 'Never assume a home sale unless the household would realistically consider it.',
+      reviewQuestion: 'Is downsizing an acceptable planning lever or should the home be preserved?',
+      suggestedNextStep: permission === 'canExplore' ? 'Confirm year and net proceeds before comparing home-equity choices.' : 'Keep downsizing out of optimizer search unless the household opts in.'
+    }
+  };
+
+  return byId[row.id];
 }
 
 export function selectFundingSourceRows(row: AnnualSimulationRow | null | undefined): FundingSourceRow[] {

@@ -17,6 +17,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectOptimizerDecisionBoundaries,
+  selectOptimizerInputReview,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -225,6 +226,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const spendingCapacity = selectSpendingCapacitySummary(result, preview.scenarios, plan, retirementAnswer);
     const estateIntent = selectEstateIntentSummary(result, plan, preview.survivor, retirementAnswer);
     const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
+    const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -289,7 +291,11 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['ready', 'needsInput', 'review']).toContain(optimizerBoundaries.status);
     expect(optimizerBoundaries.rows).toHaveLength(6);
     expect(optimizerBoundaries.rows.find((row) => row.id === 'spending')?.currentSetting).toContain('early');
+    expect(['ready', 'needsDecision', 'review']).toContain(optimizerInputReview.status);
+    expect(optimizerInputReview.rows).toHaveLength(6);
+    expect(optimizerInputReview.rows.some((row) => row.permission === 'canExplore')).toBe(true);
     expect(Object.keys(planFile.plan)).not.toContain('optimizerBoundaries');
+    expect(Object.keys(planFile.plan)).not.toContain('optimizerInputReview');
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
     expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
     expect(readinessRows).toHaveLength(6);
