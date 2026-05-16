@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 26 is complete. Suggested Sprint 27 should focus on **Scenario Choice Redesign**.
+Sprint 28 is complete. Suggested Sprint 29 should focus on **Optimizer Input Review And Guardrails**.
 
-Goal: make scenario comparison feel like household decision-making rather than model diagnostics.
+Goal: turn the optimizer boundary map into a deliberate review step before any automatic search is introduced.
 
-Candidate Sprint 27 slices:
+Candidate Sprint 29 slices:
 
-- Reframe scenario cards as household choices: keep current plan, spend more/less early, work longer, delay benefits, and review estate trade-off.
-- Add "best for" and "trade-off" language to help households understand why a path may fit their goals.
-- Reduce technical deltas on first-read cards while preserving full comparison detail in the supporting table.
-- Keep current scenario rerun boundaries and avoid custom scenario builder scope.
+- Add a guided "optimizer input review" surface that lets the household confirm which levers are allowed to move.
+- Separate "must preserve" wishes from "can explore" wishes for spending, estate, retirement date, benefits, and downsizing.
+- Keep all optimizer permissions runtime-only until a saved-plan schema decision is made.
+- Continue keeping optimizer execution out of scope until the review and guardrails are clear.
 - Preserve schema v2, stable dashboard parity, and runtime-only recommendation output.
 
 ## Consumer Roadmap Sequence
@@ -85,6 +85,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 24 — Spending capacity layer.** Complete 2026-05-15. Added a first-pass spending capacity answer for flexible, balanced, tight, and repair-needed plans using existing scenario output.
 - **Sprint 25 — Estate intent and tax efficiency.** Complete 2026-05-15. Added a first-pass estate/tax-efficiency review connecting projected estate, estate goals, OAS recovery tax, final registered assets, and survivor review prompts.
 - **Sprint 26 — Intake UX and help text.** Complete 2026-05-15. Reframed guided intake language around household planning choices and added plain help for CPP/OAS, DB bridges, locked-in accounts, ACB, real estate/downsize, survivor assumptions, and estate goals.
+- **Sprint 27 — Scenario choice redesign.** Complete 2026-05-15. Reframed scenario cards as household choices with best-for and trade-off copy while keeping detailed comparison tables as supporting evidence.
+- **Sprint 28 — Optimizer prep and decision boundaries.** Complete 2026-05-15. Added runtime-only optimizer boundary rows for spending, retirement timing, CPP/OAS timing, withdrawal order, estate target, and downsizing without adding optimizer execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

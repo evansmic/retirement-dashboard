@@ -16,6 +16,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectOptimizerDecisionBoundaries,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -26,6 +27,7 @@ import {
   selectResultsReadinessSummary,
   selectRetirementAnswerSummary,
   selectScenarioCards,
+  selectScenarioChoiceCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
@@ -560,12 +562,18 @@ describe('result selectors', () => {
         years: [{ ...fixture.years[0], bal_total: 520000 }, { ...fixture.years[1], bal_total: 540000 }]
       }
     });
+    const scenarioChoices = selectScenarioChoiceCards(fixture, planFixture, {
+      spendLessGogo: {
+        years: [{ ...fixture.years[0], totalTaxYear: 6000, bal_total: 520000 }, { ...fixture.years[1], totalTaxYear: 6200, bal_total: 540000 }]
+      }
+    });
     const scenarioAssumptions = selectScenarioAssumptionRows(planFixture);
     const scenarioComparison = selectScenarioComparisonRows(fixture, {
       spendLessGogo: {
         years: [{ ...fixture.years[0], totalTaxYear: 6000, bal_total: 520000 }, { ...fixture.years[1], totalTaxYear: 6200, bal_total: 540000 }]
       }
     });
+    const optimizerBoundaries = selectOptimizerDecisionBoundaries(fixture, planFixture);
     const survivor = selectSurvivorViewSummary(fixture, planFixture);
     const survivorComparison = selectSurvivorComparison(fixture, fixture, planFixture);
     const recommended = selectRecommendedPath(fixture, { spendLessGogo: scenarioComparison.find((row) => row.id === 'spendLessGogo') ? {
@@ -586,6 +594,14 @@ describe('result selectors', () => {
     expect(scenarios.map((card) => card.id)).toEqual(['retireLater', 'spendLessGogo', 'delayBenefits']);
     expect(scenarios.every((card) => card.status === 'ready')).toBe(true);
     expect(scenarios.find((card) => card.id === 'spendLessGogo')?.endPortfolioDelta).toBe(40000);
+    expect(scenarioChoices.map((card) => card.id)).toEqual(['currentPlan', 'spendLessGogo', 'retireLater', 'delayBenefits']);
+    expect(scenarioChoices.find((card) => card.id === 'spendLessGogo')).toMatchObject({
+      label: 'Spend a little less early',
+      householdChoice: 'Reduce early retirement lifestyle spending by 10%.',
+      primaryMetricLabel: 'Early spending change',
+      primaryMetric: '$0'
+    });
+    expect(scenarioChoices.find((card) => card.id === 'currentPlan')?.bestFor).toContain('supports the retirement');
     expect(scenarioAssumptions.find((row) => row.id === 'retireLater')).toMatchObject({
       baseline: '2028',
       scenario: '2030'
@@ -594,6 +610,16 @@ describe('result selectors', () => {
       endPortfolioDelta: 40000,
       status: 'improves'
     });
+    expect(optimizerBoundaries.rows).toHaveLength(6);
+    expect(optimizerBoundaries.rows.find((row) => row.id === 'spending')).toMatchObject({
+      status: 'available',
+      detailArea: 'details'
+    });
+    expect(optimizerBoundaries.rows.find((row) => row.id === 'withdrawalOrder')).toMatchObject({
+      status: 'reviewOnly',
+      detailArea: 'taxes'
+    });
+    expect(optimizerBoundaries.availableCount).toBeGreaterThanOrEqual(4);
     expect(survivor.status).toBe('single');
     expect(survivorComparison.status).toBe('single');
     expect(recommended.candidateRows.find((row) => row.id === 'baseline')?.reviewStatus).toBeTruthy();
@@ -603,6 +629,24 @@ describe('result selectors', () => {
     expect(recommended.defaultRiskDetailId).toBeTruthy();
     expect(recommended.riskDetails.length).toBe(recommended.breakRisks.length);
     expect(recommended.riskDetails.find((detail) => detail.id === 'sourceReconciliation')?.metrics.length).toBeGreaterThan(0);
+  });
+
+  it('marks missing optimizer boundary inputs before future automatic search', () => {
+    const plan = {
+      ...planFixture,
+      spending: { gogo: 0, gogoEnd: 75, slowgo: 0, slowgoEnd: 85, nogo: 0 },
+      inheritance: 0,
+      p1: { ...planFixture.p1, retireYear: 0, cpp65_monthly: 0, cpp70_monthly: 0, oas_monthly: 0 },
+      assumptions: { ...planFixture.assumptions, retireYear: 0 }
+    };
+    const answer = selectRetirementAnswerSummary(fixture, plan);
+    const boundaries = selectOptimizerDecisionBoundaries(fixture, plan, answer);
+
+    expect(boundaries.status).toBe('needsInput');
+    expect(boundaries.rows.find((row) => row.id === 'spending')).toMatchObject({ status: 'needsInput' });
+    expect(boundaries.rows.find((row) => row.id === 'retirementTiming')).toMatchObject({ status: 'needsInput' });
+    expect(boundaries.rows.find((row) => row.id === 'benefitTiming')).toMatchObject({ status: 'needsInput' });
+    expect(boundaries.nextStep).toContain('Clear missing inputs');
   });
 
   it('selects a no-shortfall candidate over a higher-portfolio candidate with a shortfall', () => {
@@ -719,7 +763,7 @@ describe('result selectors', () => {
     });
     expect(recommended.defaultRiskDetailId).toBe('spendingSensitivity');
     expect(recommended.riskDetails.find((detail) => detail.id === 'spendingSensitivity')?.evidenceRows[0]).toMatchObject({
-      label: 'Spend 10% less in go-go',
+      label: 'Spend a little less early',
       value: 'Ready'
     });
     expect(recommended.checklistItems.find((item) => item.id === 'reviewStress')).toMatchObject({
@@ -738,7 +782,7 @@ describe('result selectors', () => {
 
     expect(spendingDetail).toBeTruthy();
     expect(spendingDetail?.evidenceRows[0]).toMatchObject({
-      label: 'Spend 10% less in go-go',
+      label: 'Spend a little less early',
       value: 'Not available'
     });
   });

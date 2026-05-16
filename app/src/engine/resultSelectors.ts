@@ -355,6 +355,21 @@ export type ScenarioCard = {
   fundedThroughYear?: number | null;
 };
 
+export type ScenarioChoiceCard = {
+  id: 'currentPlan' | ScenarioCard['id'];
+  label: string;
+  status: 'ready' | 'needsInput' | 'calculating';
+  tone: 'current' | 'improves' | 'tradeoff' | 'needsInput';
+  householdChoice: string;
+  bestFor: string;
+  tradeoff: string;
+  primaryMetricLabel: string;
+  primaryMetric: string;
+  secondaryMetricLabel: string;
+  secondaryMetric: string;
+  detail: string;
+};
+
 export type ScenarioAssumptionRow = {
   id: ScenarioCard['id'];
   label: string;
@@ -667,6 +682,30 @@ export type EstateIntentSummary = {
   }>;
 };
 
+export type OptimizerBoundaryStatus = 'available' | 'needsInput' | 'reviewOnly';
+
+export type OptimizerBoundaryRow = {
+  id: 'spending' | 'retirementTiming' | 'benefitTiming' | 'withdrawalOrder' | 'estateTarget' | 'downsizing';
+  label: string;
+  status: OptimizerBoundaryStatus;
+  currentSetting: string;
+  futureSearchSpace: string;
+  whyItMatters: string;
+  beforeOptimizing: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type OptimizerBoundarySummary = {
+  status: 'ready' | 'needsInput' | 'review';
+  headline: string;
+  detail: string;
+  availableCount: number;
+  needsInputCount: number;
+  reviewOnlyCount: number;
+  nextStep: string;
+  rows: OptimizerBoundaryRow[];
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -676,6 +715,23 @@ function n(value: number | undefined): number {
 
 function rowsFrom(result: SimulationResult | null | undefined): AnnualSimulationRow[] {
   return result?.years || [];
+}
+
+function planAssetTotal(plan: V2PlanPayload | null | undefined): number {
+  if (!plan) return 0;
+  const people = [plan.p1, plan.p2];
+  return (
+    people.reduce(
+      (total, person) =>
+        total +
+        n(person?.rrsp) +
+        n(person?.tfsa) +
+        n(person?.lif) +
+        n(person?.lira) +
+        n(person?.nonreg),
+      0
+    ) + n(plan.cashWedge?.balance)
+  );
 }
 
 function personLooksBlank(person: V2PlanPayload['p2'] | null | undefined): boolean {
@@ -1110,6 +1166,139 @@ export function selectEstateIntentSummary(
     taxEfficiencyHeadline,
     taxEfficiencyDetail,
     reviewActions: reviewActions.slice(0, 4)
+  };
+}
+
+export function selectOptimizerDecisionBoundaries(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  retirementAnswer: RetirementAnswerSummary = selectRetirementAnswerSummary(baseline, plan)
+): OptimizerBoundarySummary {
+  const overview = selectOverviewMetrics(baseline);
+  const rows = rowsFrom(baseline);
+  const diagnostics = selectReconciliationDiagnostics(baseline);
+  const earlySpending = n(plan?.spending?.gogo);
+  const laterSpending = n(plan?.spending?.slowgo);
+  const lateLifeSpending = n(plan?.spending?.nogo);
+  const retireYear = n(plan?.assumptions?.retireYear) || n(plan?.p1?.retireYear);
+  const hasBenefitEstimates = Boolean(
+    plan &&
+      (n(plan.p1.cpp65_monthly) ||
+        n(plan.p1.cpp70_monthly) ||
+        n(plan.p1.oas_monthly) ||
+        n(plan.p2.cpp65_monthly) ||
+        n(plan.p2.cpp70_monthly) ||
+        n(plan.p2.oas_monthly))
+  );
+  const assets = planAssetTotal(plan);
+  const estateTarget = n(plan?.inheritance);
+  const downsizeYear = n(plan?.downsize?.year);
+  const downsizeProceeds = n(plan?.downsize?.netProceeds);
+  const cannotUseResults = !rows.length || retirementAnswer.status === 'cannotTell' || diagnostics.status === 'warning';
+
+  const boundaryRows: OptimizerBoundaryRow[] = [
+    {
+      id: 'spending',
+      label: 'Retirement spending',
+      status: earlySpending > 0 && laterSpending > 0 && lateLifeSpending > 0 ? 'available' : 'needsInput',
+      currentSetting:
+        earlySpending || laterSpending || lateLifeSpending
+          ? `${moneyText(earlySpending)} early / ${moneyText(laterSpending)} later / ${moneyText(lateLifeSpending)} late-life`
+          : 'Not set',
+      futureSearchSpace: 'Test higher or lower early, later, and late-life spending while preserving safety and estate intent.',
+      whyItMatters: 'Spending is the main way the household turns savings into retirement life.',
+      beforeOptimizing:
+        earlySpending > 0 ? 'Confirm the spending targets reflect the lifestyle the household actually wants.' : 'Enter spending targets before searching for a better plan.',
+      detailArea: 'details'
+    },
+    {
+      id: 'retirementTiming',
+      label: 'Retirement timing',
+      status: retireYear ? 'available' : 'needsInput',
+      currentSetting: retireYear ? String(retireYear) : 'Not set',
+      futureSearchSpace: 'Test retiring earlier or later around the entered retirement year.',
+      whyItMatters: 'Working longer can add savings, reduce withdrawal years, and change CPP/OAS and pension timing.',
+      beforeOptimizing: retireYear ? 'Confirm whether the household is actually willing to move the retirement date.' : 'Enter a retirement year before timing can be compared.',
+      detailArea: 'details'
+    },
+    {
+      id: 'benefitTiming',
+      label: 'CPP/OAS timing',
+      status: hasBenefitEstimates ? 'available' : 'needsInput',
+      currentSetting: hasBenefitEstimates ? 'CPP/OAS estimates entered' : 'Needs CPP/OAS estimates',
+      futureSearchSpace: 'Compare current timing with delayed government benefits where estimates are available.',
+      whyItMatters: 'Government benefit timing changes guaranteed income, withdrawals, tax, and survivor resilience.',
+      beforeOptimizing: hasBenefitEstimates ? 'Confirm the monthly CPP and OAS estimates are reasonable.' : 'Add CPP/OAS estimates before benefit timing can be tested.',
+      detailArea: 'incomeSources'
+    },
+    {
+      id: 'withdrawalOrder',
+      label: 'Withdrawal order and tax timing',
+      status: assets > 0 ? 'reviewOnly' : 'needsInput',
+      currentSetting: plan?.assumptions?.withdrawalOrder || 'default',
+      futureSearchSpace: 'Later optimizer work can compare registered, non-registered, TFSA, cash wedge, and tax-aware drawdown paths.',
+      whyItMatters: 'Drawdown order can affect OAS recovery tax, registered balances left late in life, and estate tax pressure.',
+      beforeOptimizing:
+        assets > 0
+          ? 'Keep this as a review boundary until the drawdown optimizer is explicitly implemented.'
+          : 'Enter investment account balances before withdrawal timing can be reviewed.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'estateTarget',
+      label: 'Estate goal',
+      status: estateTarget > 0 ? 'available' : retirementAnswer.status === 'estateHeavy' ? 'needsInput' : 'reviewOnly',
+      currentSetting: estateTarget > 0 ? moneyText(estateTarget) : 'Not set',
+      futureSearchSpace: 'Balance more retirement spending against money intentionally left for heirs, gifts, or charity.',
+      whyItMatters: 'Without an estate goal, the tool cannot know whether a large ending portfolio is success or unused lifestyle.',
+      beforeOptimizing:
+        estateTarget > 0
+          ? 'Confirm the estate goal is intentional.'
+          : retirementAnswer.status === 'estateHeavy'
+            ? 'Add an estate goal or confirm that spending more is acceptable before optimizing.'
+            : 'Review whether leaving money is important before using estate trade-offs.',
+      detailArea: 'details'
+    },
+    {
+      id: 'downsizing',
+      label: 'Home sale or downsizing',
+      status: downsizeYear && downsizeProceeds ? 'available' : 'reviewOnly',
+      currentSetting: downsizeYear && downsizeProceeds ? `${downsizeYear}, ${moneyText(downsizeProceeds)}` : 'Not part of current plan',
+      futureSearchSpace: 'Test whether unlocking home equity changes spending room, taxes, or estate outcomes.',
+      whyItMatters: 'Real estate can be a major retirement resource, but it is also a lifestyle decision.',
+      beforeOptimizing:
+        downsizeYear && downsizeProceeds
+          ? 'Confirm the year and net cash estimate after selling, moving, debt, and replacement housing costs.'
+          : 'Only optimize downsizing if the household would realistically consider it.',
+      detailArea: 'details'
+    }
+  ];
+
+  const availableCount = boundaryRows.filter((row) => row.status === 'available').length;
+  const needsInputCount = boundaryRows.filter((row) => row.status === 'needsInput').length;
+  const reviewOnlyCount = boundaryRows.filter((row) => row.status === 'reviewOnly').length;
+  const status: OptimizerBoundarySummary['status'] = cannotUseResults || needsInputCount > 0 ? 'needsInput' : reviewOnlyCount > 0 ? 'review' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'ready'
+        ? 'The main planning levers are ready to become optimizer inputs later.'
+        : status === 'review'
+          ? 'Some optimizer levers are available, while others should stay as review choices.'
+          : 'Optimizer prep needs clearer inputs before automatic search would be responsible.',
+    detail:
+      overview.projectionYears > 0
+        ? 'This does not optimize the plan yet. It marks which household choices are defined well enough for a future search and which still need human intent.'
+        : 'Results need to calculate before optimizer boundaries can be reviewed.',
+    availableCount,
+    needsInputCount,
+    reviewOnlyCount,
+    nextStep:
+      status === 'needsInput'
+        ? 'Clear missing inputs and source-review items first.'
+        : 'Keep using the retirement choice cards while optimizer execution remains out of scope.',
+    rows: boundaryRows
   };
 }
 
@@ -2178,9 +2367,9 @@ export function selectScenarioCards(
     },
     {
       id: 'spendLessGogo',
-      label: 'Spend 10% less in go-go',
+      label: 'Spend a little less early',
       status: gogoSpending ? 'ready' : 'needsInput',
-      lever: gogoSpending ? `${Math.round(gogoSpending).toLocaleString()} to ${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Set go-go spending',
+      lever: gogoSpending ? `${Math.round(gogoSpending).toLocaleString()} to ${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Set early retirement spending',
       baseline: `End portfolio ${Math.round(overview.endPortfolio).toLocaleString()}`,
       detail: scenarioDetail(result, comparisons.spendLessGogo),
       ...scenarioComparison(result, comparisons.spendLessGogo)
@@ -2197,6 +2386,120 @@ export function selectScenarioCards(
   ];
 }
 
+export function selectScenarioChoiceCards(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>> = {}
+): ScenarioChoiceCard[] {
+  const overview = selectOverviewMetrics(result);
+  const baselineRows = rowsFrom(result);
+  const baselineFirstShortfall = baselineRows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const baselineFundedThrough = baselineFirstShortfall ? baselineFirstShortfall.year - 1 : overview.lastYear;
+  const plannedSpending = n(plan?.spending?.gogo) || overview.firstYearSpending;
+  const estateTarget = n(plan?.inheritance);
+  const estateHeavy =
+    !baselineFirstShortfall &&
+    !estateTarget &&
+    overview.firstYearSpending > 0 &&
+    overview.endPortfolio >= 1_000_000 &&
+    overview.endPortfolio / overview.firstYearSpending >= 20;
+  const technicalCards = selectScenarioCards(result, plan, comparisons);
+  const comparisonRows = selectScenarioComparisonRows(result, comparisons);
+  const comparisonById = new Map(comparisonRows.map((row) => [row.id, row]));
+  const cardById = new Map(technicalCards.map((card) => [card.id, card]));
+
+  const choiceForScenario = (
+    id: ScenarioCard['id'],
+    label: string,
+    householdChoice: string,
+    bestFor: string,
+    tradeoff: string,
+    primaryMetricLabel: string,
+    primaryMetric: (row: ScenarioComparisonRow | undefined) => string
+  ): ScenarioChoiceCard => {
+    const card = cardById.get(id);
+    const row = comparisonById.get(id);
+    const status: ScenarioChoiceCard['status'] = card?.status === 'needsInput' ? 'needsInput' : row?.status === 'notAvailable' ? 'calculating' : 'ready';
+    const tone: ScenarioChoiceCard['tone'] =
+      status === 'needsInput'
+        ? 'needsInput'
+        : row?.status === 'improves'
+          ? 'improves'
+          : row?.status === 'worse'
+            ? 'tradeoff'
+            : 'current';
+    return {
+      id,
+      label,
+      status,
+      tone,
+      householdChoice,
+      bestFor,
+      tradeoff,
+      primaryMetricLabel,
+      primaryMetric: status === 'needsInput' ? card?.lever || 'Needs input' : primaryMetric(row),
+      secondaryMetricLabel: 'Spending funded through',
+      secondaryMetric: row?.fundedThroughYear ? String(row.fundedThroughYear) : status === 'calculating' ? 'Calculating' : '-',
+      detail:
+        status === 'needsInput'
+          ? card?.lever || 'Add the missing input to test this choice.'
+          : row
+            ? scenarioChoiceDetail(row)
+            : 'Scenario output will appear after the preview finishes calculating.'
+    };
+  };
+
+  return [
+    {
+      id: 'currentPlan',
+      label: 'Keep current plan',
+      status: overview.projectionYears ? 'ready' : 'calculating',
+      tone: 'current',
+      householdChoice: 'Retire with the spending and timing you entered.',
+      bestFor: estateHeavy
+        ? 'Seeing whether the plan is already strong enough to support more lifestyle or clearer estate wishes.'
+        : 'Confirming whether the plan you entered already supports the retirement you want.',
+      tradeoff: estateHeavy
+        ? 'This may leave more money unused than intended unless that estate outcome is deliberate.'
+        : 'This depends on the current spending, tax, survivor, and market assumptions being realistic.',
+      primaryMetricLabel: 'Spending funded through',
+      primaryMetric: baselineFundedThrough ? String(baselineFundedThrough) : overview.projectionYears ? '-' : 'Calculating',
+      secondaryMetricLabel: 'Projected money left',
+      secondaryMetric: moneyText(overview.endPortfolio),
+      detail: baselineFirstShortfall
+        ? `First shortfall appears in ${baselineFirstShortfall.year}; compare the choices below before relying on the plan.`
+        : `Early spending target is ${moneyText(plannedSpending)} and the baseline reaches ${baselineFundedThrough || '-'}.`
+    },
+    choiceForScenario(
+      'spendLessGogo',
+      'Spend a little less early',
+      'Reduce early retirement lifestyle spending by 10%.',
+      'Testing whether a modest lifestyle adjustment repairs a tight plan or preserves more cushion.',
+      'This means less travel, projects, gifting, or discretionary spending in the most active years.',
+      'Early spending change',
+      (row) => signedMoneyText(row?.firstYearSpendingDelta)
+    ),
+    choiceForScenario(
+      'retireLater',
+      'Work two years longer',
+      'Start retirement two years later where retirement years are entered.',
+      'Adding cushion without lowering the retirement lifestyle target.',
+      'The trade-off is time: retirement starts later even if the finances look stronger.',
+      'Money left change',
+      (row) => signedMoneyText(row?.endPortfolioDelta)
+    ),
+    choiceForScenario(
+      'delayBenefits',
+      'Delay CPP/OAS to 70',
+      'Compare the current benefit timing with age-70 government benefits.',
+      'Understanding whether higher later-life guaranteed income improves the household plan.',
+      'The household may need to fund more spending from savings before benefits start.',
+      'Money left change',
+      (row) => signedMoneyText(row?.endPortfolioDelta)
+    )
+  ];
+}
+
 export function selectScenarioComparisonRows(
   baseline: SimulationResult | null | undefined,
   comparisons: Partial<Record<ScenarioCard['id'], SimulationResult | null | undefined>>
@@ -2205,7 +2508,7 @@ export function selectScenarioComparisonRows(
   const baselineTax = selectTaxSummaryMetrics(baseline);
   const definitions: Array<{ id: ScenarioCard['id']; label: string }> = [
     { id: 'retireLater', label: 'Retire two years later' },
-    { id: 'spendLessGogo', label: 'Spend 10% less in go-go' },
+    { id: 'spendLessGogo', label: 'Spend a little less early' },
     { id: 'delayBenefits', label: 'Delay CPP/OAS to 70' }
   ];
 
@@ -2265,9 +2568,9 @@ export function selectScenarioAssumptionRows(plan: V2PlanPayload | null | undefi
     },
     {
       id: 'spendLessGogo',
-      label: 'Spend 10% less in go-go',
+      label: 'Spend a little less early',
       baseline: gogoSpending ? `${Math.round(gogoSpending).toLocaleString()}` : 'Not set',
-      scenario: gogoSpending ? `${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Needs go-go spending',
+      scenario: gogoSpending ? `${Math.round(gogoSpending * 0.9).toLocaleString()}` : 'Needs early spending',
       changed: Boolean(gogoSpending)
     },
     {
@@ -2303,6 +2606,14 @@ function scenarioDetail(
   return `Computed preview: end portfolio ${comparison.endPortfolioDelta && comparison.endPortfolioDelta >= 0 ? '+' : ''}${Math.round(
     comparison.endPortfolioDelta || 0
   ).toLocaleString()}, funded through ${comparison.fundedThroughYear || '-'}.`;
+}
+
+function scenarioChoiceDetail(row: ScenarioComparisonRow): string {
+  if (row.status === 'notAvailable') return 'Scenario output has not been calculated yet.';
+  const funding = row.firstShortfallYear ? `first shortfall in ${row.firstShortfallYear}` : `funded through ${row.fundedThroughYear || '-'}`;
+  const estate = `money left changes by ${signedMoneyText(row.endPortfolioDelta)}`;
+  const tax = row.lifetimeTaxDelta ? `lifetime tax changes by ${signedMoneyText(row.lifetimeTaxDelta)}` : 'lifetime tax is roughly unchanged';
+  return `${funding}; ${estate}; ${tax}.`;
 }
 
 export function selectSurvivorViewSummary(
@@ -2931,14 +3242,14 @@ function selectRecommendedBreakRisks(
 
   risks.push({
     id: 'spendingSensitivity',
-    label: 'Go-go spending',
+    label: 'Early retirement spending',
     severity:
       spendingCandidate && !spendingCandidate.blocked && spendingCandidate.endPortfolioDelta > Math.max(25000, Math.abs(recommended.endPortfolio) * 0.05)
         ? 'watch'
         : 'review',
     detail:
       spendingCandidate && !spendingCandidate.blocked && spendingCandidate.endPortfolioDelta > 0
-        ? `A 10% go-go spending reduction improves terminal portfolio by ${Math.round(spendingCandidate.endPortfolioDelta).toLocaleString()} versus the current plan.`
+        ? `A 10% early-spending reduction improves projected money left by ${Math.round(spendingCandidate.endPortfolioDelta).toLocaleString()} versus the current plan.`
         : 'The spending reduction preview does not materially improve the selected trust metrics.',
     handoff: 'Stable dashboard: compare detailed spending and withdrawal schedules.'
   });
@@ -3148,15 +3459,15 @@ function selectRecommendedRiskDetails(
           label: risk.label,
           severity: risk.severity,
           candidateLabel,
-          headline: 'This shows whether the recommendation is sensitive to go-go spending.',
-          detail: 'The bounded rerun lowers go-go spending by 10% and compares the result with the current plan.',
+          headline: 'This shows whether the recommendation is sensitive to early retirement spending.',
+          detail: 'The bounded rerun lowers early retirement spending by 10% and compares the result with the current plan.',
           metrics: [
-            detailMetric('currentSpend', 'Current go-go spending', moneyText(plan?.spending?.gogo), 'neutral'),
-            detailMetric('scenarioSpend', '10% lower go-go', moneyText(Math.round(n(plan?.spending?.gogo) * 0.9)), 'neutral'),
+            detailMetric('currentSpend', 'Current early spending', moneyText(plan?.spending?.gogo), 'neutral'),
+            detailMetric('scenarioSpend', '10% lower early spending', moneyText(Math.round(n(plan?.spending?.gogo) * 0.9)), 'neutral'),
             detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(spendingComparison.endPortfolioDelta), n(spendingComparison.endPortfolioDelta) > 0 ? 'ok' : 'neutral'),
             detailMetric('fundedThrough', 'Funded through', spendingComparison.fundedThroughYear ? String(spendingComparison.fundedThroughYear) : '-', 'neutral')
           ],
-          evidenceRows: scenarioEvidenceRows('spending', 'Spend 10% less in go-go', comparisons.spendLessGogo, spendingComparison),
+          evidenceRows: scenarioEvidenceRows('spending', 'Spend a little less early', comparisons.spendLessGogo, spendingComparison),
           handoff: risk.handoff
         };
       case 'retirementTiming':
@@ -3342,8 +3653,8 @@ function selectRecommendedChecklistItems(
       priority: spendingRisk?.severity === 'watch' ? 'now' : 'next',
       detail:
         spendingRisk?.severity === 'watch'
-          ? 'The selected path is sensitive to go-go spending; confirm the lifestyle target before saving.'
-          : 'The 10% go-go spending rerun does not currently create a watch-level item.',
+          ? 'The selected path is sensitive to early retirement spending; confirm the lifestyle target before saving.'
+          : 'The 10% early-spending rerun does not currently create a watch-level item.',
       handoff: 'Review the spending sensitivity drilldown and stable dashboard withdrawal schedule.'
     },
     {

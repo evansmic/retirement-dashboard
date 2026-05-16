@@ -1549,20 +1549,24 @@ button.secondary,
 
 .scenario-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .scenario-card {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
   border-radius: 8px;
   background: var(--paper);
-  padding: 12px;
+  padding: 14px;
 }
 
 .scenario-card span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
   font-weight: 800;
 }
 
@@ -1570,11 +1574,102 @@ button.secondary,
 .scenario-card p {
   color: var(--muted);
   line-height: 1.45;
+  margin: 0;
+}
+
+.scenario-card .mini-ledger {
+  margin: 0;
+}
+
+.scenario-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scenario-copy-grid small {
+  display: block;
+  color: var(--ink);
+  font-weight: 850;
+  margin-bottom: 3px;
+}
+
+.scenario-tone-current {
+  border-left-color: var(--navy);
+}
+
+.scenario-tone-improves {
+  border-left-color: var(--green);
+}
+
+.scenario-tone-tradeoff {
+  border-left-color: var(--amber);
 }
 
 .scenario-needsInput {
   border-color: #e0c08d;
+  border-left-color: var(--amber);
   background: #fff9ee;
+}
+
+.optimizer-boundary-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.optimizer-boundary-panel h3,
+.optimizer-boundary-panel p,
+.optimizer-boundary-row h4,
+.optimizer-boundary-row p {
+  margin: 0;
+}
+
+.optimizer-boundary-needsInput {
+  border-left-color: var(--amber);
+  background: #fff9ee;
+}
+
+.optimizer-boundary-ready {
+  border-left-color: var(--green);
+}
+
+.optimizer-boundary-list {
+  display: grid;
+  gap: 10px;
+}
+
+.optimizer-boundary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 12px;
+}
+
+.optimizer-boundary-row small {
+  color: var(--muted);
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.optimizer-row-available {
+  border-left-color: var(--green);
+}
+
+.optimizer-row-needsInput {
+  border-left-color: var(--amber);
+}
+
+.optimizer-row-reviewOnly {
+  border-left-color: var(--navy);
 }
 
 .stress-summary-panel {
@@ -2091,6 +2186,7 @@ button.secondary,
   .break-risk-layout,
   .decision-checklist,
   .decision-detail-grid,
+  .optimizer-boundary-row,
   .scenario-card-grid,
   .status-strip {
     grid-template-columns: 1fr;
@@ -2145,6 +2241,7 @@ button.secondary,
   .sidebar,
   .step-rail,
   .source-story-flow,
+  .scenario-copy-grid,
   .summary-grid {
     grid-template-columns: 1fr;
   }

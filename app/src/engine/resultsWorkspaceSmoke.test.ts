@@ -16,6 +16,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectOptimizerDecisionBoundaries,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -26,6 +27,7 @@ import {
   selectResultsReadinessSummary,
   selectRetirementAnswerSummary,
   selectScenarioCards,
+  selectScenarioChoiceCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
@@ -211,6 +213,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const taxPressureRows = selectTaxPressureRows(result);
     const taxPressureExplanation = selectTaxPressureExplanation(result);
     const scenarioCards = selectScenarioCards(result, plan, preview.scenarios);
+    const scenarioChoiceCards = selectScenarioChoiceCards(result, plan, preview.scenarios);
     const scenarioComparisonRows = selectScenarioComparisonRows(result, preview.scenarios);
     const scenarioAssumptions = selectScenarioAssumptionRows(plan);
     const survivorSummary = selectSurvivorViewSummary(result, plan);
@@ -221,6 +224,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const retirementAnswer = selectRetirementAnswerSummary(result, plan, null, preview.survivor);
     const spendingCapacity = selectSpendingCapacitySummary(result, preview.scenarios, plan, retirementAnswer);
     const estateIntent = selectEstateIntentSummary(result, plan, preview.survivor, retirementAnswer);
+    const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
     const readinessSummary = selectResultsReadinessSummary(recommendedPath);
     const readinessRows = selectResultsReadinessRows(recommendedPath);
     const planFile = createPlanFile(plan);
@@ -259,6 +263,9 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(taxPressureRows.length).toBeGreaterThanOrEqual(0);
     expect(taxPressureExplanation.headline.length).toBeGreaterThan(10);
     expect(scenarioCards).toHaveLength(3);
+    expect(scenarioChoiceCards).toHaveLength(4);
+    expect(scenarioChoiceCards.map((card) => card.id)).toEqual(['currentPlan', 'spendLessGogo', 'retireLater', 'delayBenefits']);
+    expect(scenarioChoiceCards.find((card) => card.id === 'currentPlan')?.householdChoice).toContain('Retire');
     expect(scenarioComparisonRows).toHaveLength(3);
     expect(Object.keys(preview.scenarios).sort()).toEqual(['delayBenefits', 'retireLater', 'spendLessGogo']);
     expect(scenarioAssumptions).toHaveLength(3);
@@ -279,6 +286,10 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['cannotTell', 'needsIntent', 'taxReview', 'survivorReview', 'aligned']).toContain(estateIntent.status);
     expect(estateIntent.headline.length).toBeGreaterThan(10);
     expect(estateIntent.reviewActions.length).toBeGreaterThanOrEqual(1);
+    expect(['ready', 'needsInput', 'review']).toContain(optimizerBoundaries.status);
+    expect(optimizerBoundaries.rows).toHaveLength(6);
+    expect(optimizerBoundaries.rows.find((row) => row.id === 'spending')?.currentSetting).toContain('early');
+    expect(Object.keys(planFile.plan)).not.toContain('optimizerBoundaries');
     expect(['ready', 'review', 'blocked']).toContain(readinessSummary.status);
     expect(readinessSummary.stableDashboardHandoff).toContain('detailed report');
     expect(readinessRows).toHaveLength(6);

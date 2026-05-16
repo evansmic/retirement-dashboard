@@ -33,6 +33,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectOptimizerDecisionBoundaries,
   selectOverviewMetrics,
   selectPlanHealthExplainer,
   selectPortfolioChartSeries,
@@ -42,7 +43,7 @@ import {
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
   selectRetirementAnswerSummary,
-  selectScenarioCards,
+  selectScenarioChoiceCards,
   selectScenarioComparisonRows,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
@@ -2055,7 +2056,7 @@ function ResultsHandoffPanel({
   const sourceStory = selectSourceReconciliationStory(firstRow);
   const decisionChecklist = selectDecisionChecklist(result, plan);
   const decisionDetailRows = selectDecisionDetailRows(result, plan);
-  const scenarioCards = selectScenarioCards(result, plan, scenarios);
+  const scenarioChoiceCards = selectScenarioChoiceCards(result, plan, scenarios);
   const scenarioComparisonRows = selectScenarioComparisonRows(result, scenarios);
   const scenarioAssumptionRows = selectScenarioAssumptionRows(plan);
   const survivorSummary = selectSurvivorViewSummary(result, plan);
@@ -2066,6 +2067,7 @@ function ResultsHandoffPanel({
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
+  const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -2254,10 +2256,11 @@ function ResultsHandoffPanel({
             <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
             <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
             <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
-            <div className="result-section-label">Scenario Tests</div>
-            <ScenarioCardsPanel cards={scenarioCards} />
+            <div className="result-section-label">Retirement Choices</div>
+            <ScenarioCardsPanel cards={scenarioChoiceCards} />
             <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
             <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
+            <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
             <div className="result-section-label">Survivor Impact</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
             <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
@@ -2977,23 +2980,42 @@ function TaxPressurePanel({
   );
 }
 
-function ScenarioCardsPanel({ cards }: { cards: ReturnType<typeof selectScenarioCards> }) {
+function ScenarioCardsPanel({ cards }: { cards: ReturnType<typeof selectScenarioChoiceCards> }) {
   return (
     <section className="decision-panel">
-      <h3>First scenario cards</h3>
+      <h3>Retirement choices to compare</h3>
+      <p>
+        These cards translate the preview reruns into household decisions. Use them to decide which path deserves a
+        closer look, then use the table below for the numbers behind each choice.
+      </p>
       <div className="scenario-card-grid">
         {cards.map((card) => (
-          <article className={`scenario-card scenario-${card.status}`} key={card.id}>
-            <strong>{card.label}</strong>
-            <span>{card.lever}</span>
-            <small>{card.baseline}</small>
-            {typeof card.endPortfolioDelta === 'number' ? (
-              <small className={card.endPortfolioDelta >= 0 ? 'ok-value' : 'bad-value'}>
-                End portfolio delta {formatSignedMoney(card.endPortfolioDelta)}
-              </small>
-            ) : null}
-            {card.fundedThroughYear ? <small>Scenario funded through {card.fundedThroughYear}</small> : null}
-            <p>{card.detail}</p>
+          <article className={`scenario-card scenario-${card.status} scenario-tone-${card.tone}`} key={card.id}>
+            <div>
+              <strong>{card.label}</strong>
+              <span>{card.householdChoice}</span>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>{card.primaryMetricLabel}</dt>
+                <dd>{card.primaryMetric}</dd>
+              </div>
+              <div>
+                <dt>{card.secondaryMetricLabel}</dt>
+                <dd>{card.secondaryMetric}</dd>
+              </div>
+            </dl>
+            <div className="scenario-copy-grid">
+              <div>
+                <small>Best for</small>
+                <p>{card.bestFor}</p>
+              </div>
+              <div>
+                <small>Trade-off</small>
+                <p>{card.tradeoff}</p>
+              </div>
+            </div>
+            <p className="table-note">{card.detail}</p>
           </article>
         ))}
       </div>
@@ -3080,6 +3102,59 @@ function ScenarioComparisonPanel({
         </table>
       </div>
       <p className="table-note">These are simple local reruns for comparison only. Full optimization remains out of scope.</p>
+    </section>
+  );
+}
+
+function OptimizerBoundaryPanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectOptimizerDecisionBoundaries>;
+}) {
+  return (
+    <section className={`optimizer-boundary-panel optimizer-boundary-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Future optimizer prep</p>
+        <h3>{loading ? 'Checking decision boundaries' : summary.headline}</h3>
+        <p>{summary.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Ready as inputs" value={String(summary.availableCount)} />
+        <Metric label="Needs clearer intent" value={String(summary.needsInputCount)} />
+        <Metric label="Review-only for now" value={String(summary.reviewOnlyCount)} />
+      </div>
+      <div className="optimizer-boundary-list">
+        {summary.rows.map((row) => (
+          <article className={`optimizer-boundary-row optimizer-row-${row.status}`} key={row.id}>
+            <div>
+              <small>{row.status === 'available' ? 'available' : row.status === 'needsInput' ? 'needs input' : 'review only'}</small>
+              <h4>{row.label}</h4>
+              <p>{row.whyItMatters}</p>
+            </div>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Current</dt>
+                <dd>{row.currentSetting}</dd>
+              </div>
+              <div>
+                <dt>Future search space</dt>
+                <dd>{row.futureSearchSpace}</dd>
+              </div>
+              <div>
+                <dt>Before optimizing</dt>
+                <dd>{row.beforeOptimizing}</dd>
+              </div>
+              <div>
+                <dt>Review area</dt>
+                <dd>{resultsSectionTitle(row.detailArea)}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{summary.nextStep}</p>
     </section>
   );
 }

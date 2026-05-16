@@ -4,35 +4,46 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 26: Intake UX And Help Text
+## Active Sprint — Sprint 28: Optimizer Prep And Decision Boundaries
 
 **Status:** Complete 2026-05-15 after verification.
 
-Goal: make the guided intake easier for non-expert households by explaining complex Canadian retirement inputs in plain language.
+Goal: prepare the consumer-facing optimizer by making the future search space explicit before adding optimization behaviour.
 
 Non-scope: new simulation math, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 26 checkpoint doc: [`docs/sprint_26_intake_ux_help_text.md`](docs/sprint_26_intake_ux_help_text.md).
+Sprint 28 checkpoint doc: [`docs/sprint_28_optimizer_prep_decision_boundaries.md`](docs/sprint_28_optimizer_prep_decision_boundaries.md).
 
-### Sprint 26 Candidate Implementation Tickets
+### Sprint 28 Candidate Implementation Tickets
 
-- [x] **S26-01 — Spending and estate language.** ✅ *Done 2026-05-15.* Reframed go-go/slow-go/no-go as early, later, and late-life retirement spending, with estate goals described as intentional money left.
-- [x] **S26-02 — Income help text.** ✅ *Done 2026-05-15.* Added plain CPP/OAS, defined-benefit bridge, employment, and survivor CPP guidance.
-- [x] **S26-03 — Account help text.** ✅ *Done 2026-05-15.* Added RRSP/RRIF, LIRA/LIF, TFSA, non-registered, and adjusted-cost-base guidance.
-- [x] **S26-04 — Real estate/downsize copy.** ✅ *Done 2026-05-15.* Reframed home-sale input as net cash added to retirement spending and removed intake-facing schema language.
-- [x] **S26-05 — Assumptions and survivor help.** ✅ *Done 2026-05-15.* Added planning horizon, return/inflation, strategy-switch, and survivor scenario guidance.
-- [x] **S26-06 — Tests and docs.** ✅ *Done 2026-05-15.* Added Sprint 26 documentation and ran the standard verification suite.
+- [x] **S28-01 — Boundary selector contract.** ✅ *Done 2026-05-15.* Added runtime-only optimizer boundary types and selector output.
+- [x] **S28-02 — Lever readiness rows.** ✅ *Done 2026-05-15.* Covered spending, retirement timing, CPP/OAS timing, withdrawal order, estate target, and downsizing.
+- [x] **S28-03 — Consumer Overview panel.** ✅ *Done 2026-05-15.* Added future optimizer prep to Results without implying automatic optimization is running.
+- [x] **S28-04 — Runtime-only guardrails.** ✅ *Done 2026-05-15.* Confirmed boundary output does not enter saved plan files.
+- [x] **S28-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 28 documentation.
 
-### Sprint 26 Definition Of Done
+### Sprint 28 Definition Of Done
 
-- Intake language explains why complex Canadian retirement inputs matter without exposing implementation scaffolding.
-- Spending phases read as consumer lifestyle phases, not planner jargon.
-- Real estate and estate-goal copy helps households decide whether these choices are intentional.
+- Future optimizer inputs are explicit and bounded.
+- Missing inputs and review-only levers are visible before optimization is attempted.
+- UI language makes clear that no optimizer is running yet.
 - Output remains runtime-only and no simulation math changes.
 - Runtime dashboard schema remains v2.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 27: Scenario Choice Redesign
+
+**Complete 2026-05-15.** Reframed scenario cards as household choices with best-for and trade-off copy while keeping detailed comparison tables as supporting evidence.
+
+Sprint 27 checkpoint doc: [`docs/sprint_27_scenario_choice_redesign.md`](docs/sprint_27_scenario_choice_redesign.md).
+
+### Sprint 26: Intake UX And Help Text
+
+**Complete 2026-05-15.** Made the guided intake easier for non-expert households by explaining complex Canadian retirement inputs in plain language.
+
+Sprint 26 checkpoint doc: [`docs/sprint_26_intake_ux_help_text.md`](docs/sprint_26_intake_ux_help_text.md).
 
 ### Sprint 25: Estate Intent And Tax Efficiency
 
