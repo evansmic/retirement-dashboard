@@ -346,7 +346,7 @@ describe('result selectors', () => {
     });
   });
 
-  it('flags impossible source reconciliation rows', () => {
+  it('flags impossible money-in / money-out check rows', () => {
     const reconciliation = selectCashFlowReconciliation({
       ...fixture.years[0],
       cash_draw: 0
@@ -363,7 +363,7 @@ describe('result selectors', () => {
     expect(selectStressTestSummary({ years: [{ ...fixture.years[0], cash_draw: 0 }] })).toMatchObject({
       status: 'watch',
       firstStressYear: 2028,
-      worstStressLabel: 'Source reconciliation'
+      worstStressLabel: 'Money-in / money-out check'
     });
   });
 
@@ -729,7 +729,7 @@ describe('result selectors', () => {
     });
   });
 
-  it('blocks candidates with source reconciliation warnings', () => {
+  it('blocks candidates with money-in / money-out check warnings', () => {
     const warningScenario = withRows([{ ...fixture.years[0], cash_draw: 0 }, fixture.years[1]]);
     const recommended = selectRecommendedPath(fixture, { spendLessGogo: warningScenario }, null, planFixture);
     const warningRow = recommended.candidateRows.find((row) => row.id === 'spendLessGogo');

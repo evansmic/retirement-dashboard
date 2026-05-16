@@ -245,15 +245,15 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(accountChartRows).toHaveLength(result.years.length);
     expect(accountDrawdownRows).toHaveLength(5);
     expect(['ok', 'review', 'watch']).toContain(accountDrawdownStory.status);
-    expect(accountDrawdownStory.stableDashboardHandoff).toContain('stable dashboard');
+    expect(accountDrawdownStory.stableDashboardHandoff).toContain('detailed report');
     expect(taxSummary.lifetimeTax).toBeGreaterThanOrEqual(0);
     expect(taxReviewRows).toHaveLength(4);
     expect(['ok', 'review', 'watch']).toContain(taxStorySummary.status);
-    expect(taxStorySummary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(taxStorySummary.stableDashboardHandoff).toContain('detailed report');
     expect(stressRows.find((row) => row.id === 'fundedYears')?.value).toContain('/');
     expect(stressTestRows).toHaveLength(5);
     expect(['ok', 'review', 'watch']).toContain(stressTestSummary.status);
-    expect(stressTestSummary.stableDashboardHandoff).toContain('stable dashboard');
+    expect(stressTestSummary.stableDashboardHandoff).toContain('detailed report');
     expect(milestones.length).toBeGreaterThanOrEqual(2);
     expect(diagnostics.rowsChecked).toBe(result.years.length);
     expect(firstFundingRows.some((row) => row.id === 'cash-wedge')).toBe(true);
@@ -274,7 +274,7 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['single', 'ready', 'needsInput']).toContain(survivorSummary.status);
     expect(['single', 'needsInput', 'ready', 'notAvailable']).toContain(survivorComparison.status);
     expect(['single', 'needsInput', 'notAvailable', 'ok', 'review', 'watch']).toContain(survivorStory.status);
-    expect(survivorStory.stableDashboardHandoff).toContain('stable dashboard');
+    expect(survivorStory.stableDashboardHandoff).toContain('detailed report');
     expect(survivorReviewRows).toHaveLength(6);
     expect(survivorReviewRows.find((row) => row.id === 'setup')?.detailArea).toBe('assumptions');
     expect(recommendedPath.candidateRows.find((row) => row.id === 'baseline')).toBeTruthy();

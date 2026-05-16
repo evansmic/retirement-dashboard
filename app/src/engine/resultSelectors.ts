@@ -1583,7 +1583,7 @@ export function selectAccountDrawdownReviewRows(result: SimulationResult | null 
         tfsaWithdrawalTotal > RECONCILIATION_TOLERANCE
           ? `TFSA withdrawals begin in ${yearLabel(firstTfsa?.year ?? null)} and total ${compactMoney(tfsaWithdrawalTotal)}.`
           : 'The TFSA bucket is not materially drawn in this projection.',
-      reviewAction: 'Use this as a tax-free funding check, then confirm the detailed annual pattern in the stable dashboard if needed.',
+      reviewAction: 'Use this as a tax-free funding check, then confirm the detailed annual pattern in the detailed report if needed.',
       detailArea: 'annualDetail'
     },
     {
@@ -1637,7 +1637,7 @@ export function selectAccountDrawdownReviewRows(result: SimulationResult | null 
         firstBalance && lastBalance
           ? `Portfolio changes from ${compactMoney(firstBalance.total)} to ${compactMoney(lastBalance.total)} by ${lastBalance.year}.`
           : 'No portfolio balance path is available yet.',
-      reviewAction: 'Use Stress Tests for fragility and the stable dashboard for the complete account audit trail.',
+      reviewAction: 'Use Stress Tests for fragility and the detailed report for the complete account audit trail.',
       detailArea: 'stressTests'
     }
   ];
@@ -1683,7 +1683,7 @@ export function selectAccountDrawdownStory(result: SimulationResult | null | und
     lowestPortfolioYear: lowest?.year ?? null,
     lowestPortfolio: lowest?.total ?? 0,
     firstDepletionYear: firstDepletion?.year ?? null,
-    stableDashboardHandoff: 'Full account schedules, legacy charts, print/PDF, and audit views remain in the stable dashboard.'
+    stableDashboardHandoff: 'Full account schedules, printable charts, print/PDF, and audit views remain in the detailed report.'
   };
 }
 
@@ -1819,7 +1819,7 @@ export function selectStressTestRows(result: SimulationResult | null | undefined
       evidence: depletionRow
         ? `Total portfolio reaches zero or below tolerance in ${depletionRow.year}.`
         : 'The total portfolio remains above zero through the visible projection.',
-      reviewAction: depletionRow ? 'Review the depletion year and nearby withdrawal rows.' : 'Use this as a baseline check, then compare richer stress runs in the stable dashboard.',
+      reviewAction: depletionRow ? 'Review the depletion year and nearby withdrawal rows.' : 'Use this as a baseline check, then compare richer stress runs in the detailed report.',
       detailArea: 'accounts'
     },
     {
@@ -1853,7 +1853,7 @@ export function selectStressTestRows(result: SimulationResult | null | undefined
     },
     {
       id: 'sourceReconciliation',
-      label: 'Source reconciliation',
+      label: 'Money-in / money-out check',
       severity: diagnostics.status === 'warning' ? 'watch' : 'ok',
       year: diagnostics.firstWarningYear,
       value: diagnostics.status === 'warning' ? `$${Math.round(diagnostics.maxReconciliationGap).toLocaleString()} gap` : 'Clean',
@@ -1896,13 +1896,13 @@ export function selectStressTestSummary(result: SimulationResult | null | undefi
           : 'The baseline projection has no major stress flags in the visible years.',
     detail:
       status === 'ok'
-        ? 'Use this as the first read, then use the stable dashboard for Monte Carlo and historical sequence stress.'
+        ? 'Use this as the first read, then use the detailed report for Monte Carlo and historical sequence stress.'
         : `Review ${watchCount + reviewCount} stress item${watchCount + reviewCount === 1 ? '' : 's'} before treating the path as durable.`,
     totalYears: rows.length,
     fundedYears: rows.length - shortfallRows.length,
     firstStressYear,
     worstStressLabel: worst?.severity !== 'ok' ? worst.label : 'No major stress item',
-    stableDashboardHandoff: 'Full Monte Carlo, historical sequence stress, print/PDF, and legacy stress charts remain in the stable dashboard.'
+    stableDashboardHandoff: 'Full Monte Carlo, historical sequence stress, print/PDF, and detailed stress charts remain in the detailed report.'
   };
 }
 
@@ -2068,7 +2068,7 @@ export function selectPlanHealthExplainer(result: SimulationResult | null | unde
 
   const reviewCandidates = [
     {
-      label: diagnostics.status === 'warning' ? 'source reconciliation' : '',
+      label: diagnostics.status === 'warning' ? 'money-in / money-out check' : '',
       amount: diagnostics.maxReconciliationGap
     },
     { label: shortfallRow ? 'first projection shortfall' : '', amount: n(shortfallRow?.shortfall) },
@@ -2102,7 +2102,7 @@ export function selectPlanHealthExplainer(result: SimulationResult | null | unde
     largestReviewItem: reviewCandidates[0]
       ? `${reviewCandidates[0].label} (${Math.round(reviewCandidates[0].amount).toLocaleString()})`
       : 'No major review item surfaced',
-    detailFallback: 'Open the stable dashboard for full schedules, charts, stress tests, and print/PDF.'
+    detailFallback: 'Open the detailed report for full schedules, charts, stress tests, and print/PDF.'
   };
 }
 
@@ -2157,7 +2157,7 @@ export function selectDecisionChecklist(
   return [
     {
       id: 'sourceReconciliation',
-      label: 'Source reconciliation',
+      label: 'Money-in / money-out check',
       status: diagnostics.status === 'ok' ? 'ok' : 'watch',
       reason: diagnostics.status === 'ok' ? 'All extracted annual rows reconcile within tolerance.' : 'At least one annual row has a funding gap.',
       detail: diagnostics.firstWarningYear ? `First warning year: ${diagnostics.firstWarningYear}.` : 'Use this as the first trust check.'
@@ -2442,7 +2442,7 @@ export function selectTaxStorySummary(result: SimulationResult | null | undefine
           : 'No major tax pressure item appears in the baseline projection.',
     detail:
       status === 'ok'
-        ? 'Use this as the first tax read, then open the stable dashboard for complete schedules.'
+        ? 'Use this as the first tax read, then open the detailed report for complete schedules.'
         : `Review ${watchCount + reviewCount} tax item${watchCount + reviewCount === 1 ? '' : 's'} before treating the tax path as settled.`,
     firstYearTax: tax.firstYearTax,
     peakTaxYear: tax.peakTaxYear,
@@ -2451,7 +2451,7 @@ export function selectTaxStorySummary(result: SimulationResult | null | undefine
     lifetimeOasClawback: tax.lifetimeOasClawback,
     registeredWithdrawalYears,
     planningWindowYears: planningWindowYears ? String(planningWindowYears) : 'None detected',
-    stableDashboardHandoff: 'Full tax schedules, print/PDF, and legacy audit views remain in the stable dashboard.'
+    stableDashboardHandoff: 'Full tax schedules, print/PDF, and detailed audit views remain in the detailed report.'
   };
 }
 
@@ -2738,7 +2738,7 @@ export function selectSurvivorViewSummary(
       headline: 'Survivor view is not needed for this single-person plan.',
       survivorYear: null,
       incomeAtRisk: 0,
-      detail: 'Single plans still use the stable dashboard for full result detail.'
+      detail: 'Single plans still use the detailed report for full result detail.'
     };
   }
 
@@ -2845,13 +2845,13 @@ export function selectSurvivorStorySummary(
   const summary = selectSurvivorViewSummary(baseline, plan);
   const comparison = selectSurvivorComparison(baseline, survivor, plan);
   const stableDashboardHandoff =
-    'Full survivor audit schedules, legacy charts, print/PDF, and report-style review remain in the stable dashboard.';
+    'Full survivor audit schedules, printable charts, print/PDF, and report-style review remain in the detailed report.';
 
   if (comparison.status === 'single') {
     return {
       status: 'single',
       headline: 'Household resilience is not needed for this single-person plan.',
-      detail: 'The React preview keeps this tab calm for single plans while the stable dashboard remains available for full result review.',
+      detail: 'The planner preview keeps this tab calm for single plans while the detailed report remains available for full result review.',
       survivorYear: null,
       readiness: 'Not applicable',
       incomeAtRisk: 0,
@@ -2889,7 +2889,7 @@ export function selectSurvivorStorySummary(
     return {
       status: 'notAvailable',
       headline: 'Survivor comparison is waiting for the preview rerun.',
-      detail: 'The survivor year is set, but the survivor result is not available yet. Keep the stable dashboard as the complete fallback.',
+      detail: 'The survivor year is set, but the survivor result is not available yet. Keep the detailed report as the complete fallback.',
       survivorYear: comparison.survivorYear,
       readiness: 'Calculating',
       incomeAtRisk: summary.incomeAtRisk,
@@ -2920,7 +2920,7 @@ export function selectSurvivorStorySummary(
           : 'The survivor preview stays funded in the visible years.',
     detail:
       status === 'ok'
-        ? 'Use this as a bounded household-resilience read before opening full survivor audit detail in the stable dashboard.'
+        ? 'Use this as a first-pass household-resilience read before opening full survivor detail in the detailed report.'
         : 'Review the rows below before treating the two-person plan as durable.',
     survivorYear: comparison.survivorYear,
     readiness: 'Ready',
@@ -3041,8 +3041,8 @@ export function selectSurvivorReviewRows(
       explanation:
         comparison.status === 'ready'
           ? `Survivor funding delta near the scenario year is ${signedMoneyText(fundingDelta)} after tax.`
-          : 'Use the stable dashboard if React cannot calculate the survivor rerun.',
-      reviewAction: 'Use Stress Tests for bounded fragility context and the stable dashboard for full survivor stress surfaces.',
+          : 'Use the detailed report if the planner cannot calculate the survivor rerun.',
+      reviewAction: 'Use Stress Tests for first-pass fragility context and the detailed report for full survivor stress surfaces.',
       detailArea: 'stressTests'
     }
   ];
@@ -3141,7 +3141,7 @@ export function selectRecommendedPath(
     riskDetails,
     checklistItems,
     reasons: recommendationReasons,
-    tradeoffs: recommendedRow?.tradeoffs.length ? recommendedRow.tradeoffs : ['Review the stable dashboard before relying on this preview.'],
+    tradeoffs: recommendedRow?.tradeoffs.length ? recommendedRow.tradeoffs : ['Review the detailed report before relying on this preview.'],
     trustChecks: selectRecommendationTrustChecks(baseline, survivorComparison),
     candidateRows: rowsWithRecommendation,
     whyNotRows
@@ -3176,7 +3176,7 @@ export function selectResultsReadinessSummary(
         ? 'Use the rows below to clear validation or source blockers first.'
         : status === 'review'
           ? 'Save can remain available, but the preview still has review items to inspect before relying on it.'
-          : 'No blocker or review item is currently visible in the bounded React readiness checks.',
+          : 'No blocker or review item is currently visible in the first-pass readiness checks.',
     saveStatus: saveRow?.status ?? 'blocked',
     stableDashboardStatus: stableDashboardRow?.status === 'blocked' ? 'blocked' : 'ready',
     readyCount,
@@ -3206,7 +3206,7 @@ export function selectResultsReadinessRows(
       label: 'Blockers',
       status: validationBlocked ? 'blocked' : blockers?.status ?? 'blocked',
       priority: 'now',
-      detail: blockers?.detail ?? 'Validation and source reconciliation must be available before final review.',
+      detail: blockers?.detail ?? 'Validation and money-in / money-out check must be available before final review.',
       action: blockers?.handoff ?? 'Review Guided Intake warnings and Cash Flow.',
       detailArea: 'cashFlow'
     },
@@ -3239,7 +3239,7 @@ export function selectResultsReadinessRows(
     },
     {
       id: 'stableDashboard',
-      label: 'Stable dashboard inspection',
+      label: 'Detailed report inspection',
       status: validationBlocked ? 'blocked' : 'review',
       priority: dashboard?.priority ?? 'next',
       detail: dashboard?.detail ?? 'The detailed report remains available for complete schedules and printable review.',
@@ -3251,7 +3251,7 @@ export function selectResultsReadinessRows(
       label: 'Save local plan',
       status: validationBlocked ? 'blocked' : save?.status ?? 'blocked',
       priority: save?.priority ?? 'later',
-      detail: save?.detail ?? 'Save the normalized v2 plan locally after review.',
+      detail: save?.detail ?? 'Save the editable plan locally after review.',
       action: save?.handoff ?? 'Save the editable local plan file after review.',
       detailArea: 'exportSave'
     }
@@ -3328,8 +3328,8 @@ function selectRecommendedBreakRisks(
         id: 'sourceReconciliation',
         label: 'Recommendation blockers',
         severity: 'blocked',
-        detail: 'A recommended path is not available until validation and source reconciliation blockers are cleared.',
-        handoff: 'Fix intake blockers, then use the stable dashboard for full schedules.'
+        detail: 'A recommended path is not available until validation and money-in / money-out check blockers are cleared.',
+        handoff: 'Fix intake blockers, then use the detailed report for full schedules.'
       }
     ];
   }
@@ -3343,13 +3343,13 @@ function selectRecommendedBreakRisks(
 
   risks.push({
     id: 'sourceReconciliation',
-    label: 'Source reconciliation',
+    label: 'Money-in / money-out check',
     severity: context.sourceStatus === 'ok' ? 'ok' : 'blocked',
     detail:
       context.sourceStatus === 'ok'
         ? 'The selected candidate reconciles income, withdrawals, tax, and spending in the preview rows.'
         : 'The selected candidate has reconciliation warnings, so the recommendation should not be relied on yet.',
-    handoff: 'Stable dashboard: review annual cash-flow rows.'
+    handoff: 'Detailed report: review annual cash-flow rows.'
   });
 
   risks.push({
@@ -3363,7 +3363,7 @@ function selectRecommendedBreakRisks(
       spendingCandidate && !spendingCandidate.blocked && spendingCandidate.endPortfolioDelta > 0
         ? `A 10% early-spending reduction improves projected money left by ${Math.round(spendingCandidate.endPortfolioDelta).toLocaleString()} versus the current plan.`
         : 'The spending reduction preview does not materially improve the selected trust metrics.',
-    handoff: 'Stable dashboard: compare detailed spending and withdrawal schedules.'
+    handoff: 'Detailed report: compare detailed spending and withdrawal schedules.'
   });
 
   risks.push({
@@ -3374,8 +3374,8 @@ function selectRecommendedBreakRisks(
       ? 'The recommendation depends on working two years longer than the current plan.'
       : retireLaterCandidate && retireLaterCandidate.endPortfolioDelta > 0
         ? `Retiring two years later improves terminal portfolio by ${Math.round(retireLaterCandidate.endPortfolioDelta).toLocaleString()}.`
-        : 'Retiring later does not overtake the selected path in this bounded preview.',
-    handoff: 'Stable dashboard: inspect year-by-year employment, tax, and withdrawal timing.'
+        : 'Retiring later does not overtake the selected path in this first-pass review.',
+    handoff: 'Detailed report: inspect year-by-year employment, tax, and withdrawal timing.'
   });
 
   risks.push({
@@ -3386,8 +3386,8 @@ function selectRecommendedBreakRisks(
       ? 'The selected path depends on delayed CPP/OAS claiming assumptions.'
       : delayBenefitsCandidate && delayBenefitsCandidate.endPortfolioDelta > 0
         ? `Delaying CPP/OAS improves terminal portfolio by ${Math.round(delayBenefitsCandidate.endPortfolioDelta).toLocaleString()}.`
-        : 'Delayed public benefits do not overtake the selected path in this bounded preview.',
-    handoff: 'Stable dashboard: review benefit timing and taxable income by year.'
+        : 'Delayed public benefits do not overtake the selected path in this first-pass review.',
+    handoff: 'Detailed report: review benefit timing and taxable income by year.'
   });
 
   if (context.firstShortfallYear) {
@@ -3396,7 +3396,7 @@ function selectRecommendedBreakRisks(
       label: 'Projection shortfall',
       severity: 'watch',
       detail: `The selected path first reports a shortfall in ${context.firstShortfallYear}.`,
-      handoff: 'Stable dashboard: inspect stress tests and annual shortfall rows.'
+      handoff: 'Detailed report: inspect stress tests and annual shortfall rows.'
     });
   }
 
@@ -3408,7 +3408,7 @@ function selectRecommendedBreakRisks(
       context.terminalPortfolio <= RECONCILIATION_TOLERANCE
         ? 'The selected path ends with little or no portfolio cushion.'
         : `Lowest portfolio is ${Math.round(context.lowestPortfolio).toLocaleString()} in ${context.lowestPortfolioYear || '-'}.`,
-    handoff: 'Stable dashboard: review balance charts and ending estate trade-offs.'
+    handoff: 'Detailed report: review balance charts and ending estate trade-offs.'
   });
 
   if (context.taxPressureCount > 0) {
@@ -3417,7 +3417,7 @@ function selectRecommendedBreakRisks(
       label: 'Tax pressure',
       severity: 'review',
       detail: `${context.taxPressureCount} selected-path year${context.taxPressureCount === 1 ? '' : 's'} show elevated tax or OAS clawback pressure.`,
-      handoff: 'Stable dashboard: inspect tax schedules and OAS clawback rows.'
+      handoff: 'Detailed report: inspect tax schedules and OAS clawback rows.'
     });
   }
 
@@ -3438,7 +3438,7 @@ function selectRecommendedBreakRisks(
             ? `Survivor comparison first reports a shortfall in ${survivorComparison.firstShortfallYear}.`
             : `Survivor comparison remains funded through ${survivorComparison.fundedThroughYear || '-'}.`
           : 'Set a survivor year to test household resilience.',
-    handoff: 'Stable dashboard: review survivor and household resilience detail.'
+    handoff: 'Detailed report: review survivor and household resilience detail.'
   });
 
   return risks;
@@ -3454,7 +3454,7 @@ function selectRecommendedConfidence(
       level: 'low',
       label: 'Low confidence',
       detail: 'The recommendation has blockers or missing stress context.',
-      drivers: ['Clear validation and source reconciliation blockers before using the selected path.']
+      drivers: ['Clear validation and money-in / money-out check blockers before using the selected path.']
     };
   }
 
@@ -3487,8 +3487,8 @@ function selectRecommendedConfidence(
   return {
     level: 'higher',
     label: 'Higher confidence',
-    detail: 'The selected path clears the bounded stress checks available in the React preview.',
-    drivers: drivers.length ? drivers : ['No major fragility appears in the bounded confidence layer.']
+    detail: 'The selected path clears the first-pass stress checks available in the planner preview.',
+    drivers: drivers.length ? drivers : ['No major fragility appears in the first-pass confidence check.']
   };
 }
 
@@ -3561,7 +3561,7 @@ function selectRecommendedRiskDetails(
             id: step.id,
             label: step.label,
             value: signedMoneyText(step.amount),
-            detail: step.tone === 'watch' ? 'Review this source line.' : 'Included in first-year source reconciliation.'
+            detail: step.tone === 'watch' ? 'Review this source line.' : 'Included in first-year money-in / money-out check.'
           })),
           handoff: risk.handoff
         };
@@ -3743,9 +3743,9 @@ function selectRecommendedChecklistItems(
       priority: 'now',
       detail:
         validationBlocked || blockedRisks.length > 0 || !recommended
-          ? 'Resolve validation and source reconciliation blockers before relying on the selected path.'
-          : 'No validation or source reconciliation blocker is currently stopping the preview.',
-      handoff: 'Start with Guided Intake warnings and stable dashboard cash-flow rows.'
+          ? 'Resolve validation and money-in / money-out check blockers before relying on the selected path.'
+          : 'No validation or money-in / money-out check blocker is currently stopping the preview.',
+      handoff: 'Start with Guided Intake warnings and detailed report cash-flow rows.'
     },
     {
       id: 'reviewStress',
@@ -3755,8 +3755,8 @@ function selectRecommendedChecklistItems(
       detail:
         watchRisks.length > 0
           ? `${watchRisks.length} selected-path risk${watchRisks.length === 1 ? '' : 's'} need review before acting.`
-          : 'No watch-level selected-path risk is visible in the bounded preview.',
-      handoff: 'Use the break-risk drilldowns above, then inspect complete annual rows in the stable dashboard.'
+          : 'No watch-level selected-path risk is visible in the first-pass review.',
+      handoff: 'Use the break-risk drilldowns above, then inspect complete annual rows in the detailed report.'
     },
     {
       id: 'confirmSpending',
@@ -3767,7 +3767,7 @@ function selectRecommendedChecklistItems(
         spendingRisk?.severity === 'watch'
           ? 'The selected path is sensitive to early retirement spending; confirm the lifestyle target before saving.'
           : 'The 10% early-spending rerun does not currently create a watch-level item.',
-      handoff: 'Review the spending sensitivity drilldown and stable dashboard withdrawal schedule.'
+      handoff: 'Review the spending sensitivity drilldown and detailed report withdrawal schedule.'
     },
     {
       id: 'confirmTiming',
@@ -3785,8 +3785,8 @@ function selectRecommendedChecklistItems(
       detail:
         context.taxPressureCount > 0
           ? `${context.taxPressureCount} selected-path year${context.taxPressureCount === 1 ? '' : 's'} show tax or OAS pressure.`
-          : 'No major selected-path tax pressure was detected in the bounded preview.',
-      handoff: 'Use the Taxes tab and stable dashboard tax schedules for year-by-year detail.'
+          : 'No major selected-path tax pressure was detected in the first-pass review.',
+      handoff: 'Use the Taxes tab and detailed report tax schedules for year-by-year detail.'
     },
     {
       id: 'testSurvivor',
@@ -3802,15 +3802,15 @@ function selectRecommendedChecklistItems(
           : survivorComparison.status === 'ready'
             ? 'Survivor comparison is available; review it before relying on a two-person plan.'
             : 'Set a survivor year to test household resilience.',
-      handoff: 'Use Household Resilience and the stable dashboard survivor detail.'
+      handoff: 'Use Household Resilience and the detailed report survivor detail.'
     },
     {
       id: 'openStableDashboard',
       label: 'Inspect complete detail',
       status: 'review',
       priority: 'next',
-      detail: 'The React result is still a preview. Complete schedules, charts, and print/PDF remain in the stable dashboard.',
-      handoff: 'Open stable dashboard before acting on the selected path.'
+      detail: 'The Results page is still a preview. Complete schedules, charts, and print/PDF remain in the detailed report.',
+      handoff: 'Open detailed report before acting on the selected path.'
     },
     {
       id: 'savePlan',
@@ -3820,8 +3820,8 @@ function selectRecommendedChecklistItems(
       detail:
         validationBlocked || blockedRisks.length > 0
           ? 'Save after blockers are clear so the local plan file reflects reviewed inputs.'
-          : 'Save the reviewed v2 plan locally when you are ready to keep this version.',
-      handoff: 'Use Save .plan.json; recommendation and checklist output stay runtime-only.'
+          : 'Save the reviewed editable plan file when you are ready to keep this version.',
+      handoff: 'Use Save editable plan. Results notes stay separate from the saved plan file.'
     }
   ];
 
@@ -3873,7 +3873,7 @@ function scenarioEvidenceRows(
       id: `${prefix}-tax`,
       label: 'Lifetime tax',
       value: moneyText(tax.lifetimeTax),
-      detail: 'Use the stable dashboard to inspect annual tax rows.'
+      detail: 'Use the detailed report to inspect annual tax rows.'
     }
   ];
 }
@@ -4044,7 +4044,7 @@ function recommendedReasonCopy(row: RecommendedCandidateRow): string[] {
 }
 
 function whyNotReason(row: RecommendedCandidateRow, recommended: RecommendedCandidateRow | null): string {
-  if (row.blocked) return 'Blocked by missing scenario output or source reconciliation warnings.';
+  if (row.blocked) return 'Blocked by missing scenario output or money-in / money-out check warnings.';
   if (!recommended) return 'No recommended candidate is available for comparison.';
   if (row.firstShortfallYear && !recommended.firstShortfallYear) return `It has a shortfall in ${row.firstShortfallYear}.`;
   if ((row.fundedThroughYear || 0) < (recommended.fundedThroughYear || 0)) return 'It funds fewer projection years.';
@@ -4063,7 +4063,7 @@ function selectRecommendationTrustChecks(
   return [
     {
       id: 'sourceReconciliation',
-      label: 'Source reconciliation',
+      label: 'Money-in / money-out check',
       status: diagnostics.status === 'ok' ? 'ok' : 'blocked',
       detail: diagnostics.status === 'ok' ? `${diagnostics.rowsChecked} rows reconcile.` : `First warning year ${diagnostics.firstWarningYear || '-'}.`
     },

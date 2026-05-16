@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { createBlankPlan } from '../data/defaultPlan';
+import { createExamplePlan, examplePlanCards, ExamplePlanId } from '../data/examplePlans';
 import { createPlanFile, extractPlanPayload, p2LooksBlank, safeFilenamePart, validatePlanFile } from '../data/planFile';
 import { PlanValidationResult, validatePlanForGuidedIntake } from '../data/planValidation';
 import { fromV2Payload } from '../data/domainAdapter';
@@ -95,6 +96,7 @@ type WorkspaceState = {
 
 type WorkspaceAction =
   | { type: 'newPlan' }
+  | { type: 'loadExample'; id: ExamplePlanId; label: string }
   | { type: 'openPlan'; plan: V2PlanPayload; label: string }
   | { type: 'updatePlan'; plan: V2PlanPayload }
   | { type: 'setHouseholdMode'; mode: 'single' | 'couple'; plan?: V2PlanPayload }
@@ -150,6 +152,21 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
         dirty: true,
         lastExportedAt: ''
       };
+    case 'loadExample': {
+      const plan = createExamplePlan(action.id);
+      return {
+        ...state,
+        view: 'intake',
+        activeStep: 'household',
+        activeResultsSection: 'overview',
+        householdMode: p2LooksBlank(plan.p2) ? 'single' : 'couple',
+        plan,
+        importLabel: `Example: ${action.label}`,
+        error: '',
+        dirty: true,
+        lastExportedAt: ''
+      };
+    }
     case 'openPlan':
       return {
         ...state,
@@ -471,7 +488,12 @@ export function App() {
 
         <section className="workspace-main">
           {state.view === 'start' ? (
-            <StartPanel error={state.error} onFileChange={onFileChange} onNewPlan={() => dispatch({ type: 'newPlan' })} />
+            <StartPanel
+              error={state.error}
+              onExample={(id, label) => dispatch({ type: 'loadExample', id, label })}
+              onFileChange={onFileChange}
+              onNewPlan={() => dispatch({ type: 'newPlan' })}
+            />
           ) : null}
 
           {state.view === 'intake' && plan ? (
@@ -530,10 +552,12 @@ export function App() {
 
 function StartPanel({
   error,
+  onExample,
   onFileChange,
   onNewPlan
 }: {
   error: string;
+  onExample: (id: ExamplePlanId, label: string) => void;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onNewPlan: () => void;
 }) {
@@ -570,6 +594,30 @@ function StartPanel({
           <li>Editable local plan file</li>
           <li>No account infrastructure required</li>
         </ul>
+      </div>
+
+      <div className="panel example-panel">
+        <p className="eyebrow">Try an example</p>
+        <h3>See how Results answers different retirement stories.</h3>
+        <p>
+          Use a synthetic household to explore the planner before entering your own numbers. Each example opens as an
+          editable local working copy.
+        </p>
+        <div className="example-plan-grid">
+          {examplePlanCards.map((example) => (
+            <button
+              className="example-plan-card"
+              key={example.id}
+              type="button"
+              onClick={() => onExample(example.id, example.label)}
+            >
+              <span>{example.shortLabel}</span>
+              <strong>{example.summary}</strong>
+              <small>{example.bestFor}</small>
+              <em>{example.focus}</em>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -2223,7 +2271,7 @@ function ResultsHandoffPanel({
                     </dd>
                   </div>
                   <div>
-                    <dt>Cash-flow delta</dt>
+                    <dt>Unexplained gap</dt>
                     <dd className={Math.abs(reconciliation.cashFlowDelta) > 1 ? 'bad-value' : 'ok-value'}>
                       {formatSignedMoney(reconciliation.cashFlowDelta)}
                     </dd>
@@ -2333,7 +2381,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'accounts':
       return {
-        summary: 'Accounts shows projected account bucket balances, start/end summaries, and a runtime balance chart.',
+        summary: 'Accounts shows projected account bucket balances, start/end summaries, and a balance chart.',
         handoff: 'Use the detailed report for complete account schedules, printable rows, and richer chart surfaces.'
       };
     case 'taxes':
@@ -2358,7 +2406,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     case 'assumptions':
       return {
-        summary: 'Assumptions summarizes the v2 plan settings used by the preview run. Edits still happen in Guided Intake.',
+        summary: 'Assumptions summarizes the plan settings used for the calculation. Edits still happen in Guided Intake.',
         handoff: stableHandoff
       };
     case 'exportSave':
@@ -2368,7 +2416,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
       };
     default:
       return {
-        summary: 'This React results tab is reserved for a bounded migrated result surface.',
+        summary: 'This Results tab is reserved for future detailed review.',
         handoff: stableHandoff
       };
   }
@@ -2780,9 +2828,9 @@ function RecommendedChecklistPanel({
   return (
     <section className="result-card recommended-checklist-panel">
       <div>
-        <p className="eyebrow">Implementation checklist</p>
+        <p className="eyebrow">Before relying on this plan</p>
         <h3>Before you rely on this path</h3>
-        <p>Runtime-only review steps from the selected-path evidence. This is not saved to the plan file.</p>
+        <p>Review steps based on the selected path. These notes stay separate from your saved plan file.</p>
       </div>
       <div className="recommended-checklist-list">
         {items.map((item) => (
@@ -2861,9 +2909,9 @@ function PlanHealthPanel({
 function SourceStoryPanel({ story }: { story: ReturnType<typeof selectSourceReconciliationStory> }) {
   return (
     <section className="decision-panel">
-      <h3>Source reconciliation story{story.year ? ` (${story.year})` : ''}</h3>
+      <h3>Money-in / money-out check story{story.year ? ` (${story.year})` : ''}</h3>
       <p>{story.headline}</p>
-      <div className="source-story-flow" aria-label="First-year source reconciliation flow">
+      <div className="source-story-flow" aria-label="First-year money-in / money-out check flow">
         {story.steps.map((step) => (
           <div className={`source-story-step source-story-${step.tone}`} key={step.id}>
             <span>{step.label}</span>
@@ -3239,7 +3287,7 @@ function SurvivorSummaryPanel({
           <Metric label="First survivor shortfall" value={comparison.firstShortfallYear ? String(comparison.firstShortfallYear) : '-'} />
         </div>
       ) : null}
-      <p className="table-note">{summary.detail} Use Household Resilience for the fuller React review.</p>
+      <p className="table-note">{summary.detail} Use Survivor Impact for the fuller household review.</p>
     </section>
   );
 }
@@ -3306,7 +3354,7 @@ function HouseholdResiliencePanel({
       </div>
 
       <section className="decision-panel">
-        <h3>Stable dashboard fallback</h3>
+        <h3>Detailed report fallback</h3>
         <p>{story.stableDashboardHandoff}</p>
         <p className="table-note">{summary.detail}</p>
       </section>
@@ -3323,13 +3371,13 @@ function ReconciliationDiagnosticsPanel({
 }) {
   return (
     <section className={`reconciliation-diagnostics ${diagnostics.status === 'warning' ? 'watch-card' : ''}`}>
-      <h3>Source reconciliation diagnostics</h3>
+      <h3>Money-in / money-out check diagnostics</h3>
       <div className="summary-grid">
         <Metric label="Rows checked" value={loading ? 'Calculating' : String(diagnostics.rowsChecked || '-')} />
         <Metric label="Warnings" value={String(diagnostics.warningCount)} />
         <Metric label="First warning year" value={diagnostics.firstWarningYear ? String(diagnostics.firstWarningYear) : '-'} />
         <Metric label="Max funding gap" value={formatSignedMoney(diagnostics.maxReconciliationGap)} />
-        <Metric label="Max cash-flow delta" value={formatSignedMoney(diagnostics.maxCashFlowDelta)} />
+        <Metric label="Max unexplained gap" value={formatSignedMoney(diagnostics.maxCashFlowDelta)} />
       </div>
     </section>
   );
@@ -3384,10 +3432,10 @@ function ProjectionPathPanel({
 function DeferredResultsPanel({ section }: { section: string }) {
   return (
     <div className="deferred-results-panel">
-      <strong>{section} stays in the stable dashboard for now.</strong>
+      <strong>{section} stays in the detailed report for now.</strong>
       <span>
-        This React tab is reserved in the Sprint 6 navigation shell, but detailed results remain in the stable dashboard
-        until this panel is migrated and parity-tested.
+        Detailed results remain available in the printable report while this part of the guided Results page is being
+        simplified.
       </span>
     </div>
   );
@@ -3668,7 +3716,7 @@ function TaxesResultsPanel({
       </div>
 
       {detailRows.length > visibleRows.length ? (
-        <p className="table-note">Showing the first {visibleRows.length} years. Full tax detail remains in the stable dashboard.</p>
+        <p className="table-note">Showing the first {visibleRows.length} years. Full tax detail remains in the detailed report.</p>
       ) : null}
       <p className="table-note">{story.stableDashboardHandoff}</p>
     </div>
@@ -3747,11 +3795,11 @@ function StressTestsPanel({
       </div>
       <section className="stress-scenario-panel">
         <div>
-          <p className="eyebrow">Bounded scenario tests</p>
+          <p className="eyebrow">Scenario tests</p>
           <h3>Compare the main fragility levers</h3>
           <p>
-            These local reruns keep the stress read close to the baseline without changing the saved plan or replacing the
-            stable dashboard stress tools.
+            These local reruns keep the stress read close to the baseline without changing the saved plan. Use the
+            detailed report for deeper stress tables and printable charts.
           </p>
         </div>
         <ScenarioComparisonPanel loading={loading} rows={scenarioRows} />
@@ -3907,9 +3955,9 @@ function ResultsReadinessPanel({
           ))}
         </div>
       ) : (
-        <p className="table-note">No review or blocker rows are visible in the bounded React readiness checks.</p>
+        <p className="table-note">No review or blocker rows are visible in the first-pass readiness checks.</p>
       )}
-      {compact ? <p className="table-note">Use Export/Save for the full readiness handoff.</p> : null}
+      {compact ? <p className="table-note">Use Save & print for the full readiness handoff.</p> : null}
     </section>
   );
 }
@@ -4013,8 +4061,8 @@ function AnnualDetailPanel({
       </div>
 
       <p className="table-note">
-        Showing all {rows.length} projection years in React. Charts, print/PDF, and legacy audit surfaces remain in the
-        stable dashboard.
+        Showing all {rows.length} projection years. Printable charts and deeper audit tables remain in the detailed
+        report.
       </p>
     </div>
   );
@@ -4345,7 +4393,7 @@ function CashFlowResultsPanel({
         <Metric label="Reconciliation warnings" value={String(diagnostics.warningCount)} />
         <Metric label="First warning year" value={diagnostics.firstWarningYear ? String(diagnostics.firstWarningYear) : '-'} />
         <Metric label="Max funding gap" value={formatSignedMoney(diagnostics.maxReconciliationGap)} />
-        <Metric label="Max cash-flow delta" value={formatSignedMoney(diagnostics.maxCashFlowDelta)} />
+        <Metric label="Max unexplained gap" value={formatSignedMoney(diagnostics.maxCashFlowDelta)} />
       </div>
 
       <div className="result-table-wrap">
@@ -4357,7 +4405,7 @@ function CashFlowResultsPanel({
               <th>Tax</th>
               <th>After-tax spending</th>
               <th>Gap</th>
-              <th>Cash-flow delta</th>
+              <th>Unexplained gap</th>
               <th>Portfolio</th>
             </tr>
           </thead>
@@ -4388,7 +4436,7 @@ function CashFlowResultsPanel({
       </div>
 
       {rows.length > visibleRows.length ? (
-        <p className="table-note">Showing the first {visibleRows.length} years. Full annual detail remains in the stable dashboard.</p>
+        <p className="table-note">Showing the first {visibleRows.length} years. Full annual detail remains in the detailed report.</p>
       ) : null}
     </div>
   );

@@ -4,34 +4,51 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Active Sprint — Sprint 29: Optimizer Input Review And Guardrails
+## Latest Sprint — Sprint 31: Consumer Copy Scrub
 
-**Status:** Complete 2026-05-15 after verification.
+**Status:** Complete 2026-05-16.
 
-Goal: turn the optimizer boundary map into a deliberate review step before any automatic search is introduced.
+Goal: remove remaining implementation/scaffolding language from user-facing Results copy so the planner sounds like a calm consumer retirement guide.
 
-Non-scope: new simulation math, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
+Non-scope: full visual redesign, new simulation math, DB survivor pension modelling, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 29 checkpoint doc: [`docs/sprint_29_optimizer_input_review_guardrails.md`](docs/sprint_29_optimizer_input_review_guardrails.md).
+Sprint 31 checkpoint doc: [`docs/sprint_31_consumer_copy_scrub.md`](docs/sprint_31_consumer_copy_scrub.md).
 
-### Sprint 29 Candidate Implementation Tickets
+### Sprint 31 Candidate Implementation Tickets
 
-- [x] **S29-01 — Permission review selector.** ✅ *Done 2026-05-15.* Added runtime-only optimizer input review rows derived from the Sprint 28 boundary map.
-- [x] **S29-02 — Can explore / must preserve / needs decision.** ✅ *Done 2026-05-15.* Classified future optimizer levers by household permission.
-- [x] **S29-03 — Guardrail copy.** ✅ *Done 2026-05-15.* Added plain-language guardrails and review questions for each future optimizer lever.
-- [x] **S29-04 — Overview review panel.** ✅ *Done 2026-05-15.* Added optimizer permissions review without saving choices or running optimization.
-- [x] **S29-05 — Tests and docs.** ✅ *Done 2026-05-15.* Added selector/smoke coverage and Sprint 29 documentation.
+- [x] **S31-01 — User-facing copy scan.** Searched the live React UI and selector output for internal terms such as runtime, legacy, stable dashboard, schema, bounded preview, source reconciliation, and cash-flow delta.
+- [x] **S31-02 — Detailed report language.** Reframed stable-dashboard handoffs as detailed-report guidance without changing routes or fallback behavior.
+- [x] **S31-03 — Money-flow wording.** Renamed source reconciliation and cash-flow delta language to money-in / money-out check and unexplained gap in consumer-facing panels.
+- [x] **S31-04 — Readiness and scenario copy.** Replaced implementation/checklist/runtime phrasing with plain review-step wording.
+- [x] **S31-05 — Tests and docs.** Updated copy expectations and documented Sprint 31.
 
-### Sprint 29 Definition Of Done
+### Sprint 31 Definition Of Done
 
-- Future optimizer permissions are visible before automatic search exists.
-- Must-preserve wishes are separated from can-explore levers.
-- Missing household decisions are clearly called out.
-- Output remains runtime-only and no simulation math changes.
-- Runtime dashboard schema remains v2.
+- Live consumer UI avoids internal implementation terms from the Sprint 31 copy scan.
+- Detailed-report language is consistent while preserving the existing fallback route.
+- Money-flow warnings remain visible but use consumer-friendly labels.
+- No simulation math, saved plan format, optimizer behavior, or report routing changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 31: Consumer Copy Scrub
+
+**Complete 2026-05-16.** Replaced remaining internal implementation language in the live React Results copy with consumer-facing detailed-report, money-flow, and review-step language.
+
+Sprint 31 checkpoint doc: [`docs/sprint_31_consumer_copy_scrub.md`](docs/sprint_31_consumer_copy_scrub.md).
+
+### Sprint 30: React Start Examples And Light Visual Alignment
+
+**Complete 2026-05-16.** Added the bundled synthetic example plans to the modern React Start screen and lightly aligned the entry experience with the Results dashboard visual language.
+
+Sprint 30 checkpoint doc: [`docs/sprint_30_react_start_examples_visual_alignment.md`](docs/sprint_30_react_start_examples_visual_alignment.md).
+
+### Sprint 29: Optimizer Input Review And Guardrails
+
+**Complete 2026-05-15.** Added runtime-only optimizer permission rows that separate can-explore levers, must-preserve wishes, and missing household decisions.
+
+Sprint 29 checkpoint doc: [`docs/sprint_29_optimizer_input_review_guardrails.md`](docs/sprint_29_optimizer_input_review_guardrails.md).
 
 ### Sprint 28: Optimizer Prep And Decision Boundaries
 
