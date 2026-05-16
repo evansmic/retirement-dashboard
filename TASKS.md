@@ -4,33 +4,39 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 31: Consumer Copy Scrub
+## Latest Sprint — Sprint 32: Overview Simplification
 
 **Status:** Complete 2026-05-16.
 
-Goal: remove remaining implementation/scaffolding language from user-facing Results copy so the planner sounds like a calm consumer retirement guide.
+Goal: keep the Overview calm after the retirement answer by moving audit-style diagnostics into Details while preserving the evidence for deeper review.
 
 Non-scope: full visual redesign, new simulation math, DB survivor pension modelling, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 31 checkpoint doc: [`docs/sprint_31_consumer_copy_scrub.md`](docs/sprint_31_consumer_copy_scrub.md).
+Sprint 32 checkpoint doc: [`docs/sprint_32_overview_simplification.md`](docs/sprint_32_overview_simplification.md).
 
-### Sprint 31 Candidate Implementation Tickets
+### Sprint 32 Candidate Implementation Tickets
 
-- [x] **S31-01 — User-facing copy scan.** Searched the live React UI and selector output for internal terms such as runtime, legacy, stable dashboard, schema, bounded preview, source reconciliation, and cash-flow delta.
-- [x] **S31-02 — Detailed report language.** Reframed stable-dashboard handoffs as detailed-report guidance without changing routes or fallback behavior.
-- [x] **S31-03 — Money-flow wording.** Renamed source reconciliation and cash-flow delta language to money-in / money-out check and unexplained gap in consumer-facing panels.
-- [x] **S31-04 — Readiness and scenario copy.** Replaced implementation/checklist/runtime phrasing with plain review-step wording.
-- [x] **S31-05 — Tests and docs.** Updated copy expectations and documented Sprint 31.
+- [x] **S32-01 — Overview content audit.** Identified audit-style panels crowding the Overview after the consumer answer.
+- [x] **S32-02 — Details evidence surface.** Moved plan health, money-flow diagnostics, decision detail, projection path, tax pressure, scenario tables, and optimizer-prep panels into Details.
+- [x] **S32-03 — Calm Overview flow.** Kept retirement answer, spending capacity, estate intent, suggested plan, household scenario cards, survivor snapshot, and readiness on Overview.
+- [x] **S32-04 — First-year money-flow component.** Extracted first-year money-flow evidence so it can live in Details without duplicating Overview code.
+- [x] **S32-05 — Tests and docs.** Added structure coverage for the Overview/Details split and documented Sprint 32.
 
-### Sprint 31 Definition Of Done
+### Sprint 32 Definition Of Done
 
-- Live consumer UI avoids internal implementation terms from the Sprint 31 copy scan.
-- Detailed-report language is consistent while preserving the existing fallback route.
-- Money-flow warnings remain visible but use consumer-friendly labels.
+- Overview starts with the household answer and avoids audit-style diagnostic panels.
+- Details keeps the moved evidence reachable without changing selectors or engine output.
+- Scenario and survivor summaries remain visible on Overview.
 - No simulation math, saved plan format, optimizer behavior, or report routing changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 32: Overview Simplification
+
+**Complete 2026-05-16.** Moved audit-style diagnostic panels from Overview into Details so the first Results page stays focused on the retirement answer, spending, estate intent, choices, survivor snapshot, and readiness.
+
+Sprint 32 checkpoint doc: [`docs/sprint_32_overview_simplification.md`](docs/sprint_32_overview_simplification.md).
 
 ### Sprint 31: Consumer Copy Scrub
 

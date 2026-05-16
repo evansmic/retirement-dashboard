@@ -2169,10 +2169,24 @@ function ResultsHandoffPanel({
           <CashFlowResultsPanel diagnostics={reconciliationDiagnostics} loading={loading} rows={cashFlowRows} />
         ) : activeSection === 'details' ? (
           <DetailsResultsPanel
+            decisionChecklist={decisionChecklist}
+            decisionDetailRows={decisionDetailRows}
+            fundingRows={fundingRows}
+            optimizerBoundaries={optimizerBoundaries}
+            optimizerInputReview={optimizerInputReview}
             loading={loading}
             onSection={onSection}
             overview={overview}
+            planHealth={planHealth}
+            projectionMilestones={projectionMilestones}
+            reconciliation={reconciliation}
+            reconciliationDiagnostics={reconciliationDiagnostics}
             readinessSummary={readinessSummary}
+            scenarioAssumptionRows={scenarioAssumptionRows}
+            scenarioComparisonRows={scenarioComparisonRows}
+            sourceStory={sourceStory}
+            taxPressureExplanation={taxPressureExplanation}
+            taxPressureRows={taxPressureRows}
             validation={validation}
           />
         ) : activeSection === 'annualDetail' ? (
@@ -2240,78 +2254,8 @@ function ResultsHandoffPanel({
             </div>
 
             <RecommendedPathPanel loading={loading} summary={recommendedPath} />
-            <div className="result-section-label">Plan Health</div>
-            <PlanHealthPanel health={planHealth} loading={loading} />
-            <div className="result-section-label">Money Flow</div>
-            <SourceStoryPanel story={sourceStory} />
-            <div className="result-section-label">Decision Checks</div>
-            <DecisionChecklistPanel items={decisionChecklist} />
-            <DecisionDetailPanel rows={decisionDetailRows} />
-
-            <div className="result-overview-grid">
-              <section className="result-card">
-                <h3>First-year reconciliation</h3>
-                <dl className="result-ledger">
-                  <div>
-                    <dt>After-tax spending</dt>
-                    <dd>{formatMoney(reconciliation.afterTaxSpending)}</dd>
-                  </div>
-                  <div>
-                    <dt>Funding minus tax</dt>
-                    <dd>{formatMoney(reconciliation.reconciledAfterTaxSpending)}</dd>
-                  </div>
-                  <div>
-                    <dt>One-off outflows</dt>
-                    <dd>{formatMoney(reconciliation.oneOffOutflows)}</dd>
-                  </div>
-                  <div>
-                    <dt>Reconciliation gap</dt>
-                    <dd className={Math.abs(reconciliation.reconciliationDelta) > 1 ? 'bad-value' : 'ok-value'}>
-                      {formatSignedMoney(reconciliation.reconciliationDelta)}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Unexplained gap</dt>
-                    <dd className={Math.abs(reconciliation.cashFlowDelta) > 1 ? 'bad-value' : 'ok-value'}>
-                      {formatSignedMoney(reconciliation.cashFlowDelta)}
-                    </dd>
-                  </div>
-                </dl>
-              </section>
-
-              <section className="result-card">
-                <h3>Funding sources</h3>
-                <dl className="result-ledger">
-                  {fundingRows.length > 0 ? (
-                    fundingRows.map((row) => (
-                      <div key={row.id}>
-                        <dt>{row.label}</dt>
-                        <dd>{formatMoney(row.amount)}</dd>
-                      </div>
-                    ))
-                  ) : (
-                    <div>
-                      <dt>Preview</dt>
-                      <dd>{loading ? 'Calculating' : '-'}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt>Tax</dt>
-                    <dd>-{formatMoney(reconciliation.tax)}</dd>
-                  </div>
-                </dl>
-              </section>
-            </div>
-
-            <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
-            <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
-            <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
             <div className="result-section-label">Retirement Choices</div>
             <ScenarioCardsPanel cards={scenarioChoiceCards} />
-            <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
-            <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
-            <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
-            <OptimizerInputReviewPanel summary={optimizerInputReview} />
             <div className="result-section-label">Survivor Impact</div>
             <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
             <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
@@ -2580,16 +2524,44 @@ function EstateIntentPanel({
 }
 
 function DetailsResultsPanel({
+  decisionChecklist,
+  decisionDetailRows,
+  fundingRows,
   loading,
   onSection,
+  optimizerBoundaries,
+  optimizerInputReview,
   overview,
+  planHealth,
+  projectionMilestones,
+  reconciliation,
+  reconciliationDiagnostics,
   readinessSummary,
+  scenarioAssumptionRows,
+  scenarioComparisonRows,
+  sourceStory,
+  taxPressureExplanation,
+  taxPressureRows,
   validation
 }: {
+  decisionChecklist: ReturnType<typeof selectDecisionChecklist>;
+  decisionDetailRows: ReturnType<typeof selectDecisionDetailRows>;
+  fundingRows: ReturnType<typeof selectFundingSourceRows>;
   loading: boolean;
   onSection: (section: ResultsWorkspaceSection) => void;
+  optimizerBoundaries: ReturnType<typeof selectOptimizerDecisionBoundaries>;
+  optimizerInputReview: ReturnType<typeof selectOptimizerInputReview>;
   overview: ReturnType<typeof selectOverviewMetrics>;
+  planHealth: ReturnType<typeof selectPlanHealthExplainer>;
+  projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
+  reconciliation: ReturnType<typeof selectCashFlowReconciliation>;
+  reconciliationDiagnostics: ReturnType<typeof selectReconciliationDiagnostics>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
+  scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
+  scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
+  sourceStory: ReturnType<typeof selectSourceReconciliationStory>;
+  taxPressureExplanation: ReturnType<typeof selectTaxPressureExplanation>;
+  taxPressureRows: ReturnType<typeof selectTaxPressureRows>;
   validation: PlanValidationResult | null;
 }) {
   const detailCards: Array<{
@@ -2671,6 +2643,90 @@ function DetailsResultsPanel({
           </article>
         ))}
       </div>
+
+      <div className="result-section-label">Planning evidence</div>
+      <PlanHealthPanel health={planHealth} loading={loading} />
+      <div className="result-section-label">Money Flow</div>
+      <SourceStoryPanel story={sourceStory} />
+      <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
+      <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
+      <div className="result-section-label">Decision Checks</div>
+      <DecisionChecklistPanel items={decisionChecklist} />
+      <DecisionDetailPanel rows={decisionDetailRows} />
+      <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
+      <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
+      <div className="result-section-label">Scenario evidence</div>
+      <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
+      <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
+      <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
+      <OptimizerInputReviewPanel summary={optimizerInputReview} />
+    </div>
+  );
+}
+
+function FirstYearMoneyFlowPanel({
+  fundingRows,
+  loading,
+  reconciliation
+}: {
+  fundingRows: ReturnType<typeof selectFundingSourceRows>;
+  loading: boolean;
+  reconciliation: ReturnType<typeof selectCashFlowReconciliation>;
+}) {
+  return (
+    <div className="result-overview-grid">
+      <section className="result-card">
+        <h3>First-year money flow</h3>
+        <dl className="result-ledger">
+          <div>
+            <dt>After-tax spending</dt>
+            <dd>{formatMoney(reconciliation.afterTaxSpending)}</dd>
+          </div>
+          <div>
+            <dt>Funding minus tax</dt>
+            <dd>{formatMoney(reconciliation.reconciledAfterTaxSpending)}</dd>
+          </div>
+          <div>
+            <dt>One-off outflows</dt>
+            <dd>{formatMoney(reconciliation.oneOffOutflows)}</dd>
+          </div>
+          <div>
+            <dt>Reconciliation gap</dt>
+            <dd className={Math.abs(reconciliation.reconciliationDelta) > 1 ? 'bad-value' : 'ok-value'}>
+              {formatSignedMoney(reconciliation.reconciliationDelta)}
+            </dd>
+          </div>
+          <div>
+            <dt>Unexplained gap</dt>
+            <dd className={Math.abs(reconciliation.cashFlowDelta) > 1 ? 'bad-value' : 'ok-value'}>
+              {formatSignedMoney(reconciliation.cashFlowDelta)}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="result-card">
+        <h3>Funding sources</h3>
+        <dl className="result-ledger">
+          {fundingRows.length > 0 ? (
+            fundingRows.map((row) => (
+              <div key={row.id}>
+                <dt>{row.label}</dt>
+                <dd>{formatMoney(row.amount)}</dd>
+              </div>
+            ))
+          ) : (
+            <div>
+              <dt>Preview</dt>
+              <dd>{loading ? 'Calculating' : '-'}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Tax</dt>
+            <dd>-{formatMoney(reconciliation.tax)}</dd>
+          </div>
+        </dl>
+      </section>
     </div>
   );
 }

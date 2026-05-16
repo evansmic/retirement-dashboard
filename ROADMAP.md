@@ -40,17 +40,17 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 31 is complete. Suggested Sprint 32 should focus on **Overview Simplification**.
+Sprint 32 is complete. Suggested Sprint 33 should focus on **Save & Print Polish**.
 
-Goal: keep the Overview calm after the retirement answer by moving audit-style diagnostic panels into Details/Risks, while preserving all existing evidence for users who want to inspect it.
+Goal: split the local editable plan save action from the printable detailed report action so consumers understand the difference between keeping their inputs and reviewing a readable report.
 
-Candidate Sprint 32 slices:
+Candidate Sprint 33 slices:
 
-- Keep Can I retire, spending capacity, estate intent, suggested plan, top risks, scenarios, survivor impact, and next steps visible.
-- Move detailed money-flow diagnostics, projection path, tax pressure timeline, and optimizer-prep panels out of the main Overview flow where possible.
-- Use Details/Risks as the home for audit-style tables and deep review rows.
-- Preserve selector output, saved plan format, detailed-report route, and engine behavior.
-- Add focused smoke coverage so moved panels remain reachable.
+- Rename and separate actions as **Save editable plan** and **Open printable report** everywhere they appear.
+- Make the Save & print page explain which action saves data and which action opens the readable report.
+- Keep `.plan.json` as the local editable file format without making that extension the primary consumer label.
+- Preserve current detailed-report route, saved plan format, and no-cloud/accountless behavior.
+- Add focused copy/smoke coverage for the two-action model.
 
 ## Consumer Roadmap Sequence
 
@@ -96,7 +96,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 29 — Optimizer input review and guardrails.** Complete 2026-05-15. Added runtime-only optimizer permission rows that separate can-explore levers, must-preserve wishes, and missing household decisions.
 - **Sprint 30 — React start examples and light visual alignment.** Complete 2026-05-16. Added the bundled synthetic examples to the modern React start screen and lightly aligned start styling with the Results dashboard without doing a full redesign.
 - **Sprint 31 — Consumer copy scrub.** Complete 2026-05-16. Replaced remaining internal implementation language in live React Results copy with consumer-facing detailed-report, money-flow, and review-step language.
-- **Sprint 32 — Overview simplification.** Planned. Move diagnostic/audit panels out of Overview and into Details/Risks.
+- **Sprint 32 — Overview simplification.** Complete 2026-05-16. Moved audit-style diagnostics from Overview into Details so the first Results page stays calm and decision-oriented.
 - **Sprint 33 — Save & print polish.** Planned. Split editable plan save from printable/detailed report actions.
 - **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Planned before optimizer execution. Add per-person DB survivor continuation assumptions and use them in survivor reruns.
 - **Sprint 35 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
