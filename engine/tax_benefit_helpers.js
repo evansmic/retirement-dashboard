@@ -139,9 +139,15 @@ var RetirementTaxBenefitHelpers = (function(){
     function calcDBSurvivor(year, p1DeathYear){
       const plan = D();
       if(year <= p1DeathYear) return 0;
-      const yrs = p1DeathYear - plan.p1.db_startYear;
-      const idx = Math.pow(1+plan.p1.db_index, yrs);
-      return plan.p1.db_after65 * idx * 0.60 * Math.pow(1+plan.p1.db_index, year-p1DeathYear);
+      const p1 = plan.p1 || {};
+      const after65 = Number(p1.db_after65) || 0;
+      const customAnnual = Number(p1.db_survivor_annual) || 0;
+      const survivorPct = Number(p1.db_survivor_pct) > 0 ? Number(p1.db_survivor_pct) : 0.60;
+      const survivorBase = customAnnual > 0 ? customAnnual : after65 * survivorPct;
+      if(survivorBase <= 0) return 0;
+      const startY = Number(p1.db_startYear) || Number(p1.retireYear) || p1DeathYear;
+      const dbIndex = Number.isFinite(Number(p1.db_index)) ? Number(p1.db_index) : 0.022;
+      return survivorBase * Math.pow(1 + dbIndex, year - startY);
     }
 
     function cppAdjFactor(startAge){

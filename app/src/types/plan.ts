@@ -17,6 +17,8 @@ export type PlanPerson = {
   db_after65?: number;
   db_index?: number;
   db_startYear?: number;
+  db_survivor_pct?: number;
+  db_survivor_annual?: number;
   rrsp?: number;
   rrspRoom?: number;
   tfsa?: number;
@@ -133,6 +135,8 @@ export type DomainPerson = {
     dbAfter65: number;
     dbIndex: number;
     dbStartYear: number;
+    dbSurvivorPct: number;
+    dbSurvivorAnnual: number;
     cpp65Monthly: number;
     cpp70Monthly: number;
     oasMonthly: number;

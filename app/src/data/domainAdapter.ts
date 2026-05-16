@@ -22,6 +22,8 @@ function personToDomain(id: 'p1' | 'p2', person: PlanPerson, active: boolean): D
       dbAfter65: n(person.db_after65),
       dbIndex: n(person.db_index),
       dbStartYear: n(person.db_startYear),
+      dbSurvivorPct: n(person.db_survivor_pct),
+      dbSurvivorAnnual: n(person.db_survivor_annual),
       cpp65Monthly: n(person.cpp65_monthly, n(person.cpp65) / 12),
       cpp70Monthly: n(person.cpp70_monthly, n(person.cpp70) / 12),
       oasMonthly: n(person.oas_monthly, n(person.oasBase) / 12)

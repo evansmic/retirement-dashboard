@@ -266,6 +266,19 @@ function totalDebt(plan: V2PlanPayload): number {
   return (plan.mortgage?.balance || 0) + (plan.loc?.balance || 0);
 }
 
+function dbSurvivorSetupText(plan: V2PlanPayload): string {
+  const people: PlanPerson[] = p2LooksBlank(plan.p2) ? [plan.p1] : [plan.p1, plan.p2];
+  const labels = people
+    .filter((person) => (person.db_after65 || 0) > 0 || (person.db_survivor_annual || 0) > 0)
+    .map((person) => {
+      const name = person.name || 'Person';
+      if ((person.db_survivor_annual || 0) > 0) return `${name}: ${formatMoney(person.db_survivor_annual || 0)}/yr`;
+      if ((person.db_survivor_pct || 0) > 0) return `${name}: ${displayPercent(person.db_survivor_pct)}%`;
+      return `${name}: 60% assumed`;
+    });
+  return labels.length ? labels.join(' / ') : 'None entered';
+}
+
 function blankPerson2(): PlanPerson {
   return {
     name: '',
@@ -282,6 +295,8 @@ function blankPerson2(): PlanPerson {
     db_after65: 0,
     db_index: 0,
     db_startYear: 0,
+    db_survivor_pct: 0,
+    db_survivor_annual: 0,
     rrsp: 0,
     rrspRoom: 0,
     tfsa: 0,
@@ -1672,7 +1687,9 @@ function IncomePersonCard({
 
       <div className="field-section">
         <strong>Defined benefit pension</strong>
-        <p className="field-hint">Some pensions include a temporary bridge before 65. Enter the before-65 and 65+ annual amounts from the pension estimate.</p>
+        <p className="field-hint">
+          Some pensions include a temporary bridge before 65. Enter the before-65 and 65+ annual amounts from the pension estimate, then add the spouse continuation from the pension statement.
+        </p>
         <div className="field-row">
           <label className="field">
             <span>Before 65 annual</span>
@@ -1714,6 +1731,30 @@ function IncomePersonCard({
               value={displayPercent(person.db_index, blankZero)}
               onChange={(event) => onChange('db_index', event.target.value, 'percent')}
               placeholder="2.2"
+            />
+          </label>
+        </div>
+        <div className="field-row">
+          <label className="field">
+            <span>Survivor continuation %</span>
+            <small>Use the spouse amount from the DB pension statement. If left blank or 0, survivor testing assumes 60% of the 65+ pension.</small>
+            <input
+              inputMode="decimal"
+              type="number"
+              value={displayPercent(person.db_survivor_pct, blankZero)}
+              onChange={(event) => onChange('db_survivor_pct', event.target.value, 'percent')}
+              placeholder="60"
+            />
+          </label>
+          <label className="field">
+            <span>Custom survivor annual</span>
+            <small>Optional annual spouse amount if the statement gives a dollar value instead of a percentage.</small>
+            <input
+              inputMode="numeric"
+              type="number"
+              value={displayNumber(person.db_survivor_annual, blankZero)}
+              onChange={(event) => onChange('db_survivor_annual', event.target.value)}
+              placeholder="0"
             />
           </label>
         </div>
@@ -1996,6 +2037,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
         rows={[
           ['Salary', formatMoney(sumPeople(plan, 'salary'))],
           ['DB pension before 65', formatMoney(sumPeople(plan, 'db_before65'))],
+          ['DB survivor continuation', dbSurvivorSetupText(plan)],
           ['CPP 65 monthly', formatMoney(sumPeople(plan, 'cpp65_monthly'))],
           ['OAS monthly', formatMoney(sumPeople(plan, 'oas_monthly'))]
         ]}

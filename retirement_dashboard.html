@@ -590,6 +590,8 @@ body.blank-mode .body { display:none !important }
  * @property {number} db_after65                 DB pension (CAD/yr) at/after 65 — post-CPP integration.
  * @property {number} db_index                   Annual DB indexation (e.g. 0.022).
  * @property {number} db_startYear               First year DB pension is paid.
+ * @property {number} [db_survivor_pct]          Spouse continuation percentage as a decimal (0.60 = 60%).
+ * @property {number} [db_survivor_annual]       Optional annual spouse continuation amount from the pension statement.
  * @property {number} rrsp                       RRSP balance at plan start.
  * @property {number} [rrspRoom]                 Unused RRSP contribution room.
  * @property {number} tfsa                       TFSA balance at plan start.
@@ -796,7 +798,7 @@ function _p2LooksBlank(p2) {
   const meaningfulFields = [
     'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
     'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
-    'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+    'db_after65', 'db_survivor_pct', 'db_survivor_annual', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
     'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
     'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
     'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
@@ -813,7 +815,7 @@ function normalizePlanPayload(D) {
     [
       'dob', 'dobMonth', 'retireYear', 'salary', 'annualRrspContrib',
       'annualTfsaContrib', 'annualNonregContrib', 'db_before65',
-      'db_after65', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
+      'db_after65', 'db_survivor_pct', 'db_survivor_annual', 'rrsp', 'rrspRoom', 'tfsa', 'tfsaRoom', 'tfsaAnnual',
       'lira', 'lif', 'nonreg', 'nonregAcb', 'nonregAnnual',
       'cpp70_monthly', 'cpp65_monthly', 'oas_monthly',
       'cpp70', 'cpp65', 'oasBase', 'cppSurv_u65_mo', 'cppSurv_o65_mo',
@@ -985,6 +987,7 @@ const PRESETS = {
     // OTPP, 32 years × 2% × $105K avg ≈ $67,200/yr. CPP integration drops
     // ~$14,260/yr at 65 (0.625% × YMPE × yrs). YMPE 2026 = $71,300.
     db_before65:67200, db_after65:52940, db_index:0.022, db_startYear:2028,
+    db_survivor_pct:0.60, db_survivor_annual:0,
     rrsp:140000, tfsa:90000, tfsaRoom:7000, tfsaAnnual:7000,
     lif:0, nonreg:0, nonregAcb:0, nonregAnnual:0,
     cpp70: 1775 * 12, cpp65: 1250 * 12,
@@ -998,6 +1001,7 @@ const PRESETS = {
     // 2%×(salary-YMPE)) = 30 × ($1,069 + $574) ≈ $49,300/yr. Bridge benefit
     // to 65 adds ~$10,700/yr (≈ 0.5% × YMPE × yrs).
     db_before65:60000, db_after65:49300, db_index:0.022, db_startYear:2027,
+    db_survivor_pct:0.60, db_survivor_annual:0,
     rrsp:150000, rrspRoom:0, tfsa:85000, tfsaRoom:7000, tfsaAnnual:7000,
     lira:0, lif:0, nonreg:20000, nonregAcb:18000, nonregAnnual:0,
     // Long full-career; ~95% of CPP max.

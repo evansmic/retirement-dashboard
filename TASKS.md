@@ -4,33 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 33: Save & Print Polish
+## Latest Sprint — Sprint 34: DB Survivor Pension Inputs And Survivor Cash-Flow Accuracy
 
 **Status:** Complete 2026-05-16.
 
-Goal: make the end-of-results actions clearer by separating the editable local plan file from the printable/readable report.
+Goal: model defined-benefit survivor pension continuation explicitly so two-person plans with DB pensions can produce more credible survivor cash-flow results before optimizer execution.
 
-Non-scope: full visual redesign, new simulation math, DB survivor pension modelling, schema v3, custom scenario builder, optimizer behaviour, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
+Non-scope: broad survivor redesign, second-death modelling, optimizer behaviour, schema v3, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
 
-Sprint 33 checkpoint doc: [`docs/sprint_33_save_print_polish.md`](docs/sprint_33_save_print_polish.md).
+Sprint 34 checkpoint doc: [`docs/sprint_34_db_survivor_pension.md`](docs/sprint_34_db_survivor_pension.md).
 
-### Sprint 33 Candidate Implementation Tickets
+### Sprint 34 Candidate Implementation Tickets
 
-- [x] **S33-01 — Save/report copy audit.** Found remaining places where save, export, detailed report, and file-extension language were blended.
-- [x] **S33-02 — Save editable plan action.** Reframed local plan saving as saving an editable plan, not primarily as exporting a file extension.
-- [x] **S33-03 — Open printable report action.** Reframed the readable detailed-report path as opening a printable report.
-- [x] **S33-04 — Save & print panel split.** Updated the Save & print panel so the save and report actions explain different purposes.
-- [x] **S33-05 — Tests and docs.** Added structure coverage for the two-action model and documented Sprint 33.
+- [x] **S34-01 — DB survivor inputs.** Add optional per-person survivor continuation percentage and custom annual survivor amount.
+- [x] **S34-02 — Engine survivor cash flow.** Use the configured Person 1 DB survivor amount in the existing survivor rerun while preserving the old 60% fallback.
+- [x] **S34-03 — Intake and survivor copy.** Tell households to confirm DB spouse continuation from the pension statement.
+- [x] **S34-04 — Example plans.** Add explicit DB survivor continuation to the public-sector DB couple example.
+- [x] **S34-05 — Tests and docs.** Cover 50%, 60%, 100%, custom annual amount, and fallback behavior.
 
-### Sprint 33 Definition Of Done
+### Sprint 34 Definition Of Done
 
-- Save editable plan and Open printable report are visibly distinct actions.
-- `.plan.json` remains the underlying file format without being the primary consumer label.
-- The printable report route and editable plan save behavior are unchanged.
-- No simulation math, saved plan format, optimizer behavior, or report routing changes.
+- DB pension survivor assumptions can be entered without changing schema version.
+- Existing plans without new fields keep the historical 60% survivor fallback.
+- Survivor reruns include the configured DB spouse continuation.
+- Consumer copy points to the pension statement rather than pretending the app knows every pension rule.
+- No optimizer behavior, report routing, or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 34: DB Survivor Pension Inputs And Survivor Cash-Flow Accuracy
+
+**Complete 2026-05-16.** Added per-person DB survivor continuation assumptions and used them in survivor reruns while preserving the historical 60% fallback for old plans.
+
+Sprint 34 checkpoint doc: [`docs/sprint_34_db_survivor_pension.md`](docs/sprint_34_db_survivor_pension.md).
 
 ### Sprint 33: Save & Print Polish
 

@@ -907,6 +907,7 @@ describe('result selectors', () => {
     expect(readyStory.endPortfolioDelta).toBeLessThan(0);
     expect(readyStory.lifetimeTaxDelta).toBeGreaterThan(0);
     expect(readyRows).toHaveLength(6);
+    expect(readyRows.find((row) => row.id === 'incomeChange')?.explanation).toContain('DB pensions may continue');
     expect(readyRows.find((row) => row.id === 'spendingFunding')).toMatchObject({
       severity: 'watch',
       detailArea: 'annualDetail'

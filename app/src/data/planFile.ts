@@ -18,6 +18,8 @@ const p2BlankNumericFields = [
   'annualNonregContrib',
   'db_before65',
   'db_after65',
+  'db_survivor_pct',
+  'db_survivor_annual',
   'rrsp',
   'rrspRoom',
   'tfsa',

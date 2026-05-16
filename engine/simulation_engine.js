@@ -24,7 +24,7 @@
     const placeholderName = !name || name === '—' || name.toLowerCase() === 'person 2';
     const fields = [
       'dob','dobMonth','retireYear','salary','annualRrspContrib','annualTfsaContrib','annualNonregContrib',
-      'db_before65','db_after65','rrsp','rrspRoom','tfsa','tfsaRoom','tfsaAnnual','lira','lif',
+      'db_before65','db_after65','db_survivor_pct','db_survivor_annual','rrsp','rrspRoom','tfsa','tfsaRoom','tfsaAnnual','lira','lif',
       'nonreg','nonregAcb','nonregAnnual','cpp70_monthly','cpp65_monthly','oas_monthly','cpp70','cpp65',
       'oasBase','cppSurv_u65_mo','cppSurv_o65_mo','cppSurvivor_under65','cppSurvivor_over65'
     ];

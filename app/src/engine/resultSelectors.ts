@@ -2976,11 +2976,11 @@ export function selectSurvivorReviewRows(
         comparison.status === 'single'
           ? 'Single-person plan; no survivor year is needed.'
           : comparison.status === 'needsInput'
-            ? 'A survivor year is required before the household-resilience rerun can be compared.'
+            ? 'A survivor year is required before the survivor impact rerun can be compared.'
             : comparison.status === 'notAvailable'
               ? 'The survivor year is set, but the survivor rerun is not available yet.'
               : `Survivor comparison uses ${comparison.survivorYear}.`,
-      reviewAction: comparison.status === 'needsInput' ? 'Set the survivor year in Assumptions.' : 'Confirm the scenario setup before relying on the comparison.',
+      reviewAction: comparison.status === 'needsInput' ? 'Set the survivor year in Assumptions.' : 'Confirm the scenario setup and pension statement details before relying on the comparison.',
       detailArea: 'assumptions'
     },
     {
@@ -2990,9 +2990,9 @@ export function selectSurvivorReviewRows(
       value: moneyText(summary.incomeAtRisk),
       explanation:
         summary.incomeAtRisk > RECONCILIATION_TOLERANCE
-          ? `Approximate Person 1 income visible around the survivor year is ${moneyText(summary.incomeAtRisk)}.`
+          ? `Approximate Person 1 income visible around the survivor year is ${moneyText(summary.incomeAtRisk)}. DB pensions may continue at 50%, 60%, 100%, or a statement-specific spouse amount.`
           : 'No Person 1 income-at-risk estimate is visible from the current preview rows.',
-      reviewAction: 'Review income sources before relying on the survivor comparison.',
+      reviewAction: 'Review income sources and confirm DB survivor continuation against the pension statement.',
       detailArea: 'incomeSources'
     },
     {

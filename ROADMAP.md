@@ -40,17 +40,19 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 33 is complete. Suggested Sprint 34 should focus on **DB Survivor Pension Inputs And Survivor Cash-Flow Accuracy**.
+Sprint 34 is complete. The next step is a feedback gate before optimizer extraction: review the consumer journey with the new DB survivor modelling in place, then proceed to Sprint 35 only if the planner/design feedback does not reveal a blocking consumer-readiness issue.
 
 Goal: model defined-benefit survivor pension continuation explicitly so two-person plans with DB pensions can produce more credible survivor cash-flow results before optimizer execution.
 
-Candidate Sprint 34 slices:
+Completed Sprint 34 slices:
 
-- Add optional per-person DB survivor continuation assumptions, likely percent and/or custom annual survivor amount.
-- Preserve existing behavior as a fallback for old plans, with the current hard-coded continuation only when no new value exists.
+- Add optional per-person DB survivor continuation assumptions: percentage and custom annual survivor amount.
+- Preserve existing behavior as a fallback for old plans, with the current 60% continuation only when no new value exists.
 - Update survivor rerun cash flows so the surviving spouse receives the configured DB survivor amount.
 - Update intake help text and Survivor Impact copy to tell households to check pension statements.
 - Update synthetic DB pension examples and add engine/selector tests for 50%, 60%, 100%, and custom survivor amounts.
+
+After Sprint 34 is pushed, run a feedback gate before moving into Sprint 35 optimizer extraction so fresh planner/design review can confirm the consumer experience is ready for optimizer work.
 
 ## Consumer Roadmap Sequence
 
@@ -98,7 +100,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 31 — Consumer copy scrub.** Complete 2026-05-16. Replaced remaining internal implementation language in live React Results copy with consumer-facing detailed-report, money-flow, and review-step language.
 - **Sprint 32 — Overview simplification.** Complete 2026-05-16. Moved audit-style diagnostics from Overview into Details so the first Results page stays calm and decision-oriented.
 - **Sprint 33 — Save & print polish.** Complete 2026-05-16. Split editable plan save from printable report actions in the consumer UI while preserving local file and report behavior.
-- **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Planned before optimizer execution. Add per-person DB survivor continuation assumptions and use them in survivor reruns.
+- **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Complete 2026-05-16. Added per-person DB survivor continuation assumptions and used them in survivor reruns while preserving old-plan fallback behavior.
 - **Sprint 35 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
