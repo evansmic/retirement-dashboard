@@ -4,35 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 36: Optimizer Contract & Engine Safety
+## Latest Sprint — Sprint 37: Bounded Optimizer Execution
 
 **Status:** Complete 2026-05-17.
 
-Goal: prepare the optimizer boundary without running an optimizer, while hardening engine safety, example working-copy trust, and visible intake language.
+Goal: add the first limited optimizer run using the Sprint 36 contract while keeping results review-oriented, local-first, and separate from saved plan files.
 
-Non-scope: optimizer execution, strategy application, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
+Non-scope: year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 36 checkpoint doc: [`docs/sprint_36_optimizer_contract_engine_safety.md`](docs/sprint_36_optimizer_contract_engine_safety.md).
+Sprint 37 checkpoint doc: [`docs/sprint_37_bounded_optimizer_execution.md`](docs/sprint_37_bounded_optimizer_execution.md).
 
-### Sprint 36 Candidate Implementation Tickets
+### Sprint 37 Candidate Implementation Tickets
 
-- [x] **S36-01 — Optimizer contract boundary.** Add non-executing optimizer contract types for levers, guardrails, and future annual withdrawal overrides.
-- [x] **S36-02 — Engine safety wrapper.** Short-circuit invalid plans and non-finite results to a safe empty result instead of throwing.
-- [x] **S36-03 — Example working-copy trust.** Make React examples read as custom editable plans based on templates.
-- [x] **S36-04 — Intake language drift.** Tighten high-friction labels for CPP/OAS, locked-in accounts, and withdrawal order.
-- [x] **S36-05 — Edge-case tests.** Cover blocked optimizer inputs, safe empty runs, negative account balances, and no optimizer persistence.
+- [x] **S37-01 — Limited candidate runner.** Generate a small set of plan options from allowed contract levers only.
+- [x] **S37-02 — Safe simulation execution.** Run candidates through the existing safe simulation boundary.
+- [x] **S37-03 — Review scoring.** Score candidates by funded years, shortfalls, projected money left, lifetime tax, and household-disruption penalties.
+- [x] **S37-04 — Consumer Results surface.** Show plan options to review in Overview and Details without presenting advice.
+- [x] **S37-05 — Persistence guardrails.** Test that optimizer output is not saved into `.plan.json`.
 
-### Sprint 36 Definition Of Done
+### Sprint 37 Definition Of Done
 
-- No optimizer execution or strategy application.
-- Future optimizer shape can express fixed withdrawal order now and annual withdrawal overrides later.
-- Invalid/extreme plans do not crash the preview path.
-- Example plans remain immutable templates and open as editable working copies.
-- Visible high-friction labels stay consumer-facing.
-- No optimizer behavior, report routing, or saved output contract changes.
+- Bounded optimizer execution is local and uses existing engine output.
+- Candidate generation is limited to spending, retirement timing, CPP/OAS timing, and withdrawal-order tests.
+- Output is framed as planning options to review, not guaranteed safe spending or personalized advice.
+- No optimizer output is persisted.
+- No year-by-year dynamic withdrawal strategy is applied.
+- No report routing or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 37: Bounded Optimizer Execution
+
+**Complete 2026-05-17.** Added the first limited optimizer runner, candidate scoring, consumer Results surfaces, and persistence guardrails while keeping optimizer output review-only and unsaved.
+
+Sprint 37 checkpoint doc: [`docs/sprint_37_bounded_optimizer_execution.md`](docs/sprint_37_bounded_optimizer_execution.md).
 
 ### Sprint 36: Optimizer Contract & Engine Safety
 

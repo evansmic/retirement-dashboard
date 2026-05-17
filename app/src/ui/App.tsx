@@ -66,6 +66,7 @@ import {
   selectTaxSummaryMetrics
 } from '../engine/resultSelectors';
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
+import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { PreviewScenarioResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -110,6 +111,7 @@ type BridgePreview = {
   result: SimulationResult | null;
   scenarios: PreviewScenarioResults;
   survivor: SimulationResult | null;
+  optimizer: BoundedOptimizerSummary | null;
   error: string;
   loading: boolean;
 };
@@ -360,6 +362,7 @@ export function App() {
     result: null,
     scenarios: {},
     survivor: null,
+    optimizer: null,
     error: '',
     loading: false
   });
@@ -370,15 +373,16 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     if (!plan || (state.view !== 'review' && state.view !== 'results')) {
-      setBridgePreview({ result: null, scenarios: {}, survivor: null, error: '', loading: false });
+      setBridgePreview({ result: null, scenarios: {}, survivor: null, optimizer: null, error: '', loading: false });
       return;
     }
 
     setBridgePreview((current) => ({ ...current, loading: true, error: '' }));
-    import('../engine/previewScenarios')
-      .then(({ runResultsPreviewBundle }) => {
+    Promise.all([import('../engine/previewScenarios'), import('../engine/boundedOptimizer')])
+      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }]) => {
         const preview = runResultsPreviewBundle(plan);
-        if (!cancelled) setBridgePreview({ ...preview, error: '', loading: false });
+        const optimizer = runBoundedOptimizer(plan);
+        if (!cancelled) setBridgePreview({ ...preview, optimizer, error: '', loading: false });
       })
       .catch((err) => {
         if (!cancelled) {
@@ -386,6 +390,7 @@ export function App() {
             result: null,
             scenarios: {},
             survivor: null,
+            optimizer: null,
             error: err instanceof Error ? err.message : 'Could not run preview calculation.',
             loading: false
           });
@@ -570,6 +575,7 @@ export function App() {
               result={bridgePreview.result}
               scenarios={bridgePreview.scenarios}
               survivor={bridgePreview.survivor}
+              optimizer={bridgePreview.optimizer}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2116,6 +2122,7 @@ function ResultsHandoffPanel({
   result,
   scenarios,
   survivor,
+  optimizer,
   title,
   validation
 }: {
@@ -2128,6 +2135,7 @@ function ResultsHandoffPanel({
   result: SimulationResult | null;
   scenarios: BridgePreview['scenarios'];
   survivor: BridgePreview['survivor'];
+  optimizer: BridgePreview['optimizer'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2224,14 +2232,15 @@ function ResultsHandoffPanel({
         {activeSection === 'cashFlow' ? (
           <CashFlowResultsPanel diagnostics={reconciliationDiagnostics} loading={loading} rows={cashFlowRows} />
         ) : activeSection === 'details' ? (
-          <DetailsResultsPanel
-            decisionChecklist={decisionChecklist}
-            decisionDetailRows={decisionDetailRows}
-            fundingRows={fundingRows}
-            optimizerBoundaries={optimizerBoundaries}
-            optimizerInputReview={optimizerInputReview}
-            loading={loading}
-            onSection={onSection}
+            <DetailsResultsPanel
+              decisionChecklist={decisionChecklist}
+              decisionDetailRows={decisionDetailRows}
+              fundingRows={fundingRows}
+              optimizerBoundaries={optimizerBoundaries}
+              optimizerInputReview={optimizerInputReview}
+              boundedOptimizer={optimizer}
+              loading={loading}
+              onSection={onSection}
             overview={overview}
             planHealth={planHealth}
             projectionMilestones={projectionMilestones}
@@ -2303,6 +2312,7 @@ function ResultsHandoffPanel({
               loading={loading}
               readinessRows={readinessRows}
             />
+            <BoundedOptimizerPanel loading={loading} summary={optimizer} variant="compact" />
             <OverviewHighlightsPanel
               estateIntent={estateIntent}
               loading={loading}
@@ -2712,6 +2722,7 @@ function DetailsResultsPanel({
   onSection,
   optimizerBoundaries,
   optimizerInputReview,
+  boundedOptimizer,
   overview,
   planHealth,
   projectionMilestones,
@@ -2732,6 +2743,7 @@ function DetailsResultsPanel({
   onSection: (section: ResultsWorkspaceSection) => void;
   optimizerBoundaries: ReturnType<typeof selectOptimizerDecisionBoundaries>;
   optimizerInputReview: ReturnType<typeof selectOptimizerInputReview>;
+  boundedOptimizer: BoundedOptimizerSummary | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -2839,6 +2851,7 @@ function DetailsResultsPanel({
       <div className="result-section-label">Scenario evidence</div>
       <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
+      <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
@@ -3052,6 +3065,83 @@ function RecommendedPathPanel({
       <p className="table-note">
         This is a first-pass planning comparison, not financial advice or a full optimizer. Open the printable report for
         complete annual detail before acting on a path.
+      </p>
+    </section>
+  );
+}
+
+function BoundedOptimizerPanel({
+  loading,
+  summary,
+  variant = 'full'
+}: {
+  loading: boolean;
+  summary: BoundedOptimizerSummary | null;
+  variant?: 'compact' | 'full';
+}) {
+  const suggested = summary?.candidates.find((candidate) => candidate.id === summary.suggestedCandidateId) || null;
+  const topRows = summary?.candidates.slice().sort((a, b) => b.score - a.score).slice(0, variant === 'compact' ? 3 : summary.candidates.length) || [];
+  const isCompact = variant === 'compact';
+
+  return (
+    <section className={`result-card bounded-optimizer-panel optimizer-${summary?.status || 'loading'}`}>
+      <div>
+        <p className="eyebrow">Plan options to review</p>
+        <h3>{loading ? 'Checking plan options' : summary?.suggestedLabel || 'Plan options need inputs'}</h3>
+        <p>
+          {loading
+            ? 'Running a limited set of planning checks.'
+            : summary?.headline || 'Clear required inputs before plan options can be compared.'}
+        </p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Options checked" value={loading ? 'Calculating' : String(summary?.candidateCount || 0)} />
+        <Metric label="Funded years" value={suggested ? `${suggested.fundedYears}/${suggested.totalYears}` : '-'} />
+        <Metric label="First shortfall" value={suggested?.firstShortfallYear ? String(suggested.firstShortfallYear) : suggested ? 'None' : '-'} />
+        <Metric label="Projected money left" value={suggested ? formatMoney(suggested.endPortfolio) : '-'} />
+      </div>
+
+      <ul className="compact-list">
+        {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
+          <li key={note}>{note}</li>
+        ))}
+      </ul>
+
+      {!isCompact && topRows.length ? (
+        <div className="result-table-wrap">
+          <table className="result-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Status</th>
+                <th>Change tested</th>
+                <th>Funded years</th>
+                <th>First shortfall</th>
+                <th>Projected money left</th>
+                <th>Lifetime tax change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topRows.map((row) => (
+                <tr className={row.status === 'blocked' ? 'warning-row' : row.status === 'suggested' ? 'selected-row' : ''} key={row.id}>
+                  <td>{row.label}</td>
+                  <td>{row.status === 'suggested' ? 'review first' : row.status}</td>
+                  <td>{row.changeSummary}</td>
+                  <td>{`${row.fundedYears}/${row.totalYears}`}</td>
+                  <td>{row.firstShortfallYear || 'None'}</td>
+                  <td>{formatMoney(row.endPortfolio)}</td>
+                  <td className={row.lifetimeTaxDelta <= 0 ? 'ok-value' : 'bad-value'}>{formatSignedMoney(row.lifetimeTaxDelta)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      <p className="table-note">
+        This limited check does not provide financial advice, does not optimize year-by-year tax brackets, and does not
+        save optimizer results.
       </p>
     </section>
   );

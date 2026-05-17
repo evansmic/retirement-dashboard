@@ -1,0 +1,140 @@
+import { describe, expect, it } from 'vitest';
+import { createBlankPlan } from '../data/defaultPlan';
+import { createPlanFile } from '../data/planFile';
+import type { SimulationResult, V2PlanPayload } from '../types/plan';
+import { buildBoundedOptimizerCandidates, runBoundedOptimizer, type BoundedOptimizerCandidateId } from './boundedOptimizer';
+import type { SimulationConfig } from './runSimulation';
+
+function readyPlan(): V2PlanPayload {
+  const plan = createBlankPlan();
+  plan.title = 'Bounded optimizer test';
+  plan.p1 = {
+    ...plan.p1,
+    name: 'Alex',
+    dob: 1968,
+    retireYear: 2032,
+    salary: 90000,
+    rrsp: 250000,
+    tfsa: 90000,
+    nonreg: 60000,
+    cpp65_monthly: 1200,
+    cpp70_monthly: 1700,
+    oas_monthly: 742
+  };
+  plan.spending.gogo = 85000;
+  plan.spending.slowgo = 72000;
+  plan.spending.nogo = 62000;
+  plan.assumptions.retireYear = 2032;
+  plan.assumptions.planEnd = 2065;
+  plan.assumptions.withdrawalOrder = 'default';
+  return plan;
+}
+
+function result(endPortfolio: number, lifetimeTax: number, firstShortfallYear: number | null = null): SimulationResult {
+  const years = [2032, 2033, 2034].map((year, index) => ({
+    year,
+    ageF: 64 + index,
+    ageM: 0,
+    spending: 85000,
+    grossIncome: 90000,
+    dbPension: 0,
+    cpp_f: 0,
+    oas_f: 0,
+    tfsa_draw: 0,
+    nonreg_draw: 0,
+    cash_draw: 0,
+    totalTaxYear: Math.round(lifetimeTax / 3),
+    taxableIncome: 90000,
+    totalOasClawY: 0,
+    totalAftaxYear: 85000,
+    cashFlow: 0,
+    shortfall: firstShortfallYear === year ? 5000 : 0,
+    bal_rrsp: 0,
+    bal_tfsa: 0,
+    bal_lif: 0,
+    bal_nonreg: 0,
+    bal_cash: 0,
+    bal_total: index === 2 ? endPortfolio : endPortfolio + (2 - index) * 10000
+  }));
+  return { years, totalTax: lifetimeTax } as SimulationResult;
+}
+
+describe('bounded optimizer runner', () => {
+  it('builds a limited candidate set from optimizer contract levers', () => {
+    const candidates = buildBoundedOptimizerCandidates(readyPlan());
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual([
+      'baseline',
+      'spendLess5',
+      'spendLess10',
+      'retireLater1',
+      'retireLater2',
+      'delayBenefits',
+      'withdrawalRegisteredFirst',
+      'withdrawalNonRegisteredFirst'
+    ]);
+    expect(candidates.find((candidate) => candidate.id === 'spendLess10')?.plan.spending.gogo).toBe(76500);
+    expect(candidates.find((candidate) => candidate.id === 'delayBenefits')?.config).toMatchObject({
+      cppAgeF: 70,
+      cppAgeM: 70,
+      oasAgeF: 70,
+      oasAgeM: 70
+    });
+  });
+
+  it('runs candidates through the provided runner and does not persist optimizer output', () => {
+    const calls: Array<{ title: string | undefined; order: string | undefined; config: SimulationConfig }> = [];
+    const byCandidate: Partial<Record<BoundedOptimizerCandidateId, SimulationResult>> = {
+      baseline: result(100000, 90000, 2033),
+      spendLess5: result(120000, 88000, null),
+      spendLess10: result(125000, 87000, null),
+      retireLater1: result(130000, 86000, null),
+      retireLater2: result(140000, 85000, null),
+      delayBenefits: result(155000, 83000, null),
+      withdrawalRegisteredFirst: result(170000, 80000, null),
+      withdrawalNonRegisteredFirst: result(160000, 82000, null)
+    };
+
+    const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
+      calls.push({ title: candidatePlan.title, order: candidatePlan.assumptions.withdrawalOrder, config });
+      const id =
+        config.withdrawalOrder === 'registered-first'
+          ? 'withdrawalRegisteredFirst'
+          : config.withdrawalOrder === 'nonreg-first'
+            ? 'withdrawalNonRegisteredFirst'
+            : config.cppAgeF === 70
+              ? 'delayBenefits'
+              : candidatePlan.p1.retireYear === 2034
+                ? 'retireLater2'
+                : candidatePlan.p1.retireYear === 2033
+                  ? 'retireLater1'
+                  : candidatePlan.spending.gogo === 76500
+                    ? 'spendLess10'
+                    : candidatePlan.spending.gogo === 80750
+                      ? 'spendLess5'
+                      : 'baseline';
+      return byCandidate[id] || result(0, 0);
+    });
+
+    expect(summary.status).toBe('ready');
+    expect(summary.execution).toBe('boundedSearch');
+    expect(summary.suggestedCandidateId).toBe('withdrawalRegisteredFirst');
+    expect(summary.candidates).toHaveLength(8);
+    expect(calls).toHaveLength(8);
+    expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
+  });
+
+  it('blocks bounded search when contract blockers remain', () => {
+    const plan = createBlankPlan();
+    plan.p1.retireYear = 0;
+    plan.assumptions.retireYear = 0;
+    plan.spending.gogo = 0;
+
+    const summary = runBoundedOptimizer(plan, () => result(0, 0));
+
+    expect(summary.status).toBe('blocked');
+    expect(summary.suggestedCandidateId).toBeNull();
+    expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline']);
+    expect(summary.reviewNotes.length).toBeGreaterThan(0);
+  });
+});
