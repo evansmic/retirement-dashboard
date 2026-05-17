@@ -161,7 +161,7 @@ function reducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState
         activeResultsSection: 'overview',
         householdMode: p2LooksBlank(plan.p2) ? 'single' : 'couple',
         plan,
-        importLabel: `Example: ${action.label}`,
+        importLabel: `Custom plan based on ${action.label}`,
         error: '',
         dirty: true,
         lastSavedAt: ''
@@ -860,7 +860,7 @@ function AccountsPersonCard({
 
       <div className="field-section">
         <strong>Registered accounts</strong>
-        <p className="field-hint">Use current balances. RRSP/RRIF are taxable when withdrawn; LIRA/LIF are locked-in pension accounts.</p>
+        <p className="field-hint">Use current balances. RRSP/RRIF are taxable when withdrawn; locked-in accounts follow pension rules.</p>
         <div className="field-row">
           <label className="field">
             <span>RRSP/RRIF balance</span>
@@ -885,7 +885,7 @@ function AccountsPersonCard({
         </div>
         <div className="field-row">
           <label className="field">
-            <span>LIRA balance</span>
+            <span>Locked-in account (LIRA)</span>
             <small>Locked-in money from a former pension that has not started LIF withdrawals.</small>
             <input
               inputMode="numeric"
@@ -896,7 +896,7 @@ function AccountsPersonCard({
             />
           </label>
           <label className="field">
-            <span>LIF balance</span>
+            <span>Locked-in income account (LIF)</span>
             <small>Locked-in retirement income account after withdrawals have started.</small>
             <input
               inputMode="numeric"
@@ -1471,8 +1471,8 @@ function AssumptionsStep({
           tax and estate sections first.
         </p>
         <label className="field full">
-          <span>Withdrawal order</span>
-          <small>Controls which account type is drawn first in the preview.</small>
+          <span>Withdrawal order to test</span>
+          <small>Controls which account type is drawn first in this planning run.</small>
           <select
             value={plan.assumptions.withdrawalOrder || 'default'}
             onChange={(event) => updateAssumption('withdrawalOrder', event.target.value, 'text')}
@@ -1776,7 +1776,7 @@ function IncomePersonCard({
         <p className="field-hint">Use Service Canada estimates where possible. CPP fields are monthly amounts before tax; OAS is the estimated monthly benefit before any clawback.</p>
         <div className="field-row three">
           <label className="field">
-            <span>CPP 65 monthly</span>
+            <span>Canada Pension Plan (CPP) at 65</span>
             <small>Your estimated monthly CPP if started at 65.</small>
             <input
               inputMode="numeric"
@@ -1787,7 +1787,7 @@ function IncomePersonCard({
             />
           </label>
           <label className="field">
-            <span>CPP 70 monthly</span>
+            <span>Canada Pension Plan (CPP) at 70</span>
             <small>Your estimated monthly CPP if delayed to 70.</small>
             <input
               inputMode="numeric"
@@ -1798,8 +1798,8 @@ function IncomePersonCard({
             />
           </label>
           <label className="field">
-            <span>OAS monthly</span>
-            <small>Use today’s monthly OAS estimate before income-tested recovery tax.</small>
+            <span>Old Age Security (OAS) monthly</span>
+            <small>Use today's monthly OAS estimate before income-tested recovery tax.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -2049,8 +2049,8 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
           ['Salary', formatMoney(sumPeople(plan, 'salary'))],
           ['DB pension before 65', formatMoney(sumPeople(plan, 'db_before65'))],
           ['DB survivor continuation', dbSurvivorSetupText(plan)],
-          ['CPP 65 monthly', formatMoney(sumPeople(plan, 'cpp65_monthly'))],
-          ['OAS monthly', formatMoney(sumPeople(plan, 'oas_monthly'))]
+          ['CPP at 65 monthly', formatMoney(sumPeople(plan, 'cpp65_monthly'))],
+          ['Old Age Security monthly', formatMoney(sumPeople(plan, 'oas_monthly'))]
         ]}
       />
       <ReviewSummaryCard
@@ -2083,7 +2083,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
         rows={[
           ['Plan end', String(plan.assumptions.planEnd || '-')],
           ['Return / inflation', `${formatPercent(plan.assumptions.returnRate)} / ${formatPercent(plan.assumptions.inflation)}`],
-          ['Withdrawal order', plan.assumptions.withdrawalOrder || 'default']
+          ['Withdrawal order to test', plan.assumptions.withdrawalOrder || 'default']
         ]}
       />
     </div>
@@ -4065,7 +4065,7 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
     ['Return assumption', formatPercent(plan.assumptions.returnRate)],
     ['Inflation', formatPercent(plan.assumptions.inflation)],
     ['Volatility', formatPercent(plan.assumptions.returnStdDev)],
-    ['Withdrawal order', plan.assumptions.withdrawalOrder || 'default'],
+    ['Withdrawal order to test', plan.assumptions.withdrawalOrder || 'default'],
     ['CPP sharing', plan.assumptions.cppSharing ? 'Enabled' : 'Disabled'],
     ['Younger-spouse RRIF age', plan.assumptions.youngerSpouseRrif ? 'Enabled' : 'Disabled'],
     ['Spousal RRSP attribution', plan.assumptions.spousalRrsp ? 'Enabled' : 'Disabled'],

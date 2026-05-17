@@ -69,6 +69,22 @@ export function validatePlanForGuidedIntake(plan: V2PlanPayload): PlanValidation
   if (n(plan.mortgage?.balance) < 0 || n(plan.loc?.balance) < 0) {
     block('negative_debt', 'Debts', 'Debt balances cannot be negative.');
   }
+  const accountValues = [
+    plan.p1.rrsp,
+    plan.p1.tfsa,
+    plan.p1.lira,
+    plan.p1.lif,
+    plan.p1.nonreg,
+    plan.p2.rrsp,
+    plan.p2.tfsa,
+    plan.p2.lira,
+    plan.p2.lif,
+    plan.p2.nonreg,
+    plan.cashWedge?.balance
+  ];
+  if (accountValues.some((value) => n(value) < 0)) {
+    block('negative_account_balance', 'Accounts', 'Account and cash balances cannot be negative.');
+  }
 
   if (!String(plan.p1.name || '').trim()) {
     warn('p1_name', 'Household', 'Person 1 has no display name.');

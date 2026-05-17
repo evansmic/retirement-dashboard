@@ -1,4 +1,5 @@
 import { runExtractedSimulation } from './extractedSimulationEngine';
+import { validatePlanForGuidedIntake } from '../data/planValidation';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
 
 export type SimulationConfig = {
@@ -27,6 +28,33 @@ export function runSimulation(
   _options: SimulationOptions = {}
 ): SimulationResult {
   return runExtractedSimulation(plan, config) as SimulationResult;
+}
+
+export function runSimulationSafely(
+  plan: V2PlanPayload,
+  config: SimulationConfig = {},
+  _options: SimulationOptions = {}
+): SimulationResult {
+  const validation = validatePlanForGuidedIntake(plan);
+  if (!validation.canGenerate) return { years: [] };
+
+  try {
+    const result = runSimulation(plan, config);
+    return simulationResultIsFinite(result) ? result : { years: [] };
+  } catch {
+    return { years: [] };
+  }
+}
+
+function simulationResultIsFinite(result: SimulationResult | null | undefined): result is SimulationResult {
+  if (!result || !Array.isArray(result.years)) return false;
+  return result.years.every(
+    (row) =>
+      Number.isFinite(row.year) &&
+      Number.isFinite(row.bal_total) &&
+      Number.isFinite(row.totalAftaxYear) &&
+      Number.isFinite(row.totalTaxYear)
+  );
 }
 
 export const engineExtractionGate = {

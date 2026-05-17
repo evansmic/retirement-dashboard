@@ -10,7 +10,7 @@ import {
   runResultsPreviewBundle,
   shouldRunSurvivorPreview
 } from './previewScenarios';
-import { SimulationConfig } from './runSimulation';
+import { SimulationConfig, runSimulationSafely } from './runSimulation';
 
 function testPlan(): V2PlanPayload {
   const plan = createBlankPlan();
@@ -161,5 +161,18 @@ describe('preview scenario runner', () => {
     expect(shouldRunSurvivorPreview(coupleWithoutYear)).toBe(false);
     expect(runResultsPreviewBundle(coupleWithoutYear, runner).survivor).toBeNull();
     expect(callCount).toBe(8);
+  });
+
+  it('returns a safe empty result for invalid or extreme plans instead of throwing', () => {
+    const invalid = createBlankPlan();
+    invalid.p1.retireYear = 0;
+    invalid.assumptions.retireYear = 0;
+    invalid.assumptions.planEnd = 2026;
+    invalid.spending.gogo = 0;
+
+    expect(() => runSimulationSafely(invalid, buildBaselinePreviewConfig(invalid))).not.toThrow();
+    expect(runSimulationSafely(invalid, buildBaselinePreviewConfig(invalid))).toEqual({ years: [] });
+    expect(() => runResultsPreviewBundle(invalid)).not.toThrow();
+    expect(runResultsPreviewBundle(invalid).result).toEqual({ years: [] });
   });
 });

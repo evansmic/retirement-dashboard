@@ -30,4 +30,14 @@ describe('guided intake validation', () => {
     expect(result.warnings.map((issue) => issue.code)).toContain('p1_name');
     expect(result.warnings.map((issue) => issue.code)).toContain('p1_cpp');
   });
+
+  it('blocks negative account balances before the engine runs', () => {
+    const plan = createBlankPlan();
+    plan.p1.rrsp = -1;
+
+    const result = validatePlanForGuidedIntake(plan);
+
+    expect(result.canGenerate).toBe(false);
+    expect(result.blockers.map((issue) => issue.code)).toContain('negative_account_balance');
+  });
 });

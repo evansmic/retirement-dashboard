@@ -52,4 +52,16 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('bounded preview');
     expect(appSource).not.toContain('wasted unnecessarily');
   });
+
+  it('keeps examples and high-friction intake labels consumer-facing', () => {
+    expect(appSource).toContain('Custom plan based on');
+    expect(appSource).toContain('Locked-in account (LIRA)');
+    expect(appSource).toContain('Locked-in income account (LIF)');
+    expect(appSource).toContain('Canada Pension Plan (CPP) at 65');
+    expect(appSource).toContain('Old Age Security (OAS) monthly');
+    expect(appSource).toContain('Withdrawal order to test');
+    expect(appSource).not.toContain('Example: ${action.label}');
+    expect(appSource).not.toContain('CPP 65 monthly');
+    expect(appSource).not.toContain('OAS monthly</span>');
+  });
 });

@@ -1,6 +1,6 @@
 import { extractPlanPayload, p2LooksBlank } from '../data/planFile';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
-import { runSimulation, SimulationConfig } from './runSimulation';
+import { runSimulationSafely, SimulationConfig } from './runSimulation';
 
 export type PreviewScenarioId = 'retireLater' | 'spendLessGogo' | 'delayBenefits';
 
@@ -59,7 +59,7 @@ export function shouldRunSurvivorPreview(plan: V2PlanPayload): boolean {
 
 export function runResultsPreviewBundle(
   plan: V2PlanPayload,
-  runner: PreviewSimulationRunner = runSimulation
+  runner: PreviewSimulationRunner = runSimulationSafely
 ): ResultsPreviewBundle {
   const baselineConfig = buildBaselinePreviewConfig(plan);
   const result = runner(plan, baselineConfig);

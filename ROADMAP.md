@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 35.5 is complete. Tester feedback supported the consumer-readiness direction and surfaced a few pre-optimizer guardrails: keep spending estimates humble, keep visible copy consumer-facing, clarify the printable-report bridge, guard against example drift, and avoid loaded tax language. The next step is optimizer contract extraction without changing the saved plan schema or adding optimizer execution prematurely.
+Sprint 36 is complete. The optimizer boundary now has a non-executing contract for future levers and annual withdrawal overrides, the preview path fails safely for invalid plans, example plans open as editable working copies, and high-friction intake labels are more consumer-facing. The next step is bounded optimizer execution planning, still without changing the saved plan schema.
 
-Completed Sprint 35.5 slices:
+Completed Sprint 36 slices:
 
-- Replaced remaining visible internal warning copy with consumer-facing language.
-- Neutralized tax review copy around taxes, spending, flexibility, and estate goals.
-- Clarified that Open printable report currently opens the detailed report view while report polish continues.
-- Added parity coverage so React example IDs match the stable dashboard example slugs.
-- Added tests that keep spending capacity framed as a today's-dollar planning estimate, not a guarantee.
+- Added a non-executing optimizer contract for spending, retirement timing, benefit timing, withdrawal order, estate target, and downsizing.
+- Included a future annual withdrawal override shape so the optimizer does not depend on a rigid fixed-order loop.
+- Added a safe simulation wrapper for validation blockers, engine errors, and non-finite output.
+- Made React examples read as custom editable plans based on templates.
+- Tightened visible labels for locked-in accounts, CPP/OAS, and withdrawal order.
 
 ## Consumer Roadmap Sequence
 
@@ -67,7 +67,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 11. **Sprint 34 — DB survivor pension modelling.** Add survivor-continuation inputs for defined-benefit pensions before optimizer execution.
 12. **Sprint 35 — Results trust and readiness.** Tighten the first Results answer, spending estimate language, top actions, examples, save/print copy, and Overview density before optimizer extraction.
 13. **Sprint 35.5 — Feedback gate cleanup.** Address tester feedback: internal copy nits, neutral tax wording, report handoff expectations, example parity, and spending-estimate humility.
-14. **Sprint 36+ — Optimizer extraction and execution.** Resume optimizer contract extraction, then build optimizer behavior after consumer readiness and survivor modelling are cleaner.
+14. **Sprint 36 — Optimizer contract and engine safety.** Add the non-executing optimizer contract, edge-case safety, example working-copy trust, and label drift cleanup before optimizer execution.
+15. **Sprint 37+ — Bounded optimizer execution.** Build optimizer behavior only after contract and safety boundaries remain green.
 
 ## Medium-Term Roadmap
 
@@ -101,7 +102,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Complete 2026-05-16. Added per-person DB survivor continuation assumptions and used them in survivor reruns while preserving old-plan fallback behavior.
 - **Sprint 35 — Results trust and readiness.** Complete 2026-05-16. Strengthened the first Results answer, reframed spending estimates, added prioritized top actions, and kept dense diagnostics in Details/Risks before optimizer execution.
 - **Sprint 35.5 — Feedback gate cleanup.** Complete 2026-05-17. Neutralized visible copy, clarified printable-report expectations, added example parity coverage, and guarded spending estimate humility before optimizer extraction.
-- **Sprint 36 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
+- **Sprint 36 — Optimizer contract and engine safety.** Complete 2026-05-17. Added a non-executing optimizer contract, future annual withdrawal override shape, defensive safe-run behavior, example working-copy clarity, and label drift cleanup.
+- **Sprint 37 — Bounded optimizer execution.** Planned after contract and engine-safety guardrails. Start with limited search behavior and review-oriented explanations.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

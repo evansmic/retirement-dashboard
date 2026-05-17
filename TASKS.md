@@ -4,33 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 35.5: Feedback Gate Cleanup
+## Latest Sprint — Sprint 36: Optimizer Contract & Engine Safety
 
 **Status:** Complete 2026-05-17.
 
-Goal: address tester feedback from Sprint 35 before optimizer extraction, keeping changes narrow and copy/test oriented.
+Goal: prepare the optimizer boundary without running an optimizer, while hardening engine safety, example working-copy trust, and visible intake language.
 
-Non-scope: optimizer execution, strategy application, new modelling, schema/output changes, cloud accounts, advisor tooling, or print/report migration.
+Non-scope: optimizer execution, strategy application, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 35.5 checkpoint doc: [`docs/sprint_35_5_feedback_gate_cleanup.md`](docs/sprint_35_5_feedback_gate_cleanup.md).
+Sprint 36 checkpoint doc: [`docs/sprint_36_optimizer_contract_engine_safety.md`](docs/sprint_36_optimizer_contract_engine_safety.md).
 
-### Sprint 35.5 Candidate Implementation Tickets
+### Sprint 36 Candidate Implementation Tickets
 
-- [x] **S35.5-01 — Visible copy nits.** Remove remaining internal wording from React warnings and keep tax copy neutral.
-- [x] **S35.5-02 — Printable report bridge.** Clarify that the report route is the detailed view while report polish continues.
-- [x] **S35.5-03 — Example drift guard.** Add parity coverage so React example IDs match stable dashboard example slugs.
-- [x] **S35.5-04 — Spending humility guard.** Test that spending-capacity copy keeps today's dollars and no-guarantee framing visible.
+- [x] **S36-01 — Optimizer contract boundary.** Add non-executing optimizer contract types for levers, guardrails, and future annual withdrawal overrides.
+- [x] **S36-02 — Engine safety wrapper.** Short-circuit invalid plans and non-finite results to a safe empty result instead of throwing.
+- [x] **S36-03 — Example working-copy trust.** Make React examples read as custom editable plans based on templates.
+- [x] **S36-04 — Intake language drift.** Tighten high-friction labels for CPP/OAS, locked-in accounts, and withdrawal order.
+- [x] **S36-05 — Edge-case tests.** Cover blocked optimizer inputs, safe empty runs, negative account balances, and no optimizer persistence.
 
-### Sprint 35.5 Definition Of Done
+### Sprint 36 Definition Of Done
 
-- Visible React copy avoids internal implementation terms and loaded moral language.
-- Printable report handoff sets expectations honestly while preserving the current route.
-- React and stable dashboard example slugs stay aligned by test.
-- Spending capacity remains framed as a today's-dollar planning estimate for review.
+- No optimizer execution or strategy application.
+- Future optimizer shape can express fixed withdrawal order now and annual withdrawal overrides later.
+- Invalid/extreme plans do not crash the preview path.
+- Example plans remain immutable templates and open as editable working copies.
+- Visible high-friction labels stay consumer-facing.
 - No optimizer behavior, report routing, or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 36: Optimizer Contract & Engine Safety
+
+**Complete 2026-05-17.** Added a non-executing optimizer contract, safe simulation wrapper, edge-case validation coverage, clearer example working-copy status, and consumer-facing intake label polish before optimizer extraction.
+
+Sprint 36 checkpoint doc: [`docs/sprint_36_optimizer_contract_engine_safety.md`](docs/sprint_36_optimizer_contract_engine_safety.md).
 
 ### Sprint 35.5: Feedback Gate Cleanup
 
