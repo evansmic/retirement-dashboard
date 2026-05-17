@@ -917,7 +917,7 @@ export function selectRetirementAnswerSummary(
   actions.push({
     id: 'tax',
     label: 'Look for tax efficiency',
-    detail: 'Review registered withdrawals, OAS recovery tax, and later-life tax pressure so less of the household wealth is wasted unnecessarily.',
+    detail: 'Review registered withdrawals, OAS recovery tax, and later-life tax pressure so the household can understand trade-offs between taxes, spending, flexibility, and estate goals.',
     detailArea: 'taxes'
   });
   if (!personLooksBlank(plan?.p2)) {

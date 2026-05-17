@@ -441,6 +441,8 @@ describe('result selectors', () => {
     expect(answer.status).toBe('tight');
     expect(answer.headline).toContain('limited');
     expect(answer.actions.find((action) => action.id === 'spending')).toBeTruthy();
+    expect(answer.actions.find((action) => action.id === 'tax')?.detail).toContain('trade-offs between taxes, spending');
+    expect(answer.actions.find((action) => action.id === 'tax')?.detail).not.toContain('wasted');
   });
 
   it('summarizes flexible spending capacity for estate-heavy plans', () => {
@@ -454,6 +456,8 @@ describe('result selectors', () => {
     expect(spending.status).toBe('flexible');
     expect(spending.estimatedAnnualRoom).toBeGreaterThan(0);
     expect(spending.headline).toContain('support more lifestyle spending');
+    expect(spending.planningEstimateDetail).toContain("today's dollars");
+    expect(spending.planningEstimateDetail).toContain('not a guarantee');
     expect(spending.reviewActions.find((action) => action.id === 'spendMore')).toBeTruthy();
   });
 

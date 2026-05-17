@@ -2329,7 +2329,7 @@ function ResultsHandoffPanel({
         {overview.hasShortfall ? (
           <div className="validation-panel">
             <strong>Projection shortfall</strong>
-            <span>At least one projection year reports a shortfall in the extracted simulation output.</span>
+            <span>At least one projection year shows spending that is not fully covered. Review Risks before relying on this plan.</span>
           </div>
         ) : null}
         {validation ? <ValidationPanel validation={validation} /> : null}
@@ -4133,8 +4133,8 @@ function ExportSavePanel({
           <p className="eyebrow">Read and print</p>
           <h3>Open printable report</h3>
           <p>
-            {readinessSummary.stableDashboardHandoff} Use it to review complete schedules, charts, and tax/account detail
-            before relying on the plan.
+            Open the detailed report view when you want complete schedules, printable charts, and tax/account detail.
+            It may look more detailed than this guided Results page while the report experience is being polished.
           </p>
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}

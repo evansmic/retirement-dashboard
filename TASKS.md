@@ -4,34 +4,39 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 35: Results Trust & Readiness
+## Latest Sprint — Sprint 35.5: Feedback Gate Cleanup
 
-**Status:** Complete 2026-05-16.
+**Status:** Complete 2026-05-17.
 
-Goal: make the React Results experience more consumer-ready before optimizer work, without adding optimizer execution or changing engine output.
+Goal: address tester feedback from Sprint 35 before optimizer extraction, keeping changes narrow and copy/test oriented.
 
 Non-scope: optimizer execution, strategy application, new modelling, schema/output changes, cloud accounts, advisor tooling, or print/report migration.
 
-Sprint 35 checkpoint doc: [`docs/sprint_35_results_trust_readiness.md`](docs/sprint_35_results_trust_readiness.md).
+Sprint 35.5 checkpoint doc: [`docs/sprint_35_5_feedback_gate_cleanup.md`](docs/sprint_35_5_feedback_gate_cleanup.md).
 
-### Sprint 35 Candidate Implementation Tickets
+### Sprint 35.5 Candidate Implementation Tickets
 
-- [x] **S35-01 — Stronger Results hero.** Answer "Can I retire?" with verdict, confidence, plan-through year/age, spending estimate, and calm insight.
-- [x] **S35-02 — Spending estimate language.** Keep today's dollars visible and frame spending capacity as a planning estimate for review.
-- [x] **S35-03 — Prioritized review actions.** Add a 3-5 item "Review these first" section from existing readiness and answer data.
-- [x] **S35-04 — Overview density.** Demote scenario/recommendation-heavy panels out of Overview and keep detail in Details/Risks.
-- [x] **S35-05 — Examples, Save/Print, and copy scrub.** Confirm examples are directly loadable, keep Save editable plan/Open printable report labels, and remove remaining internal copy from live UI.
+- [x] **S35.5-01 — Visible copy nits.** Remove remaining internal wording from React warnings and keep tax copy neutral.
+- [x] **S35.5-02 — Printable report bridge.** Clarify that the report route is the detailed view while report polish continues.
+- [x] **S35.5-03 — Example drift guard.** Add parity coverage so React example IDs match stable dashboard example slugs.
+- [x] **S35.5-04 — Spending humility guard.** Test that spending-capacity copy keeps today's dollars and no-guarantee framing visible.
 
-### Sprint 35 Definition Of Done
+### Sprint 35.5 Definition Of Done
 
-- Overview prioritizes answer, spending estimate, top actions, estate/tax/survivor highlights, and next steps.
-- Spending language does not imply guaranteed safe spending or personalized financial advice.
-- Built-in examples remain directly loadable from the React start screen.
-- Save editable plan and Open printable report remain distinct local-first actions.
+- Visible React copy avoids internal implementation terms and loaded moral language.
+- Printable report handoff sets expectations honestly while preserving the current route.
+- React and stable dashboard example slugs stay aligned by test.
+- Spending capacity remains framed as a today's-dollar planning estimate for review.
 - No optimizer behavior, report routing, or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 35.5: Feedback Gate Cleanup
+
+**Complete 2026-05-17.** Addressed tester feedback before optimizer extraction by neutralizing tax copy, replacing internal shortfall wording, clarifying the printable-report bridge, adding example parity coverage, and guarding spending estimate humility.
+
+Sprint 35.5 checkpoint doc: [`docs/sprint_35_5_feedback_gate_cleanup.md`](docs/sprint_35_5_feedback_gate_cleanup.md).
 
 ### Sprint 35: Results Trust & Readiness
 

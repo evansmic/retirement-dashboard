@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 35 is complete. The next step is a feedback gate before optimizer extraction: review the consumer Results journey with the clearer answer hero, spending estimate, top actions, and DB survivor modelling in place. If no blocking readiness issue appears, proceed to optimizer contract extraction without changing the saved plan schema or adding optimizer execution prematurely.
+Sprint 35.5 is complete. Tester feedback supported the consumer-readiness direction and surfaced a few pre-optimizer guardrails: keep spending estimates humble, keep visible copy consumer-facing, clarify the printable-report bridge, guard against example drift, and avoid loaded tax language. The next step is optimizer contract extraction without changing the saved plan schema or adding optimizer execution prematurely.
 
-Completed Sprint 35 slices:
+Completed Sprint 35.5 slices:
 
-- Strengthened the Results Overview hero with a plain retirement verdict, confidence level, plan-through year/age, today's-dollar annual spending estimate, and calm insight.
-- Reframed spending capacity as a planning estimate for review, avoiding guaranteed safe-spending or advice-like language.
-- Added a short "Review these first" section from existing readiness and answer data.
-- Demoted scenario/recommendation-heavy content out of Overview so Details/Risks keep the deeper diagnostics.
-- Confirmed React start examples, Save editable plan, Open printable report, and local-first copy remain consumer-facing.
+- Replaced remaining visible internal warning copy with consumer-facing language.
+- Neutralized tax review copy around taxes, spending, flexibility, and estate goals.
+- Clarified that Open printable report currently opens the detailed report view while report polish continues.
+- Added parity coverage so React example IDs match the stable dashboard example slugs.
+- Added tests that keep spending capacity framed as a today's-dollar planning estimate, not a guarantee.
 
 ## Consumer Roadmap Sequence
 
@@ -66,7 +66,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 10. **Sprint 33 — Save & print polish.** Split Save editable plan from Open printable report and make report language fully consumer-facing.
 11. **Sprint 34 — DB survivor pension modelling.** Add survivor-continuation inputs for defined-benefit pensions before optimizer execution.
 12. **Sprint 35 — Results trust and readiness.** Tighten the first Results answer, spending estimate language, top actions, examples, save/print copy, and Overview density before optimizer extraction.
-13. **Sprint 36+ — Optimizer extraction and execution.** Resume optimizer contract extraction, then build optimizer behavior after consumer readiness and survivor modelling are cleaner.
+13. **Sprint 35.5 — Feedback gate cleanup.** Address tester feedback: internal copy nits, neutral tax wording, report handoff expectations, example parity, and spending-estimate humility.
+14. **Sprint 36+ — Optimizer extraction and execution.** Resume optimizer contract extraction, then build optimizer behavior after consumer readiness and survivor modelling are cleaner.
 
 ## Medium-Term Roadmap
 
@@ -99,6 +100,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 33 — Save & print polish.** Complete 2026-05-16. Split editable plan save from printable report actions in the consumer UI while preserving local file and report behavior.
 - **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Complete 2026-05-16. Added per-person DB survivor continuation assumptions and used them in survivor reruns while preserving old-plan fallback behavior.
 - **Sprint 35 — Results trust and readiness.** Complete 2026-05-16. Strengthened the first Results answer, reframed spending estimates, added prioritized top actions, and kept dense diagnostics in Details/Risks before optimizer execution.
+- **Sprint 35.5 — Feedback gate cleanup.** Complete 2026-05-17. Neutralized visible copy, clarified printable-report expectations, added example parity coverage, and guarded spending estimate humility before optimizer extraction.
 - **Sprint 36 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
