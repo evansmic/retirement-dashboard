@@ -4,34 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 34: DB Survivor Pension Inputs And Survivor Cash-Flow Accuracy
+## Latest Sprint — Sprint 35: Results Trust & Readiness
 
 **Status:** Complete 2026-05-16.
 
-Goal: model defined-benefit survivor pension continuation explicitly so two-person plans with DB pensions can produce more credible survivor cash-flow results before optimizer execution.
+Goal: make the React Results experience more consumer-ready before optimizer work, without adding optimizer execution or changing engine output.
 
-Non-scope: broad survivor redesign, second-death modelling, optimizer behaviour, schema v3, paid advisor tooling, cloud accounts, persisted recommendation output, or print/PDF migration.
+Non-scope: optimizer execution, strategy application, new modelling, schema/output changes, cloud accounts, advisor tooling, or print/report migration.
 
-Sprint 34 checkpoint doc: [`docs/sprint_34_db_survivor_pension.md`](docs/sprint_34_db_survivor_pension.md).
+Sprint 35 checkpoint doc: [`docs/sprint_35_results_trust_readiness.md`](docs/sprint_35_results_trust_readiness.md).
 
-### Sprint 34 Candidate Implementation Tickets
+### Sprint 35 Candidate Implementation Tickets
 
-- [x] **S34-01 — DB survivor inputs.** Add optional per-person survivor continuation percentage and custom annual survivor amount.
-- [x] **S34-02 — Engine survivor cash flow.** Use the configured Person 1 DB survivor amount in the existing survivor rerun while preserving the old 60% fallback.
-- [x] **S34-03 — Intake and survivor copy.** Tell households to confirm DB spouse continuation from the pension statement.
-- [x] **S34-04 — Example plans.** Add explicit DB survivor continuation to the public-sector DB couple example.
-- [x] **S34-05 — Tests and docs.** Cover 50%, 60%, 100%, custom annual amount, and fallback behavior.
+- [x] **S35-01 — Stronger Results hero.** Answer "Can I retire?" with verdict, confidence, plan-through year/age, spending estimate, and calm insight.
+- [x] **S35-02 — Spending estimate language.** Keep today's dollars visible and frame spending capacity as a planning estimate for review.
+- [x] **S35-03 — Prioritized review actions.** Add a 3-5 item "Review these first" section from existing readiness and answer data.
+- [x] **S35-04 — Overview density.** Demote scenario/recommendation-heavy panels out of Overview and keep detail in Details/Risks.
+- [x] **S35-05 — Examples, Save/Print, and copy scrub.** Confirm examples are directly loadable, keep Save editable plan/Open printable report labels, and remove remaining internal copy from live UI.
 
-### Sprint 34 Definition Of Done
+### Sprint 35 Definition Of Done
 
-- DB pension survivor assumptions can be entered without changing schema version.
-- Existing plans without new fields keep the historical 60% survivor fallback.
-- Survivor reruns include the configured DB spouse continuation.
-- Consumer copy points to the pension statement rather than pretending the app knows every pension rule.
+- Overview prioritizes answer, spending estimate, top actions, estate/tax/survivor highlights, and next steps.
+- Spending language does not imply guaranteed safe spending or personalized financial advice.
+- Built-in examples remain directly loadable from the React start screen.
+- Save editable plan and Open printable report remain distinct local-first actions.
 - No optimizer behavior, report routing, or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 35: Results Trust & Readiness
+
+**Complete 2026-05-16.** Strengthened the React Results Overview hero, reframed spending capacity as a today's-dollar planning estimate, added prioritized review actions, demoted dense scenario/recommendation panels, and scrubbed remaining internal copy from live Results UI.
+
+Sprint 35 checkpoint doc: [`docs/sprint_35_results_trust_readiness.md`](docs/sprint_35_results_trust_readiness.md).
 
 ### Sprint 34: DB Survivor Pension Inputs And Survivor Cash-Flow Accuracy
 

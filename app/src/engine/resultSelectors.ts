@@ -642,6 +642,9 @@ export type SpendingCapacitySummary = {
   label: string;
   headline: string;
   detail: string;
+  planningEstimateLabel: string;
+  planningEstimateDetail: string;
+  estimatedSustainableAnnualSpending: number;
   earlySpending: number;
   laterSpending: number;
   lateLifeSpending: number;
@@ -1000,16 +1003,37 @@ export function selectSpendingCapacitySummary(
     flexible: 'This plan may support more lifestyle spending, especially if the large projected estate is not intentional.'
   };
   const detailByStatus: Record<SpendingCapacityStatus, string> = {
-    cannotTell: 'Clear blockers first, then revisit spending capacity.',
+    cannotTell: 'Clear blockers first, then revisit this planning estimate.',
     needsReduction: spendLessRows.length && !spendLessShortfall
       ? `The built-in lower-spending test uses about ${moneyText(stressTestedEarlySpending)} in early retirement and remains funded through ${spendLessOverview.lastYear ?? 'the projection end'}.`
       : 'Review spending, work timing, real estate choices, and benefit timing together rather than relying on one spending cut.',
-    tight: 'Treat this as a caution flag: small changes in spending, taxes, markets, or timing could matter.',
+    tight: 'Treat this as a planning estimate for review: small changes in spending, taxes, markets, or timing could matter.',
     balanced: 'The next review is whether the entered lifestyle target reflects the life the household actually wants.',
     flexible: estimatedAnnualRoom > 0
-      ? `A bounded first-pass estimate suggests roughly ${moneyText(estimatedAnnualRoom)} of possible extra annual lifestyle room, subject to tax, market, estate, and survivor review.`
+      ? `A first-pass planning estimate suggests roughly ${moneyText(estimatedAnnualRoom)} of possible extra annual lifestyle room, subject to tax, market, estate, and survivor review.`
       : 'There may be flexibility, but the exact amount should be tested with a dedicated spending scenario.'
   };
+  const repairEarlySpending = status === 'needsReduction' && spendLessRows.length && !spendLessShortfall ? stressTestedEarlySpending : 0;
+  const estimatedSustainableAnnualSpending =
+    status === 'needsReduction' && repairEarlySpending > 0
+      ? repairEarlySpending
+      : status === 'flexible' && estimatedAnnualRoom > 0
+        ? earlySpending + estimatedAnnualRoom
+        : earlySpending;
+  const planningEstimateLabel =
+    status === 'needsReduction'
+      ? 'Repair planning estimate'
+      : status === 'flexible' && estimatedAnnualRoom > 0
+        ? 'Spending estimate for review'
+        : 'Current spending estimate';
+  const planningEstimateDetail =
+    status === 'cannotTell'
+      ? "Today's-dollar spending estimate will appear after required inputs are complete."
+      : status === 'needsReduction' && repairEarlySpending > 0
+        ? "This is the lower early-retirement spending test in today's dollars, not a guarantee or personal financial advice."
+        : status === 'flexible' && estimatedAnnualRoom > 0
+          ? "This is a first-pass annual lifestyle estimate in today's dollars for review, not a guarantee."
+          : "This keeps the current annual lifestyle target visible in today's dollars for review.";
   const estateTradeoff =
     status === 'flexible'
       ? estateTarget > 0
@@ -1018,7 +1042,6 @@ export function selectSpendingCapacitySummary(
       : estateTarget > 0
         ? 'Keep the estate target visible while reviewing spending changes.'
         : 'If preserving money is important, add an estate target before increasing spending.';
-  const repairEarlySpending = status === 'needsReduction' && spendLessRows.length && !spendLessShortfall ? stressTestedEarlySpending : 0;
   const reviewActions: SpendingCapacitySummary['reviewActions'] = [];
 
   if (status === 'flexible') {
@@ -1064,6 +1087,9 @@ export function selectSpendingCapacitySummary(
     label: labelByStatus[status],
     headline: headlineByStatus[status],
     detail: detailByStatus[status],
+    planningEstimateLabel,
+    planningEstimateDetail,
+    estimatedSustainableAnnualSpending,
     earlySpending,
     laterSpending,
     lateLifeSpending,
@@ -1118,12 +1144,12 @@ export function selectEstateIntentSummary(
       : 'The projected estate is meaningfully different from the estate goal entered.',
     taxReview: 'The estate picture may be shaped by tax timing and registered assets.',
     survivorReview: 'For a couple, estate and tax choices should be checked against the survivor result.',
-    aligned: 'The projected estate does not raise a major intent or tax-efficiency flag in this bounded review.'
+    aligned: 'The projected estate does not raise a major intent or tax-efficiency flag in this first-pass review.'
   };
   const taxEfficiencyHeadline =
     hasTaxPressure
       ? 'Tax timing may affect how much wealth supports the household versus tax.'
-      : 'No major estate-tax efficiency flag appears in the bounded review.';
+      : 'No major estate-tax efficiency flag appears in this first-pass review.';
   const taxEfficiencyDetail =
     hasTaxPressure
       ? 'Review registered withdrawals, OAS recovery tax, and later-life registered balances before assuming the estate outcome is the best use of resources.'
@@ -1387,12 +1413,12 @@ function optimizerReviewCopy(
     retirementTiming: {
       guardrail: 'Do not move retirement timing unless the household is genuinely willing to work longer or retire earlier.',
       reviewQuestion: 'Is the retirement date flexible, or should it be preserved?',
-      suggestedNextStep: permission === 'needsDecision' ? 'Enter a retirement year first.' : 'Review Work two years longer as the bounded timing test.'
+      suggestedNextStep: permission === 'needsDecision' ? 'Enter a retirement year first.' : 'Review Work two years longer as the first timing test.'
     },
     benefitTiming: {
       guardrail: 'Explore CPP/OAS timing only after the monthly estimates are credible.',
       reviewQuestion: 'Would the household consider delaying benefits if it improves later-life security?',
-      suggestedNextStep: permission === 'needsDecision' ? 'Add CPP/OAS estimates first.' : 'Review Delay CPP/OAS to 70 as the bounded benefit test.'
+      suggestedNextStep: permission === 'needsDecision' ? 'Add CPP/OAS estimates first.' : 'Review Delay CPP/OAS to 70 as the first benefit-timing test.'
     },
     withdrawalOrder: {
       guardrail: 'Preserve the current withdrawal-order setting until a tax-aware drawdown optimizer exists.',
@@ -1683,7 +1709,7 @@ export function selectAccountDrawdownStory(result: SimulationResult | null | und
     lowestPortfolioYear: lowest?.year ?? null,
     lowestPortfolio: lowest?.total ?? 0,
     firstDepletionYear: firstDepletion?.year ?? null,
-    stableDashboardHandoff: 'Full account schedules, printable charts, print/PDF, and audit views remain in the detailed report.'
+    stableDashboardHandoff: 'Complete account schedules, printable charts, and deeper review views remain in the detailed report.'
   };
 }
 
@@ -1902,7 +1928,7 @@ export function selectStressTestSummary(result: SimulationResult | null | undefi
     fundedYears: rows.length - shortfallRows.length,
     firstStressYear,
     worstStressLabel: worst?.severity !== 'ok' ? worst.label : 'No major stress item',
-    stableDashboardHandoff: 'Full Monte Carlo, historical sequence stress, print/PDF, and detailed stress charts remain in the detailed report.'
+    stableDashboardHandoff: 'Complete risk tables, historical sequence stress, and detailed risk charts remain in the detailed report.'
   };
 }
 
@@ -2451,7 +2477,7 @@ export function selectTaxStorySummary(result: SimulationResult | null | undefine
     lifetimeOasClawback: tax.lifetimeOasClawback,
     registeredWithdrawalYears,
     planningWindowYears: planningWindowYears ? String(planningWindowYears) : 'None detected',
-    stableDashboardHandoff: 'Full tax schedules, print/PDF, and detailed audit views remain in the detailed report.'
+    stableDashboardHandoff: 'Complete tax schedules and deeper review views remain in the detailed report.'
   };
 }
 
@@ -3572,7 +3598,7 @@ function selectRecommendedRiskDetails(
           severity: risk.severity,
           candidateLabel,
           headline: 'This shows whether the recommendation is sensitive to early retirement spending.',
-          detail: 'The bounded rerun lowers early retirement spending by 10% and compares the result with the current plan.',
+          detail: 'This first-pass test lowers early retirement spending by 10% and compares the result with the current plan.',
           metrics: [
             detailMetric('currentSpend', 'Current early spending', moneyText(plan?.spending?.gogo), 'neutral'),
             detailMetric('scenarioSpend', '10% lower early spending', moneyText(Math.round(n(plan?.spending?.gogo) * 0.9)), 'neutral'),
@@ -3589,7 +3615,7 @@ function selectRecommendedRiskDetails(
           severity: risk.severity,
           candidateLabel,
           headline: 'This shows whether the path depends on working longer.',
-          detail: 'The bounded rerun moves the household retirement year two years later where retirement years are set.',
+          detail: 'This first-pass test moves the household retirement year two years later where retirement years are set.',
           metrics: [
             detailMetric('currentYear', 'Current retirement year', String(plan?.assumptions.retireYear || plan?.p1.retireYear || '-'), 'neutral'),
             detailMetric('laterYear', 'Retire-later year', n(plan?.assumptions.retireYear || plan?.p1.retireYear) ? String(n(plan?.assumptions.retireYear || plan?.p1.retireYear) + 2) : '-', 'neutral'),
@@ -3606,7 +3632,7 @@ function selectRecommendedRiskDetails(
           severity: risk.severity,
           candidateLabel,
           headline: 'This shows whether delayed public benefits materially change the result.',
-          detail: 'The bounded rerun delays CPP and OAS claiming to age 70 for the preview scenario.',
+          detail: 'This first-pass test delays CPP and OAS claiming to age 70 for comparison.',
           metrics: [
             detailMetric('baselineTiming', 'Current preview timing', 'CPP/OAS at 65', 'neutral'),
             detailMetric('scenarioTiming', 'Delay scenario', 'CPP/OAS at 70', 'neutral'),
@@ -3861,7 +3887,7 @@ function scenarioEvidenceRows(
       id: `${prefix}-availability`,
       label,
       value: rows.length ? 'Ready' : 'Not available',
-      detail: rows.length ? 'Scenario output is available for this bounded rerun.' : 'Scenario output has not been calculated.'
+      detail: rows.length ? 'Scenario output is available for this first-pass test.' : 'Scenario output has not been calculated.'
     },
     {
       id: `${prefix}-end-portfolio`,

@@ -236,6 +236,17 @@ function formatPercent(value: number | undefined): string {
   return `${Number(((value || 0) * 100).toFixed(2))}%`;
 }
 
+function planThroughAgeLabel(plan: V2PlanPayload, fundedThroughYear: number | null): string {
+  if (!fundedThroughYear) return '-';
+  const p1Age = plan.p1?.dob ? fundedThroughYear - Number(plan.p1.dob) : null;
+  const p2Age = !p2LooksBlank(plan.p2) && plan.p2?.dob ? fundedThroughYear - Number(plan.p2.dob) : null;
+  const p1Label = plan.p1?.name || 'Person 1';
+  const p2Label = plan.p2?.name || 'Person 2';
+  if (p1Age && p2Age) return `${p1Label} ${p1Age} / ${p2Label} ${p2Age}`;
+  if (p1Age) return `${p1Label} ${p1Age}`;
+  return String(fundedThroughYear);
+}
+
 function resultsSectionTitle(section: ResultsWorkspaceSection): string {
   const titles: Record<ResultsWorkspaceSection, string> = {
     overview: 'Overview',
@@ -2151,7 +2162,6 @@ function ResultsHandoffPanel({
   const sourceStory = selectSourceReconciliationStory(firstRow);
   const decisionChecklist = selectDecisionChecklist(result, plan);
   const decisionDetailRows = selectDecisionDetailRows(result, plan);
-  const scenarioChoiceCards = selectScenarioChoiceCards(result, plan, scenarios);
   const scenarioComparisonRows = selectScenarioComparisonRows(result, scenarios);
   const scenarioAssumptionRows = selectScenarioAssumptionRows(plan);
   const survivorSummary = selectSurvivorViewSummary(result, plan);
@@ -2280,30 +2290,27 @@ function ResultsHandoffPanel({
           <IncomeSourcesPanel loading={loading} rows={incomeSourceRows} />
         ) : activeSection === 'overview' ? (
           <>
-            <RetirementAnswerPanel answer={retirementAnswer} loading={loading} />
+            <RetirementAnswerPanel
+              answer={retirementAnswer}
+              confidenceLabel={recommendedPath.confidence.label}
+              loading={loading}
+              planThroughAge={planThroughAgeLabel(plan, retirementAnswer.fundedThroughYear)}
+              spendingCapacity={spendingCapacity}
+            />
             <SpendingCapacityPanel loading={loading} summary={spendingCapacity} />
+            <ReviewTheseFirstPanel
+              actions={retirementAnswer.actions}
+              loading={loading}
+              readinessRows={readinessRows}
+            />
+            <OverviewHighlightsPanel
+              estateIntent={estateIntent}
+              loading={loading}
+              survivorComparison={survivorComparison}
+              survivorSummary={survivorSummary}
+              taxStory={taxStorySummary}
+            />
             <EstateIntentPanel loading={loading} summary={estateIntent} />
-
-            <div className="summary-grid">
-              <Metric
-                label="Projection"
-                value={
-                  overview.firstYear && overview.lastYear
-                    ? `${overview.firstYear}-${overview.lastYear} (${overview.projectionYears} years)`
-                    : loading
-                      ? 'Calculating'
-                      : '-'
-                }
-              />
-              <Metric label="Projected money left" value={formatMoney(overview.endPortfolio)} />
-              <Metric label="Early spending target" value={formatMoney(retirementAnswer.plannedEarlySpending)} />
-            </div>
-
-            <RecommendedPathPanel loading={loading} summary={recommendedPath} />
-            <div className="result-section-label">Retirement Choices</div>
-            <ScenarioCardsPanel cards={scenarioChoiceCards} />
-            <div className="result-section-label">Survivor Impact</div>
-            <SurvivorSummaryPanel comparison={survivorComparison} summary={survivorSummary} />
             <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
           </>
         ) : (
@@ -2414,27 +2421,54 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
 
 function RetirementAnswerPanel({
   answer,
+  confidenceLabel,
+  planThroughAge,
+  spendingCapacity,
   loading
 }: {
   answer: ReturnType<typeof selectRetirementAnswerSummary>;
+  confidenceLabel: string;
+  planThroughAge: string;
+  spendingCapacity: ReturnType<typeof selectSpendingCapacitySummary>;
   loading: boolean;
 }) {
+  const calmInsight =
+    answer.status === 'notReady'
+      ? 'The useful next step is to adjust one or two inputs, then compare the plan again.'
+      : answer.status === 'tight'
+        ? 'This is close enough to deserve careful review, not panic.'
+        : answer.status === 'estateHeavy'
+          ? 'The opportunity is deciding how much to enjoy, preserve, or give with intention.'
+          : answer.status === 'cannotTell'
+            ? 'Once the missing inputs are cleared, the answer will become much more useful.'
+            : 'The plan looks workable under the current assumptions, with a few checks to keep it honest.';
+
   return (
     <section className={`retirement-answer-panel retirement-answer-${answer.status}`}>
       <div className="retirement-answer-lede">
         <p className="eyebrow">Can I retire?</p>
         <h3>{loading ? 'Calculating retirement answer' : answer.label}</h3>
         <p>{answer.headline}</p>
-        <p>{answer.detail}</p>
+        <p>{calmInsight}</p>
       </div>
 
       <div className="summary-grid">
+        <Metric label="Confidence" value={loading ? 'Calculating' : confidenceLabel} />
         <Metric
-          label="Funded through"
+          label="Plan-through year"
           value={answer.fundedThroughYear ? String(answer.fundedThroughYear) : loading ? 'Calculating' : '-'}
         />
-        <Metric label="Planned early spending" value={formatMoney(answer.plannedEarlySpending)} />
-        <Metric label="Projected money left" value={formatMoney(answer.projectedMoneyLeft)} />
+        <Metric label="Plan-through age" value={loading ? 'Calculating' : planThroughAge} />
+        <Metric
+          label="Annual spending estimate, today's dollars"
+          value={
+            spendingCapacity.estimatedSustainableAnnualSpending
+              ? formatMoney(spendingCapacity.estimatedSustainableAnnualSpending)
+              : loading
+                ? 'Calculating'
+                : '-'
+          }
+        />
       </div>
 
       <div className="retirement-answer-grid">
@@ -2449,18 +2483,6 @@ function RetirementAnswerPanel({
           <p>{answer.estateDetail}</p>
         </section>
       </div>
-
-      <section className="retirement-actions">
-        <h4>What to review next</h4>
-        <div>
-          {answer.actions.map((action) => (
-            <article key={action.id}>
-              <strong>{action.label}</strong>
-              <span>{action.detail}</span>
-            </article>
-          ))}
-        </div>
-      </section>
     </section>
   );
 }
@@ -2482,6 +2504,16 @@ function SpendingCapacityPanel({
       </div>
 
       <div className="summary-grid">
+        <Metric
+          label={`${summary.planningEstimateLabel}, today's dollars`}
+          value={
+            summary.estimatedSustainableAnnualSpending
+              ? formatMoney(summary.estimatedSustainableAnnualSpending)
+              : loading
+                ? 'Calculating'
+                : '-'
+          }
+        />
         <Metric label="Early retirement spending" value={formatMoney(summary.earlySpending)} />
         <Metric label="Later retirement spending" value={formatMoney(summary.laterSpending)} />
         <Metric label="Late-life spending" value={formatMoney(summary.lateLifeSpending)} />
@@ -2500,6 +2532,7 @@ function SpendingCapacityPanel({
         <Metric label="Projected money left" value={formatMoney(summary.projectedMoneyLeft)} />
         <Metric label="Estate target" value={summary.estateTarget ? formatMoney(summary.estateTarget) : 'Not set'} />
       </div>
+      <p className="table-note">{summary.planningEstimateDetail}</p>
 
       <div className="spending-capacity-grid">
         <section>
@@ -2517,6 +2550,108 @@ function SpendingCapacityPanel({
             ))}
           </div>
         </section>
+      </div>
+    </section>
+  );
+}
+
+function ReviewTheseFirstPanel({
+  actions,
+  loading,
+  readinessRows
+}: {
+  actions: ReturnType<typeof selectRetirementAnswerSummary>['actions'];
+  loading: boolean;
+  readinessRows: ReturnType<typeof selectResultsReadinessRows>;
+}) {
+  const reviewRows = readinessRows
+    .filter((row) => row.status !== 'ready')
+    .sort((a, b) => {
+      const priority = { now: 0, next: 1, later: 2 };
+      return priority[a.priority] - priority[b.priority];
+    });
+  const fallbackRows = actions
+    .filter((action) => action.id !== 'report')
+    .map((action) => ({
+      id: action.id,
+      label: action.label,
+      detail: action.detail,
+      action: `Review in ${resultsSectionTitle(action.detailArea)}.`,
+      detailArea: action.detailArea
+    }));
+  const topRows = [
+    ...reviewRows.map((row) => ({
+      id: row.id,
+      label: row.label,
+      detail: row.detail,
+      action: row.action,
+      detailArea: row.detailArea
+    })),
+    ...fallbackRows
+  ].filter((row, index, all) => all.findIndex((candidate) => candidate.label === row.label) === index).slice(0, 5);
+
+  return (
+    <section className="review-first-panel">
+      <div>
+        <p className="eyebrow">Review these first</p>
+        <h3>{loading ? 'Finding the first review items' : 'Start with the few checks that matter most.'}</h3>
+        <p>Detailed diagnostics stay in Details and Risks; this list keeps the first review focused.</p>
+      </div>
+      <div className="review-first-list">
+        {topRows.slice(0, 5).map((row, index) => (
+          <article key={row.id}>
+            <small>{index + 1}</small>
+            <div>
+              <strong>{row.label}</strong>
+              <span>{row.detail}</span>
+              <em>{row.action}</em>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function OverviewHighlightsPanel({
+  estateIntent,
+  loading,
+  survivorComparison,
+  survivorSummary,
+  taxStory
+}: {
+  estateIntent: ReturnType<typeof selectEstateIntentSummary>;
+  loading: boolean;
+  survivorComparison: ReturnType<typeof selectSurvivorComparison>;
+  survivorSummary: ReturnType<typeof selectSurvivorViewSummary>;
+  taxStory: ReturnType<typeof selectTaxStorySummary>;
+}) {
+  return (
+    <section className="overview-highlights-panel">
+      <div>
+        <p className="eyebrow">Highlights</p>
+        <h3>Estate, tax, and survivor items at a glance.</h3>
+      </div>
+      <div className="overview-highlight-grid">
+        <article>
+          <strong>Estate</strong>
+          <span>{loading ? 'Calculating estate picture.' : estateIntent.headline}</span>
+          <em>{estateIntent.estateTarget ? `Goal ${formatMoney(estateIntent.estateTarget)}` : 'No estate goal entered'}</em>
+        </article>
+        <article>
+          <strong>Taxes</strong>
+          <span>{loading ? 'Calculating tax picture.' : taxStory.headline}</span>
+          <em>{taxStory.peakTaxYear ? `Peak tax year ${taxStory.peakTaxYear}` : 'No peak tax year yet'}</em>
+        </article>
+        <article>
+          <strong>Survivor</strong>
+          <span>{survivorSummary.detail}</span>
+          <em>
+            {survivorComparison.status === 'ready' && survivorComparison.fundedThroughYear
+              ? `Survivor funded through ${survivorComparison.fundedThroughYear}`
+              : resultsSectionTitle('householdResilience')}
+          </em>
+        </article>
       </div>
     </section>
   );

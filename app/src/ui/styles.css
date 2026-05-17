@@ -1000,6 +1000,88 @@ button.secondary,
   line-height: 1.4;
 }
 
+.review-first-panel,
+.overview-highlights-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.review-first-panel h3,
+.review-first-panel p,
+.overview-highlights-panel h3,
+.overview-highlights-panel p {
+  margin: 0;
+}
+
+.review-first-panel p,
+.overview-highlights-panel p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.review-first-list {
+  display: grid;
+  gap: 10px;
+}
+
+.review-first-list article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 12px;
+}
+
+.review-first-list small {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: #ffffff;
+  font-weight: 850;
+}
+
+.review-first-list div,
+.overview-highlight-grid article {
+  display: grid;
+  gap: 5px;
+}
+
+.review-first-list span,
+.overview-highlight-grid span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.review-first-list em,
+.overview-highlight-grid em {
+  color: var(--green-dark);
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.overview-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.overview-highlight-grid article {
+  border-left: 4px solid var(--green);
+  background: #fbfcfa;
+  padding: 12px;
+}
+
 .retirement-answer-cannotTell,
 .retirement-answer-notReady {
   border-color: #d79b92;
@@ -2304,6 +2386,7 @@ button.secondary,
   .retirement-actions > div,
   .spending-capacity-grid,
   .estate-intent-grid,
+  .overview-highlight-grid,
   .details-card-grid,
   .break-risk-layout,
   .decision-checklist,

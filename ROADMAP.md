@@ -40,19 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 34 is complete. The next step is a feedback gate before optimizer extraction: review the consumer journey with the new DB survivor modelling in place, then proceed to Sprint 35 only if the planner/design feedback does not reveal a blocking consumer-readiness issue.
+Sprint 35 is complete. The next step is a feedback gate before optimizer extraction: review the consumer Results journey with the clearer answer hero, spending estimate, top actions, and DB survivor modelling in place. If no blocking readiness issue appears, proceed to optimizer contract extraction without changing the saved plan schema or adding optimizer execution prematurely.
 
-Goal: model defined-benefit survivor pension continuation explicitly so two-person plans with DB pensions can produce more credible survivor cash-flow results before optimizer execution.
+Completed Sprint 35 slices:
 
-Completed Sprint 34 slices:
-
-- Add optional per-person DB survivor continuation assumptions: percentage and custom annual survivor amount.
-- Preserve existing behavior as a fallback for old plans, with the current 60% continuation only when no new value exists.
-- Update survivor rerun cash flows so the surviving spouse receives the configured DB survivor amount.
-- Update intake help text and Survivor Impact copy to tell households to check pension statements.
-- Update synthetic DB pension examples and add engine/selector tests for 50%, 60%, 100%, and custom survivor amounts.
-
-After Sprint 34 is pushed, run a feedback gate before moving into Sprint 35 optimizer extraction so fresh planner/design review can confirm the consumer experience is ready for optimizer work.
+- Strengthened the Results Overview hero with a plain retirement verdict, confidence level, plan-through year/age, today's-dollar annual spending estimate, and calm insight.
+- Reframed spending capacity as a planning estimate for review, avoiding guaranteed safe-spending or advice-like language.
+- Added a short "Review these first" section from existing readiness and answer data.
+- Demoted scenario/recommendation-heavy content out of Overview so Details/Risks keep the deeper diagnostics.
+- Confirmed React start examples, Save editable plan, Open printable report, and local-first copy remain consumer-facing.
 
 ## Consumer Roadmap Sequence
 
@@ -69,7 +65,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 9. **Sprint 32 — Overview simplification.** Move audit-style diagnostics out of Overview and into Details/Risks so the first answer stays calm.
 10. **Sprint 33 — Save & print polish.** Split Save editable plan from Open printable report and make report language fully consumer-facing.
 11. **Sprint 34 — DB survivor pension modelling.** Add survivor-continuation inputs for defined-benefit pensions before optimizer execution.
-12. **Sprint 35+ — Optimizer extraction and execution.** Resume optimizer contract extraction, then build bounded optimizer behavior after consumer readiness and survivor modelling are cleaner.
+12. **Sprint 35 — Results trust and readiness.** Tighten the first Results answer, spending estimate language, top actions, examples, save/print copy, and Overview density before optimizer extraction.
+13. **Sprint 36+ — Optimizer extraction and execution.** Resume optimizer contract extraction, then build optimizer behavior after consumer readiness and survivor modelling are cleaner.
 
 ## Medium-Term Roadmap
 
@@ -101,7 +98,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 32 — Overview simplification.** Complete 2026-05-16. Moved audit-style diagnostics from Overview into Details so the first Results page stays calm and decision-oriented.
 - **Sprint 33 — Save & print polish.** Complete 2026-05-16. Split editable plan save from printable report actions in the consumer UI while preserving local file and report behavior.
 - **Sprint 34 — DB survivor pension inputs and survivor cash-flow accuracy.** Complete 2026-05-16. Added per-person DB survivor continuation assumptions and used them in survivor reruns while preserving old-plan fallback behavior.
-- **Sprint 35 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
+- **Sprint 35 — Results trust and readiness.** Complete 2026-05-16. Strengthened the first Results answer, reframed spending estimates, added prioritized top actions, and kept dense diagnostics in Details/Risks before optimizer execution.
+- **Sprint 36 — Optimizer contract extraction.** Planned after consumer-readiness and DB survivor modelling. Move optimizer-prep contracts toward engine-owned modules before optimizer execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

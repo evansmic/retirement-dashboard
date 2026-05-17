@@ -14,8 +14,10 @@ describe('Results overview structure', () => {
 
     expect(overviewBranch).toContain('<RetirementAnswerPanel');
     expect(overviewBranch).toContain('<SpendingCapacityPanel');
+    expect(overviewBranch).toContain('<ReviewTheseFirstPanel');
+    expect(overviewBranch).toContain('<OverviewHighlightsPanel');
     expect(overviewBranch).toContain('<EstateIntentPanel');
-    expect(overviewBranch).toContain('<ScenarioCardsPanel');
+    expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
     expect(overviewBranch).not.toContain('<ProjectionPathPanel');
     expect(overviewBranch).not.toContain('<ReconciliationDiagnosticsPanel');
     expect(overviewBranch).not.toContain('<TaxPressurePanel');
