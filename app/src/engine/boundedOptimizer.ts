@@ -43,6 +43,13 @@ export type BoundedOptimizerCandidateRow = {
   score: number;
 };
 
+export type BoundedOptimizerExplanation = {
+  whyThisOption: string[];
+  tradeoffs: string[];
+  verifyBeforeUsing: string[];
+  plainLanguageSummary: string;
+};
+
 export type BoundedOptimizerSummary = {
   status: 'blocked' | 'ready';
   execution: 'boundedSearch';
@@ -53,6 +60,7 @@ export type BoundedOptimizerSummary = {
   suggestedLabel: string;
   candidateCount: number;
   candidates: BoundedOptimizerCandidateRow[];
+  explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
 };
 
@@ -255,6 +263,82 @@ function compareRows(a: BoundedOptimizerCandidateRow, b: BoundedOptimizerCandida
   return a.label.localeCompare(b.label);
 }
 
+function moneyText(value: number): string {
+  const rounded = Math.round(Math.abs(value));
+  return `${value < 0 ? '-' : ''}$${rounded.toLocaleString()}`;
+}
+
+function deltaText(value: number, improvementWord: string, declineWord: string): string {
+  if (Math.abs(value) <= 1) return 'About the same as the current plan.';
+  return value > 0 ? `${improvementWord} by about ${moneyText(value)}.` : `${declineWord} by about ${moneyText(value)}.`;
+}
+
+function leverTradeoffCopy(row: BoundedOptimizerCandidateRow): string[] {
+  const tradeoffs: string[] = [];
+  if (row.changedLevers.includes('spending')) {
+    tradeoffs.push('Lower spending can improve the projection, but it must still feel realistic for the household.');
+  }
+  if (row.changedLevers.includes('retirementTiming')) {
+    tradeoffs.push('Working longer can improve the numbers, but it changes a major life and health assumption.');
+  }
+  if (row.changedLevers.includes('benefitTiming')) {
+    tradeoffs.push('Delaying CPP/OAS can help later income, but bridge funding and health assumptions matter.');
+  }
+  if (row.changedLevers.includes('withdrawalOrder')) {
+    tradeoffs.push('Changing drawdown order is only a high-level check here; it is not year-by-year tax planning.');
+  }
+  return tradeoffs;
+}
+
+function buildOptimizerExplanation(
+  suggested: BoundedOptimizerCandidateRow | null,
+  baseline: BoundedOptimizerCandidateRow | null,
+  contract: OptimizerContract
+): BoundedOptimizerExplanation {
+  if (!suggested || !baseline || contract.status !== 'readyForExtraction') {
+    return {
+      whyThisOption: ['Required inputs need review before plan options can be compared.'],
+      tradeoffs: contract.blockers.length ? contract.blockers.slice(0, 3) : ['Run Results after clearing missing or invalid inputs.'],
+      verifyBeforeUsing: ['Clear input blockers.', 'Run Results again.', 'Save an editable plan copy after reviewing the inputs.'],
+      plainLanguageSummary: 'Plan options are paused until required inputs are ready.'
+    };
+  }
+
+  const whyThisOption = [
+    suggested.firstShortfallYear
+      ? `It funds spending through ${suggested.fundedThroughYear || '-'} before a first shortfall in ${suggested.firstShortfallYear}.`
+      : 'It avoids a visible spending shortfall in the projection years checked.',
+    deltaText(suggested.endPortfolioDelta, 'Projected money left improves', 'Projected money left falls'),
+    deltaText(-suggested.lifetimeTaxDelta, 'Lifetime tax falls', 'Lifetime tax rises')
+  ];
+
+  if (baseline.firstShortfallYear && !suggested.firstShortfallYear) {
+    whyThisOption.unshift(`It removes the current plan's first visible shortfall in ${baseline.firstShortfallYear}.`);
+  }
+  if (suggested.id === 'baseline') {
+    whyThisOption.unshift('The current plan remains strongest after the limited checks.');
+  }
+
+  const tradeoffs = leverTradeoffCopy(suggested);
+  if (suggested.endPortfolioDelta < -1) tradeoffs.push('This option leaves less projected money at the end of the plan.');
+  if (suggested.lifetimeTaxDelta > 1) tradeoffs.push('This option shows higher lifetime tax in the current model.');
+  if (!tradeoffs.length) tradeoffs.push('No major input change is being proposed by this limited check.');
+
+  return {
+    whyThisOption,
+    tradeoffs,
+    verifyBeforeUsing: [
+      suggested.reviewNote,
+      'Review taxes, survivor impact, and account balances before acting.',
+      'Confirm the option still fits household comfort and priorities.'
+    ],
+    plainLanguageSummary:
+      suggested.id === 'baseline'
+        ? 'The limited check did not find a better plan option than the current inputs.'
+        : `${suggested.label} ranked highest in this limited planning review because it improved the strongest trust checks without widening the search.`
+  };
+}
+
 export function runBoundedOptimizer(
   plan: V2PlanPayload,
   runner: BoundedOptimizerRunner = runSimulationSafely
@@ -295,6 +379,9 @@ export function runBoundedOptimizer(
     return { ...row, status };
   });
   const suggestedLabel = suggested?.label || 'No plan option ready';
+  const baselineRow = candidates.find((row) => row.id === 'baseline') || null;
+  const suggestedRow = candidates.find((row) => row.id === suggested?.id) || null;
+  const explanation = buildOptimizerExplanation(suggestedRow, baselineRow, contract);
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -309,6 +396,7 @@ export function runBoundedOptimizer(
     suggestedLabel,
     candidateCount: candidates.length,
     candidates,
+    explanation,
     reviewNotes: suggested
       ? [
           suggested.reviewNote,

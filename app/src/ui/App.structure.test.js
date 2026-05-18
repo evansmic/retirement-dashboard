@@ -15,6 +15,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).toContain('<RetirementAnswerPanel');
     expect(overviewBranch).toContain('<SpendingCapacityPanel');
     expect(overviewBranch).toContain('<ReviewTheseFirstPanel');
+    expect(overviewBranch).toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).toContain('<OverviewHighlightsPanel');
     expect(overviewBranch).toContain('<EstateIntentPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
@@ -27,7 +28,18 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<ReconciliationDiagnosticsPanel');
     expect(detailsPanel).toContain('<TaxPressurePanel');
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
+    expect(detailsPanel).toContain('<BoundedOptimizerPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('explains bounded optimizer output without advice or saved-output language', () => {
+    expect(appSource).toContain('Plan options to review');
+    expect(appSource).toContain('Why this option');
+    expect(appSource).toContain('Trade-offs');
+    expect(appSource).toContain('Check before using');
+    expect(appSource).toContain('save optimizer results');
+    expect(appSource).not.toContain('Apply optimized plan');
+    expect(appSource).not.toContain('Guaranteed');
   });
 
   it('keeps save and report actions distinct in the consumer UI', () => {

@@ -929,6 +929,29 @@ button.secondary,
   padding: 16px;
 }
 
+.bounded-optimizer-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.optimizer-explanation-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.optimizer-explanation-card h3,
+.optimizer-explanation-card p {
+  margin: 0;
+}
+
+.optimizer-explanation-card p {
+  color: var(--muted);
+}
+
 .retirement-answer-panel {
   display: grid;
   gap: 14px;

@@ -3108,6 +3108,40 @@ function BoundedOptimizerPanel({
         ))}
       </ul>
 
+      {summary?.explanation ? (
+        <div className="result-overview-grid">
+          <section className="optimizer-explanation-card">
+            <h3>Why this option</h3>
+            <p>{summary.explanation.plainLanguageSummary}</p>
+            <ul className="compact-list">
+              {summary.explanation.whyThisOption.slice(0, isCompact ? 2 : 4).map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          </section>
+          {!isCompact ? (
+            <>
+              <section className="optimizer-explanation-card">
+                <h3>Trade-offs</h3>
+                <ul className="compact-list">
+                  {summary.explanation.tradeoffs.map((tradeoff) => (
+                    <li key={tradeoff}>{tradeoff}</li>
+                  ))}
+                </ul>
+              </section>
+              <section className="optimizer-explanation-card">
+                <h3>Check before using</h3>
+                <ul className="compact-list">
+                  {summary.explanation.verifyBeforeUsing.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
       {!isCompact && topRows.length ? (
         <div className="result-table-wrap">
           <table className="result-table">

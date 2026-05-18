@@ -120,6 +120,10 @@ describe('bounded optimizer runner', () => {
     expect(summary.execution).toBe('boundedSearch');
     expect(summary.suggestedCandidateId).toBe('withdrawalRegisteredFirst');
     expect(summary.candidates).toHaveLength(8);
+    expect(summary.explanation.plainLanguageSummary).toContain('ranked highest');
+    expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
+    expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
+    expect(summary.explanation.verifyBeforeUsing.join(' ')).toContain('Review taxes');
     expect(calls).toHaveLength(8);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
@@ -135,6 +139,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.status).toBe('blocked');
     expect(summary.suggestedCandidateId).toBeNull();
     expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline']);
+    expect(summary.explanation.plainLanguageSummary).toContain('paused');
     expect(summary.reviewNotes.length).toBeGreaterThan(0);
   });
 });

@@ -4,35 +4,42 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 37: Bounded Optimizer Execution
+## Latest Sprint — Sprint 38: Optimizer Explanation Depth
 
 **Status:** Complete 2026-05-17.
 
-Goal: add the first limited optimizer run using the Sprint 36 contract while keeping results review-oriented, local-first, and separate from saved plan files.
+Goal: deepen the bounded optimizer explanation layer before widening the search space, so households can see why an option ranked highest, what trade-offs it introduces, and what to verify before using it.
 
-Non-scope: year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
+Non-scope: wider candidate search, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 37 checkpoint doc: [`docs/sprint_37_bounded_optimizer_execution.md`](docs/sprint_37_bounded_optimizer_execution.md).
+Sprint 38 checkpoint doc: [`docs/sprint_38_optimizer_explanation_depth.md`](docs/sprint_38_optimizer_explanation_depth.md).
 
-### Sprint 37 Candidate Implementation Tickets
+### Sprint 38 Candidate Implementation Tickets
 
-- [x] **S37-01 — Limited candidate runner.** Generate a small set of plan options from allowed contract levers only.
-- [x] **S37-02 — Safe simulation execution.** Run candidates through the existing safe simulation boundary.
-- [x] **S37-03 — Review scoring.** Score candidates by funded years, shortfalls, projected money left, lifetime tax, and household-disruption penalties.
-- [x] **S37-04 — Consumer Results surface.** Show plan options to review in Overview and Details without presenting advice.
-- [x] **S37-05 — Persistence guardrails.** Test that optimizer output is not saved into `.plan.json`.
+- [x] **S38-01 — Explanation selector.** Add structured why/trade-off/verify explanation output to the bounded optimizer summary.
+- [x] **S38-02 — Driver copy.** Explain funded years, shortfalls, projected money left, and lifetime tax in plain language.
+- [x] **S38-03 — Trade-off guardrails.** Explain lifestyle, work timing, benefit timing, and drawdown-order caveats without advice language.
+- [x] **S38-04 — Results UI.** Add compact Overview explanation and fuller Details explanation cards.
+- [x] **S38-05 — Copy and persistence tests.** Keep optimizer output review-only and unsaved.
 
-### Sprint 37 Definition Of Done
+### Sprint 38 Definition Of Done
 
-- Bounded optimizer execution is local and uses existing engine output.
-- Candidate generation is limited to spending, retirement timing, CPP/OAS timing, and withdrawal-order tests.
-- Output is framed as planning options to review, not guaranteed safe spending or personalized advice.
+- Bounded optimizer output explains why the selected option ranked highest.
+- Trade-offs are visible before the detailed candidate table.
+- Verify-before-using steps remain review-oriented and consumer-facing.
+- Candidate generation remains unchanged from Sprint 37.
 - No optimizer output is persisted.
-- No year-by-year dynamic withdrawal strategy is applied.
+- No year-by-year dynamic withdrawal strategy is applied or widened.
 - No report routing or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 38: Optimizer Explanation Depth
+
+**Complete 2026-05-17.** Added structured bounded-optimizer explanations, Overview and Details explanation surfaces, and tests that keep the first optimizer output review-oriented before widening search.
+
+Sprint 38 checkpoint doc: [`docs/sprint_38_optimizer_explanation_depth.md`](docs/sprint_38_optimizer_explanation_depth.md).
 
 ### Sprint 37: Bounded Optimizer Execution
 
