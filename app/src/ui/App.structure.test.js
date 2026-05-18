@@ -37,6 +37,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Why this option');
     expect(appSource).toContain('Trade-offs');
     expect(appSource).toContain('Check before using');
+    expect(appSource).toContain('Review first');
+    expect(appSource).toContain('Skipped');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');

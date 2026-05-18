@@ -952,6 +952,46 @@ button.secondary,
   color: var(--muted);
 }
 
+.optimizer-eligibility-list {
+  display: grid;
+  gap: 8px;
+}
+
+.optimizer-eligibility-note {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.25fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.optimizer-eligibility-note strong,
+.optimizer-eligibility-note p {
+  margin: 0;
+}
+
+.optimizer-eligibility-note span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.optimizer-eligibility-note p {
+  color: var(--muted);
+}
+
+.eligibility-skipped {
+  background: #fffaf0;
+}
+
+.eligibility-needsReview {
+  background: #fff7f4;
+}
+
 .retirement-answer-panel {
   display: grid;
   gap: 14px;

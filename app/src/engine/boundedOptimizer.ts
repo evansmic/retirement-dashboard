@@ -50,6 +50,12 @@ export type BoundedOptimizerExplanation = {
   plainLanguageSummary: string;
 };
 
+export type BoundedOptimizerEligibilityNote = {
+  lever: OptimizerLeverId | 'survivor';
+  status: 'eligible' | 'skipped' | 'needsReview';
+  reason: string;
+};
+
 export type BoundedOptimizerSummary = {
   status: 'blocked' | 'ready';
   execution: 'boundedSearch';
@@ -60,6 +66,7 @@ export type BoundedOptimizerSummary = {
   suggestedLabel: string;
   candidateCount: number;
   candidates: BoundedOptimizerCandidateRow[];
+  eligibilityNotes: BoundedOptimizerEligibilityNote[];
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
 };
@@ -99,6 +106,82 @@ function canExplore(contract: OptimizerContract, id: OptimizerLeverId): boolean 
   return leverPermission(contract, id) === 'canExplore';
 }
 
+function personAgeInYear(person: { dob?: number }, year: number): number | null {
+  const birthYear = n(person.dob);
+  return birthYear > 0 && year > 0 ? year - birthYear : null;
+}
+
+function totalAccountBalance(plan: V2PlanPayload, fields: Array<'rrsp' | 'lira' | 'lif' | 'tfsa' | 'nonreg'>): number {
+  return fields.reduce((total, field) => total + n(plan.p1[field]) + n(plan.p2[field]), 0);
+}
+
+function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract): BoundedOptimizerEligibilityNote[] {
+  const spending = n(plan.spending.gogo);
+  const retireYear = n(plan.assumptions.retireYear) || n(plan.p1.retireYear);
+  const p1RetireAge = personAgeInYear(plan.p1, n(plan.p1.retireYear) || retireYear);
+  const p2RetireAge = p2LooksBlank(plan.p2) ? null : personAgeInYear(plan.p2, n(plan.p2.retireYear) || retireYear);
+  const benefitEstimateCount = [plan.p1.cpp65_monthly, plan.p1.cpp70_monthly, plan.p1.oas_monthly, plan.p2.cpp65_monthly, plan.p2.cpp70_monthly, plan.p2.oas_monthly].filter(
+    (value) => n(value) > 0
+  ).length;
+  const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
+  const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
+  const hasTwoAccountBuckets = registered > 10_000 && flexible > 10_000;
+  const coupleNeedsSurvivorReview = !p2LooksBlank(plan.p2) && !n(plan.assumptions.p1DiesInSurvivor);
+  const notes: BoundedOptimizerEligibilityNote[] = [];
+
+  notes.push({
+    lever: 'spending',
+    status: !canExplore(contract, 'spending') || spending < 30_000 ? 'skipped' : 'eligible',
+    reason:
+      spending < 30_000
+        ? 'Spending cuts are skipped when planned annual spending is already very low.'
+        : 'Spending options can be reviewed because a household spending target is entered.'
+  });
+  notes.push({
+    lever: 'retirementTiming',
+    status:
+      !canExplore(contract, 'retirementTiming') || (p1RetireAge !== null && p1RetireAge >= 70) || (p2RetireAge !== null && p2RetireAge >= 70)
+        ? 'skipped'
+        : 'eligible',
+    reason:
+      (p1RetireAge !== null && p1RetireAge >= 70) || (p2RetireAge !== null && p2RetireAge >= 70)
+        ? 'Working-longer tests are skipped when a retirement age is already 70 or later.'
+        : 'Working-longer options can be reviewed because retirement timing is still inside the bounded test range.'
+  });
+  notes.push({
+    lever: 'benefitTiming',
+    status: !canExplore(contract, 'benefitTiming') || benefitEstimateCount < (p2LooksBlank(plan.p2) ? 2 : 4) ? 'skipped' : 'eligible',
+    reason:
+      benefitEstimateCount < (p2LooksBlank(plan.p2) ? 2 : 4)
+        ? 'CPP/OAS delay is skipped until enough monthly benefit estimates are entered.'
+        : 'CPP/OAS delay can be reviewed because benefit estimates are present.'
+  });
+  notes.push({
+    lever: 'withdrawalOrder',
+    status: !canExplore(contract, 'withdrawalOrder') || !hasTwoAccountBuckets ? 'skipped' : 'eligible',
+    reason: hasTwoAccountBuckets
+      ? 'Withdrawal-order checks can be reviewed because there are meaningful balances in registered and flexible accounts.'
+      : 'Withdrawal-order checks are skipped until there are meaningful balances in more than one account bucket.'
+  });
+  if (coupleNeedsSurvivorReview) {
+    notes.push({
+      lever: 'survivor',
+      status: 'needsReview',
+      reason: 'Set a survivor scenario year before relying on optimizer choices for a two-person plan.'
+    });
+  }
+
+  return notes;
+}
+
+function eligibilityFor(notes: BoundedOptimizerEligibilityNote[], lever: OptimizerLeverId): BoundedOptimizerEligibilityNote | undefined {
+  return notes.find((note) => note.lever === lever);
+}
+
+function eligible(notes: BoundedOptimizerEligibilityNote[], lever: OptimizerLeverId): boolean {
+  return eligibilityFor(notes, lever)?.status === 'eligible';
+}
+
 function scaleSpending(plan: V2PlanPayload, multiplier: number): V2PlanPayload {
   const next = extractPlanPayload(plan);
   next.spending.gogo = Math.round(n(next.spending.gogo) * multiplier);
@@ -126,6 +209,7 @@ export function buildBoundedOptimizerCandidates(
   contract: OptimizerContract = buildOptimizerContract(plan)
 ): BoundedOptimizerCandidateDefinition[] {
   const config = baseConfig(plan);
+  const eligibilityNotes = buildEligibilityNotes(plan, contract);
   const candidates: BoundedOptimizerCandidateDefinition[] = [
     {
       id: 'baseline',
@@ -141,7 +225,7 @@ export function buildBoundedOptimizerCandidates(
 
   if (contract.status !== 'readyForExtraction') return candidates;
 
-  if (canExplore(contract, 'spending')) {
+  if (eligible(eligibilityNotes, 'spending')) {
     candidates.push(
       {
         id: 'spendLess5',
@@ -166,7 +250,7 @@ export function buildBoundedOptimizerCandidates(
     );
   }
 
-  if (canExplore(contract, 'retirementTiming')) {
+  if (eligible(eligibilityNotes, 'retirementTiming')) {
     candidates.push(
       {
         id: 'retireLater1',
@@ -191,7 +275,7 @@ export function buildBoundedOptimizerCandidates(
     );
   }
 
-  if (canExplore(contract, 'benefitTiming')) {
+  if (eligible(eligibilityNotes, 'benefitTiming')) {
     candidates.push({
       id: 'delayBenefits',
       label: 'Delay CPP/OAS to 70',
@@ -204,7 +288,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  if (canExplore(contract, 'withdrawalOrder')) {
+  if (eligible(eligibilityNotes, 'withdrawalOrder')) {
     const currentOrder = plan.assumptions.withdrawalOrder || 'default';
     WITHDRAWAL_ORDERS.filter((order) => order.value !== currentOrder).forEach((order) => {
       candidates.push({
@@ -344,6 +428,7 @@ export function runBoundedOptimizer(
   runner: BoundedOptimizerRunner = runSimulationSafely
 ): BoundedOptimizerSummary {
   const contract = buildOptimizerContract(plan);
+  const eligibilityNotes = buildEligibilityNotes(plan, contract);
   const definitions = buildBoundedOptimizerCandidates(plan, contract);
   const rawResults = definitions.map((definition) => ({
     definition,
@@ -396,6 +481,7 @@ export function runBoundedOptimizer(
     suggestedLabel,
     candidateCount: candidates.length,
     candidates,
+    eligibilityNotes,
     explanation,
     reviewNotes: suggested
       ? [

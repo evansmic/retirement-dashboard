@@ -3108,6 +3108,18 @@ function BoundedOptimizerPanel({
         ))}
       </ul>
 
+      {summary?.eligibilityNotes.length ? (
+        <div className="optimizer-eligibility-list">
+          {(isCompact ? summary.eligibilityNotes.filter((note) => note.status !== 'eligible').slice(0, 3) : summary.eligibilityNotes).map((note) => (
+            <div className={`optimizer-eligibility-note eligibility-${note.status}`} key={`${note.lever}-${note.status}`}>
+              <strong>{optimizerLeverLabel(note.lever)}</strong>
+              <span>{note.status === 'eligible' ? 'Included' : note.status === 'skipped' ? 'Skipped' : 'Review first'}</span>
+              <p>{note.reason}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       {summary?.explanation ? (
         <div className="result-overview-grid">
           <section className="optimizer-explanation-card">
@@ -3179,6 +3191,19 @@ function BoundedOptimizerPanel({
       </p>
     </section>
   );
+}
+
+function optimizerLeverLabel(lever: BoundedOptimizerSummary['eligibilityNotes'][number]['lever']): string {
+  const labels: Record<BoundedOptimizerSummary['eligibilityNotes'][number]['lever'], string> = {
+    spending: 'Spending',
+    retirementTiming: 'Work timing',
+    benefitTiming: 'CPP/OAS timing',
+    withdrawalOrder: 'Withdrawal order',
+    estateTarget: 'Estate goal',
+    downsizing: 'Downsizing',
+    survivor: 'Survivor setup'
+  };
+  return labels[lever];
 }
 
 function RecommendedChecklistPanel({

@@ -142,4 +142,49 @@ describe('bounded optimizer runner', () => {
     expect(summary.explanation.plainLanguageSummary).toContain('paused');
     expect(summary.reviewNotes.length).toBeGreaterThan(0);
   });
+
+  it('skips ineligible levers without widening the optimizer search', () => {
+    const plan = readyPlan();
+    plan.spending.gogo = 25000;
+    plan.spending.slowgo = 22000;
+    plan.spending.nogo = 20000;
+    plan.p1.dob = 1962;
+    plan.p1.retireYear = 2032;
+    plan.assumptions.retireYear = 2032;
+    plan.p1.tfsa = 0;
+    plan.p1.nonreg = 0;
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+    const summary = runBoundedOptimizer(plan, () => result(100000, 90000));
+
+    expect(candidates.map((candidate) => candidate.id)).toEqual(['baseline', 'delayBenefits']);
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'spending')).toMatchObject({ status: 'skipped' });
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'retirementTiming')).toMatchObject({ status: 'skipped' });
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'withdrawalOrder')).toMatchObject({ status: 'skipped' });
+    expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline', 'delayBenefits']);
+  });
+
+  it('flags missing survivor setup for two-person optimizer review', () => {
+    const plan = readyPlan();
+    plan.p2 = {
+      ...plan.p2,
+      name: 'Morgan',
+      dob: 1969,
+      retireYear: 2033,
+      rrsp: 150000,
+      tfsa: 70000,
+      cpp65_monthly: 900,
+      cpp70_monthly: 1250,
+      oas_monthly: 742
+    };
+    plan.assumptions.p1DiesInSurvivor = 0;
+
+    const summary = runBoundedOptimizer(plan, () => result(100000, 90000));
+
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'survivor')).toMatchObject({
+      status: 'needsReview',
+      reason: expect.stringContaining('survivor scenario year')
+    });
+    expect(summary.status).toBe('ready');
+  });
 });

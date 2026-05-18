@@ -4,36 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 38: Optimizer Explanation Depth
+## Latest Sprint — Sprint 39: Optimizer Eligibility Refinement
 
 **Status:** Complete 2026-05-17.
 
-Goal: deepen the bounded optimizer explanation layer before widening the search space, so households can see why an option ranked highest, what trade-offs it introduces, and what to verify before using it.
+Goal: tighten when each bounded optimizer lever is allowed before widening the search space.
 
 Non-scope: wider candidate search, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 38 checkpoint doc: [`docs/sprint_38_optimizer_explanation_depth.md`](docs/sprint_38_optimizer_explanation_depth.md).
+Sprint 39 checkpoint doc: [`docs/sprint_39_optimizer_eligibility_refinement.md`](docs/sprint_39_optimizer_eligibility_refinement.md).
 
-### Sprint 38 Candidate Implementation Tickets
+### Sprint 39 Candidate Implementation Tickets
 
-- [x] **S38-01 — Explanation selector.** Add structured why/trade-off/verify explanation output to the bounded optimizer summary.
-- [x] **S38-02 — Driver copy.** Explain funded years, shortfalls, projected money left, and lifetime tax in plain language.
-- [x] **S38-03 — Trade-off guardrails.** Explain lifestyle, work timing, benefit timing, and drawdown-order caveats without advice language.
-- [x] **S38-04 — Results UI.** Add compact Overview explanation and fuller Details explanation cards.
-- [x] **S38-05 — Copy and persistence tests.** Keep optimizer output review-only and unsaved.
+- [x] **S39-01 — Lever eligibility notes.** Add included/skipped/review-first eligibility output for bounded optimizer levers.
+- [x] **S39-02 — Spending gate.** Skip spending reductions when planned spending is already very low.
+- [x] **S39-03 — Work timing gate.** Skip working-longer tests when retirement age is already 70 or later.
+- [x] **S39-04 — Benefits and drawdown gates.** Require enough benefit estimates and meaningful account mix before testing timing/order choices.
+- [x] **S39-05 — Survivor review gate.** Flag two-person plans that lack a survivor scenario year before relying on optimizer choices.
 
-### Sprint 38 Definition Of Done
+### Sprint 39 Definition Of Done
 
-- Bounded optimizer output explains why the selected option ranked highest.
-- Trade-offs are visible before the detailed candidate table.
-- Verify-before-using steps remain review-oriented and consumer-facing.
-- Candidate generation remains unchanged from Sprint 37.
+- Ineligible levers are skipped instead of silently tested.
+- Eligibility notes are visible in Results.
+- Candidate generation remains bounded to the Sprint 37 candidate family.
 - No optimizer output is persisted.
 - No year-by-year dynamic withdrawal strategy is applied or widened.
 - No report routing or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 39: Optimizer Eligibility Refinement
+
+**Complete 2026-05-17.** Added eligibility gates and visible included/skipped/review-first notes for bounded optimizer levers before widening optimizer search.
+
+Sprint 39 checkpoint doc: [`docs/sprint_39_optimizer_eligibility_refinement.md`](docs/sprint_39_optimizer_eligibility_refinement.md).
 
 ### Sprint 38: Optimizer Explanation Depth
 
