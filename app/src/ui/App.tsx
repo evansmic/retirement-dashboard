@@ -3154,6 +3154,25 @@ function BoundedOptimizerPanel({
         </div>
       ) : null}
 
+      {!isCompact && summary?.evidenceRows.length ? (
+        <section className="optimizer-evidence-panel">
+          <div>
+            <p className="eyebrow">Pension-splitting evidence</p>
+            <h3>What changed in this test</h3>
+            <p>These rows compare the pension-splitting option with the current plan. Confirm eligibility before relying on them.</p>
+          </div>
+          <div className="optimizer-evidence-grid">
+            {summary.evidenceRows.map((row) => (
+              <article className={`optimizer-evidence-row evidence-${row.tone}`} key={row.id}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!isCompact && topRows.length ? (
         <div className="result-table-wrap">
           <table className="result-table">
@@ -3201,6 +3220,7 @@ function optimizerLeverLabel(lever: BoundedOptimizerSummary['eligibilityNotes'][
     withdrawalOrder: 'Withdrawal order',
     estateTarget: 'Estate goal',
     downsizing: 'Downsizing',
+    pensionSplitting: 'Pension splitting',
     survivor: 'Survivor setup'
   };
   return labels[lever];

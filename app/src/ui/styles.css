@@ -992,6 +992,63 @@ button.secondary,
   background: #fff7f4;
 }
 
+.optimizer-evidence-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.optimizer-evidence-panel h3,
+.optimizer-evidence-panel p {
+  margin: 0;
+}
+
+.optimizer-evidence-panel p {
+  color: var(--muted);
+}
+
+.optimizer-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.optimizer-evidence-row {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.optimizer-evidence-row span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.optimizer-evidence-row strong {
+  font-size: 1.05rem;
+}
+
+.optimizer-evidence-row p {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.evidence-ok {
+  border-color: #b9d2c5;
+}
+
+.evidence-watch {
+  border-color: #e1b9ae;
+}
+
 .retirement-answer-panel {
   display: grid;
   gap: 14px;

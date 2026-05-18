@@ -39,6 +39,10 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Check before using');
     expect(appSource).toContain('Review first');
     expect(appSource).toContain('Skipped');
+    expect(appSource).toContain('Pension splitting');
+    expect(appSource).toContain('Pension-splitting evidence');
+    expect(appSource).toContain('What changed in this test');
+    expect(appSource).toContain('Confirm eligibility before relying on them');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');

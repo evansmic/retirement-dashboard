@@ -128,6 +128,55 @@ describe('bounded optimizer runner', () => {
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
 
+  it('adds one bounded pension-splitting candidate for eligible two-person plans', () => {
+    const plan = readyPlan();
+    plan.p2 = {
+      ...plan.p2,
+      name: 'Morgan',
+      dob: 1969,
+      retireYear: 2033,
+      rrsp: 120000,
+      tfsa: 70000,
+      cpp65_monthly: 900,
+      cpp70_monthly: 1250,
+      oas_monthly: 742
+    };
+    plan.p1.db_after65 = 30000;
+    plan.assumptions.p1DiesInSurvivor = 2040;
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+    const summary = runBoundedOptimizer(plan, (candidatePlan, config) =>
+      config.pensionSplit ? result(180000, 78000, null) : result(120000, 90000, null)
+    );
+
+    expect(candidates.map((candidate) => candidate.id)).toContain('pensionSplit');
+    expect(candidates.find((candidate) => candidate.id === 'pensionSplit')).toMatchObject({
+      label: 'Test pension splitting',
+      config: expect.objectContaining({ pensionSplit: true }),
+      changedLevers: ['pensionSplitting']
+    });
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'pensionSplitting')).toMatchObject({ status: 'eligible' });
+    expect(summary.suggestedCandidateId).toBe('pensionSplit');
+    expect(summary.explanation.tradeoffs.join(' ')).toContain('Pension-splitting');
+    expect(summary.evidenceRows.map((row) => row.id)).toEqual([
+      'pensionLifetimeTax',
+      'pensionFirstYearTax',
+      'pensionPeakTax',
+      'pensionOasRecovery',
+      'pensionPortfolio'
+    ]);
+    expect(summary.evidenceRows.find((row) => row.id === 'pensionLifetimeTax')).toMatchObject({
+      label: 'Lifetime tax change',
+      value: '-$12,000',
+      tone: 'ok'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'pensionPortfolio')).toMatchObject({
+      label: 'Projected money-left change',
+      value: '+$60,000',
+      tone: 'ok'
+    });
+  });
+
   it('blocks bounded search when contract blockers remain', () => {
     const plan = createBlankPlan();
     plan.p1.retireYear = 0;

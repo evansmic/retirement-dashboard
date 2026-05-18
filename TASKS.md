@@ -4,35 +4,48 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 39: Optimizer Eligibility Refinement
+## Latest Sprint — Sprint 41: Pension-Splitting Evidence Rows
 
-**Status:** Complete 2026-05-17.
+**Status:** Complete 2026-05-18.
 
-Goal: tighten when each bounded optimizer lever is allowed before widening the search space.
+Goal: make the pension-splitting optimizer option easier to trust by showing what changed before adding more optimizer behavior.
 
-Non-scope: wider candidate search, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
+Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 39 checkpoint doc: [`docs/sprint_39_optimizer_eligibility_refinement.md`](docs/sprint_39_optimizer_eligibility_refinement.md).
+Sprint 41 checkpoint doc: [`docs/sprint_41_pension_splitting_evidence_rows.md`](docs/sprint_41_pension_splitting_evidence_rows.md).
 
-### Sprint 39 Candidate Implementation Tickets
+### Sprint 41 Candidate Implementation Tickets
 
-- [x] **S39-01 — Lever eligibility notes.** Add included/skipped/review-first eligibility output for bounded optimizer levers.
-- [x] **S39-02 — Spending gate.** Skip spending reductions when planned spending is already very low.
-- [x] **S39-03 — Work timing gate.** Skip working-longer tests when retirement age is already 70 or later.
-- [x] **S39-04 — Benefits and drawdown gates.** Require enough benefit estimates and meaningful account mix before testing timing/order choices.
-- [x] **S39-05 — Survivor review gate.** Flag two-person plans that lack a survivor scenario year before relying on optimizer choices.
+- [x] **S41-01 — Evidence selector.** Add pension-splitting evidence rows comparing the option against the current plan.
+- [x] **S41-02 — Tax evidence.** Show lifetime tax, first-year tax, and peak annual tax movement.
+- [x] **S41-03 — OAS and portfolio evidence.** Show OAS recovery tax and projected money-left movement.
+- [x] **S41-04 — Details UI.** Show evidence rows in Details, not as a heavier Overview feature.
+- [x] **S41-05 — Copy and tests.** Keep eligibility and review copy close to the evidence.
 
-### Sprint 39 Definition Of Done
+### Sprint 41 Definition Of Done
 
-- Ineligible levers are skipped instead of silently tested.
-- Eligibility notes are visible in Results.
-- Candidate generation remains bounded to the Sprint 37 candidate family.
+- Pension-splitting evidence is visible before the candidate table in Details.
+- Evidence rows compare against the current plan.
+- Overview remains light.
+- No new optimizer candidate families are added.
 - No optimizer output is persisted.
 - No year-by-year dynamic withdrawal strategy is applied or widened.
 - No report routing or saved output contract changes.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 41: Pension-Splitting Evidence Rows
+
+**Complete 2026-05-18.** Added pension-splitting evidence rows for tax, OAS recovery tax, and projected money-left movement while keeping the optimizer review-only.
+
+Sprint 41 checkpoint doc: [`docs/sprint_41_pension_splitting_evidence_rows.md`](docs/sprint_41_pension_splitting_evidence_rows.md).
+
+### Sprint 40: Bounded Optimizer Search Expansion
+
+**Complete 2026-05-18.** Added one narrow pension-splitting optimizer candidate with eligibility gating and review-oriented explanation while avoiding broad search expansion.
+
+Sprint 40 checkpoint doc: [`docs/sprint_40_bounded_optimizer_search_expansion.md`](docs/sprint_40_bounded_optimizer_search_expansion.md).
 
 ### Sprint 39: Optimizer Eligibility Refinement
 

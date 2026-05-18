@@ -10,16 +10,19 @@ export type BoundedOptimizerCandidateId =
   | 'retireLater1'
   | 'retireLater2'
   | 'delayBenefits'
+  | 'pensionSplit'
   | 'withdrawalDefault'
   | 'withdrawalRegisteredFirst'
   | 'withdrawalNonRegisteredFirst';
+
+export type BoundedOptimizerLever = OptimizerLeverId | 'pensionSplitting';
 
 export type BoundedOptimizerCandidateDefinition = {
   id: BoundedOptimizerCandidateId;
   label: string;
   plan: V2PlanPayload;
   config: SimulationConfig;
-  changedLevers: OptimizerLeverId[];
+  changedLevers: BoundedOptimizerLever[];
   changeSummary: string;
   reviewNote: string;
   disruptionPenalty: number;
@@ -29,7 +32,7 @@ export type BoundedOptimizerCandidateRow = {
   id: BoundedOptimizerCandidateId;
   label: string;
   status: 'suggested' | 'review' | 'blocked';
-  changedLevers: OptimizerLeverId[];
+  changedLevers: BoundedOptimizerLever[];
   changeSummary: string;
   reviewNote: string;
   fundedYears: number;
@@ -51,9 +54,17 @@ export type BoundedOptimizerExplanation = {
 };
 
 export type BoundedOptimizerEligibilityNote = {
-  lever: OptimizerLeverId | 'survivor';
+  lever: BoundedOptimizerLever | 'survivor';
   status: 'eligible' | 'skipped' | 'needsReview';
   reason: string;
+};
+
+export type BoundedOptimizerEvidenceRow = {
+  id: 'pensionLifetimeTax' | 'pensionFirstYearTax' | 'pensionPeakTax' | 'pensionOasRecovery' | 'pensionPortfolio';
+  label: string;
+  value: string;
+  detail: string;
+  tone: 'neutral' | 'ok' | 'watch';
 };
 
 export type BoundedOptimizerSummary = {
@@ -67,6 +78,7 @@ export type BoundedOptimizerSummary = {
   candidateCount: number;
   candidates: BoundedOptimizerCandidateRow[];
   eligibilityNotes: BoundedOptimizerEligibilityNote[];
+  evidenceRows: BoundedOptimizerEvidenceRow[];
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
 };
@@ -126,6 +138,8 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
   const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
   const hasTwoAccountBuckets = registered > 10_000 && flexible > 10_000;
+  const pensionEligibleIncome = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) + registered;
+  const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && (p1RetireAge === null || p1RetireAge >= 60);
   const coupleNeedsSurvivorReview = !p2LooksBlank(plan.p2) && !n(plan.assumptions.p1DiesInSurvivor);
   const notes: BoundedOptimizerEligibilityNote[] = [];
 
@@ -163,6 +177,13 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
       ? 'Withdrawal-order checks can be reviewed because there are meaningful balances in registered and flexible accounts.'
       : 'Withdrawal-order checks are skipped until there are meaningful balances in more than one account bucket.'
   });
+  notes.push({
+    lever: 'pensionSplitting',
+    status: hasPotentialPensionSplit ? 'eligible' : 'skipped',
+    reason: hasPotentialPensionSplit
+      ? 'Pension-splitting can be reviewed because this two-person plan has pension or registered income to test.'
+      : 'Pension-splitting is skipped until a two-person plan has meaningful pension or registered income.'
+  });
   if (coupleNeedsSurvivorReview) {
     notes.push({
       lever: 'survivor',
@@ -174,11 +195,11 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   return notes;
 }
 
-function eligibilityFor(notes: BoundedOptimizerEligibilityNote[], lever: OptimizerLeverId): BoundedOptimizerEligibilityNote | undefined {
+function eligibilityFor(notes: BoundedOptimizerEligibilityNote[], lever: BoundedOptimizerLever): BoundedOptimizerEligibilityNote | undefined {
   return notes.find((note) => note.lever === lever);
 }
 
-function eligible(notes: BoundedOptimizerEligibilityNote[], lever: OptimizerLeverId): boolean {
+function eligible(notes: BoundedOptimizerEligibilityNote[], lever: BoundedOptimizerLever): boolean {
   return eligibilityFor(notes, lever)?.status === 'eligible';
 }
 
@@ -288,6 +309,19 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
+  if (eligible(eligibilityNotes, 'pensionSplitting')) {
+    candidates.push({
+      id: 'pensionSplit',
+      label: 'Test pension splitting',
+      plan: extractPlanPayload(plan),
+      config: { ...config, pensionSplit: true },
+      changedLevers: ['pensionSplitting'],
+      changeSummary: 'Turn on pension-splitting in this test',
+      reviewNote: 'Review eligible pension income and spouse tax details before using this option.',
+      disruptionPenalty: 1_500
+    });
+  }
+
   if (eligible(eligibilityNotes, 'withdrawalOrder')) {
     const currentOrder = plan.assumptions.withdrawalOrder || 'default';
     WITHDRAWAL_ORDERS.filter((order) => order.value !== currentOrder).forEach((order) => {
@@ -304,7 +338,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  return candidates.slice(0, 8);
+  return candidates.slice(0, 9);
 }
 
 function summarizeResult(result: SimulationResult | null | undefined) {
@@ -320,7 +354,10 @@ function summarizeResult(result: SimulationResult | null | undefined) {
     fundedThroughYear,
     firstShortfallYear: firstShortfall ? n(firstShortfall.year) : null,
     endPortfolio: n(lastRow?.bal_total),
-    lifetimeTax: rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0)
+    lifetimeTax: rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0),
+    firstYearTax: n(rows[0]?.totalTaxYear),
+    peakTax: rows.reduce((peak, row) => Math.max(peak, n(row.totalTaxYear)), 0),
+    lifetimeOasRecovery: rows.reduce((sum, row) => sum + n(row.totalOasClawY), 0)
   };
 }
 
@@ -352,6 +389,11 @@ function moneyText(value: number): string {
   return `${value < 0 ? '-' : ''}$${rounded.toLocaleString()}`;
 }
 
+function signedMoneyText(value: number): string {
+  if (Math.abs(value) <= 1) return '$0';
+  return `${value > 0 ? '+' : '-'}$${Math.round(Math.abs(value)).toLocaleString()}`;
+}
+
 function deltaText(value: number, improvementWord: string, declineWord: string): string {
   if (Math.abs(value) <= 1) return 'About the same as the current plan.';
   return value > 0 ? `${improvementWord} by about ${moneyText(value)}.` : `${declineWord} by about ${moneyText(value)}.`;
@@ -370,6 +412,9 @@ function leverTradeoffCopy(row: BoundedOptimizerCandidateRow): string[] {
   }
   if (row.changedLevers.includes('withdrawalOrder')) {
     tradeoffs.push('Changing drawdown order is only a high-level check here; it is not year-by-year tax planning.');
+  }
+  if (row.changedLevers.includes('pensionSplitting')) {
+    tradeoffs.push('Pension-splitting can lower household tax, but eligibility and spouse tax details need review.');
   }
   return tradeoffs;
 }
@@ -423,6 +468,63 @@ function buildOptimizerExplanation(
   };
 }
 
+function evidenceTone(delta: number, lowerIsBetter = true): BoundedOptimizerEvidenceRow['tone'] {
+  if (Math.abs(delta) <= 1) return 'neutral';
+  return lowerIsBetter ? (delta < 0 ? 'ok' : 'watch') : delta > 0 ? 'ok' : 'watch';
+}
+
+function buildPensionSplittingEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>
+): BoundedOptimizerEvidenceRow[] {
+  const baseline = summaries.baseline;
+  const pension = summaries.pensionSplit;
+  if (!baseline || !pension || pension.totalYears === 0) return [];
+
+  const lifetimeTaxDelta = pension.lifetimeTax - baseline.lifetimeTax;
+  const firstYearTaxDelta = pension.firstYearTax - baseline.firstYearTax;
+  const peakTaxDelta = pension.peakTax - baseline.peakTax;
+  const oasDelta = pension.lifetimeOasRecovery - baseline.lifetimeOasRecovery;
+  const portfolioDelta = pension.endPortfolio - baseline.endPortfolio;
+
+  return [
+    {
+      id: 'pensionLifetimeTax',
+      label: 'Lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax across the projection when pension-splitting is turned on for this review.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'pensionFirstYearTax',
+      label: 'First-year tax change',
+      value: signedMoneyText(firstYearTaxDelta),
+      detail: 'Shows whether the first projection year changes when eligible pension income is split.',
+      tone: evidenceTone(firstYearTaxDelta)
+    },
+    {
+      id: 'pensionPeakTax',
+      label: 'Peak annual tax change',
+      value: signedMoneyText(peakTaxDelta),
+      detail: 'Compares the highest annual tax year in each projection.',
+      tone: evidenceTone(peakTaxDelta)
+    },
+    {
+      id: 'pensionOasRecovery',
+      label: 'OAS recovery tax change',
+      value: signedMoneyText(oasDelta),
+      detail: 'Shows whether OAS recovery tax changes across the projection.',
+      tone: evidenceTone(oasDelta)
+    },
+    {
+      id: 'pensionPortfolio',
+      label: 'Projected money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left at the end of the plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
+}
+
 export function runBoundedOptimizer(
   plan: V2PlanPayload,
   runner: BoundedOptimizerRunner = runSimulationSafely
@@ -434,9 +536,12 @@ export function runBoundedOptimizer(
     definition,
     result: runner(definition.plan, definition.config)
   }));
-  const baselineSummary = summarizeResult(rawResults[0]?.result);
-  const rows = rawResults.map(({ definition, result }) => {
-    const summary = summarizeResult(result);
+  const summarizedResults = rawResults.map(({ definition, result }) => ({
+    definition,
+    summary: summarizeResult(result)
+  }));
+  const baselineSummary = summarizedResults[0]?.summary;
+  const rows = summarizedResults.map(({ definition, summary }) => {
     return {
       id: definition.id,
       label: definition.label,
@@ -467,6 +572,11 @@ export function runBoundedOptimizer(
   const baselineRow = candidates.find((row) => row.id === 'baseline') || null;
   const suggestedRow = candidates.find((row) => row.id === suggested?.id) || null;
   const explanation = buildOptimizerExplanation(suggestedRow, baselineRow, contract);
+  const summaryById = summarizedResults.reduce<Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>>((acc, item) => {
+    acc[item.definition.id] = item.summary;
+    return acc;
+  }, {});
+  const evidenceRows = buildPensionSplittingEvidence(summaryById);
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -482,6 +592,7 @@ export function runBoundedOptimizer(
     candidateCount: candidates.length,
     candidates,
     eligibilityNotes,
+    evidenceRows,
     explanation,
     reviewNotes: suggested
       ? [
