@@ -59,6 +59,13 @@ export type BoundedOptimizerEligibilityNote = {
   reason: string;
 };
 
+export type BoundedOptimizerGuardrailNote = {
+  id: BoundedOptimizerLever | 'survivor';
+  label: string;
+  status: 'tested' | 'notTested' | 'reviewFirst';
+  reason: string;
+};
+
 export type BoundedOptimizerEvidenceRow = {
   id: 'pensionLifetimeTax' | 'pensionFirstYearTax' | 'pensionPeakTax' | 'pensionOasRecovery' | 'pensionPortfolio';
   label: string;
@@ -86,6 +93,7 @@ export type BoundedOptimizerSummary = {
   candidateCount: number;
   candidates: BoundedOptimizerCandidateRow[];
   eligibilityNotes: BoundedOptimizerEligibilityNote[];
+  guardrailNotes: BoundedOptimizerGuardrailNote[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
   explanation: BoundedOptimizerExplanation;
@@ -132,6 +140,44 @@ function personAgeInYear(person: { dob?: number }, year: number): number | null 
   return birthYear > 0 && year > 0 ? year - birthYear : null;
 }
 
+function projectionStartYear(plan: V2PlanPayload): number {
+  const p2RetireYear = p2LooksBlank(plan.p2) ? Infinity : n(plan.p2.retireYear);
+  return Math.min(
+    n(plan.assumptions.planStart) || Infinity,
+    n(plan.assumptions.retireYear) || Infinity,
+    n(plan.p1.retireYear) || Infinity,
+    p2RetireYear || Infinity
+  );
+}
+
+function projectionEndYear(plan: V2PlanPayload): number {
+  return n(plan.assumptions.planEnd) || n(plan.assumptions.horizon) || projectionStartYear(plan);
+}
+
+function activePeople(plan: V2PlanPayload): Array<{ key: 'p1' | 'p2'; person: V2PlanPayload['p1'] }> {
+  const people: Array<{ key: 'p1' | 'p2'; person: V2PlanPayload['p1'] }> = [{ key: 'p1', person: plan.p1 }];
+  if (!p2LooksBlank(plan.p2)) people.push({ key: 'p2', person: plan.p2 });
+  return people;
+}
+
+function hasCppAndOasEstimate(person: V2PlanPayload['p1']): boolean {
+  return (n(person.cpp65_monthly) > 0 || n(person.cpp70_monthly) > 0) && n(person.oas_monthly) > 0;
+}
+
+function personCanStillDelayBenefits(person: V2PlanPayload['p1'], startYear: number, endYear: number): boolean {
+  const startAge = personAgeInYear(person, startYear);
+  const reachesAge70 = n(person.dob) > 0 && endYear >= n(person.dob) + 70;
+  return hasCppAndOasEstimate(person) && startAge !== null && startAge < 70 && reachesAge70;
+}
+
+function canMoveRetirement(plan: V2PlanPayload, years: number): boolean {
+  return activePeople(plan).every(({ person }) => {
+    const retireYear = n(person.retireYear) || n(plan.assumptions.retireYear);
+    const retireAge = personAgeInYear(person, retireYear);
+    return retireAge !== null && retireAge + years <= 70;
+  });
+}
+
 function totalAccountBalance(plan: V2PlanPayload, fields: Array<'rrsp' | 'lira' | 'lif' | 'tfsa' | 'nonreg'>): number {
   return fields.reduce((total, field) => total + n(plan.p1[field]) + n(plan.p2[field]), 0);
 }
@@ -141,14 +187,20 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   const retireYear = n(plan.assumptions.retireYear) || n(plan.p1.retireYear);
   const p1RetireAge = personAgeInYear(plan.p1, n(plan.p1.retireYear) || retireYear);
   const p2RetireAge = p2LooksBlank(plan.p2) ? null : personAgeInYear(plan.p2, n(plan.p2.retireYear) || retireYear);
-  const benefitEstimateCount = [plan.p1.cpp65_monthly, plan.p1.cpp70_monthly, plan.p1.oas_monthly, plan.p2.cpp65_monthly, plan.p2.cpp70_monthly, plan.p2.oas_monthly].filter(
-    (value) => n(value) > 0
-  ).length;
+  const startYear = projectionStartYear(plan);
+  const endYear = projectionEndYear(plan);
+  const activeBenefitPeople = activePeople(plan);
+  const benefitPeopleReady = activeBenefitPeople.every(({ person }) => personCanStillDelayBenefits(person, startYear, endYear));
   const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
   const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
   const hasTwoAccountBuckets = registered > 10_000 && flexible > 10_000;
   const pensionEligibleIncome = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) + registered;
-  const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && (p1RetireAge === null || p1RetireAge >= 60);
+  const reachesPensionSplitAge = activePeople(plan).some(({ person }) => {
+    const ageAtEnd = personAgeInYear(person, endYear);
+    return ageAtEnd === null || ageAtEnd >= 65;
+  });
+  const hasDbPension = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) > 0;
+  const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && (hasDbPension || reachesPensionSplitAge);
   const coupleNeedsSurvivorReview = !p2LooksBlank(plan.p2) && !n(plan.assumptions.p1DiesInSurvivor);
   const notes: BoundedOptimizerEligibilityNote[] = [];
 
@@ -163,21 +215,21 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   notes.push({
     lever: 'retirementTiming',
     status:
-      !canExplore(contract, 'retirementTiming') || (p1RetireAge !== null && p1RetireAge >= 70) || (p2RetireAge !== null && p2RetireAge >= 70)
+      !canExplore(contract, 'retirementTiming') || !canMoveRetirement(plan, 1)
         ? 'skipped'
         : 'eligible',
     reason:
-      (p1RetireAge !== null && p1RetireAge >= 70) || (p2RetireAge !== null && p2RetireAge >= 70)
-        ? 'Working-longer tests are skipped when a retirement age is already 70 or later.'
+      !canMoveRetirement(plan, 1)
+        ? 'Working-longer tests are skipped when they would move retirement past age 70.'
         : 'Working-longer options can be reviewed because retirement timing is still inside the bounded test range.'
   });
   notes.push({
     lever: 'benefitTiming',
-    status: !canExplore(contract, 'benefitTiming') || benefitEstimateCount < (p2LooksBlank(plan.p2) ? 2 : 4) ? 'skipped' : 'eligible',
+    status: !canExplore(contract, 'benefitTiming') || !benefitPeopleReady ? 'skipped' : 'eligible',
     reason:
-      benefitEstimateCount < (p2LooksBlank(plan.p2) ? 2 : 4)
-        ? 'CPP/OAS delay is skipped until enough monthly benefit estimates are entered.'
-        : 'CPP/OAS delay can be reviewed because benefit estimates are present.'
+      !benefitPeopleReady
+        ? 'CPP/OAS delay is skipped unless each active person has CPP and OAS estimates and is still before age 70 in the projection.'
+        : 'CPP/OAS delay can be reviewed because benefit estimates and timing are inside the age-70 test range.'
   });
   notes.push({
     lever: 'withdrawalOrder',
@@ -210,6 +262,35 @@ function eligibilityFor(notes: BoundedOptimizerEligibilityNote[], lever: Bounded
 
 function eligible(notes: BoundedOptimizerEligibilityNote[], lever: BoundedOptimizerLever): boolean {
   return eligibilityFor(notes, lever)?.status === 'eligible';
+}
+
+function guardrailStatus(note: BoundedOptimizerEligibilityNote): BoundedOptimizerGuardrailNote['status'] {
+  if (note.status === 'eligible') return 'tested';
+  if (note.status === 'needsReview') return 'reviewFirst';
+  return 'notTested';
+}
+
+function guardrailLabel(lever: BoundedOptimizerEligibilityNote['lever']): string {
+  const labels: Record<BoundedOptimizerEligibilityNote['lever'], string> = {
+    spending: 'Spending changes',
+    retirementTiming: 'Work timing',
+    benefitTiming: 'CPP/OAS timing',
+    withdrawalOrder: 'Withdrawal order',
+    estateTarget: 'Estate goal',
+    downsizing: 'Downsizing',
+    pensionSplitting: 'Pension splitting',
+    survivor: 'Survivor setup'
+  };
+  return labels[lever];
+}
+
+function buildGuardrailNotes(notes: BoundedOptimizerEligibilityNote[]): BoundedOptimizerGuardrailNote[] {
+  return notes.map((note) => ({
+    id: note.lever,
+    label: guardrailLabel(note.lever),
+    status: guardrailStatus(note),
+    reason: note.reason
+  }));
 }
 
 function scaleSpending(plan: V2PlanPayload, multiplier: number): V2PlanPayload {
@@ -281,8 +362,8 @@ export function buildBoundedOptimizerCandidates(
   }
 
   if (eligible(eligibilityNotes, 'retirementTiming')) {
-    candidates.push(
-      {
+    if (canMoveRetirement(plan, 1)) {
+      candidates.push({
         id: 'retireLater1',
         label: 'Work 1 year longer',
         plan: retireLater(plan, 1),
@@ -291,8 +372,10 @@ export function buildBoundedOptimizerCandidates(
         changeSummary: 'Move retirement one year later',
         reviewNote: 'Review whether work timing is truly flexible before relying on this option.',
         disruptionPenalty: 10_000
-      },
-      {
+      });
+    }
+    if (canMoveRetirement(plan, 2)) {
+      candidates.push({
         id: 'retireLater2',
         label: 'Work 2 years longer',
         plan: retireLater(plan, 2),
@@ -301,8 +384,8 @@ export function buildBoundedOptimizerCandidates(
         changeSummary: 'Move retirement two years later',
         reviewNote: 'This may improve funding, but it changes a major life assumption.',
         disruptionPenalty: 20_000
-      }
-    );
+      });
+    }
   }
 
   if (eligible(eligibilityNotes, 'benefitTiming')) {
@@ -643,6 +726,7 @@ export function runBoundedOptimizer(
   }, {});
   const evidenceRows = buildPensionSplittingEvidence(summaryById);
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
+  const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -658,6 +742,7 @@ export function runBoundedOptimizer(
     candidateCount: candidates.length,
     candidates,
     eligibilityNotes,
+    guardrailNotes,
     evidenceRows,
     driverRows,
     explanation,

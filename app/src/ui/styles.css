@@ -992,6 +992,64 @@ button.secondary,
   background: #fff7f4;
 }
 
+.optimizer-guardrail-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d5ded8;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 14px;
+}
+
+.optimizer-guardrail-panel h3,
+.optimizer-guardrail-panel p {
+  margin: 0;
+}
+
+.optimizer-guardrail-panel p {
+  color: var(--muted);
+}
+
+.optimizer-guardrail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.optimizer-guardrail-row {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 10px;
+}
+
+.optimizer-guardrail-row span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.optimizer-guardrail-row strong {
+  font-size: 1rem;
+}
+
+.optimizer-guardrail-row p {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.guardrail-tested {
+  border-color: #b9d2c5;
+}
+
+.guardrail-reviewFirst,
+.guardrail-notTested {
+  border-color: #e1b9ae;
+}
+
 .optimizer-evidence-panel {
   display: grid;
   gap: 12px;

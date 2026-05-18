@@ -4,30 +4,29 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 42: Optimizer Tax-Driver Explanations
+## Latest Sprint — Sprint 43: Optimizer Guardrails & Timing Integrity
 
 **Status:** Complete 2026-05-18.
 
-Goal: explain the tax and funding drivers behind the selected bounded optimizer option before adding more optimizer behavior.
+Goal: harden bounded optimizer candidate eligibility so plan options stay inside Canadian benefit, work-timing, pension-splitting, and withdrawal-order constraints before adding broader optimizer behavior.
 
 Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 42 checkpoint doc: [`docs/sprint_42_optimizer_tax_driver_explanations.md`](docs/sprint_42_optimizer_tax_driver_explanations.md).
+Sprint 43 checkpoint doc: [`docs/sprint_43_optimizer_guardrails_timing_integrity.md`](docs/sprint_43_optimizer_guardrails_timing_integrity.md).
 
-### Sprint 42 Candidate Implementation Tickets
+### Sprint 43 Candidate Implementation Tickets
 
-- [x] **S42-01 — Driver selector.** Add selected-option driver rows versus the current plan.
-- [x] **S42-02 — Tax drivers.** Show lifetime tax, peak annual tax, and OAS recovery tax movement.
-- [x] **S42-03 — Funding drivers.** Show funded-year and projected money-left movement.
-- [x] **S42-04 — Details UI.** Add driver rows in Details without increasing Overview density.
-- [x] **S42-05 — Copy and tests.** Keep driver copy directional and non-advisory.
+- [x] **S43-01 — Benefit timing guardrails.** Skip CPP/OAS delay unless active people have CPP and OAS estimates and are still before age 70 in the projection.
+- [x] **S43-02 — Work timing guardrails.** Keep work-later candidates inside the age-70 test boundary per option.
+- [x] **S43-03 — Pension and withdrawal guardrails.** Keep pension-splitting and withdrawal-order checks tied to supported household/account structures.
+- [x] **S43-04 — Details explanation.** Add plain "why tested / not tested" guardrail notes in Details.
+- [x] **S43-05 — Regression coverage.** Add optimizer tests for age-70 boundary behavior and guardrail copy.
 
-### Sprint 42 Definition Of Done
+### Sprint 43 Definition Of Done
 
-- Selected optimizer option has visible tax/funding driver rows.
-- Driver rows compare against the current plan.
-- Driver rows explain direction rather than claiming advice.
-- Overview remains light.
+- CPP/OAS delay is not tested for impossible or already age-70 timing.
+- Work-later candidates do not move retirement past age 70.
+- Details explains why option families were tested or skipped.
 - No new optimizer candidate families are added.
 - No optimizer output is persisted.
 - No year-by-year dynamic withdrawal strategy is applied or widened.
@@ -35,6 +34,12 @@ Sprint 42 checkpoint doc: [`docs/sprint_42_optimizer_tax_driver_explanations.md`
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 43: Optimizer Guardrails & Timing Integrity
+
+**Complete 2026-05-18.** Tightened bounded optimizer eligibility for CPP/OAS delay, work timing, pension splitting, and withdrawal-order checks; added Details guardrail notes explaining why option families were tested or skipped.
+
+Sprint 43 checkpoint doc: [`docs/sprint_43_optimizer_guardrails_timing_integrity.md`](docs/sprint_43_optimizer_guardrails_timing_integrity.md).
 
 ### Sprint 42: Optimizer Tax-Driver Explanations
 

@@ -46,6 +46,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Tax and funding drivers');
     expect(appSource).toContain('Why the option moved');
     expect(appSource).toContain('They explain direction, not a final recommendation');
+    expect(appSource).toContain('Why options were tested');
+    expect(appSource).toContain('Guardrails before recommendations');
+    expect(appSource).toContain('These checks keep the review inside the timing and tax rules');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');

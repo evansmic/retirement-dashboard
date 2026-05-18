@@ -3154,6 +3154,25 @@ function BoundedOptimizerPanel({
         </div>
       ) : null}
 
+      {!isCompact && summary?.guardrailNotes.length ? (
+        <section className="optimizer-guardrail-panel">
+          <div>
+            <p className="eyebrow">Why options were tested</p>
+            <h3>Guardrails before recommendations</h3>
+            <p>These checks keep the review inside the timing and tax rules the model can support today.</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.guardrailNotes.map((note) => (
+              <article className={`optimizer-guardrail-row guardrail-${note.status}`} key={note.id}>
+                <span>{note.status === 'tested' ? 'Tested' : note.status === 'reviewFirst' ? 'Review first' : 'Not tested'}</span>
+                <strong>{note.label}</strong>
+                <p>{note.reason}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.driverRows.length ? (
         <section className="optimizer-driver-panel">
           <div>

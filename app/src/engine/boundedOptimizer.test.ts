@@ -132,6 +132,10 @@ describe('bounded optimizer runner', () => {
     expect(summary.driverRows.map((row) => row.id)).toEqual(['fundedYears', 'lifetimeTax', 'peakTax', 'oasRecovery', 'portfolio']);
     expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
+    expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
+      status: 'tested',
+      reason: expect.stringContaining('age-70 test range')
+    });
     expect(calls).toHaveLength(8);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
@@ -219,11 +223,28 @@ describe('bounded optimizer runner', () => {
     const candidates = buildBoundedOptimizerCandidates(plan);
     const summary = runBoundedOptimizer(plan, () => result(100000, 90000));
 
-    expect(candidates.map((candidate) => candidate.id)).toEqual(['baseline', 'delayBenefits']);
+    expect(candidates.map((candidate) => candidate.id)).toEqual(['baseline']);
     expect(summary.eligibilityNotes.find((note) => note.lever === 'spending')).toMatchObject({ status: 'skipped' });
     expect(summary.eligibilityNotes.find((note) => note.lever === 'retirementTiming')).toMatchObject({ status: 'skipped' });
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'benefitTiming')).toMatchObject({ status: 'skipped' });
     expect(summary.eligibilityNotes.find((note) => note.lever === 'withdrawalOrder')).toMatchObject({ status: 'skipped' });
-    expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline', 'delayBenefits']);
+    expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
+      status: 'notTested',
+      reason: expect.stringContaining('before age 70')
+    });
+    expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline']);
+  });
+
+  it('keeps work-timing candidates inside the age-70 boundary per option', () => {
+    const plan = readyPlan();
+    plan.p1.dob = 1964;
+    plan.p1.retireYear = 2033;
+    plan.assumptions.retireYear = 2033;
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+
+    expect(candidates.map((candidate) => candidate.id)).toContain('retireLater1');
+    expect(candidates.map((candidate) => candidate.id)).not.toContain('retireLater2');
   });
 
   it('flags missing survivor setup for two-person optimizer review', () => {
