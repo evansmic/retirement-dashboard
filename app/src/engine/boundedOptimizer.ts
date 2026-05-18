@@ -35,6 +35,8 @@ export type BoundedOptimizerCandidateRow = {
   changedLevers: BoundedOptimizerLever[];
   changeSummary: string;
   reviewNote: string;
+  suggestionEligible: boolean;
+  suggestionReason: string;
   fundedYears: number;
   totalYears: number;
   fundedThroughYear: number | null;
@@ -66,6 +68,13 @@ export type BoundedOptimizerGuardrailNote = {
   reason: string;
 };
 
+export type BoundedOptimizerRecommendationNote = {
+  candidateId: BoundedOptimizerCandidateId;
+  label: string;
+  status: 'canHighlight' | 'reviewOnly';
+  reason: string;
+};
+
 export type BoundedOptimizerEvidenceRow = {
   id: 'pensionLifetimeTax' | 'pensionFirstYearTax' | 'pensionPeakTax' | 'pensionOasRecovery' | 'pensionPortfolio';
   label: string;
@@ -94,6 +103,7 @@ export type BoundedOptimizerSummary = {
   candidates: BoundedOptimizerCandidateRow[];
   eligibilityNotes: BoundedOptimizerEligibilityNote[];
   guardrailNotes: BoundedOptimizerGuardrailNote[];
+  recommendationNotes: BoundedOptimizerRecommendationNote[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
   explanation: BoundedOptimizerExplanation;
@@ -468,6 +478,61 @@ function scoreCandidate(
   return fixedShortfallBonus + noShortfallBonus + fundedScore + portfolioScore + taxScore - disruptionPenalty;
 }
 
+function isDisruptiveChoice(row: Pick<BoundedOptimizerCandidateRow, 'changedLevers'>): boolean {
+  return row.changedLevers.some((lever) => lever === 'spending' || lever === 'retirementTiming' || lever === 'benefitTiming');
+}
+
+function isMaterialFundingRepair(
+  summary: ReturnType<typeof summarizeResult>,
+  baseline: ReturnType<typeof summarizeResult>
+): boolean {
+  if (baseline.firstShortfallYear && !summary.firstShortfallYear) return true;
+  if (baseline.firstShortfallYear && summary.fundedYears >= baseline.fundedYears + 2) return true;
+  return false;
+}
+
+function hasWeakBenefitBridge(summary: ReturnType<typeof summarizeResult>): boolean {
+  return summary.rows.some((row) => {
+    const beforeAge70 = (n(row.ageF) > 0 && n(row.ageF) < 70) || (n(row.ageM) > 0 && n(row.ageM) < 70);
+    return beforeAge70 && n(row.shortfall) > 1;
+  });
+}
+
+function hasMeaningfulNonDisruptiveImprovement(
+  summary: ReturnType<typeof summarizeResult>,
+  baseline: ReturnType<typeof summarizeResult>
+): boolean {
+  return summary.fundedYears > baseline.fundedYears || summary.endPortfolio - baseline.endPortfolio > 25_000 || baseline.lifetimeTax - summary.lifetimeTax > 5_000;
+}
+
+function recommendationPermission(
+  row: Pick<BoundedOptimizerCandidateRow, 'id' | 'label' | 'changedLevers'>,
+  summary: ReturnType<typeof summarizeResult>,
+  baseline: ReturnType<typeof summarizeResult>
+): { eligible: boolean; reason: string } {
+  if (row.id === 'baseline') {
+    return { eligible: true, reason: 'The current plan can stay first when other options do not clear the suggestion bar.' };
+  }
+
+  if (summary.totalYears === 0) {
+    return { eligible: false, reason: 'This option did not produce a usable projection.' };
+  }
+
+  if (row.changedLevers.includes('benefitTiming') && hasWeakBenefitBridge(summary)) {
+    return { eligible: false, reason: 'Benefit delay remains review-only because the bridge years before age 70 show a spending shortfall.' };
+  }
+
+  if (isDisruptiveChoice(row)) {
+    return isMaterialFundingRepair(summary, baseline)
+      ? { eligible: true, reason: 'This disruptive option can be reviewed first because it materially improves a visible funding shortfall.' }
+      : { eligible: false, reason: 'This option changes lifestyle, work timing, or benefit timing, so it stays review-only unless it materially repairs a funding problem.' };
+  }
+
+  return hasMeaningfulNonDisruptiveImprovement(summary, baseline)
+    ? { eligible: true, reason: 'This option can be reviewed first because it improves taxes, funded years, or projected money left without changing lifestyle or work timing.' }
+    : { eligible: false, reason: 'This option is close to the current plan, so it stays review-only.' };
+}
+
 function compareRows(a: BoundedOptimizerCandidateRow, b: BoundedOptimizerCandidateRow): number {
   if (a.score !== b.score) return b.score - a.score;
   if (a.firstShortfallYear && !b.firstShortfallYear) return 1;
@@ -538,7 +603,7 @@ function buildOptimizerExplanation(
     whyThisOption.unshift(`It removes the current plan's first visible shortfall in ${baseline.firstShortfallYear}.`);
   }
   if (suggested.id === 'baseline') {
-    whyThisOption.unshift('The current plan remains strongest after the limited checks.');
+    whyThisOption.unshift('The current plan stays first because other options do not clear the suggestion bar.');
   }
 
   const tradeoffs = leverTradeoffCopy(suggested);
@@ -557,7 +622,7 @@ function buildOptimizerExplanation(
     plainLanguageSummary:
       suggested.id === 'baseline'
         ? 'The limited check did not find a better plan option than the current inputs.'
-        : `${suggested.label} ranked highest in this limited planning review because it improved the strongest trust checks without widening the search.`
+        : `${suggested.label} is the first option to review because it cleared the suggestion checks without widening the search.`
   };
 }
 
@@ -690,6 +755,7 @@ export function runBoundedOptimizer(
   }));
   const baselineSummary = summarizedResults[0]?.summary;
   const rows = summarizedResults.map(({ definition, summary }) => {
+    const recommendation = recommendationPermission(definition, summary, baselineSummary);
     return {
       id: definition.id,
       label: definition.label,
@@ -697,6 +763,8 @@ export function runBoundedOptimizer(
       changedLevers: definition.changedLevers,
       changeSummary: definition.changeSummary,
       reviewNote: definition.reviewNote,
+      suggestionEligible: recommendation.eligible,
+      suggestionReason: recommendation.reason,
       fundedYears: summary.fundedYears,
       totalYears: summary.totalYears,
       fundedThroughYear: summary.fundedThroughYear,
@@ -711,7 +779,8 @@ export function runBoundedOptimizer(
 
   const eligibleRows = rows.filter((row) => row.status !== 'blocked');
   const sortedRows = [...eligibleRows].sort(compareRows);
-  const suggested = contract.status === 'readyForExtraction' ? sortedRows[0] || null : null;
+  const baselineCandidate = rows.find((row) => row.id === 'baseline') || null;
+  const suggested = contract.status === 'readyForExtraction' ? sortedRows.find((row) => row.suggestionEligible) || baselineCandidate : null;
   const candidates: BoundedOptimizerCandidateRow[] = rows.map((row) => {
     const status: BoundedOptimizerCandidateRow['status'] = suggested && row.id === suggested.id ? 'suggested' : row.status;
     return { ...row, status };
@@ -727,13 +796,21 @@ export function runBoundedOptimizer(
   const evidenceRows = buildPensionSplittingEvidence(summaryById);
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
+  const recommendationNotes: BoundedOptimizerRecommendationNote[] = rows
+    .filter((row) => row.id !== 'baseline')
+    .map((row) => ({
+      candidateId: row.id,
+      label: row.label,
+      status: row.suggestionEligible ? 'canHighlight' : 'reviewOnly',
+      reason: row.suggestionReason
+    }));
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
     execution: 'boundedSearch',
     contract,
     headline: suggested
-      ? `${suggested.label} is the strongest option in this limited review set.`
+      ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',
     detail:
       'This checks a small set of spending, timing, benefit, and withdrawal-order options. It is a planning review, not financial advice or a full tax optimizer.',
@@ -743,6 +820,7 @@ export function runBoundedOptimizer(
     candidates,
     eligibilityNotes,
     guardrailNotes,
+    recommendationNotes,
     evidenceRows,
     driverRows,
     explanation,

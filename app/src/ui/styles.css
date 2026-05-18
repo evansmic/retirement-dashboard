@@ -1050,6 +1050,60 @@ button.secondary,
   border-color: #e1b9ae;
 }
 
+.optimizer-recommendation-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d5ded8;
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 14px;
+}
+
+.optimizer-recommendation-panel h3,
+.optimizer-recommendation-panel p {
+  margin: 0;
+}
+
+.optimizer-recommendation-panel p {
+  color: var(--muted);
+}
+
+.optimizer-recommendation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.optimizer-recommendation-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.2fr) minmax(150px, 0.25fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 10px 12px;
+}
+
+.optimizer-recommendation-row span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.optimizer-recommendation-row strong,
+.optimizer-recommendation-row p {
+  margin: 0;
+}
+
+.recommendation-reviewOnly {
+  border-color: #e1b9ae;
+}
+
+.recommendation-canHighlight {
+  border-color: #b9d2c5;
+}
+
 .optimizer-evidence-panel {
   display: grid;
   gap: 12px;

@@ -125,7 +125,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.execution).toBe('boundedSearch');
     expect(summary.suggestedCandidateId).toBe('withdrawalRegisteredFirst');
     expect(summary.candidates).toHaveLength(8);
-    expect(summary.explanation.plainLanguageSummary).toContain('ranked highest');
+    expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
     expect(summary.explanation.verifyBeforeUsing.join(' ')).toContain('Review taxes');
@@ -135,6 +135,14 @@ describe('bounded optimizer runner', () => {
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('age-70 test range')
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'spendLess10')).toMatchObject({
+      status: 'canHighlight',
+      reason: expect.stringContaining('materially improves a visible funding shortfall')
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'withdrawalRegisteredFirst')).toMatchObject({
+      status: 'canHighlight',
+      reason: expect.stringContaining('without changing lifestyle or work timing')
     });
     expect(calls).toHaveLength(8);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
@@ -245,6 +253,52 @@ describe('bounded optimizer runner', () => {
 
     expect(candidates.map((candidate) => candidate.id)).toContain('retireLater1');
     expect(candidates.map((candidate) => candidate.id)).not.toContain('retireLater2');
+  });
+
+  it('keeps disruptive improvements review-only when the current plan has no visible funding problem', () => {
+    const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
+      const id =
+        config.cppAgeF === 70
+          ? 'delayBenefits'
+          : candidatePlan.p1.retireYear === 2034
+            ? 'retireLater2'
+            : candidatePlan.p1.retireYear === 2033
+              ? 'retireLater1'
+              : candidatePlan.spending.gogo === 76500
+                ? 'spendLess10'
+                : candidatePlan.spending.gogo === 80750
+                  ? 'spendLess5'
+                  : 'baseline';
+      return id === 'baseline' ? result(200000, 90000, null) : result(350000, 85000, null);
+    });
+
+    expect(summary.suggestedCandidateId).toBe('baseline');
+    expect(summary.headline).toContain('first option to review');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'spendLess10')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('changes lifestyle')
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'retireLater2')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('changes lifestyle')
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'delayBenefits')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('benefit timing')
+    });
+  });
+
+  it('keeps benefit delay review-only when bridge years show a shortfall', () => {
+    const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
+      if (config.cppAgeF === 70) return result(500000, 70000, 2033);
+      return candidatePlan.spending.gogo === 80750 ? result(260000, 88000, null) : result(100000, 90000, 2033);
+    });
+
+    expect(summary.suggestedCandidateId).toBe('spendLess5');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'delayBenefits')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('bridge years before age 70')
+    });
   });
 
   it('flags missing survivor setup for two-person optimizer review', () => {

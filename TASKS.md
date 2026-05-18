@@ -4,29 +4,30 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 43: Optimizer Guardrails & Timing Integrity
+## Latest Sprint — Sprint 44: Optimizer Recommendation Discipline
 
 **Status:** Complete 2026-05-18.
 
-Goal: harden bounded optimizer candidate eligibility so plan options stay inside Canadian benefit, work-timing, pension-splitting, and withdrawal-order constraints before adding broader optimizer behavior.
+Goal: keep bounded optimizer output from over-suggesting disruptive household choices just because they improve the projection.
 
 Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 43 checkpoint doc: [`docs/sprint_43_optimizer_guardrails_timing_integrity.md`](docs/sprint_43_optimizer_guardrails_timing_integrity.md).
+Sprint 44 checkpoint doc: [`docs/sprint_44_optimizer_recommendation_discipline.md`](docs/sprint_44_optimizer_recommendation_discipline.md).
 
-### Sprint 43 Candidate Implementation Tickets
+### Sprint 44 Candidate Implementation Tickets
 
-- [x] **S43-01 — Benefit timing guardrails.** Skip CPP/OAS delay unless active people have CPP and OAS estimates and are still before age 70 in the projection.
-- [x] **S43-02 — Work timing guardrails.** Keep work-later candidates inside the age-70 test boundary per option.
-- [x] **S43-03 — Pension and withdrawal guardrails.** Keep pension-splitting and withdrawal-order checks tied to supported household/account structures.
-- [x] **S43-04 — Details explanation.** Add plain "why tested / not tested" guardrail notes in Details.
-- [x] **S43-05 — Regression coverage.** Add optimizer tests for age-70 boundary behavior and guardrail copy.
+- [x] **S44-01 — Suggestion gate.** Separate scored candidates from candidates allowed to be highlighted first.
+- [x] **S44-02 — Disruption discipline.** Keep spending cuts, work-later tests, and benefit-delay tests review-only unless they materially repair a visible funding problem.
+- [x] **S44-03 — Bridge check.** Keep benefit-delay review-only when pre-age-70 bridge years show a shortfall.
+- [x] **S44-04 — Details explanation.** Explain why some options stay review-only.
+- [x] **S44-05 — Copy and tests.** Replace strongest-option language with first-option-to-review language and cover disruptive edge cases.
 
-### Sprint 43 Definition Of Done
+### Sprint 44 Definition Of Done
 
-- CPP/OAS delay is not tested for impossible or already age-70 timing.
-- Work-later candidates do not move retirement past age 70.
-- Details explains why option families were tested or skipped.
+- Disruptive options do not become highlighted solely because they improve projected money left.
+- Benefit delay is not highlighted when bridge years are weak.
+- Non-disruptive options can still be highlighted when they materially improve tax, funded years, or projected money left.
+- Details explains why options can be highlighted or remain review-only.
 - No new optimizer candidate families are added.
 - No optimizer output is persisted.
 - No year-by-year dynamic withdrawal strategy is applied or widened.
@@ -34,6 +35,12 @@ Sprint 43 checkpoint doc: [`docs/sprint_43_optimizer_guardrails_timing_integrity
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 44: Optimizer Recommendation Discipline
+
+**Complete 2026-05-18.** Added a suggestion gate so disruptive options stay review-only unless they materially repair a visible funding problem, and added Details copy explaining why some options are not highlighted first.
+
+Sprint 44 checkpoint doc: [`docs/sprint_44_optimizer_recommendation_discipline.md`](docs/sprint_44_optimizer_recommendation_discipline.md).
 
 ### Sprint 43: Optimizer Guardrails & Timing Integrity
 

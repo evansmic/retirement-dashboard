@@ -40,14 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 43 is complete. The bounded optimizer now has tighter candidate guardrails for CPP/OAS delay, work timing, pension splitting, and withdrawal-order checks, plus Details copy that explains why option families were tested or skipped.
+Sprint 44 is complete. The bounded optimizer now separates scored options from options allowed to be highlighted first, so disruptive household choices stay review-only unless they materially repair a visible funding problem.
 
-Completed Sprint 43 slices:
+Completed Sprint 44 slices:
 
-- Skips CPP/OAS delay unless active people have CPP and OAS estimates and are still before age 70 in the projection.
-- Keeps work-later candidates inside an age-70 boundary per one-year and two-year option.
-- Keeps pension-splitting and withdrawal-order checks tied to supported household/account structures.
-- Adds Details guardrail notes that explain why option families were tested or skipped.
+- Added a suggestion gate on top of candidate scoring.
+- Kept spending cuts, work-later tests, and benefit-delay tests review-only unless they materially improve a real funding shortfall.
+- Kept benefit delay review-only when bridge years before age 70 show a shortfall.
+- Added Details explanation for why options can be highlighted or remain review-only.
 - Kept the optimizer candidate set unchanged.
 - Kept optimizer output unsaved and review-only.
 
@@ -76,7 +76,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 19. **Sprint 41 — Pension-splitting evidence rows.** Explain what changed when pension splitting is tested before adding more optimizer behavior.
 20. **Sprint 42 — Optimizer tax-driver explanations.** Explain why the selected optimizer option moved before adding more optimizer behavior.
 21. **Sprint 43 — Optimizer guardrails and timing integrity.** Harden candidate eligibility before adding broader optimizer behavior.
-22. **Sprint 44+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
+22. **Sprint 44 — Optimizer recommendation discipline.** Prevent disruptive options from being highlighted solely because they improve the projection.
+23. **Sprint 45+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
 
 ## Medium-Term Roadmap
 
@@ -118,7 +119,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 41 — Pension-splitting evidence rows.** Complete 2026-05-18. Added evidence rows for tax, OAS recovery tax, and projected money-left movement against the current plan.
 - **Sprint 42 — Optimizer tax-driver explanations.** Complete 2026-05-18. Added driver rows for funded years, tax, OAS recovery tax, and projected money left.
 - **Sprint 43 — Optimizer guardrails and timing integrity.** Complete 2026-05-18. Tightened candidate eligibility for CPP/OAS delay, work timing, pension splitting, and withdrawal-order checks before broader optimizer behavior.
-- **Sprint 44 — Next optimizer increment.** Planned after Sprint 43. Consider a modest guardrail-spending stress before any tax-aware drawdown optimizer.
+- **Sprint 44 — Optimizer recommendation discipline.** Complete 2026-05-18. Added a suggestion gate so disruptive options stay review-only unless they materially repair a visible funding problem.
+- **Sprint 45 — Next optimizer increment.** Planned after Sprint 44. Consider a modest guardrail-spending stress before any tax-aware drawdown optimizer.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

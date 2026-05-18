@@ -3173,6 +3173,25 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.recommendationNotes.length ? (
+        <section className="optimizer-recommendation-panel">
+          <div>
+            <p className="eyebrow">Suggestion discipline</p>
+            <h3>Why some options stay review-only</h3>
+            <p>Options that change lifestyle, work timing, or benefit timing need a stronger reason before they are highlighted first.</p>
+          </div>
+          <div className="optimizer-recommendation-list">
+            {summary.recommendationNotes.map((note) => (
+              <article className={`optimizer-recommendation-row recommendation-${note.status}`} key={note.candidateId}>
+                <span>{note.status === 'canHighlight' ? 'Can be first' : 'Review-only'}</span>
+                <strong>{note.label}</strong>
+                <p>{note.reason}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.driverRows.length ? (
         <section className="optimizer-driver-panel">
           <div>
