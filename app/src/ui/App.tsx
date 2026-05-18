@@ -51,6 +51,7 @@ import {
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
   selectSpendingCapacitySummary,
+  selectSpendingStressSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
   selectStressTestSummary,
@@ -67,7 +68,7 @@ import {
 } from '../engine/resultSelectors';
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
-import type { PreviewScenarioResults } from '../engine/previewScenarios';
+import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -110,6 +111,7 @@ type WorkspaceAction =
 type BridgePreview = {
   result: SimulationResult | null;
   scenarios: PreviewScenarioResults;
+  spendingStress: SpendingStressResults;
   survivor: SimulationResult | null;
   optimizer: BoundedOptimizerSummary | null;
   error: string;
@@ -361,6 +363,7 @@ export function App() {
   const [bridgePreview, setBridgePreview] = useState<BridgePreview>({
     result: null,
     scenarios: {},
+    spendingStress: {},
     survivor: null,
     optimizer: null,
     error: '',
@@ -373,7 +376,7 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     if (!plan || (state.view !== 'review' && state.view !== 'results')) {
-      setBridgePreview({ result: null, scenarios: {}, survivor: null, optimizer: null, error: '', loading: false });
+      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, error: '', loading: false });
       return;
     }
 
@@ -389,6 +392,7 @@ export function App() {
           setBridgePreview({
             result: null,
             scenarios: {},
+            spendingStress: {},
             survivor: null,
             optimizer: null,
             error: err instanceof Error ? err.message : 'Could not run preview calculation.',
@@ -574,6 +578,7 @@ export function App() {
               plan={plan}
               result={bridgePreview.result}
               scenarios={bridgePreview.scenarios}
+              spendingStress={bridgePreview.spendingStress}
               survivor={bridgePreview.survivor}
               optimizer={bridgePreview.optimizer}
               title={domainPlan.title}
@@ -2121,6 +2126,7 @@ function ResultsHandoffPanel({
   plan,
   result,
   scenarios,
+  spendingStress,
   survivor,
   optimizer,
   title,
@@ -2134,6 +2140,7 @@ function ResultsHandoffPanel({
   plan: V2PlanPayload;
   result: SimulationResult | null;
   scenarios: BridgePreview['scenarios'];
+  spendingStress: BridgePreview['spendingStress'];
   survivor: BridgePreview['survivor'];
   optimizer: BridgePreview['optimizer'];
   title: string;
@@ -2179,6 +2186,7 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const spendingStressSummary = selectSpendingStressSummary(result, spendingStress, plan);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
   const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
   const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
@@ -2249,6 +2257,7 @@ function ResultsHandoffPanel({
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
             scenarioComparisonRows={scenarioComparisonRows}
+            spendingStress={spendingStressSummary}
             sourceStory={sourceStory}
             taxPressureExplanation={taxPressureExplanation}
             taxPressureRows={taxPressureRows}
@@ -2731,6 +2740,7 @@ function DetailsResultsPanel({
   readinessSummary,
   scenarioAssumptionRows,
   scenarioComparisonRows,
+  spendingStress,
   sourceStory,
   taxPressureExplanation,
   taxPressureRows,
@@ -2752,6 +2762,7 @@ function DetailsResultsPanel({
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
   scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
+  spendingStress: ReturnType<typeof selectSpendingStressSummary>;
   sourceStory: ReturnType<typeof selectSourceReconciliationStory>;
   taxPressureExplanation: ReturnType<typeof selectTaxPressureExplanation>;
   taxPressureRows: ReturnType<typeof selectTaxPressureRows>;
@@ -2849,6 +2860,7 @@ function DetailsResultsPanel({
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
       <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       <div className="result-section-label">Scenario evidence</div>
+      <SpendingStressPanel loading={loading} summary={spendingStress} />
       <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
@@ -3265,6 +3277,56 @@ function BoundedOptimizerPanel({
         This limited check does not provide financial advice, does not optimize year-by-year tax brackets, and does not
         save optimizer results.
       </p>
+    </section>
+  );
+}
+
+function SpendingStressPanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectSpendingStressSummary>;
+}) {
+  return (
+    <section className={`result-card spending-stress-panel spending-stress-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Spending stress check</p>
+        <h3>{loading ? 'Checking nearby spending levels' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+      {summary.rows.length ? (
+        <div className="result-table-wrap">
+          <table className="result-table">
+            <thead>
+              <tr>
+                <th>Spending level</th>
+                <th>Early spending</th>
+                <th>Funded years</th>
+                <th>First shortfall</th>
+                <th>Projected money left</th>
+                <th>Lifetime tax change</th>
+                <th>Read</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.rows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.label}</td>
+                  <td>{formatMoney(row.earlySpending)}</td>
+                  <td>{`${row.fundedYears}/${row.totalYears}`}</td>
+                  <td>{row.firstShortfallYear || 'None'}</td>
+                  <td>{formatMoney(row.endPortfolio)}</td>
+                  <td className={row.lifetimeTaxDelta <= 0 ? 'ok-value' : 'bad-value'}>{formatSignedMoney(row.lifetimeTaxDelta)}</td>
+                  <td>{row.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      <p className="table-note">{summary.reviewNote}</p>
     </section>
   );
 }

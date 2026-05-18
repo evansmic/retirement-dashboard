@@ -57,6 +57,12 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Guaranteed');
   });
 
+  it('shows spending stress as review evidence without advice language', () => {
+    expect(appSource).toContain('Spending stress check');
+    expect(appSource).not.toContain('safe spend');
+    expect(appSource).not.toContain('you can spend more');
+  });
+
   it('keeps save and report actions distinct in the consumer UI', () => {
     expect(appSource).toContain('Save editable plan');
     expect(appSource).toContain('Open printable report');

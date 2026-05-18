@@ -40,16 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 44 is complete. The bounded optimizer now separates scored options from options allowed to be highlighted first, so disruptive household choices stay review-only unless they materially repair a visible funding problem.
+Sprint 45 is complete. Results now include a runtime-only spending stress check in Details, comparing nearby early-retirement spending levels without turning the output into a spending recommendation.
 
-Completed Sprint 44 slices:
+Completed Sprint 45 slices:
 
-- Added a suggestion gate on top of candidate scoring.
-- Kept spending cuts, work-later tests, and benefit-delay tests review-only unless they materially improve a real funding shortfall.
-- Kept benefit delay review-only when bridge years before age 70 show a shortfall.
-- Added Details explanation for why options can be highlighted or remain review-only.
-- Kept the optimizer candidate set unchanged.
-- Kept optimizer output unsaved and review-only.
+- Added current, 5% lower, 10% lower, and conditional 5% higher spending stress checks.
+- Summarized fragile, balanced, and room-to-review outcomes.
+- Added a Details-only spending stress table.
+- Kept higher-spending language review-oriented.
+- Kept stress output unsaved and outside optimizer strategy application.
 
 ## Consumer Roadmap Sequence
 
@@ -77,7 +76,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 20. **Sprint 42 — Optimizer tax-driver explanations.** Explain why the selected optimizer option moved before adding more optimizer behavior.
 21. **Sprint 43 — Optimizer guardrails and timing integrity.** Harden candidate eligibility before adding broader optimizer behavior.
 22. **Sprint 44 — Optimizer recommendation discipline.** Prevent disruptive options from being highlighted solely because they improve the projection.
-23. **Sprint 45+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
+23. **Sprint 45 — Spending guardrail stress.** Add review-only nearby spending stress checks before tax-aware drawdown work.
+24. **Sprint 46+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
 
 ## Medium-Term Roadmap
 
@@ -120,7 +120,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 42 — Optimizer tax-driver explanations.** Complete 2026-05-18. Added driver rows for funded years, tax, OAS recovery tax, and projected money left.
 - **Sprint 43 — Optimizer guardrails and timing integrity.** Complete 2026-05-18. Tightened candidate eligibility for CPP/OAS delay, work timing, pension splitting, and withdrawal-order checks before broader optimizer behavior.
 - **Sprint 44 — Optimizer recommendation discipline.** Complete 2026-05-18. Added a suggestion gate so disruptive options stay review-only unless they materially repair a visible funding problem.
-- **Sprint 45 — Next optimizer increment.** Planned after Sprint 44. Consider a modest guardrail-spending stress before any tax-aware drawdown optimizer.
+- **Sprint 45 — Spending guardrail stress.** Complete 2026-05-18. Added runtime-only nearby spending stress checks and Details evidence without adding a spending optimizer.
+- **Sprint 46 — Next optimizer increment.** Planned after Sprint 45. Consider one narrow tax-aware drawdown contract slice before execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

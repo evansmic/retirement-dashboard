@@ -33,6 +33,7 @@ import {
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingCapacitySummary,
+  selectSpendingStressSummary,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -224,6 +225,7 @@ describe('Sprint 6 results workspace smoke', () => {
     const recommendedPath = selectRecommendedPath(result, preview.scenarios, preview.survivor, plan);
     const retirementAnswer = selectRetirementAnswerSummary(result, plan, null, preview.survivor);
     const spendingCapacity = selectSpendingCapacitySummary(result, preview.scenarios, plan, retirementAnswer);
+    const spendingStress = selectSpendingStressSummary(result, preview.spendingStress, plan);
     const estateIntent = selectEstateIntentSummary(result, plan, preview.survivor, retirementAnswer);
     const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
     const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
@@ -270,6 +272,7 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(scenarioChoiceCards.find((card) => card.id === 'currentPlan')?.householdChoice).toContain('Retire');
     expect(scenarioComparisonRows).toHaveLength(3);
     expect(Object.keys(preview.scenarios).sort()).toEqual(['delayBenefits', 'retireLater', 'spendLessGogo']);
+    expect(Object.keys(preview.spendingStress).sort()).toContain('current');
     expect(scenarioAssumptions).toHaveLength(3);
     expect(['single', 'ready', 'needsInput']).toContain(survivorSummary.status);
     expect(['single', 'needsInput', 'ready', 'notAvailable']).toContain(survivorComparison.status);
@@ -285,6 +288,9 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(['cannotTell', 'needsReduction', 'tight', 'balanced', 'flexible']).toContain(spendingCapacity.status);
     expect(spendingCapacity.headline.length).toBeGreaterThan(10);
     expect(spendingCapacity.reviewActions.length).toBeGreaterThanOrEqual(2);
+    expect(['cannotTell', 'fragile', 'balanced', 'roomToReview']).toContain(spendingStress.status);
+    expect(spendingStress.headline.length).toBeGreaterThan(10);
+    expect(Object.keys(planFile.plan)).not.toContain('spendingStress');
     expect(['cannotTell', 'needsIntent', 'taxReview', 'survivorReview', 'aligned']).toContain(estateIntent.status);
     expect(estateIntent.headline.length).toBeGreaterThan(10);
     expect(estateIntent.reviewActions.length).toBeGreaterThanOrEqual(1);

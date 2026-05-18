@@ -33,6 +33,7 @@ import {
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingCapacitySummary,
+  selectSpendingStressSummary,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -477,6 +478,78 @@ describe('result selectors', () => {
     expect(spending.repairEarlySpending).toBe(Math.round((planFixture.spending.gogo || 0) * 0.9));
     expect(spending.detail).toContain('lower-spending test');
     expect(spending.reviewActions.find((action) => action.id === 'spendLess')).toBeTruthy();
+  });
+
+  it('summarizes fragile spending stress when lower spending repairs a shortfall', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 66500, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 68000, bal_total: 100000 }
+    ]);
+
+    const stress = selectSpendingStressSummary(
+      shortfallResult,
+      { current: shortfallResult, littleLess: repairedResult, meaningfullyLess: repairedResult },
+      planFixture
+    );
+
+    expect(stress.status).toBe('fragile');
+    expect(stress.headline).toContain('spending reductions');
+    expect(stress.rows.map((row) => row.label)).toEqual(['Current spending', 'A little less', 'Meaningfully less']);
+    expect(stress.rows.find((row) => row.id === 'littleLess')).toMatchObject({
+      earlySpending: Math.round((planFixture.spending.gogo || 0) * 0.95),
+      firstShortfallYear: null
+    });
+  });
+
+  it('summarizes room to review when a small spending increase remains funded', () => {
+    const baseline = withRows([
+      { ...fixture.years[0], shortfall: 0, totalTaxYear: 10000, bal_total: 600000 },
+      { ...fixture.years[1], shortfall: 0, totalTaxYear: 11000, bal_total: 650000 }
+    ]);
+    const higher = withRows([
+      { ...fixture.years[0], shortfall: 0, totalTaxYear: 10200, bal_total: 590000 },
+      { ...fixture.years[1], shortfall: 0, totalTaxYear: 11200, bal_total: 620000 }
+    ]);
+
+    const stress = selectSpendingStressSummary(baseline, { current: baseline, littleMore: higher }, { ...planFixture, inheritance: 500000 });
+
+    expect(stress.status).toBe('roomToReview');
+    expect(stress.detail).toContain('room to review');
+    expect(stress.detail).toContain('not a recommendation');
+    expect(stress.detail).not.toContain('you can spend more');
+    expect(stress.rows.find((row) => row.id === 'littleMore')).toMatchObject({
+      label: 'A little more',
+      firstShortfallYear: null
+    });
+  });
+
+  it('summarizes fragile spending stress when a small increase creates a shortfall', () => {
+    const baseline = withRows([
+      { ...fixture.years[0], shortfall: 0, totalTaxYear: 10000, bal_total: 300000 },
+      { ...fixture.years[1], shortfall: 0, totalTaxYear: 11000, bal_total: 280000 }
+    ]);
+    const higher = withRows([
+      { ...fixture.years[0], shortfall: 0, totalTaxYear: 10200, bal_total: 240000 },
+      { ...fixture.years[1], shortfall: 5000, totalTaxYear: 11200, bal_total: 0 }
+    ]);
+
+    const stress = selectSpendingStressSummary(baseline, { current: baseline, littleMore: higher }, planFixture);
+
+    expect(stress.status).toBe('fragile');
+    expect(stress.headline).toContain('small spending increase');
+    expect(stress.rows.find((row) => row.id === 'littleMore')).toMatchObject({ firstShortfallYear: 2029 });
+  });
+
+  it('returns a safe empty spending stress summary without projection rows', () => {
+    const stress = selectSpendingStressSummary({ years: [] }, {}, planFixture);
+
+    expect(stress.status).toBe('cannotTell');
+    expect(stress.rows).toEqual([]);
+    expect(stress.reviewNote).toContain('does not change the saved plan');
   });
 
   it('flags estate intent when a large projected estate has no target', () => {

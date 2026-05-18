@@ -934,6 +934,33 @@ button.secondary,
   gap: 14px;
 }
 
+.spending-stress-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.spending-stress-panel > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.spending-stress-panel h3,
+.spending-stress-panel p {
+  margin: 0;
+}
+
+.spending-stress-panel p {
+  color: var(--muted);
+}
+
+.spending-stress-fragile {
+  border-color: #e1b9ae;
+}
+
+.spending-stress-roomToReview {
+  border-color: #b9d2c5;
+}
+
 .optimizer-explanation-card {
   display: grid;
   gap: 10px;

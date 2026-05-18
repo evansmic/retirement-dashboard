@@ -6,6 +6,7 @@ import {
   createDelayBenefitsConfig,
   createRetireLaterPlan,
   createSpendLessGogoPlan,
+  createSpendingStressPlan,
   PreviewSimulationRunner,
   runResultsPreviewBundle,
   shouldRunSurvivorPreview
@@ -113,6 +114,14 @@ describe('preview scenario runner', () => {
     expect(plan.spending.gogo).toBe(90000);
   });
 
+  it('creates spending stress plans without mutating the original plan', () => {
+    const plan = testPlan();
+
+    expect(createSpendingStressPlan(plan, 0.95).spending.gogo).toBe(85500);
+    expect(createSpendingStressPlan(plan, 1.05).spending.gogo).toBe(94500);
+    expect(plan.spending.gogo).toBe(90000);
+  });
+
   it('creates the delay-benefits config from the baseline config', () => {
     const config: SimulationConfig = buildBaselinePreviewConfig(testPlan());
     expect(createDelayBenefitsConfig(config)).toMatchObject({
@@ -125,7 +134,7 @@ describe('preview scenario runner', () => {
     });
   });
 
-  it('runs baseline, three scenario reruns, and survivor rerun for a couple survivor plan', () => {
+  it('runs baseline, scenarios, spending stress, and survivor rerun for a couple survivor plan', () => {
     const plan = testPlan();
     const calls: Array<{ plan: V2PlanPayload; config: SimulationConfig }> = [];
     const runner: PreviewSimulationRunner = (nextPlan, config) => {
@@ -137,12 +146,31 @@ describe('preview scenario runner', () => {
 
     expect(preview.result.years[0].year).toBe(2027);
     expect(Object.keys(preview.scenarios).sort()).toEqual(['delayBenefits', 'retireLater', 'spendLessGogo']);
-    expect(preview.survivor?.years[0].year).toBe(2031);
-    expect(calls).toHaveLength(5);
+    expect(Object.keys(preview.spendingStress).sort()).toEqual(['current', 'littleLess', 'littleMore', 'meaningfullyLess']);
+    expect(preview.survivor?.years[0].year).toBe(2033);
+    expect(calls).toHaveLength(7);
     expect(calls[1].plan.assumptions.retireYear).toBe(2033);
     expect(calls[2].plan.spending.gogo).toBe(81000);
     expect(calls[3].config).toMatchObject({ cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 });
-    expect(calls[4].config.p1Dies).toBe(2035);
+    expect(calls[4].plan.spending.gogo).toBe(85500);
+    expect(calls[5].plan.spending.gogo).toBe(94500);
+    expect(calls[6].config.p1Dies).toBe(2035);
+  });
+
+  it('does not run higher-spending stress when the baseline already has a shortfall', () => {
+    const plan = testPlan();
+    const calls: Array<{ plan: V2PlanPayload; config: SimulationConfig }> = [];
+    const runner: PreviewSimulationRunner = (nextPlan, config) => {
+      calls.push({ plan: nextPlan, config });
+      return calls.length === 1
+        ? { years: [{ ...fakeResult(2027).years[0], shortfall: 1000 }] } as SimulationResult
+        : fakeResult(2026 + calls.length);
+    };
+
+    const preview = runResultsPreviewBundle(plan, runner);
+
+    expect(preview.spendingStress.littleMore).toBeUndefined();
+    expect(calls).toHaveLength(6);
   });
 
   it('does not run survivor preview for single-person plans or missing survivor years', () => {
@@ -157,10 +185,10 @@ describe('preview scenario runner', () => {
 
     expect(shouldRunSurvivorPreview(single)).toBe(false);
     expect(runResultsPreviewBundle(single, runner).survivor).toBeNull();
-    expect(callCount).toBe(4);
+    expect(callCount).toBe(6);
     expect(shouldRunSurvivorPreview(coupleWithoutYear)).toBe(false);
     expect(runResultsPreviewBundle(coupleWithoutYear, runner).survivor).toBeNull();
-    expect(callCount).toBe(8);
+    expect(callCount).toBe(12);
   });
 
   it('returns a safe empty result for invalid or extreme plans instead of throwing', () => {

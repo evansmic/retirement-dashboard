@@ -4,30 +4,30 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 44: Optimizer Recommendation Discipline
+## Latest Sprint — Sprint 45: Spending Guardrail Stress
 
 **Status:** Complete 2026-05-18.
 
-Goal: keep bounded optimizer output from over-suggesting disruptive household choices just because they improve the projection.
+Goal: add a narrow spending-stress layer that shows whether the plan looks fragile, balanced, or has room to review without becoming a spending optimizer.
 
 Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 44 checkpoint doc: [`docs/sprint_44_optimizer_recommendation_discipline.md`](docs/sprint_44_optimizer_recommendation_discipline.md).
+Sprint 45 checkpoint doc: [`docs/sprint_45_spending_guardrail_stress.md`](docs/sprint_45_spending_guardrail_stress.md).
 
-### Sprint 44 Candidate Implementation Tickets
+### Sprint 45 Candidate Implementation Tickets
 
-- [x] **S44-01 — Suggestion gate.** Separate scored candidates from candidates allowed to be highlighted first.
-- [x] **S44-02 — Disruption discipline.** Keep spending cuts, work-later tests, and benefit-delay tests review-only unless they materially repair a visible funding problem.
-- [x] **S44-03 — Bridge check.** Keep benefit-delay review-only when pre-age-70 bridge years show a shortfall.
-- [x] **S44-04 — Details explanation.** Explain why some options stay review-only.
-- [x] **S44-05 — Copy and tests.** Replace strongest-option language with first-option-to-review language and cover disruptive edge cases.
+- [x] **S45-01 — Runtime stress bundle.** Add current, 5% lower, 10% lower, and conditional 5% higher spending checks using safe simulation.
+- [x] **S45-02 — Spending stress selector.** Summarize fragile, balanced, and room-to-review outcomes.
+- [x] **S45-03 — Details UI.** Add a Details-only spending stress table with plain labels.
+- [x] **S45-04 — Copy discipline.** Frame higher spending as room to review, not a recommendation.
+- [x] **S45-05 — Tests.** Cover repair, room-to-review, fragile, and empty-result cases.
 
-### Sprint 44 Definition Of Done
+### Sprint 45 Definition Of Done
 
-- Disruptive options do not become highlighted solely because they improve projected money left.
-- Benefit delay is not highlighted when bridge years are weak.
-- Non-disruptive options can still be highlighted when they materially improve tax, funded years, or projected money left.
-- Details explains why options can be highlighted or remain review-only.
+- Spending stress compares current, lower, and conditional higher spending.
+- Higher spending is never presented as a recommendation.
+- Spending stress stays runtime-only and is not saved to `.plan.json`.
+- Detailed rows live in Details, not Overview.
 - No new optimizer candidate families are added.
 - No optimizer output is persisted.
 - No year-by-year dynamic withdrawal strategy is applied or widened.
@@ -35,6 +35,12 @@ Sprint 44 checkpoint doc: [`docs/sprint_44_optimizer_recommendation_discipline.m
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 45: Spending Guardrail Stress
+
+**Complete 2026-05-18.** Added runtime-only spending stress checks for nearby early-retirement spending levels, with Details evidence and review-only copy.
+
+Sprint 45 checkpoint doc: [`docs/sprint_45_spending_guardrail_stress.md`](docs/sprint_45_spending_guardrail_stress.md).
 
 ### Sprint 44: Optimizer Recommendation Discipline
 
