@@ -86,7 +86,12 @@
     //  PENSION INCOME SPLITTING OPTIMIZER
     //  Returns optimal split fraction (0–0.5) for P1's eligible pension
     // ════════════════════════════════════════════════════════
-    function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year, p2Eligible){
+    function cappedOasClawback(netIncome, year, grossOas){
+      if(grossOas <= 0) return 0;
+      return Math.min(grossOas, oasClawback(netIncome, year));
+    }
+
+    function optimalSplit(p1Eligible, p1Other, p2Income, p1Age, p2Age, year, p2Eligible, cfg){
       // DB pension splittable at any age; RRIF/LIF only from 65+ (caller already handles eligibility)
       // Objective MINIMISES combined tax + OAS clawback (not tax alone) so the optimizer
       // does not accidentally push the receiving spouse into clawback territory.
@@ -100,8 +105,10 @@
         const mInc = p2Income+split;
         const fTax = calcTax(fInc, p1Age, year, p1Eligible*(1-frac)>0);
         const mTax = calcTax(mInc, p2Age, year, p2Eligible+split>0);
-        const clawF = oasClawback(fInc, year);
-        const clawM = oasClawback(mInc, year);
+        const grossOasF = calcOAS_P1(year, (cfg && cfg.oasAgeF) || 65, true);
+        const grossOasM = calcOAS_P2(year, (cfg && cfg.oasAgeM) || 65);
+        const clawF = cappedOasClawback(fInc, year, grossOasF);
+        const clawM = cappedOasClawback(mInc, year, grossOasM);
         const combined = fTax + mTax + clawF + clawM;
         if(f===0 || combined<best){ best=combined; bestSplit=frac; }
       }
@@ -119,14 +126,16 @@
       eligF = Math.max(0, eligF || 0);
       eligM = Math.max(0, eligM || 0);
       if(cfg.pensionSplit && p1Alive && eligF > 0){
-        const frac = optimalSplit(eligF, Math.max(0, taxableF - eligF), taxableM, ageF, ageM, year, eligM);
+        const frac = optimalSplit(eligF, Math.max(0, taxableF - eligF), taxableM, ageF, ageM, year, eligM, cfg);
         splitAmt = eligF * frac;
         fInc = Math.max(0, taxableF - splitAmt);
         mInc = taxableM + splitAmt;
       }
       // Clawback and tax computed on POST-SPLIT income — fixes the reference-document §1.4 bug.
-      const clawF = p1Alive ? oasClawback(fInc, year) : 0;
-      const clawM = oasClawback(mInc, year);
+      const grossOasF = p1Alive ? calcOAS_P1(year, (cfg && cfg.oasAgeF) || 65, p1Alive) : 0;
+      const grossOasM = calcOAS_P2(year, (cfg && cfg.oasAgeM) || 65);
+      const clawF = p1Alive ? cappedOasClawback(fInc, year, grossOasF) : 0;
+      const clawM = cappedOasClawback(mInc, year, grossOasM);
       const p1EligibleAfterSplit = Math.max(0, eligF - splitAmt);
       const p2EligibleAfterSplit = eligM + splitAmt;
       const taxF  = p1Alive ? calcTax(Math.max(0,fInc), ageF, year, p1EligibleAfterSplit>0) : 0;

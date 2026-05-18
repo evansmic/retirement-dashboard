@@ -67,6 +67,14 @@ export type BoundedOptimizerEvidenceRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type BoundedOptimizerDriverRow = {
+  id: 'fundedYears' | 'lifetimeTax' | 'peakTax' | 'oasRecovery' | 'portfolio';
+  label: string;
+  value: string;
+  detail: string;
+  tone: 'neutral' | 'ok' | 'watch';
+};
+
 export type BoundedOptimizerSummary = {
   status: 'blocked' | 'ready';
   execution: 'boundedSearch';
@@ -79,6 +87,7 @@ export type BoundedOptimizerSummary = {
   candidates: BoundedOptimizerCandidateRow[];
   eligibilityNotes: BoundedOptimizerEligibilityNote[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
+  driverRows: BoundedOptimizerDriverRow[];
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
 };
@@ -343,6 +352,7 @@ export function buildBoundedOptimizerCandidates(
 
 function summarizeResult(result: SimulationResult | null | undefined) {
   const rows = Array.isArray(result?.years) ? result.years : [];
+  const totalTax = n((result as { totalTax?: unknown } | null | undefined)?.totalTax);
   const firstShortfall = rows.find((row) => n(row.shortfall) > 1);
   const fundedYears = rows.filter((row) => n(row.shortfall) <= 1).length;
   const lastRow = rows[rows.length - 1];
@@ -354,7 +364,7 @@ function summarizeResult(result: SimulationResult | null | undefined) {
     fundedThroughYear,
     firstShortfallYear: firstShortfall ? n(firstShortfall.year) : null,
     endPortfolio: n(lastRow?.bal_total),
-    lifetimeTax: rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0),
+    lifetimeTax: totalTax || rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0),
     firstYearTax: n(rows[0]?.totalTaxYear),
     peakTax: rows.reduce((peak, row) => Math.max(peak, n(row.totalTaxYear)), 0),
     lifetimeOasRecovery: rows.reduce((sum, row) => sum + n(row.totalOasClawY), 0)
@@ -525,6 +535,61 @@ function buildPensionSplittingEvidence(
   ];
 }
 
+function buildDriverRows(
+  suggested: BoundedOptimizerCandidateRow | null,
+  baseline: BoundedOptimizerCandidateRow | null,
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>
+): BoundedOptimizerDriverRow[] {
+  if (!suggested || !baseline) return [];
+  const suggestedSummary = summaries[suggested.id];
+  const baselineSummary = summaries.baseline;
+  if (!suggestedSummary || !baselineSummary || suggestedSummary.totalYears === 0) return [];
+
+  const fundedYearsDelta = suggestedSummary.fundedYears - baselineSummary.fundedYears;
+  const lifetimeTaxDelta = suggestedSummary.lifetimeTax - baselineSummary.lifetimeTax;
+  const peakTaxDelta = suggestedSummary.peakTax - baselineSummary.peakTax;
+  const oasRecoveryDelta = suggestedSummary.lifetimeOasRecovery - baselineSummary.lifetimeOasRecovery;
+  const portfolioDelta = suggestedSummary.endPortfolio - baselineSummary.endPortfolio;
+
+  return [
+    {
+      id: 'fundedYears',
+      label: 'Funded years',
+      value: fundedYearsDelta === 0 ? 'No change' : `${fundedYearsDelta > 0 ? '+' : ''}${fundedYearsDelta} year${Math.abs(fundedYearsDelta) === 1 ? '' : 's'}`,
+      detail: 'Compares how many projection years have spending covered.',
+      tone: fundedYearsDelta === 0 ? 'neutral' : fundedYearsDelta > 0 ? 'ok' : 'watch'
+    },
+    {
+      id: 'lifetimeTax',
+      label: 'Lifetime tax',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax across the projection.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'peakTax',
+      label: 'Peak annual tax',
+      value: signedMoneyText(peakTaxDelta),
+      detail: 'Compares the highest annual tax year.',
+      tone: evidenceTone(peakTaxDelta)
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery tax',
+      value: signedMoneyText(oasRecoveryDelta),
+      detail: 'Compares OAS recovery tax across the projection.',
+      tone: evidenceTone(oasRecoveryDelta)
+    },
+    {
+      id: 'portfolio',
+      label: 'Projected money left',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left at the end of the plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
+}
+
 export function runBoundedOptimizer(
   plan: V2PlanPayload,
   runner: BoundedOptimizerRunner = runSimulationSafely
@@ -577,6 +642,7 @@ export function runBoundedOptimizer(
     return acc;
   }, {});
   const evidenceRows = buildPensionSplittingEvidence(summaryById);
+  const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -593,6 +659,7 @@ export function runBoundedOptimizer(
     candidates,
     eligibilityNotes,
     evidenceRows,
+    driverRows,
     explanation,
     reviewNotes: suggested
       ? [

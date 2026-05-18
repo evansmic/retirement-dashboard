@@ -3154,6 +3154,25 @@ function BoundedOptimizerPanel({
         </div>
       ) : null}
 
+      {!isCompact && summary?.driverRows.length ? (
+        <section className="optimizer-driver-panel">
+          <div>
+            <p className="eyebrow">Tax and funding drivers</p>
+            <h3>Why the option moved</h3>
+            <p>These rows compare the selected plan option with the current plan. They explain direction, not a final recommendation.</p>
+          </div>
+          <div className="optimizer-driver-grid">
+            {summary.driverRows.map((row) => (
+              <article className={`optimizer-driver-row driver-${row.tone}`} key={row.id}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.evidenceRows.length ? (
         <section className="optimizer-evidence-panel">
           <div>

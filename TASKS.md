@@ -4,28 +4,29 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 41: Pension-Splitting Evidence Rows
+## Latest Sprint — Sprint 42: Optimizer Tax-Driver Explanations
 
 **Status:** Complete 2026-05-18.
 
-Goal: make the pension-splitting optimizer option easier to trust by showing what changed before adding more optimizer behavior.
+Goal: explain the tax and funding drivers behind the selected bounded optimizer option before adding more optimizer behavior.
 
 Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
 
-Sprint 41 checkpoint doc: [`docs/sprint_41_pension_splitting_evidence_rows.md`](docs/sprint_41_pension_splitting_evidence_rows.md).
+Sprint 42 checkpoint doc: [`docs/sprint_42_optimizer_tax_driver_explanations.md`](docs/sprint_42_optimizer_tax_driver_explanations.md).
 
-### Sprint 41 Candidate Implementation Tickets
+### Sprint 42 Candidate Implementation Tickets
 
-- [x] **S41-01 — Evidence selector.** Add pension-splitting evidence rows comparing the option against the current plan.
-- [x] **S41-02 — Tax evidence.** Show lifetime tax, first-year tax, and peak annual tax movement.
-- [x] **S41-03 — OAS and portfolio evidence.** Show OAS recovery tax and projected money-left movement.
-- [x] **S41-04 — Details UI.** Show evidence rows in Details, not as a heavier Overview feature.
-- [x] **S41-05 — Copy and tests.** Keep eligibility and review copy close to the evidence.
+- [x] **S42-01 — Driver selector.** Add selected-option driver rows versus the current plan.
+- [x] **S42-02 — Tax drivers.** Show lifetime tax, peak annual tax, and OAS recovery tax movement.
+- [x] **S42-03 — Funding drivers.** Show funded-year and projected money-left movement.
+- [x] **S42-04 — Details UI.** Add driver rows in Details without increasing Overview density.
+- [x] **S42-05 — Copy and tests.** Keep driver copy directional and non-advisory.
 
-### Sprint 41 Definition Of Done
+### Sprint 42 Definition Of Done
 
-- Pension-splitting evidence is visible before the candidate table in Details.
-- Evidence rows compare against the current plan.
+- Selected optimizer option has visible tax/funding driver rows.
+- Driver rows compare against the current plan.
+- Driver rows explain direction rather than claiming advice.
 - Overview remains light.
 - No new optimizer candidate families are added.
 - No optimizer output is persisted.
@@ -34,6 +35,12 @@ Sprint 41 checkpoint doc: [`docs/sprint_41_pension_splitting_evidence_rows.md`](
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 42: Optimizer Tax-Driver Explanations
+
+**Complete 2026-05-18.** Added selected-option tax and funding driver rows for lifetime tax, peak tax, OAS recovery tax, funded years, and projected money left while keeping optimizer output review-only.
+
+Sprint 42 checkpoint doc: [`docs/sprint_42_optimizer_tax_driver_explanations.md`](docs/sprint_42_optimizer_tax_driver_explanations.md).
 
 ### Sprint 41: Pension-Splitting Evidence Rows
 

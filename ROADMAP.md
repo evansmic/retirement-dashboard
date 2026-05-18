@@ -40,14 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 41 is complete. The pension-splitting optimizer option now has evidence rows showing tax, OAS recovery tax, and projected money-left movement versus the current plan. The next step is another small explanation or evidence increment before adding more optimizer behaviors.
+Sprint 42 is complete. The selected bounded optimizer option now has tax and funding driver rows, so users can see whether the result is driven by funded years, lifetime tax, peak tax, OAS recovery tax, or projected money left. The next step can stay narrow: another explanation increment or a modest guardrail-spending stress.
 
-Completed Sprint 41 slices:
+Completed Sprint 42 slices:
 
-- Added pension-splitting evidence rows.
-- Compared lifetime tax, first-year tax, peak annual tax, OAS recovery tax, and projected money left against the current plan.
-- Kept the evidence in Details so Overview stays light.
-- Kept the Sprint 40 candidate set unchanged.
+- Added selected-option tax and funding driver rows.
+- Compared funded years, lifetime tax, peak tax, OAS recovery tax, and projected money left against the current plan.
+- Kept driver evidence in Details so Overview stays light.
+- Kept the optimizer candidate set unchanged.
 - Kept optimizer output unsaved and review-only.
 
 ## Consumer Roadmap Sequence
@@ -73,7 +73,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 17. **Sprint 39 — Optimizer eligibility refinement.** Tighten when each lever is allowed before adding more optimizer behavior.
 18. **Sprint 40 — Bounded optimizer search expansion.** Add pension-splitting as the first narrow new optimizer candidate family.
 19. **Sprint 41 — Pension-splitting evidence rows.** Explain what changed when pension splitting is tested before adding more optimizer behavior.
-20. **Sprint 42+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
+20. **Sprint 42 — Optimizer tax-driver explanations.** Explain why the selected optimizer option moved before adding more optimizer behavior.
+21. **Sprint 43+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
 
 ## Medium-Term Roadmap
 
@@ -113,7 +114,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 39 — Optimizer eligibility refinement.** Complete 2026-05-17. Added included/skipped/review-first eligibility notes and gates for spending, work timing, benefit timing, withdrawal order, and survivor setup.
 - **Sprint 40 — Bounded optimizer search expansion.** Complete 2026-05-18. Added one pension-splitting candidate family with eligibility gates and review copy.
 - **Sprint 41 — Pension-splitting evidence rows.** Complete 2026-05-18. Added evidence rows for tax, OAS recovery tax, and projected money-left movement against the current plan.
-- **Sprint 42 — Next optimizer increment.** Planned after Sprint 41. Consider one narrow addition, such as richer tax-driver explanations or a modest guardrail-spending stress, before any tax-aware drawdown optimizer.
+- **Sprint 42 — Optimizer tax-driver explanations.** Complete 2026-05-18. Added driver rows for funded years, tax, OAS recovery tax, and projected money left.
+- **Sprint 43 — Next optimizer increment.** Planned after Sprint 42. Consider a modest guardrail-spending stress before any tax-aware drawdown optimizer.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

@@ -106,4 +106,53 @@ describe('extracted simulation engine boundary', () => {
     expect(Math.abs((sources - first.totalTaxYear) - first.totalAftaxYear)).toBeLessThan(1);
     expect(result.years[result.years.length - 1].bal_total).toBeGreaterThan(0);
   });
+
+  it('does not show OAS recovery tax before delayed OAS has started', () => {
+    const delayedOasPlan: V2PlanPayload = {
+      ...larryPlan,
+      title: 'Delayed OAS recovery regression',
+      p1: {
+        ...larryPlan.p1,
+        dob: 1968,
+        retireYear: 2028,
+        salary: 0,
+        annualRrspContrib: 0,
+        annualTfsaContrib: 0,
+        db_before65: 150000,
+        db_after65: 150000,
+        db_startYear: 2028,
+        rrsp: 0,
+        tfsa: 0,
+        cpp65_monthly: 1200,
+        oas_monthly: 742
+      },
+      spending: { gogo: 50000, gogoEnd: 75, slowgo: 45000, slowgoEnd: 85, nogo: 40000 },
+      cashWedge: { balance: 100000, returnRate: 0.03, targetYears: 2 },
+      assumptions: {
+        ...larryPlan.assumptions,
+        retireYear: 2028,
+        planEnd: 2040
+      }
+    };
+
+    const result = runSimulation(delayedOasPlan, {
+      cppAgeF: 70,
+      cppAgeM: 70,
+      oasAgeF: 70,
+      oasAgeM: 70,
+      meltdown: false,
+      returnRate: 0.05,
+      pensionSplit: false,
+      p1Dies: null,
+      withdrawalOrder: 'default'
+    });
+
+    const beforeOasRows = result.years.filter((row) => row.ageF < 70);
+    const firstOasRow = result.years.find((row) => row.ageF === 70);
+
+    expect(beforeOasRows.length).toBeGreaterThan(0);
+    expect(beforeOasRows.every((row) => row.oas_f === 0 && row.totalOasClawY === 0)).toBe(true);
+    expect(firstOasRow).toBeDefined();
+    expect(firstOasRow?.totalOasClawY).toBeGreaterThan(0);
+  });
 });

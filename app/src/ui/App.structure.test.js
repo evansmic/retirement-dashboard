@@ -43,6 +43,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Pension-splitting evidence');
     expect(appSource).toContain('What changed in this test');
     expect(appSource).toContain('Confirm eligibility before relying on them');
+    expect(appSource).toContain('Tax and funding drivers');
+    expect(appSource).toContain('Why the option moved');
+    expect(appSource).toContain('They explain direction, not a final recommendation');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');

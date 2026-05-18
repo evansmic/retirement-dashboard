@@ -30,7 +30,12 @@ function readyPlan(): V2PlanPayload {
   return plan;
 }
 
-function result(endPortfolio: number, lifetimeTax: number, firstShortfallYear: number | null = null): SimulationResult {
+function result(
+  endPortfolio: number,
+  lifetimeTax: number,
+  firstShortfallYear: number | null = null,
+  options: { oasRecovery?: number } = {}
+): SimulationResult {
   const years = [2032, 2033, 2034].map((year, index) => ({
     year,
     ageF: 64 + index,
@@ -45,7 +50,7 @@ function result(endPortfolio: number, lifetimeTax: number, firstShortfallYear: n
     cash_draw: 0,
     totalTaxYear: Math.round(lifetimeTax / 3),
     taxableIncome: 90000,
-    totalOasClawY: 0,
+    totalOasClawY: Math.round((options.oasRecovery || 0) / 3),
     totalAftaxYear: 85000,
     cashFlow: 0,
     shortfall: firstShortfallYear === year ? 5000 : 0,
@@ -124,6 +129,9 @@ describe('bounded optimizer runner', () => {
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
     expect(summary.explanation.verifyBeforeUsing.join(' ')).toContain('Review taxes');
+    expect(summary.driverRows.map((row) => row.id)).toEqual(['fundedYears', 'lifetimeTax', 'peakTax', 'oasRecovery', 'portfolio']);
+    expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
+    expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
     expect(calls).toHaveLength(8);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
@@ -146,7 +154,7 @@ describe('bounded optimizer runner', () => {
 
     const candidates = buildBoundedOptimizerCandidates(plan);
     const summary = runBoundedOptimizer(plan, (candidatePlan, config) =>
-      config.pensionSplit ? result(180000, 78000, null) : result(120000, 90000, null)
+      config.pensionSplit ? result(180000, 78000, null, { oasRecovery: 3000 }) : result(120000, 90000, null, { oasRecovery: 9000 })
     );
 
     expect(candidates.map((candidate) => candidate.id)).toContain('pensionSplit');
@@ -173,6 +181,11 @@ describe('bounded optimizer runner', () => {
     expect(summary.evidenceRows.find((row) => row.id === 'pensionPortfolio')).toMatchObject({
       label: 'Projected money-left change',
       value: '+$60,000',
+      tone: 'ok'
+    });
+    expect(summary.driverRows.find((row) => row.id === 'oasRecovery')).toMatchObject({
+      label: 'OAS recovery tax',
+      value: '-$6,000',
       tone: 'ok'
     });
   });
