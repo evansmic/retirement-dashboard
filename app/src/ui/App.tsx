@@ -31,6 +31,7 @@ import {
   selectCashFlowReconciliationRows,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectDrawdownReadinessSummary,
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
@@ -2187,6 +2188,7 @@ function ResultsHandoffPanel({
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const spendingStressSummary = selectSpendingStressSummary(result, spendingStress, plan);
+  const drawdownReadiness = selectDrawdownReadinessSummary(result, plan);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
   const optimizerBoundaries = selectOptimizerDecisionBoundaries(result, plan, retirementAnswer);
   const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
@@ -2240,15 +2242,16 @@ function ResultsHandoffPanel({
         {activeSection === 'cashFlow' ? (
           <CashFlowResultsPanel diagnostics={reconciliationDiagnostics} loading={loading} rows={cashFlowRows} />
         ) : activeSection === 'details' ? (
-            <DetailsResultsPanel
-              decisionChecklist={decisionChecklist}
-              decisionDetailRows={decisionDetailRows}
-              fundingRows={fundingRows}
-              optimizerBoundaries={optimizerBoundaries}
-              optimizerInputReview={optimizerInputReview}
-              boundedOptimizer={optimizer}
-              loading={loading}
-              onSection={onSection}
+          <DetailsResultsPanel
+            decisionChecklist={decisionChecklist}
+            decisionDetailRows={decisionDetailRows}
+            fundingRows={fundingRows}
+            optimizerBoundaries={optimizerBoundaries}
+            optimizerInputReview={optimizerInputReview}
+            boundedOptimizer={optimizer}
+            drawdownReadiness={drawdownReadiness}
+            loading={loading}
+            onSection={onSection}
             overview={overview}
             planHealth={planHealth}
             projectionMilestones={projectionMilestones}
@@ -2732,6 +2735,7 @@ function DetailsResultsPanel({
   optimizerBoundaries,
   optimizerInputReview,
   boundedOptimizer,
+  drawdownReadiness,
   overview,
   planHealth,
   projectionMilestones,
@@ -2754,6 +2758,7 @@ function DetailsResultsPanel({
   optimizerBoundaries: ReturnType<typeof selectOptimizerDecisionBoundaries>;
   optimizerInputReview: ReturnType<typeof selectOptimizerInputReview>;
   boundedOptimizer: BoundedOptimizerSummary | null;
+  drawdownReadiness: ReturnType<typeof selectDrawdownReadinessSummary>;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -2864,6 +2869,7 @@ function DetailsResultsPanel({
       <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
+      <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
@@ -3326,6 +3332,40 @@ function SpendingStressPanel({
           </table>
         </div>
       ) : null}
+      <p className="table-note">{summary.reviewNote}</p>
+    </section>
+  );
+}
+
+function DrawdownReadinessPanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectDrawdownReadinessSummary>;
+}) {
+  return (
+    <section className={`result-card optimizer-evidence-panel drawdown-readiness-panel drawdown-readiness-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Drawdown readiness</p>
+        <h3>{loading ? 'Checking drawdown evidence' : summary.headline}</h3>
+        <p>{summary.detail}</p>
+      </div>
+      {summary.rows.length ? (
+        <div className="optimizer-evidence-grid">
+          {summary.rows.map((row) => (
+            <article className={`optimizer-evidence-row evidence-${row.tone}`} key={row.id}>
+              <span>{row.label}</span>
+              <strong>{row.value}</strong>
+              <p>{row.detail}</p>
+              <p>{row.reviewFocus}</p>
+            </article>
+          ))}
+        </div>
+      ) : null}
+      <p className="table-note">
+        This does not change withdrawal order or create annual account-by-account instructions. It does not change the current withdrawal order used in Results.
+      </p>
       <p className="table-note">{summary.reviewNote}</p>
     </section>
   );

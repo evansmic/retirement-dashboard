@@ -13,6 +13,7 @@ import {
   selectChartReadyData,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectDrawdownReadinessSummary,
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
@@ -50,6 +51,7 @@ import {
   selectTaxSummaryMetrics
 } from './resultSelectors';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
+import { createPlanFile } from '../data/planFile';
 
 const fixture: SimulationResult = {
   years: [
@@ -550,6 +552,79 @@ describe('result selectors', () => {
     expect(stress.status).toBe('cannotTell');
     expect(stress.rows).toEqual([]);
     expect(stress.reviewNote).toContain('does not change the saved plan');
+  });
+
+  it('returns a safe empty drawdown readiness summary without projection rows', () => {
+    const readiness = selectDrawdownReadinessSummary({ years: [] }, planFixture);
+
+    expect(readiness.status).toBe('cannotTell');
+    expect(readiness.rows).toEqual([]);
+    expect(readiness.reviewNote).toContain('does not change withdrawal order');
+    expect(readiness.reviewNote).toContain('save optimizer output');
+  });
+
+  it('summarizes registered withdrawal, OAS recovery, and peak tax evidence as review-only', () => {
+    const result = withRows([
+      {
+        year: 2028,
+        rrif_draw_f: 0,
+        lif_draw: 0,
+        taxableIncome: 42000,
+        totalTaxYear: 3500,
+        totalOasClawY: 0,
+        bal_total: 600000
+      },
+      {
+        year: 2029,
+        rrif_draw_f: 65000,
+        lif_draw: 5000,
+        taxableIncome: 125000,
+        totalTaxYear: 31000,
+        totalOasClawY: 4200,
+        bal_rrsp: 260000,
+        bal_lif: 40000,
+        bal_total: 500000
+      }
+    ]);
+
+    const readiness = selectDrawdownReadinessSummary(result, {
+      ...planFixture,
+      p1: { ...planFixture.p1, rrsp: 300000, tfsa: 90000, nonreg: 50000 },
+      cashWedge: { ...planFixture.cashWedge, balance: 40000 }
+    });
+
+    expect(readiness.status).toBe('review');
+    expect(readiness.detail).toContain('does not change the current withdrawal order');
+    expect(readiness.rows.find((row) => row.id === 'registeredPressure')).toMatchObject({
+      tone: 'watch',
+      year: 2029,
+      disposition: 'reviewOnly'
+    });
+    expect(readiness.rows.find((row) => row.id === 'oasRecovery')).toMatchObject({
+      tone: 'watch',
+      year: 2029,
+      disposition: 'reviewOnly'
+    });
+    expect(readiness.rows.find((row) => row.id === 'peakTax')).toMatchObject({
+      year: 2029,
+      disposition: 'reviewOnly'
+    });
+    expect(readiness.rows.find((row) => row.id === 'lowTaxWindow')).toMatchObject({
+      value: '2028',
+      disposition: 'reviewOnly'
+    });
+    expect(readiness.rows.every((row) => row.disposition === 'reviewOnly')).toBe(true);
+    expect(JSON.stringify(readiness)).not.toContain('recommendation');
+  });
+
+  it('keeps drawdown readiness out of saved plan files', () => {
+    const readiness = selectDrawdownReadinessSummary(fixture, planFixture);
+    const file = createPlanFile(planFixture);
+
+    expect(readiness.rows.length).toBeGreaterThan(0);
+    expect(file.plan).not.toHaveProperty('drawdownReadiness');
+    expect(file.plan).not.toHaveProperty('optimizerContract');
+    expect(file.plan).not.toHaveProperty('withdrawalStrategy');
   });
 
   it('flags estate intent when a large projected estate has no target', () => {

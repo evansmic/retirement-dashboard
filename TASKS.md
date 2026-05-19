@@ -4,37 +4,43 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 45: Spending Guardrail Stress
+## Latest Sprint — Sprint 46: Tax-Aware Drawdown Contract Readiness
 
 **Status:** Complete 2026-05-18.
 
-Goal: add a narrow spending-stress layer that shows whether the plan looks fragile, balanced, or has room to review without becoming a spending optimizer.
+Goal: prepare for a future tax-aware drawdown optimizer by adding read-only drawdown readiness evidence and hardening the optimizer contract boundary without changing withdrawal order or saved plan data.
 
-Non-scope: new candidate families, broad search expansion, year-by-year tax-bracket optimization, automatic strategy application, persisted optimizer output, new modelling, schema/output changes, cloud accounts, advisor tooling, or report migration.
+Non-scope: tax-aware withdrawal optimization, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, new candidate families, cloud accounts, advisor tooling, or report migration.
 
-Sprint 45 checkpoint doc: [`docs/sprint_45_spending_guardrail_stress.md`](docs/sprint_45_spending_guardrail_stress.md).
+Sprint 46 checkpoint doc: [`docs/sprint_46_tax_aware_drawdown_contract_readiness.md`](docs/sprint_46_tax_aware_drawdown_contract_readiness.md).
 
-### Sprint 45 Candidate Implementation Tickets
+### Sprint 46 Candidate Implementation Tickets
 
-- [x] **S45-01 — Runtime stress bundle.** Add current, 5% lower, 10% lower, and conditional 5% higher spending checks using safe simulation.
-- [x] **S45-02 — Spending stress selector.** Summarize fragile, balanced, and room-to-review outcomes.
-- [x] **S45-03 — Details UI.** Add a Details-only spending stress table with plain labels.
-- [x] **S45-04 — Copy discipline.** Frame higher spending as room to review, not a recommendation.
-- [x] **S45-05 — Tests.** Cover repair, room-to-review, fragile, and empty-result cases.
+- [x] **S46-01 — Drawdown readiness selector.** Summarize registered withdrawal pressure, OAS recovery exposure, peak tax years, low-tax windows, and account mix from existing results.
+- [x] **S46-02 — Details UI.** Add a Details-only Drawdown readiness panel with review-only copy.
+- [x] **S46-03 — Contract hardening.** Keep withdrawal strategy in current-order mode with empty annual overrides.
+- [x] **S46-04 — Persistence guardrails.** Confirm readiness and optimizer strategy output are not saved into `.plan.json`.
+- [x] **S46-05 — Copy discipline.** Avoid optimal-drawdown, recommendation, guarantee, or advice-like language.
 
-### Sprint 45 Definition Of Done
+### Sprint 46 Definition Of Done
 
-- Spending stress compares current, lower, and conditional higher spending.
-- Higher spending is never presented as a recommendation.
-- Spending stress stays runtime-only and is not saved to `.plan.json`.
-- Detailed rows live in Details, not Overview.
-- No new optimizer candidate families are added.
+- Drawdown readiness is visible in Details and absent from Overview.
+- Drawdown readiness uses existing simulation and plan data only.
+- Current withdrawal order remains unchanged.
+- Annual withdrawal overrides remain an empty future-contract placeholder.
+- No drawdown readiness or optimizer strategy output is persisted.
 - No optimizer output is persisted.
-- No year-by-year dynamic withdrawal strategy is applied or widened.
-- No report routing or saved output contract changes.
+- No tax-aware drawdown optimizer is executed.
+- No engine output or saved plan schema changes are introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 46: Tax-Aware Drawdown Contract Readiness
+
+**Complete 2026-05-18.** Added Details-only drawdown readiness evidence and reinforced the current-order withdrawal strategy contract without adding tax-aware drawdown execution or saved optimizer output.
+
+Sprint 46 checkpoint doc: [`docs/sprint_46_tax_aware_drawdown_contract_readiness.md`](docs/sprint_46_tax_aware_drawdown_contract_readiness.md).
 
 ### Sprint 45: Spending Guardrail Stress
 

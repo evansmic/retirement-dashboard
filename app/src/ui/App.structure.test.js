@@ -29,6 +29,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<TaxPressurePanel');
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel');
+    expect(detailsPanel).toContain('<DrawdownReadinessPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
   });
 
@@ -61,6 +62,21 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Spending stress check');
     expect(appSource).not.toContain('safe spend');
     expect(appSource).not.toContain('you can spend more');
+  });
+
+  it('shows drawdown readiness in Details without optimizer execution language', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<ResultsReadinessPanel compact', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+
+    expect(appSource).toContain('Drawdown readiness');
+    expect(appSource).toContain('does not change withdrawal order');
+    expect(appSource).toContain('does not change the current withdrawal order');
+    expect(overviewBranch).not.toContain('<DrawdownReadinessPanel');
+    expect(appSource).not.toContain('optimal drawdown');
+    expect(appSource).not.toContain('recommended withdrawal strategy');
+    expect(appSource).not.toContain('safe spend');
+    expect(appSource).not.toContain('guaranteed');
   });
 
   it('keeps save and report actions distinct in the consumer UI', () => {

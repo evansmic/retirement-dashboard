@@ -759,6 +759,27 @@ export type OptimizerInputReviewSummary = {
   rows: OptimizerInputReviewRow[];
 };
 
+export type DrawdownReadinessStatus = 'cannotTell' | 'ready' | 'review';
+
+export type DrawdownReadinessRow = {
+  id: 'registeredPressure' | 'oasRecovery' | 'peakTax' | 'lowTaxWindow' | 'accountMix';
+  label: string;
+  tone: 'ok' | 'review' | 'watch';
+  year: number | null;
+  value: string;
+  detail: string;
+  reviewFocus: string;
+  disposition: 'reviewOnly';
+};
+
+export type DrawdownReadinessSummary = {
+  status: DrawdownReadinessStatus;
+  headline: string;
+  detail: string;
+  rows: DrawdownReadinessRow[];
+  reviewNote: string;
+};
+
 const RECONCILIATION_TOLERANCE = 1;
 const OAS_CLAWBACK_WATCH_THRESHOLD = 1;
 
@@ -1248,6 +1269,160 @@ export function selectSpendingStressSummary(
     detail: detailByStatus[status],
     rows,
     reviewNote: 'Spending stress is review evidence only. It does not change your saved plan or apply an optimized strategy.'
+  };
+}
+
+export function selectDrawdownReadinessSummary(
+  result: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined
+): DrawdownReadinessSummary {
+  const rows = rowsFrom(result);
+  if (!rows.length) {
+    return {
+      status: 'cannotTell',
+      headline: 'Drawdown readiness needs a completed projection first.',
+      detail: 'Clear required inputs, then rerun Results before reviewing future drawdown evidence.',
+      rows: [],
+      reviewNote: 'This is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
+    };
+  }
+
+  const annualRows = rows.map((row) => ({
+    row,
+    year: n(row.year),
+    registeredWithdrawals: n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw),
+    tfsaWithdrawals: n(row.tfsa_draw),
+    nonRegisteredWithdrawals: n(row.nonreg_draw),
+    cashWithdrawals: n(row.cash_draw),
+    tax: n(row.totalTaxYear),
+    taxableIncome: n(row.taxableIncome),
+    oasRecovery: n(row.totalOasClawY)
+  }));
+  const registeredRows = annualRows.filter((item) => item.registeredWithdrawals > RECONCILIATION_TOLERANCE);
+  const largestRegistered = registeredRows.reduce<typeof annualRows[number] | null>((largest, item) => {
+    if (!largest || item.registeredWithdrawals > largest.registeredWithdrawals) return item;
+    return largest;
+  }, null);
+  const oasRows = annualRows.filter((item) => item.oasRecovery > OAS_CLAWBACK_WATCH_THRESHOLD);
+  const largestOasRecovery = oasRows.reduce<typeof annualRows[number] | null>((largest, item) => {
+    if (!largest || item.oasRecovery > largest.oasRecovery) return item;
+    return largest;
+  }, null);
+  const peakTax = annualRows.reduce<typeof annualRows[number] | null>((peak, item) => {
+    if (!peak || item.tax > peak.tax) return item;
+    return peak;
+  }, null);
+  const firstRegisteredYear = registeredRows[0]?.year || null;
+  const peakTaxAmount = peakTax?.tax || 0;
+  const lowTaxRows = annualRows.filter((item) => {
+    if (item.taxableIncome <= 0) return false;
+    if (item.registeredWithdrawals > RECONCILIATION_TOLERANCE) return false;
+    if (firstRegisteredYear && item.year >= firstRegisteredYear) return false;
+    return peakTaxAmount <= 0 || item.tax <= Math.max(5000, peakTaxAmount * 0.55);
+  });
+  const firstLowTax = lowTaxRows[0] || null;
+  const lastLowTax = lowTaxRows[lowTaxRows.length - 1] || null;
+  const planRegisteredAssets = n(plan?.p1?.rrsp) + n(plan?.p1?.lif) + n(plan?.p1?.lira) + n(plan?.p2?.rrsp) + n(plan?.p2?.lif) + n(plan?.p2?.lira);
+  const planFlexibleAssets = n(plan?.p1?.tfsa) + n(plan?.p2?.tfsa) + n(plan?.p1?.nonreg) + n(plan?.p2?.nonreg) + n(plan?.cashWedge?.balance);
+  const finalRow = rows[rows.length - 1];
+  const finalRegisteredAssets = n(finalRow?.bal_rrsp) + n(finalRow?.bal_lif);
+
+  const readinessRows: DrawdownReadinessRow[] = [
+    {
+      id: 'registeredPressure',
+      label: 'Registered withdrawal pressure',
+      tone: largestRegistered ? (largestRegistered.registeredWithdrawals > 50000 || registeredRows.length >= Math.max(4, rows.length * 0.35) ? 'watch' : 'review') : 'ok',
+      year: largestRegistered?.year || null,
+      value: largestRegistered ? `${largestRegistered.year}: ${moneyText(largestRegistered.registeredWithdrawals)}` : 'No clear pressure',
+      detail: largestRegistered
+        ? 'Registered withdrawals are visible in the projection and may shape taxable income later.'
+        : 'No major registered withdrawal pressure appears in the current projection.',
+      reviewFocus: largestRegistered
+        ? 'A future drawdown review would test timing against taxes, benefits, and estate goals.'
+        : 'Keep the current withdrawal order unless a later review shows a reason to test it.',
+      disposition: 'reviewOnly'
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery exposure',
+      tone: largestOasRecovery ? (largestOasRecovery.oasRecovery > 3000 ? 'watch' : 'review') : 'ok',
+      year: largestOasRecovery?.year || null,
+      value: largestOasRecovery ? `${largestOasRecovery.year}: ${moneyText(largestOasRecovery.oasRecovery)}` : 'None visible',
+      detail: largestOasRecovery
+        ? 'OAS recovery tax appears in the projection, so taxable income timing deserves review.'
+        : 'No OAS recovery tax appears in the current projection.',
+      reviewFocus: largestOasRecovery
+        ? 'A future drawdown review would compare whether taxable withdrawals can be timed more deliberately.'
+        : 'No OAS recovery evidence is available for a future drawdown check right now.',
+      disposition: 'reviewOnly'
+    },
+    {
+      id: 'peakTax',
+      label: 'Peak tax year',
+      tone: peakTaxAmount > 0 ? (largestRegistered || largestOasRecovery ? 'review' : 'ok') : 'ok',
+      year: peakTax?.year || null,
+      value: peakTaxAmount > 0 && peakTax ? `${peakTax.year}: ${moneyText(peakTaxAmount)}` : 'No tax shown',
+      detail: peakTaxAmount > 0
+        ? 'This is the highest annual tax year in the current projection.'
+        : 'The projection does not show annual tax pressure yet.',
+      reviewFocus: peakTaxAmount > 0
+        ? 'Use this as evidence for a later year-by-year drawdown review, not as an instruction to change accounts.'
+        : 'Confirm taxable income inputs before using tax timing evidence.',
+      disposition: 'reviewOnly'
+    },
+    {
+      id: 'lowTaxWindow',
+      label: 'Possible low-tax review window',
+      tone: firstLowTax ? 'review' : 'ok',
+      year: firstLowTax?.year || null,
+      value: firstLowTax && lastLowTax
+        ? firstLowTax.year === lastLowTax.year
+          ? String(firstLowTax.year)
+          : `${firstLowTax.year}-${lastLowTax.year}`
+        : 'No clear window',
+      detail: firstLowTax
+        ? 'One or more years before registered withdrawals show lower taxable income in the current projection.'
+        : 'No clear low-tax window appears before registered withdrawals begin.',
+      reviewFocus: firstLowTax
+        ? 'A future drawdown review may test whether those years are useful for planned taxable withdrawals.'
+        : 'Keep this as context until the drawdown optimizer can test annual withdrawal amounts.',
+      disposition: 'reviewOnly'
+    },
+    {
+      id: 'accountMix',
+      label: 'Account mix for future testing',
+      tone: planRegisteredAssets > 0 && planFlexibleAssets > 0 ? 'review' : 'ok',
+      year: null,
+      value:
+        planRegisteredAssets > 0 || planFlexibleAssets > 0
+          ? `${moneyText(planRegisteredAssets)} registered / ${moneyText(planFlexibleAssets)} flexible`
+          : 'No account mix entered',
+      detail:
+        planRegisteredAssets > 0 && planFlexibleAssets > 0
+          ? 'The plan has both taxable registered assets and more flexible account buckets for a future review.'
+          : 'The current account mix gives a future drawdown review fewer account choices to compare.',
+      reviewFocus:
+        finalRegisteredAssets > 0
+          ? 'Registered assets remain visible late in the projection, so estate and survivor impact should be checked later.'
+          : 'Current account balances should still be confirmed before testing future drawdown paths.',
+      disposition: 'reviewOnly'
+    }
+  ];
+
+  const hasWatch = readinessRows.some((row) => row.tone === 'watch');
+  const hasReview = readinessRows.some((row) => row.tone === 'review');
+  const status: DrawdownReadinessStatus = hasWatch || hasReview ? 'review' : 'ready';
+
+  return {
+    status,
+    headline:
+      status === 'review'
+        ? 'The plan has drawdown evidence worth preserving for a future review.'
+        : 'No major drawdown timing pressure appears in this first-pass review.',
+    detail:
+      'These rows explain where a future tax-aware drawdown review would look. This does not change the current withdrawal order.',
+    rows: readinessRows,
+    reviewNote: 'Drawdown readiness is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
   };
 }
 

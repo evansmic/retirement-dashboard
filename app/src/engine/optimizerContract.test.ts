@@ -59,4 +59,30 @@ describe('optimizer contract boundary', () => {
     expect(contract.levers.find((lever) => lever.id === 'spending')).toMatchObject({ permission: 'needsDecision' });
     expect(contract.levers.find((lever) => lever.id === 'retirementTiming')).toMatchObject({ permission: 'needsDecision' });
   });
+
+  it('keeps annual withdrawal overrides as a future contract placeholder only', () => {
+    const plan = createBlankPlan();
+    plan.title = 'Drawdown contract boundary';
+    plan.p1.rrsp = 300000;
+    plan.p1.tfsa = 100000;
+    plan.p1.retireYear = 2030;
+    plan.p1.cpp65_monthly = 1100;
+    plan.p1.oas_monthly = 742;
+    plan.spending.gogo = 78000;
+    plan.assumptions.retireYear = 2030;
+    plan.assumptions.planEnd = 2065;
+    plan.assumptions.withdrawalOrder = 'registered-first';
+
+    const contract = buildOptimizerContract(plan);
+    const file = createPlanFile(plan);
+
+    expect(contract.withdrawalStrategy).toEqual({
+      mode: 'currentOrder',
+      order: 'registered-first',
+      annualOverrides: []
+    });
+    expect(contract.withdrawalStrategy.mode).not.toBe('annualOverrides');
+    expect(file.plan).not.toHaveProperty('withdrawalStrategy');
+    expect(file.plan).not.toHaveProperty('annualOverrides');
+  });
 });
