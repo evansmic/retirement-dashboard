@@ -11,11 +11,12 @@ export type BoundedOptimizerCandidateId =
   | 'retireLater2'
   | 'delayBenefits'
   | 'pensionSplit'
+  | 'cppSharing'
   | 'withdrawalDefault'
   | 'withdrawalRegisteredFirst'
   | 'withdrawalNonRegisteredFirst';
 
-export type BoundedOptimizerLever = OptimizerLeverId | 'pensionSplitting';
+export type BoundedOptimizerLever = OptimizerLeverId | 'pensionSplitting' | 'cppSharing';
 
 export type BoundedOptimizerCandidateDefinition = {
   id: BoundedOptimizerCandidateId;
@@ -76,7 +77,17 @@ export type BoundedOptimizerRecommendationNote = {
 };
 
 export type BoundedOptimizerEvidenceRow = {
-  id: 'pensionLifetimeTax' | 'pensionFirstYearTax' | 'pensionPeakTax' | 'pensionOasRecovery' | 'pensionPortfolio';
+  id:
+    | 'pensionLifetimeTax'
+    | 'pensionFirstYearTax'
+    | 'pensionPeakTax'
+    | 'pensionOasRecovery'
+    | 'pensionPortfolio'
+    | 'cppSharingLifetimeTax'
+    | 'cppSharingFirstYearTax'
+    | 'cppSharingPeakTax'
+    | 'cppSharingOasRecovery'
+    | 'cppSharingPortfolio';
   label: string;
   value: string;
   detail: string;
@@ -174,6 +185,15 @@ function hasCppAndOasEstimate(person: V2PlanPayload['p1']): boolean {
   return (n(person.cpp65_monthly) > 0 || n(person.cpp70_monthly) > 0) && n(person.oas_monthly) > 0;
 }
 
+function hasCppEstimate(person: V2PlanPayload['p1']): boolean {
+  return n(person.cpp65_monthly) > 0 || n(person.cpp70_monthly) > 0;
+}
+
+function personReachesCppStartAge(person: V2PlanPayload['p1'], endYear: number): boolean {
+  const birthYear = n(person.dob);
+  return birthYear > 0 && endYear >= birthYear + 65;
+}
+
 function personCanStillDelayBenefits(person: V2PlanPayload['p1'], startYear: number, endYear: number): boolean {
   const startAge = personAgeInYear(person, startYear);
   const reachesAge70 = n(person.dob) > 0 && endYear >= n(person.dob) + 70;
@@ -211,6 +231,10 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   });
   const hasDbPension = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) > 0;
   const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && (hasDbPension || reachesPensionSplitAge);
+  const isTwoPersonPlan = !p2LooksBlank(plan.p2);
+  const cppSharingAlreadyOn = Boolean(plan.assumptions.cppSharing);
+  const cppSharingReady =
+    isTwoPersonPlan && !cppSharingAlreadyOn && activeBenefitPeople.every(({ person }) => hasCppEstimate(person) && personReachesCppStartAge(person, endYear));
   const coupleNeedsSurvivorReview = !p2LooksBlank(plan.p2) && !n(plan.assumptions.p1DiesInSurvivor);
   const notes: BoundedOptimizerEligibilityNote[] = [];
 
@@ -255,6 +279,17 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
       ? 'Pension-splitting can be reviewed because this two-person plan has pension or registered income to test.'
       : 'Pension-splitting is skipped until a two-person plan has meaningful pension or registered income.'
   });
+  notes.push({
+    lever: 'cppSharing',
+    status: cppSharingReady ? 'eligible' : 'skipped',
+    reason: cppSharingReady
+      ? 'CPP sharing can be reviewed because both people have CPP estimates in this two-person plan.'
+      : !isTwoPersonPlan
+        ? 'CPP sharing is skipped until this is a two-person plan.'
+        : cppSharingAlreadyOn
+          ? 'CPP sharing is already included in the current plan.'
+          : 'CPP sharing is skipped unless both people have CPP estimates and reach CPP start age within the projection.'
+  });
   if (coupleNeedsSurvivorReview) {
     notes.push({
       lever: 'survivor',
@@ -289,6 +324,7 @@ function guardrailLabel(lever: BoundedOptimizerEligibilityNote['lever']): string
     estateTarget: 'Estate goal',
     downsizing: 'Downsizing',
     pensionSplitting: 'Pension splitting',
+    cppSharing: 'CPP sharing',
     survivor: 'Survivor setup'
   };
   return labels[lever];
@@ -322,6 +358,12 @@ function retireLater(plan: V2PlanPayload, years: number): V2PlanPayload {
 function withWithdrawalOrder(plan: V2PlanPayload, order: string): V2PlanPayload {
   const next = extractPlanPayload(plan);
   next.assumptions.withdrawalOrder = order;
+  return next;
+}
+
+function withCppSharing(plan: V2PlanPayload): V2PlanPayload {
+  const next = extractPlanPayload(plan);
+  next.assumptions.cppSharing = true;
   return next;
 }
 
@@ -424,6 +466,19 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
+  if (eligible(eligibilityNotes, 'cppSharing')) {
+    candidates.push({
+      id: 'cppSharing',
+      label: 'Test CPP sharing',
+      plan: withCppSharing(plan),
+      config,
+      changedLevers: ['cppSharing'],
+      changeSummary: 'Turn on CPP sharing in this test',
+      reviewNote: 'Review CPP sharing eligibility and household tax details before relying on this option.',
+      disruptionPenalty: 1_500
+    });
+  }
+
   if (eligible(eligibilityNotes, 'withdrawalOrder')) {
     const currentOrder = plan.assumptions.withdrawalOrder || 'default';
     WITHDRAWAL_ORDERS.filter((order) => order.value !== currentOrder).forEach((order) => {
@@ -440,7 +495,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  return candidates.slice(0, 9);
+  return candidates.slice(0, 10);
 }
 
 function summarizeResult(result: SimulationResult | null | undefined) {
@@ -574,6 +629,9 @@ function leverTradeoffCopy(row: BoundedOptimizerCandidateRow): string[] {
   if (row.changedLevers.includes('pensionSplitting')) {
     tradeoffs.push('Pension-splitting can lower household tax, but eligibility and spouse tax details need review.');
   }
+  if (row.changedLevers.includes('cppSharing')) {
+    tradeoffs.push('CPP sharing can shift taxable income between spouses, but eligibility and household tax details need review.');
+  }
   return tradeoffs;
 }
 
@@ -676,6 +734,58 @@ function buildPensionSplittingEvidence(
     {
       id: 'pensionPortfolio',
       label: 'Projected money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left at the end of the plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
+}
+
+function buildCppSharingEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>
+): BoundedOptimizerEvidenceRow[] {
+  const baseline = summaries.baseline;
+  const sharing = summaries.cppSharing;
+  if (!baseline || !sharing || sharing.totalYears === 0) return [];
+
+  const lifetimeTaxDelta = sharing.lifetimeTax - baseline.lifetimeTax;
+  const firstYearTaxDelta = sharing.firstYearTax - baseline.firstYearTax;
+  const peakTaxDelta = sharing.peakTax - baseline.peakTax;
+  const oasDelta = sharing.lifetimeOasRecovery - baseline.lifetimeOasRecovery;
+  const portfolioDelta = sharing.endPortfolio - baseline.endPortfolio;
+
+  return [
+    {
+      id: 'cppSharingLifetimeTax',
+      label: 'CPP sharing lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax across the projection when CPP sharing is turned on for this review.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'cppSharingFirstYearTax',
+      label: 'CPP sharing first-year tax change',
+      value: signedMoneyText(firstYearTaxDelta),
+      detail: 'Shows whether the first projection year changes when CPP sharing is tested.',
+      tone: evidenceTone(firstYearTaxDelta)
+    },
+    {
+      id: 'cppSharingPeakTax',
+      label: 'CPP sharing peak tax change',
+      value: signedMoneyText(peakTaxDelta),
+      detail: 'Compares the highest annual tax year with and without CPP sharing in this check.',
+      tone: evidenceTone(peakTaxDelta)
+    },
+    {
+      id: 'cppSharingOasRecovery',
+      label: 'CPP sharing OAS recovery tax change',
+      value: signedMoneyText(oasDelta),
+      detail: 'Shows whether OAS recovery tax changes across the projection.',
+      tone: evidenceTone(oasDelta)
+    },
+    {
+      id: 'cppSharingPortfolio',
+      label: 'CPP sharing projected money-left change',
       value: signedMoneyText(portfolioDelta),
       detail: 'Compares projected money left at the end of the plan.',
       tone: evidenceTone(portfolioDelta, false)
@@ -793,7 +903,7 @@ export function runBoundedOptimizer(
     acc[item.definition.id] = item.summary;
     return acc;
   }, {});
-  const evidenceRows = buildPensionSplittingEvidence(summaryById);
+  const evidenceRows = [...buildPensionSplittingEvidence(summaryById), ...buildCppSharingEvidence(summaryById)];
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
   const recommendationNotes: BoundedOptimizerRecommendationNote[] = rows

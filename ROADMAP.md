@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 47 is complete. The built-in examples now run through an optimizer readiness matrix before the next bounded behavior is added.
+Sprint 48 is complete. Eligible couples now have a review-only CPP sharing candidate in the bounded optimizer without changing saved plans or adding tax-aware drawdown execution.
 
-Completed Sprint 47 slices:
+Completed Sprint 48 slices:
 
-- Ran every built-in example through Results preview, spending stress, drawdown readiness, and bounded optimizer.
-- Confirmed disruptive options only become first to review when they materially repair a visible funding issue.
-- Confirmed withdrawal-order checks remain high-level review checks, not tax-aware drawdown instructions.
-- Confirmed optimizer, stress, and drawdown readiness output stay unsaved.
-- Kept Sprint 47 as a readiness gate, not a new optimizer behavior.
+- Added a CPP sharing candidate for eligible two-person plans where CPP sharing is currently off.
+- Added eligibility notes for included, skipped, and already-on CPP sharing states.
+- Added CPP sharing evidence rows for tax, OAS recovery tax, and projected money-left movement.
+- Kept CPP sharing review-only and separate from pension splitting, withdrawal-order checks, and drawdown readiness.
+- Confirmed optimizer output remains runtime-only and unsaved.
 
 ## Consumer Roadmap Sequence
 
@@ -79,7 +79,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 23. **Sprint 45 — Spending guardrail stress.** Add review-only nearby spending stress checks before tax-aware drawdown work.
 24. **Sprint 46 — Tax-aware drawdown contract readiness.** Add review-only drawdown evidence before tax-aware drawdown execution.
 25. **Sprint 47 — Example-plan optimizer readiness matrix.** Test all bundled examples before adding another optimizer behavior.
-26. **Sprint 48+ — Next optimizer increment.** Add only one more bounded behavior after example testing.
+26. **Sprint 48 — CPP sharing review candidate.** Add CPP sharing as one narrow review-only bounded optimizer behavior for eligible couples.
+27. **Sprint 49+ — Next optimizer increment.** Add only one more bounded behavior after CPP sharing remains stable in examples.
 
 ## Medium-Term Roadmap
 
@@ -125,6 +126,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 45 — Spending guardrail stress.** Complete 2026-05-18. Added runtime-only nearby spending stress checks and Details evidence without adding a spending optimizer.
 - **Sprint 46 — Tax-aware drawdown contract readiness.** Complete 2026-05-18. Added Details-only drawdown readiness evidence and contract tests while keeping withdrawal order unchanged and annual overrides empty.
 - **Sprint 47 — Example-plan optimizer readiness matrix.** Complete 2026-05-18. Added all-example readiness coverage for Results preview, spending stress, drawdown readiness, bounded optimizer suggestion discipline, copy posture, and persistence guardrails.
+- **Sprint 48 — CPP sharing review candidate.** Complete 2026-05-18. Added one review-only CPP sharing candidate for eligible couples, with eligibility notes and evidence rows while preserving saved plan and engine schemas.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

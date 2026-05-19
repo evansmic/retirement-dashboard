@@ -30,6 +30,34 @@ function readyPlan(): V2PlanPayload {
   return plan;
 }
 
+function cppSharingPlan(): V2PlanPayload {
+  const plan = readyPlan();
+  plan.p1.rrsp = 0;
+  plan.p1.lira = 0;
+  plan.p1.lif = 0;
+  plan.p1.tfsa = 160000;
+  plan.p1.nonreg = 180000;
+  plan.p1.db_after65 = 0;
+  plan.p1.db_before65 = 0;
+  plan.p2 = {
+    ...plan.p2,
+    name: 'Morgan',
+    dob: 1969,
+    retireYear: 2033,
+    rrsp: 0,
+    lira: 0,
+    lif: 0,
+    tfsa: 110000,
+    nonreg: 90000,
+    cpp65_monthly: 900,
+    cpp70_monthly: 1250,
+    oas_monthly: 742
+  };
+  plan.assumptions.cppSharing = false;
+  plan.assumptions.p1DiesInSurvivor = 2040;
+  return plan;
+}
+
 function result(
   endPortfolio: number,
   lifetimeTax: number,
@@ -162,6 +190,7 @@ describe('bounded optimizer runner', () => {
       oas_monthly: 742
     };
     plan.p1.db_after65 = 30000;
+    plan.assumptions.cppSharing = true;
     plan.assumptions.p1DiesInSurvivor = 2040;
 
     const candidates = buildBoundedOptimizerCandidates(plan);
@@ -199,6 +228,80 @@ describe('bounded optimizer runner', () => {
       label: 'OAS recovery tax',
       value: '-$6,000',
       tone: 'ok'
+    });
+  });
+
+  it('adds one bounded CPP sharing candidate for eligible couples without mutating the source plan', () => {
+    const plan = cppSharingPlan();
+    const candidates = buildBoundedOptimizerCandidates(plan);
+    const cppSharingCandidates = candidates.filter((candidate) => candidate.id === 'cppSharing');
+    const summary = runBoundedOptimizer(plan, (candidatePlan) =>
+      candidatePlan.assumptions.cppSharing
+        ? result(180000, 78000, null, { oasRecovery: 3000 })
+        : result(120000, 90000, null, { oasRecovery: 9000 })
+    );
+
+    expect(cppSharingCandidates).toHaveLength(1);
+    expect(cppSharingCandidates[0]).toMatchObject({
+      label: 'Test CPP sharing',
+      changedLevers: ['cppSharing'],
+      changeSummary: 'Turn on CPP sharing in this test'
+    });
+    expect(cppSharingCandidates[0].plan.assumptions.cppSharing).toBe(true);
+    expect(plan.assumptions.cppSharing).toBe(false);
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'cppSharing')).toMatchObject({ status: 'eligible' });
+    expect(summary.suggestedCandidateId).toBe('cppSharing');
+    expect(summary.explanation.tradeoffs.join(' ')).toContain('CPP sharing');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'cppSharing')).toMatchObject({
+      status: 'canHighlight',
+      reason: expect.stringContaining('without changing lifestyle or work timing')
+    });
+    expect(summary.evidenceRows.map((row) => row.id)).toEqual([
+      'cppSharingLifetimeTax',
+      'cppSharingFirstYearTax',
+      'cppSharingPeakTax',
+      'cppSharingOasRecovery',
+      'cppSharingPortfolio'
+    ]);
+    expect(summary.evidenceRows.find((row) => row.id === 'cppSharingLifetimeTax')).toMatchObject({
+      label: 'CPP sharing lifetime tax change',
+      value: '-$12,000',
+      tone: 'ok'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'cppSharingOasRecovery')).toMatchObject({
+      value: '-$6,000',
+      tone: 'ok'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'cppSharingPortfolio')).toMatchObject({
+      value: '+$60,000',
+      tone: 'ok'
+    });
+    expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
+    expect(createPlanFile(plan).plan.assumptions.cppSharing).toBe(false);
+  });
+
+  it('skips CPP sharing for single plans, missing CPP estimates, and plans where it is already on', () => {
+    const single = readyPlan();
+    const missingCpp = cppSharingPlan();
+    missingCpp.p2.cpp65_monthly = 0;
+    missingCpp.p2.cpp70_monthly = 0;
+    const alreadyOn = cppSharingPlan();
+    alreadyOn.assumptions.cppSharing = true;
+
+    expect(buildBoundedOptimizerCandidates(single).map((candidate) => candidate.id)).not.toContain('cppSharing');
+    expect(runBoundedOptimizer(single, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'cppSharing')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('two-person plan')
+    });
+    expect(buildBoundedOptimizerCandidates(missingCpp).map((candidate) => candidate.id)).not.toContain('cppSharing');
+    expect(runBoundedOptimizer(missingCpp, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'cppSharing')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('both people have CPP estimates')
+    });
+    expect(buildBoundedOptimizerCandidates(alreadyOn).map((candidate) => candidate.id)).not.toContain('cppSharing');
+    expect(runBoundedOptimizer(alreadyOn, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'cppSharing')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('already included')
     });
   });
 

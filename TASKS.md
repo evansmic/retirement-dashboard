@@ -4,38 +4,42 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 47: Example-Plan Optimizer Readiness Matrix
+## Latest Sprint — Sprint 48: CPP Sharing Review Candidate
 
 **Status:** Complete 2026-05-18.
 
-Goal: add a focused readiness gate across the built-in example plans before adding another optimizer behavior.
+Goal: add one narrow, review-only CPP sharing optimizer candidate for eligible couples using existing CPP sharing plan support.
 
-Non-scope: new optimizer candidate families, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 47 checkpoint doc: [`docs/sprint_47_example_plan_optimizer_readiness_matrix.md`](docs/sprint_47_example_plan_optimizer_readiness_matrix.md).
+Sprint 48 checkpoint doc: [`docs/sprint_48_cpp_sharing_review_candidate.md`](docs/sprint_48_cpp_sharing_review_candidate.md).
 
-### Sprint 47 Candidate Implementation Tickets
+### Sprint 48 Candidate Implementation Tickets
 
-- [x] **S47-01 — Example readiness matrix.** Run every built-in example through Results preview, spending stress, drawdown readiness, and bounded optimizer.
-- [x] **S47-02 — Suggestion discipline assertions.** Confirm disruptive options only become first to review when they materially repair visible funding issues.
-- [x] **S47-03 — Withdrawal-order guardrails.** Confirm withdrawal-order checks stay high-level and do not imply tax-aware annual drawdown instructions.
-- [x] **S47-04 — Persistence guardrails.** Confirm optimizer, spending stress, and drawdown readiness outputs are not saved into `.plan.json`.
-- [x] **S47-05 — Copy discipline.** Guard against safe-spending, guarantee, optimal-drawdown, or advice-like language across the example matrix.
+- [x] **S48-01 — CPP sharing candidate.** Add a bounded `cppSharing` candidate for eligible two-person plans where CPP sharing is currently off.
+- [x] **S48-02 — Eligibility guardrails.** Skip single-person plans, missing CPP estimates, plans that do not reach CPP start age, and plans where CPP sharing is already on.
+- [x] **S48-03 — Evidence rows.** Compare CPP sharing against the current plan for lifetime tax, first-year tax, peak tax, OAS recovery tax, and projected money left.
+- [x] **S48-04 — Review-only copy.** Keep CPP sharing framed as a tax/income review check, not a recommendation or filing instruction.
+- [x] **S48-05 — Persistence and example matrix.** Confirm optimizer output and candidate results stay runtime-only across saved plan files and built-in examples.
 
-### Sprint 47 Definition Of Done
+### Sprint 48 Definition Of Done
 
-- Every built-in example produces finite baseline Results preview rows.
-- Spending stress and drawdown readiness return safe statuses for every example.
-- Bounded optimizer returns blocked or ready summaries with valid candidate rows.
-- Disruptive suggestions remain gated by visible funding repair.
-- Withdrawal-order candidates remain review-only high-level checks.
-- No stress, drawdown readiness, optimizer contract, or optimizer output is persisted.
+- Eligible couples produce exactly one CPP sharing candidate.
+- Ineligible plans skip CPP sharing with plain notes.
+- CPP sharing is tested only in a candidate working copy.
+- CPP sharing evidence appears in Details through the optimizer evidence surface.
+- Disruptive suggestions remain gated by visible funding repair, and CPP sharing can be highlighted only when it improves taxes, funded years, or projected money left.
 - No optimizer output is persisted.
-- No new optimizer candidate family is added.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 48: CPP Sharing Review Candidate
+
+**Complete 2026-05-18.** Added a narrow CPP sharing review candidate for eligible couples, with eligibility notes, tax/evidence rows, and persistence guardrails while keeping saved plans and engine output unchanged.
+
+Sprint 48 checkpoint doc: [`docs/sprint_48_cpp_sharing_review_candidate.md`](docs/sprint_48_cpp_sharing_review_candidate.md).
 
 ### Sprint 47: Example-Plan Optimizer Readiness Matrix
 

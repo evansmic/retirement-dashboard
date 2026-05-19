@@ -87,8 +87,23 @@ describe('example-plan optimizer readiness matrix', () => {
     }
   });
 
+  it('keeps CPP sharing examples as review checks, not filing instructions', () => {
+    for (const card of examplePlanCards) {
+      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+      const cppSharingRows = summary.candidates.filter((row) => row.changedLevers.includes('cppSharing'));
+
+      for (const row of cppSharingRows) {
+        expect(row.label, `${card.id} ${row.id} label`).toBe('Test CPP sharing');
+        expect(row.reviewNote, `${card.id} ${row.id} review note`).toContain('Review CPP sharing eligibility');
+        expect(row.reviewNote).toContain('household tax details');
+        expect(row.reviewNote.toLowerCase()).not.toContain('automatic filing');
+        expect(row.changeSummary).toContain('in this test');
+      }
+    }
+  });
+
   it('keeps readiness and optimizer copy review-oriented across the example matrix', () => {
-    const forbidden = ['safe spend', 'guaranteed', 'optimal drawdown', 'recommended withdrawal strategy', 'apply optimized plan'];
+    const forbidden = ['safe spend', 'guaranteed', 'optimal drawdown', 'recommended withdrawal strategy', 'apply optimized plan', 'automatic filing instruction'];
 
     for (const card of examplePlanCards) {
       const plan = createExamplePlan(card.id);
