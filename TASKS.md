@@ -4,36 +4,42 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 48: CPP Sharing Review Candidate
+## Latest Sprint — Sprint 49: Home Equity Reliance & Estate Guardrails
 
 **Status:** Complete 2026-05-18.
 
-Goal: add one narrow, review-only CPP sharing optimizer candidate for eligible couples using existing CPP sharing plan support.
+Goal: add conservative optimizer-readiness checks for home-sale reliance and explicit estate goals before broader optimizer work.
 
-Non-scope: tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: home-sale recommendations, invented downsizing proceeds, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 48 checkpoint doc: [`docs/sprint_48_cpp_sharing_review_candidate.md`](docs/sprint_48_cpp_sharing_review_candidate.md).
+Sprint 49 checkpoint doc: [`docs/sprint_49_home_equity_estate_guardrails.md`](docs/sprint_49_home_equity_estate_guardrails.md).
 
-### Sprint 48 Candidate Implementation Tickets
+### Sprint 49 Candidate Implementation Tickets
 
-- [x] **S48-01 — CPP sharing candidate.** Add a bounded `cppSharing` candidate for eligible two-person plans where CPP sharing is currently off.
-- [x] **S48-02 — Eligibility guardrails.** Skip single-person plans, missing CPP estimates, plans that do not reach CPP start age, and plans where CPP sharing is already on.
-- [x] **S48-03 — Evidence rows.** Compare CPP sharing against the current plan for lifetime tax, first-year tax, peak tax, OAS recovery tax, and projected money left.
-- [x] **S48-04 — Review-only copy.** Keep CPP sharing framed as a tax/income review check, not a recommendation or filing instruction.
-- [x] **S48-05 — Persistence and example matrix.** Confirm optimizer output and candidate results stay runtime-only across saved plan files and built-in examples.
+- [x] **S49-01 — Home-sale reliance candidate.** Add `withoutDownsize` only when downsize year and net proceeds are already entered.
+- [x] **S49-02 — Working-copy isolation.** Remove home-sale cash only in the candidate copy and never mutate the source plan.
+- [x] **S49-03 — Estate-goal guardrail.** Keep candidates review-only when they weaken an entered estate goal unless they repair a visible shortfall without worsening the estate gap.
+- [x] **S49-04 — Reliance evidence.** Compare current plan and without-home-sale-cash results for funded years, shortfall timing, projected money left, tax, and estate gap when available.
+- [x] **S49-05 — Copy and persistence.** Keep home-equity copy review-oriented and confirm no optimizer output is saved into `.plan.json`.
 
-### Sprint 48 Definition Of Done
+### Sprint 49 Definition Of Done
 
-- Eligible couples produce exactly one CPP sharing candidate.
-- Ineligible plans skip CPP sharing with plain notes.
-- CPP sharing is tested only in a candidate working copy.
-- CPP sharing evidence appears in Details through the optimizer evidence surface.
-- Disruptive suggestions remain gated by visible funding repair, and CPP sharing can be highlighted only when it improves taxes, funded years, or projected money left.
+- Plans with a complete downsize event produce exactly one `withoutDownsize` candidate.
+- Partial or missing downsize inputs do not produce the candidate.
+- `withoutDownsize` is evidence-only and cannot become the highlighted first option.
+- Entered estate goals can block candidates that would weaken the goal.
+- Detailed reliance evidence appears in Details through the optimizer evidence surface.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 49: Home Equity Reliance & Estate Guardrails
+
+**Complete 2026-05-18.** Added a review-only home-sale reliance check and estate-goal suggestion guardrails without adding home-sale recommendations, optimizer strategy application, or saved output.
+
+Sprint 49 checkpoint doc: [`docs/sprint_49_home_equity_estate_guardrails.md`](docs/sprint_49_home_equity_estate_guardrails.md).
 
 ### Sprint 48: CPP Sharing Review Candidate
 

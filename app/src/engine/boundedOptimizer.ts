@@ -12,6 +12,7 @@ export type BoundedOptimizerCandidateId =
   | 'delayBenefits'
   | 'pensionSplit'
   | 'cppSharing'
+  | 'withoutDownsize'
   | 'withdrawalDefault'
   | 'withdrawalRegisteredFirst'
   | 'withdrawalNonRegisteredFirst';
@@ -87,7 +88,12 @@ export type BoundedOptimizerEvidenceRow = {
     | 'cppSharingFirstYearTax'
     | 'cppSharingPeakTax'
     | 'cppSharingOasRecovery'
-    | 'cppSharingPortfolio';
+    | 'cppSharingPortfolio'
+    | 'homeRelianceFundedYears'
+    | 'homeRelianceFirstShortfall'
+    | 'homeReliancePortfolio'
+    | 'homeRelianceLifetimeTax'
+    | 'homeRelianceEstateGap';
   label: string;
   value: string;
   detail: string;
@@ -235,6 +241,10 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   const cppSharingAlreadyOn = Boolean(plan.assumptions.cppSharing);
   const cppSharingReady =
     isTwoPersonPlan && !cppSharingAlreadyOn && activeBenefitPeople.every(({ person }) => hasCppEstimate(person) && personReachesCppStartAge(person, endYear));
+  const downsizeYear = n(plan.downsize?.year);
+  const downsizeProceeds = n(plan.downsize?.netProceeds);
+  const hasCompleteDownsize = downsizeYear > 0 && downsizeProceeds > 0;
+  const hasPartialDownsize = (downsizeYear > 0 || downsizeProceeds > 0) && !hasCompleteDownsize;
   const coupleNeedsSurvivorReview = !p2LooksBlank(plan.p2) && !n(plan.assumptions.p1DiesInSurvivor);
   const notes: BoundedOptimizerEligibilityNote[] = [];
 
@@ -289,6 +299,15 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
         : cppSharingAlreadyOn
           ? 'CPP sharing is already included in the current plan.'
           : 'CPP sharing is skipped unless both people have CPP estimates and reach CPP start age within the projection.'
+  });
+  notes.push({
+    lever: 'downsizing',
+    status: hasCompleteDownsize ? 'eligible' : 'skipped',
+    reason: hasCompleteDownsize
+      ? 'Home-sale reliance can be checked because a year and net cash amount are already part of the current plan.'
+      : hasPartialDownsize
+        ? 'Home-sale reliance is skipped until both the year and net cash amount are entered.'
+        : 'Home-sale reliance is skipped because no home-sale cash is part of the current plan.'
   });
   if (coupleNeedsSurvivorReview) {
     notes.push({
@@ -364,6 +383,12 @@ function withWithdrawalOrder(plan: V2PlanPayload, order: string): V2PlanPayload 
 function withCppSharing(plan: V2PlanPayload): V2PlanPayload {
   const next = extractPlanPayload(plan);
   next.assumptions.cppSharing = true;
+  return next;
+}
+
+function withoutDownsize(plan: V2PlanPayload): V2PlanPayload {
+  const next = extractPlanPayload(plan);
+  next.downsize = { ...(next.downsize || {}), year: 0, netProceeds: 0 };
   return next;
 }
 
@@ -479,6 +504,19 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
+  if (eligible(eligibilityNotes, 'downsizing')) {
+    candidates.push({
+      id: 'withoutDownsize',
+      label: 'Check without home-sale cash',
+      plan: withoutDownsize(plan),
+      config,
+      changedLevers: ['downsizing'],
+      changeSummary: 'Remove home-sale cash in this reliance check',
+      reviewNote: 'This checks how much the plan depends on home-sale cash. It is not a suggestion to sell or keep the home.',
+      disruptionPenalty: 1_000_000
+    });
+  }
+
   if (eligible(eligibilityNotes, 'withdrawalOrder')) {
     const currentOrder = plan.assumptions.withdrawalOrder || 'default';
     WITHDRAWAL_ORDERS.filter((order) => order.value !== currentOrder).forEach((order) => {
@@ -495,7 +533,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  return candidates.slice(0, 10);
+  return candidates.slice(0, 11);
 }
 
 function summarizeResult(result: SimulationResult | null | undefined) {
@@ -560,17 +598,38 @@ function hasMeaningfulNonDisruptiveImprovement(
   return summary.fundedYears > baseline.fundedYears || summary.endPortfolio - baseline.endPortfolio > 25_000 || baseline.lifetimeTax - summary.lifetimeTax > 5_000;
 }
 
+function estateTargetGap(summary: ReturnType<typeof summarizeResult>, estateTarget: number): number {
+  return estateTarget > 0 ? Math.max(0, estateTarget - summary.endPortfolio) : 0;
+}
+
 function recommendationPermission(
   row: Pick<BoundedOptimizerCandidateRow, 'id' | 'label' | 'changedLevers'>,
   summary: ReturnType<typeof summarizeResult>,
-  baseline: ReturnType<typeof summarizeResult>
+  baseline: ReturnType<typeof summarizeResult>,
+  estateTarget: number
 ): { eligible: boolean; reason: string } {
   if (row.id === 'baseline') {
     return { eligible: true, reason: 'The current plan can stay first when other options do not clear the suggestion bar.' };
   }
 
+  if (row.id === 'withoutDownsize') {
+    return { eligible: false, reason: 'This home-sale reliance check is evidence only, so it stays review-only and is not highlighted as the first option.' };
+  }
+
   if (summary.totalYears === 0) {
     return { eligible: false, reason: 'This option did not produce a usable projection.' };
+  }
+
+  if (estateTarget > 0 && summary.endPortfolio < estateTarget) {
+    const baselineGap = estateTargetGap(baseline, estateTarget);
+    const candidateGap = estateTargetGap(summary, estateTarget);
+    const worsensGap = candidateGap > baselineGap + 1;
+    if (!isMaterialFundingRepair(summary, baseline) || worsensGap) {
+      return {
+        eligible: false,
+        reason: 'This option stays review-only because it weakens the entered estate goal. Change the estate goal first if that trade-off is intentional.'
+      };
+    }
   }
 
   if (row.changedLevers.includes('benefitTiming') && hasWeakBenefitBridge(summary)) {
@@ -631,6 +690,9 @@ function leverTradeoffCopy(row: BoundedOptimizerCandidateRow): string[] {
   }
   if (row.changedLevers.includes('cppSharing')) {
     tradeoffs.push('CPP sharing can shift taxable income between spouses, but eligibility and household tax details need review.');
+  }
+  if (row.changedLevers.includes('downsizing')) {
+    tradeoffs.push('Home-sale cash is a lifestyle-sensitive assumption; this check only shows reliance on that cash.');
   }
   return tradeoffs;
 }
@@ -793,6 +855,66 @@ function buildCppSharingEvidence(
   ];
 }
 
+function buildHomeSaleRelianceEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>,
+  plan: V2PlanPayload
+): BoundedOptimizerEvidenceRow[] {
+  const baseline = summaries.baseline;
+  const withoutHomeCash = summaries.withoutDownsize;
+  if (!baseline || !withoutHomeCash || withoutHomeCash.totalYears === 0) return [];
+
+  const fundedYearsDelta = withoutHomeCash.fundedYears - baseline.fundedYears;
+  const lifetimeTaxDelta = withoutHomeCash.lifetimeTax - baseline.lifetimeTax;
+  const portfolioDelta = withoutHomeCash.endPortfolio - baseline.endPortfolio;
+  const estateTarget = n(plan.inheritance);
+  const estateGapDelta = estateTargetGap(withoutHomeCash, estateTarget) - estateTargetGap(baseline, estateTarget);
+
+  const rows: BoundedOptimizerEvidenceRow[] = [
+    {
+      id: 'homeRelianceFundedYears',
+      label: 'Home-sale reliance check',
+      value: fundedYearsDelta === 0 ? 'No change' : `${fundedYearsDelta > 0 ? '+' : ''}${fundedYearsDelta} year${Math.abs(fundedYearsDelta) === 1 ? '' : 's'}`,
+      detail: 'Compares the Current plan with Without home-sale cash to show how many funded years change.',
+      tone: fundedYearsDelta === 0 ? 'neutral' : fundedYearsDelta > 0 ? 'ok' : 'watch'
+    },
+    {
+      id: 'homeRelianceFirstShortfall',
+      label: 'First shortfall without home-sale cash',
+      value: withoutHomeCash.firstShortfallYear ? String(withoutHomeCash.firstShortfallYear) : 'None visible',
+      detail: baseline.firstShortfallYear
+        ? `Current plan first shortfall: ${baseline.firstShortfallYear}.`
+        : 'Current plan has no visible shortfall in the projection years checked.',
+      tone: withoutHomeCash.firstShortfallYear && !baseline.firstShortfallYear ? 'watch' : 'neutral'
+    },
+    {
+      id: 'homeReliancePortfolio',
+      label: 'Projected money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left at the end of the plan without home-sale cash.',
+      tone: evidenceTone(portfolioDelta, false)
+    },
+    {
+      id: 'homeRelianceLifetimeTax',
+      label: 'Lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax across the projection without home-sale cash.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    }
+  ];
+
+  if (estateTarget > 0) {
+    rows.push({
+      id: 'homeRelianceEstateGap',
+      label: 'Estate goal gap change',
+      value: signedMoneyText(estateGapDelta),
+      detail: 'Shows whether removing home-sale cash widens the gap against the entered estate goal.',
+      tone: evidenceTone(estateGapDelta)
+    });
+  }
+
+  return rows;
+}
+
 function buildDriverRows(
   suggested: BoundedOptimizerCandidateRow | null,
   baseline: BoundedOptimizerCandidateRow | null,
@@ -853,6 +975,7 @@ export function runBoundedOptimizer(
   runner: BoundedOptimizerRunner = runSimulationSafely
 ): BoundedOptimizerSummary {
   const contract = buildOptimizerContract(plan);
+  const estateTarget = n(plan.inheritance);
   const eligibilityNotes = buildEligibilityNotes(plan, contract);
   const definitions = buildBoundedOptimizerCandidates(plan, contract);
   const rawResults = definitions.map((definition) => ({
@@ -865,7 +988,7 @@ export function runBoundedOptimizer(
   }));
   const baselineSummary = summarizedResults[0]?.summary;
   const rows = summarizedResults.map(({ definition, summary }) => {
-    const recommendation = recommendationPermission(definition, summary, baselineSummary);
+    const recommendation = recommendationPermission(definition, summary, baselineSummary, estateTarget);
     return {
       id: definition.id,
       label: definition.label,
@@ -903,7 +1026,7 @@ export function runBoundedOptimizer(
     acc[item.definition.id] = item.summary;
     return acc;
   }, {});
-  const evidenceRows = [...buildPensionSplittingEvidence(summaryById), ...buildCppSharingEvidence(summaryById)];
+  const evidenceRows = [...buildPensionSplittingEvidence(summaryById), ...buildCppSharingEvidence(summaryById), ...buildHomeSaleRelianceEvidence(summaryById, plan)];
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
   const recommendationNotes: BoundedOptimizerRecommendationNote[] = rows

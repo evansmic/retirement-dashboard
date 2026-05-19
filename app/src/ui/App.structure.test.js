@@ -42,9 +42,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Skipped');
     expect(appSource).toContain('Pension splitting');
     expect(appSource).toContain('CPP sharing');
-    expect(appSource).toContain('Income-sharing evidence');
+    expect(appSource).toContain('Option evidence');
     expect(appSource).toContain('What changed in this test');
-    expect(appSource).toContain('pension-splitting or CPP-sharing checks');
+    expect(appSource).toContain('income-sharing or home-sale reliance checks');
     expect(appSource).toContain('Confirm eligibility before relying on them');
     expect(appSource).toContain('Tax and funding drivers');
     expect(appSource).toContain('Why the option moved');

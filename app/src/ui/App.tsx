@@ -3232,9 +3232,9 @@ function BoundedOptimizerPanel({
       {!isCompact && summary?.evidenceRows.length ? (
         <section className="optimizer-evidence-panel">
           <div>
-            <p className="eyebrow">Income-sharing evidence</p>
+            <p className="eyebrow">Option evidence</p>
             <h3>What changed in this test</h3>
-            <p>These rows compare pension-splitting or CPP-sharing checks with the current plan. Confirm eligibility before relying on them.</p>
+            <p>These rows compare income-sharing or home-sale reliance checks with the current plan. Confirm eligibility before relying on them.</p>
           </div>
           <div className="optimizer-evidence-grid">
             {summary.evidenceRows.map((row) => (

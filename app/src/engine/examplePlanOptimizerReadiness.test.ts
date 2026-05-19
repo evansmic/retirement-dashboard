@@ -102,8 +102,32 @@ describe('example-plan optimizer readiness matrix', () => {
     }
   });
 
+  it('keeps home-equity examples as reliance checks, not home-sale suggestions', () => {
+    for (const card of examplePlanCards) {
+      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+      const homeRows = summary.candidates.filter((row) => row.id === 'withoutDownsize');
+
+      for (const row of homeRows) {
+        expect(row.label, `${card.id} ${row.id} label`).toBe('Check without home-sale cash');
+        expect(row.reviewNote, `${card.id} ${row.id} review note`).toContain('depends on home-sale cash');
+        expect(row.reviewNote).toContain('not a suggestion');
+        expect(row.suggestionEligible).toBe(false);
+        expect(row.changeSummary).not.toContain('estimate');
+      }
+    }
+  });
+
   it('keeps readiness and optimizer copy review-oriented across the example matrix', () => {
-    const forbidden = ['safe spend', 'guaranteed', 'optimal drawdown', 'recommended withdrawal strategy', 'apply optimized plan', 'automatic filing instruction'];
+    const forbidden = [
+      'safe spend',
+      'guaranteed',
+      'optimal drawdown',
+      'recommended withdrawal strategy',
+      'apply optimized plan',
+      'automatic filing instruction',
+      'sell your home',
+      'recommended home sale'
+    ];
 
     for (const card of examplePlanCards) {
       const plan = createExamplePlan(card.id);

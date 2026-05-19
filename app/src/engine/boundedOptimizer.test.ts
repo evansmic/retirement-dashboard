@@ -58,6 +58,12 @@ function cppSharingPlan(): V2PlanPayload {
   return plan;
 }
 
+function downsizePlan(): V2PlanPayload {
+  const plan = readyPlan();
+  plan.downsize = { year: 2040, netProceeds: 250000 };
+  return plan;
+}
+
 function result(
   endPortfolio: number,
   lifetimeTax: number,
@@ -302,6 +308,87 @@ describe('bounded optimizer runner', () => {
     expect(runBoundedOptimizer(alreadyOn, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'cppSharing')).toMatchObject({
       status: 'skipped',
       reason: expect.stringContaining('already included')
+    });
+  });
+
+  it('adds one home-sale reliance candidate only when downsize year and proceeds are entered', () => {
+    const plan = downsizePlan();
+    const missingYear = downsizePlan();
+    missingYear.downsize = { year: 0, netProceeds: 250000 };
+    const missingProceeds = downsizePlan();
+    missingProceeds.downsize = { year: 2040, netProceeds: 0 };
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+    const relianceCandidates = candidates.filter((candidate) => candidate.id === 'withoutDownsize');
+
+    expect(relianceCandidates).toHaveLength(1);
+    expect(relianceCandidates[0]).toMatchObject({
+      label: 'Check without home-sale cash',
+      changedLevers: ['downsizing'],
+      changeSummary: 'Remove home-sale cash in this reliance check'
+    });
+    expect(relianceCandidates[0].plan.downsize).toEqual({ year: 0, netProceeds: 0 });
+    expect(plan.downsize).toEqual({ year: 2040, netProceeds: 250000 });
+    expect(buildBoundedOptimizerCandidates(missingYear).map((candidate) => candidate.id)).not.toContain('withoutDownsize');
+    expect(buildBoundedOptimizerCandidates(missingProceeds).map((candidate) => candidate.id)).not.toContain('withoutDownsize');
+  });
+
+  it('keeps the home-sale reliance candidate review-only and adds reliance evidence rows', () => {
+    const plan = downsizePlan();
+    const summary = runBoundedOptimizer(plan, (candidatePlan) =>
+      candidatePlan.downsize?.netProceeds === 0 ? result(900000, 50000, null) : result(120000, 90000, null)
+    );
+
+    expect(summary.suggestedCandidateId).not.toBe('withoutDownsize');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'withoutDownsize')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('reliance check is evidence only')
+    });
+    expect(summary.evidenceRows.map((row) => row.id)).toEqual([
+      'homeRelianceFundedYears',
+      'homeRelianceFirstShortfall',
+      'homeReliancePortfolio',
+      'homeRelianceLifetimeTax'
+    ]);
+    expect(summary.evidenceRows.find((row) => row.id === 'homeReliancePortfolio')).toMatchObject({
+      label: 'Projected money-left change',
+      value: '+$780,000',
+      tone: 'ok'
+    });
+    expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
+    expect(createPlanFile(plan).plan.downsize).toEqual({ year: 2040, netProceeds: 250000 });
+  });
+
+  it('holds back candidates that weaken an entered estate goal', () => {
+    const plan = readyPlan();
+    plan.inheritance = 300000;
+
+    const summary = runBoundedOptimizer(plan, (candidatePlan, config) => {
+      if (config.withdrawalOrder === 'registered-first') return result(250000, 50000, null);
+      return candidatePlan.title === plan.title ? result(320000, 90000, null) : result(250000, 50000, null);
+    });
+
+    expect(summary.suggestedCandidateId).toBe('baseline');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'withdrawalRegisteredFirst')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('weakens the entered estate goal')
+    });
+  });
+
+  it('allows a shortfall repair when it does not worsen the estate-goal gap', () => {
+    const plan = readyPlan();
+    plan.inheritance = 300000;
+
+    const summary = runBoundedOptimizer(plan, (candidatePlan) => {
+      if (candidatePlan.spending.gogo === 80750) return result(310000, 88000, null);
+      if (candidatePlan.spending.gogo === plan.spending.gogo) return result(250000, 90000, 2033);
+      return result(240000, 95000, 2033);
+    });
+
+    expect(summary.suggestedCandidateId).toBe('spendLess5');
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'spendLess5')).toMatchObject({
+      status: 'canHighlight',
+      reason: expect.stringContaining('materially improves a visible funding shortfall')
     });
   });
 
