@@ -77,6 +77,17 @@ export type BoundedOptimizerRecommendationNote = {
   reason: string;
 };
 
+export type BoundedOptimizerOptionGroupId = 'currentPlan' | 'lifestyle' | 'timing' | 'incomeSharing' | 'drawdownReview' | 'homeEstate';
+
+export type BoundedOptimizerOptionGroup = {
+  id: BoundedOptimizerOptionGroupId;
+  label: string;
+  summary: string;
+  candidateIds: BoundedOptimizerCandidateId[];
+  reviewOnlyCount: number;
+  canHighlightCount: number;
+};
+
 export type BoundedOptimizerEvidenceRow = {
   id:
     | 'pensionLifetimeTax'
@@ -121,6 +132,7 @@ export type BoundedOptimizerSummary = {
   eligibilityNotes: BoundedOptimizerEligibilityNote[];
   guardrailNotes: BoundedOptimizerGuardrailNote[];
   recommendationNotes: BoundedOptimizerRecommendationNote[];
+  optionGroups: BoundedOptimizerOptionGroup[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
   explanation: BoundedOptimizerExplanation;
@@ -656,6 +668,63 @@ function compareRows(a: BoundedOptimizerCandidateRow, b: BoundedOptimizerCandida
   return a.label.localeCompare(b.label);
 }
 
+function optionGroupForRow(row: Pick<BoundedOptimizerCandidateRow, 'id' | 'changedLevers'>): BoundedOptimizerOptionGroupId {
+  if (row.id === 'baseline') return 'currentPlan';
+  if (row.changedLevers.includes('spending')) return 'lifestyle';
+  if (row.changedLevers.includes('retirementTiming') || row.changedLevers.includes('benefitTiming')) return 'timing';
+  if (row.changedLevers.includes('pensionSplitting') || row.changedLevers.includes('cppSharing')) return 'incomeSharing';
+  if (row.changedLevers.includes('withdrawalOrder')) return 'drawdownReview';
+  if (row.changedLevers.includes('downsizing') || row.changedLevers.includes('estateTarget')) return 'homeEstate';
+  return 'currentPlan';
+}
+
+function optionGroupLabel(id: BoundedOptimizerOptionGroupId): Pick<BoundedOptimizerOptionGroup, 'label' | 'summary'> {
+  const labels: Record<BoundedOptimizerOptionGroupId, Pick<BoundedOptimizerOptionGroup, 'label' | 'summary'>> = {
+    currentPlan: {
+      label: 'Current plan',
+      summary: 'The comparison point for every check.'
+    },
+    lifestyle: {
+      label: 'Lifestyle choices',
+      summary: 'Spending changes stay review-only unless they repair a visible funding issue.'
+    },
+    timing: {
+      label: 'Timing choices',
+      summary: 'Work and benefit timing can change major life assumptions, so they need stronger support.'
+    },
+    incomeSharing: {
+      label: 'Income-sharing checks',
+      summary: 'Pension splitting and CPP sharing are tax and income checks for eligible couples.'
+    },
+    drawdownReview: {
+      label: 'Drawdown review',
+      summary: 'Withdrawal-order checks are high-level comparisons, not tax-aware instructions.'
+    },
+    homeEstate: {
+      label: 'Home and estate checks',
+      summary: 'Home-sale cash and estate goals are treated as household preferences to review.'
+    }
+  };
+  return labels[id];
+}
+
+function buildOptionGroups(rows: BoundedOptimizerCandidateRow[]): BoundedOptimizerOptionGroup[] {
+  const order: BoundedOptimizerOptionGroupId[] = ['currentPlan', 'lifestyle', 'timing', 'incomeSharing', 'drawdownReview', 'homeEstate'];
+  return order
+    .map((id) => {
+      const groupRows = rows.filter((row) => optionGroupForRow(row) === id);
+      const label = optionGroupLabel(id);
+      return {
+        id,
+        ...label,
+        candidateIds: groupRows.map((row) => row.id),
+        reviewOnlyCount: groupRows.filter((row) => row.status === 'review' || !row.suggestionEligible).length,
+        canHighlightCount: groupRows.filter((row) => row.suggestionEligible).length
+      } satisfies BoundedOptimizerOptionGroup;
+    })
+    .filter((group) => group.candidateIds.length > 0);
+}
+
 function moneyText(value: number): string {
   const rounded = Math.round(Math.abs(value));
   return `${value < 0 ? '-' : ''}$${rounded.toLocaleString()}`;
@@ -1037,6 +1106,7 @@ export function runBoundedOptimizer(
       status: row.suggestionEligible ? 'canHighlight' : 'reviewOnly',
       reason: row.suggestionReason
     }));
+  const optionGroups = buildOptionGroups(candidates);
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -1054,6 +1124,7 @@ export function runBoundedOptimizer(
     eligibilityNotes,
     guardrailNotes,
     recommendationNotes,
+    optionGroups,
     evidenceRows,
     driverRows,
     explanation,

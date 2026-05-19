@@ -47,6 +47,10 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.optimizer.execution).toBe('boundedSearch');
       expect(item.optimizer.candidates.length).toBeGreaterThan(0);
       expect(item.optimizer.candidates.find((row) => row.id === 'baseline')).toBeTruthy();
+      expect(item.optimizer.optionGroups.length).toBeGreaterThan(0);
+      expect(item.optimizer.optionGroups.flatMap((group) => group.candidateIds)).toEqual(
+        expect.arrayContaining(item.optimizer.candidates.map((row) => row.id))
+      );
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
@@ -54,6 +58,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('drawdownReadiness');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
+      expect(item.saved.plan).not.toHaveProperty('optionGroups');
     }
   });
 
@@ -138,10 +143,11 @@ describe('example-plan optimizer readiness matrix', () => {
       const copy = JSON.stringify({
         spendingStress,
         drawdownReadiness,
-        optimizerHeadline: optimizer.headline,
-        optimizerDetail: optimizer.detail,
-        optimizerReviewNotes: optimizer.reviewNotes,
-        optimizerRecommendationNotes: optimizer.recommendationNotes
+      optimizerHeadline: optimizer.headline,
+      optimizerDetail: optimizer.detail,
+      optimizerReviewNotes: optimizer.reviewNotes,
+      optimizerOptionGroups: optimizer.optionGroups,
+      optimizerRecommendationNotes: optimizer.recommendationNotes
       }).toLowerCase();
 
       expect(copy, `${card.id} copy includes review posture`).toContain('review');

@@ -54,7 +54,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');
     expect(appSource).toContain('Suggestion discipline');
     expect(appSource).toContain('Why some options stay review-only');
-    expect(appSource).toContain('need a stronger reason before they are highlighted first');
+    expect(appSource).toContain('Option map');
+    expect(appSource).toContain('What kind of choices were checked');
+    expect(appSource).toContain('lifestyle choices, timing choices, tax checks, drawdown review, and home or estate assumptions');
+    expect(appSource).toContain('First option to review means it cleared the highlight checks');
+    expect(appSource).toContain('Review-only means the result is useful evidence');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');

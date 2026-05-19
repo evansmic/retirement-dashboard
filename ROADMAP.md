@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 49 is complete. The bounded optimizer now treats home equity and explicit estate goals more conservatively before broader optimizer work.
+Sprint 50 is complete. The bounded optimizer now groups plan options by choice type so the growing review set is easier to understand before adding more behavior.
 
-Completed Sprint 49 slices:
+Completed Sprint 50 slices:
 
-- Added a review-only check that removes already-entered home-sale cash in a working copy.
-- Added reliance evidence comparing the current plan with the without-home-sale-cash check.
-- Prevented the reliance check from becoming the highlighted first option.
-- Added estate-goal suggestion guardrails so candidates do not quietly weaken an entered estate goal.
-- Confirmed optimizer output remains runtime-only and unsaved.
+- Grouped candidates into current plan, lifestyle, timing, income-sharing, drawdown review, and home/estate categories.
+- Added a Details-only option map that explains what kind of choices were checked.
+- Clarified the difference between first option to review and review-only evidence.
+- Extended example readiness coverage so option groups remain runtime-only.
+- Kept Sprint 50 as a clarity sprint, not a new optimizer behavior.
 
 ## Consumer Roadmap Sequence
 
@@ -81,7 +81,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 25. **Sprint 47 — Example-plan optimizer readiness matrix.** Test all bundled examples before adding another optimizer behavior.
 26. **Sprint 48 — CPP sharing review candidate.** Add CPP sharing as one narrow review-only bounded optimizer behavior for eligible couples.
 27. **Sprint 49 — Home equity reliance and estate guardrails.** Check reliance on entered home-sale cash and protect explicit estate goals before broader optimizer work.
-28. **Sprint 50+ — Next optimizer increment.** Add only one more bounded behavior after home-equity and estate guardrails remain stable in examples.
+28. **Sprint 50 — Plan options clarity and candidate discipline.** Group and explain the growing bounded optimizer set before adding another behavior.
+29. **Sprint 51+ — Next optimizer increment.** Add only one more bounded behavior after option grouping remains stable in examples.
 
 ## Medium-Term Roadmap
 
@@ -129,6 +130,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 47 — Example-plan optimizer readiness matrix.** Complete 2026-05-18. Added all-example readiness coverage for Results preview, spending stress, drawdown readiness, bounded optimizer suggestion discipline, copy posture, and persistence guardrails.
 - **Sprint 48 — CPP sharing review candidate.** Complete 2026-05-18. Added one review-only CPP sharing candidate for eligible couples, with eligibility notes and evidence rows while preserving saved plan and engine schemas.
 - **Sprint 49 — Home equity reliance and estate guardrails.** Complete 2026-05-18. Added evidence-only home-sale reliance checks and estate-goal suggestion guardrails while preserving saved plan and engine schemas.
+- **Sprint 50 — Plan options clarity and candidate discipline.** Complete 2026-05-19. Added option groups and Details explanation copy so the bounded optimizer remains readable without adding new behavior.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

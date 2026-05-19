@@ -164,6 +164,15 @@ describe('bounded optimizer runner', () => {
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
     expect(summary.explanation.verifyBeforeUsing.join(' ')).toContain('Review taxes');
     expect(summary.driverRows.map((row) => row.id)).toEqual(['fundedYears', 'lifetimeTax', 'peakTax', 'oasRecovery', 'portfolio']);
+    expect(summary.optionGroups.map((group) => group.id)).toEqual(['currentPlan', 'lifestyle', 'timing', 'drawdownReview']);
+    expect(summary.optionGroups.find((group) => group.id === 'lifestyle')).toMatchObject({
+      label: 'Lifestyle choices',
+      candidateIds: ['spendLess5', 'spendLess10']
+    });
+    expect(summary.optionGroups.find((group) => group.id === 'drawdownReview')).toMatchObject({
+      label: 'Drawdown review',
+      canHighlightCount: 2
+    });
     expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
@@ -282,6 +291,10 @@ describe('bounded optimizer runner', () => {
       value: '+$60,000',
       tone: 'ok'
     });
+    expect(summary.optionGroups.find((group) => group.id === 'incomeSharing')).toMatchObject({
+      label: 'Income-sharing checks',
+      candidateIds: ['cppSharing']
+    });
     expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
     expect(createPlanFile(plan).plan.assumptions.cppSharing).toBe(false);
   });
@@ -354,6 +367,12 @@ describe('bounded optimizer runner', () => {
       label: 'Projected money-left change',
       value: '+$780,000',
       tone: 'ok'
+    });
+    expect(summary.optionGroups.find((group) => group.id === 'homeEstate')).toMatchObject({
+      label: 'Home and estate checks',
+      candidateIds: ['withoutDownsize'],
+      reviewOnlyCount: 1,
+      canHighlightCount: 0
     });
     expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
     expect(createPlanFile(plan).plan.downsize).toEqual({ year: 2040, netProceeds: 250000 });

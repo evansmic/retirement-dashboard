@@ -4,36 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 49: Home Equity Reliance & Estate Guardrails
+## Latest Sprint — Sprint 50: Plan Options Clarity & Candidate Discipline
 
-**Status:** Complete 2026-05-18.
+**Status:** Complete 2026-05-19.
 
-Goal: add conservative optimizer-readiness checks for home-sale reliance and explicit estate goals before broader optimizer work.
+Goal: make the growing bounded optimizer set easier to understand before adding more optimizer behavior.
 
-Non-scope: home-sale recommendations, invented downsizing proceeds, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: new optimizer candidate families, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 49 checkpoint doc: [`docs/sprint_49_home_equity_estate_guardrails.md`](docs/sprint_49_home_equity_estate_guardrails.md).
+Sprint 50 checkpoint doc: [`docs/sprint_50_plan_options_clarity.md`](docs/sprint_50_plan_options_clarity.md).
 
-### Sprint 49 Candidate Implementation Tickets
+### Sprint 50 Candidate Implementation Tickets
 
-- [x] **S49-01 — Home-sale reliance candidate.** Add `withoutDownsize` only when downsize year and net proceeds are already entered.
-- [x] **S49-02 — Working-copy isolation.** Remove home-sale cash only in the candidate copy and never mutate the source plan.
-- [x] **S49-03 — Estate-goal guardrail.** Keep candidates review-only when they weaken an entered estate goal unless they repair a visible shortfall without worsening the estate gap.
-- [x] **S49-04 — Reliance evidence.** Compare current plan and without-home-sale-cash results for funded years, shortfall timing, projected money left, tax, and estate gap when available.
-- [x] **S49-05 — Copy and persistence.** Keep home-equity copy review-oriented and confirm no optimizer output is saved into `.plan.json`.
+- [x] **S50-01 — Option grouping.** Group bounded optimizer candidates into current plan, lifestyle, timing, income-sharing, drawdown review, and home/estate categories.
+- [x] **S50-02 — Details option map.** Add a Details-only option map that explains what kind of choices were checked.
+- [x] **S50-03 — Highlight vs review-only copy.** Clarify that first option to review has passed highlight checks while review-only options remain useful evidence.
+- [x] **S50-04 — Matrix guardrails.** Extend example readiness coverage so every example exposes stable option groups without persisted output.
+- [x] **S50-05 — Docs.** Document Sprint 50 as a clarity/readiness sprint, not a new optimizer increment.
 
-### Sprint 49 Definition Of Done
+### Sprint 50 Definition Of Done
 
-- Plans with a complete downsize event produce exactly one `withoutDownsize` candidate.
-- Partial or missing downsize inputs do not produce the candidate.
-- `withoutDownsize` is evidence-only and cannot become the highlighted first option.
-- Entered estate goals can block candidates that would weaken the goal.
-- Detailed reliance evidence appears in Details through the optimizer evidence surface.
+- Optimizer summaries expose stable option groups.
+- Details shows an option map without adding Overview density.
+- Review-only versus first-to-review language is clearer and consumer-facing.
+- Example matrix confirms option grouping across bundled examples.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 50: Plan Options Clarity & Candidate Discipline
+
+**Complete 2026-05-19.** Added option grouping and Details copy that separates lifestyle, timing, income-sharing, drawdown, and home/estate checks while keeping bounded optimizer output review-only and unsaved.
+
+Sprint 50 checkpoint doc: [`docs/sprint_50_plan_options_clarity.md`](docs/sprint_50_plan_options_clarity.md).
 
 ### Sprint 49: Home Equity Reliance & Estate Guardrails
 

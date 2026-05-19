@@ -3172,6 +3172,28 @@ function BoundedOptimizerPanel({
         </div>
       ) : null}
 
+      {!isCompact && summary?.optionGroups.length ? (
+        <section className="optimizer-option-group-panel">
+          <div>
+            <p className="eyebrow">Option map</p>
+            <h3>What kind of choices were checked</h3>
+            <p>Groups help separate lifestyle choices, timing choices, tax checks, drawdown review, and home or estate assumptions.</p>
+          </div>
+          <div className="optimizer-option-group-grid">
+            {summary.optionGroups.map((group) => (
+              <article className="optimizer-option-group-row" key={group.id}>
+                <span>{group.candidateIds.length} option{group.candidateIds.length === 1 ? '' : 's'}</span>
+                <strong>{group.label}</strong>
+                <p>{group.summary}</p>
+                <small>
+                  {group.canHighlightCount} can be first / {group.reviewOnlyCount} review-only
+                </small>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.guardrailNotes.length ? (
         <section className="optimizer-guardrail-panel">
           <div>
@@ -3196,7 +3218,7 @@ function BoundedOptimizerPanel({
           <div>
             <p className="eyebrow">Suggestion discipline</p>
             <h3>Why some options stay review-only</h3>
-            <p>Options that change lifestyle, work timing, or benefit timing need a stronger reason before they are highlighted first.</p>
+            <p>First option to review means it cleared the highlight checks. Review-only means the result is useful evidence, but it should not lead the plan.</p>
           </div>
           <div className="optimizer-recommendation-list">
             {summary.recommendationNotes.map((note) => (
