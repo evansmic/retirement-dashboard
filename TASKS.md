@@ -4,35 +4,48 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 52: Tax-Aware Drawdown Prototype Evidence
+## Latest Sprint — Sprint 54: Drawdown Sandbox Gate
 
 **Status:** Complete 2026-05-19.
 
-Goal: add a slow, evidence-only tax-aware drawdown prototype layer without executing annual withdrawal overrides.
+Goal: choose one future drawdown sandbox check from validated drafts, while still avoiding annual override execution or saved optimizer output.
 
-Non-scope: tax-aware drawdown execution, annual withdrawal override execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: real tax-aware drawdown execution, annual withdrawal override simulation, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 52 checkpoint doc: [`docs/sprint_52_tax_aware_drawdown_prototype_evidence.md`](docs/sprint_52_tax_aware_drawdown_prototype_evidence.md).
+Sprint 54 checkpoint doc: [`docs/sprint_54_drawdown_sandbox_gate.md`](docs/sprint_54_drawdown_sandbox_gate.md).
 
-### Sprint 52 Candidate Implementation Tickets
+### Sprint 54 Candidate Implementation Tickets
 
-- [x] **S52-01 — Prototype evidence rows.** Add tax-aware drawdown prototype rows for low-tax windows, registered pressure, OAS recovery years, peak tax years, and later-life estate pressure.
-- [x] **S52-02 — Details-only UI.** Surface prototype evidence inside Drawdown readiness in Details, not Overview.
-- [x] **S52-03 — Contract boundary.** Preserve `withdrawalStrategy.mode === 'currentOrder'` and `annualOverrides === []`.
-- [x] **S52-04 — Persistence guardrails.** Confirm prototype evidence is not saved into `.plan.json`.
-- [x] **S52-05 — Copy discipline.** Keep language evidence-only and avoid instructions, recommendations, safe-spending, or tax-advice phrasing.
+- [x] **S54-01 — Sandbox gate selector.** Select one draft check to hold for later comparison when inputs are ready.
+- [x] **S54-02 — Blocker copy.** Explain when the future sandbox check is blocked or waiting on inputs.
+- [x] **S54-03 — Details-only UI.** Surface the future sandbox gate under Drawdown readiness in Details, not Overview.
+- [x] **S54-04 — Persistence guardrails.** Confirm sandbox planning output is not written into `.plan.json`.
+- [x] **S54-05 — Copy discipline.** Keep the language as future comparison planning, not account instructions or advice.
 
-### Sprint 52 Definition Of Done
+### Sprint 54 Definition Of Done
 
-- Prototype rows identify 3-5 future review windows when available.
+- One future sandbox check can be queued, held for input, or blocked.
+- No sandbox comparison is run.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown prototype output is persisted.
+- No drawdown draft, sandbox, comparison, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 54: Drawdown Sandbox Gate
+
+**Complete 2026-05-19.** Added a Details-only future sandbox gate that chooses one validated drawdown draft check to hold for later comparison, or explains what blocks it, without running annual overrides or saving output.
+
+Sprint 54 checkpoint doc: [`docs/sprint_54_drawdown_sandbox_gate.md`](docs/sprint_54_drawdown_sandbox_gate.md).
+
+### Sprint 53: Bounded Drawdown Execution Readiness
+
+**Complete 2026-05-19.** Added Details-only future drawdown draft checks, validation statuses, readiness blockers, and a test-only synthetic comparison harness while keeping current withdrawal order, annual overrides, saved plans, and engine output unchanged.
+
+Sprint 53 checkpoint doc: [`docs/sprint_53_bounded_drawdown_execution_readiness.md`](docs/sprint_53_bounded_drawdown_execution_readiness.md).
 
 ### Sprint 52: Tax-Aware Drawdown Prototype Evidence
 

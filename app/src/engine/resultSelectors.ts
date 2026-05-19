@@ -783,12 +783,67 @@ export type TaxAwareDrawdownPrototypeRow = {
   disposition: 'evidenceOnly';
 };
 
+export type TaxAwareDrawdownDraftStatus = 'usableForFutureReview' | 'needsInput' | 'blocked';
+
+export type TaxAwareDrawdownDraftRow = {
+  id: 'lowTaxRegisteredDraft' | 'registeredSmoothingDraft' | 'oasRecoveryDraft' | 'peakTaxDraft' | 'estatePressureDraft';
+  label: string;
+  status: TaxAwareDrawdownDraftStatus;
+  year: number | null;
+  accountBucket: 'registered' | 'flexible' | 'mixed' | 'none';
+  direction: 'testEarlier' | 'smooth' | 'reducePressure' | 'preserveChoice' | 'none';
+  amountBand: string;
+  evidenceSource: TaxAwareDrawdownPrototypeRow['id'];
+  detail: string;
+  safetyNotes: string[];
+  disposition: 'draftOnly';
+};
+
+export type TaxAwareDrawdownReadinessCheck = {
+  id: 'accountBalances' | 'accountMix' | 'oasRecoveryExposure' | 'estateIntent' | 'lockedInAccounts' | 'survivorScenario';
+  label: string;
+  status: 'ready' | 'review' | 'needsInput' | 'blocked';
+  detail: string;
+};
+
+export type TaxAwareDrawdownSandboxStatus = 'readyToCompareLater' | 'needsInput' | 'blocked' | 'notReady';
+
+export type TaxAwareDrawdownSandboxRow = {
+  id: 'firstFutureSandboxCheck';
+  label: string;
+  status: 'queuedForFutureReview' | 'heldForInput' | 'blocked';
+  draftId: TaxAwareDrawdownDraftRow['id'] | null;
+  baselineSignal: string;
+  compareWouldNeed: string;
+  holdReason: string;
+  disposition: 'sandboxPlanningOnly';
+};
+
+export type TaxAwareDrawdownSandboxSummary = {
+  status: TaxAwareDrawdownSandboxStatus;
+  headline: string;
+  detail: string;
+  rows: TaxAwareDrawdownSandboxRow[];
+  reviewNote: string;
+};
+
+export type TaxAwareDrawdownDraftSummary = {
+  status: 'cannotTell' | 'readyForFutureReview' | 'needsInput' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: TaxAwareDrawdownDraftRow[];
+  readinessRows: TaxAwareDrawdownReadinessCheck[];
+  sandbox: TaxAwareDrawdownSandboxSummary;
+  reviewNote: string;
+};
+
 export type DrawdownReadinessSummary = {
   status: DrawdownReadinessStatus;
   headline: string;
   detail: string;
   rows: DrawdownReadinessRow[];
   prototypeRows: TaxAwareDrawdownPrototypeRow[];
+  drawdownOverrideDrafts: TaxAwareDrawdownDraftSummary;
   reviewNote: string;
 };
 
@@ -1290,12 +1345,20 @@ export function selectDrawdownReadinessSummary(
 ): DrawdownReadinessSummary {
   const rows = rowsFrom(result);
   if (!rows.length) {
+    const drawdownOverrideDrafts = buildTaxAwareDrawdownDraftSummary({
+      prototypeRows: [],
+      annualRows: [],
+      plan,
+      finalRegisteredAssets: 0,
+      estateTarget: n(plan?.inheritance)
+    });
     return {
       status: 'cannotTell',
       headline: 'Drawdown readiness needs a completed projection first.',
       detail: 'Clear required inputs, then rerun Results before reviewing future drawdown evidence.',
       rows: [],
       prototypeRows: [],
+      drawdownOverrideDrafts,
       reviewNote: 'This is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
     };
   }
@@ -1435,6 +1498,13 @@ export function selectDrawdownReadinessSummary(
     finalRegisteredAssets,
     estateTarget
   });
+  const drawdownOverrideDrafts = buildTaxAwareDrawdownDraftSummary({
+    prototypeRows,
+    annualRows,
+    plan,
+    finalRegisteredAssets,
+    estateTarget
+  });
 
   return {
     status,
@@ -1446,6 +1516,7 @@ export function selectDrawdownReadinessSummary(
       'These rows explain where a future tax-aware drawdown review would look. This does not change the current withdrawal order.',
     rows: readinessRows,
     prototypeRows,
+    drawdownOverrideDrafts,
     reviewNote: 'Drawdown readiness is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
   };
 }
@@ -1538,6 +1609,353 @@ function buildTaxAwareDrawdownPrototypeRows({
   }
 
   return rows.slice(0, 5);
+}
+
+function buildTaxAwareDrawdownDraftSummary({
+  prototypeRows,
+  annualRows,
+  plan,
+  finalRegisteredAssets,
+  estateTarget
+}: {
+  prototypeRows: TaxAwareDrawdownPrototypeRow[];
+  annualRows: Array<{
+    year: number;
+    registeredWithdrawals: number;
+    tfsaWithdrawals: number;
+    nonRegisteredWithdrawals: number;
+    cashWithdrawals: number;
+    tax: number;
+    taxableIncome: number;
+    oasRecovery: number;
+  }>;
+  plan: V2PlanPayload | null | undefined;
+  finalRegisteredAssets: number;
+  estateTarget: number;
+}): TaxAwareDrawdownDraftSummary {
+  const planRegisteredAssets = n(plan?.p1?.rrsp) + n(plan?.p1?.lif) + n(plan?.p1?.lira) + n(plan?.p2?.rrsp) + n(plan?.p2?.lif) + n(plan?.p2?.lira);
+  const planFlexibleAssets = n(plan?.p1?.tfsa) + n(plan?.p2?.tfsa) + n(plan?.p1?.nonreg) + n(plan?.p2?.nonreg) + n(plan?.cashWedge?.balance);
+  const lockedInAssets = n(plan?.p1?.lif) + n(plan?.p1?.lira) + n(plan?.p2?.lif) + n(plan?.p2?.lira);
+  const hasSurvivorScenario = n(plan?.assumptions?.p1DiesInSurvivor) > 0;
+  const projectionYears = new Set(annualRows.map((row) => row.year));
+  const bucketBand = planRegisteredAssets > 250000 ? '$10k-$25k review band' : '$5k-$10k review band';
+  const mixedBand = planFlexibleAssets > 0 ? '$5k-$25k review band' : 'Needs flexible-account evidence';
+
+  const validateDraft = (
+    row: Omit<TaxAwareDrawdownDraftRow, 'status' | 'safetyNotes' | 'disposition'>,
+    requiresRegistered: boolean,
+    requiresFlexible: boolean,
+    extraNotes: string[] = []
+  ): TaxAwareDrawdownDraftRow => {
+    const safetyNotes: string[] = [...extraNotes];
+    let status: TaxAwareDrawdownDraftStatus = 'usableForFutureReview';
+
+    if (row.year !== null && !projectionYears.has(row.year)) {
+      status = 'blocked';
+      safetyNotes.push('The year is outside the current projection.');
+    }
+    if (requiresRegistered && planRegisteredAssets <= RECONCILIATION_TOLERANCE) {
+      status = 'blocked';
+      safetyNotes.push('Registered account balances are missing for this check.');
+    }
+    if (requiresFlexible && planFlexibleAssets <= RECONCILIATION_TOLERANCE && status !== 'blocked') {
+      status = 'needsInput';
+      safetyNotes.push('Flexible account balances are needed before this can be reviewed.');
+    }
+    if (lockedInAssets > RECONCILIATION_TOLERANCE) {
+      safetyNotes.push('Locked-in account limits would need a later check before any future execution.');
+      if (status === 'usableForFutureReview' && row.accountBucket === 'registered') status = 'needsInput';
+    }
+    if (!safetyNotes.length) {
+      safetyNotes.push('This is a review draft only. It does not change account withdrawals.');
+    }
+
+    return {
+      ...row,
+      status,
+      safetyNotes,
+      disposition: 'draftOnly'
+    };
+  };
+
+  const drafts = prototypeRows.flatMap((row): TaxAwareDrawdownDraftRow[] => {
+    switch (row.id) {
+      case 'lowTaxWindow':
+        return [
+          validateDraft(
+            {
+              id: 'lowTaxRegisteredDraft',
+              label: 'Low-tax registered check',
+              year: row.year,
+              accountBucket: 'registered',
+              direction: 'testEarlier',
+              amountBand: bucketBand,
+              evidenceSource: row.id,
+              detail: 'A later review could test a modest registered withdrawal band in this lower-tax window.'
+            },
+            true,
+            false,
+            ['The amount stays as a band until a later engine run can test exact values.']
+          )
+        ];
+      case 'registeredPressure':
+        return [
+          validateDraft(
+            {
+              id: 'registeredSmoothingDraft',
+              label: 'Registered smoothing check',
+              year: row.year,
+              accountBucket: 'registered',
+              direction: 'smooth',
+              amountBand: bucketBand,
+              evidenceSource: row.id,
+              detail: 'A later review could compare whether registered withdrawals are too concentrated in this year.'
+            },
+            true,
+            false,
+            ['This does not replace the current withdrawal order.']
+          )
+        ];
+      case 'oasRecovery':
+        return [
+          validateDraft(
+            {
+              id: 'oasRecoveryDraft',
+              label: 'OAS recovery pressure check',
+              year: row.year,
+              accountBucket: 'mixed',
+              direction: 'reducePressure',
+              amountBand: mixedBand,
+              evidenceSource: row.id,
+              detail: 'A later review could compare nearby years and account buckets around OAS recovery exposure.'
+            },
+            true,
+            true,
+            ['This is only a tax-timing question for future review.']
+          )
+        ];
+      case 'peakTax':
+        return [
+          validateDraft(
+            {
+              id: 'peakTaxDraft',
+              label: 'Peak tax year check',
+              year: row.year,
+              accountBucket: 'mixed',
+              direction: 'reducePressure',
+              amountBand: mixedBand,
+              evidenceSource: row.id,
+              detail: 'A later review could test whether tax pressure is concentrated in this year.'
+            },
+            false,
+            true,
+            ['The current plan remains the baseline until a later execution phase exists.']
+          )
+        ];
+      case 'estatePressure':
+        return [
+          validateDraft(
+            {
+              id: 'estatePressureDraft',
+              label: 'Estate preference check',
+              year: row.year,
+              accountBucket: finalRegisteredAssets > RECONCILIATION_TOLERANCE ? 'registered' : 'none',
+              direction: 'preserveChoice',
+              amountBand: finalRegisteredAssets > RECONCILIATION_TOLERANCE ? '$10k-$25k review band' : 'No registered balance band',
+              evidenceSource: row.id,
+              detail: 'A later review could check whether drawdown timing respects estate, survivor, tax, and flexibility preferences.'
+            },
+            true,
+            false,
+            estateTarget > 0 ? ['The entered estate goal should remain a guardrail in any later comparison.'] : []
+          )
+        ];
+    }
+  });
+
+  const readinessRows: TaxAwareDrawdownReadinessCheck[] = [
+    {
+      id: 'accountBalances',
+      label: 'Account balances',
+      status: planRegisteredAssets > 0 || planFlexibleAssets > 0 ? 'ready' : 'blocked',
+      detail:
+        planRegisteredAssets > 0 || planFlexibleAssets > 0
+          ? 'Entered account balances give a later review something to compare.'
+          : 'Enter account balances before future drawdown testing.'
+    },
+    {
+      id: 'accountMix',
+      label: 'Account mix',
+      status: planRegisteredAssets > 0 && planFlexibleAssets > 0 ? 'ready' : 'needsInput',
+      detail:
+        planRegisteredAssets > 0 && planFlexibleAssets > 0
+          ? 'Registered and flexible account buckets are both visible.'
+          : 'A thin account mix limits what a later review can compare.'
+    },
+    {
+      id: 'oasRecoveryExposure',
+      label: 'OAS recovery exposure',
+      status: prototypeRows.some((row) => row.id === 'oasRecovery') ? 'review' : 'ready',
+      detail: prototypeRows.some((row) => row.id === 'oasRecovery')
+        ? 'OAS recovery evidence should stay visible in later testing.'
+        : 'No OAS recovery pressure appears in the current projection.'
+    },
+    {
+      id: 'estateIntent',
+      label: 'Estate goal',
+      status: estateTarget > 0 ? 'review' : 'ready',
+      detail: estateTarget > 0 ? 'The entered estate goal should remain visible in later comparisons.' : 'No entered estate goal is constraining this review.'
+    },
+    {
+      id: 'lockedInAccounts',
+      label: 'Locked-in accounts',
+      status: lockedInAssets > 0 ? 'needsInput' : 'ready',
+      detail: lockedInAssets > 0 ? 'Locked-in account limits need a later rule check before execution.' : 'No locked-in balance is entered for this household.'
+    },
+    {
+      id: 'survivorScenario',
+      label: 'Survivor scenario',
+      status: hasSurvivorScenario ? 'review' : 'needsInput',
+      detail: hasSurvivorScenario
+        ? 'A survivor scenario is visible and should be preserved in later testing.'
+        : 'A survivor scenario would make later drawdown testing more complete.'
+    }
+  ];
+
+  if (!annualRows.length) {
+    return {
+      status: 'cannotTell',
+      headline: 'Future drawdown draft checks need a completed projection.',
+      detail: 'Run Results before reviewing draft checks for future tax-aware drawdown testing.',
+      rows: [],
+      readinessRows: [],
+      sandbox: buildTaxAwareDrawdownSandboxSummary([], []),
+      reviewNote: 'Draft checks are review-only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
+    };
+  }
+
+  if (!drafts.length) {
+    return {
+      status: 'cannotTell',
+      headline: 'No future drawdown draft checks stand out yet.',
+      detail: 'The current projection does not show enough drawdown timing evidence for draft checks.',
+      rows: [],
+      readinessRows,
+      sandbox: buildTaxAwareDrawdownSandboxSummary([], readinessRows),
+      reviewNote: 'Draft checks are review-only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
+    };
+  }
+
+  const hasUsable = drafts.some((row) => row.status === 'usableForFutureReview');
+  const hasBlocked = drafts.some((row) => row.status === 'blocked') || readinessRows.some((row) => row.status === 'blocked');
+  const hasNeedsInput = drafts.some((row) => row.status === 'needsInput') || readinessRows.some((row) => row.status === 'needsInput');
+  const accountBalancesBlocked = readinessRows.some((row) => row.id === 'accountBalances' && row.status === 'blocked');
+  const status: TaxAwareDrawdownDraftSummary['status'] =
+    accountBalancesBlocked || (hasBlocked && !hasUsable) ? 'blocked' : hasNeedsInput || hasBlocked ? 'needsInput' : 'readyForFutureReview';
+
+  return {
+    status,
+    headline:
+      status === 'readyForFutureReview'
+        ? 'This plan is ready for future tax-aware drawdown testing.'
+        : status === 'blocked'
+          ? 'Future drawdown testing needs missing inputs first.'
+          : 'Future drawdown testing has useful draft checks, with inputs to confirm.',
+    detail:
+      'These draft checks describe what a later test might compare. They are not run as part of the calculation and do not change the current plan.',
+    rows: drafts,
+    readinessRows,
+    sandbox: buildTaxAwareDrawdownSandboxSummary(drafts, readinessRows),
+    reviewNote: 'Future drawdown draft checks are review evidence only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
+  };
+}
+
+function buildTaxAwareDrawdownSandboxSummary(
+  drafts: TaxAwareDrawdownDraftRow[],
+  readinessRows: TaxAwareDrawdownReadinessCheck[]
+): TaxAwareDrawdownSandboxSummary {
+  const accountBlocked = readinessRows.some((row) => row.id === 'accountBalances' && row.status === 'blocked');
+  const missingInputRows = readinessRows.filter((row) => row.status === 'needsInput' || row.status === 'blocked');
+  const priority: TaxAwareDrawdownDraftRow['id'][] = [
+    'oasRecoveryDraft',
+    'peakTaxDraft',
+    'registeredSmoothingDraft',
+    'lowTaxRegisteredDraft',
+    'estatePressureDraft'
+  ];
+  const usableDrafts = drafts.filter((row) => row.status === 'usableForFutureReview');
+  const firstUsable = priority.map((id) => usableDrafts.find((row) => row.id === id)).find(Boolean) || null;
+
+  if (!drafts.length) {
+    return {
+      status: 'notReady',
+      headline: 'No future sandbox check is queued yet.',
+      detail: 'The plan needs drawdown evidence before a later sandbox comparison can be framed.',
+      rows: [],
+      reviewNote: 'No sandbox comparison is run here. Nothing changes in the current calculation or saved plan.'
+    };
+  }
+
+  if (accountBlocked || !firstUsable) {
+    return {
+      status: 'blocked',
+      headline: 'Future sandbox comparison is blocked for now.',
+      detail: 'The plan needs usable account evidence before a later comparison can be framed.',
+      rows: [
+        {
+          id: 'firstFutureSandboxCheck',
+          label: 'First future sandbox check',
+          status: 'blocked',
+          draftId: null,
+          baselineSignal: 'No usable draft check is available.',
+          compareWouldNeed: 'A completed projection with entered account balances and a future calculation that can test annual overrides.',
+          holdReason: accountBlocked ? 'Account balances are missing.' : 'All draft checks are blocked or need more input.',
+          disposition: 'sandboxPlanningOnly'
+        }
+      ],
+      reviewNote: 'No sandbox comparison is run here. Nothing changes in the current calculation or saved plan.'
+    };
+  }
+
+  if (missingInputRows.length) {
+    return {
+      status: 'needsInput',
+      headline: 'A future sandbox check is visible, with inputs to confirm first.',
+      detail: 'One draft check can be held for later comparison after the missing inputs are reviewed.',
+      rows: [
+        {
+          id: 'firstFutureSandboxCheck',
+          label: 'First future sandbox check',
+          status: 'heldForInput',
+          draftId: firstUsable.id,
+          baselineSignal: `${firstUsable.label}: ${firstUsable.amountBand}`,
+          compareWouldNeed: 'A later calculation that can compare taxes, OAS recovery, funding, estate intent, and survivor impact together.',
+          holdReason: missingInputRows.map((row) => row.label).join(', '),
+          disposition: 'sandboxPlanningOnly'
+        }
+      ],
+      reviewNote: 'No sandbox comparison is run here. Nothing changes in the current calculation or saved plan.'
+    };
+  }
+
+  return {
+    status: 'readyToCompareLater',
+    headline: 'One future sandbox check is ready to hold for later comparison.',
+    detail: 'This identifies the first draft shape to compare when a later calculation can safely test annual overrides.',
+    rows: [
+      {
+        id: 'firstFutureSandboxCheck',
+        label: 'First future sandbox check',
+        status: 'queuedForFutureReview',
+        draftId: firstUsable.id,
+        baselineSignal: `${firstUsable.label}: ${firstUsable.amountBand}`,
+        compareWouldNeed: 'A later calculation that can compare taxes, OAS recovery, funding, estate intent, and survivor impact together.',
+        holdReason: 'Ready for a later sandbox comparison; no comparison is run in this sprint.',
+        disposition: 'sandboxPlanningOnly'
+      }
+    ],
+    reviewNote: 'No sandbox comparison is run here. Nothing changes in the current calculation or saved plan.'
+  };
 }
 
 export function selectEstateIntentSummary(

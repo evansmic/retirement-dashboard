@@ -979,6 +979,49 @@ button.secondary,
   color: var(--muted);
 }
 
+.drawdown-draft-panel {
+  border-color: #d7d3c7;
+  background: #fffdf7;
+}
+
+.drawdown-readiness-checks {
+  display: grid;
+  gap: 10px;
+}
+
+.drawdown-readiness-checks h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.drawdown-sandbox-panel {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e1ddd2;
+  padding-top: 12px;
+}
+
+.drawdown-sandbox-panel h4,
+.drawdown-sandbox-panel p {
+  margin: 0;
+}
+
+.drawdown-sandbox-panel p {
+  color: var(--muted);
+}
+
+.draft-status-blocked {
+  border-color: #e1b9ae;
+}
+
+.draft-status-needsInput {
+  border-color: #ded2a8;
+}
+
+.draft-status-usableForFutureReview {
+  border-color: #b9d2c5;
+}
+
 .optimizer-explanation-card {
   display: grid;
   gap: 10px;

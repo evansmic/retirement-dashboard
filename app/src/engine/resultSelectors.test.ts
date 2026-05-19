@@ -560,6 +560,12 @@ describe('result selectors', () => {
     expect(readiness.status).toBe('cannotTell');
     expect(readiness.rows).toEqual([]);
     expect(readiness.prototypeRows).toEqual([]);
+    expect(readiness.drawdownOverrideDrafts).toMatchObject({
+      status: 'cannotTell',
+      rows: [],
+      readinessRows: [],
+      sandbox: { status: 'notReady', rows: [] }
+    });
     expect(readiness.reviewNote).toContain('does not change withdrawal order');
     expect(readiness.reviewNote).toContain('save optimizer output');
   });
@@ -626,8 +632,123 @@ describe('result selectors', () => {
       tone: 'watch',
       disposition: 'evidenceOnly'
     });
+    expect(readiness.drawdownOverrideDrafts.rows.map((row) => row.evidenceSource)).toEqual([
+      'lowTaxWindow',
+      'registeredPressure',
+      'oasRecovery',
+      'peakTax',
+      'estatePressure'
+    ]);
+    expect(readiness.drawdownOverrideDrafts.rows.find((row) => row.id === 'lowTaxRegisteredDraft')).toMatchObject({
+      year: 2028,
+      accountBucket: 'registered',
+      direction: 'testEarlier',
+      disposition: 'draftOnly'
+    });
+    expect(readiness.drawdownOverrideDrafts.rows.find((row) => row.id === 'oasRecoveryDraft')).toMatchObject({
+      accountBucket: 'mixed',
+      status: 'usableForFutureReview'
+    });
+    expect(readiness.drawdownOverrideDrafts.readinessRows.find((row) => row.id === 'accountBalances')).toMatchObject({
+      status: 'ready'
+    });
+    expect(readiness.drawdownOverrideDrafts.sandbox).toMatchObject({
+      status: 'needsInput',
+      rows: [
+        {
+          id: 'firstFutureSandboxCheck',
+          status: 'heldForInput',
+          draftId: 'oasRecoveryDraft',
+          disposition: 'sandboxPlanningOnly'
+        }
+      ]
+    });
+    expect(readiness.drawdownOverrideDrafts.sandbox.reviewNote).toContain('No sandbox comparison is run here');
     expect(JSON.stringify(readiness)).not.toContain('recommendation');
     expect(JSON.stringify(readiness)).not.toContain('account-by-account');
+  });
+
+  it('blocks future drawdown draft checks when account bucket evidence is missing', () => {
+    const result = withRows([
+      { year: 2028, rrif_draw_f: 0, lif_draw: 0, taxableIncome: 42000, totalTaxYear: 3500, totalOasClawY: 0, bal_total: 600000 },
+      {
+        year: 2029,
+        rrif_draw_f: 65000,
+        taxableIncome: 125000,
+        totalTaxYear: 31000,
+        totalOasClawY: 4200,
+        bal_rrsp: 0,
+        bal_lif: 0,
+        bal_total: 500000
+      }
+    ]);
+
+    const readiness = selectDrawdownReadinessSummary(result, {
+      ...planFixture,
+      p1: { ...planFixture.p1, rrsp: 0, tfsa: 0, nonreg: 0 },
+      cashWedge: { ...planFixture.cashWedge, balance: 0 }
+    });
+
+    expect(readiness.drawdownOverrideDrafts.status).toBe('blocked');
+    expect(readiness.drawdownOverrideDrafts.rows.find((row) => row.id === 'lowTaxRegisteredDraft')).toMatchObject({
+      status: 'blocked',
+      accountBucket: 'registered'
+    });
+    expect(readiness.drawdownOverrideDrafts.readinessRows.find((row) => row.id === 'accountBalances')).toMatchObject({
+      status: 'blocked'
+    });
+    expect(readiness.drawdownOverrideDrafts.sandbox).toMatchObject({
+      status: 'blocked',
+      rows: [{ status: 'blocked', draftId: null, disposition: 'sandboxPlanningOnly' }]
+    });
+    expect(readiness.drawdownOverrideDrafts.reviewNote).toContain('do not change withdrawal order');
+  });
+
+  it('queues one future sandbox check when draft inputs are ready', () => {
+    const result = withRows([
+      {
+        year: 2028,
+        rrif_draw_f: 0,
+        lif_draw: 0,
+        taxableIncome: 42000,
+        totalTaxYear: 3500,
+        totalOasClawY: 0,
+        bal_total: 600000
+      },
+      {
+        year: 2029,
+        rrif_draw_f: 65000,
+        lif_draw: 0,
+        taxableIncome: 125000,
+        totalTaxYear: 31000,
+        totalOasClawY: 4200,
+        bal_rrsp: 260000,
+        bal_lif: 0,
+        bal_total: 500000
+      }
+    ]);
+
+    const readiness = selectDrawdownReadinessSummary(result, {
+      ...planFixture,
+      inheritance: 0,
+      p1: { ...planFixture.p1, rrsp: 300000, tfsa: 90000, nonreg: 50000 },
+      p2: { ...planFixture.p2, rrsp: 0, lif: 0, lira: 0, tfsa: 0, nonreg: 0 },
+      cashWedge: { ...planFixture.cashWedge, balance: 40000 },
+      assumptions: { ...planFixture.assumptions, p1DiesInSurvivor: 2035 }
+    });
+
+    expect(readiness.drawdownOverrideDrafts.sandbox).toMatchObject({
+      status: 'readyToCompareLater',
+      rows: [
+        {
+          status: 'queuedForFutureReview',
+          draftId: 'oasRecoveryDraft',
+          disposition: 'sandboxPlanningOnly'
+        }
+      ]
+    });
+    expect(readiness.drawdownOverrideDrafts.sandbox.detail).toContain('later calculation');
+    expect(JSON.stringify(readiness.drawdownOverrideDrafts.sandbox)).not.toContain('annualOverrides');
   });
 
   it('keeps drawdown readiness out of saved plan files', () => {
@@ -636,11 +757,16 @@ describe('result selectors', () => {
 
     expect(readiness.rows.length).toBeGreaterThan(0);
     expect(readiness.prototypeRows.length).toBeGreaterThan(0);
+    expect(readiness.drawdownOverrideDrafts.rows.length).toBeGreaterThan(0);
     expect(file.plan).not.toHaveProperty('drawdownReadiness');
     expect(file.plan).not.toHaveProperty('optimizerContract');
     expect(file.plan).not.toHaveProperty('withdrawalStrategy');
     expect(file.plan).not.toHaveProperty('annualOverrides');
     expect(file.plan).not.toHaveProperty('taxAwareDrawdownPrototype');
+    expect(file.plan).not.toHaveProperty('taxAwareDrawdownDrafts');
+    expect(file.plan).not.toHaveProperty('drawdownOverrideDrafts');
+    expect(file.plan).not.toHaveProperty('drawdownDraftComparison');
+    expect(file.plan).not.toHaveProperty('drawdownSandbox');
   });
 
   it('flags estate intent when a large projected estate has no target', () => {

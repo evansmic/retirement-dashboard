@@ -44,6 +44,15 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(['cannotTell', 'fragile', 'balanced', 'roomToReview']).toContain(item.spendingStress.status);
       expect(['cannotTell', 'ready', 'review']).toContain(item.drawdownReadiness.status);
       expect(item.drawdownReadiness.prototypeRows.every((row) => row.disposition === 'evidenceOnly')).toBe(true);
+      expect(['cannotTell', 'readyForFutureReview', 'needsInput', 'blocked']).toContain(item.drawdownReadiness.drawdownOverrideDrafts.status);
+      expect(item.drawdownReadiness.drawdownOverrideDrafts.rows.every((row) => row.disposition === 'draftOnly')).toBe(true);
+      expect(
+        item.drawdownReadiness.drawdownOverrideDrafts.rows.every((row) =>
+          ['usableForFutureReview', 'needsInput', 'blocked'].includes(row.status)
+        )
+      ).toBe(true);
+      expect(['notReady', 'readyToCompareLater', 'needsInput', 'blocked']).toContain(item.drawdownReadiness.drawdownOverrideDrafts.sandbox.status);
+      expect(item.drawdownReadiness.drawdownOverrideDrafts.sandbox.rows.every((row) => row.disposition === 'sandboxPlanningOnly')).toBe(true);
       expect(['blocked', 'ready']).toContain(item.optimizer.status);
       expect(item.optimizer.execution).toBe('boundedSearch');
       expect(item.optimizer.candidates.length).toBeGreaterThan(0);
@@ -58,6 +67,10 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('spendingStress');
       expect(item.saved.plan).not.toHaveProperty('drawdownReadiness');
       expect(item.saved.plan).not.toHaveProperty('taxAwareDrawdownPrototype');
+      expect(item.saved.plan).not.toHaveProperty('taxAwareDrawdownDrafts');
+      expect(item.saved.plan).not.toHaveProperty('drawdownOverrideDrafts');
+      expect(item.saved.plan).not.toHaveProperty('drawdownDraftComparison');
+      expect(item.saved.plan).not.toHaveProperty('drawdownSandbox');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
       expect(item.saved.plan).not.toHaveProperty('optionGroups');

@@ -3404,6 +3404,77 @@ function DrawdownReadinessPanel({
           </div>
         </section>
       ) : null}
+      {summary.drawdownOverrideDrafts.rows.length || summary.drawdownOverrideDrafts.readinessRows.length ? (
+        <section className={`drawdown-prototype-panel drawdown-draft-panel draft-${summary.drawdownOverrideDrafts.status}`}>
+          <div>
+            <p className="eyebrow">Future drawdown draft checks</p>
+            <h3>{summary.drawdownOverrideDrafts.headline}</h3>
+            <p>{summary.drawdownOverrideDrafts.detail}</p>
+            <p>They are not run as part of the calculation and do not change this plan.</p>
+          </div>
+          {summary.drawdownOverrideDrafts.rows.length ? (
+            <div className="optimizer-evidence-grid">
+              {summary.drawdownOverrideDrafts.rows.map((row) => (
+                <article className={`optimizer-evidence-row draft-status-${row.status}`} key={row.id}>
+                  <span>{row.label}</span>
+                  <strong>
+                    {row.status === 'usableForFutureReview'
+                      ? 'Future review'
+                      : row.status === 'needsInput'
+                        ? 'Needs input'
+                        : 'Blocked'}
+                  </strong>
+                  <p>
+                    {row.year ? `${row.year} / ${row.accountBucket} / ${row.amountBand}` : `${row.accountBucket} / ${row.amountBand}`}
+                  </p>
+                  <p>{row.detail}</p>
+                  <p>{row.safetyNotes.join(' ')}</p>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          {summary.drawdownOverrideDrafts.readinessRows.length ? (
+            <div className="drawdown-readiness-checks" aria-label="Future drawdown testing readiness">
+              <h4>Is this plan ready for future tax-aware drawdown testing?</h4>
+              <div className="optimizer-eligibility-list">
+                {summary.drawdownOverrideDrafts.readinessRows.map((row) => (
+                  <article className={`optimizer-eligibility-note eligibility-${row.status}`} key={row.id}>
+                    <strong>{row.label}</strong>
+                    <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : row.status === 'needsInput' ? 'Needs input' : 'Blocked'}</span>
+                    <p>{row.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {summary.drawdownOverrideDrafts.sandbox.rows.length ? (
+            <div className={`drawdown-sandbox-panel sandbox-${summary.drawdownOverrideDrafts.sandbox.status}`}>
+              <div>
+                <p className="eyebrow">Future sandbox gate</p>
+                <h4>{summary.drawdownOverrideDrafts.sandbox.headline}</h4>
+                <p>{summary.drawdownOverrideDrafts.sandbox.detail}</p>
+              </div>
+              {summary.drawdownOverrideDrafts.sandbox.rows.map((row) => (
+                <article className={`optimizer-evidence-row sandbox-row-${row.status}`} key={row.id}>
+                  <span>{row.label}</span>
+                  <strong>
+                    {row.status === 'queuedForFutureReview'
+                      ? 'Hold for later comparison'
+                      : row.status === 'heldForInput'
+                        ? 'Confirm inputs first'
+                        : 'Blocked'}
+                  </strong>
+                  <p>{row.baselineSignal}</p>
+                  <p>{row.compareWouldNeed}</p>
+                  <p>{row.holdReason}</p>
+                </article>
+              ))}
+              <p className="table-note">{summary.drawdownOverrideDrafts.sandbox.reviewNote}</p>
+            </div>
+          ) : null}
+          <p className="table-note">{summary.drawdownOverrideDrafts.reviewNote}</p>
+        </section>
+      ) : null}
       <p className="table-note">
         This does not change withdrawal order or create annual account-by-account instructions. It does not change the current withdrawal order used in Results.
       </p>
