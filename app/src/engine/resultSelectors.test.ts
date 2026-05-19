@@ -767,6 +767,8 @@ describe('result selectors', () => {
     expect(file.plan).not.toHaveProperty('drawdownOverrideDrafts');
     expect(file.plan).not.toHaveProperty('drawdownDraftComparison');
     expect(file.plan).not.toHaveProperty('drawdownSandbox');
+    expect(file.plan).not.toHaveProperty('drawdownSandboxComparison');
+    expect(file.plan).not.toHaveProperty('syntheticDrawdownPayload');
   });
 
   it('flags estate intent when a large projected estate has no target', () => {

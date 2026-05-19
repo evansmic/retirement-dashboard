@@ -71,6 +71,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('drawdownOverrideDrafts');
       expect(item.saved.plan).not.toHaveProperty('drawdownDraftComparison');
       expect(item.saved.plan).not.toHaveProperty('drawdownSandbox');
+      expect(item.saved.plan).not.toHaveProperty('drawdownSandboxComparison');
+      expect(item.saved.plan).not.toHaveProperty('syntheticDrawdownPayload');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
       expect(item.saved.plan).not.toHaveProperty('optionGroups');

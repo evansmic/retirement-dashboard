@@ -4,36 +4,44 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 54: Drawdown Sandbox Gate
+## Latest Sprint — Sprint 55: Mocked Drawdown Sandbox Comparison
 
 **Status:** Complete 2026-05-19.
 
-Goal: choose one future drawdown sandbox check from validated drafts, while still avoiding annual override execution or saved optimizer output.
+Goal: add a test-only comparison runner for the queued drawdown sandbox draft, using mocked output only and still avoiding product execution or saved optimizer output.
 
 Non-scope: real tax-aware drawdown execution, annual withdrawal override simulation, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 54 checkpoint doc: [`docs/sprint_54_drawdown_sandbox_gate.md`](docs/sprint_54_drawdown_sandbox_gate.md).
+Sprint 55 checkpoint doc: [`docs/sprint_55_mocked_drawdown_sandbox_comparison.md`](docs/sprint_55_mocked_drawdown_sandbox_comparison.md).
 
-### Sprint 54 Candidate Implementation Tickets
+### Sprint 55 Candidate Implementation Tickets
 
-- [x] **S54-01 — Sandbox gate selector.** Select one draft check to hold for later comparison when inputs are ready.
-- [x] **S54-02 — Blocker copy.** Explain when the future sandbox check is blocked or waiting on inputs.
-- [x] **S54-03 — Details-only UI.** Surface the future sandbox gate under Drawdown readiness in Details, not Overview.
-- [x] **S54-04 — Persistence guardrails.** Confirm sandbox planning output is not written into `.plan.json`.
-- [x] **S54-05 — Copy discipline.** Keep the language as future comparison planning, not account instructions or advice.
+- [x] **S55-01 — Gate-aware harness.** Compare only the sandbox-queued draft check.
+- [x] **S55-02 — Mock payload validation.** Reject negative amounts, year mismatches, and bucket mismatches before scoring.
+- [x] **S55-03 — Test-only posture.** Keep the comparison runner out of UI and product execution paths.
+- [x] **S55-04 — Persistence guardrails.** Confirm mocked payload and comparison output are not written into `.plan.json`.
+- [x] **S55-05 — Copy discipline.** Keep harness language evidence-only and avoid advice, certainty, or execution framing.
 
-### Sprint 54 Definition Of Done
+### Sprint 55 Definition Of Done
 
-- One future sandbox check can be queued, held for input, or blocked.
-- No sandbox comparison is run.
+- One queued sandbox draft can be scored against mocked baseline/candidate metrics.
+- Blocked or unqueued sandbox gates reject comparison attempts.
+- Invalid mocked payloads are rejected before scoring.
+- No product UI imports or renders the harness.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 55: Mocked Drawdown Sandbox Comparison
+
+**Complete 2026-05-19.** Added a test-only, gate-aware synthetic comparison runner that scores a queued drawdown sandbox draft against mocked output and rejects invalid payloads before scoring. No product execution, UI surface, saved output, or engine schema change was added.
+
+Sprint 55 checkpoint doc: [`docs/sprint_55_mocked_drawdown_sandbox_comparison.md`](docs/sprint_55_mocked_drawdown_sandbox_comparison.md).
 
 ### Sprint 54: Drawdown Sandbox Gate
 

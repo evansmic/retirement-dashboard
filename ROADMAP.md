@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 54 is complete. Tax-aware drawdown work now has a future sandbox gate that queues one draft check for later comparison, without executing annual withdrawal overrides.
+Sprint 55 is complete. Tax-aware drawdown work now has a test-only mocked comparison runner for the queued sandbox draft, without executing annual withdrawal overrides.
 
-Completed Sprint 54 slices:
+Completed Sprint 55 slices:
 
-- Selected one validated future drawdown draft check to hold for later comparison.
-- Explained when the future sandbox check is blocked or waiting on inputs.
-- Kept the sandbox gate inside Drawdown readiness in Details.
+- Added a gate-aware synthetic comparison runner for the queued sandbox draft.
+- Rejected unqueued gates, non-usable drafts, negative amounts, year mismatches, and bucket mismatches before scoring.
+- Kept the comparison runner out of UI and product execution paths.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, and comparison output remain runtime-only and unsaved.
-- Kept Sprint 54 as planning work, not account-by-account drawdown execution.
+- Confirmed prototype, draft, sandbox, mocked payload, and comparison output remain runtime-only and unsaved.
+- Kept Sprint 55 as test harness work, not account-by-account drawdown execution.
 
 ## Consumer Roadmap Sequence
 
@@ -87,7 +87,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 30. **Sprint 52 — Tax-aware drawdown prototype evidence.** Add evidence-only review windows before executing annual drawdown overrides.
 31. **Sprint 53 — Bounded drawdown execution readiness.** Add runtime-only draft checks, validation, and test-only comparison scaffolding before real annual override execution.
 32. **Sprint 54 — Drawdown sandbox gate.** Queue one future drawdown draft check for later comparison without running annual overrides.
-33. **Sprint 55+ — Narrow drawdown execution candidate.** Consider one carefully gated execution path only after sandbox gate coverage remains stable.
+33. **Sprint 55 — Mocked drawdown sandbox comparison.** Score the queued sandbox draft against mocked output only, behind test-only guardrails.
+34. **Sprint 56+ — Narrow drawdown execution candidate.** Consider one carefully gated execution path only after the mocked comparison harness remains stable.
 
 ## Medium-Term Roadmap
 
@@ -140,6 +141,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 52 — Tax-aware drawdown prototype evidence.** Complete 2026-05-19. Added Details-only review-window evidence for future tax-aware drawdown work while keeping current withdrawal order and annual overrides unchanged.
 - **Sprint 53 — Bounded drawdown execution readiness.** Complete 2026-05-19. Added runtime-only future drawdown draft checks, validation statuses, readiness blockers, and a test-only synthetic comparison harness without changing saved plans or engine output.
 - **Sprint 54 — Drawdown sandbox gate.** Complete 2026-05-19. Added a Details-only future sandbox gate that queues one validated drawdown draft check for later comparison while keeping annual overrides unexecuted and unsaved.
+- **Sprint 55 — Mocked drawdown sandbox comparison.** Complete 2026-05-19. Added a test-only gate-aware comparison runner for queued sandbox drafts, with mocked payload validation and persistence guardrails.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
