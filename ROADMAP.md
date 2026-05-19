@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 50 is complete. The bounded optimizer now groups plan options by choice type so the growing review set is easier to understand before adding more behavior.
+Sprint 51 is complete. CPP/OAS delay now explains eligibility and bridge-year risk more clearly before broader optimizer work.
 
-Completed Sprint 50 slices:
+Completed Sprint 51 slices:
 
-- Grouped candidates into current plan, lifestyle, timing, income-sharing, drawdown review, and home/estate categories.
-- Added a Details-only option map that explains what kind of choices were checked.
-- Clarified the difference between first option to review and review-only evidence.
-- Extended example readiness coverage so option groups remain runtime-only.
-- Kept Sprint 50 as a clarity sprint, not a new optimizer behavior.
+- Added specific skipped reasons for missing benefit estimates, already-age-70 cases, and projections that do not reach age 70.
+- Added Details evidence for benefit-delay bridge years before age 70.
+- Kept benefit delay review-only when bridge years show a spending shortfall.
+- Preserved the existing `delayBenefits` candidate without adding another optimizer behavior.
+- Confirmed optimizer output remains runtime-only and unsaved.
 
 ## Consumer Roadmap Sequence
 
@@ -82,7 +82,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 26. **Sprint 48 — CPP sharing review candidate.** Add CPP sharing as one narrow review-only bounded optimizer behavior for eligible couples.
 27. **Sprint 49 — Home equity reliance and estate guardrails.** Check reliance on entered home-sale cash and protect explicit estate goals before broader optimizer work.
 28. **Sprint 50 — Plan options clarity and candidate discipline.** Group and explain the growing bounded optimizer set before adding another behavior.
-29. **Sprint 51+ — Next optimizer increment.** Add only one more bounded behavior after option grouping remains stable in examples.
+29. **Sprint 51 — Benefit timing bridge-year clarity.** Refine CPP/OAS delay eligibility and bridge-year explanation before adding another behavior.
+30. **Sprint 52+ — Next optimizer increment.** Add only one more bounded behavior after benefit timing remains stable in examples.
 
 ## Medium-Term Roadmap
 
@@ -131,6 +132,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 48 — CPP sharing review candidate.** Complete 2026-05-18. Added one review-only CPP sharing candidate for eligible couples, with eligibility notes and evidence rows while preserving saved plan and engine schemas.
 - **Sprint 49 — Home equity reliance and estate guardrails.** Complete 2026-05-18. Added evidence-only home-sale reliance checks and estate-goal suggestion guardrails while preserving saved plan and engine schemas.
 - **Sprint 50 — Plan options clarity and candidate discipline.** Complete 2026-05-19. Added option groups and Details explanation copy so the bounded optimizer remains readable without adding new behavior.
+- **Sprint 51 — Benefit timing bridge-year clarity.** Complete 2026-05-19. Refined CPP/OAS delay eligibility notes and added bridge-year evidence while preserving the existing bounded candidate set.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

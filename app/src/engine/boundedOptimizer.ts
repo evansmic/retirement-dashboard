@@ -100,6 +100,10 @@ export type BoundedOptimizerEvidenceRow = {
     | 'cppSharingPeakTax'
     | 'cppSharingOasRecovery'
     | 'cppSharingPortfolio'
+    | 'benefitBridgeYears'
+    | 'benefitFirstBridgeShortfall'
+    | 'benefitLifetimeTax'
+    | 'benefitPortfolio'
     | 'homeRelianceFundedYears'
     | 'homeRelianceFirstShortfall'
     | 'homeReliancePortfolio'
@@ -218,6 +222,36 @@ function personCanStillDelayBenefits(person: V2PlanPayload['p1'], startYear: num
   return hasCppAndOasEstimate(person) && startAge !== null && startAge < 70 && reachesAge70;
 }
 
+function personLabel(key: 'p1' | 'p2', person: V2PlanPayload['p1']): string {
+  return person.name || (key === 'p1' ? 'Person 1' : 'Person 2');
+}
+
+function benefitTimingReason(plan: V2PlanPayload, people: ReturnType<typeof activePeople>, startYear: number, endYear: number, ready: boolean): string {
+  if (ready) {
+    return 'CPP/OAS delay can be reviewed because benefit estimates are entered and each active person can be tested to age 70.';
+  }
+
+  const missingEstimate = people.find(({ person }) => !hasCppAndOasEstimate(person));
+  if (missingEstimate) {
+    return `CPP/OAS delay is skipped because ${personLabel(missingEstimate.key, missingEstimate.person)} needs CPP and OAS estimates first.`;
+  }
+
+  const alreadyAge70 = people.find(({ person }) => {
+    const startAge = personAgeInYear(person, startYear);
+    return startAge !== null && startAge >= 70;
+  });
+  if (alreadyAge70) {
+    return `CPP/OAS delay is skipped because ${personLabel(alreadyAge70.key, alreadyAge70.person)} is already age 70 or older at the projection start.`;
+  }
+
+  const doesNotReach70 = people.find(({ person }) => n(person.dob) <= 0 || endYear < n(person.dob) + 70);
+  if (doesNotReach70) {
+    return `CPP/OAS delay is skipped because ${personLabel(doesNotReach70.key, doesNotReach70.person)} does not reach age 70 within the projection.`;
+  }
+
+  return 'CPP/OAS delay is skipped until benefit estimates and age-70 timing are both ready to review.';
+}
+
 function canMoveRetirement(plan: V2PlanPayload, years: number): boolean {
   return activePeople(plan).every(({ person }) => {
     const retireYear = n(person.retireYear) || n(plan.assumptions.retireYear);
@@ -282,10 +316,7 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   notes.push({
     lever: 'benefitTiming',
     status: !canExplore(contract, 'benefitTiming') || !benefitPeopleReady ? 'skipped' : 'eligible',
-    reason:
-      !benefitPeopleReady
-        ? 'CPP/OAS delay is skipped unless each active person has CPP and OAS estimates and is still before age 70 in the projection.'
-        : 'CPP/OAS delay can be reviewed because benefit estimates and timing are inside the age-70 test range.'
+    reason: benefitTimingReason(plan, activeBenefitPeople, startYear, endYear, benefitPeopleReady)
   });
   notes.push({
     lever: 'withdrawalOrder',
@@ -597,10 +628,15 @@ function isMaterialFundingRepair(
 }
 
 function hasWeakBenefitBridge(summary: ReturnType<typeof summarizeResult>): boolean {
-  return summary.rows.some((row) => {
+  return benefitBridgeShortfall(summary).count > 0;
+}
+
+function benefitBridgeShortfall(summary: ReturnType<typeof summarizeResult>): { count: number; firstYear: number | null } {
+  const bridgeRows = summary.rows.filter((row) => {
     const beforeAge70 = (n(row.ageF) > 0 && n(row.ageF) < 70) || (n(row.ageM) > 0 && n(row.ageM) < 70);
     return beforeAge70 && n(row.shortfall) > 1;
   });
+  return { count: bridgeRows.length, firstYear: bridgeRows[0] ? n(bridgeRows[0].year) : null };
 }
 
 function hasMeaningfulNonDisruptiveImprovement(
@@ -645,7 +681,11 @@ function recommendationPermission(
   }
 
   if (row.changedLevers.includes('benefitTiming') && hasWeakBenefitBridge(summary)) {
-    return { eligible: false, reason: 'Benefit delay remains review-only because the bridge years before age 70 show a spending shortfall.' };
+    const bridge = benefitBridgeShortfall(summary);
+    return {
+      eligible: false,
+      reason: `Benefit delay remains review-only because ${bridge.count} bridge year${bridge.count === 1 ? '' : 's'} before age 70 ${bridge.count === 1 ? 'shows' : 'show'} a spending shortfall${bridge.firstYear ? `, starting in ${bridge.firstYear}` : ''}.`
+    };
   }
 
   if (isDisruptiveChoice(row)) {
@@ -924,6 +964,49 @@ function buildCppSharingEvidence(
   ];
 }
 
+function buildBenefitTimingEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>
+): BoundedOptimizerEvidenceRow[] {
+  const baseline = summaries.baseline;
+  const delay = summaries.delayBenefits;
+  if (!baseline || !delay || delay.totalYears === 0) return [];
+
+  const bridge = benefitBridgeShortfall(delay);
+  const lifetimeTaxDelta = delay.lifetimeTax - baseline.lifetimeTax;
+  const portfolioDelta = delay.endPortfolio - baseline.endPortfolio;
+
+  return [
+    {
+      id: 'benefitBridgeYears',
+      label: 'Bridge years before age 70',
+      value: bridge.count ? `${bridge.count} shortfall year${bridge.count === 1 ? '' : 's'}` : 'No visible bridge shortfall',
+      detail: 'Checks whether delaying CPP/OAS creates spending gaps before age 70.',
+      tone: bridge.count ? 'watch' : 'neutral'
+    },
+    {
+      id: 'benefitFirstBridgeShortfall',
+      label: 'First bridge shortfall',
+      value: bridge.firstYear ? String(bridge.firstYear) : 'None visible',
+      detail: baseline.firstShortfallYear ? `Current plan first shortfall: ${baseline.firstShortfallYear}.` : 'Current plan has no visible shortfall in the projection years checked.',
+      tone: bridge.firstYear ? 'watch' : 'neutral'
+    },
+    {
+      id: 'benefitLifetimeTax',
+      label: 'Delay lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax when CPP/OAS are delayed to 70 in this review.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'benefitPortfolio',
+      label: 'Delay projected money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left at the end of the plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
+}
+
 function buildHomeSaleRelianceEvidence(
   summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>,
   plan: V2PlanPayload
@@ -1095,7 +1178,12 @@ export function runBoundedOptimizer(
     acc[item.definition.id] = item.summary;
     return acc;
   }, {});
-  const evidenceRows = [...buildPensionSplittingEvidence(summaryById), ...buildCppSharingEvidence(summaryById), ...buildHomeSaleRelianceEvidence(summaryById, plan)];
+  const evidenceRows = [
+    ...buildBenefitTimingEvidence(summaryById),
+    ...buildPensionSplittingEvidence(summaryById),
+    ...buildCppSharingEvidence(summaryById),
+    ...buildHomeSaleRelianceEvidence(summaryById, plan)
+  ];
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
   const recommendationNotes: BoundedOptimizerRecommendationNote[] = rows

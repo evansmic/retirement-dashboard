@@ -32,6 +32,7 @@ function readyPlan(): V2PlanPayload {
 
 function cppSharingPlan(): V2PlanPayload {
   const plan = readyPlan();
+  plan.p1.oas_monthly = 0;
   plan.p1.rrsp = 0;
   plan.p1.lira = 0;
   plan.p1.lif = 0;
@@ -60,6 +61,7 @@ function cppSharingPlan(): V2PlanPayload {
 
 function downsizePlan(): V2PlanPayload {
   const plan = readyPlan();
+  plan.p1.oas_monthly = 0;
   plan.downsize = { year: 2040, netProceeds: 250000 };
   return plan;
 }
@@ -177,7 +179,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
-      reason: expect.stringContaining('age-70 test range')
+      reason: expect.stringContaining('can be reviewed')
     });
     expect(summary.recommendationNotes.find((note) => note.candidateId === 'spendLess10')).toMatchObject({
       status: 'canHighlight',
@@ -189,6 +191,51 @@ describe('bounded optimizer runner', () => {
     });
     expect(calls).toHaveLength(8);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
+  });
+
+  it('adds bridge-year evidence for the benefit timing check', () => {
+    const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
+      if (config.cppAgeF === 70) return result(500000, 70000, 2033);
+      return candidatePlan.spending.gogo === readyPlan().spending.gogo ? result(100000, 90000, null) : result(90000, 95000, null);
+    });
+
+    expect(summary.evidenceRows.map((row) => row.id)).toEqual([
+      'benefitBridgeYears',
+      'benefitFirstBridgeShortfall',
+      'benefitLifetimeTax',
+      'benefitPortfolio'
+    ]);
+    expect(summary.evidenceRows.find((row) => row.id === 'benefitBridgeYears')).toMatchObject({
+      label: 'Bridge years before age 70',
+      value: '1 shortfall year',
+      tone: 'watch'
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'delayBenefits')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('1 bridge year before age 70')
+    });
+  });
+
+  it('explains why benefit timing is skipped when estimates or age-70 timing are not ready', () => {
+    const missingEstimate = readyPlan();
+    missingEstimate.p1.oas_monthly = 0;
+    const already70 = readyPlan();
+    already70.p1.dob = 1960;
+    const shortProjection = readyPlan();
+    shortProjection.assumptions.planEnd = 2035;
+
+    expect(runBoundedOptimizer(missingEstimate, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'benefitTiming')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('needs CPP and OAS estimates')
+    });
+    expect(runBoundedOptimizer(already70, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'benefitTiming')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('already age 70 or older')
+    });
+    expect(runBoundedOptimizer(shortProjection, () => result(100000, 90000)).eligibilityNotes.find((note) => note.lever === 'benefitTiming')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('does not reach age 70')
+    });
   });
 
   it('adds one bounded pension-splitting candidate for eligible two-person plans', () => {
@@ -205,6 +252,7 @@ describe('bounded optimizer runner', () => {
       oas_monthly: 742
     };
     plan.p1.db_after65 = 30000;
+    plan.p1.oas_monthly = 0;
     plan.assumptions.cppSharing = true;
     plan.assumptions.p1DiesInSurvivor = 2040;
 
@@ -447,7 +495,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.eligibilityNotes.find((note) => note.lever === 'withdrawalOrder')).toMatchObject({ status: 'skipped' });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'notTested',
-      reason: expect.stringContaining('before age 70')
+      reason: expect.stringContaining('already age 70')
     });
     expect(summary.candidates.map((candidate) => candidate.id)).toEqual(['baseline']);
   });
@@ -506,7 +554,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.suggestedCandidateId).toBe('spendLess5');
     expect(summary.recommendationNotes.find((note) => note.candidateId === 'delayBenefits')).toMatchObject({
       status: 'reviewOnly',
-      reason: expect.stringContaining('bridge years before age 70')
+      reason: expect.stringContaining('bridge year before age 70')
     });
   });
 

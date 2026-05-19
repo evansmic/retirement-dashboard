@@ -4,35 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 50: Plan Options Clarity & Candidate Discipline
+## Latest Sprint — Sprint 51: Benefit Timing Bridge-Year Clarity
 
 **Status:** Complete 2026-05-19.
 
-Goal: make the growing bounded optimizer set easier to understand before adding more optimizer behavior.
+Goal: refine CPP/OAS delay eligibility and bridge-year explanation without adding another optimizer behavior.
 
 Non-scope: new optimizer candidate families, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 50 checkpoint doc: [`docs/sprint_50_plan_options_clarity.md`](docs/sprint_50_plan_options_clarity.md).
+Sprint 51 checkpoint doc: [`docs/sprint_51_benefit_timing_bridge_clarity.md`](docs/sprint_51_benefit_timing_bridge_clarity.md).
 
-### Sprint 50 Candidate Implementation Tickets
+### Sprint 51 Candidate Implementation Tickets
 
-- [x] **S50-01 — Option grouping.** Group bounded optimizer candidates into current plan, lifestyle, timing, income-sharing, drawdown review, and home/estate categories.
-- [x] **S50-02 — Details option map.** Add a Details-only option map that explains what kind of choices were checked.
-- [x] **S50-03 — Highlight vs review-only copy.** Clarify that first option to review has passed highlight checks while review-only options remain useful evidence.
-- [x] **S50-04 — Matrix guardrails.** Extend example readiness coverage so every example exposes stable option groups without persisted output.
-- [x] **S50-05 — Docs.** Document Sprint 50 as a clarity/readiness sprint, not a new optimizer increment.
+- [x] **S51-01 — Eligibility reasons.** Explain whether benefit timing is skipped because estimates are missing, someone is already age 70, or the projection does not reach age 70.
+- [x] **S51-02 — Bridge-year evidence.** Add Details evidence for pre-70 bridge shortfalls when CPP/OAS are delayed.
+- [x] **S51-03 — Recommendation discipline.** Keep benefit delay review-only when bridge years show a spending gap, with first-year detail.
+- [x] **S51-04 — Copy discipline.** Keep CPP/OAS delay framed as a review check, not a recommendation.
+- [x] **S51-05 — Docs.** Document Sprint 51 as a refinement sprint, not a new optimizer increment.
 
-### Sprint 50 Definition Of Done
+### Sprint 51 Definition Of Done
 
-- Optimizer summaries expose stable option groups.
-- Details shows an option map without adding Overview density.
-- Review-only versus first-to-review language is clearer and consumer-facing.
-- Example matrix confirms option grouping across bundled examples.
+- Benefit timing skip notes identify the specific readiness issue.
+- Delay-to-70 evidence shows bridge-year risk, lifetime tax movement, and projected money-left movement.
+- Bridge-year shortfalls prevent benefit delay from becoming the highlighted first option.
+- No new optimizer candidate family is added.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 51: Benefit Timing Bridge-Year Clarity
+
+**Complete 2026-05-19.** Refined CPP/OAS delay eligibility notes and added bridge-year evidence so benefit timing remains review-oriented before broader optimizer work.
+
+Sprint 51 checkpoint doc: [`docs/sprint_51_benefit_timing_bridge_clarity.md`](docs/sprint_51_benefit_timing_bridge_clarity.md).
 
 ### Sprint 50: Plan Options Clarity & Candidate Discipline
 
