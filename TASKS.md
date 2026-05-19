@@ -4,37 +4,44 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 46: Tax-Aware Drawdown Contract Readiness
+## Latest Sprint — Sprint 47: Example-Plan Optimizer Readiness Matrix
 
 **Status:** Complete 2026-05-18.
 
-Goal: prepare for a future tax-aware drawdown optimizer by adding read-only drawdown readiness evidence and hardening the optimizer contract boundary without changing withdrawal order or saved plan data.
+Goal: add a focused readiness gate across the built-in example plans before adding another optimizer behavior.
 
-Non-scope: tax-aware withdrawal optimization, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, new candidate families, cloud accounts, advisor tooling, or report migration.
+Non-scope: new optimizer candidate families, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 46 checkpoint doc: [`docs/sprint_46_tax_aware_drawdown_contract_readiness.md`](docs/sprint_46_tax_aware_drawdown_contract_readiness.md).
+Sprint 47 checkpoint doc: [`docs/sprint_47_example_plan_optimizer_readiness_matrix.md`](docs/sprint_47_example_plan_optimizer_readiness_matrix.md).
 
-### Sprint 46 Candidate Implementation Tickets
+### Sprint 47 Candidate Implementation Tickets
 
-- [x] **S46-01 — Drawdown readiness selector.** Summarize registered withdrawal pressure, OAS recovery exposure, peak tax years, low-tax windows, and account mix from existing results.
-- [x] **S46-02 — Details UI.** Add a Details-only Drawdown readiness panel with review-only copy.
-- [x] **S46-03 — Contract hardening.** Keep withdrawal strategy in current-order mode with empty annual overrides.
-- [x] **S46-04 — Persistence guardrails.** Confirm readiness and optimizer strategy output are not saved into `.plan.json`.
-- [x] **S46-05 — Copy discipline.** Avoid optimal-drawdown, recommendation, guarantee, or advice-like language.
+- [x] **S47-01 — Example readiness matrix.** Run every built-in example through Results preview, spending stress, drawdown readiness, and bounded optimizer.
+- [x] **S47-02 — Suggestion discipline assertions.** Confirm disruptive options only become first to review when they materially repair visible funding issues.
+- [x] **S47-03 — Withdrawal-order guardrails.** Confirm withdrawal-order checks stay high-level and do not imply tax-aware annual drawdown instructions.
+- [x] **S47-04 — Persistence guardrails.** Confirm optimizer, spending stress, and drawdown readiness outputs are not saved into `.plan.json`.
+- [x] **S47-05 — Copy discipline.** Guard against safe-spending, guarantee, optimal-drawdown, or advice-like language across the example matrix.
 
-### Sprint 46 Definition Of Done
+### Sprint 47 Definition Of Done
 
-- Drawdown readiness is visible in Details and absent from Overview.
-- Drawdown readiness uses existing simulation and plan data only.
-- Current withdrawal order remains unchanged.
-- Annual withdrawal overrides remain an empty future-contract placeholder.
-- No drawdown readiness or optimizer strategy output is persisted.
+- Every built-in example produces finite baseline Results preview rows.
+- Spending stress and drawdown readiness return safe statuses for every example.
+- Bounded optimizer returns blocked or ready summaries with valid candidate rows.
+- Disruptive suggestions remain gated by visible funding repair.
+- Withdrawal-order candidates remain review-only high-level checks.
+- No stress, drawdown readiness, optimizer contract, or optimizer output is persisted.
 - No optimizer output is persisted.
-- No tax-aware drawdown optimizer is executed.
-- No engine output or saved plan schema changes are introduced.
+- No new optimizer candidate family is added.
+- No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 47: Example-Plan Optimizer Readiness Matrix
+
+**Complete 2026-05-18.** Added an example-plan readiness matrix that runs all bundled examples through Results preview, spending stress, drawdown readiness, and bounded optimizer guardrails without adding new optimizer behavior or saved output.
+
+Sprint 47 checkpoint doc: [`docs/sprint_47_example_plan_optimizer_readiness_matrix.md`](docs/sprint_47_example_plan_optimizer_readiness_matrix.md).
 
 ### Sprint 46: Tax-Aware Drawdown Contract Readiness
 
