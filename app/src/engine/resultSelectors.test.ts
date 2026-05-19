@@ -559,6 +559,7 @@ describe('result selectors', () => {
 
     expect(readiness.status).toBe('cannotTell');
     expect(readiness.rows).toEqual([]);
+    expect(readiness.prototypeRows).toEqual([]);
     expect(readiness.reviewNote).toContain('does not change withdrawal order');
     expect(readiness.reviewNote).toContain('save optimizer output');
   });
@@ -614,7 +615,19 @@ describe('result selectors', () => {
       disposition: 'reviewOnly'
     });
     expect(readiness.rows.every((row) => row.disposition === 'reviewOnly')).toBe(true);
+    expect(readiness.prototypeRows.map((row) => row.id)).toEqual(['lowTaxWindow', 'registeredPressure', 'oasRecovery', 'peakTax', 'estatePressure']);
+    expect(readiness.prototypeRows.find((row) => row.id === 'lowTaxWindow')).toMatchObject({
+      label: 'Low-tax review window',
+      value: '2028',
+      disposition: 'evidenceOnly'
+    });
+    expect(readiness.prototypeRows.find((row) => row.id === 'registeredPressure')).toMatchObject({
+      year: 2029,
+      tone: 'watch',
+      disposition: 'evidenceOnly'
+    });
     expect(JSON.stringify(readiness)).not.toContain('recommendation');
+    expect(JSON.stringify(readiness)).not.toContain('account-by-account');
   });
 
   it('keeps drawdown readiness out of saved plan files', () => {
@@ -622,9 +635,12 @@ describe('result selectors', () => {
     const file = createPlanFile(planFixture);
 
     expect(readiness.rows.length).toBeGreaterThan(0);
+    expect(readiness.prototypeRows.length).toBeGreaterThan(0);
     expect(file.plan).not.toHaveProperty('drawdownReadiness');
     expect(file.plan).not.toHaveProperty('optimizerContract');
     expect(file.plan).not.toHaveProperty('withdrawalStrategy');
+    expect(file.plan).not.toHaveProperty('annualOverrides');
+    expect(file.plan).not.toHaveProperty('taxAwareDrawdownPrototype');
   });
 
   it('flags estate intent when a large projected estate has no target', () => {

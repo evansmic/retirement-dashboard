@@ -4,35 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 51: Benefit Timing Bridge-Year Clarity
+## Latest Sprint — Sprint 52: Tax-Aware Drawdown Prototype Evidence
 
 **Status:** Complete 2026-05-19.
 
-Goal: refine CPP/OAS delay eligibility and bridge-year explanation without adding another optimizer behavior.
+Goal: add a slow, evidence-only tax-aware drawdown prototype layer without executing annual withdrawal overrides.
 
-Non-scope: new optimizer candidate families, tax-aware drawdown execution, annual withdrawal override execution, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: tax-aware drawdown execution, annual withdrawal override execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 51 checkpoint doc: [`docs/sprint_51_benefit_timing_bridge_clarity.md`](docs/sprint_51_benefit_timing_bridge_clarity.md).
+Sprint 52 checkpoint doc: [`docs/sprint_52_tax_aware_drawdown_prototype_evidence.md`](docs/sprint_52_tax_aware_drawdown_prototype_evidence.md).
 
-### Sprint 51 Candidate Implementation Tickets
+### Sprint 52 Candidate Implementation Tickets
 
-- [x] **S51-01 — Eligibility reasons.** Explain whether benefit timing is skipped because estimates are missing, someone is already age 70, or the projection does not reach age 70.
-- [x] **S51-02 — Bridge-year evidence.** Add Details evidence for pre-70 bridge shortfalls when CPP/OAS are delayed.
-- [x] **S51-03 — Recommendation discipline.** Keep benefit delay review-only when bridge years show a spending gap, with first-year detail.
-- [x] **S51-04 — Copy discipline.** Keep CPP/OAS delay framed as a review check, not a recommendation.
-- [x] **S51-05 — Docs.** Document Sprint 51 as a refinement sprint, not a new optimizer increment.
+- [x] **S52-01 — Prototype evidence rows.** Add tax-aware drawdown prototype rows for low-tax windows, registered pressure, OAS recovery years, peak tax years, and later-life estate pressure.
+- [x] **S52-02 — Details-only UI.** Surface prototype evidence inside Drawdown readiness in Details, not Overview.
+- [x] **S52-03 — Contract boundary.** Preserve `withdrawalStrategy.mode === 'currentOrder'` and `annualOverrides === []`.
+- [x] **S52-04 — Persistence guardrails.** Confirm prototype evidence is not saved into `.plan.json`.
+- [x] **S52-05 — Copy discipline.** Keep language evidence-only and avoid instructions, recommendations, safe-spending, or tax-advice phrasing.
 
-### Sprint 51 Definition Of Done
+### Sprint 52 Definition Of Done
 
-- Benefit timing skip notes identify the specific readiness issue.
-- Delay-to-70 evidence shows bridge-year risk, lifetime tax movement, and projected money-left movement.
-- Bridge-year shortfalls prevent benefit delay from becoming the highlighted first option.
-- No new optimizer candidate family is added.
+- Prototype rows identify 3-5 future review windows when available.
+- Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
+- Optimizer contract remains current-order with no annual overrides.
+- No drawdown prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 52: Tax-Aware Drawdown Prototype Evidence
+
+**Complete 2026-05-19.** Added Details-only tax-aware drawdown prototype evidence rows while keeping current withdrawal order, annual overrides, saved plans, and engine output unchanged.
+
+Sprint 52 checkpoint doc: [`docs/sprint_52_tax_aware_drawdown_prototype_evidence.md`](docs/sprint_52_tax_aware_drawdown_prototype_evidence.md).
 
 ### Sprint 51: Benefit Timing Bridge-Year Clarity
 

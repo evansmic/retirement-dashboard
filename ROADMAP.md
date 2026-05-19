@@ -40,15 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 51 is complete. CPP/OAS delay now explains eligibility and bridge-year risk more clearly before broader optimizer work.
+Sprint 52 is complete. Tax-aware drawdown work has started slowly as Details-only prototype evidence, without executing annual withdrawal overrides.
 
-Completed Sprint 51 slices:
+Completed Sprint 52 slices:
 
-- Added specific skipped reasons for missing benefit estimates, already-age-70 cases, and projections that do not reach age 70.
-- Added Details evidence for benefit-delay bridge years before age 70.
-- Kept benefit delay review-only when bridge years show a spending shortfall.
-- Preserved the existing `delayBenefits` candidate without adding another optimizer behavior.
-- Confirmed optimizer output remains runtime-only and unsaved.
+- Added prototype evidence rows for low-tax windows, registered pressure, OAS recovery years, peak tax, and later-life estate pressure.
+- Kept the evidence inside Drawdown readiness in Details.
+- Preserved current withdrawal order and empty annual overrides.
+- Confirmed prototype evidence remains runtime-only and unsaved.
+- Kept Sprint 52 as evidence only, not account-by-account drawdown execution.
 
 ## Consumer Roadmap Sequence
 
@@ -83,7 +83,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 27. **Sprint 49 — Home equity reliance and estate guardrails.** Check reliance on entered home-sale cash and protect explicit estate goals before broader optimizer work.
 28. **Sprint 50 — Plan options clarity and candidate discipline.** Group and explain the growing bounded optimizer set before adding another behavior.
 29. **Sprint 51 — Benefit timing bridge-year clarity.** Refine CPP/OAS delay eligibility and bridge-year explanation before adding another behavior.
-30. **Sprint 52+ — Next optimizer increment.** Add only one more bounded behavior after benefit timing remains stable in examples.
+30. **Sprint 52 — Tax-aware drawdown prototype evidence.** Add evidence-only review windows before executing annual drawdown overrides.
+31. **Sprint 53+ — Next optimizer increment.** Consider bounded drawdown execution only after prototype evidence remains stable in examples.
 
 ## Medium-Term Roadmap
 
@@ -133,6 +134,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 49 — Home equity reliance and estate guardrails.** Complete 2026-05-18. Added evidence-only home-sale reliance checks and estate-goal suggestion guardrails while preserving saved plan and engine schemas.
 - **Sprint 50 — Plan options clarity and candidate discipline.** Complete 2026-05-19. Added option groups and Details explanation copy so the bounded optimizer remains readable without adding new behavior.
 - **Sprint 51 — Benefit timing bridge-year clarity.** Complete 2026-05-19. Refined CPP/OAS delay eligibility notes and added bridge-year evidence while preserving the existing bounded candidate set.
+- **Sprint 52 — Tax-aware drawdown prototype evidence.** Complete 2026-05-19. Added Details-only review-window evidence for future tax-aware drawdown work while keeping current withdrawal order and annual overrides unchanged.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

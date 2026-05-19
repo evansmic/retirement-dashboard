@@ -772,11 +772,23 @@ export type DrawdownReadinessRow = {
   disposition: 'reviewOnly';
 };
 
+export type TaxAwareDrawdownPrototypeRow = {
+  id: 'lowTaxWindow' | 'registeredPressure' | 'oasRecovery' | 'peakTax' | 'estatePressure';
+  label: string;
+  tone: 'ok' | 'review' | 'watch';
+  year: number | null;
+  value: string;
+  evidence: string;
+  futureQuestion: string;
+  disposition: 'evidenceOnly';
+};
+
 export type DrawdownReadinessSummary = {
   status: DrawdownReadinessStatus;
   headline: string;
   detail: string;
   rows: DrawdownReadinessRow[];
+  prototypeRows: TaxAwareDrawdownPrototypeRow[];
   reviewNote: string;
 };
 
@@ -1283,6 +1295,7 @@ export function selectDrawdownReadinessSummary(
       headline: 'Drawdown readiness needs a completed projection first.',
       detail: 'Clear required inputs, then rerun Results before reviewing future drawdown evidence.',
       rows: [],
+      prototypeRows: [],
       reviewNote: 'This is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
     };
   }
@@ -1326,6 +1339,7 @@ export function selectDrawdownReadinessSummary(
   const planFlexibleAssets = n(plan?.p1?.tfsa) + n(plan?.p2?.tfsa) + n(plan?.p1?.nonreg) + n(plan?.p2?.nonreg) + n(plan?.cashWedge?.balance);
   const finalRow = rows[rows.length - 1];
   const finalRegisteredAssets = n(finalRow?.bal_rrsp) + n(finalRow?.bal_lif);
+  const estateTarget = n(plan?.inheritance);
 
   const readinessRows: DrawdownReadinessRow[] = [
     {
@@ -1412,6 +1426,15 @@ export function selectDrawdownReadinessSummary(
   const hasWatch = readinessRows.some((row) => row.tone === 'watch');
   const hasReview = readinessRows.some((row) => row.tone === 'review');
   const status: DrawdownReadinessStatus = hasWatch || hasReview ? 'review' : 'ready';
+  const prototypeRows = buildTaxAwareDrawdownPrototypeRows({
+    firstLowTax,
+    lastLowTax,
+    largestRegistered,
+    largestOasRecovery,
+    peakTax,
+    finalRegisteredAssets,
+    estateTarget
+  });
 
   return {
     status,
@@ -1422,8 +1445,99 @@ export function selectDrawdownReadinessSummary(
     detail:
       'These rows explain where a future tax-aware drawdown review would look. This does not change the current withdrawal order.',
     rows: readinessRows,
+    prototypeRows,
     reviewNote: 'Drawdown readiness is review evidence only. It does not change withdrawal order, create annual overrides, or save optimizer output.'
   };
+}
+
+function buildTaxAwareDrawdownPrototypeRows({
+  firstLowTax,
+  lastLowTax,
+  largestRegistered,
+  largestOasRecovery,
+  peakTax,
+  finalRegisteredAssets,
+  estateTarget
+}: {
+  firstLowTax: { year: number; taxableIncome: number; tax: number } | null;
+  lastLowTax: { year: number; taxableIncome: number; tax: number } | null;
+  largestRegistered: { year: number; registeredWithdrawals: number; taxableIncome: number } | null;
+  largestOasRecovery: { year: number; oasRecovery: number; taxableIncome: number } | null;
+  peakTax: { year: number; tax: number; taxableIncome: number } | null;
+  finalRegisteredAssets: number;
+  estateTarget: number;
+}): TaxAwareDrawdownPrototypeRow[] {
+  const rows: TaxAwareDrawdownPrototypeRow[] = [];
+
+  if (firstLowTax && lastLowTax) {
+    rows.push({
+      id: 'lowTaxWindow',
+      label: 'Low-tax review window',
+      tone: 'review',
+      year: firstLowTax.year,
+      value: firstLowTax.year === lastLowTax.year ? String(firstLowTax.year) : `${firstLowTax.year}-${lastLowTax.year}`,
+      evidence: `Taxable income is ${moneyText(firstLowTax.taxableIncome)} before registered withdrawals begin.`,
+      futureQuestion: 'Could a future review test modest registered withdrawals in this window without hurting spending, benefits, or estate goals?',
+      disposition: 'evidenceOnly'
+    });
+  }
+
+  if (largestRegistered) {
+    rows.push({
+      id: 'registeredPressure',
+      label: 'Registered withdrawal pressure',
+      tone: largestRegistered.registeredWithdrawals > 50000 ? 'watch' : 'review',
+      year: largestRegistered.year,
+      value: `${largestRegistered.year}: ${moneyText(largestRegistered.registeredWithdrawals)}`,
+      evidence: `Registered withdrawals and taxable income are both visible in ${largestRegistered.year}.`,
+      futureQuestion: 'Could a future year-by-year review smooth registered withdrawals without creating new shortfalls?',
+      disposition: 'evidenceOnly'
+    });
+  }
+
+  if (largestOasRecovery) {
+    rows.push({
+      id: 'oasRecovery',
+      label: 'OAS recovery review year',
+      tone: largestOasRecovery.oasRecovery > 3000 ? 'watch' : 'review',
+      year: largestOasRecovery.year,
+      value: `${largestOasRecovery.year}: ${moneyText(largestOasRecovery.oasRecovery)}`,
+      evidence: `OAS recovery tax appears alongside taxable income of ${moneyText(largestOasRecovery.taxableIncome)}.`,
+      futureQuestion: 'Could a future review reduce taxable-income pressure around OAS recovery years?',
+      disposition: 'evidenceOnly'
+    });
+  }
+
+  if (peakTax && peakTax.tax > 0) {
+    rows.push({
+      id: 'peakTax',
+      label: 'Peak tax review year',
+      tone: largestRegistered || largestOasRecovery ? 'review' : 'ok',
+      year: peakTax.year,
+      value: `${peakTax.year}: ${moneyText(peakTax.tax)}`,
+      evidence: `This is the highest annual tax year in the current projection.`,
+      futureQuestion: 'Could a future review compare nearby years before changing any account withdrawal amounts?',
+      disposition: 'evidenceOnly'
+    });
+  }
+
+  if (finalRegisteredAssets > 0 || estateTarget > 0) {
+    rows.push({
+      id: 'estatePressure',
+      label: 'Later-life estate pressure',
+      tone: finalRegisteredAssets > 100000 || estateTarget > 0 ? 'review' : 'ok',
+      year: null,
+      value: finalRegisteredAssets > 0 ? `${moneyText(finalRegisteredAssets)} registered left` : 'Estate goal visible',
+      evidence:
+        estateTarget > 0
+          ? `The entered estate goal is ${moneyText(estateTarget)}, so drawdown timing should preserve that preference.`
+          : 'Registered assets remain visible late in the projection.',
+      futureQuestion: 'Could a future review balance taxes, survivor resilience, flexibility, and estate intent?',
+      disposition: 'evidenceOnly'
+    });
+  }
+
+  return rows.slice(0, 5);
 }
 
 export function selectEstateIntentSummary(

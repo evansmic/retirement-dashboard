@@ -961,6 +961,24 @@ button.secondary,
   border-color: #b9d2c5;
 }
 
+.drawdown-prototype-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d5ded8;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 14px;
+}
+
+.drawdown-prototype-panel h3,
+.drawdown-prototype-panel p {
+  margin: 0;
+}
+
+.drawdown-prototype-panel p {
+  color: var(--muted);
+}
+
 .optimizer-explanation-card {
   display: grid;
   gap: 10px;

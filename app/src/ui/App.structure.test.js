@@ -76,6 +76,9 @@ describe('Results overview structure', () => {
     const overviewBranch = appSource.slice(overviewStart, overviewEnd);
 
     expect(appSource).toContain('Drawdown readiness');
+    expect(appSource).toContain('Tax-aware prototype evidence');
+    expect(appSource).toContain('Review windows for later');
+    expect(appSource).toContain('They do not create instructions');
     expect(appSource).toContain('does not change withdrawal order');
     expect(appSource).toContain('does not change the current withdrawal order');
     expect(overviewBranch).not.toContain('<DrawdownReadinessPanel');

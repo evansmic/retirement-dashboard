@@ -3385,6 +3385,25 @@ function DrawdownReadinessPanel({
           ))}
         </div>
       ) : null}
+      {summary.prototypeRows.length ? (
+        <section className="drawdown-prototype-panel">
+          <div>
+            <p className="eyebrow">Tax-aware prototype evidence</p>
+            <h3>Review windows for later</h3>
+            <p>These rows show where a future year-by-year drawdown review would look. They do not create instructions.</p>
+          </div>
+          <div className="optimizer-evidence-grid">
+            {summary.prototypeRows.map((row) => (
+              <article className={`optimizer-evidence-row evidence-${row.tone}`} key={row.id}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+                <p>{row.evidence}</p>
+                <p>{row.futureQuestion}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <p className="table-note">
         This does not change withdrawal order or create annual account-by-account instructions. It does not change the current withdrawal order used in Results.
       </p>

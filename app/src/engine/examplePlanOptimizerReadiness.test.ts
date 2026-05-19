@@ -43,6 +43,7 @@ describe('example-plan optimizer readiness matrix', () => {
 
       expect(['cannotTell', 'fragile', 'balanced', 'roomToReview']).toContain(item.spendingStress.status);
       expect(['cannotTell', 'ready', 'review']).toContain(item.drawdownReadiness.status);
+      expect(item.drawdownReadiness.prototypeRows.every((row) => row.disposition === 'evidenceOnly')).toBe(true);
       expect(['blocked', 'ready']).toContain(item.optimizer.status);
       expect(item.optimizer.execution).toBe('boundedSearch');
       expect(item.optimizer.candidates.length).toBeGreaterThan(0);
@@ -56,6 +57,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
       expect(item.saved.plan).not.toHaveProperty('spendingStress');
       expect(item.saved.plan).not.toHaveProperty('drawdownReadiness');
+      expect(item.saved.plan).not.toHaveProperty('taxAwareDrawdownPrototype');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
       expect(item.saved.plan).not.toHaveProperty('optionGroups');
