@@ -5,6 +5,7 @@ import { selectDrawdownReadinessSummary, selectSpendingStressSummary } from './r
 import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
 import { runResultsPreviewBundle } from './previewScenarios';
 import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
+import { buildDrawdownExecutionContract, selectDrawdownPrototypeReadinessReview } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
 
@@ -80,6 +81,9 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('drawdownComparisonReadiness');
       expect(item.saved.plan).not.toHaveProperty('drawdownComparison');
       expect(item.saved.plan).not.toHaveProperty('singleRegisteredTimingCheck');
+      expect(item.saved.plan).not.toHaveProperty('drawdownExecutionContract');
+      expect(item.saved.plan).not.toHaveProperty('runtimeDrawdownOverridePayload');
+      expect(item.saved.plan).not.toHaveProperty('internalDrawdownDryRun');
       expect(item.saved.plan).not.toHaveProperty('syntheticDrawdownPayload');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
@@ -197,9 +201,11 @@ describe('example-plan optimizer readiness matrix', () => {
     for (const card of examplePlanCards) {
       const plan = createExamplePlan(card.id);
       const comparison = runSingleDrawdownComparison(plan);
+      const contract = buildDrawdownExecutionContract({ plan, comparison });
+      const readinessReview = selectDrawdownPrototypeReadinessReview({ plan, comparison, contract });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
-      const copy = JSON.stringify({ comparison, guardrails }).toLowerCase();
+      const copy = JSON.stringify({ comparison, guardrails, contract, readinessReview }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
       expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
@@ -209,10 +215,27 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(guardrails.find((row) => row.id === 'hiddenOnly'), `${card.id} hidden guardrail`).toMatchObject({ status: 'ok' });
       expect(guardrails.find((row) => row.id === 'reviewOnly'), `${card.id} review guardrail`).toMatchObject({ status: 'ok' });
       expect(guardrails.find((row) => row.id === 'savedPlan'), `${card.id} saved-plan guardrail`).toMatchObject({ status: 'ok' });
+      expect(['readyForInternalDryRun', 'needsInput', 'blocked', 'notReady']).toContain(contract.status);
+      expect(contract.withdrawalStrategy).toEqual({ mode: 'currentOrder', annualOverrides: [] });
+      expect(contract.disposition).toBe('runtimeContractOnly');
+      expect(['readyForNarrowPrototype', 'holdForGuardrails', 'notReady']).toContain(readinessReview.status);
+      expect(readinessReview.disposition).toBe('readinessReviewOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
         expect(comparison.reviewNote).toContain('does not create account instructions');
+        const fundingRow = comparison.decisionGate.rows.find((row) => row.id === 'funding');
+        const materialityRow = comparison.decisionGate.rows.find((row) => row.id === 'materiality');
+        expect(fundingRow, `${card.id} funding gate row`).toBeTruthy();
+        expect(materialityRow, `${card.id} materiality gate row`).toBeTruthy();
+        if (comparison.decisionGate.status === 'eligibleForReview') {
+          expect(fundingRow?.status, `${card.id} eligible funding row`).toBe('ok');
+          expect(materialityRow?.status, `${card.id} eligible materiality row`).toBe('ok');
+          expect(comparison.decisionGate.headline).toContain('not a recommendation');
+        }
+        if (comparison.decisionGate.status === 'blocked') {
+          expect(comparison.decisionGate.rows.some((row) => row.status === 'blocked'), `${card.id} blocked gate row`).toBe(true);
+        }
       } else {
         expect(comparison.evidenceRows).toEqual([]);
         expect(comparison.reviewNote).toContain('Hidden comparison only');
@@ -221,6 +244,9 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('drawdownComparison');
       expect(saved.plan).not.toHaveProperty('hiddenDrawdownComparison');
       expect(saved.plan).not.toHaveProperty('singleRegisteredTimingCheck');
+      expect(saved.plan).not.toHaveProperty('drawdownExecutionContract');
+      expect(saved.plan).not.toHaveProperty('runtimeDrawdownOverridePayload');
+      expect(saved.plan).not.toHaveProperty('internalDrawdownDryRun');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

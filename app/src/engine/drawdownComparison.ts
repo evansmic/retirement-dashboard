@@ -31,6 +31,8 @@ export type DrawdownComparisonDecisionGateRow = {
 export type DrawdownComparisonDecisionGate = {
   status: 'eligibleForReview' | 'holdBack' | 'blocked' | 'notReady';
   headline: string;
+  summary: string;
+  nextStep: string;
   detail: string;
   rows: DrawdownComparisonDecisionGateRow[];
   reviewNote: string;
@@ -236,6 +238,8 @@ function blockedResult(
     decisionGate: {
       status: status === 'blocked' ? 'blocked' : 'notReady',
       headline: status === 'blocked' ? 'Drawdown comparison gate is blocked.' : 'Drawdown comparison gate is not ready.',
+      summary: 'There is not enough drawdown comparison evidence to review yet.',
+      nextStep: 'Review the drawdown readiness checks in Details before treating this as comparison evidence.',
       detail: reason,
       rows: [],
       reviewNote: 'review-only gate: no drawdown comparison can be highlighted from this state.'
@@ -320,6 +324,8 @@ function buildDecisionGate({
   const hasBlocked = rows.some((row) => row.status === 'blocked');
   const hasReview = rows.some((row) => row.status === 'review');
   const status: DrawdownComparisonDecisionGate['status'] = hasBlocked ? 'blocked' : hasReview ? 'holdBack' : 'eligibleForReview';
+  const firstReviewRow = rows.find((row) => row.status === 'review');
+  const firstBlockedRow = rows.find((row) => row.status === 'blocked');
 
   return {
     status,
@@ -329,6 +335,18 @@ function buildDecisionGate({
         : status === 'blocked'
           ? 'Held back by a blocking guardrail.'
           : 'Hold back until review items are resolved.',
+    summary:
+      status === 'eligibleForReview'
+        ? 'The comparison has enough evidence for later review, while staying separate from the saved plan.'
+        : status === 'blocked'
+          ? `${firstBlockedRow?.label || 'A guardrail'} blocks this comparison from being elevated.`
+          : `${firstReviewRow?.label || 'A review item'} should be checked before this comparison is made more visible.`,
+    nextStep:
+      status === 'eligibleForReview'
+        ? 'Keep this as evidence until a later sprint defines a narrow user-facing prototype.'
+        : status === 'blocked'
+          ? 'Do not elevate this comparison while a blocking guardrail is present.'
+          : 'Use the gate rows to decide what household or account detail needs review first.',
     detail:
       'This gate decides whether the comparison can be reviewed more prominently later. It does not change the plan or create account instructions.',
     rows,

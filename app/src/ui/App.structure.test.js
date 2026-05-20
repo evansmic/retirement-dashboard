@@ -90,6 +90,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Drawdown comparison evidence');
     expect(appSource).toContain('Review gate');
     expect(appSource).toContain('not a recommendation');
+    expect(appSource).toContain('Future drawdown prototype readiness');
+    expect(appSource).toContain('Readiness review only');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');

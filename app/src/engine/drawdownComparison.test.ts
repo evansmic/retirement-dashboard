@@ -129,6 +129,8 @@ describe('hidden drawdown comparison', () => {
     expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
     expect(comparison.decisionGate).toMatchObject({
       status: 'eligibleForReview',
+      summary: expect.stringContaining('later review'),
+      nextStep: expect.stringContaining('later sprint'),
       rows: expect.arrayContaining([
         expect.objectContaining({ id: 'materiality', status: 'ok' }),
         expect.objectContaining({ id: 'funding', status: 'ok' }),
@@ -178,6 +180,40 @@ describe('hidden drawdown comparison', () => {
       rows: expect.arrayContaining([expect.objectContaining({ id: 'funding', status: 'blocked' })])
     });
     expect(comparison.reason).toContain('held back');
+  });
+
+  it('holds back tiny comparison movement as background evidence', () => {
+    const tinyCandidate: SimulationResult = {
+      years: candidate.years.map((row, index) => ({
+        ...row,
+        totalTaxYear: baseline.years[index].totalTaxYear - 100,
+        totalOasClawY: baseline.years[index].totalOasClawY,
+        bal_total: baseline.years[index].bal_total + 250
+      }))
+    };
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? tinyCandidate : baseline));
+
+    expect(comparison.decisionGate).toMatchObject({
+      status: 'holdBack',
+      rows: expect.arrayContaining([expect.objectContaining({ id: 'materiality', status: 'review' })])
+    });
+    expect(comparison.decisionGate.summary).toContain('Material change');
+  });
+
+  it('keeps locked-in review cases upstream when comparison readiness is not available', () => {
+    const guardedPlan: V2PlanPayload = {
+      ...plan,
+      p1: { ...plan.p1, lif: 25000 },
+      assumptions: { ...plan.assumptions }
+    };
+    const comparison = runSingleDrawdownComparison(guardedPlan, (_plan, config) => (config.meltdown ? candidate : baseline));
+
+    expect(comparison.status).toBe('notReady');
+    expect(comparison.decisionGate).toMatchObject({
+      status: 'notReady',
+      rows: []
+    });
+    expect(comparison.reason).toContain('not ready');
   });
 
   it('keeps hidden comparison output out of saved plan files', () => {

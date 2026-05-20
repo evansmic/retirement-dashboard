@@ -70,6 +70,7 @@ import {
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
+import type { DrawdownPrototypeReadinessReview } from '../engine/drawdownExecutionReadiness';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -117,6 +118,7 @@ type BridgePreview = {
   survivor: SimulationResult | null;
   optimizer: BoundedOptimizerSummary | null;
   hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
+  drawdownPrototypeReadiness: DrawdownPrototypeReadinessReview | null;
   error: string;
   loading: boolean;
 };
@@ -370,6 +372,7 @@ export function App() {
     survivor: null,
     optimizer: null,
     hiddenDrawdownComparison: null,
+    drawdownPrototypeReadiness: null,
     error: '',
     loading: false
   });
@@ -380,17 +383,28 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     if (!plan || (state.view !== 'review' && state.view !== 'results')) {
-      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, hiddenDrawdownComparison: null, error: '', loading: false });
+      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, hiddenDrawdownComparison: null, drawdownPrototypeReadiness: null, error: '', loading: false });
       return;
     }
 
     setBridgePreview((current) => ({ ...current, loading: true, error: '' }));
-    Promise.all([import('../engine/previewScenarios'), import('../engine/boundedOptimizer'), import('../engine/drawdownComparison')])
-      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }, { runSingleDrawdownComparison }]) => {
+    Promise.all([
+      import('../engine/previewScenarios'),
+      import('../engine/boundedOptimizer'),
+      import('../engine/drawdownComparison'),
+      import('../engine/drawdownExecutionReadiness')
+    ])
+      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }, { runSingleDrawdownComparison }, { buildDrawdownExecutionContract, selectDrawdownPrototypeReadinessReview }]) => {
         const preview = runResultsPreviewBundle(plan);
         const optimizer = runBoundedOptimizer(plan);
         const hiddenDrawdownComparison = runSingleDrawdownComparison(plan);
-        if (!cancelled) setBridgePreview({ ...preview, optimizer, hiddenDrawdownComparison, error: '', loading: false });
+        const drawdownExecutionContract = buildDrawdownExecutionContract({ plan, comparison: hiddenDrawdownComparison });
+        const drawdownPrototypeReadiness = selectDrawdownPrototypeReadinessReview({
+          plan,
+          comparison: hiddenDrawdownComparison,
+          contract: drawdownExecutionContract
+        });
+        if (!cancelled) setBridgePreview({ ...preview, optimizer, hiddenDrawdownComparison, drawdownPrototypeReadiness, error: '', loading: false });
       })
       .catch((err) => {
         if (!cancelled) {
@@ -398,12 +412,13 @@ export function App() {
             result: null,
             scenarios: {},
             spendingStress: {},
-            survivor: null,
-            optimizer: null,
-            hiddenDrawdownComparison: null,
-            error: err instanceof Error ? err.message : 'Could not run preview calculation.',
-            loading: false
-          });
+             survivor: null,
+             optimizer: null,
+             hiddenDrawdownComparison: null,
+             drawdownPrototypeReadiness: null,
+             error: err instanceof Error ? err.message : 'Could not run preview calculation.',
+             loading: false
+           });
         }
       });
 
@@ -588,6 +603,7 @@ export function App() {
               survivor={bridgePreview.survivor}
               optimizer={bridgePreview.optimizer}
               hiddenDrawdownComparison={bridgePreview.hiddenDrawdownComparison}
+              drawdownPrototypeReadiness={bridgePreview.drawdownPrototypeReadiness}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2137,6 +2153,7 @@ function ResultsHandoffPanel({
   survivor,
   optimizer,
   hiddenDrawdownComparison,
+  drawdownPrototypeReadiness,
   title,
   validation
 }: {
@@ -2152,6 +2169,7 @@ function ResultsHandoffPanel({
   survivor: BridgePreview['survivor'];
   optimizer: BridgePreview['optimizer'];
   hiddenDrawdownComparison: BridgePreview['hiddenDrawdownComparison'];
+  drawdownPrototypeReadiness: BridgePreview['drawdownPrototypeReadiness'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2259,6 +2277,7 @@ function ResultsHandoffPanel({
             boundedOptimizer={optimizer}
             drawdownReadiness={drawdownReadiness}
             hiddenDrawdownComparison={hiddenDrawdownComparison}
+            drawdownPrototypeReadiness={drawdownPrototypeReadiness}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2746,6 +2765,7 @@ function DetailsResultsPanel({
   boundedOptimizer,
   drawdownReadiness,
   hiddenDrawdownComparison,
+  drawdownPrototypeReadiness,
   overview,
   planHealth,
   projectionMilestones,
@@ -2770,6 +2790,7 @@ function DetailsResultsPanel({
   boundedOptimizer: BoundedOptimizerSummary | null;
   drawdownReadiness: ReturnType<typeof selectDrawdownReadinessSummary>;
   hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
+  drawdownPrototypeReadiness: DrawdownPrototypeReadinessReview | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -2882,6 +2903,7 @@ function DetailsResultsPanel({
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
       <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
       <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
+      <DrawdownPrototypeReadinessPanel loading={loading} review={drawdownPrototypeReadiness} />
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
@@ -3550,6 +3572,7 @@ function HiddenDrawdownComparisonPanel({
           <div>
             <p className="eyebrow">Review gate</p>
             <h4>{comparison.decisionGate.headline}</h4>
+            <p>{comparison.decisionGate.summary}</p>
             <p>{comparison.decisionGate.detail}</p>
           </div>
           <div className="optimizer-eligibility-list">
@@ -3561,6 +3584,7 @@ function HiddenDrawdownComparisonPanel({
               </article>
             ))}
           </div>
+          <p className="table-note">{comparison.decisionGate.nextStep}</p>
           <p className="table-note">{comparison.decisionGate.reviewNote}</p>
         </div>
       ) : null}
@@ -3568,6 +3592,40 @@ function HiddenDrawdownComparisonPanel({
         {comparison?.reviewNote ||
           'Drawdown comparison evidence is review-only. It does not change withdrawal order, create annual overrides, or save optimizer output.'}
       </p>
+    </section>
+  );
+}
+
+function DrawdownPrototypeReadinessPanel({
+  loading,
+  review
+}: {
+  loading: boolean;
+  review: DrawdownPrototypeReadinessReview | null;
+}) {
+  return (
+    <section className={`result-card optimizer-evidence-panel drawdown-prototype-readiness readiness-${review?.status || 'notReady'}`}>
+      <div>
+        <p className="eyebrow">Future drawdown prototype readiness</p>
+        <h3>{loading ? 'Checking prototype readiness' : review?.headline || 'Drawdown prototype is not ready yet.'}</h3>
+        <p>
+          This stays in Details as a readiness review. It does not create account instructions, change withdrawal order, run annual overrides in the product, or save output.
+        </p>
+      </div>
+      {review?.rows.length ? (
+        <div className="optimizer-eligibility-list">
+          {review.rows.map((row) => (
+            <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status}`} key={row.id}>
+              <strong>{row.label}</strong>
+              <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+              <p>{row.detail}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="table-note">Prototype readiness appears after the drawdown comparison checks run.</p>
+      )}
+      <p className="table-note">{review?.reviewNote || 'Readiness review only. Nothing changes in the current plan.'}</p>
     </section>
   );
 }
