@@ -5,7 +5,13 @@ import { selectDrawdownReadinessSummary, selectSpendingStressSummary } from './r
 import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
 import { runResultsPreviewBundle } from './previewScenarios';
 import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
-import { buildDrawdownExecutionContract, selectDrawdownPrototypeReadinessReview } from './drawdownExecutionReadiness';
+import {
+  buildDrawdownExecutionContract,
+  selectDrawdownPhaseReview,
+  selectDrawdownPrototypeReadinessReview,
+  selectDrawdownReviewPreview,
+  selectDrawdownVisibleReviewGate
+} from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
 
@@ -203,9 +209,18 @@ describe('example-plan optimizer readiness matrix', () => {
       const comparison = runSingleDrawdownComparison(plan);
       const contract = buildDrawdownExecutionContract({ plan, comparison });
       const readinessReview = selectDrawdownPrototypeReadinessReview({ plan, comparison, contract });
+      const visibleGate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+      const preview = runResultsPreviewBundle(plan);
+      const spendingStress = selectSpendingStressSummary(preview.result, preview.spendingStress, plan);
+      const reviewPreview = selectDrawdownReviewPreview({
+        gate: visibleGate,
+        comparison,
+        spendingStressStatus: spendingStress.status
+      });
+      const phaseReview = selectDrawdownPhaseReview({ plan, gate: visibleGate, preview: reviewPreview });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
-      const copy = JSON.stringify({ comparison, guardrails, contract, readinessReview }).toLowerCase();
+      const copy = JSON.stringify({ comparison, guardrails, contract, readinessReview, visibleGate, reviewPreview, phaseReview }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
       expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
@@ -220,6 +235,12 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(contract.disposition).toBe('runtimeContractOnly');
       expect(['readyForNarrowPrototype', 'holdForGuardrails', 'notReady']).toContain(readinessReview.status);
       expect(readinessReview.disposition).toBe('readinessReviewOnly');
+      expect(['readyForVisibleReview', 'holdForMoreEvidence', 'blocked']).toContain(visibleGate.status);
+      expect(visibleGate.disposition).toBe('visibleReviewGateOnly');
+      expect(['visibleForReview', 'heldBack', 'blocked']).toContain(reviewPreview.status);
+      expect(reviewPreview.disposition).toBe('detailsPreviewOnly');
+      expect(['readyToContinue', 'holdForMoreGuardrails', 'stopBeforeExecution']).toContain(phaseReview.status);
+      expect(phaseReview.disposition).toBe('phaseReviewOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -247,6 +268,9 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('drawdownExecutionContract');
       expect(saved.plan).not.toHaveProperty('runtimeDrawdownOverridePayload');
       expect(saved.plan).not.toHaveProperty('internalDrawdownDryRun');
+      expect(saved.plan).not.toHaveProperty('drawdownVisibleReviewGate');
+      expect(saved.plan).not.toHaveProperty('drawdownReviewPreview');
+      expect(saved.plan).not.toHaveProperty('drawdownPhaseReview');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

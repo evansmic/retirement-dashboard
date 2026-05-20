@@ -4,39 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 65: Drawdown Prototype Readiness Review
+## Latest Sprint — Sprint 70: Drawdown Phase Review & Go/No-Go
 
 **Status:** Complete 2026-05-20.
 
-Goal: complete the guarded drawdown prototype readiness phase by hardening the decision gate, polishing the explanation, adding a runtime-only execution contract, proving one internal dry-run path, and summarizing readiness in Details.
+Goal: add a final review-only drawdown preview phase that can show a narrow Details preview only when guardrails are clear, then summarize whether drawdown work should continue, hold, or stop before deeper execution.
 
 Non-scope: product annual override execution, account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 65 checkpoint doc: [`docs/sprint_65_drawdown_prototype_readiness_review.md`](docs/sprint_65_drawdown_prototype_readiness_review.md).
+Sprint 70 checkpoint doc: [`docs/sprint_70_drawdown_phase_review_go_no_go.md`](docs/sprint_70_drawdown_phase_review_go_no_go.md).
 
-### Sprint 61-65 Candidate Implementation Tickets
+### Sprint 66-70 Candidate Implementation Tickets
 
-- [x] **S61-01 — Gate hardening.** Add focused edge coverage for materiality, funding harm, upstream locked-in readiness, and all-example gate posture.
-- [x] **S62-01 — Explainer polish.** Add plain summary and next-step copy to the drawdown decision gate.
-- [x] **S63-01 — Execution contract.** Add runtime-only drawdown payload validation while keeping current withdrawal order and empty annual overrides.
-- [x] **S64-01 — Internal dry-run harness.** Add one test-only dry-run comparison path that is not reachable from product UI.
-- [x] **S65-01 — Readiness review.** Add a compact Details-only prototype readiness review and all-example persistence coverage.
+- [x] **S66-01 — Final visible-review gate.** Add a gate that returns ready, hold, or blocked before any Details preview can appear.
+- [x] **S67-01 — Details-only drawdown review preview.** Show high-level funding, tax, OAS recovery, and projected-money-left evidence only when the gate allows it.
+- [x] **S68-01 — Example matrix.** Extend built-in examples to cover the final gate, preview, phase review, copy posture, and persistence boundaries.
+- [x] **S69-01 — Stress and harm checks.** Hold back the preview when nearby spending stress is fragile and block visible review when funding or estate harm appears.
+- [x] **S70-01 — Go/no-go review.** Add a phase review summary that says continue, hold, or stop before deeper drawdown execution.
 
-### Sprint 65 Definition Of Done
+### Sprint 70 Definition Of Done
 
-- Drawdown comparison decision gate remains Details-only.
-- The gate has plain summary and next-step copy.
-- Runtime-only payload validation rejects bad years, missing account buckets, invalid amount bands, and saved-plan boundary failures.
-- One internal dry-run path can compare evidence only when explicitly called as test-only.
-- Prototype readiness appears in Details and remains a review surface, not a product execution path.
+- Final drawdown preview gate appears only in Details.
+- Drawdown review preview appears only in Details and never gives account-by-account instructions.
+- Fragile spending stress can hold back the visible preview.
+- Funding or entered estate-goal harm blocks visible review.
+- Phase review summarizes ready, hold, or stop before deeper execution.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 70: Drawdown Phase Review & Go/No-Go
+
+**Complete 2026-05-20.** Added a Details-only phase review that summarizes gate, preview, example, stress, copy, and saved-plan posture before any deeper drawdown execution.
+
+Sprint 70 checkpoint doc: [`docs/sprint_70_drawdown_phase_review_go_no_go.md`](docs/sprint_70_drawdown_phase_review_go_no_go.md).
+
+### Sprint 69: Drawdown Preview Stress & Harm Checks
+
+**Complete 2026-05-20.** Added stress and harm checks so the visible preview is held back under fragile spending stress and blocked when funding or entered estate-goal harm appears.
+
+Sprint 69 checkpoint doc: [`docs/sprint_69_drawdown_preview_stress_harm_checks.md`](docs/sprint_69_drawdown_preview_stress_harm_checks.md).
+
+### Sprint 68: Drawdown Preview Example Matrix
+
+**Complete 2026-05-20.** Extended the built-in example matrix to cover final preview gate status, Details preview status, phase review status, copy boundaries, and saved-plan persistence.
+
+Sprint 68 checkpoint doc: [`docs/sprint_68_drawdown_preview_example_matrix.md`](docs/sprint_68_drawdown_preview_example_matrix.md).
+
+### Sprint 67: Visible Drawdown Review Preview
+
+**Complete 2026-05-20.** Added a narrow Details-only drawdown review preview that shows high-level funding, tax, OAS recovery, and projected-money-left evidence when final guardrails allow it.
+
+Sprint 67 checkpoint doc: [`docs/sprint_67_visible_drawdown_review_preview.md`](docs/sprint_67_visible_drawdown_review_preview.md).
+
+### Sprint 66: Drawdown Prototype Decision Gate
+
+**Complete 2026-05-20.** Added a final visible-review gate for the drawdown prototype that requires eligible comparison evidence, a ready runtime contract, a clean saved-plan boundary, and no visible harm.
+
+Sprint 66 checkpoint doc: [`docs/sprint_66_drawdown_prototype_decision_gate.md`](docs/sprint_66_drawdown_prototype_decision_gate.md).
 
 ### Sprint 65: Drawdown Prototype Readiness Review
 

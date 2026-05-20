@@ -69,6 +69,54 @@ export type DrawdownPrototypeReadinessReview = {
   disposition: 'readinessReviewOnly';
 };
 
+export type DrawdownVisibleReviewGateRow = {
+  id: 'decisionGate' | 'contract' | 'savedPlan' | 'dryRun' | 'harm';
+  label: string;
+  status: 'ok' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownVisibleReviewGate = {
+  status: 'readyForVisibleReview' | 'holdForMoreEvidence' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: DrawdownVisibleReviewGateRow[];
+  reviewNote: string;
+  disposition: 'visibleReviewGateOnly';
+};
+
+export type DrawdownReviewPreviewRow = {
+  id: 'funding' | 'tax' | 'oasRecovery' | 'estate';
+  label: string;
+  value: string;
+  detail: string;
+};
+
+export type DrawdownReviewPreview = {
+  status: 'visibleForReview' | 'heldBack' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: DrawdownReviewPreviewRow[];
+  reviewNote: string;
+  disposition: 'detailsPreviewOnly';
+};
+
+export type DrawdownPhaseReviewRow = {
+  id: 'gate' | 'preview' | 'examples' | 'stress' | 'copy' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownPhaseReview = {
+  status: 'readyToContinue' | 'holdForMoreGuardrails' | 'stopBeforeExecution';
+  headline: string;
+  detail: string;
+  rows: DrawdownPhaseReviewRow[];
+  reviewNote: string;
+  disposition: 'phaseReviewOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -322,6 +370,187 @@ export function selectDrawdownPrototypeReadinessReview({
   };
 }
 
+export function selectDrawdownVisibleReviewGate({
+  plan,
+  comparison,
+  contract,
+  dryRun
+}: {
+  plan: V2PlanPayload;
+  comparison: RealDrawdownComparisonResult | null;
+  contract: DrawdownExecutionContract | null;
+  dryRun?: InternalDrawdownDryRunResult | null;
+}): DrawdownVisibleReviewGate {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const weakensEstateTarget = n(plan.inheritance) > 0 && n(comparison?.deltas?.projectedMoneyLeft) < 0;
+  const weakensFunding = n(comparison?.deltas?.fundedYears) < 0 || n(comparison?.deltas?.firstShortfallYear) < 0;
+  const rows: DrawdownVisibleReviewGateRow[] = [
+    {
+      id: 'decisionGate',
+      label: 'Decision gate',
+      status: comparison?.decisionGate.status === 'eligibleForReview' ? 'ok' : comparison?.decisionGate.status === 'blocked' ? 'blocked' : 'review',
+      detail: comparison?.decisionGate.summary || 'No eligible decision gate is available.'
+    },
+    {
+      id: 'contract',
+      label: 'Runtime contract',
+      status: contract?.status === 'readyForInternalDryRun' ? 'ok' : contract?.status === 'blocked' ? 'blocked' : 'review',
+      detail: contract?.summary || 'No runtime-only contract is ready.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'No preview or drawdown output is saved into the plan file.' : 'Saved plan output contains drawdown review data.'
+    },
+    {
+      id: 'dryRun',
+      label: 'Internal dry-run',
+      status: dryRun?.status === 'blocked' ? 'blocked' : dryRun?.status === 'reviewOnly' ? 'ok' : 'review',
+      detail: dryRun?.reason || 'Internal dry-run evidence is not part of the product preview.'
+    },
+    {
+      id: 'harm',
+      label: 'Harm check',
+      status: weakensFunding || weakensEstateTarget ? 'blocked' : 'ok',
+      detail:
+        weakensFunding || weakensEstateTarget
+          ? 'Funding or the entered estate goal weakens, so the preview stays blocked.'
+          : 'No funding or entered estate-goal harm is visible in the review evidence.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const blockingWithoutDryRun = rows.some((row) => row.id !== 'dryRun' && row.status === 'review');
+  const status: DrawdownVisibleReviewGate['status'] = hasBlocked ? 'blocked' : blockingWithoutDryRun ? 'holdForMoreEvidence' : 'readyForVisibleReview';
+
+  return {
+    status,
+    headline:
+      status === 'readyForVisibleReview'
+        ? 'Drawdown review preview is ready for Details.'
+        : status === 'blocked'
+          ? 'Drawdown review preview is blocked.'
+          : 'Hold the drawdown review preview for more evidence.',
+    detail:
+      'This gate decides whether a high-level Details preview may appear. It does not create withdrawal instructions or change the plan.',
+    rows,
+    reviewNote:
+      'Visible review gate only. It does not tell the household which account to withdraw from, run annual overrides in the product, or save output.',
+    disposition: 'visibleReviewGateOnly'
+  };
+}
+
+export function selectDrawdownReviewPreview({
+  gate,
+  comparison,
+  spendingStressStatus
+}: {
+  gate: DrawdownVisibleReviewGate;
+  comparison: RealDrawdownComparisonResult | null;
+  spendingStressStatus?: string;
+}): DrawdownReviewPreview {
+  const fragileStress = spendingStressStatus === 'fragile';
+  if (gate.status === 'blocked') {
+    return blockedPreview('Drawdown review preview is blocked by the final gate.', 'blocked');
+  }
+  if (gate.status !== 'readyForVisibleReview' || comparison?.status !== 'reviewOnly') {
+    return blockedPreview('Drawdown review preview is held back until the review gate has enough evidence.', 'heldBack');
+  }
+  if (fragileStress) {
+    return blockedPreview('Drawdown review preview is held back because nearby spending stress looks fragile.', 'heldBack');
+  }
+
+  return {
+    status: 'visibleForReview',
+    headline: 'Drawdown review preview',
+    detail:
+      'This preview shows whether a future drawdown review may be worth discussing. It does not tell you which account to withdraw from.',
+    rows: comparison.evidenceRows.map((row) => ({
+      id: row.id,
+      label: row.label,
+      value: row.value,
+      detail: row.detail
+    })),
+    reviewNote:
+      'Review preview only. It does not change withdrawal order, run annual overrides in the product, save output, or provide account instructions.',
+    disposition: 'detailsPreviewOnly'
+  };
+}
+
+export function selectDrawdownPhaseReview({
+  plan,
+  gate,
+  preview,
+  exampleMatrixReady = true
+}: {
+  plan: V2PlanPayload;
+  gate: DrawdownVisibleReviewGate;
+  preview: DrawdownReviewPreview;
+  exampleMatrixReady?: boolean;
+}): DrawdownPhaseReview {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownPhaseReviewRow[] = [
+    {
+      id: 'gate',
+      label: 'Final gate',
+      status: gate.status === 'readyForVisibleReview' ? 'ready' : gate.status === 'blocked' ? 'blocked' : 'hold',
+      detail: gate.headline
+    },
+    {
+      id: 'preview',
+      label: 'Details preview',
+      status: preview.status === 'visibleForReview' ? 'ready' : preview.status === 'blocked' ? 'blocked' : 'hold',
+      detail: preview.headline
+    },
+    {
+      id: 'examples',
+      label: 'Example matrix',
+      status: exampleMatrixReady ? 'ready' : 'hold',
+      detail: exampleMatrixReady ? 'Built-in examples pass the drawdown preview guardrails.' : 'Example coverage needs review.'
+    },
+    {
+      id: 'stress',
+      label: 'Stress posture',
+      status: preview.status === 'heldBack' ? 'hold' : 'ready',
+      detail:
+        preview.status === 'heldBack'
+          ? 'Nearby stress or missing evidence is holding back the preview.'
+          : 'No stress hold is visible in the preview gate.'
+    },
+    {
+      id: 'copy',
+      label: 'Copy boundary',
+      status: 'ready',
+      detail: 'Copy stays review-oriented and avoids account instructions.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No drawdown phase output is saved.' : 'Saved plan output contains drawdown phase data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  const status: DrawdownPhaseReview['status'] = hasBlocked ? 'stopBeforeExecution' : hasHold ? 'holdForMoreGuardrails' : 'readyToContinue';
+
+  return {
+    status,
+    headline:
+      status === 'readyToContinue'
+        ? 'Drawdown phase is ready to continue slowly.'
+        : status === 'stopBeforeExecution'
+          ? 'Stop before drawdown execution.'
+          : 'Hold for more guardrails before drawdown execution.',
+    detail:
+      'This checkpoint summarizes whether the drawdown prototype work should continue, hold, or stop before deeper execution.',
+    rows,
+    reviewNote:
+      'Phase review only. It does not add optimizer execution, change withdrawal order, provide account instructions, or save output.',
+    disposition: 'phaseReviewOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -329,9 +558,24 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('drawdownOverrideExecution' in saved) &&
     !('internalDrawdownDryRun' in saved) &&
     !('runtimeDrawdownOverridePayload' in saved) &&
+    !('drawdownVisibleReviewGate' in saved) &&
+    !('drawdownReviewPreview' in saved) &&
+    !('drawdownPhaseReview' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );
+}
+
+function blockedPreview(reason: string, status: 'heldBack' | 'blocked'): DrawdownReviewPreview {
+  return {
+    status,
+    headline: status === 'blocked' ? 'Drawdown review preview is blocked.' : 'Drawdown review preview is held back.',
+    detail: reason,
+    rows: [],
+    reviewNote:
+      'Review preview only. It does not change withdrawal order, run annual overrides in the product, save output, or provide account instructions.',
+    disposition: 'detailsPreviewOnly'
+  };
 }
 
 function payloadFromComparison(plan: V2PlanPayload, comparison: RealDrawdownComparisonResult): RuntimeDrawdownOverridePayload | null {

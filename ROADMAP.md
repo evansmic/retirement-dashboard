@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 65 is complete. Tax-aware drawdown work now has a hardened decision gate, a runtime-only execution contract, a test-only internal dry-run harness, and a Details-only prototype readiness review.
+Sprint 70 is complete. Tax-aware drawdown work now has a final visible-review gate, a narrow Details-only preview, stress/harm checks, example-matrix coverage, and a phase go/no-go review.
 
-Completed Sprint 61-65 slices:
+Completed Sprint 66-70 slices:
 
-- Hardened the drawdown decision gate across edge cases and built-in examples.
-- Added plain summary and next-step copy to the decision gate.
-- Added a runtime-only drawdown payload contract with validation for year, account bucket, amount band, gate status, and saved-plan boundary.
-- Added one internal dry-run harness that is explicitly test-only and returns review evidence.
-- Added a compact Details-only prototype readiness review.
+- Added a final gate for whether a drawdown preview may appear in Details.
+- Added a high-level drawdown review preview with funding, tax, OAS recovery, and projected-money-left evidence.
+- Extended built-in example coverage across gate, preview, phase review, copy posture, and saved-plan boundaries.
+- Added stress and harm checks that hold or block the preview before deeper execution.
+- Added a phase review that says continue, hold, or stop before deeper drawdown execution.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, runtime payload, internal dry-run, mocked payload, and comparison output remain runtime-only and unsaved.
-- Kept Sprints 61-65 as readiness work, not account-by-account drawdown instructions.
+- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, runtime payload, internal dry-run, mocked payload, and comparison output remain runtime-only and unsaved.
+- Kept Sprints 66-70 as review work, not account-by-account drawdown instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -100,7 +100,12 @@ Near-term product work should prioritize interpretation and journey simplificati
 41. **Sprint 63 — Drawdown execution contract v1.** Define runtime-only annual override payload validation without product execution.
 42. **Sprint 64 — Internal drawdown dry-run harness.** Compare one guarded payload shape behind a test-only path.
 43. **Sprint 65 — Drawdown prototype readiness review.** Summarize whether the narrow prototype is ready for future product review.
-44. **Sprint 66+ — Narrow drawdown prototype decision.** Decide whether to expose a tiny review-only prototype or hold for more guardrails.
+44. **Sprint 66 — Drawdown prototype decision gate.** Decide whether the narrow drawdown prototype may become a Details-only review surface.
+45. **Sprint 67 — Visible drawdown review preview.** Expose high-level drawdown review evidence in Details only when the final gate allows it.
+46. **Sprint 68 — Drawdown preview example matrix.** Run the visible preview guardrails across all examples.
+47. **Sprint 69 — Drawdown preview stress and harm checks.** Hold or block preview exposure when stress or harm checks fail.
+48. **Sprint 70 — Drawdown phase review and go/no-go.** Summarize whether to continue, hold, or stop before deeper drawdown execution.
+49. **Sprint 71+ — Drawdown execution boundary decision.** Decide whether to keep the preview as-is, deepen guardrails, or begin a tightly scoped execution prototype.
 
 ## Medium-Term Roadmap
 
@@ -164,6 +169,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 63 — Drawdown execution contract v1.** Complete 2026-05-20. Added runtime-only payload validation while preserving current withdrawal order and empty annual overrides.
 - **Sprint 64 — Internal drawdown dry-run harness.** Complete 2026-05-20. Added a test-only internal dry-run comparison path for one guarded payload shape.
 - **Sprint 65 — Drawdown prototype readiness review.** Complete 2026-05-20. Added a Details-only readiness review that keeps prototype status review-only and unsaved.
+- **Sprint 66 — Drawdown prototype decision gate.** Complete 2026-05-20. Added a final visible-review gate for the drawdown prototype before any Details preview appears.
+- **Sprint 67 — Visible drawdown review preview.** Complete 2026-05-20. Added high-level Details-only preview evidence without account instructions.
+- **Sprint 68 — Drawdown preview example matrix.** Complete 2026-05-20. Extended all-example guardrails for preview, phase review, copy posture, and saved-plan boundaries.
+- **Sprint 69 — Drawdown preview stress and harm checks.** Complete 2026-05-20. Added fragile-spending holdback and funding/estate harm blocking.
+- **Sprint 70 — Drawdown phase review and go/no-go.** Complete 2026-05-20. Added a Details-only checkpoint for continue, hold, or stop before deeper drawdown execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

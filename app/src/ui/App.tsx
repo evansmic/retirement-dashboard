@@ -70,7 +70,12 @@ import {
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
-import type { DrawdownPrototypeReadinessReview } from '../engine/drawdownExecutionReadiness';
+import type {
+  DrawdownPhaseReview,
+  DrawdownPrototypeReadinessReview,
+  DrawdownReviewPreview,
+  DrawdownVisibleReviewGate
+} from '../engine/drawdownExecutionReadiness';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -119,6 +124,9 @@ type BridgePreview = {
   optimizer: BoundedOptimizerSummary | null;
   hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
   drawdownPrototypeReadiness: DrawdownPrototypeReadinessReview | null;
+  drawdownVisibleReviewGate: DrawdownVisibleReviewGate | null;
+  drawdownReviewPreview: DrawdownReviewPreview | null;
+  drawdownPhaseReview: DrawdownPhaseReview | null;
   error: string;
   loading: boolean;
 };
@@ -373,6 +381,9 @@ export function App() {
     optimizer: null,
     hiddenDrawdownComparison: null,
     drawdownPrototypeReadiness: null,
+    drawdownVisibleReviewGate: null,
+    drawdownReviewPreview: null,
+    drawdownPhaseReview: null,
     error: '',
     loading: false
   });
@@ -383,7 +394,20 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     if (!plan || (state.view !== 'review' && state.view !== 'results')) {
-      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, hiddenDrawdownComparison: null, drawdownPrototypeReadiness: null, error: '', loading: false });
+      setBridgePreview({
+        result: null,
+        scenarios: {},
+        spendingStress: {},
+        survivor: null,
+        optimizer: null,
+        hiddenDrawdownComparison: null,
+        drawdownPrototypeReadiness: null,
+        drawdownVisibleReviewGate: null,
+        drawdownReviewPreview: null,
+        drawdownPhaseReview: null,
+        error: '',
+        loading: false
+      });
       return;
     }
 
@@ -394,7 +418,19 @@ export function App() {
       import('../engine/drawdownComparison'),
       import('../engine/drawdownExecutionReadiness')
     ])
-      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }, { runSingleDrawdownComparison }, { buildDrawdownExecutionContract, selectDrawdownPrototypeReadinessReview }]) => {
+      .then(
+        ([
+          { runResultsPreviewBundle },
+          { runBoundedOptimizer },
+          { runSingleDrawdownComparison },
+          {
+            buildDrawdownExecutionContract,
+            selectDrawdownPhaseReview,
+            selectDrawdownPrototypeReadinessReview,
+            selectDrawdownReviewPreview,
+            selectDrawdownVisibleReviewGate
+          }
+        ]) => {
         const preview = runResultsPreviewBundle(plan);
         const optimizer = runBoundedOptimizer(plan);
         const hiddenDrawdownComparison = runSingleDrawdownComparison(plan);
@@ -404,7 +440,35 @@ export function App() {
           comparison: hiddenDrawdownComparison,
           contract: drawdownExecutionContract
         });
-        if (!cancelled) setBridgePreview({ ...preview, optimizer, hiddenDrawdownComparison, drawdownPrototypeReadiness, error: '', loading: false });
+        const spendingStressSummary = selectSpendingStressSummary(preview.result, preview.spendingStress, plan);
+        const drawdownVisibleReviewGate = selectDrawdownVisibleReviewGate({
+          plan,
+          comparison: hiddenDrawdownComparison,
+          contract: drawdownExecutionContract
+        });
+        const drawdownReviewPreview = selectDrawdownReviewPreview({
+          gate: drawdownVisibleReviewGate,
+          comparison: hiddenDrawdownComparison,
+          spendingStressStatus: spendingStressSummary.status
+        });
+        const drawdownPhaseReview = selectDrawdownPhaseReview({
+          plan,
+          gate: drawdownVisibleReviewGate,
+          preview: drawdownReviewPreview
+        });
+        if (!cancelled) {
+          setBridgePreview({
+            ...preview,
+            optimizer,
+            hiddenDrawdownComparison,
+            drawdownPrototypeReadiness,
+            drawdownVisibleReviewGate,
+            drawdownReviewPreview,
+            drawdownPhaseReview,
+            error: '',
+            loading: false
+          });
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -416,6 +480,9 @@ export function App() {
              optimizer: null,
              hiddenDrawdownComparison: null,
              drawdownPrototypeReadiness: null,
+             drawdownVisibleReviewGate: null,
+             drawdownReviewPreview: null,
+             drawdownPhaseReview: null,
              error: err instanceof Error ? err.message : 'Could not run preview calculation.',
              loading: false
            });
@@ -604,6 +671,9 @@ export function App() {
               optimizer={bridgePreview.optimizer}
               hiddenDrawdownComparison={bridgePreview.hiddenDrawdownComparison}
               drawdownPrototypeReadiness={bridgePreview.drawdownPrototypeReadiness}
+              drawdownVisibleReviewGate={bridgePreview.drawdownVisibleReviewGate}
+              drawdownReviewPreview={bridgePreview.drawdownReviewPreview}
+              drawdownPhaseReview={bridgePreview.drawdownPhaseReview}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2154,6 +2224,9 @@ function ResultsHandoffPanel({
   optimizer,
   hiddenDrawdownComparison,
   drawdownPrototypeReadiness,
+  drawdownVisibleReviewGate,
+  drawdownReviewPreview,
+  drawdownPhaseReview,
   title,
   validation
 }: {
@@ -2170,6 +2243,9 @@ function ResultsHandoffPanel({
   optimizer: BridgePreview['optimizer'];
   hiddenDrawdownComparison: BridgePreview['hiddenDrawdownComparison'];
   drawdownPrototypeReadiness: BridgePreview['drawdownPrototypeReadiness'];
+  drawdownVisibleReviewGate: BridgePreview['drawdownVisibleReviewGate'];
+  drawdownReviewPreview: BridgePreview['drawdownReviewPreview'];
+  drawdownPhaseReview: BridgePreview['drawdownPhaseReview'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2278,6 +2354,9 @@ function ResultsHandoffPanel({
             drawdownReadiness={drawdownReadiness}
             hiddenDrawdownComparison={hiddenDrawdownComparison}
             drawdownPrototypeReadiness={drawdownPrototypeReadiness}
+            drawdownVisibleReviewGate={drawdownVisibleReviewGate}
+            drawdownReviewPreview={drawdownReviewPreview}
+            drawdownPhaseReview={drawdownPhaseReview}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2766,6 +2845,9 @@ function DetailsResultsPanel({
   drawdownReadiness,
   hiddenDrawdownComparison,
   drawdownPrototypeReadiness,
+  drawdownVisibleReviewGate,
+  drawdownReviewPreview,
+  drawdownPhaseReview,
   overview,
   planHealth,
   projectionMilestones,
@@ -2791,6 +2873,9 @@ function DetailsResultsPanel({
   drawdownReadiness: ReturnType<typeof selectDrawdownReadinessSummary>;
   hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
   drawdownPrototypeReadiness: DrawdownPrototypeReadinessReview | null;
+  drawdownVisibleReviewGate: DrawdownVisibleReviewGate | null;
+  drawdownReviewPreview: DrawdownReviewPreview | null;
+  drawdownPhaseReview: DrawdownPhaseReview | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -2904,6 +2989,7 @@ function DetailsResultsPanel({
       <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
       <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
       <DrawdownPrototypeReadinessPanel loading={loading} review={drawdownPrototypeReadiness} />
+      <DrawdownReviewPreviewPanel gate={drawdownVisibleReviewGate} loading={loading} phase={drawdownPhaseReview} preview={drawdownReviewPreview} />
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
@@ -3626,6 +3712,82 @@ function DrawdownPrototypeReadinessPanel({
         <p className="table-note">Prototype readiness appears after the drawdown comparison checks run.</p>
       )}
       <p className="table-note">{review?.reviewNote || 'Readiness review only. Nothing changes in the current plan.'}</p>
+    </section>
+  );
+}
+
+function DrawdownReviewPreviewPanel({
+  gate,
+  loading,
+  phase,
+  preview
+}: {
+  gate: DrawdownVisibleReviewGate | null;
+  loading: boolean;
+  phase: DrawdownPhaseReview | null;
+  preview: DrawdownReviewPreview | null;
+}) {
+  return (
+    <section className={`result-card optimizer-evidence-panel drawdown-review-preview preview-${preview?.status || 'heldBack'}`}>
+      <div>
+        <p className="eyebrow">Drawdown review preview</p>
+        <h3>{loading ? 'Checking drawdown review preview' : preview?.headline || 'Drawdown review preview is held back.'}</h3>
+        <p>
+          This is a high-level Details preview only. It does not tell you which account to withdraw from, change withdrawal order, run annual overrides in the product, or save output.
+        </p>
+      </div>
+      {preview?.rows.length ? (
+        <div className="optimizer-evidence-grid">
+          {preview.rows.map((row) => (
+            <article className="optimizer-evidence-row evidence-review" key={row.id}>
+              <span>{row.label}</span>
+              <strong>{row.value}</strong>
+              <p>{row.detail}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="table-note">{preview?.detail || 'The preview appears only after final guardrails are clear.'}</p>
+      )}
+      {gate?.rows.length ? (
+        <div className={`drawdown-decision-gate gate-${gate.status}`}>
+          <div>
+            <p className="eyebrow">Final preview gate</p>
+            <h4>{gate.headline}</h4>
+            <p>{gate.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {gate.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{gate.reviewNote}</p>
+        </div>
+      ) : null}
+      {phase?.rows.length ? (
+        <div className={`drawdown-decision-gate phase-${phase.status}`}>
+          <div>
+            <p className="eyebrow">Drawdown phase review</p>
+            <h4>{phase.headline}</h4>
+            <p>{phase.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {phase.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{phase.reviewNote}</p>
+        </div>
+      ) : null}
+      <p className="table-note">{preview?.reviewNote || 'Review preview only. Nothing changes in the current plan.'}</p>
     </section>
   );
 }

@@ -6,7 +6,10 @@ import {
   buildDrawdownExecutionContract,
   drawdownExecutionSavedPlanGuard,
   runInternalDrawdownDryRun,
+  selectDrawdownPhaseReview,
   selectDrawdownPrototypeReadinessReview,
+  selectDrawdownReviewPreview,
+  selectDrawdownVisibleReviewGate,
   validateRuntimeDrawdownPayload,
   type RuntimeDrawdownOverridePayload
 } from './drawdownExecutionReadiness';
@@ -203,6 +206,9 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('drawdownExecutionContract');
     expect(saved.plan).not.toHaveProperty('runtimeDrawdownOverridePayload');
     expect(saved.plan).not.toHaveProperty('internalDrawdownDryRun');
+    expect(saved.plan).not.toHaveProperty('drawdownVisibleReviewGate');
+    expect(saved.plan).not.toHaveProperty('drawdownReviewPreview');
+    expect(saved.plan).not.toHaveProperty('drawdownPhaseReview');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -226,5 +232,68 @@ describe('drawdown execution readiness contract', () => {
     expect(review.reviewNote).toContain('Readiness review only');
     expect(JSON.stringify(review).toLowerCase()).not.toContain('recommended withdrawal strategy');
     expect(JSON.stringify(review).toLowerCase()).not.toContain('optimal drawdown');
+  });
+
+  it('allows a visible Details preview only after the final review gate passes', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+
+    expect(gate).toMatchObject({
+      status: 'readyForVisibleReview',
+      disposition: 'visibleReviewGateOnly'
+    });
+    expect(preview).toMatchObject({
+      status: 'visibleForReview',
+      headline: 'Drawdown review preview',
+      disposition: 'detailsPreviewOnly'
+    });
+    expect(preview.rows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+    expect(preview.detail).toContain('does not tell you which account to withdraw from');
+    expect(preview.reviewNote).toContain('Review preview only');
+  });
+
+  it('holds back the visible preview when spending stress is fragile', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'fragile' });
+
+    expect(preview.status).toBe('heldBack');
+    expect(preview.rows).toEqual([]);
+    expect(preview.detail).toContain('spending stress');
+  });
+
+  it('blocks the final visible gate when funding harm is present', () => {
+    const weakCandidate: SimulationResult = {
+      years: comparisonCandidate.years.map((row, index) => ({
+        ...row,
+        shortfall: index === 1 ? 1000 : 0
+      }))
+    };
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? weakCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+
+    expect(gate.status).toBe('blocked');
+    expect(gate.rows).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'decisionGate', status: 'blocked' })]));
+    expect(preview.status).toBe('blocked');
+  });
+
+  it('summarizes drawdown phase go or hold status without adding execution', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+
+    expect(phase).toMatchObject({
+      status: 'readyToContinue',
+      disposition: 'phaseReviewOnly'
+    });
+    expect(phase.rows.map((row) => row.id)).toEqual(['gate', 'preview', 'examples', 'stress', 'copy', 'savedPlan']);
+    expect(phase.reviewNote).toContain('Phase review only');
   });
 });

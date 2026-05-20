@@ -92,12 +92,17 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('not a recommendation');
     expect(appSource).toContain('Future drawdown prototype readiness');
     expect(appSource).toContain('Readiness review only');
+    expect(appSource).toContain('Drawdown review preview');
+    expect(appSource).toContain('Final preview gate');
+    expect(appSource).toContain('Drawdown phase review');
+    expect(appSource).toContain('does not tell you which account to withdraw from');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');
     expect(appSource).toContain('does not change the current withdrawal order');
     expect(overviewBranch).not.toContain('<DrawdownReadinessPanel');
     expect(overviewBranch).not.toContain('<HiddenDrawdownComparisonPanel');
+    expect(overviewBranch).not.toContain('<DrawdownReviewPreviewPanel');
     expect(appSource).not.toContain('optimal drawdown');
     expect(appSource).not.toContain('recommended withdrawal strategy');
     expect(appSource).not.toContain('safe spend');
