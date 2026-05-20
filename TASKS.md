@@ -4,37 +4,44 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 56: Drawdown Comparison Readiness Review
+## Latest Sprint — Sprint 57: Hidden Drawdown Comparison Candidate
 
 **Status:** Complete 2026-05-19.
 
-Goal: summarize whether the current plan is ready for a later drawdown comparison, while keeping comparison execution test-only and unsaved.
+Goal: add one hidden real comparison candidate using existing simulation plumbing, while keeping it out of UI, saved plans, and account-instruction language.
 
-Non-scope: real tax-aware drawdown execution, annual withdrawal override simulation, product comparison execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: annual withdrawal override simulation, product-facing drawdown execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 56 checkpoint doc: [`docs/sprint_56_drawdown_comparison_readiness_review.md`](docs/sprint_56_drawdown_comparison_readiness_review.md).
+Sprint 57 checkpoint doc: [`docs/sprint_57_hidden_drawdown_comparison_candidate.md`](docs/sprint_57_hidden_drawdown_comparison_candidate.md).
 
-### Sprint 56 Candidate Implementation Tickets
+### Sprint 57 Candidate Implementation Tickets
 
-- [x] **S56-01 — Readiness selector.** Add a compact comparison-readiness summary from drafts, sandbox gate, account evidence, and household guardrails.
-- [x] **S56-02 — Details UI.** Surface "Future comparison readiness" in Details, not Overview.
-- [x] **S56-03 — Boundary copy.** Say the review does not run a comparison, change withdrawal order, or save optimizer output.
-- [x] **S56-04 — Persistence guardrails.** Confirm comparison readiness is not written into `.plan.json`.
-- [x] **S56-05 — Example matrix.** Keep all examples passing with readiness statuses and review-only language.
+- [x] **S57-01 — Hidden comparison runner.** Add one gated registered-timing comparison using existing simulation config only.
+- [x] **S57-02 — Readiness gate.** Run only when comparison readiness and sandbox draft checks are ready.
+- [x] **S57-03 — Evidence rows.** Return funding, tax, OAS recovery, and projected money-left deltas as review-only evidence.
+- [x] **S57-04 — UI boundary.** Keep the runner out of React UI and Overview.
+- [x] **S57-05 — Persistence guardrails.** Confirm hidden comparison output is not written into `.plan.json`.
 
-### Sprint 56 Definition Of Done
+### Sprint 57 Definition Of Done
 
-- Details answers whether a later drawdown comparison is ready, needs input, blocked, or not ready.
-- Overview remains unchanged.
-- The mocked comparison harness remains test-only and is not imported by UI.
+- One hidden registered-timing comparison can run against a working-copy simulation config.
+- The comparison is blocked when readiness or sandbox gates are not ready.
+- The comparison returns review-only evidence, not instructions.
+- Overview remains unchanged and UI does not import the hidden runner.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 57: Hidden Drawdown Comparison Candidate
+
+**Complete 2026-05-19.** Added one hidden registered-timing comparison candidate using existing simulation plumbing and gated by comparison readiness. It returns review-only evidence and remains out of UI and saved plans.
+
+Sprint 57 checkpoint doc: [`docs/sprint_57_hidden_drawdown_comparison_candidate.md`](docs/sprint_57_hidden_drawdown_comparison_candidate.md).
 
 ### Sprint 56: Drawdown Comparison Readiness Review
 
