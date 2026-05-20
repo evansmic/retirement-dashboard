@@ -1,8 +1,9 @@
 import { createPlanFile } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
-import { buildBaselinePreviewConfig, type PreviewSimulationRunner } from './previewScenarios';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 import { selectDrawdownReadinessSummary, type TaxAwareDrawdownDraftRow } from './resultSelectors';
+
+export type DrawdownComparisonRunner = (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
 
 export type RealDrawdownComparisonMetrics = {
   fundedYears: number;
@@ -43,9 +44,9 @@ const SUPPORTED_DRAFTS: TaxAwareDrawdownDraftRow['id'][] = ['lowTaxRegisteredDra
 
 export function runSingleDrawdownComparison(
   plan: V2PlanPayload,
-  runner: PreviewSimulationRunner = runSimulationSafely
+  runner: DrawdownComparisonRunner = runSimulationSafely
 ): RealDrawdownComparisonResult {
-  const baselineConfig = buildBaselinePreviewConfig(plan);
+  const baselineConfig = buildDrawdownComparisonBaselineConfig(plan);
   const baselineResult = runner(plan, baselineConfig);
   const readiness = selectDrawdownReadinessSummary(baselineResult, plan);
   const sandboxRow = readiness.drawdownOverrideDrafts.sandbox.rows.find((row) => row.status === 'queuedForFutureReview') || null;
@@ -134,6 +135,20 @@ export function runSingleDrawdownComparison(
     reviewNote:
       'Hidden comparison only. It uses existing simulation plumbing for evidence, does not create account instructions, and does not change or save the plan.',
     disposition: 'hiddenComparisonOnly'
+  };
+}
+
+function buildDrawdownComparisonBaselineConfig(plan: V2PlanPayload): SimulationConfig {
+  return {
+    cppAgeF: 65,
+    cppAgeM: 65,
+    oasAgeF: 65,
+    oasAgeM: 65,
+    meltdown: false,
+    returnRate: 0.05,
+    pensionSplit: false,
+    p1Dies: null,
+    withdrawalOrder: plan.assumptions.withdrawalOrder || 'default'
   };
 }
 

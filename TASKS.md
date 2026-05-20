@@ -4,30 +4,30 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 58: Hidden Drawdown Example Matrix
+## Latest Sprint — Sprint 59: Drawdown Comparison Evidence Surface
 
-**Status:** Complete 2026-05-19.
+**Status:** Complete 2026-05-20.
 
-Goal: run the hidden drawdown comparison across built-in examples and prove it remains conservative, hidden, review-only, and unsaved before any Details evidence surface.
+Goal: expose the hidden drawdown comparison as compact Details-only review evidence, without account instructions, annual override execution, Overview density, or saved output.
 
-Non-scope: annual withdrawal override simulation, product-facing drawdown execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: annual withdrawal override simulation, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 58 checkpoint doc: [`docs/sprint_58_hidden_drawdown_example_matrix.md`](docs/sprint_58_hidden_drawdown_example_matrix.md).
+Sprint 59 checkpoint doc: [`docs/sprint_59_drawdown_comparison_evidence_surface.md`](docs/sprint_59_drawdown_comparison_evidence_surface.md).
 
-### Sprint 58 Candidate Implementation Tickets
+### Sprint 59 Candidate Implementation Tickets
 
-- [x] **S58-01 — Guardrail selector.** Add hidden-comparison guardrail rows for hidden-only, review-only, funding, and saved-plan boundaries.
-- [x] **S58-02 — Example matrix.** Run every built-in example through the hidden comparison path.
-- [x] **S58-03 — Copy discipline.** Confirm hidden comparison output avoids advice, certainty, safe-spending, and account-instruction language.
-- [x] **S58-04 — Persistence guardrails.** Confirm hidden comparison output is not written into `.plan.json`.
-- [x] **S58-05 — UI boundary.** Keep hidden comparison out of React UI and Overview.
+- [x] **S59-01 — Details-only panel.** Surface drawdown comparison evidence under Details, after drawdown readiness.
+- [x] **S59-02 — Review-only copy.** Say the comparison does not change the plan, create account instructions, or save output.
+- [x] **S59-03 — Evidence rows.** Show only funding, tax, OAS recovery, and projected-money-left rows when available.
+- [x] **S59-04 — Blocked state.** Show a plain reason when comparison evidence is not ready.
+- [x] **S59-05 — Overview guardrail.** Keep Overview unchanged.
 
-### Sprint 58 Definition Of Done
+### Sprint 59 Definition Of Done
 
-- Every built-in example returns a hidden comparison status of review-only, blocked, or not ready.
-- Hidden-only, review-only, and saved-plan guardrails stay green for all examples.
-- If the comparison runs, it returns only funding, tax, OAS recovery, and projected-money-left evidence rows.
-- Overview remains unchanged and UI does not import the hidden runner.
+- Drawdown comparison evidence appears only in Details.
+- Evidence rows remain review-only and do not become recommendations.
+- The panel says it does not change the plan or create account instructions.
+- Overview remains unchanged.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, mocked payload, or prototype output is persisted.
@@ -36,6 +36,12 @@ Sprint 58 checkpoint doc: [`docs/sprint_58_hidden_drawdown_example_matrix.md`](d
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 59: Drawdown Comparison Evidence Surface
+
+**Complete 2026-05-20.** Added a compact Details-only drawdown comparison evidence panel that shows review evidence when available and a plain blocked reason when not ready, without changing the plan or creating account instructions.
+
+Sprint 59 checkpoint doc: [`docs/sprint_59_drawdown_comparison_evidence_surface.md`](docs/sprint_59_drawdown_comparison_evidence_surface.md).
 
 ### Sprint 58: Hidden Drawdown Example Matrix
 

@@ -984,6 +984,22 @@ button.secondary,
   background: #fffdf7;
 }
 
+.hidden-drawdown-panel {
+  display: grid;
+  gap: 14px;
+  border-color: #d7d3c7;
+  background: #fffdf7;
+}
+
+.hidden-drawdown-panel h3,
+.hidden-drawdown-panel p {
+  margin: 0;
+}
+
+.hidden-drawdown-panel p {
+  color: var(--muted);
+}
+
 .drawdown-readiness-checks {
   display: grid;
   gap: 10px;

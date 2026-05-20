@@ -69,6 +69,7 @@ import {
 } from '../engine/resultSelectors';
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
+import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -115,6 +116,7 @@ type BridgePreview = {
   spendingStress: SpendingStressResults;
   survivor: SimulationResult | null;
   optimizer: BoundedOptimizerSummary | null;
+  hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
   error: string;
   loading: boolean;
 };
@@ -367,6 +369,7 @@ export function App() {
     spendingStress: {},
     survivor: null,
     optimizer: null,
+    hiddenDrawdownComparison: null,
     error: '',
     loading: false
   });
@@ -377,16 +380,17 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     if (!plan || (state.view !== 'review' && state.view !== 'results')) {
-      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, error: '', loading: false });
+      setBridgePreview({ result: null, scenarios: {}, spendingStress: {}, survivor: null, optimizer: null, hiddenDrawdownComparison: null, error: '', loading: false });
       return;
     }
 
     setBridgePreview((current) => ({ ...current, loading: true, error: '' }));
-    Promise.all([import('../engine/previewScenarios'), import('../engine/boundedOptimizer')])
-      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }]) => {
+    Promise.all([import('../engine/previewScenarios'), import('../engine/boundedOptimizer'), import('../engine/drawdownComparison')])
+      .then(([{ runResultsPreviewBundle }, { runBoundedOptimizer }, { runSingleDrawdownComparison }]) => {
         const preview = runResultsPreviewBundle(plan);
         const optimizer = runBoundedOptimizer(plan);
-        if (!cancelled) setBridgePreview({ ...preview, optimizer, error: '', loading: false });
+        const hiddenDrawdownComparison = runSingleDrawdownComparison(plan);
+        if (!cancelled) setBridgePreview({ ...preview, optimizer, hiddenDrawdownComparison, error: '', loading: false });
       })
       .catch((err) => {
         if (!cancelled) {
@@ -396,6 +400,7 @@ export function App() {
             spendingStress: {},
             survivor: null,
             optimizer: null,
+            hiddenDrawdownComparison: null,
             error: err instanceof Error ? err.message : 'Could not run preview calculation.',
             loading: false
           });
@@ -582,6 +587,7 @@ export function App() {
               spendingStress={bridgePreview.spendingStress}
               survivor={bridgePreview.survivor}
               optimizer={bridgePreview.optimizer}
+              hiddenDrawdownComparison={bridgePreview.hiddenDrawdownComparison}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2130,6 +2136,7 @@ function ResultsHandoffPanel({
   spendingStress,
   survivor,
   optimizer,
+  hiddenDrawdownComparison,
   title,
   validation
 }: {
@@ -2144,6 +2151,7 @@ function ResultsHandoffPanel({
   spendingStress: BridgePreview['spendingStress'];
   survivor: BridgePreview['survivor'];
   optimizer: BridgePreview['optimizer'];
+  hiddenDrawdownComparison: BridgePreview['hiddenDrawdownComparison'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2250,6 +2258,7 @@ function ResultsHandoffPanel({
             optimizerInputReview={optimizerInputReview}
             boundedOptimizer={optimizer}
             drawdownReadiness={drawdownReadiness}
+            hiddenDrawdownComparison={hiddenDrawdownComparison}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2736,6 +2745,7 @@ function DetailsResultsPanel({
   optimizerInputReview,
   boundedOptimizer,
   drawdownReadiness,
+  hiddenDrawdownComparison,
   overview,
   planHealth,
   projectionMilestones,
@@ -2759,6 +2769,7 @@ function DetailsResultsPanel({
   optimizerInputReview: ReturnType<typeof selectOptimizerInputReview>;
   boundedOptimizer: BoundedOptimizerSummary | null;
   drawdownReadiness: ReturnType<typeof selectDrawdownReadinessSummary>;
+  hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -2870,6 +2881,7 @@ function DetailsResultsPanel({
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
       <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
+      <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
@@ -3499,6 +3511,44 @@ function DrawdownReadinessPanel({
         This does not change withdrawal order or create annual account-by-account instructions. It does not change the current withdrawal order used in Results.
       </p>
       <p className="table-note">{summary.reviewNote}</p>
+    </section>
+  );
+}
+
+function HiddenDrawdownComparisonPanel({
+  comparison,
+  loading
+}: {
+  comparison: RealDrawdownComparisonResult | null;
+  loading: boolean;
+}) {
+  const hasEvidence = comparison?.status === 'reviewOnly' && comparison.evidenceRows.length > 0;
+  return (
+    <section className={`result-card optimizer-evidence-panel hidden-drawdown-panel hidden-drawdown-${comparison?.status || 'notReady'}`}>
+      <div>
+        <p className="eyebrow">Drawdown comparison evidence</p>
+        <h3>{loading ? 'Checking drawdown comparison' : hasEvidence ? 'A hidden drawdown comparison has review evidence.' : 'No drawdown comparison evidence is ready yet.'}</h3>
+        <p>
+          This is a small review check from the current plan. It does not change your plan, create account instructions, or save comparison output.
+        </p>
+      </div>
+      {hasEvidence ? (
+        <div className="optimizer-evidence-grid">
+          {comparison.evidenceRows.map((row) => (
+            <article className="optimizer-evidence-row evidence-review" key={row.id}>
+              <span>{row.label}</span>
+              <strong>{row.value}</strong>
+              <p>{row.detail}</p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="table-note">{comparison?.reason || 'A comparison will appear here only after readiness checks are available.'}</p>
+      )}
+      <p className="table-note">
+        {comparison?.reviewNote ||
+          'Drawdown comparison evidence is review-only. It does not change withdrawal order, create annual overrides, or save optimizer output.'}
+      </p>
     </section>
   );
 }

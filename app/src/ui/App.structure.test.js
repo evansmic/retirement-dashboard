@@ -30,6 +30,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel');
     expect(detailsPanel).toContain('<DrawdownReadinessPanel');
+    expect(detailsPanel).toContain('<HiddenDrawdownComparisonPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
   });
 
@@ -86,10 +87,13 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Future sandbox gate');
     expect(appSource).toContain('Hold for later comparison');
     expect(appSource).toContain('They are not run as part of the calculation');
-    expect(appSource).not.toContain('runSingleDrawdownComparison');
+    expect(appSource).toContain('Drawdown comparison evidence');
+    expect(appSource).toContain('does not change your plan');
+    expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');
     expect(appSource).toContain('does not change the current withdrawal order');
     expect(overviewBranch).not.toContain('<DrawdownReadinessPanel');
+    expect(overviewBranch).not.toContain('<HiddenDrawdownComparisonPanel');
     expect(appSource).not.toContain('optimal drawdown');
     expect(appSource).not.toContain('recommended withdrawal strategy');
     expect(appSource).not.toContain('safe spend');
