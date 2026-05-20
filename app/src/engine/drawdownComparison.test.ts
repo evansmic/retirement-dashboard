@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SimulationConfig } from './runSimulation';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
-import { drawdownComparisonSavedPlanGuard, runSingleDrawdownComparison } from './drawdownComparison';
+import { drawdownComparisonSavedPlanGuard, runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
 
 const plan: V2PlanPayload = {
   schemaVersion: 2,
@@ -129,6 +129,13 @@ describe('hidden drawdown comparison', () => {
     expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
     expect(comparison.reviewNote).toContain('does not create account instructions');
     expect(comparison.reviewNote).toContain('does not change or save the plan');
+    expect(selectHiddenDrawdownComparisonGuardrails(comparison, plan)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'hiddenOnly', status: 'ok' }),
+        expect.objectContaining({ id: 'reviewOnly', status: 'ok' }),
+        expect.objectContaining({ id: 'savedPlan', status: 'ok' })
+      ])
+    );
     expect(JSON.stringify(comparison).toLowerCase()).not.toContain('recommended withdrawal strategy');
     expect(JSON.stringify(comparison).toLowerCase()).not.toContain('optimal drawdown');
   });

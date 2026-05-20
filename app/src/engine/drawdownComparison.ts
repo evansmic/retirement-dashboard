@@ -32,6 +32,13 @@ export type RealDrawdownComparisonResult = {
   disposition: 'hiddenComparisonOnly';
 };
 
+export type HiddenDrawdownComparisonGuardrail = {
+  id: 'hiddenOnly' | 'reviewOnly' | 'funding' | 'savedPlan';
+  label: string;
+  status: 'ok' | 'review' | 'blocked';
+  detail: string;
+};
+
 const SUPPORTED_DRAFTS: TaxAwareDrawdownDraftRow['id'][] = ['lowTaxRegisteredDraft', 'oasRecoveryDraft', 'peakTaxDraft'];
 
 export function runSingleDrawdownComparison(
@@ -138,6 +145,45 @@ export function drawdownComparisonSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );
+}
+
+export function selectHiddenDrawdownComparisonGuardrails(
+  comparison: RealDrawdownComparisonResult,
+  plan: V2PlanPayload
+): HiddenDrawdownComparisonGuardrail[] {
+  const weakensFunding =
+    comparison.deltas !== null &&
+    (comparison.deltas.fundedYears < 0 || (comparison.deltas.firstShortfallYear !== null && comparison.deltas.firstShortfallYear < 0));
+  const savedPlanClean = drawdownComparisonSavedPlanGuard(plan);
+
+  return [
+    {
+      id: 'hiddenOnly',
+      label: 'Hidden comparison boundary',
+      status: comparison.disposition === 'hiddenComparisonOnly' ? 'ok' : 'blocked',
+      detail: 'The comparison remains hidden and is not part of the React results flow.'
+    },
+    {
+      id: 'reviewOnly',
+      label: 'Review-only output',
+      status: comparison.status === 'reviewOnly' || comparison.status === 'notReady' || comparison.status === 'blocked' ? 'ok' : 'blocked',
+      detail: 'The output is evidence for review, not account instructions.'
+    },
+    {
+      id: 'funding',
+      label: 'Funding guardrail',
+      status: weakensFunding ? 'review' : 'ok',
+      detail: weakensFunding
+        ? 'Funding worsened in the hidden comparison, so this must remain held back.'
+        : 'Funding did not worsen, or the comparison did not run.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'No hidden comparison output is saved into the plan file.' : 'Saved plan output contains hidden comparison data.'
+    }
+  ];
 }
 
 function blockedResult(

@@ -40,17 +40,17 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 57 is complete. Tax-aware drawdown work now has one hidden registered-timing comparison candidate, without product-facing execution or saved output.
+Sprint 58 is complete. Tax-aware drawdown work now has all-example guardrail coverage for the hidden comparison, without product-facing execution or saved output.
 
-Completed Sprint 57 slices:
+Completed Sprint 58 slices:
 
-- Added a hidden comparison runner gated by comparison readiness and sandbox draft checks.
-- Used existing simulation plumbing only; no annual override schema or saved plan schema changed.
-- Returned funding, tax, OAS recovery, and projected money-left evidence rows.
+- Added hidden-comparison guardrail rows for hidden-only, review-only, funding, and saved-plan boundaries.
+- Ran every built-in example through the hidden comparison path.
+- Confirmed hidden comparison output stays review-only, unsaved, and free of account-instruction language.
 - Kept the hidden runner out of UI and Overview.
 - Preserved current withdrawal order and empty annual overrides.
 - Confirmed prototype, draft, sandbox, readiness, hidden comparison, mocked payload, and comparison output remain runtime-only and unsaved.
-- Kept Sprint 57 as hidden comparison work, not account-by-account drawdown instructions.
+- Kept Sprint 58 as matrix guardrail work, not account-by-account drawdown instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -91,7 +91,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 33. **Sprint 55 — Mocked drawdown sandbox comparison.** Score the queued sandbox draft against mocked output only, behind test-only guardrails.
 34. **Sprint 56 — Drawdown comparison readiness review.** Summarize whether the current plan is ready for a later comparison without running one.
 35. **Sprint 57 — Hidden drawdown comparison candidate.** Run one hidden registered-timing comparison as review-only evidence.
-36. **Sprint 58+ — Drawdown comparison evidence surface.** Consider exposing hidden comparison evidence in Details only after example-matrix guardrails hold.
+36. **Sprint 58 — Hidden drawdown example matrix.** Run all examples through the hidden comparison and lock guardrails before UI exposure.
+37. **Sprint 59+ — Drawdown comparison evidence surface.** Consider exposing hidden comparison evidence in Details only after example-matrix guardrails hold.
 
 ## Medium-Term Roadmap
 
@@ -147,6 +148,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 55 — Mocked drawdown sandbox comparison.** Complete 2026-05-19. Added a test-only gate-aware comparison runner for queued sandbox drafts, with mocked payload validation and persistence guardrails.
 - **Sprint 56 — Drawdown comparison readiness review.** Complete 2026-05-19. Added a Details-only readiness review for later drawdown comparison using draft, sandbox, account, and household guardrail evidence.
 - **Sprint 57 — Hidden drawdown comparison candidate.** Complete 2026-05-19. Added one hidden registered-timing comparison candidate that returns review-only evidence while staying out of UI and saved plan files.
+- **Sprint 58 — Hidden drawdown example matrix.** Complete 2026-05-19. Added all-example guardrail coverage for the hidden drawdown comparison before any Details evidence surface.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

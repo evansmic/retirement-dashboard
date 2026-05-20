@@ -4,6 +4,7 @@ import { createPlanFile } from '../data/planFile';
 import { selectDrawdownReadinessSummary, selectSpendingStressSummary } from './resultSelectors';
 import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
 import { runResultsPreviewBundle } from './previewScenarios';
+import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
 
@@ -179,6 +180,47 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(copy, `${card.id} copy includes evidence or current-plan framing`).toMatch(/evidence|current plan/);
       for (const phrase of forbidden) {
         expect(copy, `${card.id} forbidden phrase: ${phrase}`).not.toContain(phrase);
+      }
+    }
+  });
+
+  it('runs hidden drawdown comparisons across examples without surfacing instructions or saved output', () => {
+    const forbidden = [
+      'safe spend',
+      'guaranteed',
+      'optimal drawdown',
+      'recommended withdrawal strategy',
+      'account-by-account instruction',
+      'apply optimized plan'
+    ];
+
+    for (const card of examplePlanCards) {
+      const plan = createExamplePlan(card.id);
+      const comparison = runSingleDrawdownComparison(plan);
+      const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
+      const saved = createPlanFile(plan);
+      const copy = JSON.stringify({ comparison, guardrails }).toLowerCase();
+
+      expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
+      expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
+      expect(guardrails.every((row) => ['ok', 'review', 'blocked'].includes(row.status))).toBe(true);
+      expect(guardrails.find((row) => row.id === 'hiddenOnly'), `${card.id} hidden guardrail`).toMatchObject({ status: 'ok' });
+      expect(guardrails.find((row) => row.id === 'reviewOnly'), `${card.id} review guardrail`).toMatchObject({ status: 'ok' });
+      expect(guardrails.find((row) => row.id === 'savedPlan'), `${card.id} saved-plan guardrail`).toMatchObject({ status: 'ok' });
+      if (comparison.status === 'reviewOnly') {
+        expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+        expect(comparison.reviewNote).toContain('does not create account instructions');
+      } else {
+        expect(comparison.evidenceRows).toEqual([]);
+        expect(comparison.reviewNote).toContain('Hidden comparison only');
+      }
+
+      expect(saved.plan).not.toHaveProperty('drawdownComparison');
+      expect(saved.plan).not.toHaveProperty('hiddenDrawdownComparison');
+      expect(saved.plan).not.toHaveProperty('singleRegisteredTimingCheck');
+      expect(saved.plan).not.toHaveProperty('annualOverrides');
+      for (const phrase of forbidden) {
+        expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);
       }
     }
   });

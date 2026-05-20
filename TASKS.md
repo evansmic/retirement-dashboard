@@ -4,29 +4,29 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 57: Hidden Drawdown Comparison Candidate
+## Latest Sprint — Sprint 58: Hidden Drawdown Example Matrix
 
 **Status:** Complete 2026-05-19.
 
-Goal: add one hidden real comparison candidate using existing simulation plumbing, while keeping it out of UI, saved plans, and account-instruction language.
+Goal: run the hidden drawdown comparison across built-in examples and prove it remains conservative, hidden, review-only, and unsaved before any Details evidence surface.
 
 Non-scope: annual withdrawal override simulation, product-facing drawdown execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 57 checkpoint doc: [`docs/sprint_57_hidden_drawdown_comparison_candidate.md`](docs/sprint_57_hidden_drawdown_comparison_candidate.md).
+Sprint 58 checkpoint doc: [`docs/sprint_58_hidden_drawdown_example_matrix.md`](docs/sprint_58_hidden_drawdown_example_matrix.md).
 
-### Sprint 57 Candidate Implementation Tickets
+### Sprint 58 Candidate Implementation Tickets
 
-- [x] **S57-01 — Hidden comparison runner.** Add one gated registered-timing comparison using existing simulation config only.
-- [x] **S57-02 — Readiness gate.** Run only when comparison readiness and sandbox draft checks are ready.
-- [x] **S57-03 — Evidence rows.** Return funding, tax, OAS recovery, and projected money-left deltas as review-only evidence.
-- [x] **S57-04 — UI boundary.** Keep the runner out of React UI and Overview.
-- [x] **S57-05 — Persistence guardrails.** Confirm hidden comparison output is not written into `.plan.json`.
+- [x] **S58-01 — Guardrail selector.** Add hidden-comparison guardrail rows for hidden-only, review-only, funding, and saved-plan boundaries.
+- [x] **S58-02 — Example matrix.** Run every built-in example through the hidden comparison path.
+- [x] **S58-03 — Copy discipline.** Confirm hidden comparison output avoids advice, certainty, safe-spending, and account-instruction language.
+- [x] **S58-04 — Persistence guardrails.** Confirm hidden comparison output is not written into `.plan.json`.
+- [x] **S58-05 — UI boundary.** Keep hidden comparison out of React UI and Overview.
 
-### Sprint 57 Definition Of Done
+### Sprint 58 Definition Of Done
 
-- One hidden registered-timing comparison can run against a working-copy simulation config.
-- The comparison is blocked when readiness or sandbox gates are not ready.
-- The comparison returns review-only evidence, not instructions.
+- Every built-in example returns a hidden comparison status of review-only, blocked, or not ready.
+- Hidden-only, review-only, and saved-plan guardrails stay green for all examples.
+- If the comparison runs, it returns only funding, tax, OAS recovery, and projected-money-left evidence rows.
 - Overview remains unchanged and UI does not import the hidden runner.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
@@ -36,6 +36,12 @@ Sprint 57 checkpoint doc: [`docs/sprint_57_hidden_drawdown_comparison_candidate.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 58: Hidden Drawdown Example Matrix
+
+**Complete 2026-05-19.** Added all-example guardrail coverage for the hidden drawdown comparison, confirming it remains hidden, review-only, unsaved, and free of account-instruction language before any Details evidence surface.
+
+Sprint 58 checkpoint doc: [`docs/sprint_58_hidden_drawdown_example_matrix.md`](docs/sprint_58_hidden_drawdown_example_matrix.md).
 
 ### Sprint 57: Hidden Drawdown Comparison Candidate
 
