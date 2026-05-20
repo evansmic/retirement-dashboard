@@ -564,7 +564,8 @@ describe('result selectors', () => {
       status: 'cannotTell',
       rows: [],
       readinessRows: [],
-      sandbox: { status: 'notReady', rows: [] }
+      sandbox: { status: 'notReady', rows: [] },
+      comparisonReadiness: { status: 'needsInput' }
     });
     expect(readiness.reviewNote).toContain('does not change withdrawal order');
     expect(readiness.reviewNote).toContain('save optimizer output');
@@ -664,6 +665,14 @@ describe('result selectors', () => {
       ]
     });
     expect(readiness.drawdownOverrideDrafts.sandbox.reviewNote).toContain('No sandbox comparison is run here');
+    expect(readiness.drawdownOverrideDrafts.comparisonReadiness).toMatchObject({
+      status: 'needsInput',
+      rows: expect.arrayContaining([
+        expect.objectContaining({ id: 'sandboxGate', status: 'needsInput' }),
+        expect.objectContaining({ id: 'accountEvidence', status: 'ready' })
+      ])
+    });
+    expect(readiness.drawdownOverrideDrafts.comparisonReadiness.reviewNote).toContain('does not run annual withdrawal changes');
     expect(JSON.stringify(readiness)).not.toContain('recommendation');
     expect(JSON.stringify(readiness)).not.toContain('account-by-account');
   });
@@ -700,6 +709,10 @@ describe('result selectors', () => {
     expect(readiness.drawdownOverrideDrafts.sandbox).toMatchObject({
       status: 'blocked',
       rows: [{ status: 'blocked', draftId: null, disposition: 'sandboxPlanningOnly' }]
+    });
+    expect(readiness.drawdownOverrideDrafts.comparisonReadiness).toMatchObject({
+      status: 'blocked',
+      rows: expect.arrayContaining([expect.objectContaining({ id: 'accountEvidence', status: 'blocked' })])
     });
     expect(readiness.drawdownOverrideDrafts.reviewNote).toContain('do not change withdrawal order');
   });
@@ -748,6 +761,15 @@ describe('result selectors', () => {
       ]
     });
     expect(readiness.drawdownOverrideDrafts.sandbox.detail).toContain('later calculation');
+    expect(readiness.drawdownOverrideDrafts.comparisonReadiness).toMatchObject({
+      status: 'readyForLaterComparison',
+      rows: expect.arrayContaining([
+        expect.objectContaining({ id: 'draftCheck', status: 'ready' }),
+        expect.objectContaining({ id: 'sandboxGate', status: 'ready' }),
+        expect.objectContaining({ id: 'accountEvidence', status: 'ready' })
+      ])
+    });
+    expect(readiness.drawdownOverrideDrafts.comparisonReadiness.detail).toContain('does not run a comparison');
     expect(JSON.stringify(readiness.drawdownOverrideDrafts.sandbox)).not.toContain('annualOverrides');
   });
 
@@ -768,6 +790,7 @@ describe('result selectors', () => {
     expect(file.plan).not.toHaveProperty('drawdownDraftComparison');
     expect(file.plan).not.toHaveProperty('drawdownSandbox');
     expect(file.plan).not.toHaveProperty('drawdownSandboxComparison');
+    expect(file.plan).not.toHaveProperty('drawdownComparisonReadiness');
     expect(file.plan).not.toHaveProperty('syntheticDrawdownPayload');
   });
 

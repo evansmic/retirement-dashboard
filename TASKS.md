@@ -4,38 +4,43 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 55: Mocked Drawdown Sandbox Comparison
+## Latest Sprint — Sprint 56: Drawdown Comparison Readiness Review
 
 **Status:** Complete 2026-05-19.
 
-Goal: add a test-only comparison runner for the queued drawdown sandbox draft, using mocked output only and still avoiding product execution or saved optimizer output.
+Goal: summarize whether the current plan is ready for a later drawdown comparison, while keeping comparison execution test-only and unsaved.
 
-Non-scope: real tax-aware drawdown execution, annual withdrawal override simulation, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: real tax-aware drawdown execution, annual withdrawal override simulation, product comparison execution, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 55 checkpoint doc: [`docs/sprint_55_mocked_drawdown_sandbox_comparison.md`](docs/sprint_55_mocked_drawdown_sandbox_comparison.md).
+Sprint 56 checkpoint doc: [`docs/sprint_56_drawdown_comparison_readiness_review.md`](docs/sprint_56_drawdown_comparison_readiness_review.md).
 
-### Sprint 55 Candidate Implementation Tickets
+### Sprint 56 Candidate Implementation Tickets
 
-- [x] **S55-01 — Gate-aware harness.** Compare only the sandbox-queued draft check.
-- [x] **S55-02 — Mock payload validation.** Reject negative amounts, year mismatches, and bucket mismatches before scoring.
-- [x] **S55-03 — Test-only posture.** Keep the comparison runner out of UI and product execution paths.
-- [x] **S55-04 — Persistence guardrails.** Confirm mocked payload and comparison output are not written into `.plan.json`.
-- [x] **S55-05 — Copy discipline.** Keep harness language evidence-only and avoid advice, certainty, or execution framing.
+- [x] **S56-01 — Readiness selector.** Add a compact comparison-readiness summary from drafts, sandbox gate, account evidence, and household guardrails.
+- [x] **S56-02 — Details UI.** Surface "Future comparison readiness" in Details, not Overview.
+- [x] **S56-03 — Boundary copy.** Say the review does not run a comparison, change withdrawal order, or save optimizer output.
+- [x] **S56-04 — Persistence guardrails.** Confirm comparison readiness is not written into `.plan.json`.
+- [x] **S56-05 — Example matrix.** Keep all examples passing with readiness statuses and review-only language.
 
-### Sprint 55 Definition Of Done
+### Sprint 56 Definition Of Done
 
-- One queued sandbox draft can be scored against mocked baseline/candidate metrics.
-- Blocked or unqueued sandbox gates reject comparison attempts.
-- Invalid mocked payloads are rejected before scoring.
-- No product UI imports or renders the harness.
+- Details answers whether a later drawdown comparison is ready, needs input, blocked, or not ready.
+- Overview remains unchanged.
+- The mocked comparison harness remains test-only and is not imported by UI.
 - Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 56: Drawdown Comparison Readiness Review
+
+**Complete 2026-05-19.** Added a Details-only comparison-readiness review that summarizes draft checks, sandbox gate, account evidence, and household guardrails before any real drawdown comparison exists.
+
+Sprint 56 checkpoint doc: [`docs/sprint_56_drawdown_comparison_readiness_review.md`](docs/sprint_56_drawdown_comparison_readiness_review.md).
 
 ### Sprint 55: Mocked Drawdown Sandbox Comparison
 

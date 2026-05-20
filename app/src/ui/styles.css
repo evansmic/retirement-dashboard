@@ -1001,12 +1001,22 @@ button.secondary,
   padding-top: 12px;
 }
 
+.drawdown-comparison-readiness {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e1ddd2;
+  padding-top: 12px;
+}
+
 .drawdown-sandbox-panel h4,
-.drawdown-sandbox-panel p {
+.drawdown-sandbox-panel p,
+.drawdown-comparison-readiness h4,
+.drawdown-comparison-readiness p {
   margin: 0;
 }
 
-.drawdown-sandbox-panel p {
+.drawdown-sandbox-panel p,
+.drawdown-comparison-readiness p {
   color: var(--muted);
 }
 

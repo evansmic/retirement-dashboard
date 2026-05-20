@@ -827,6 +827,21 @@ export type TaxAwareDrawdownSandboxSummary = {
   reviewNote: string;
 };
 
+export type TaxAwareDrawdownComparisonReadinessRow = {
+  id: 'draftCheck' | 'sandboxGate' | 'accountEvidence' | 'householdGuardrails';
+  label: string;
+  status: 'ready' | 'review' | 'needsInput' | 'blocked';
+  detail: string;
+};
+
+export type TaxAwareDrawdownComparisonReadinessSummary = {
+  status: 'readyForLaterComparison' | 'needsInput' | 'blocked' | 'notReady';
+  headline: string;
+  detail: string;
+  rows: TaxAwareDrawdownComparisonReadinessRow[];
+  reviewNote: string;
+};
+
 export type TaxAwareDrawdownDraftSummary = {
   status: 'cannotTell' | 'readyForFutureReview' | 'needsInput' | 'blocked';
   headline: string;
@@ -834,6 +849,7 @@ export type TaxAwareDrawdownDraftSummary = {
   rows: TaxAwareDrawdownDraftRow[];
   readinessRows: TaxAwareDrawdownReadinessCheck[];
   sandbox: TaxAwareDrawdownSandboxSummary;
+  comparisonReadiness: TaxAwareDrawdownComparisonReadinessSummary;
   reviewNote: string;
 };
 
@@ -1823,25 +1839,29 @@ function buildTaxAwareDrawdownDraftSummary({
   ];
 
   if (!annualRows.length) {
+    const sandbox = buildTaxAwareDrawdownSandboxSummary([], []);
     return {
       status: 'cannotTell',
       headline: 'Future drawdown draft checks need a completed projection.',
       detail: 'Run Results before reviewing draft checks for future tax-aware drawdown testing.',
       rows: [],
       readinessRows: [],
-      sandbox: buildTaxAwareDrawdownSandboxSummary([], []),
+      sandbox,
+      comparisonReadiness: buildTaxAwareDrawdownComparisonReadinessSummary([], [], sandbox),
       reviewNote: 'Draft checks are review-only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
     };
   }
 
   if (!drafts.length) {
+    const sandbox = buildTaxAwareDrawdownSandboxSummary([], readinessRows);
     return {
       status: 'cannotTell',
       headline: 'No future drawdown draft checks stand out yet.',
       detail: 'The current projection does not show enough drawdown timing evidence for draft checks.',
       rows: [],
       readinessRows,
-      sandbox: buildTaxAwareDrawdownSandboxSummary([], readinessRows),
+      sandbox,
+      comparisonReadiness: buildTaxAwareDrawdownComparisonReadinessSummary([], readinessRows, sandbox),
       reviewNote: 'Draft checks are review-only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
     };
   }
@@ -1852,6 +1872,7 @@ function buildTaxAwareDrawdownDraftSummary({
   const accountBalancesBlocked = readinessRows.some((row) => row.id === 'accountBalances' && row.status === 'blocked');
   const status: TaxAwareDrawdownDraftSummary['status'] =
     accountBalancesBlocked || (hasBlocked && !hasUsable) ? 'blocked' : hasNeedsInput || hasBlocked ? 'needsInput' : 'readyForFutureReview';
+  const sandbox = buildTaxAwareDrawdownSandboxSummary(drafts, readinessRows);
 
   return {
     status,
@@ -1865,7 +1886,8 @@ function buildTaxAwareDrawdownDraftSummary({
       'These draft checks describe what a later test might compare. They are not run as part of the calculation and do not change the current plan.',
     rows: drafts,
     readinessRows,
-    sandbox: buildTaxAwareDrawdownSandboxSummary(drafts, readinessRows),
+    sandbox,
+    comparisonReadiness: buildTaxAwareDrawdownComparisonReadinessSummary(drafts, readinessRows, sandbox),
     reviewNote: 'Future drawdown draft checks are review evidence only. They do not change withdrawal order, create annual overrides, or save optimizer output.'
   };
 }
@@ -1955,6 +1977,104 @@ function buildTaxAwareDrawdownSandboxSummary(
       }
     ],
     reviewNote: 'No sandbox comparison is run here. Nothing changes in the current calculation or saved plan.'
+  };
+}
+
+function buildTaxAwareDrawdownComparisonReadinessSummary(
+  drafts: TaxAwareDrawdownDraftRow[],
+  readinessRows: TaxAwareDrawdownReadinessCheck[],
+  sandbox: TaxAwareDrawdownSandboxSummary
+): TaxAwareDrawdownComparisonReadinessSummary {
+  const usableDraftCount = drafts.filter((row) => row.status === 'usableForFutureReview').length;
+  const blockedDraftCount = drafts.filter((row) => row.status === 'blocked').length;
+  const needsInputCount = drafts.filter((row) => row.status === 'needsInput').length;
+  const accountEvidence = readinessRows.find((row) => row.id === 'accountBalances');
+  const accountMix = readinessRows.find((row) => row.id === 'accountMix');
+  const lockedIn = readinessRows.find((row) => row.id === 'lockedInAccounts');
+  const survivor = readinessRows.find((row) => row.id === 'survivorScenario');
+  const estate = readinessRows.find((row) => row.id === 'estateIntent');
+  const householdGuardrailRows = [lockedIn, survivor, estate].filter(Boolean) as TaxAwareDrawdownReadinessCheck[];
+  const householdNeedsInput = householdGuardrailRows.some((row) => row.status === 'needsInput' || row.status === 'blocked');
+  const householdReview = householdGuardrailRows.some((row) => row.status === 'review');
+
+  const rows: TaxAwareDrawdownComparisonReadinessRow[] = [
+    {
+      id: 'draftCheck',
+      label: 'Draft check',
+      status: usableDraftCount > 0 ? (needsInputCount || blockedDraftCount ? 'review' : 'ready') : blockedDraftCount ? 'blocked' : 'needsInput',
+      detail:
+        usableDraftCount > 0
+          ? `${usableDraftCount} future draft check${usableDraftCount === 1 ? '' : 's'} can be held for later comparison.`
+          : 'No usable future draft check is available yet.'
+    },
+    {
+      id: 'sandboxGate',
+      label: 'Sandbox gate',
+      status:
+        sandbox.status === 'readyToCompareLater'
+          ? 'ready'
+          : sandbox.status === 'needsInput'
+            ? 'needsInput'
+            : sandbox.status === 'blocked'
+              ? 'blocked'
+              : 'needsInput',
+      detail: sandbox.rows[0]?.holdReason || sandbox.detail
+    },
+    {
+      id: 'accountEvidence',
+      label: 'Account evidence',
+      status:
+        accountEvidence?.status === 'blocked'
+          ? 'blocked'
+          : accountMix?.status === 'needsInput'
+            ? 'needsInput'
+            : accountEvidence?.status === 'ready'
+              ? 'ready'
+              : 'needsInput',
+      detail:
+        accountMix?.status === 'ready'
+          ? 'Registered and flexible account buckets are visible for later comparison.'
+          : accountMix?.detail || accountEvidence?.detail || 'Account evidence needs review before later comparison.'
+    },
+    {
+      id: 'householdGuardrails',
+      label: 'Household guardrails',
+      status: householdNeedsInput ? 'needsInput' : householdReview ? 'review' : 'ready',
+      detail:
+        householdNeedsInput || householdReview
+          ? householdGuardrailRows
+              .filter((row) => row.status === 'needsInput' || row.status === 'blocked' || row.status === 'review')
+              .map((row) => row.label)
+              .join(', ')
+          : 'Estate, survivor, and locked-in account guardrails do not block later comparison.'
+    }
+  ];
+
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasNeedsInput = rows.some((row) => row.status === 'needsInput');
+  const hasReadySandbox = sandbox.status === 'readyToCompareLater';
+  const status: TaxAwareDrawdownComparisonReadinessSummary['status'] = hasBlocked
+    ? 'blocked'
+    : hasNeedsInput
+      ? 'needsInput'
+      : hasReadySandbox
+        ? 'readyForLaterComparison'
+        : 'notReady';
+
+  return {
+    status,
+    headline:
+      status === 'readyForLaterComparison'
+        ? 'Ready for a later drawdown comparison check.'
+        : status === 'blocked'
+          ? 'Later drawdown comparison is blocked for now.'
+          : status === 'needsInput'
+            ? 'Later drawdown comparison needs inputs confirmed first.'
+            : 'Later drawdown comparison is not ready yet.',
+    detail:
+      'This review summarizes whether the current plan has enough evidence for a later comparison. It does not run a comparison or change the plan.',
+    rows,
+    reviewNote: 'Comparison readiness is review-only. It does not run annual withdrawal changes, change withdrawal order, or save optimizer output.'
   };
 }
 

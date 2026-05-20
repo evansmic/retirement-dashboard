@@ -81,6 +81,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('They do not create instructions');
     expect(appSource).toContain('Future drawdown draft checks');
     expect(appSource).toContain('Is this plan ready for future tax-aware drawdown testing?');
+    expect(appSource).toContain('Future comparison readiness');
+    expect(appSource).toContain('does not run a comparison');
     expect(appSource).toContain('Future sandbox gate');
     expect(appSource).toContain('Hold for later comparison');
     expect(appSource).toContain('They are not run as part of the calculation');

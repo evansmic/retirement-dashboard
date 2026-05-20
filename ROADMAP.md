@@ -40,16 +40,16 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 55 is complete. Tax-aware drawdown work now has a test-only mocked comparison runner for the queued sandbox draft, without executing annual withdrawal overrides.
+Sprint 56 is complete. Tax-aware drawdown work now has a Details-only readiness review for later drawdown comparison, without executing annual withdrawal overrides.
 
-Completed Sprint 55 slices:
+Completed Sprint 56 slices:
 
-- Added a gate-aware synthetic comparison runner for the queued sandbox draft.
-- Rejected unqueued gates, non-usable drafts, negative amounts, year mismatches, and bucket mismatches before scoring.
-- Kept the comparison runner out of UI and product execution paths.
+- Added a compact comparison-readiness summary from draft checks, sandbox gate, account evidence, and household guardrails.
+- Surfaced "Future comparison readiness" in Details, not Overview.
+- Kept the mocked comparison harness out of UI and product execution paths.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, mocked payload, and comparison output remain runtime-only and unsaved.
-- Kept Sprint 55 as test harness work, not account-by-account drawdown execution.
+- Confirmed prototype, draft, sandbox, readiness, mocked payload, and comparison output remain runtime-only and unsaved.
+- Kept Sprint 56 as readiness review work, not account-by-account drawdown execution.
 
 ## Consumer Roadmap Sequence
 
@@ -88,7 +88,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 31. **Sprint 53 — Bounded drawdown execution readiness.** Add runtime-only draft checks, validation, and test-only comparison scaffolding before real annual override execution.
 32. **Sprint 54 — Drawdown sandbox gate.** Queue one future drawdown draft check for later comparison without running annual overrides.
 33. **Sprint 55 — Mocked drawdown sandbox comparison.** Score the queued sandbox draft against mocked output only, behind test-only guardrails.
-34. **Sprint 56+ — Narrow drawdown execution candidate.** Consider one carefully gated execution path only after the mocked comparison harness remains stable.
+34. **Sprint 56 — Drawdown comparison readiness review.** Summarize whether the current plan is ready for a later comparison without running one.
+35. **Sprint 57+ — Narrow drawdown execution candidate.** Consider one carefully gated execution path only after readiness review remains stable.
 
 ## Medium-Term Roadmap
 
@@ -142,6 +143,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 53 — Bounded drawdown execution readiness.** Complete 2026-05-19. Added runtime-only future drawdown draft checks, validation statuses, readiness blockers, and a test-only synthetic comparison harness without changing saved plans or engine output.
 - **Sprint 54 — Drawdown sandbox gate.** Complete 2026-05-19. Added a Details-only future sandbox gate that queues one validated drawdown draft check for later comparison while keeping annual overrides unexecuted and unsaved.
 - **Sprint 55 — Mocked drawdown sandbox comparison.** Complete 2026-05-19. Added a test-only gate-aware comparison runner for queued sandbox drafts, with mocked payload validation and persistence guardrails.
+- **Sprint 56 — Drawdown comparison readiness review.** Complete 2026-05-19. Added a Details-only readiness review for later drawdown comparison using draft, sandbox, account, and household guardrail evidence.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

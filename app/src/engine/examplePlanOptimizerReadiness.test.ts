@@ -53,6 +53,10 @@ describe('example-plan optimizer readiness matrix', () => {
       ).toBe(true);
       expect(['notReady', 'readyToCompareLater', 'needsInput', 'blocked']).toContain(item.drawdownReadiness.drawdownOverrideDrafts.sandbox.status);
       expect(item.drawdownReadiness.drawdownOverrideDrafts.sandbox.rows.every((row) => row.disposition === 'sandboxPlanningOnly')).toBe(true);
+      expect(['readyForLaterComparison', 'needsInput', 'blocked', 'notReady']).toContain(
+        item.drawdownReadiness.drawdownOverrideDrafts.comparisonReadiness.status
+      );
+      expect(item.drawdownReadiness.drawdownOverrideDrafts.comparisonReadiness.reviewNote).toContain('review-only');
       expect(['blocked', 'ready']).toContain(item.optimizer.status);
       expect(item.optimizer.execution).toBe('boundedSearch');
       expect(item.optimizer.candidates.length).toBeGreaterThan(0);
@@ -72,6 +76,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('drawdownDraftComparison');
       expect(item.saved.plan).not.toHaveProperty('drawdownSandbox');
       expect(item.saved.plan).not.toHaveProperty('drawdownSandboxComparison');
+      expect(item.saved.plan).not.toHaveProperty('drawdownComparisonReadiness');
       expect(item.saved.plan).not.toHaveProperty('syntheticDrawdownPayload');
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');

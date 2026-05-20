@@ -3447,6 +3447,26 @@ function DrawdownReadinessPanel({
               </div>
             </div>
           ) : null}
+          {summary.drawdownOverrideDrafts.comparisonReadiness.rows.length ? (
+            <div className={`drawdown-comparison-readiness readiness-${summary.drawdownOverrideDrafts.comparisonReadiness.status}`}>
+              <div>
+                <p className="eyebrow">Future comparison readiness</p>
+                <h4>{summary.drawdownOverrideDrafts.comparisonReadiness.headline}</h4>
+                <p>{summary.drawdownOverrideDrafts.comparisonReadiness.detail}</p>
+                <p>This does not run a comparison or change this plan.</p>
+              </div>
+              <div className="optimizer-eligibility-list">
+                {summary.drawdownOverrideDrafts.comparisonReadiness.rows.map((row) => (
+                  <article className={`optimizer-eligibility-note eligibility-${row.status}`} key={row.id}>
+                    <strong>{row.label}</strong>
+                    <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : row.status === 'needsInput' ? 'Needs input' : 'Blocked'}</span>
+                    <p>{row.detail}</p>
+                  </article>
+                ))}
+              </div>
+              <p className="table-note">{summary.drawdownOverrideDrafts.comparisonReadiness.reviewNote}</p>
+            </div>
+          ) : null}
           {summary.drawdownOverrideDrafts.sandbox.rows.length ? (
             <div className={`drawdown-sandbox-panel sandbox-${summary.drawdownOverrideDrafts.sandbox.status}`}>
               <div>
