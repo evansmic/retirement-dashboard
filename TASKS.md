@@ -4,38 +4,45 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 59: Drawdown Comparison Evidence Surface
+## Latest Sprint — Sprint 60: Drawdown Comparison Decision Gate
 
 **Status:** Complete 2026-05-20.
 
-Goal: expose the hidden drawdown comparison as compact Details-only review evidence, without account instructions, annual override execution, Overview density, or saved output.
+Goal: add a conservative decision gate before any hidden drawdown comparison could later be reviewed more prominently, using materiality and harm checks while keeping the comparison Details-only and review-only.
 
-Non-scope: annual withdrawal override simulation, account-by-account instructions, automatic strategy application, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: annual withdrawal override simulation, account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 59 checkpoint doc: [`docs/sprint_59_drawdown_comparison_evidence_surface.md`](docs/sprint_59_drawdown_comparison_evidence_surface.md).
+Sprint 60 checkpoint doc: [`docs/sprint_60_drawdown_comparison_decision_gate.md`](docs/sprint_60_drawdown_comparison_decision_gate.md).
 
-### Sprint 59 Candidate Implementation Tickets
+### Sprint 60 Candidate Implementation Tickets
 
-- [x] **S59-01 — Details-only panel.** Surface drawdown comparison evidence under Details, after drawdown readiness.
-- [x] **S59-02 — Review-only copy.** Say the comparison does not change the plan, create account instructions, or save output.
-- [x] **S59-03 — Evidence rows.** Show only funding, tax, OAS recovery, and projected-money-left rows when available.
-- [x] **S59-04 — Blocked state.** Show a plain reason when comparison evidence is not ready.
-- [x] **S59-05 — Overview guardrail.** Keep Overview unchanged.
+- [x] **S60-01 — Decision gate selector.** Add a runtime-only gate for materiality, funding harm, estate preference, survivor setup, locked-in accounts, and saved-plan boundaries.
+- [x] **S60-02 — Funding and materiality checks.** Hold back comparisons that worsen funding or do not move enough evidence to merit later review.
+- [x] **S60-03 — Household guardrails.** Flag estate-goal, survivor, and locked-in account review needs without converting them into instructions.
+- [x] **S60-04 — Details-only UI.** Show the gate under the drawdown comparison evidence panel in Details.
+- [x] **S60-05 — Copy and persistence guardrails.** Keep the gate review-only, unsaved, and free of account-by-account instruction language.
 
-### Sprint 59 Definition Of Done
+### Sprint 60 Definition Of Done
 
-- Drawdown comparison evidence appears only in Details.
-- Evidence rows remain review-only and do not become recommendations.
-- The panel says it does not change the plan or create account instructions.
+- Drawdown comparison decision gate appears only in Details.
+- The gate can mark a comparison eligible for review, held back, blocked, or not ready.
+- Funding harm blocks later highlighting.
+- Materiality, estate preference, survivor setup, locked-in account, and saved-plan checks are visible in plain language.
+- The panel says the gate is review-only and does not put a strategy into the plan, change withdrawal order, create account instructions, or save optimizer output.
 - Overview remains unchanged.
-- Drawdown readiness still says it does not change withdrawal order or create annual account instructions.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 60: Drawdown Comparison Decision Gate
+
+**Complete 2026-05-20.** Added a Details-only decision gate for hidden drawdown comparisons, with materiality, funding harm, estate, survivor, locked-in account, and saved-plan guardrails before any later highlight path.
+
+Sprint 60 checkpoint doc: [`docs/sprint_60_drawdown_comparison_decision_gate.md`](docs/sprint_60_drawdown_comparison_decision_gate.md).
 
 ### Sprint 59: Drawdown Comparison Evidence Surface
 

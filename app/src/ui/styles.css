@@ -1000,6 +1000,22 @@ button.secondary,
   color: var(--muted);
 }
 
+.drawdown-decision-gate {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e1ddd2;
+  padding-top: 12px;
+}
+
+.drawdown-decision-gate h4,
+.drawdown-decision-gate p {
+  margin: 0;
+}
+
+.drawdown-decision-gate p {
+  color: var(--muted);
+}
+
 .drawdown-readiness-checks {
   display: grid;
   gap: 10px;

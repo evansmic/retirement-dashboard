@@ -3529,7 +3529,7 @@ function HiddenDrawdownComparisonPanel({
         <p className="eyebrow">Drawdown comparison evidence</p>
         <h3>{loading ? 'Checking drawdown comparison' : hasEvidence ? 'A hidden drawdown comparison has review evidence.' : 'No drawdown comparison evidence is ready yet.'}</h3>
         <p>
-          This is a small review check from the current plan. It does not change your plan, create account instructions, or save comparison output.
+          This is a small review check from the current plan. It is not a recommendation and does not change your plan, create account instructions, or save comparison output.
         </p>
       </div>
       {hasEvidence ? (
@@ -3545,6 +3545,25 @@ function HiddenDrawdownComparisonPanel({
       ) : (
         <p className="table-note">{comparison?.reason || 'A comparison will appear here only after readiness checks are available.'}</p>
       )}
+      {comparison?.decisionGate.rows.length ? (
+        <div className={`drawdown-decision-gate gate-${comparison.decisionGate.status}`}>
+          <div>
+            <p className="eyebrow">Review gate</p>
+            <h4>{comparison.decisionGate.headline}</h4>
+            <p>{comparison.decisionGate.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {comparison.decisionGate.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{comparison.decisionGate.reviewNote}</p>
+        </div>
+      ) : null}
       <p className="table-note">
         {comparison?.reviewNote ||
           'Drawdown comparison evidence is review-only. It does not change withdrawal order, create annual overrides, or save optimizer output.'}

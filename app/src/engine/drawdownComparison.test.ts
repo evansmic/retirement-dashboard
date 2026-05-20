@@ -127,6 +127,15 @@ describe('hidden drawdown comparison', () => {
       projectedMoneyLeft: 5000
     });
     expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+    expect(comparison.decisionGate).toMatchObject({
+      status: 'eligibleForReview',
+      rows: expect.arrayContaining([
+        expect.objectContaining({ id: 'materiality', status: 'ok' }),
+        expect.objectContaining({ id: 'funding', status: 'ok' }),
+        expect.objectContaining({ id: 'savedPlan', status: 'ok' })
+      ])
+    });
+    expect(comparison.decisionGate.headline).toContain('not a recommendation');
     expect(comparison.reviewNote).toContain('does not create account instructions');
     expect(comparison.reviewNote).toContain('does not change or save the plan');
     expect(selectHiddenDrawdownComparisonGuardrails(comparison, plan)).toEqual(
@@ -148,8 +157,27 @@ describe('hidden drawdown comparison', () => {
       candidateId: null,
       draftId: null,
       evidenceRows: [],
+      decisionGate: { status: 'notReady', rows: [] },
       disposition: 'hiddenComparisonOnly'
     });
+  });
+
+  it('holds back the decision gate when funding worsens', () => {
+    const worseCandidate: SimulationResult = {
+      years: candidate.years.map((row, index) => ({
+        ...row,
+        shortfall: index === 1 ? 5000 : 0,
+        bal_total: index === 1 ? 450000 : row.bal_total
+      }))
+    };
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? worseCandidate : baseline));
+
+    expect(comparison.status).toBe('reviewOnly');
+    expect(comparison.decisionGate).toMatchObject({
+      status: 'blocked',
+      rows: expect.arrayContaining([expect.objectContaining({ id: 'funding', status: 'blocked' })])
+    });
+    expect(comparison.reason).toContain('held back');
   });
 
   it('keeps hidden comparison output out of saved plan files', () => {

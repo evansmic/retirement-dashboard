@@ -40,17 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 59 is complete. Tax-aware drawdown work now has a compact Details-only evidence surface for the hidden comparison, without account instructions or saved output.
+Sprint 60 is complete. Tax-aware drawdown work now has a conservative decision gate for the hidden comparison, still Details-only, review-only, and unsaved.
 
-Completed Sprint 59 slices:
+Completed Sprint 60 slices:
 
-- Added a Details-only drawdown comparison evidence panel.
-- Shows funding, tax, OAS recovery, and projected-money-left rows when available.
-- Shows a plain not-ready reason when comparison evidence is blocked or not ready.
-- Keeps the panel explicitly review-only: it does not change the plan, create account instructions, or save output.
+- Added a Details-only drawdown comparison decision gate.
+- Checks materiality before a hidden comparison could later be reviewed more prominently.
+- Blocks comparisons that worsen funding.
+- Flags estate-goal, survivor, and locked-in account review needs without turning them into instructions.
+- Keeps the gate explicitly review-only: it does not change the plan, create account instructions, put a strategy into the plan, or save output.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, mocked payload, and comparison output remain runtime-only and unsaved.
-- Kept Sprint 59 as a Details evidence surface, not account-by-account drawdown instructions.
+- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, mocked payload, and comparison output remain runtime-only and unsaved.
+- Kept Sprint 60 as a decision gate, not account-by-account drawdown instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -93,7 +94,8 @@ Near-term product work should prioritize interpretation and journey simplificati
 35. **Sprint 57 — Hidden drawdown comparison candidate.** Run one hidden registered-timing comparison as review-only evidence.
 36. **Sprint 58 — Hidden drawdown example matrix.** Run all examples through the hidden comparison and lock guardrails before UI exposure.
 37. **Sprint 59 — Drawdown comparison evidence surface.** Expose hidden comparison evidence in Details only, with review-only boundaries.
-38. **Sprint 60+ — Drawdown decision gate.** Add materiality and harm checks before any comparison could become a highlighted option.
+38. **Sprint 60 — Drawdown comparison decision gate.** Add materiality and harm checks before any comparison could become a highlighted option.
+39. **Sprint 61+ — Drawdown gate example hardening.** Stress the decision gate across examples and edge cases before any broader drawdown execution work.
 
 ## Medium-Term Roadmap
 
@@ -151,6 +153,7 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 57 — Hidden drawdown comparison candidate.** Complete 2026-05-19. Added one hidden registered-timing comparison candidate that returns review-only evidence while staying out of UI and saved plan files.
 - **Sprint 58 — Hidden drawdown example matrix.** Complete 2026-05-19. Added all-example guardrail coverage for the hidden drawdown comparison before any Details evidence surface.
 - **Sprint 59 — Drawdown comparison evidence surface.** Complete 2026-05-20. Added compact Details-only drawdown comparison evidence with explicit review-only and no-plan-change boundaries.
+- **Sprint 60 — Drawdown comparison decision gate.** Complete 2026-05-20. Added a Details-only decision gate with materiality, funding harm, estate, survivor, locked-in account, and saved-plan checks before any later highlight path.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

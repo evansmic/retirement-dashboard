@@ -203,12 +203,15 @@ describe('example-plan optimizer readiness matrix', () => {
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
       expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
+      expect(['eligibleForReview', 'holdBack', 'blocked', 'notReady']).toContain(comparison.decisionGate.status);
+      expect(comparison.decisionGate.reviewNote, `${card.id} decision gate note`).toContain('review-only');
       expect(guardrails.every((row) => ['ok', 'review', 'blocked'].includes(row.status))).toBe(true);
       expect(guardrails.find((row) => row.id === 'hiddenOnly'), `${card.id} hidden guardrail`).toMatchObject({ status: 'ok' });
       expect(guardrails.find((row) => row.id === 'reviewOnly'), `${card.id} review guardrail`).toMatchObject({ status: 'ok' });
       expect(guardrails.find((row) => row.id === 'savedPlan'), `${card.id} saved-plan guardrail`).toMatchObject({ status: 'ok' });
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+        expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
         expect(comparison.reviewNote).toContain('does not create account instructions');
       } else {
         expect(comparison.evidenceRows).toEqual([]);
