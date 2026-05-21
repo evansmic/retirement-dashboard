@@ -117,6 +117,79 @@ export type DrawdownPhaseReview = {
   disposition: 'phaseReviewOnly';
 };
 
+export type DrawdownExecutionBoundaryDecisionRow = {
+  id: 'phase' | 'examples' | 'preview' | 'savedPlan' | 'productBoundary';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownExecutionBoundaryDecision = {
+  status: 'keepPreviewOnly' | 'hardenMore' | 'readyForTinyExecutionPrototype';
+  headline: string;
+  detail: string;
+  rows: DrawdownExecutionBoundaryDecisionRow[];
+  reviewNote: string;
+  disposition: 'executionBoundaryDecisionOnly';
+};
+
+export type DrawdownAnnualOverrideAdapterDraft = {
+  disposition: 'adapterDraftOnly';
+  year: number;
+  accountBucket: DrawdownExecutionAccountBucket;
+  direction: DrawdownExecutionDirection;
+  amount: number;
+  sourcePayload: 'runtimeReviewDraftOnly';
+};
+
+export type DrawdownAdapterValidationRow = {
+  id: 'boundary' | 'year' | 'bucket' | 'amount' | 'direction' | 'savedPlan';
+  label: string;
+  status: 'ok' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownAdapterValidation = {
+  status: 'acceptedForMockScoring' | 'rejected';
+  adapter: DrawdownAnnualOverrideAdapterDraft | null;
+  rows: DrawdownAdapterValidationRow[];
+  reason: string;
+  reviewNote: string;
+  disposition: 'adapterValidationOnly';
+};
+
+export type MockedExecutionScorecardRow = {
+  id: 'funding' | 'tax' | 'oasRecovery' | 'estate';
+  label: string;
+  value: string;
+  status: 'ok' | 'blocked';
+  detail: string;
+};
+
+export type MockedExecutionScorecard = {
+  status: 'reviewOnly' | 'blocked' | 'notReady';
+  rows: MockedExecutionScorecardRow[];
+  reason: string;
+  reviewNote: string;
+  disposition: 'mockedScorecardOnly';
+};
+
+export type DrawdownExecutionPrototypeGoNoGoRow = {
+  id: 'boundary' | 'adapter' | 'scorecard' | 'savedPlan' | 'productScope';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownExecutionPrototypeGoNoGo = {
+  status: 'readyForOneRealPrototype' | 'holdForAdapterGuardrails' | 'stopBeforeExecution';
+  headline: string;
+  detail: string;
+  rows: DrawdownExecutionPrototypeGoNoGoRow[];
+  reviewNote: string;
+  disposition: 'executionPrototypeGoNoGoOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -551,6 +624,309 @@ export function selectDrawdownPhaseReview({
   };
 }
 
+export function selectDrawdownExecutionBoundaryDecision({
+  plan,
+  phase,
+  preview,
+  examplesAllClear = true
+}: {
+  plan: V2PlanPayload;
+  phase: DrawdownPhaseReview;
+  preview: DrawdownReviewPreview;
+  examplesAllClear?: boolean;
+}): DrawdownExecutionBoundaryDecision {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownExecutionBoundaryDecisionRow[] = [
+    {
+      id: 'phase',
+      label: 'Phase review',
+      status: phase.status === 'readyToContinue' ? 'ready' : phase.status === 'stopBeforeExecution' ? 'blocked' : 'hold',
+      detail: phase.headline
+    },
+    {
+      id: 'examples',
+      label: 'Example coverage',
+      status: examplesAllClear ? 'ready' : 'hold',
+      detail: examplesAllClear ? 'Built-in examples are clear enough for the next adapter checkpoint.' : 'An example is held or blocked, so the adapter path should wait.'
+    },
+    {
+      id: 'preview',
+      label: 'Visible preview',
+      status: preview.status === 'visibleForReview' ? 'ready' : preview.status === 'blocked' ? 'blocked' : 'hold',
+      detail: preview.headline
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No execution boundary output is saved.' : 'Saved plan output contains execution boundary data.'
+    },
+    {
+      id: 'productBoundary',
+      label: 'Product boundary',
+      status: 'ready',
+      detail: 'The product remains preview-only; adapter work is runtime-only and not used for product calculations.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  const status: DrawdownExecutionBoundaryDecision['status'] = hasBlocked ? 'keepPreviewOnly' : hasHold ? 'hardenMore' : 'readyForTinyExecutionPrototype';
+
+  return {
+    status,
+    headline:
+      status === 'readyForTinyExecutionPrototype'
+        ? 'Ready for a tiny execution prototype boundary.'
+        : status === 'hardenMore'
+          ? 'Harden the preview more before adapter work.'
+          : 'Keep the drawdown work as preview-only.',
+    detail:
+      'This checkpoint decides whether to stay with preview-only evidence, harden more guardrails, or allow a tiny runtime-only adapter prototype.',
+    rows,
+    reviewNote:
+      'Boundary decision only. It does not run annual overrides, change withdrawal order, create account instructions, or save output.',
+    disposition: 'executionBoundaryDecisionOnly'
+  };
+}
+
+export function buildDrawdownAnnualOverrideAdapterDraft({
+  plan,
+  boundary,
+  contract
+}: {
+  plan: V2PlanPayload;
+  boundary: DrawdownExecutionBoundaryDecision;
+  contract: DrawdownExecutionContract;
+}): DrawdownAdapterValidation {
+  const payload = contract.payloads[0] || null;
+  const adapter: DrawdownAnnualOverrideAdapterDraft | null =
+    payload && boundary.status === 'readyForTinyExecutionPrototype'
+      ? {
+          disposition: 'adapterDraftOnly',
+          year: payload.year,
+          accountBucket: payload.accountBucket,
+          direction: payload.direction,
+          amount: amountFromBand(payload.amountBand),
+          sourcePayload: payload.disposition
+        }
+      : null;
+  return validateDrawdownAnnualOverrideAdapter({ plan, boundary, adapter });
+}
+
+export function validateDrawdownAnnualOverrideAdapter({
+  plan,
+  boundary,
+  adapter
+}: {
+  plan: V2PlanPayload;
+  boundary: DrawdownExecutionBoundaryDecision;
+  adapter: DrawdownAnnualOverrideAdapterDraft | null;
+}): DrawdownAdapterValidation {
+  const projectionStart = n(plan.assumptions?.retireYear) || n(plan.p1?.retireYear) || new Date().getFullYear();
+  const projectionEnd = n(plan.assumptions?.planEnd) || projectionStart;
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownAdapterValidationRow[] = [
+    {
+      id: 'boundary',
+      label: 'Execution boundary',
+      status: boundary.status === 'readyForTinyExecutionPrototype' ? 'ok' : 'blocked',
+      detail: boundary.headline
+    },
+    {
+      id: 'year',
+      label: 'Adapter year',
+      status: adapter && adapter.year >= projectionStart && adapter.year <= projectionEnd ? 'ok' : 'blocked',
+      detail: adapter ? 'Adapter year must stay inside the projection.' : 'No adapter draft is available.'
+    },
+    {
+      id: 'bucket',
+      label: 'Adapter account bucket',
+      status: adapter && bucketBalance(plan, adapter.accountBucket) > 0 ? 'ok' : 'blocked',
+      detail: adapter ? 'Adapter bucket must match an entered account balance.' : 'No adapter bucket is available.'
+    },
+    {
+      id: 'amount',
+      label: 'Adapter amount',
+      status: adapter && Number.isFinite(adapter.amount) && adapter.amount > 0 ? 'ok' : 'blocked',
+      detail: adapter ? 'Adapter amount must be positive and bounded.' : 'No adapter amount is available.'
+    },
+    {
+      id: 'direction',
+      label: 'Adapter direction',
+      status: adapter && (adapter.direction === 'increase' || adapter.direction === 'decrease') ? 'ok' : 'blocked',
+      detail: adapter ? 'Adapter direction must be one of the supported review directions.' : 'No adapter direction is available.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'No adapter output is saved into the plan file.' : 'Saved plan output contains adapter data.'
+    }
+  ];
+  const rejected = rows.some((row) => row.status === 'blocked');
+  return {
+    status: rejected ? 'rejected' : 'acceptedForMockScoring',
+    adapter: rejected ? null : adapter,
+    rows,
+    reason: rejected ? 'The adapter draft is rejected before any scoring path.' : 'The adapter draft is accepted for mocked scorecard review only.',
+    reviewNote:
+      'Adapter validation only. It does not call the engine with annual overrides, change the current withdrawal order, or save output.',
+    disposition: 'adapterValidationOnly'
+  };
+}
+
+export function scoreMockedDrawdownAdapterResult({
+  baseline,
+  candidate,
+  adapterValidation,
+  estateTarget = 0
+}: {
+  baseline: SimulationResult;
+  candidate: SimulationResult;
+  adapterValidation: DrawdownAdapterValidation;
+  estateTarget?: number;
+}): MockedExecutionScorecard {
+  if (adapterValidation.status !== 'acceptedForMockScoring') {
+    return {
+      status: 'notReady',
+      rows: [],
+      reason: adapterValidation.reason,
+      reviewNote: 'Mocked scorecard only. Adapter output must be accepted before scoring.',
+      disposition: 'mockedScorecardOnly'
+    };
+  }
+  if (!baseline.years?.length || !candidate.years?.length) {
+    return {
+      status: 'blocked',
+      rows: [],
+      reason: 'Mocked scorecard needs complete baseline and candidate rows.',
+      reviewNote: 'Mocked scorecard only. No product calculation is run.',
+      disposition: 'mockedScorecardOnly'
+    };
+  }
+  const baselineMetrics = metricsFromResult(baseline);
+  const candidateMetrics = metricsFromResult(candidate);
+  const fundedYearsDelta = candidateMetrics.fundedYears - baselineMetrics.fundedYears;
+  const lifetimeTaxDelta = candidateMetrics.lifetimeTax - baselineMetrics.lifetimeTax;
+  const oasRecoveryTaxDelta = candidateMetrics.oasRecoveryTax - baselineMetrics.oasRecoveryTax;
+  const projectedMoneyLeftDelta = candidateMetrics.projectedMoneyLeft - baselineMetrics.projectedMoneyLeft;
+  const fundingHarm = fundedYearsDelta < 0 || shortfallEarlier(candidateMetrics.firstShortfallYear, baselineMetrics.firstShortfallYear);
+  const estateHarm = estateTarget > 0 && projectedMoneyLeftDelta < 0;
+  const rows: MockedExecutionScorecardRow[] = [
+    {
+      id: 'funding',
+      label: 'Funding movement',
+      value: signedWhole(fundedYearsDelta),
+      status: fundingHarm ? 'blocked' : 'ok',
+      detail: fundingHarm ? 'Funding worsens in the mocked scorecard.' : 'Funding does not worsen in the mocked scorecard.'
+    },
+    {
+      id: 'tax',
+      label: 'Lifetime tax movement',
+      value: moneyDelta(lifetimeTaxDelta),
+      status: 'ok',
+      detail: 'Tax movement is scored as evidence only.'
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery movement',
+      value: moneyDelta(oasRecoveryTaxDelta),
+      status: 'ok',
+      detail: 'OAS recovery movement is scored as evidence only.'
+    },
+    {
+      id: 'estate',
+      label: 'Projected money left',
+      value: moneyDelta(projectedMoneyLeftDelta),
+      status: estateHarm ? 'blocked' : 'ok',
+      detail: estateHarm ? 'The entered estate goal could be weakened.' : 'No entered estate-goal harm is visible.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  return {
+    status: blocked ? 'blocked' : 'reviewOnly',
+    rows,
+    reason: blocked ? 'The mocked scorecard is blocked by funding or estate harm.' : 'The mocked scorecard produced review evidence only.',
+    reviewNote:
+      'Mocked scorecard only. It compares supplied rows, does not run product annual overrides, and does not save output.',
+    disposition: 'mockedScorecardOnly'
+  };
+}
+
+export function emptyMockedExecutionScorecard(reason = 'Mocked scorecard is not run in the product UI.'): MockedExecutionScorecard {
+  return {
+    status: 'notReady',
+    rows: [],
+    reason,
+    reviewNote: 'Mocked scorecard only. No product calculation is run.',
+    disposition: 'mockedScorecardOnly'
+  };
+}
+
+export function selectDrawdownExecutionPrototypeGoNoGo({
+  plan,
+  boundary,
+  adapterValidation,
+  scorecard
+}: {
+  plan: V2PlanPayload;
+  boundary: DrawdownExecutionBoundaryDecision;
+  adapterValidation: DrawdownAdapterValidation;
+  scorecard: MockedExecutionScorecard;
+}): DrawdownExecutionPrototypeGoNoGo {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownExecutionPrototypeGoNoGoRow[] = [
+    {
+      id: 'boundary',
+      label: 'Boundary decision',
+      status: boundary.status === 'readyForTinyExecutionPrototype' ? 'ready' : boundary.status === 'hardenMore' ? 'hold' : 'blocked',
+      detail: boundary.headline
+    },
+    {
+      id: 'adapter',
+      label: 'Adapter validation',
+      status: adapterValidation.status === 'acceptedForMockScoring' ? 'ready' : 'blocked',
+      detail: adapterValidation.reason
+    },
+    {
+      id: 'scorecard',
+      label: 'Mocked scorecard',
+      status: scorecard.status === 'reviewOnly' ? 'ready' : scorecard.status === 'notReady' ? 'hold' : 'blocked',
+      detail: scorecard.reason
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No execution prototype output is saved.' : 'Saved plan output contains execution prototype data.'
+    },
+    {
+      id: 'productScope',
+      label: 'Product scope',
+      status: 'ready',
+      detail: 'The product remains review-only until a later sprint explicitly adds one real prototype.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  const status: DrawdownExecutionPrototypeGoNoGo['status'] = hasBlocked ? 'stopBeforeExecution' : hasHold ? 'holdForAdapterGuardrails' : 'readyForOneRealPrototype';
+  return {
+    status,
+    headline:
+      status === 'readyForOneRealPrototype'
+        ? 'Ready for one real prototype, with strict limits.'
+        : status === 'holdForAdapterGuardrails'
+          ? 'Hold for more adapter guardrails.'
+          : 'Stop before execution.',
+    detail:
+      'This checkpoint decides whether adapter work is ready for one future real prototype, or whether it should hold or stop before execution.',
+    rows,
+    reviewNote:
+      'Execution prototype go/no-go only. It does not run product annual overrides, change withdrawal order, create account instructions, or save output.',
+    disposition: 'executionPrototypeGoNoGoOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -561,6 +937,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('drawdownVisibleReviewGate' in saved) &&
     !('drawdownReviewPreview' in saved) &&
     !('drawdownPhaseReview' in saved) &&
+    !('drawdownExecutionBoundaryDecision' in saved) &&
+    !('drawdownAnnualOverrideAdapter' in saved) &&
+    !('drawdownAdapterValidation' in saved) &&
+    !('mockedExecutionScorecard' in saved) &&
+    !('drawdownExecutionPrototypeGoNoGo' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

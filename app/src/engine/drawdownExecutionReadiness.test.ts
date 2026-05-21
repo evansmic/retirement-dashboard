@@ -3,14 +3,21 @@ import { createPlanFile } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import { runSingleDrawdownComparison } from './drawdownComparison';
 import {
+  buildDrawdownAnnualOverrideAdapterDraft,
   buildDrawdownExecutionContract,
   drawdownExecutionSavedPlanGuard,
+  emptyMockedExecutionScorecard,
   runInternalDrawdownDryRun,
+  scoreMockedDrawdownAdapterResult,
+  selectDrawdownExecutionBoundaryDecision,
+  selectDrawdownExecutionPrototypeGoNoGo,
   selectDrawdownPhaseReview,
   selectDrawdownPrototypeReadinessReview,
   selectDrawdownReviewPreview,
   selectDrawdownVisibleReviewGate,
+  validateDrawdownAnnualOverrideAdapter,
   validateRuntimeDrawdownPayload,
+  type DrawdownAnnualOverrideAdapterDraft,
   type RuntimeDrawdownOverridePayload
 } from './drawdownExecutionReadiness';
 
@@ -209,6 +216,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('drawdownVisibleReviewGate');
     expect(saved.plan).not.toHaveProperty('drawdownReviewPreview');
     expect(saved.plan).not.toHaveProperty('drawdownPhaseReview');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionBoundaryDecision');
+    expect(saved.plan).not.toHaveProperty('drawdownAnnualOverrideAdapter');
+    expect(saved.plan).not.toHaveProperty('drawdownAdapterValidation');
+    expect(saved.plan).not.toHaveProperty('mockedExecutionScorecard');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionPrototypeGoNoGo');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -295,5 +307,134 @@ describe('drawdown execution readiness contract', () => {
     });
     expect(phase.rows.map((row) => row.id)).toEqual(['gate', 'preview', 'examples', 'stress', 'copy', 'savedPlan']);
     expect(phase.reviewNote).toContain('Phase review only');
+  });
+
+  it('decides whether drawdown execution should stay preview-only or proceed to adapter work', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+
+    expect(boundary).toMatchObject({
+      status: 'readyForTinyExecutionPrototype',
+      disposition: 'executionBoundaryDecisionOnly'
+    });
+    expect(boundary.reviewNote).toContain('Boundary decision only');
+
+    const heldBoundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview, examplesAllClear: false });
+    expect(heldBoundary.status).toBe('hardenMore');
+  });
+
+  it('builds a runtime-only adapter draft and rejects unsafe adapter shapes', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+
+    expect(adapterValidation).toMatchObject({
+      status: 'acceptedForMockScoring',
+      disposition: 'adapterValidationOnly'
+    });
+    expect(adapterValidation.adapter).toMatchObject({
+      disposition: 'adapterDraftOnly',
+      accountBucket: 'registered',
+      amount: 10000,
+      sourcePayload: 'runtimeReviewDraftOnly'
+    });
+    expect(adapterValidation.reviewNote).toContain('does not call the engine');
+
+    const badAdapter: DrawdownAnnualOverrideAdapterDraft = {
+      disposition: 'adapterDraftOnly',
+      year: 2027,
+      accountBucket: 'cash',
+      direction: 'increase',
+      amount: -1,
+      sourcePayload: 'runtimeReviewDraftOnly'
+    };
+    const rejected = validateDrawdownAnnualOverrideAdapter({
+      plan: { ...plan, cashWedge: { balance: 0, returnRate: 0.03, targetYears: 2 } },
+      boundary,
+      adapter: badAdapter
+    });
+
+    expect(rejected.status).toBe('rejected');
+    expect(rejected.adapter).toBeNull();
+    expect(rejected.rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'year', status: 'blocked' }),
+        expect.objectContaining({ id: 'bucket', status: 'blocked' }),
+        expect.objectContaining({ id: 'amount', status: 'blocked' })
+      ])
+    );
+  });
+
+  it('scores a mocked adapter result and blocks funding or estate harm', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const scorecard = scoreMockedDrawdownAdapterResult({
+      baseline,
+      candidate: comparisonCandidate,
+      adapterValidation
+    });
+
+    expect(scorecard).toMatchObject({
+      status: 'reviewOnly',
+      disposition: 'mockedScorecardOnly'
+    });
+    expect(scorecard.rows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+    expect(scorecard.reviewNote).toContain('Mocked scorecard only');
+
+    const harmfulCandidate: SimulationResult = {
+      years: comparisonCandidate.years.map((row, index) => ({
+        ...row,
+        shortfall: index === 1 ? 1000 : 0,
+        bal_total: index === 1 ? 450000 : row.bal_total
+      }))
+    };
+    const blocked = scoreMockedDrawdownAdapterResult({
+      baseline,
+      candidate: harmfulCandidate,
+      adapterValidation,
+      estateTarget: 100000
+    });
+    expect(blocked.status).toBe('blocked');
+    expect(blocked.rows.some((row) => row.status === 'blocked')).toBe(true);
+  });
+
+  it('summarizes execution prototype go/no-go without adding execution', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const scorecard = scoreMockedDrawdownAdapterResult({ baseline, candidate: comparisonCandidate, adapterValidation });
+    const goNoGo = selectDrawdownExecutionPrototypeGoNoGo({ plan, boundary, adapterValidation, scorecard });
+
+    expect(goNoGo).toMatchObject({
+      status: 'readyForOneRealPrototype',
+      disposition: 'executionPrototypeGoNoGoOnly'
+    });
+    expect(goNoGo.rows.map((row) => row.id)).toEqual(['boundary', 'adapter', 'scorecard', 'savedPlan', 'productScope']);
+    expect(goNoGo.reviewNote).toContain('Execution prototype go/no-go only');
+
+    const hold = selectDrawdownExecutionPrototypeGoNoGo({
+      plan,
+      boundary,
+      adapterValidation,
+      scorecard: emptyMockedExecutionScorecard()
+    });
+    expect(hold.status).toBe('holdForAdapterGuardrails');
   });
 });

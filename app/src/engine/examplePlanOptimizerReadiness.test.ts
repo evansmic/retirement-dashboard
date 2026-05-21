@@ -6,7 +6,11 @@ import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './bounde
 import { runResultsPreviewBundle } from './previewScenarios';
 import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
 import {
+  buildDrawdownAnnualOverrideAdapterDraft,
   buildDrawdownExecutionContract,
+  emptyMockedExecutionScorecard,
+  selectDrawdownExecutionBoundaryDecision,
+  selectDrawdownExecutionPrototypeGoNoGo,
   selectDrawdownPhaseReview,
   selectDrawdownPrototypeReadinessReview,
   selectDrawdownReviewPreview,
@@ -218,9 +222,28 @@ describe('example-plan optimizer readiness matrix', () => {
         spendingStressStatus: spendingStress.status
       });
       const phaseReview = selectDrawdownPhaseReview({ plan, gate: visibleGate, preview: reviewPreview });
+      const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase: phaseReview, preview: reviewPreview });
+      const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+      const goNoGo = selectDrawdownExecutionPrototypeGoNoGo({
+        plan,
+        boundary,
+        adapterValidation,
+        scorecard: emptyMockedExecutionScorecard()
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
-      const copy = JSON.stringify({ comparison, guardrails, contract, readinessReview, visibleGate, reviewPreview, phaseReview }).toLowerCase();
+      const copy = JSON.stringify({
+        comparison,
+        guardrails,
+        contract,
+        readinessReview,
+        visibleGate,
+        reviewPreview,
+        phaseReview,
+        boundary,
+        adapterValidation,
+        goNoGo
+      }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
       expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
@@ -241,6 +264,12 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(reviewPreview.disposition).toBe('detailsPreviewOnly');
       expect(['readyToContinue', 'holdForMoreGuardrails', 'stopBeforeExecution']).toContain(phaseReview.status);
       expect(phaseReview.disposition).toBe('phaseReviewOnly');
+      expect(['keepPreviewOnly', 'hardenMore', 'readyForTinyExecutionPrototype']).toContain(boundary.status);
+      expect(boundary.disposition).toBe('executionBoundaryDecisionOnly');
+      expect(['acceptedForMockScoring', 'rejected']).toContain(adapterValidation.status);
+      expect(adapterValidation.disposition).toBe('adapterValidationOnly');
+      expect(['readyForOneRealPrototype', 'holdForAdapterGuardrails', 'stopBeforeExecution']).toContain(goNoGo.status);
+      expect(goNoGo.disposition).toBe('executionPrototypeGoNoGoOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -271,6 +300,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('drawdownVisibleReviewGate');
       expect(saved.plan).not.toHaveProperty('drawdownReviewPreview');
       expect(saved.plan).not.toHaveProperty('drawdownPhaseReview');
+      expect(saved.plan).not.toHaveProperty('drawdownExecutionBoundaryDecision');
+      expect(saved.plan).not.toHaveProperty('drawdownAnnualOverrideAdapter');
+      expect(saved.plan).not.toHaveProperty('drawdownAdapterValidation');
+      expect(saved.plan).not.toHaveProperty('mockedExecutionScorecard');
+      expect(saved.plan).not.toHaveProperty('drawdownExecutionPrototypeGoNoGo');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

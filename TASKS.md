@@ -4,39 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 70: Drawdown Phase Review & Go/No-Go
+## Latest Sprint — Sprint 75: Execution Prototype Go/No-Go
 
 **Status:** Complete 2026-05-20.
 
-Goal: add a final review-only drawdown preview phase that can show a narrow Details preview only when guardrails are clear, then summarize whether drawdown work should continue, hold, or stop before deeper execution.
+Goal: decide whether the drawdown execution work is ready for one future real prototype by proving the boundary decision, adapter validation, mocked scorecard shape, and saved-plan guardrails without running annual overrides in the product.
 
 Non-scope: product annual override execution, account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 70 checkpoint doc: [`docs/sprint_70_drawdown_phase_review_go_no_go.md`](docs/sprint_70_drawdown_phase_review_go_no_go.md).
+Sprint 75 checkpoint doc: [`docs/sprint_75_execution_prototype_go_no_go.md`](docs/sprint_75_execution_prototype_go_no_go.md).
 
-### Sprint 66-70 Candidate Implementation Tickets
+### Sprint 71-75 Candidate Implementation Tickets
 
-- [x] **S66-01 — Final visible-review gate.** Add a gate that returns ready, hold, or blocked before any Details preview can appear.
-- [x] **S67-01 — Details-only drawdown review preview.** Show high-level funding, tax, OAS recovery, and projected-money-left evidence only when the gate allows it.
-- [x] **S68-01 — Example matrix.** Extend built-in examples to cover the final gate, preview, phase review, copy posture, and persistence boundaries.
-- [x] **S69-01 — Stress and harm checks.** Hold back the preview when nearby spending stress is fragile and block visible review when funding or estate harm appears.
-- [x] **S70-01 — Go/no-go review.** Add a phase review summary that says continue, hold, or stop before deeper drawdown execution.
+- [x] **S71-01 — Execution boundary decision.** Decide whether to keep the preview as-is, harden more, or prepare one tiny future execution prototype.
+- [x] **S72-01 — Annual override adapter shape.** Convert one eligible runtime contract payload into a draft adapter shape without passing it to the engine.
+- [x] **S73-01 — Adapter rejection harness.** Reject unsafe adapter shapes for bad years, missing buckets, invalid amounts, unsupported directions, or dirty saved-plan boundaries.
+- [x] **S74-01 — Mocked execution scorecard.** Add a test-only mocked scorecard that can compare supplied baseline and candidate rows without product execution.
+- [x] **S75-01 — Execution prototype go/no-go.** Summarize whether the next real prototype can begin, should hold, or must stop.
 
-### Sprint 70 Definition Of Done
+### Sprint 75 Definition Of Done
 
-- Final drawdown preview gate appears only in Details.
-- Drawdown review preview appears only in Details and never gives account-by-account instructions.
-- Fragile spending stress can hold back the visible preview.
-- Funding or entered estate-goal harm blocks visible review.
-- Phase review summarizes ready, hold, or stop before deeper execution.
+- Execution boundary checkpoint appears only in Details.
+- Adapter draft validation remains a draft check and is not used by the product calculation.
+- Mocked scorecard comparison remains test-only.
+- Go/no-go review summarizes ready, hold, or stop before one later real prototype.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 75: Execution Prototype Go/No-Go
+
+**Complete 2026-05-20.** Added a Details-only checkpoint that summarizes boundary, adapter, mocked-scorecard, saved-plan, and product-scope posture before any real drawdown execution prototype is attempted.
+
+Sprint 75 checkpoint doc: [`docs/sprint_75_execution_prototype_go_no_go.md`](docs/sprint_75_execution_prototype_go_no_go.md).
+
+### Sprint 74: One Mocked Execution Scorecard
+
+**Complete 2026-05-20.** Added a test-only mocked scorecard that can compare supplied baseline and candidate rows for funding, tax, OAS recovery, and estate posture without product execution.
+
+Sprint 74 checkpoint doc: [`docs/sprint_74_mocked_execution_scorecard.md`](docs/sprint_74_mocked_execution_scorecard.md).
+
+### Sprint 73: Test-Only Adapter Rejection Harness
+
+**Complete 2026-05-20.** Added adapter validation that rejects unsafe annual-override draft shapes while preserving current withdrawal order and empty annual overrides.
+
+Sprint 73 checkpoint doc: [`docs/sprint_73_test_only_adapter_rejection_harness.md`](docs/sprint_73_test_only_adapter_rejection_harness.md).
+
+### Sprint 72: Annual Override Adapter Shape
+
+**Complete 2026-05-20.** Added a draft adapter shape for one eligible runtime contract payload without passing it to the simulation engine or saving it.
+
+Sprint 72 checkpoint doc: [`docs/sprint_72_annual_override_adapter_shape.md`](docs/sprint_72_annual_override_adapter_shape.md).
+
+### Sprint 71: Drawdown Execution Boundary Decision
+
+**Complete 2026-05-20.** Added a Details-only boundary decision that decides whether to keep preview-only evidence, harden guardrails, or prepare a tiny future prototype.
+
+Sprint 71 checkpoint doc: [`docs/sprint_71_drawdown_execution_boundary_decision.md`](docs/sprint_71_drawdown_execution_boundary_decision.md).
 
 ### Sprint 70: Drawdown Phase Review & Go/No-Go
 
