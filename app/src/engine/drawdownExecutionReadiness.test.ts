@@ -47,6 +47,11 @@ import {
   selectTaxAwareDrawdownV1ExecutionReview,
   selectTaxAwareDrawdownV1PhaseCloseout,
   selectTaxAwareDrawdownV1SafetyChecklist,
+  selectTaxAwareDrawdownV1UxComparisonCard,
+  selectTaxAwareDrawdownV1UxCopyGuard,
+  selectTaxAwareDrawdownV1UxHeadline,
+  selectTaxAwareDrawdownV1UxReadinessCloseout,
+  selectTaxAwareDrawdownV1UxReviewActions,
   validateDrawdownAnnualOverrideAdapter,
   validateRuntimeDrawdownPayload,
   type DrawdownAnnualOverrideAdapterDraft,
@@ -285,6 +290,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerLimits');
     expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerExampleGate');
     expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerCloseout');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownUxHeadline');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownUxComparisonCard');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownUxReviewActions');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownUxCopyGuard');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownUxReadinessCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -912,6 +922,48 @@ describe('drawdown execution readiness contract', () => {
       disposition: 'v1DrawdownConsumerCloseoutOnly'
     });
     expect(consumerCloseout.reviewNote).toContain('does not save output');
+
+    const uxHeadline = selectTaxAwareDrawdownV1UxHeadline({ consumerCloseout });
+    const uxComparison = selectTaxAwareDrawdownV1UxComparisonCard({ execution });
+    const uxActions = selectTaxAwareDrawdownV1UxReviewActions({ consumerCloseout });
+    const uxCopyGuard = selectTaxAwareDrawdownV1UxCopyGuard(plan);
+    const uxReadiness = selectTaxAwareDrawdownV1UxReadinessCloseout({
+      plan,
+      headline: uxHeadline,
+      comparison: uxComparison,
+      actions: uxActions,
+      copyGuard: uxCopyGuard
+    });
+
+    expect(uxHeadline).toMatchObject({
+      status: 'ready',
+      disposition: 'v1DrawdownUxHeadlineOnly'
+    });
+    expect(uxHeadline.subhead).toContain('does not change the editable plan');
+    expect(uxComparison).toMatchObject({
+      status: 'ready',
+      disposition: 'v1DrawdownUxComparisonCardOnly'
+    });
+    expect(uxComparison.rows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
+    expect(uxActions).toMatchObject({
+      status: 'available',
+      disposition: 'v1DrawdownUxReviewActionsOnly'
+    });
+    expect(uxActions.rows.map((row) => row.id)).toEqual([
+      'reviewInputs',
+      'compareCurrentPlan',
+      'confirmTaxContext',
+      'keepEditablePlan'
+    ]);
+    expect(uxCopyGuard).toMatchObject({
+      status: 'clear',
+      disposition: 'v1DrawdownUxCopyGuardOnly'
+    });
+    expect(uxReadiness).toMatchObject({
+      status: 'readyForDesign',
+      disposition: 'v1DrawdownUxReadinessCloseoutOnly'
+    });
+    expect(uxReadiness.reviewNote).toContain('does not move the result into Overview');
   });
 
   it('holds product go/no-go when contained prototype is dense or examples need review', () => {
@@ -1042,5 +1094,23 @@ describe('drawdown execution readiness contract', () => {
     expect(safety.status).toBe('hold');
     expect(consumerExampleGate.status).toBe('needsExampleReview');
     expect(consumerCloseout.status).toBe('holdForCopyPolish');
+
+    const uxHeadline = selectTaxAwareDrawdownV1UxHeadline({ consumerCloseout });
+    const uxComparison = selectTaxAwareDrawdownV1UxComparisonCard({ execution });
+    const uxActions = selectTaxAwareDrawdownV1UxReviewActions({ consumerCloseout });
+    const uxCopyGuard = selectTaxAwareDrawdownV1UxCopyGuard(plan);
+    const uxReadiness = selectTaxAwareDrawdownV1UxReadinessCloseout({
+      plan,
+      headline: uxHeadline,
+      comparison: uxComparison,
+      actions: uxActions,
+      copyGuard: uxCopyGuard
+    });
+
+    expect(uxHeadline.status).toBe('hold');
+    expect(uxComparison.status).toBe('hold');
+    expect(uxActions.status).toBe('held');
+    expect(uxCopyGuard.status).toBe('clear');
+    expect(uxReadiness.status).toBe('holdForDesignPolish');
   });
 });

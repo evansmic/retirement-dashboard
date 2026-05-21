@@ -108,7 +108,12 @@ import type {
   TaxAwareDrawdownV1ConsumerExampleGate,
   TaxAwareDrawdownV1ConsumerLimits,
   TaxAwareDrawdownV1ConsumerSummary,
-  TaxAwareDrawdownV1SafetyChecklist
+  TaxAwareDrawdownV1SafetyChecklist,
+  TaxAwareDrawdownV1UxComparisonCard,
+  TaxAwareDrawdownV1UxCopyGuard,
+  TaxAwareDrawdownV1UxHeadline,
+  TaxAwareDrawdownV1UxReadinessCloseout,
+  TaxAwareDrawdownV1UxReviewActions
 } from '../engine/drawdownExecutionReadiness';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
@@ -195,6 +200,11 @@ type BridgePreview = {
   v1DrawdownConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
   v1DrawdownConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
   v1DrawdownConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
+  v1DrawdownUxHeadline: TaxAwareDrawdownV1UxHeadline | null;
+  v1DrawdownUxComparisonCard: TaxAwareDrawdownV1UxComparisonCard | null;
+  v1DrawdownUxReviewActions: TaxAwareDrawdownV1UxReviewActions | null;
+  v1DrawdownUxCopyGuard: TaxAwareDrawdownV1UxCopyGuard | null;
+  v1DrawdownUxReadinessCloseout: TaxAwareDrawdownV1UxReadinessCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -486,6 +496,11 @@ export function App() {
     v1DrawdownConsumerLimits: null,
     v1DrawdownConsumerExampleGate: null,
     v1DrawdownConsumerCloseout: null,
+    v1DrawdownUxHeadline: null,
+    v1DrawdownUxComparisonCard: null,
+    v1DrawdownUxReviewActions: null,
+    v1DrawdownUxCopyGuard: null,
+    v1DrawdownUxReadinessCloseout: null,
     error: '',
     loading: false
   });
@@ -541,6 +556,11 @@ export function App() {
         v1DrawdownConsumerLimits: null,
         v1DrawdownConsumerExampleGate: null,
         v1DrawdownConsumerCloseout: null,
+        v1DrawdownUxHeadline: null,
+        v1DrawdownUxComparisonCard: null,
+        v1DrawdownUxReviewActions: null,
+        v1DrawdownUxCopyGuard: null,
+        v1DrawdownUxReadinessCloseout: null,
         error: '',
         loading: false
       });
@@ -599,7 +619,12 @@ export function App() {
             selectTaxAwareDrawdownV1ExecutionIntent,
             selectTaxAwareDrawdownV1ExecutionReview,
             selectTaxAwareDrawdownV1PhaseCloseout,
-            selectTaxAwareDrawdownV1SafetyChecklist
+            selectTaxAwareDrawdownV1SafetyChecklist,
+            selectTaxAwareDrawdownV1UxComparisonCard,
+            selectTaxAwareDrawdownV1UxCopyGuard,
+            selectTaxAwareDrawdownV1UxHeadline,
+            selectTaxAwareDrawdownV1UxReadinessCloseout,
+            selectTaxAwareDrawdownV1UxReviewActions
           }
         ]) => {
         const preview = runResultsPreviewBundle(plan);
@@ -785,6 +810,23 @@ export function App() {
           limits: v1DrawdownConsumerLimits,
           exampleGate: v1DrawdownConsumerExampleGate
         });
+        const v1DrawdownUxHeadline = selectTaxAwareDrawdownV1UxHeadline({
+          consumerCloseout: v1DrawdownConsumerCloseout
+        });
+        const v1DrawdownUxComparisonCard = selectTaxAwareDrawdownV1UxComparisonCard({
+          execution: v1DrawdownExecutionResult
+        });
+        const v1DrawdownUxReviewActions = selectTaxAwareDrawdownV1UxReviewActions({
+          consumerCloseout: v1DrawdownConsumerCloseout
+        });
+        const v1DrawdownUxCopyGuard = selectTaxAwareDrawdownV1UxCopyGuard(plan);
+        const v1DrawdownUxReadinessCloseout = selectTaxAwareDrawdownV1UxReadinessCloseout({
+          plan,
+          headline: v1DrawdownUxHeadline,
+          comparison: v1DrawdownUxComparisonCard,
+          actions: v1DrawdownUxReviewActions,
+          copyGuard: v1DrawdownUxCopyGuard
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -828,6 +870,11 @@ export function App() {
             v1DrawdownConsumerLimits,
             v1DrawdownConsumerExampleGate,
             v1DrawdownConsumerCloseout,
+            v1DrawdownUxHeadline,
+            v1DrawdownUxComparisonCard,
+            v1DrawdownUxReviewActions,
+            v1DrawdownUxCopyGuard,
+            v1DrawdownUxReadinessCloseout,
             error: '',
             loading: false
           });
@@ -880,6 +927,11 @@ export function App() {
               v1DrawdownConsumerLimits: null,
               v1DrawdownConsumerExampleGate: null,
               v1DrawdownConsumerCloseout: null,
+              v1DrawdownUxHeadline: null,
+              v1DrawdownUxComparisonCard: null,
+              v1DrawdownUxReviewActions: null,
+              v1DrawdownUxCopyGuard: null,
+              v1DrawdownUxReadinessCloseout: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -1105,6 +1157,11 @@ export function App() {
               v1DrawdownConsumerLimits={bridgePreview.v1DrawdownConsumerLimits}
               v1DrawdownConsumerExampleGate={bridgePreview.v1DrawdownConsumerExampleGate}
               v1DrawdownConsumerCloseout={bridgePreview.v1DrawdownConsumerCloseout}
+              v1DrawdownUxHeadline={bridgePreview.v1DrawdownUxHeadline}
+              v1DrawdownUxComparisonCard={bridgePreview.v1DrawdownUxComparisonCard}
+              v1DrawdownUxReviewActions={bridgePreview.v1DrawdownUxReviewActions}
+              v1DrawdownUxCopyGuard={bridgePreview.v1DrawdownUxCopyGuard}
+              v1DrawdownUxReadinessCloseout={bridgePreview.v1DrawdownUxReadinessCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2692,6 +2749,11 @@ function ResultsHandoffPanel({
   v1DrawdownConsumerLimits,
   v1DrawdownConsumerExampleGate,
   v1DrawdownConsumerCloseout,
+  v1DrawdownUxHeadline,
+  v1DrawdownUxComparisonCard,
+  v1DrawdownUxReviewActions,
+  v1DrawdownUxCopyGuard,
+  v1DrawdownUxReadinessCloseout,
   title,
   validation
 }: {
@@ -2745,6 +2807,11 @@ function ResultsHandoffPanel({
   v1DrawdownConsumerLimits: BridgePreview['v1DrawdownConsumerLimits'];
   v1DrawdownConsumerExampleGate: BridgePreview['v1DrawdownConsumerExampleGate'];
   v1DrawdownConsumerCloseout: BridgePreview['v1DrawdownConsumerCloseout'];
+  v1DrawdownUxHeadline: BridgePreview['v1DrawdownUxHeadline'];
+  v1DrawdownUxComparisonCard: BridgePreview['v1DrawdownUxComparisonCard'];
+  v1DrawdownUxReviewActions: BridgePreview['v1DrawdownUxReviewActions'];
+  v1DrawdownUxCopyGuard: BridgePreview['v1DrawdownUxCopyGuard'];
+  v1DrawdownUxReadinessCloseout: BridgePreview['v1DrawdownUxReadinessCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2890,6 +2957,11 @@ function ResultsHandoffPanel({
             v1DrawdownConsumerLimits={v1DrawdownConsumerLimits}
             v1DrawdownConsumerExampleGate={v1DrawdownConsumerExampleGate}
             v1DrawdownConsumerCloseout={v1DrawdownConsumerCloseout}
+            v1DrawdownUxHeadline={v1DrawdownUxHeadline}
+            v1DrawdownUxComparisonCard={v1DrawdownUxComparisonCard}
+            v1DrawdownUxReviewActions={v1DrawdownUxReviewActions}
+            v1DrawdownUxCopyGuard={v1DrawdownUxCopyGuard}
+            v1DrawdownUxReadinessCloseout={v1DrawdownUxReadinessCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -3415,6 +3487,11 @@ function DetailsResultsPanel({
   v1DrawdownConsumerLimits,
   v1DrawdownConsumerExampleGate,
   v1DrawdownConsumerCloseout,
+  v1DrawdownUxHeadline,
+  v1DrawdownUxComparisonCard,
+  v1DrawdownUxReviewActions,
+  v1DrawdownUxCopyGuard,
+  v1DrawdownUxReadinessCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -3477,6 +3554,11 @@ function DetailsResultsPanel({
   v1DrawdownConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
   v1DrawdownConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
   v1DrawdownConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
+  v1DrawdownUxHeadline: TaxAwareDrawdownV1UxHeadline | null;
+  v1DrawdownUxComparisonCard: TaxAwareDrawdownV1UxComparisonCard | null;
+  v1DrawdownUxReviewActions: TaxAwareDrawdownV1UxReviewActions | null;
+  v1DrawdownUxCopyGuard: TaxAwareDrawdownV1UxCopyGuard | null;
+  v1DrawdownUxReadinessCloseout: TaxAwareDrawdownV1UxReadinessCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3625,6 +3707,11 @@ function DetailsResultsPanel({
         v1ConsumerLimits={v1DrawdownConsumerLimits}
         v1ConsumerExampleGate={v1DrawdownConsumerExampleGate}
         v1ConsumerCloseout={v1DrawdownConsumerCloseout}
+        v1UxHeadline={v1DrawdownUxHeadline}
+        v1UxComparisonCard={v1DrawdownUxComparisonCard}
+        v1UxReviewActions={v1DrawdownUxReviewActions}
+        v1UxCopyGuard={v1DrawdownUxCopyGuard}
+        v1UxReadinessCloseout={v1DrawdownUxReadinessCloseout}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -4459,6 +4546,11 @@ function DrawdownExecutionBoundaryPanel({
   v1ConsumerLimits,
   v1ConsumerExampleGate,
   v1ConsumerCloseout,
+  v1UxHeadline,
+  v1UxComparisonCard,
+  v1UxReviewActions,
+  v1UxCopyGuard,
+  v1UxReadinessCloseout,
   containedReviewChecklist,
   containedUsefulnessCloseout,
   containmentGuard,
@@ -4495,6 +4587,11 @@ function DrawdownExecutionBoundaryPanel({
   v1ConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
   v1ConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
   v1ConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
+  v1UxHeadline: TaxAwareDrawdownV1UxHeadline | null;
+  v1UxComparisonCard: TaxAwareDrawdownV1UxComparisonCard | null;
+  v1UxReviewActions: TaxAwareDrawdownV1UxReviewActions | null;
+  v1UxCopyGuard: TaxAwareDrawdownV1UxCopyGuard | null;
+  v1UxReadinessCloseout: TaxAwareDrawdownV1UxReadinessCloseout | null;
   containedReviewChecklist: ContainedDrawdownReviewChecklist | null;
   containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
@@ -5134,6 +5231,92 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{v1ConsumerCloseout.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1UxHeadline ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown UX headline</p>
+            <h4>{v1UxHeadline.headline}</h4>
+            <p>{v1UxHeadline.subhead}</p>
+          </div>
+          <p className="table-note">{v1UxHeadline.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1UxComparisonCard?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown comparison card</p>
+            <h4>{v1UxComparisonCard.status === 'ready' ? 'Current plan vs. bounded check' : v1UxComparisonCard.status === 'hold' ? 'Comparison needs more review' : 'Comparison is blocked'}</h4>
+            <p>This card keeps the executed scenario readable without turning it into a plan change.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1UxComparisonCard.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.value}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1UxComparisonCard.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1UxReviewActions?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown review actions</p>
+            <h4>{v1UxReviewActions.status === 'available' ? 'What to review next' : v1UxReviewActions.status === 'held' ? 'Review actions are held' : 'Review actions are blocked'}</h4>
+            <p>These actions help the household read the check without creating account instructions.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1UxReviewActions.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'review' ? 'review' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'review' ? 'Review' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1UxReviewActions.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1UxCopyGuard?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown UX copy guard</p>
+            <h4>{v1UxCopyGuard.status === 'clear' ? 'Copy stays review-oriented' : 'Copy guard blocked'}</h4>
+            <p>These checks keep the UX candidate from sounding like advice or an instruction.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1UxCopyGuard.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1UxCopyGuard.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1UxReadinessCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown UX readiness</p>
+            <h4>{v1UxReadinessCloseout.headline}</h4>
+            <p>{v1UxReadinessCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1UxReadinessCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1UxReadinessCloseout.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (

@@ -631,6 +631,65 @@ export type TaxAwareDrawdownV1ConsumerCloseout = {
   disposition: 'v1DrawdownConsumerCloseoutOnly';
 };
 
+export type TaxAwareDrawdownV1UxHeadline = {
+  status: 'ready' | 'hold' | 'blocked';
+  headline: string;
+  subhead: string;
+  reviewNote: string;
+  disposition: 'v1DrawdownUxHeadlineOnly';
+};
+
+export type TaxAwareDrawdownV1UxComparisonCard = {
+  status: 'ready' | 'hold' | 'blocked';
+  rows: Array<{
+    id: 'funding' | 'tax' | 'oasRecovery' | 'estate';
+    label: string;
+    value: string;
+    status: 'ok' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownUxComparisonCardOnly';
+};
+
+export type TaxAwareDrawdownV1UxReviewActions = {
+  status: 'available' | 'held' | 'blocked';
+  rows: Array<{
+    id: 'reviewInputs' | 'compareCurrentPlan' | 'confirmTaxContext' | 'keepEditablePlan';
+    label: string;
+    status: 'review' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownUxReviewActionsOnly';
+};
+
+export type TaxAwareDrawdownV1UxCopyGuard = {
+  status: 'clear' | 'blocked';
+  rows: Array<{
+    id: 'noRecommendation' | 'noGuarantee' | 'noInstruction' | 'savedPlan';
+    label: string;
+    status: 'ok' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownUxCopyGuardOnly';
+};
+
+export type TaxAwareDrawdownV1UxReadinessCloseout = {
+  status: 'readyForDesign' | 'holdForDesignPolish' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'headline' | 'comparison' | 'actions' | 'copy' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownUxReadinessCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -2991,6 +3050,189 @@ export function selectTaxAwareDrawdownV1ConsumerCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1UxHeadline({
+  consumerCloseout
+}: {
+  consumerCloseout: TaxAwareDrawdownV1ConsumerCloseout;
+}): TaxAwareDrawdownV1UxHeadline {
+  return {
+    status: consumerCloseout.status === 'readyForUxCopy' ? 'ready' : consumerCloseout.status === 'holdForCopyPolish' ? 'hold' : 'blocked',
+    headline:
+      consumerCloseout.status === 'readyForUxCopy'
+        ? 'Review one bounded drawdown check.'
+        : consumerCloseout.status === 'holdForCopyPolish'
+          ? 'Drawdown check needs more polish.'
+          : 'Drawdown check is blocked.',
+    subhead:
+      'This compares the current plan with one bounded registered-timing scenario. It does not change the editable plan.',
+    reviewNote:
+      'UX headline only. It frames the bounded execution result without making a recommendation.',
+    disposition: 'v1DrawdownUxHeadlineOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1UxComparisonCard({
+  execution
+}: {
+  execution: TaxAwareDrawdownV1ExecutionResult;
+}): TaxAwareDrawdownV1UxComparisonCard {
+  return {
+    status: execution.status === 'reviewOnly' ? 'ready' : execution.status === 'notReady' ? 'hold' : 'blocked',
+    rows: execution.rows.map((row) => ({
+      id: row.id,
+      label: row.label,
+      value: row.value,
+      status: row.status,
+      detail: row.detail
+    })),
+    reviewNote:
+      'UX comparison card only. It summarizes the executed scenario without saving or applying it.',
+    disposition: 'v1DrawdownUxComparisonCardOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1UxReviewActions({
+  consumerCloseout
+}: {
+  consumerCloseout: TaxAwareDrawdownV1ConsumerCloseout;
+}): TaxAwareDrawdownV1UxReviewActions {
+  const blocked = consumerCloseout.status === 'blocked';
+  const held = consumerCloseout.status === 'holdForCopyPolish';
+  return {
+    status: blocked ? 'blocked' : held ? 'held' : 'available',
+    rows: [
+      {
+        id: 'reviewInputs',
+        label: 'Review household inputs',
+        status: blocked ? 'blocked' : 'review',
+        detail: 'Check registered balances, benefit timing, locked-in accounts, survivor setup, and estate intent.'
+      },
+      {
+        id: 'compareCurrentPlan',
+        label: 'Compare with the current plan',
+        status: blocked ? 'blocked' : 'review',
+        detail: 'Read the movement against the current plan before treating the result as useful.'
+      },
+      {
+        id: 'confirmTaxContext',
+        label: 'Confirm tax context',
+        status: held ? 'hold' : blocked ? 'blocked' : 'review',
+        detail: 'Use the result as tax review evidence, not a filing instruction.'
+      },
+      {
+        id: 'keepEditablePlan',
+        label: 'Keep the editable plan unchanged',
+        status: 'review',
+        detail: 'Save the editable plan only after changing household inputs yourself.'
+      }
+    ],
+    reviewNote:
+      'UX review actions only. They guide review and do not create account instructions.',
+    disposition: 'v1DrawdownUxReviewActionsOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1UxCopyGuard(plan: V2PlanPayload): TaxAwareDrawdownV1UxCopyGuard {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1UxCopyGuard['rows'] = [
+    {
+      id: 'noRecommendation',
+      label: 'No recommendation language',
+      status: 'ok',
+      detail: 'The UX candidate says review, not recommend or apply.'
+    },
+    {
+      id: 'noGuarantee',
+      label: 'No guarantee language',
+      status: 'ok',
+      detail: 'The UX candidate avoids certainty and safe-spend framing.'
+    },
+    {
+      id: 'noInstruction',
+      label: 'No instruction language',
+      status: 'ok',
+      detail: 'The UX candidate does not tell the household which account to withdraw from.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'No UX candidate output is saved.' : 'Saved plan output contains UX candidate data.'
+    }
+  ];
+  return {
+    status: rows.some((row) => row.status === 'blocked') ? 'blocked' : 'clear',
+    rows,
+    reviewNote:
+      'UX copy guard only. It protects the consumer presentation from advice-like language.',
+    disposition: 'v1DrawdownUxCopyGuardOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1UxReadinessCloseout({
+  plan,
+  headline,
+  comparison,
+  actions,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  headline: TaxAwareDrawdownV1UxHeadline;
+  comparison: TaxAwareDrawdownV1UxComparisonCard;
+  actions: TaxAwareDrawdownV1UxReviewActions;
+  copyGuard: TaxAwareDrawdownV1UxCopyGuard;
+}): TaxAwareDrawdownV1UxReadinessCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1UxReadinessCloseout['rows'] = [
+    {
+      id: 'headline',
+      label: 'Headline',
+      status: headline.status === 'ready' ? 'ready' : headline.status === 'hold' ? 'hold' : 'blocked',
+      detail: headline.headline
+    },
+    {
+      id: 'comparison',
+      label: 'Comparison card',
+      status: comparison.status === 'ready' ? 'ready' : comparison.status === 'hold' ? 'hold' : 'blocked',
+      detail: comparison.reviewNote
+    },
+    {
+      id: 'actions',
+      label: 'Review actions',
+      status: actions.status === 'available' ? 'ready' : actions.status === 'held' ? 'hold' : 'blocked',
+      detail: actions.reviewNote
+    },
+    {
+      id: 'copy',
+      label: 'Copy guard',
+      status: copyGuard.status === 'clear' ? 'ready' : 'blocked',
+      detail: copyGuard.reviewNote
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No UX readiness output is saved.' : 'Saved plan output contains UX readiness data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForDesignPolish' : 'readyForDesign',
+    headline: hasBlocked
+      ? 'Do not design the drawdown UX yet.'
+      : hasHold
+        ? 'Hold the drawdown UX for polish.'
+        : 'Ready for drawdown UX design.',
+    detail:
+      'This closeout checks whether the bounded execution result is ready to be shaped into a consumer-facing Details experience.',
+    rows,
+    reviewNote:
+      'UX readiness closeout only. It does not move the result into Overview, save output, apply a strategy, or create account instructions.',
+    disposition: 'v1DrawdownUxReadinessCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -3038,6 +3280,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownConsumerLimits' in saved) &&
     !('v1DrawdownConsumerExampleGate' in saved) &&
     !('v1DrawdownConsumerCloseout' in saved) &&
+    !('v1DrawdownUxHeadline' in saved) &&
+    !('v1DrawdownUxComparisonCard' in saved) &&
+    !('v1DrawdownUxReviewActions' in saved) &&
+    !('v1DrawdownUxCopyGuard' in saved) &&
+    !('v1DrawdownUxReadinessCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

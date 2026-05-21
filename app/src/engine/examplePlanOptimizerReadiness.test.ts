@@ -46,7 +46,12 @@ import {
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
   selectTaxAwareDrawdownV1PhaseCloseout,
-  selectTaxAwareDrawdownV1SafetyChecklist
+  selectTaxAwareDrawdownV1SafetyChecklist,
+  selectTaxAwareDrawdownV1UxComparisonCard,
+  selectTaxAwareDrawdownV1UxCopyGuard,
+  selectTaxAwareDrawdownV1UxHeadline,
+  selectTaxAwareDrawdownV1UxReadinessCloseout,
+  selectTaxAwareDrawdownV1UxReviewActions
 } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
@@ -377,6 +382,17 @@ describe('example-plan optimizer readiness matrix', () => {
         limits: v1ConsumerLimits,
         exampleGate: v1ConsumerExampleGate
       });
+      const v1UxHeadline = selectTaxAwareDrawdownV1UxHeadline({ consumerCloseout: v1ConsumerCloseout });
+      const v1UxComparison = selectTaxAwareDrawdownV1UxComparisonCard({ execution: v1Execution });
+      const v1UxActions = selectTaxAwareDrawdownV1UxReviewActions({ consumerCloseout: v1ConsumerCloseout });
+      const v1UxCopyGuard = selectTaxAwareDrawdownV1UxCopyGuard(plan);
+      const v1UxReadiness = selectTaxAwareDrawdownV1UxReadinessCloseout({
+        plan,
+        headline: v1UxHeadline,
+        comparison: v1UxComparison,
+        actions: v1UxActions,
+        copyGuard: v1UxCopyGuard
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -421,7 +437,12 @@ describe('example-plan optimizer readiness matrix', () => {
         v1SafetyChecklist,
         v1ConsumerLimits,
         v1ConsumerExampleGate,
-        v1ConsumerCloseout
+        v1ConsumerCloseout,
+        v1UxHeadline,
+        v1UxComparison,
+        v1UxActions,
+        v1UxCopyGuard,
+        v1UxReadiness
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -528,6 +549,16 @@ describe('example-plan optimizer readiness matrix', () => {
       });
       expect(['readyForUxCopy', 'holdForCopyPolish', 'blocked']).toContain(v1ConsumerCloseout.status);
       expect(v1ConsumerCloseout.disposition).toBe('v1DrawdownConsumerCloseoutOnly');
+      expect(['ready', 'hold', 'blocked']).toContain(v1UxHeadline.status);
+      expect(v1UxHeadline.disposition).toBe('v1DrawdownUxHeadlineOnly');
+      expect(['ready', 'hold', 'blocked']).toContain(v1UxComparison.status);
+      expect(v1UxComparison.disposition).toBe('v1DrawdownUxComparisonCardOnly');
+      expect(['available', 'held', 'blocked']).toContain(v1UxActions.status);
+      expect(v1UxActions.disposition).toBe('v1DrawdownUxReviewActionsOnly');
+      expect(['clear', 'blocked']).toContain(v1UxCopyGuard.status);
+      expect(v1UxCopyGuard.disposition).toBe('v1DrawdownUxCopyGuardOnly');
+      expect(['readyForDesign', 'holdForDesignPolish', 'blocked']).toContain(v1UxReadiness.status);
+      expect(v1UxReadiness.disposition).toBe('v1DrawdownUxReadinessCloseoutOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -595,6 +626,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerLimits');
       expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerExampleGate');
       expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownUxHeadline');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownUxComparisonCard');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownUxReviewActions');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownUxCopyGuard');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownUxReadinessCloseout');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

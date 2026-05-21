@@ -130,6 +130,13 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Bounded drawdown limits');
     expect(appSource).toContain('Bounded drawdown example gate');
     expect(appSource).toContain('Bounded drawdown consumer closeout');
+    expect(appSource).toContain('Bounded drawdown UX headline');
+    expect(appSource).toContain('Bounded drawdown comparison card');
+    expect(appSource).toContain('Bounded drawdown review actions');
+    expect(appSource).toContain('Bounded drawdown UX copy guard');
+    expect(appSource).toContain('Bounded drawdown UX readiness');
+    expect(appSource).toContain('without turning it into a plan change');
+    expect(appSource).toContain('without creating account instructions');
     expect(appSource).toContain('not a saved plan change or account instruction');
     expect(appSource).toContain('does not promote it today');
     expect(appSource).toContain('does not change your plan');

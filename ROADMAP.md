@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 90 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, phase closeout, one contained real scenario comparison, materiality, explanation, limitations, and usefulness closeout.
+Sprint 115 is complete. Tax-aware drawdown work now has a conservative v1 bounded execution path plus a consumer-readable Details UX candidate. The path remains unsaved, non-advisory, and outside Overview.
 
-Completed Sprint 86-90 slices:
+Completed Sprint 111-115 slices:
 
-- Added materiality checks so small contained prototype movement is held rather than overstated.
-- Added plain why-it-moved explanation rows.
-- Added visible limitations for scenario-only, no custom annual override, not-advice, and needs-review boundaries.
-- Extended built-in example coverage across the explanation layer.
-- Added a usefulness closeout for useful, hold, or not-useful status.
+- Added a plain headline for the bounded drawdown check.
+- Added a compact comparison card for funding, tax, OAS recovery, and estate evidence.
+- Added short review actions that do not become account-by-account instructions.
+- Added UX copy guards for recommendation, guarantee, instruction, and saved-plan boundaries.
+- Added a UX readiness closeout for later design polish.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, materiality, explanation, limitations, usefulness closeout, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
-- Kept Sprints 86-90 as interpretation work, not detailed account instructions.
+- Confirmed UX headline, comparison card, review actions, copy guard, readiness closeout, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 111-115 as Details UX readiness work, not broader execution or advice.
 
 ## Consumer Roadmap Sequence
 
@@ -145,6 +145,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 86. **Sprint 108 — V1 drawdown consumer limits.** Keep single-scenario and not-advice limits visible.
 87. **Sprint 109 — V1 drawdown consumer example gate.** Extend example coverage to the consumer-readable layer.
 88. **Sprint 110 — V1 drawdown consumer closeout.** Decide whether bounded execution output is ready for UX copy.
+89. **Sprint 111 — Bounded drawdown UX headline.** Add a plain Details-only headline for the bounded drawdown check.
+90. **Sprint 112 — Bounded drawdown comparison card.** Translate bounded execution evidence into a compact current-plan comparison.
+91. **Sprint 113 — Bounded drawdown review actions.** Add short review actions without creating account instructions.
+92. **Sprint 114 — Bounded drawdown UX copy guard.** Keep recommendation, guarantee, instruction, and saved-plan boundaries explicit.
+93. **Sprint 115 — Bounded drawdown UX readiness closeout.** Decide whether the bounded drawdown UX candidate is ready for later design polish.
 
 ## Medium-Term Roadmap
 
@@ -253,6 +258,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 108 — V1 drawdown consumer limits.** Complete 2026-05-21. Added visible limits for the bounded execution result.
 - **Sprint 109 — V1 drawdown consumer example gate.** Complete 2026-05-21. Added example coverage for the consumer-readable layer.
 - **Sprint 110 — V1 drawdown consumer closeout.** Complete 2026-05-21. Added closeout before UX copy work.
+- **Sprint 111 — Bounded drawdown UX headline.** Complete 2026-05-21. Added a plain Details-only headline for the bounded drawdown check.
+- **Sprint 112 — Bounded drawdown comparison card.** Complete 2026-05-21. Added a compact current-plan comparison card for bounded execution evidence.
+- **Sprint 113 — Bounded drawdown review actions.** Complete 2026-05-21. Added short review actions without creating account instructions.
+- **Sprint 114 — Bounded drawdown UX copy guard.** Complete 2026-05-21. Added copy guardrails for recommendation, guarantee, instruction, and saved-plan boundaries.
+- **Sprint 115 — Bounded drawdown UX readiness closeout.** Complete 2026-05-21. Added a closeout for whether the UX candidate is ready for later design polish.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

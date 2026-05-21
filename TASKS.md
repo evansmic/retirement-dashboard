@@ -4,38 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 110: V1 Drawdown Consumer Closeout
+## Latest Sprint — Sprint 115: Bounded Drawdown UX Readiness Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: make the first bounded drawdown execution result easier for consumers to read while keeping it conservative, unsaved, and non-advisory.
+Goal: make the first bounded drawdown execution result feel closer to a consumer-readable Details surface while keeping it conservative, unsaved, and non-advisory.
 
 Non-scope: broad account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 110 checkpoint doc: [`docs/sprint_110_v1_drawdown_consumer_closeout.md`](docs/sprint_110_v1_drawdown_consumer_closeout.md).
+Sprint 115 checkpoint doc: [`docs/sprint_115_bounded_drawdown_ux_readiness.md`](docs/sprint_115_bounded_drawdown_ux_readiness.md).
 
-### Sprint 106-110 Candidate Implementation Tickets
+### Sprint 111-115 Candidate Implementation Tickets
 
-- [x] **S106-01 — Plain summary.** Translate the bounded execution result into what ran, what changed, and what did not change.
-- [x] **S107-01 — Safety checklist.** Add funding, estate, saved-plan, and instruction checks.
-- [x] **S108-01 — Consumer limits.** Keep single-scenario, not-advice, not-saved, and not-full-plan limits visible.
-- [x] **S109-01 — Consumer example gate.** Extend all-example coverage to the consumer-readable layer.
-- [x] **S110-01 — Consumer closeout.** Decide whether bounded execution output is ready for later consumer UX copy.
+- [x] **S111-01 — UX headline.** Add a plain Details-only headline for the bounded drawdown check.
+- [x] **S112-01 — Comparison card.** Translate the execution evidence into a compact current-plan comparison card.
+- [x] **S113-01 — Review actions.** Add short next review actions that do not become account instructions.
+- [x] **S114-01 — UX copy guard.** Keep recommendation, guarantee, instruction, and saved-plan boundaries explicit.
+- [x] **S115-01 — UX readiness closeout.** Decide whether the bounded drawdown UX candidate is ready for later design polish.
 
-### Sprint 110 Definition Of Done
+### Sprint 115 Definition Of Done
 
-- Plain summary, safety checklist, limits, consumer example gate, and consumer closeout appear only in Details.
+- UX headline, comparison card, review actions, copy guard, and readiness closeout appear only in Details.
 - Overview remains unchanged and does not gain prototype readiness panels.
 - Product UI does not claim to run the full example matrix for a single plan.
-- Example matrix covers the new v1 execution layer and saved-plan boundaries.
-- The executed scenario can be reviewed, held, or blocked without applying strategy output.
+- Example matrix covers the new UX candidate layer and saved-plan boundaries.
+- The bounded drawdown check can be ready, held, or blocked without applying strategy output.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 115: Bounded Drawdown UX Readiness Closeout
+
+**Complete 2026-05-21.** Added a Details-only closeout for whether the bounded drawdown UX candidate is ready for later design polish.
+
+Sprint 115 checkpoint doc: [`docs/sprint_115_bounded_drawdown_ux_readiness.md`](docs/sprint_115_bounded_drawdown_ux_readiness.md).
+
+### Sprint 114: Bounded Drawdown UX Copy Guard
+
+**Complete 2026-05-21.** Added copy guard checks that keep the UX candidate review-oriented and protect the saved-plan boundary.
+
+Sprint 114 checkpoint doc: [`docs/sprint_114_bounded_drawdown_ux_copy_guard.md`](docs/sprint_114_bounded_drawdown_ux_copy_guard.md).
+
+### Sprint 113: Bounded Drawdown Review Actions
+
+**Complete 2026-05-21.** Added short review actions for reading the bounded drawdown check without creating account instructions.
+
+Sprint 113 checkpoint doc: [`docs/sprint_113_bounded_drawdown_review_actions.md`](docs/sprint_113_bounded_drawdown_review_actions.md).
+
+### Sprint 112: Bounded Drawdown Comparison Card
+
+**Complete 2026-05-21.** Added a compact current-plan comparison card for funding, tax, OAS recovery, and estate evidence.
+
+Sprint 112 checkpoint doc: [`docs/sprint_112_bounded_drawdown_comparison_card.md`](docs/sprint_112_bounded_drawdown_comparison_card.md).
+
+### Sprint 111: Bounded Drawdown UX Headline
+
+**Complete 2026-05-21.** Added a plain Details-only headline for the bounded drawdown check.
+
+Sprint 111 checkpoint doc: [`docs/sprint_111_bounded_drawdown_ux_headline.md`](docs/sprint_111_bounded_drawdown_ux_headline.md).
 
 ### Sprint 110: V1 Drawdown Consumer Closeout
 
