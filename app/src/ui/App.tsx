@@ -72,7 +72,11 @@ import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type {
   DrawdownAdapterValidation,
+  DrawdownAdapterAuditTrail,
   DrawdownExecutionBoundaryDecision,
+  DrawdownExecutionContainmentGuard,
+  DrawdownExecutionPhaseCloseout,
+  DrawdownExecutionPreflight,
   DrawdownExecutionPrototypeGoNoGo,
   DrawdownPhaseReview,
   DrawdownPrototypeReadinessReview,
@@ -133,6 +137,10 @@ type BridgePreview = {
   drawdownExecutionBoundary: DrawdownExecutionBoundaryDecision | null;
   drawdownAdapterValidation: DrawdownAdapterValidation | null;
   drawdownExecutionGoNoGo: DrawdownExecutionPrototypeGoNoGo | null;
+  drawdownExecutionPreflight: DrawdownExecutionPreflight | null;
+  drawdownAdapterAuditTrail: DrawdownAdapterAuditTrail | null;
+  drawdownExecutionContainmentGuard: DrawdownExecutionContainmentGuard | null;
+  drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -393,6 +401,10 @@ export function App() {
     drawdownExecutionBoundary: null,
     drawdownAdapterValidation: null,
     drawdownExecutionGoNoGo: null,
+    drawdownExecutionPreflight: null,
+    drawdownAdapterAuditTrail: null,
+    drawdownExecutionContainmentGuard: null,
+    drawdownExecutionPhaseCloseout: null,
     error: '',
     loading: false
   });
@@ -417,6 +429,10 @@ export function App() {
         drawdownExecutionBoundary: null,
         drawdownAdapterValidation: null,
         drawdownExecutionGoNoGo: null,
+        drawdownExecutionPreflight: null,
+        drawdownAdapterAuditTrail: null,
+        drawdownExecutionContainmentGuard: null,
+        drawdownExecutionPhaseCloseout: null,
         error: '',
         loading: false
       });
@@ -436,12 +452,16 @@ export function App() {
           { runBoundedOptimizer },
           { runSingleDrawdownComparison },
           {
-            buildDrawdownAnnualOverrideAdapterDraft,
-            buildDrawdownExecutionContract,
-            emptyMockedExecutionScorecard,
-            selectDrawdownExecutionBoundaryDecision,
-            selectDrawdownExecutionPrototypeGoNoGo,
-            selectDrawdownPhaseReview,
+             buildDrawdownAnnualOverrideAdapterDraft,
+             buildDrawdownExecutionContract,
+             emptyMockedExecutionScorecard,
+             selectDrawdownAdapterAuditTrail,
+             selectDrawdownExecutionBoundaryDecision,
+             selectDrawdownExecutionContainmentGuard,
+             selectDrawdownExecutionPhaseCloseout,
+             selectDrawdownExecutionPreflight,
+             selectDrawdownExecutionPrototypeGoNoGo,
+             selectDrawdownPhaseReview,
             selectDrawdownPrototypeReadinessReview,
             selectDrawdownReviewPreview,
             selectDrawdownVisibleReviewGate
@@ -484,9 +504,25 @@ export function App() {
         });
         const drawdownExecutionGoNoGo = selectDrawdownExecutionPrototypeGoNoGo({
           plan,
-          boundary: drawdownExecutionBoundary,
+         boundary: drawdownExecutionBoundary,
+         adapterValidation: drawdownAdapterValidation,
+         scorecard: emptyMockedExecutionScorecard()
+        });
+        const drawdownExecutionPreflight = selectDrawdownExecutionPreflight({
+          plan,
           adapterValidation: drawdownAdapterValidation,
-          scorecard: emptyMockedExecutionScorecard()
+          goNoGo: drawdownExecutionGoNoGo
+        });
+        const drawdownAdapterAuditTrail = selectDrawdownAdapterAuditTrail(drawdownAdapterValidation);
+        const drawdownExecutionContainmentGuard = selectDrawdownExecutionContainmentGuard({
+          plan,
+          adapterValidation: drawdownAdapterValidation
+        });
+        const drawdownExecutionPhaseCloseout = selectDrawdownExecutionPhaseCloseout({
+          plan,
+          preflight: drawdownExecutionPreflight,
+          auditTrail: drawdownAdapterAuditTrail,
+          containment: drawdownExecutionContainmentGuard
         });
         if (!cancelled) {
           setBridgePreview({
@@ -500,6 +536,10 @@ export function App() {
             drawdownExecutionBoundary,
             drawdownAdapterValidation,
             drawdownExecutionGoNoGo,
+            drawdownExecutionPreflight,
+            drawdownAdapterAuditTrail,
+            drawdownExecutionContainmentGuard,
+            drawdownExecutionPhaseCloseout,
             error: '',
             loading: false
           });
@@ -518,12 +558,16 @@ export function App() {
              drawdownVisibleReviewGate: null,
              drawdownReviewPreview: null,
              drawdownPhaseReview: null,
-             drawdownExecutionBoundary: null,
-             drawdownAdapterValidation: null,
-             drawdownExecutionGoNoGo: null,
-             error: err instanceof Error ? err.message : 'Could not run preview calculation.',
-             loading: false
-           });
+              drawdownExecutionBoundary: null,
+              drawdownAdapterValidation: null,
+              drawdownExecutionGoNoGo: null,
+              drawdownExecutionPreflight: null,
+              drawdownAdapterAuditTrail: null,
+              drawdownExecutionContainmentGuard: null,
+              drawdownExecutionPhaseCloseout: null,
+              error: err instanceof Error ? err.message : 'Could not run preview calculation.',
+              loading: false
+            });
         }
       });
 
@@ -715,6 +759,10 @@ export function App() {
               drawdownExecutionBoundary={bridgePreview.drawdownExecutionBoundary}
               drawdownAdapterValidation={bridgePreview.drawdownAdapterValidation}
               drawdownExecutionGoNoGo={bridgePreview.drawdownExecutionGoNoGo}
+              drawdownExecutionPreflight={bridgePreview.drawdownExecutionPreflight}
+              drawdownAdapterAuditTrail={bridgePreview.drawdownAdapterAuditTrail}
+              drawdownExecutionContainmentGuard={bridgePreview.drawdownExecutionContainmentGuard}
+              drawdownExecutionPhaseCloseout={bridgePreview.drawdownExecutionPhaseCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2271,6 +2319,10 @@ function ResultsHandoffPanel({
   drawdownExecutionBoundary,
   drawdownAdapterValidation,
   drawdownExecutionGoNoGo,
+  drawdownExecutionPreflight,
+  drawdownAdapterAuditTrail,
+  drawdownExecutionContainmentGuard,
+  drawdownExecutionPhaseCloseout,
   title,
   validation
 }: {
@@ -2293,6 +2345,10 @@ function ResultsHandoffPanel({
   drawdownExecutionBoundary: BridgePreview['drawdownExecutionBoundary'];
   drawdownAdapterValidation: BridgePreview['drawdownAdapterValidation'];
   drawdownExecutionGoNoGo: BridgePreview['drawdownExecutionGoNoGo'];
+  drawdownExecutionPreflight: BridgePreview['drawdownExecutionPreflight'];
+  drawdownAdapterAuditTrail: BridgePreview['drawdownAdapterAuditTrail'];
+  drawdownExecutionContainmentGuard: BridgePreview['drawdownExecutionContainmentGuard'];
+  drawdownExecutionPhaseCloseout: BridgePreview['drawdownExecutionPhaseCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2407,6 +2463,10 @@ function ResultsHandoffPanel({
             drawdownExecutionBoundary={drawdownExecutionBoundary}
             drawdownAdapterValidation={drawdownAdapterValidation}
             drawdownExecutionGoNoGo={drawdownExecutionGoNoGo}
+            drawdownExecutionPreflight={drawdownExecutionPreflight}
+            drawdownAdapterAuditTrail={drawdownAdapterAuditTrail}
+            drawdownExecutionContainmentGuard={drawdownExecutionContainmentGuard}
+            drawdownExecutionPhaseCloseout={drawdownExecutionPhaseCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2901,6 +2961,10 @@ function DetailsResultsPanel({
   drawdownExecutionBoundary,
   drawdownAdapterValidation,
   drawdownExecutionGoNoGo,
+  drawdownExecutionPreflight,
+  drawdownAdapterAuditTrail,
+  drawdownExecutionContainmentGuard,
+  drawdownExecutionPhaseCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -2932,6 +2996,10 @@ function DetailsResultsPanel({
   drawdownExecutionBoundary: DrawdownExecutionBoundaryDecision | null;
   drawdownAdapterValidation: DrawdownAdapterValidation | null;
   drawdownExecutionGoNoGo: DrawdownExecutionPrototypeGoNoGo | null;
+  drawdownExecutionPreflight: DrawdownExecutionPreflight | null;
+  drawdownAdapterAuditTrail: DrawdownAdapterAuditTrail | null;
+  drawdownExecutionContainmentGuard: DrawdownExecutionContainmentGuard | null;
+  drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3048,7 +3116,11 @@ function DetailsResultsPanel({
       <DrawdownReviewPreviewPanel gate={drawdownVisibleReviewGate} loading={loading} phase={drawdownPhaseReview} preview={drawdownReviewPreview} />
       <DrawdownExecutionBoundaryPanel
         adapterValidation={drawdownAdapterValidation}
+        auditTrail={drawdownAdapterAuditTrail}
         boundary={drawdownExecutionBoundary}
+        containmentGuard={drawdownExecutionContainmentGuard}
+        phaseCloseout={drawdownExecutionPhaseCloseout}
+        preflight={drawdownExecutionPreflight}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -3678,7 +3750,7 @@ function DrawdownReadinessPanel({
         </section>
       ) : null}
       <p className="table-note">
-        This does not change withdrawal order or create annual account-by-account instructions. It does not change the current withdrawal order used in Results.
+        This does not change withdrawal order or create detailed annual account instructions. It does not change the current withdrawal order used in Results.
       </p>
       <p className="table-note">{summary.reviewNote}</p>
     </section>
@@ -3856,12 +3928,20 @@ function DrawdownReviewPreviewPanel({
 
 function DrawdownExecutionBoundaryPanel({
   adapterValidation,
+  auditTrail,
   boundary,
+  containmentGuard,
+  phaseCloseout,
+  preflight,
   goNoGo,
   loading
 }: {
   adapterValidation: DrawdownAdapterValidation | null;
+  auditTrail: DrawdownAdapterAuditTrail | null;
   boundary: DrawdownExecutionBoundaryDecision | null;
+  containmentGuard: DrawdownExecutionContainmentGuard | null;
+  phaseCloseout: DrawdownExecutionPhaseCloseout | null;
+  preflight: DrawdownExecutionPreflight | null;
   goNoGo: DrawdownExecutionPrototypeGoNoGo | null;
   loading: boolean;
 }) {
@@ -3912,6 +3992,74 @@ function DrawdownExecutionBoundaryPanel({
           <p className="table-note">{adapterValidation.reviewNote}</p>
         </div>
       ) : null}
+      {preflight?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype preflight</p>
+            <h4>{preflight.headline}</h4>
+            <p>{preflight.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {preflight.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{preflight.reviewNote}</p>
+        </div>
+      ) : null}
+      {auditTrail?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Draft audit trail</p>
+            <h4>Draft shape for review</h4>
+            <p>This explains where the draft came from without turning it into an instruction.</p>
+          </div>
+          <div className="result-table-wrap">
+            <table className="result-table">
+              <thead>
+                <tr>
+                  <th>Check</th>
+                  <th>Value</th>
+                  <th>Why it matters</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditTrail.rows.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.label}</td>
+                    <td>{row.value}</td>
+                    <td>{row.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="table-note">{auditTrail.reviewNote}</p>
+        </div>
+      ) : null}
+      {containmentGuard?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Containment guard</p>
+            <h4>{containmentGuard.status === 'containedForReview' ? 'Contained for review' : 'Containment blocked'}</h4>
+            <p>These checks keep the work inside review evidence until a later sprint opens a small prototype.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containmentGuard.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'contained' ? 'ok' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'contained' ? 'Contained' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containmentGuard.reviewNote}</p>
+        </div>
+      ) : null}
       {goNoGo?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
@@ -3933,6 +4081,25 @@ function DrawdownExecutionBoundaryPanel({
       ) : (
         <p className="table-note">Execution boundary details appear after the drawdown preview checks run.</p>
       )}
+      {phaseCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Execution phase closeout</p>
+            <h4>{phaseCloseout.headline}</h4>
+            <p>{phaseCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {phaseCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{phaseCloseout.reviewNote}</p>
+        </div>
+      ) : null}
     </section>
   );
 }

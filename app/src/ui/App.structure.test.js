@@ -100,6 +100,10 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Boundary decision');
     expect(appSource).toContain('Adapter validation');
     expect(appSource).toContain('Execution prototype go/no-go');
+    expect(appSource).toContain('Prototype preflight');
+    expect(appSource).toContain('Draft audit trail');
+    expect(appSource).toContain('Containment guard');
+    expect(appSource).toContain('Execution phase closeout');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');

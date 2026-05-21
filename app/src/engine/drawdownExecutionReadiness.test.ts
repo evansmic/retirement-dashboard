@@ -9,7 +9,12 @@ import {
   emptyMockedExecutionScorecard,
   runInternalDrawdownDryRun,
   scoreMockedDrawdownAdapterResult,
+  selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
+  selectDrawdownExecutionContainmentGuard,
+  selectDrawdownExecutionExampleMatrixCheckpoint,
+  selectDrawdownExecutionPhaseCloseout,
+  selectDrawdownExecutionPreflight,
   selectDrawdownExecutionPrototypeGoNoGo,
   selectDrawdownPhaseReview,
   selectDrawdownPrototypeReadinessReview,
@@ -221,6 +226,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('drawdownAdapterValidation');
     expect(saved.plan).not.toHaveProperty('mockedExecutionScorecard');
     expect(saved.plan).not.toHaveProperty('drawdownExecutionPrototypeGoNoGo');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionPreflight');
+    expect(saved.plan).not.toHaveProperty('drawdownAdapterAuditTrail');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionContainmentGuard');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionExampleMatrixCheckpoint');
+    expect(saved.plan).not.toHaveProperty('drawdownExecutionPhaseCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -436,5 +446,105 @@ describe('drawdown execution readiness contract', () => {
       scorecard: emptyMockedExecutionScorecard()
     });
     expect(hold.status).toBe('holdForAdapterGuardrails');
+  });
+
+  it('summarizes execution preflight without opening a product path', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const scorecard = scoreMockedDrawdownAdapterResult({ baseline, candidate: comparisonCandidate, adapterValidation });
+    const goNoGo = selectDrawdownExecutionPrototypeGoNoGo({ plan, boundary, adapterValidation, scorecard });
+    const preflight = selectDrawdownExecutionPreflight({ plan, adapterValidation, goNoGo });
+
+    expect(preflight).toMatchObject({
+      status: 'holdForMissingEvidence',
+      disposition: 'executionPreflightOnly'
+    });
+    expect(preflight.rows.map((row) => row.id)).toEqual(['goNoGo', 'adapter', 'accountMix', 'lockedIn', 'savedPlan', 'productPath']);
+    expect(preflight.reviewNote).toContain('Preflight only');
+    expect(JSON.stringify(preflight).toLowerCase()).not.toContain('recommended withdrawal strategy');
+  });
+
+  it('creates an adapter audit trail without creating account instructions', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const auditTrail = selectDrawdownAdapterAuditTrail(adapterValidation);
+
+    expect(auditTrail).toMatchObject({
+      status: 'availableForReview',
+      disposition: 'adapterAuditTrailOnly'
+    });
+    expect(auditTrail.rows.map((row) => row.id)).toEqual(['source', 'year', 'bucket', 'amount', 'direction', 'guardrails']);
+    expect(auditTrail.rows.find((row) => row.id === 'bucket')?.value).toBe('Registered accounts');
+    expect(auditTrail.reviewNote).toContain('without creating detailed account instructions');
+
+    const missing = selectDrawdownAdapterAuditTrail({ ...adapterValidation, status: 'rejected', adapter: null });
+    expect(missing.status).toBe('missingDraft');
+    expect(missing.rows).toEqual([]);
+  });
+
+  it('keeps execution contained before a real prototype exists', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+
+    expect(containment).toMatchObject({
+      status: 'containedForReview',
+      disposition: 'executionContainmentGuardOnly'
+    });
+    expect(containment.rows.map((row) => row.id)).toEqual(['detailsOnly', 'noApply', 'noEngineOverride', 'noSave', 'singleDraft']);
+    expect(containment.reviewNote).toContain('does not open a product execution path');
+
+    const blocked = selectDrawdownExecutionContainmentGuard({
+      plan,
+      adapterValidation: { ...adapterValidation, adapter: null, status: 'rejected' }
+    });
+    expect(blocked.status).toBe('blocked');
+  });
+
+  it('summarizes example checkpoint and phase closeout conservatively', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const scorecard = scoreMockedDrawdownAdapterResult({ baseline, candidate: comparisonCandidate, adapterValidation });
+    const goNoGo = selectDrawdownExecutionPrototypeGoNoGo({ plan, boundary, adapterValidation, scorecard });
+    const preflight = selectDrawdownExecutionPreflight({ plan, adapterValidation, goNoGo });
+    const auditTrail = selectDrawdownAdapterAuditTrail(adapterValidation);
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+    const exampleCheckpoint = selectDrawdownExecutionExampleMatrixCheckpoint({ exampleCount: 4, heldOrBlockedCount: 0 });
+    const closeout = selectDrawdownExecutionPhaseCloseout({ plan, preflight, auditTrail, containment, exampleCheckpoint });
+
+    expect(exampleCheckpoint).toMatchObject({
+      status: 'allClear',
+      disposition: 'executionExampleMatrixCheckpointOnly'
+    });
+    expect(closeout).toMatchObject({
+      status: 'holdBeforeNextPhase',
+      disposition: 'executionPhaseCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['preflight', 'auditTrail', 'containment', 'examples', 'savedPlan']);
+    expect(closeout.reviewNote).toContain('Phase closeout only');
+
+    const reviewExamples = selectDrawdownExecutionExampleMatrixCheckpoint({ exampleCount: 4, heldOrBlockedCount: 1 });
+    const heldCloseout = selectDrawdownExecutionPhaseCloseout({ plan, preflight, auditTrail, containment, exampleCheckpoint: reviewExamples });
+    expect(heldCloseout.status).toBe('holdBeforeNextPhase');
   });
 });

@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 75 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, and an execution prototype go/no-go review.
+Sprint 80 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, and phase closeout.
 
-Completed Sprint 71-75 slices:
+Completed Sprint 76-80 slices:
 
-- Added a boundary decision that says whether to stay preview-only, harden more, or prepare one tiny future prototype.
-- Added a draft annual-override adapter shape without product execution.
-- Added adapter validation and rejection rows for unsafe draft shapes.
-- Added a test-only mocked scorecard for supplied baseline and candidate rows.
-- Added an execution prototype go/no-go summary.
+- Added preflight checks for go/no-go, adapter, account mix, locked-in accounts, saved-plan boundary, and the still-closed product path.
+- Added an audit trail for the draft adapter source, year, account area, amount band, direction, and guardrails.
+- Added a containment guard proving the work remains Details-only with no plan action, override calculation, saved output, or multi-draft expansion.
+- Extended built-in example coverage across the new execution-readiness layer.
+- Added a phase closeout that says whether the next phase is ready, should hold, or must stop.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
-- Kept Sprints 71-75 as boundary work, not account-by-account drawdown instructions.
+- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
+- Kept Sprints 76-80 as readiness work, not detailed account instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -110,6 +110,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 51. **Sprint 73 — Test-only adapter rejection harness.** Reject unsafe draft adapter shapes before any execution work can proceed.
 52. **Sprint 74 — One mocked execution scorecard.** Score supplied baseline and candidate rows in tests only, not product UI.
 53. **Sprint 75 — Execution prototype go/no-go.** Decide whether one future real prototype may begin, should hold, or must stop.
+54. **Sprint 76 — Prototype preflight.** Check whether the next drawdown phase has enough evidence and boundaries before any product path opens.
+55. **Sprint 77 — Adapter audit trail.** Explain the draft adapter shape in plain review terms.
+56. **Sprint 78 — Execution containment guard.** Prove the work remains Details-only with no plan action, override calculation, or saved output.
+57. **Sprint 79 — Execution example matrix checkpoint.** Run the new execution-readiness layer across all built-in examples.
+58. **Sprint 80 — Drawdown execution phase closeout.** Summarize whether the next phase is ready, should hold, or must stop.
 
 ## Medium-Term Roadmap
 
@@ -183,6 +188,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 73 — Test-only adapter rejection harness.** Complete 2026-05-20. Added validation that rejects unsafe draft adapter shapes before any execution work can proceed.
 - **Sprint 74 — One mocked execution scorecard.** Complete 2026-05-20. Added test-only mocked scoring for supplied baseline and candidate rows.
 - **Sprint 75 — Execution prototype go/no-go.** Complete 2026-05-20. Added a Details-only checkpoint for whether one later real prototype can begin.
+- **Sprint 76 — Prototype preflight.** Complete 2026-05-20. Added a Details-only preflight check before any real prototype path opens.
+- **Sprint 77 — Adapter audit trail.** Complete 2026-05-20. Added plain draft-shape audit rows for review.
+- **Sprint 78 — Execution containment guard.** Complete 2026-05-20. Added containment rows for Details-only, no plan action, no override calculation, no saved output, and one draft shape.
+- **Sprint 79 — Execution example matrix checkpoint.** Complete 2026-05-20. Extended all-example coverage for the execution-readiness layer.
+- **Sprint 80 — Drawdown execution phase closeout.** Complete 2026-05-20. Added a Details-only phase closeout before the next drawdown phase.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

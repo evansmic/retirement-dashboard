@@ -190,6 +190,74 @@ export type DrawdownExecutionPrototypeGoNoGo = {
   disposition: 'executionPrototypeGoNoGoOnly';
 };
 
+export type DrawdownExecutionPreflightRow = {
+  id: 'goNoGo' | 'adapter' | 'accountMix' | 'lockedIn' | 'savedPlan' | 'productPath';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownExecutionPreflight = {
+  status: 'readyForContainedPrototype' | 'holdForMissingEvidence' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: DrawdownExecutionPreflightRow[];
+  reviewNote: string;
+  disposition: 'executionPreflightOnly';
+};
+
+export type DrawdownAdapterAuditTrailRow = {
+  id: 'source' | 'year' | 'bucket' | 'amount' | 'direction' | 'guardrails';
+  label: string;
+  value: string;
+  detail: string;
+};
+
+export type DrawdownAdapterAuditTrail = {
+  status: 'availableForReview' | 'missingDraft';
+  rows: DrawdownAdapterAuditTrailRow[];
+  reviewNote: string;
+  disposition: 'adapterAuditTrailOnly';
+};
+
+export type DrawdownExecutionContainmentGuardRow = {
+  id: 'detailsOnly' | 'noApply' | 'noEngineOverride' | 'noSave' | 'singleDraft';
+  label: string;
+  status: 'contained' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownExecutionContainmentGuard = {
+  status: 'containedForReview' | 'blocked';
+  rows: DrawdownExecutionContainmentGuardRow[];
+  reviewNote: string;
+  disposition: 'executionContainmentGuardOnly';
+};
+
+export type DrawdownExecutionExampleMatrixCheckpoint = {
+  status: 'allClear' | 'needsReview';
+  exampleCount: number;
+  heldOrBlockedCount: number;
+  reviewNote: string;
+  disposition: 'executionExampleMatrixCheckpointOnly';
+};
+
+export type DrawdownExecutionPhaseCloseoutRow = {
+  id: 'preflight' | 'auditTrail' | 'containment' | 'examples' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type DrawdownExecutionPhaseCloseout = {
+  status: 'readyForNextPhase' | 'holdBeforeNextPhase' | 'stopBeforeNextPhase';
+  headline: string;
+  detail: string;
+  rows: DrawdownExecutionPhaseCloseoutRow[];
+  reviewNote: string;
+  disposition: 'executionPhaseCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -927,6 +995,274 @@ export function selectDrawdownExecutionPrototypeGoNoGo({
   };
 }
 
+export function selectDrawdownExecutionPreflight({
+  plan,
+  adapterValidation,
+  goNoGo
+}: {
+  plan: V2PlanPayload;
+  adapterValidation: DrawdownAdapterValidation;
+  goNoGo: DrawdownExecutionPrototypeGoNoGo;
+}): DrawdownExecutionPreflight {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const hasLockedIn = n(plan.p1?.lira) + n(plan.p1?.lif) + n(plan.p2?.lira) + n(plan.p2?.lif) > 0;
+  const accountMixCount = (bucketBalance(plan, 'registered') > 0 ? 1 : 0) + (bucketBalance(plan, 'tfsa') > 0 ? 1 : 0) + (bucketBalance(plan, 'nonRegistered') > 0 ? 1 : 0) + (bucketBalance(plan, 'cash') > 0 ? 1 : 0);
+  const rows: DrawdownExecutionPreflightRow[] = [
+    {
+      id: 'goNoGo',
+      label: 'Prototype checkpoint',
+      status: goNoGo.status === 'readyForOneRealPrototype' ? 'ready' : goNoGo.status === 'holdForAdapterGuardrails' ? 'hold' : 'blocked',
+      detail: goNoGo.headline
+    },
+    {
+      id: 'adapter',
+      label: 'Draft adapter',
+      status: adapterValidation.status === 'acceptedForMockScoring' ? 'ready' : 'blocked',
+      detail: adapterValidation.reason
+    },
+    {
+      id: 'accountMix',
+      label: 'Account mix',
+      status: accountMixCount >= 2 ? 'ready' : 'hold',
+      detail:
+        accountMixCount >= 2
+          ? 'More than one account bucket is available for comparison evidence.'
+          : 'A thin account mix means the next prototype needs extra caution.'
+    },
+    {
+      id: 'lockedIn',
+      label: 'Locked-in accounts',
+      status: hasLockedIn ? 'hold' : 'ready',
+      detail:
+        hasLockedIn
+          ? 'Locked-in accounts are present, so any later prototype must keep LIF/LIRA limits visible.'
+          : 'No locked-in account balance is entered for this plan.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No execution preflight output is saved.' : 'Saved plan output contains execution preflight data.'
+    },
+    {
+      id: 'productPath',
+      label: 'Product path',
+      status: 'hold',
+      detail: 'The product path is still intentionally closed until a later sprint adds one explicit prototype.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  const status: DrawdownExecutionPreflight['status'] = hasBlocked ? 'blocked' : hasHold ? 'holdForMissingEvidence' : 'readyForContainedPrototype';
+  return {
+    status,
+    headline:
+      status === 'readyForContainedPrototype'
+        ? 'Preflight is ready for a contained prototype.'
+        : status === 'blocked'
+          ? 'Preflight is blocked.'
+          : 'Preflight should hold before a real prototype.',
+    detail:
+      'This preflight checks whether the next drawdown work has enough evidence and boundaries before any product execution path is opened.',
+    rows,
+    reviewNote:
+      'Preflight only. It does not run annual overrides, change withdrawal order, create account instructions, or save output.',
+    disposition: 'executionPreflightOnly'
+  };
+}
+
+export function selectDrawdownAdapterAuditTrail(adapterValidation: DrawdownAdapterValidation): DrawdownAdapterAuditTrail {
+  const adapter = adapterValidation.adapter;
+  if (!adapter) {
+    return {
+      status: 'missingDraft',
+      rows: [],
+      reviewNote: 'Adapter audit trail only. No draft adapter is available for review.',
+      disposition: 'adapterAuditTrailOnly'
+    };
+  }
+  return {
+    status: 'availableForReview',
+    rows: [
+      {
+        id: 'source',
+        label: 'Evidence source',
+        value: 'Review draft',
+        detail: 'The adapter comes from the existing drawdown evidence, not from a user-facing action.'
+      },
+      {
+        id: 'year',
+        label: 'Year',
+        value: String(adapter.year),
+        detail: 'The draft points to one projection year for later review.'
+      },
+      {
+        id: 'bucket',
+        label: 'Account area',
+        value: accountBucketLabel(adapter.accountBucket),
+        detail: 'The draft uses broad account areas only.'
+      },
+      {
+        id: 'amount',
+        label: 'Amount band',
+        value: moneyDelta(adapter.amount).replace('+', ''),
+        detail: 'The amount remains a bounded review band, not an instruction.'
+      },
+      {
+        id: 'direction',
+        label: 'Direction',
+        value: adapter.direction === 'increase' ? 'Test more from this area' : 'Test less from this area',
+        detail: 'Direction describes a future test shape only.'
+      },
+      {
+        id: 'guardrails',
+        label: 'Guardrails',
+        value: adapterValidation.status === 'acceptedForMockScoring' ? 'Passed draft checks' : 'Blocked',
+        detail: adapterValidation.reviewNote
+      }
+    ],
+    reviewNote:
+      'Adapter audit trail only. It explains the draft shape without creating detailed account instructions or saving output.',
+    disposition: 'adapterAuditTrailOnly'
+  };
+}
+
+export function selectDrawdownExecutionContainmentGuard({
+  plan,
+  adapterValidation
+}: {
+  plan: V2PlanPayload;
+  adapterValidation: DrawdownAdapterValidation;
+}): DrawdownExecutionContainmentGuard {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownExecutionContainmentGuardRow[] = [
+    {
+      id: 'detailsOnly',
+      label: 'Details only',
+      status: 'contained',
+      detail: 'The execution checkpoint stays in Details and does not add Overview density.'
+    },
+    {
+      id: 'noApply',
+      label: 'No plan action',
+      status: 'contained',
+      detail: 'There is no action to change the plan from this checkpoint.'
+    },
+    {
+      id: 'noEngineOverride',
+      label: 'No override calculation',
+      status: 'contained',
+      detail: 'The product calculation keeps the current withdrawal order and empty annual overrides.'
+    },
+    {
+      id: 'noSave',
+      label: 'No saved output',
+      status: savedPlanClean ? 'contained' : 'blocked',
+      detail: savedPlanClean ? 'No execution checkpoint output is saved.' : 'Saved plan output contains execution checkpoint data.'
+    },
+    {
+      id: 'singleDraft',
+      label: 'One draft shape',
+      status: adapterValidation.adapter ? 'contained' : 'blocked',
+      detail: adapterValidation.adapter ? 'Only one draft shape is available for review.' : 'No accepted draft shape is available.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  return {
+    status: blocked ? 'blocked' : 'containedForReview',
+    rows,
+    reviewNote:
+      'Containment guard only. It keeps this work as review evidence and does not open a product execution path.',
+    disposition: 'executionContainmentGuardOnly'
+  };
+}
+
+export function selectDrawdownExecutionExampleMatrixCheckpoint({
+  exampleCount,
+  heldOrBlockedCount
+}: {
+  exampleCount: number;
+  heldOrBlockedCount: number;
+}): DrawdownExecutionExampleMatrixCheckpoint {
+  return {
+    status: heldOrBlockedCount === 0 ? 'allClear' : 'needsReview',
+    exampleCount,
+    heldOrBlockedCount,
+    reviewNote:
+      'Example matrix checkpoint only. It checks the built-in examples and does not persist optimizer or drawdown execution output.',
+    disposition: 'executionExampleMatrixCheckpointOnly'
+  };
+}
+
+export function selectDrawdownExecutionPhaseCloseout({
+  plan,
+  preflight,
+  auditTrail,
+  containment,
+  exampleCheckpoint = selectDrawdownExecutionExampleMatrixCheckpoint({ exampleCount: 0, heldOrBlockedCount: 0 })
+}: {
+  plan: V2PlanPayload;
+  preflight: DrawdownExecutionPreflight;
+  auditTrail: DrawdownAdapterAuditTrail;
+  containment: DrawdownExecutionContainmentGuard;
+  exampleCheckpoint?: DrawdownExecutionExampleMatrixCheckpoint;
+}): DrawdownExecutionPhaseCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: DrawdownExecutionPhaseCloseoutRow[] = [
+    {
+      id: 'preflight',
+      label: 'Preflight',
+      status: preflight.status === 'readyForContainedPrototype' ? 'ready' : preflight.status === 'blocked' ? 'blocked' : 'hold',
+      detail: preflight.headline
+    },
+    {
+      id: 'auditTrail',
+      label: 'Audit trail',
+      status: auditTrail.status === 'availableForReview' ? 'ready' : 'hold',
+      detail: auditTrail.status === 'availableForReview' ? 'Draft adapter evidence is explainable.' : 'No draft adapter audit trail is ready.'
+    },
+    {
+      id: 'containment',
+      label: 'Containment',
+      status: containment.status === 'containedForReview' ? 'ready' : 'blocked',
+      detail: containment.reviewNote
+    },
+    {
+      id: 'examples',
+      label: 'Example matrix',
+      status: exampleCheckpoint.status === 'allClear' ? 'ready' : 'hold',
+      detail:
+        exampleCheckpoint.status === 'allClear'
+          ? `${exampleCheckpoint.exampleCount} built-in examples passed the execution checkpoint.`
+          : `${exampleCheckpoint.heldOrBlockedCount} built-in examples need review before the next phase.`
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No execution phase output is saved.' : 'Saved plan output contains execution phase data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  const status: DrawdownExecutionPhaseCloseout['status'] = hasBlocked ? 'stopBeforeNextPhase' : hasHold ? 'holdBeforeNextPhase' : 'readyForNextPhase';
+  return {
+    status,
+    headline:
+      status === 'readyForNextPhase'
+        ? 'Ready for the next drawdown phase.'
+        : status === 'holdBeforeNextPhase'
+          ? 'Hold before the next drawdown phase.'
+          : 'Stop before the next drawdown phase.',
+    detail:
+      'This closeout summarizes whether preflight, audit trail, containment, examples, and saved-plan boundaries are ready for the next phase.',
+    rows,
+    reviewNote:
+      'Phase closeout only. It does not run annual overrides, change withdrawal order, create account instructions, or save output.',
+    disposition: 'executionPhaseCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -942,6 +1278,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('drawdownAdapterValidation' in saved) &&
     !('mockedExecutionScorecard' in saved) &&
     !('drawdownExecutionPrototypeGoNoGo' in saved) &&
+    !('drawdownExecutionPreflight' in saved) &&
+    !('drawdownAdapterAuditTrail' in saved) &&
+    !('drawdownExecutionContainmentGuard' in saved) &&
+    !('drawdownExecutionExampleMatrixCheckpoint' in saved) &&
+    !('drawdownExecutionPhaseCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );
@@ -1016,6 +1357,13 @@ function bucketBalance(plan: V2PlanPayload, bucket: DrawdownExecutionAccountBuck
   if (bucket === 'tfsa') return n(plan.p1?.tfsa) + n(plan.p2?.tfsa);
   if (bucket === 'nonRegistered') return n(plan.p1?.nonreg) + n(plan.p2?.nonreg);
   return n(plan.cashWedge?.balance);
+}
+
+function accountBucketLabel(bucket: DrawdownExecutionAccountBucket): string {
+  if (bucket === 'registered') return 'Registered accounts';
+  if (bucket === 'tfsa') return 'TFSA';
+  if (bucket === 'nonRegistered') return 'Non-registered accounts';
+  return 'Cash reserve';
 }
 
 function amountFromBand(band: DrawdownExecutionAmountBand): number {

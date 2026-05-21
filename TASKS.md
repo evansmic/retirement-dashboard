@@ -4,38 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 75: Execution Prototype Go/No-Go
+## Latest Sprint — Sprint 80: Drawdown Execution Phase Closeout
 
 **Status:** Complete 2026-05-20.
 
-Goal: decide whether the drawdown execution work is ready for one future real prototype by proving the boundary decision, adapter validation, mocked scorecard shape, and saved-plan guardrails without running annual overrides in the product.
+Goal: add the last readiness layer before any real drawdown execution prototype by checking preflight, audit trail, containment, examples, and saved-plan boundaries.
 
-Non-scope: product annual override execution, account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 75 checkpoint doc: [`docs/sprint_75_execution_prototype_go_no_go.md`](docs/sprint_75_execution_prototype_go_no_go.md).
+Sprint 80 checkpoint doc: [`docs/sprint_80_drawdown_execution_phase_closeout.md`](docs/sprint_80_drawdown_execution_phase_closeout.md).
 
-### Sprint 71-75 Candidate Implementation Tickets
+### Sprint 76-80 Candidate Implementation Tickets
 
-- [x] **S71-01 — Execution boundary decision.** Decide whether to keep the preview as-is, harden more, or prepare one tiny future execution prototype.
-- [x] **S72-01 — Annual override adapter shape.** Convert one eligible runtime contract payload into a draft adapter shape without passing it to the engine.
-- [x] **S73-01 — Adapter rejection harness.** Reject unsafe adapter shapes for bad years, missing buckets, invalid amounts, unsupported directions, or dirty saved-plan boundaries.
-- [x] **S74-01 — Mocked execution scorecard.** Add a test-only mocked scorecard that can compare supplied baseline and candidate rows without product execution.
-- [x] **S75-01 — Execution prototype go/no-go.** Summarize whether the next real prototype can begin, should hold, or must stop.
+- [x] **S76-01 — Prototype preflight.** Check go/no-go, adapter, account mix, locked-in accounts, saved-plan boundary, and product path before any real prototype.
+- [x] **S77-01 — Adapter audit trail.** Explain the draft adapter source, year, account area, amount band, direction, and guardrails without creating instructions.
+- [x] **S78-01 — Execution containment guard.** Prove the work remains Details-only, has no plan action, does not run override calculations, does not save output, and uses only one draft shape.
+- [x] **S79-01 — Example matrix checkpoint.** Extend all-example coverage across preflight, audit trail, containment, closeout, copy posture, and saved-plan boundaries.
+- [x] **S80-01 — Phase closeout.** Summarize whether the next phase is ready, should hold, or must stop before real execution work.
 
-### Sprint 75 Definition Of Done
+### Sprint 80 Definition Of Done
 
-- Execution boundary checkpoint appears only in Details.
-- Adapter draft validation remains a draft check and is not used by the product calculation.
-- Mocked scorecard comparison remains test-only.
-- Go/no-go review summarizes ready, hold, or stop before one later real prototype.
+- Prototype preflight, draft audit trail, containment guard, and phase closeout appear only in Details.
+- Preflight intentionally holds while the product path remains closed.
+- Adapter audit trail explains the draft shape without turning it into household instructions.
+- Containment guard confirms there is no product action, override calculation, saved output, or multi-draft expansion.
+- Example matrix covers the new execution-readiness layer.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 80: Drawdown Execution Phase Closeout
+
+**Complete 2026-05-20.** Added a Details-only closeout that summarizes preflight, adapter audit trail, containment, example coverage, and saved-plan boundaries before the next phase.
+
+Sprint 80 checkpoint doc: [`docs/sprint_80_drawdown_execution_phase_closeout.md`](docs/sprint_80_drawdown_execution_phase_closeout.md).
+
+### Sprint 79: Execution Example Matrix Checkpoint
+
+**Complete 2026-05-20.** Extended all-example coverage across execution preflight, adapter audit trail, containment guard, phase closeout, copy posture, and persistence boundaries.
+
+Sprint 79 checkpoint doc: [`docs/sprint_79_execution_example_matrix_checkpoint.md`](docs/sprint_79_execution_example_matrix_checkpoint.md).
+
+### Sprint 78: Execution Containment Guard
+
+**Complete 2026-05-20.** Added a Details-only containment guard proving the drawdown execution work has no plan action, no override calculation, no saved output, and only one draft shape.
+
+Sprint 78 checkpoint doc: [`docs/sprint_78_execution_containment_guard.md`](docs/sprint_78_execution_containment_guard.md).
+
+### Sprint 77: Adapter Audit Trail
+
+**Complete 2026-05-20.** Added a draft adapter audit trail that explains source, year, account area, amount band, direction, and guardrails without creating household instructions.
+
+Sprint 77 checkpoint doc: [`docs/sprint_77_adapter_audit_trail.md`](docs/sprint_77_adapter_audit_trail.md).
+
+### Sprint 76: Prototype Preflight
+
+**Complete 2026-05-20.** Added a Details-only preflight check for go/no-go, adapter, account mix, locked-in accounts, saved-plan boundary, and closed product path.
+
+Sprint 76 checkpoint doc: [`docs/sprint_76_prototype_preflight.md`](docs/sprint_76_prototype_preflight.md).
 
 ### Sprint 75: Execution Prototype Go/No-Go
 
