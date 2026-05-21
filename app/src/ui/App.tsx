@@ -71,11 +71,16 @@ import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type {
+  ContainedDrawdownCopyGuard,
+  ContainedDrawdownDetailsDensity,
   ContainedDrawdownExecutionPrototype,
+  ContainedDrawdownExampleGate,
   ContainedDrawdownExplanation,
   ContainedDrawdownLimitations,
   ContainedDrawdownMateriality,
+  ContainedDrawdownProductGoNoGo,
   ContainedDrawdownPrototypeSummary,
+  ContainedDrawdownReviewChecklist,
   ContainedDrawdownUsefulnessCloseout,
   DrawdownAdapterValidation,
   DrawdownAdapterAuditTrail,
@@ -153,6 +158,11 @@ type BridgePreview = {
   containedDrawdownExplanation: ContainedDrawdownExplanation | null;
   containedDrawdownLimitations: ContainedDrawdownLimitations | null;
   containedDrawdownUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
+  containedDrawdownDetailsDensity: ContainedDrawdownDetailsDensity | null;
+  containedDrawdownReviewChecklist: ContainedDrawdownReviewChecklist | null;
+  containedDrawdownExampleGate: ContainedDrawdownExampleGate | null;
+  containedDrawdownCopyGuard: ContainedDrawdownCopyGuard | null;
+  containedDrawdownProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
   error: string;
   loading: boolean;
 };
@@ -423,6 +433,11 @@ export function App() {
     containedDrawdownExplanation: null,
     containedDrawdownLimitations: null,
     containedDrawdownUsefulnessCloseout: null,
+    containedDrawdownDetailsDensity: null,
+    containedDrawdownReviewChecklist: null,
+    containedDrawdownExampleGate: null,
+    containedDrawdownCopyGuard: null,
+    containedDrawdownProductGoNoGo: null,
     error: '',
     loading: false
   });
@@ -457,6 +472,11 @@ export function App() {
         containedDrawdownExplanation: null,
         containedDrawdownLimitations: null,
         containedDrawdownUsefulnessCloseout: null,
+        containedDrawdownDetailsDensity: null,
+        containedDrawdownReviewChecklist: null,
+        containedDrawdownExampleGate: null,
+        containedDrawdownCopyGuard: null,
+        containedDrawdownProductGoNoGo: null,
         error: '',
         loading: false
       });
@@ -480,10 +500,15 @@ export function App() {
              buildDrawdownExecutionContract,
              emptyMockedExecutionScorecard,
              runContainedDrawdownExecutionPrototype,
+             selectContainedDrawdownCopyGuard,
+             selectContainedDrawdownDetailsDensity,
              selectContainedDrawdownExplanation,
+             selectContainedDrawdownExampleGate,
              selectContainedDrawdownLimitations,
              selectContainedDrawdownMateriality,
+             selectContainedDrawdownProductGoNoGo,
              selectContainedDrawdownPrototypeSummary,
+             selectContainedDrawdownReviewChecklist,
              selectContainedDrawdownUsefulnessCloseout,
              selectDrawdownAdapterAuditTrail,
              selectDrawdownExecutionBoundaryDecision,
@@ -576,6 +601,32 @@ export function App() {
           explanation: containedDrawdownExplanation,
           limitations: containedDrawdownLimitations
         });
+        const containedDrawdownDetailsDensity = selectContainedDrawdownDetailsDensity({
+          prototype: containedDrawdownPrototype,
+          materiality: containedDrawdownMateriality,
+          explanation: containedDrawdownExplanation,
+          limitations: containedDrawdownLimitations,
+          usefulness: containedDrawdownUsefulnessCloseout
+        });
+        const containedDrawdownReviewChecklist = selectContainedDrawdownReviewChecklist({
+          usefulness: containedDrawdownUsefulnessCloseout,
+          materiality: containedDrawdownMateriality,
+          limitations: containedDrawdownLimitations
+        });
+        const containedDrawdownExampleGate = selectContainedDrawdownExampleGate({
+          exampleCount: 0,
+          blockedCount: 0,
+          heldCount: 0
+        });
+        const containedDrawdownCopyGuard = selectContainedDrawdownCopyGuard(plan);
+        const containedDrawdownProductGoNoGo = selectContainedDrawdownProductGoNoGo({
+          plan,
+          usefulness: containedDrawdownUsefulnessCloseout,
+          density: containedDrawdownDetailsDensity,
+          checklist: containedDrawdownReviewChecklist,
+          exampleGate: containedDrawdownExampleGate,
+          copyGuard: containedDrawdownCopyGuard
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -598,6 +649,11 @@ export function App() {
             containedDrawdownExplanation,
             containedDrawdownLimitations,
             containedDrawdownUsefulnessCloseout,
+            containedDrawdownDetailsDensity,
+            containedDrawdownReviewChecklist,
+            containedDrawdownExampleGate,
+            containedDrawdownCopyGuard,
+            containedDrawdownProductGoNoGo,
             error: '',
             loading: false
           });
@@ -629,6 +685,11 @@ export function App() {
               containedDrawdownExplanation: null,
               containedDrawdownLimitations: null,
               containedDrawdownUsefulnessCloseout: null,
+              containedDrawdownDetailsDensity: null,
+              containedDrawdownReviewChecklist: null,
+              containedDrawdownExampleGate: null,
+              containedDrawdownCopyGuard: null,
+              containedDrawdownProductGoNoGo: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -833,6 +894,11 @@ export function App() {
               containedDrawdownExplanation={bridgePreview.containedDrawdownExplanation}
               containedDrawdownLimitations={bridgePreview.containedDrawdownLimitations}
               containedDrawdownUsefulnessCloseout={bridgePreview.containedDrawdownUsefulnessCloseout}
+              containedDrawdownDetailsDensity={bridgePreview.containedDrawdownDetailsDensity}
+              containedDrawdownReviewChecklist={bridgePreview.containedDrawdownReviewChecklist}
+              containedDrawdownExampleGate={bridgePreview.containedDrawdownExampleGate}
+              containedDrawdownCopyGuard={bridgePreview.containedDrawdownCopyGuard}
+              containedDrawdownProductGoNoGo={bridgePreview.containedDrawdownProductGoNoGo}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2399,6 +2465,11 @@ function ResultsHandoffPanel({
   containedDrawdownExplanation,
   containedDrawdownLimitations,
   containedDrawdownUsefulnessCloseout,
+  containedDrawdownDetailsDensity,
+  containedDrawdownReviewChecklist,
+  containedDrawdownExampleGate,
+  containedDrawdownCopyGuard,
+  containedDrawdownProductGoNoGo,
   title,
   validation
 }: {
@@ -2431,6 +2502,11 @@ function ResultsHandoffPanel({
   containedDrawdownExplanation: BridgePreview['containedDrawdownExplanation'];
   containedDrawdownLimitations: BridgePreview['containedDrawdownLimitations'];
   containedDrawdownUsefulnessCloseout: BridgePreview['containedDrawdownUsefulnessCloseout'];
+  containedDrawdownDetailsDensity: BridgePreview['containedDrawdownDetailsDensity'];
+  containedDrawdownReviewChecklist: BridgePreview['containedDrawdownReviewChecklist'];
+  containedDrawdownExampleGate: BridgePreview['containedDrawdownExampleGate'];
+  containedDrawdownCopyGuard: BridgePreview['containedDrawdownCopyGuard'];
+  containedDrawdownProductGoNoGo: BridgePreview['containedDrawdownProductGoNoGo'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2555,6 +2631,11 @@ function ResultsHandoffPanel({
             containedDrawdownExplanation={containedDrawdownExplanation}
             containedDrawdownLimitations={containedDrawdownLimitations}
             containedDrawdownUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
+            containedDrawdownDetailsDensity={containedDrawdownDetailsDensity}
+            containedDrawdownReviewChecklist={containedDrawdownReviewChecklist}
+            containedDrawdownExampleGate={containedDrawdownExampleGate}
+            containedDrawdownCopyGuard={containedDrawdownCopyGuard}
+            containedDrawdownProductGoNoGo={containedDrawdownProductGoNoGo}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -3059,6 +3140,11 @@ function DetailsResultsPanel({
   containedDrawdownExplanation,
   containedDrawdownLimitations,
   containedDrawdownUsefulnessCloseout,
+  containedDrawdownDetailsDensity,
+  containedDrawdownReviewChecklist,
+  containedDrawdownExampleGate,
+  containedDrawdownCopyGuard,
+  containedDrawdownProductGoNoGo,
   overview,
   planHealth,
   projectionMilestones,
@@ -3100,6 +3186,11 @@ function DetailsResultsPanel({
   containedDrawdownExplanation: ContainedDrawdownExplanation | null;
   containedDrawdownLimitations: ContainedDrawdownLimitations | null;
   containedDrawdownUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
+  containedDrawdownDetailsDensity: ContainedDrawdownDetailsDensity | null;
+  containedDrawdownReviewChecklist: ContainedDrawdownReviewChecklist | null;
+  containedDrawdownExampleGate: ContainedDrawdownExampleGate | null;
+  containedDrawdownCopyGuard: ContainedDrawdownCopyGuard | null;
+  containedDrawdownProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3227,6 +3318,11 @@ function DetailsResultsPanel({
         containedExplanation={containedDrawdownExplanation}
         containedLimitations={containedDrawdownLimitations}
         containedUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
+        containedDetailsDensity={containedDrawdownDetailsDensity}
+        containedReviewChecklist={containedDrawdownReviewChecklist}
+        containedExampleGate={containedDrawdownExampleGate}
+        containedCopyGuard={containedDrawdownCopyGuard}
+        containedProductGoNoGo={containedDrawdownProductGoNoGo}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -4037,10 +4133,15 @@ function DrawdownExecutionBoundaryPanel({
   auditTrail,
   boundary,
   containedExplanation,
+  containedExampleGate,
+  containedCopyGuard,
+  containedDetailsDensity,
   containedLimitations,
   containedMateriality,
+  containedProductGoNoGo,
   containedPrototype,
   containedPrototypeSummary,
+  containedReviewChecklist,
   containedUsefulnessCloseout,
   containmentGuard,
   phaseCloseout,
@@ -4051,11 +4152,16 @@ function DrawdownExecutionBoundaryPanel({
   adapterValidation: DrawdownAdapterValidation | null;
   auditTrail: DrawdownAdapterAuditTrail | null;
   boundary: DrawdownExecutionBoundaryDecision | null;
+  containedCopyGuard: ContainedDrawdownCopyGuard | null;
+  containedDetailsDensity: ContainedDrawdownDetailsDensity | null;
+  containedExampleGate: ContainedDrawdownExampleGate | null;
   containedExplanation: ContainedDrawdownExplanation | null;
   containedLimitations: ContainedDrawdownLimitations | null;
   containedMateriality: ContainedDrawdownMateriality | null;
+  containedProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
   containedPrototype: ContainedDrawdownExecutionPrototype | null;
   containedPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
+  containedReviewChecklist: ContainedDrawdownReviewChecklist | null;
   containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
   phaseCloseout: DrawdownExecutionPhaseCloseout | null;
@@ -4311,6 +4417,82 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{containedUsefulnessCloseout.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedDetailsDensity?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Details density check</p>
+            <h4>{containedDetailsDensity.status === 'compactEnough' ? 'Compact enough for Details' : 'Too dense for Details'}</h4>
+            <p>This keeps the contained prototype from crowding the Results experience.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedDetailsDensity.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : 'review'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : 'Hold'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedDetailsDensity.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedReviewChecklist?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype review checklist</p>
+            <h4>{containedReviewChecklist.status === 'readyForReview' ? 'Ready to read carefully' : containedReviewChecklist.status === 'holdBeforeReview' ? 'Read with caution' : 'Do not use this prototype'}</h4>
+            <p>This checklist keeps the contained prototype behind the main retirement answer.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedReviewChecklist.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedReviewChecklist.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedCopyGuard?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype copy guard</p>
+            <h4>{containedCopyGuard.status === 'copyClear' ? 'Copy stays review-oriented' : 'Copy guard blocked'}</h4>
+            <p>These checks keep the contained prototype from sounding like a household action.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedCopyGuard.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedCopyGuard.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedProductGoNoGo?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Contained prototype go/no-go</p>
+            <h4>{containedProductGoNoGo.headline}</h4>
+            <p>{containedProductGoNoGo.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedProductGoNoGo.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedProductGoNoGo.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (

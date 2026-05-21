@@ -349,6 +349,75 @@ export type ContainedDrawdownUsefulnessCloseout = {
   disposition: 'containedPrototypeUsefulnessOnly';
 };
 
+export type ContainedDrawdownDetailsDensityRow = {
+  id: 'sectionCount' | 'rowCount' | 'overviewBoundary';
+  label: string;
+  status: 'ok' | 'hold';
+  detail: string;
+};
+
+export type ContainedDrawdownDetailsDensity = {
+  status: 'compactEnough' | 'tooDense';
+  visibleSectionCount: number;
+  visibleRowCount: number;
+  rows: ContainedDrawdownDetailsDensityRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeDensityOnly';
+};
+
+export type ContainedDrawdownReviewChecklistRow = {
+  id: 'readMainAnswer' | 'checkMateriality' | 'reviewLimits' | 'keepPlanUnchanged';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownReviewChecklist = {
+  status: 'readyForReview' | 'holdBeforeReview' | 'blocked';
+  rows: ContainedDrawdownReviewChecklistRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeChecklistOnly';
+};
+
+export type ContainedDrawdownExampleGate = {
+  status: 'examplesClear' | 'needsExampleReview';
+  exampleCount: number;
+  blockedCount: number;
+  heldCount: number;
+  reviewNote: string;
+  disposition: 'containedPrototypeExampleGateOnly';
+};
+
+export type ContainedDrawdownCopyGuardRow = {
+  id: 'recommendation' | 'certainty' | 'instruction' | 'savedPlan';
+  label: string;
+  status: 'ok' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownCopyGuard = {
+  status: 'copyClear' | 'blocked';
+  rows: ContainedDrawdownCopyGuardRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeCopyGuardOnly';
+};
+
+export type ContainedDrawdownProductGoNoGoRow = {
+  id: 'usefulness' | 'density' | 'checklist' | 'examples' | 'copy' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownProductGoNoGo = {
+  status: 'keepInDetails' | 'holdForUxPolish' | 'doNotPromote';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownProductGoNoGoRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeProductGoNoGoOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -1685,6 +1754,242 @@ export function selectContainedDrawdownUsefulnessCloseout({
   };
 }
 
+export function selectContainedDrawdownDetailsDensity({
+  prototype,
+  materiality,
+  explanation,
+  limitations,
+  usefulness
+}: {
+  prototype: ContainedDrawdownExecutionPrototype;
+  materiality: ContainedDrawdownMateriality;
+  explanation: ContainedDrawdownExplanation;
+  limitations: ContainedDrawdownLimitations;
+  usefulness: ContainedDrawdownUsefulnessCloseout;
+}): ContainedDrawdownDetailsDensity {
+  const visibleSectionCount = [
+    prototype.rows.length > 0,
+    materiality.rows.length > 0,
+    explanation.rows.length > 0,
+    limitations.rows.length > 0,
+    usefulness.rows.length > 0
+  ].filter(Boolean).length;
+  const visibleRowCount =
+    prototype.rows.length + materiality.rows.length + explanation.rows.length + limitations.rows.length + usefulness.rows.length;
+  const tooDense = visibleSectionCount > 5 || visibleRowCount > 22;
+  const rows: ContainedDrawdownDetailsDensityRow[] = [
+    {
+      id: 'sectionCount',
+      label: 'Details sections',
+      status: visibleSectionCount <= 5 ? 'ok' : 'hold',
+      detail: `${visibleSectionCount} contained prototype sections are visible in Details.`
+    },
+    {
+      id: 'rowCount',
+      label: 'Review rows',
+      status: visibleRowCount <= 22 ? 'ok' : 'hold',
+      detail: `${visibleRowCount} contained prototype rows are visible in Details.`
+    },
+    {
+      id: 'overviewBoundary',
+      label: 'Overview boundary',
+      status: 'ok',
+      detail: 'The contained prototype stays out of Overview.'
+    }
+  ];
+  return {
+    status: tooDense ? 'tooDense' : 'compactEnough',
+    visibleSectionCount,
+    visibleRowCount,
+    rows,
+    reviewNote:
+      'Density check only. It helps keep the contained prototype readable in Details and does not change calculations.',
+    disposition: 'containedPrototypeDensityOnly'
+  };
+}
+
+export function selectContainedDrawdownReviewChecklist({
+  usefulness,
+  materiality,
+  limitations
+}: {
+  usefulness: ContainedDrawdownUsefulnessCloseout;
+  materiality: ContainedDrawdownMateriality;
+  limitations: ContainedDrawdownLimitations;
+}): ContainedDrawdownReviewChecklist {
+  const rows: ContainedDrawdownReviewChecklistRow[] = [
+    {
+      id: 'readMainAnswer',
+      label: 'Start with the main answer',
+      status: 'ready',
+      detail: 'Use the Overview answer before reading drawdown prototype evidence.'
+    },
+    {
+      id: 'checkMateriality',
+      label: 'Check whether movement matters',
+      status: materiality.status === 'blocked' ? 'blocked' : materiality.status === 'minorMovement' ? 'hold' : 'ready',
+      detail: materiality.headline
+    },
+    {
+      id: 'reviewLimits',
+      label: 'Read the limits',
+      status: limitations.status === 'visible' ? 'ready' : 'hold',
+      detail: 'Review the scenario-only and not-advice boundaries.'
+    },
+    {
+      id: 'keepPlanUnchanged',
+      label: 'Keep the plan unchanged',
+      status: usefulness.status === 'notUseful' ? 'blocked' : 'ready',
+      detail: 'This prototype does not create a plan action or saved change.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdBeforeReview' : 'readyForReview',
+    rows,
+    reviewNote:
+      'Review checklist only. It helps users read the contained prototype without treating it as an action.',
+    disposition: 'containedPrototypeChecklistOnly'
+  };
+}
+
+export function selectContainedDrawdownExampleGate({
+  exampleCount,
+  blockedCount,
+  heldCount
+}: {
+  exampleCount: number;
+  blockedCount: number;
+  heldCount: number;
+}): ContainedDrawdownExampleGate {
+  const hasMatrixEvidence = exampleCount > 0;
+  return {
+    status: hasMatrixEvidence && blockedCount === 0 && heldCount === 0 ? 'examplesClear' : 'needsExampleReview',
+    exampleCount,
+    blockedCount,
+    heldCount,
+    reviewNote: hasMatrixEvidence
+      ? 'Example gate only. It checks built-in examples and does not persist contained prototype output.'
+      : 'Example gate only. The product view does not run the built-in example matrix.',
+    disposition: 'containedPrototypeExampleGateOnly'
+  };
+}
+
+export function selectContainedDrawdownCopyGuard(plan: V2PlanPayload): ContainedDrawdownCopyGuard {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: ContainedDrawdownCopyGuardRow[] = [
+    {
+      id: 'recommendation',
+      label: 'No recommendation language',
+      status: 'ok',
+      detail: 'The contained prototype is framed as review evidence.'
+    },
+    {
+      id: 'certainty',
+      label: 'No certainty language',
+      status: 'ok',
+      detail: 'The contained prototype avoids guarantee and safe-spend framing.'
+    },
+    {
+      id: 'instruction',
+      label: 'No instruction language',
+      status: 'ok',
+      detail: 'The contained prototype does not tell the household what to withdraw or file.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'No contained prototype copy output is saved.' : 'Saved plan output contains contained prototype copy data.'
+    }
+  ];
+  return {
+    status: rows.some((row) => row.status === 'blocked') ? 'blocked' : 'copyClear',
+    rows,
+    reviewNote:
+      'Copy guard only. It protects consumer language and does not change plan calculations.',
+    disposition: 'containedPrototypeCopyGuardOnly'
+  };
+}
+
+export function selectContainedDrawdownProductGoNoGo({
+  plan,
+  usefulness,
+  density,
+  checklist,
+  exampleGate,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  usefulness: ContainedDrawdownUsefulnessCloseout;
+  density: ContainedDrawdownDetailsDensity;
+  checklist: ContainedDrawdownReviewChecklist;
+  exampleGate: ContainedDrawdownExampleGate;
+  copyGuard: ContainedDrawdownCopyGuard;
+}): ContainedDrawdownProductGoNoGo {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: ContainedDrawdownProductGoNoGoRow[] = [
+    {
+      id: 'usefulness',
+      label: 'Usefulness',
+      status: usefulness.status === 'usefulForReview' ? 'ready' : usefulness.status === 'holdForClearerEvidence' ? 'hold' : 'blocked',
+      detail: usefulness.headline
+    },
+    {
+      id: 'density',
+      label: 'Details density',
+      status: density.status === 'compactEnough' ? 'ready' : 'hold',
+      detail: `${density.visibleSectionCount} sections and ${density.visibleRowCount} rows are visible.`
+    },
+    {
+      id: 'checklist',
+      label: 'Review checklist',
+      status: checklist.status === 'readyForReview' ? 'ready' : checklist.status === 'holdBeforeReview' ? 'hold' : 'blocked',
+      detail: checklist.reviewNote
+    },
+    {
+      id: 'examples',
+      label: 'Example gate',
+      status: exampleGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail:
+        exampleGate.status === 'examplesClear'
+          ? `${exampleGate.exampleCount} examples are clear.`
+          : exampleGate.exampleCount > 0
+            ? `${exampleGate.blockedCount} blocked and ${exampleGate.heldCount} held examples need review.`
+            : 'Example matrix coverage is checked in tests, not in this product view.'
+    },
+    {
+      id: 'copy',
+      label: 'Copy guard',
+      status: copyGuard.status === 'copyClear' ? 'ready' : 'blocked',
+      detail: copyGuard.reviewNote
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No contained prototype product readiness output is saved.' : 'Saved plan output contains product readiness data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'doNotPromote' : hasHold ? 'holdForUxPolish' : 'keepInDetails',
+    headline: hasBlocked
+      ? 'Do not promote the contained prototype.'
+      : hasHold
+        ? 'Hold the contained prototype for UX polish.'
+        : 'Keep the contained prototype in Details.',
+    detail:
+      'This go/no-go decides whether the contained prototype should stay as Details evidence before any later product promotion.',
+    rows,
+    reviewNote:
+      'Product go/no-go only. It does not move the prototype into Overview, apply a strategy, or save output.',
+    disposition: 'containedPrototypeProductGoNoGoOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -1711,6 +2016,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('containedDrawdownExplanation' in saved) &&
     !('containedDrawdownLimitations' in saved) &&
     !('containedDrawdownUsefulnessCloseout' in saved) &&
+    !('containedDrawdownDetailsDensity' in saved) &&
+    !('containedDrawdownReviewChecklist' in saved) &&
+    !('containedDrawdownExampleGate' in saved) &&
+    !('containedDrawdownCopyGuard' in saved) &&
+    !('containedDrawdownProductGoNoGo' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

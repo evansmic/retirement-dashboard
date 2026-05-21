@@ -10,10 +10,15 @@ import {
   buildDrawdownExecutionContract,
   emptyMockedExecutionScorecard,
   runContainedDrawdownExecutionPrototype,
+  selectContainedDrawdownCopyGuard,
+  selectContainedDrawdownDetailsDensity,
   selectContainedDrawdownExplanation,
+  selectContainedDrawdownExampleGate,
   selectContainedDrawdownLimitations,
   selectContainedDrawdownMateriality,
+  selectContainedDrawdownProductGoNoGo,
   selectContainedDrawdownPrototypeSummary,
+  selectContainedDrawdownReviewChecklist,
   selectContainedDrawdownUsefulnessCloseout,
   selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
@@ -264,6 +269,32 @@ describe('example-plan optimizer readiness matrix', () => {
         explanation: containedExplanation,
         limitations: containedLimitations
       });
+      const containedDetailsDensity = selectContainedDrawdownDetailsDensity({
+        prototype: containedPrototype,
+        materiality: containedMateriality,
+        explanation: containedExplanation,
+        limitations: containedLimitations,
+        usefulness: containedUsefulness
+      });
+      const containedReviewChecklist = selectContainedDrawdownReviewChecklist({
+        usefulness: containedUsefulness,
+        materiality: containedMateriality,
+        limitations: containedLimitations
+      });
+      const containedExampleGate = selectContainedDrawdownExampleGate({
+        exampleCount: examplePlanCards.length,
+        blockedCount: 0,
+        heldCount: 0
+      });
+      const containedCopyGuard = selectContainedDrawdownCopyGuard(plan);
+      const containedProductGoNoGo = selectContainedDrawdownProductGoNoGo({
+        plan,
+        usefulness: containedUsefulness,
+        density: containedDetailsDensity,
+        checklist: containedReviewChecklist,
+        exampleGate: containedExampleGate,
+        copyGuard: containedCopyGuard
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -287,7 +318,12 @@ describe('example-plan optimizer readiness matrix', () => {
         containedMateriality,
         containedExplanation,
         containedLimitations,
-        containedUsefulness
+        containedUsefulness,
+        containedDetailsDensity,
+        containedReviewChecklist,
+        containedExampleGate,
+        containedCopyGuard,
+        containedProductGoNoGo
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -341,6 +377,19 @@ describe('example-plan optimizer readiness matrix', () => {
       });
       expect(['usefulForReview', 'holdForClearerEvidence', 'notUseful']).toContain(containedUsefulness.status);
       expect(containedUsefulness.disposition).toBe('containedPrototypeUsefulnessOnly');
+      expect(['compactEnough', 'tooDense']).toContain(containedDetailsDensity.status);
+      expect(containedDetailsDensity.disposition).toBe('containedPrototypeDensityOnly');
+      expect(['readyForReview', 'holdBeforeReview', 'blocked']).toContain(containedReviewChecklist.status);
+      expect(containedReviewChecklist.disposition).toBe('containedPrototypeChecklistOnly');
+      expect(containedExampleGate).toMatchObject({
+        status: 'examplesClear',
+        disposition: 'containedPrototypeExampleGateOnly'
+      });
+      expect(['copyClear', 'blocked']).toContain(containedCopyGuard.status);
+      expect(containedCopyGuard.disposition).toBe('containedPrototypeCopyGuardOnly');
+      expect(['keepInDetails', 'holdForUxPolish', 'doNotPromote']).toContain(containedProductGoNoGo.status);
+      expect(containedProductGoNoGo.disposition).toBe('containedPrototypeProductGoNoGoOnly');
+      expect(containedProductGoNoGo.reviewNote).toContain('does not move the prototype into Overview');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -387,6 +436,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('containedDrawdownExplanation');
       expect(saved.plan).not.toHaveProperty('containedDrawdownLimitations');
       expect(saved.plan).not.toHaveProperty('containedDrawdownUsefulnessCloseout');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownDetailsDensity');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownReviewChecklist');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownExampleGate');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownCopyGuard');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownProductGoNoGo');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

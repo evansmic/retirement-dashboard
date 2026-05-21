@@ -4,39 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 90: Contained Prototype Usefulness Closeout
+## Latest Sprint — Sprint 95: Contained Prototype Product Go/No-Go
 
 **Status:** Complete 2026-05-21.
 
-Goal: make the contained drawdown prototype easier to interpret by adding materiality, explanation, limitations, example coverage, and a usefulness closeout before any broader execution work.
+Goal: decide whether the contained drawdown prototype should stay in Details, hold for UX polish, or stop before any broader execution work.
 
 Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 90 checkpoint doc: [`docs/sprint_90_contained_prototype_usefulness_closeout.md`](docs/sprint_90_contained_prototype_usefulness_closeout.md).
+Sprint 95 checkpoint doc: [`docs/sprint_95_contained_prototype_product_go_no_go.md`](docs/sprint_95_contained_prototype_product_go_no_go.md).
 
-### Sprint 86-90 Candidate Implementation Tickets
+### Sprint 91-95 Candidate Implementation Tickets
 
-- [x] **S86-01 — Prototype materiality.** Decide whether contained prototype movements are large enough to keep in review.
-- [x] **S87-01 — Why-it-moved explanation.** Explain tax, OAS recovery, and projected-money-left movement in plain language.
-- [x] **S88-01 — Prototype limitations.** Add visible limits so the prototype does not sound more certain than it is.
-- [x] **S89-01 — Example and copy guard.** Extend all-example coverage across materiality, explanation, limitations, usefulness, and saved-plan boundaries.
-- [x] **S90-01 — Usefulness closeout.** Summarize whether the contained prototype is useful, needs clearer evidence, or should not be used.
+- [x] **S91-01 — Details density check.** Count the contained prototype Details surface and hold if it becomes too dense.
+- [x] **S92-01 — Review checklist.** Add a short reading checklist before users interpret contained prototype evidence.
+- [x] **S93-01 — Example gate.** Keep all-example readiness as a test/runtime gate without pretending the product view reruns the matrix.
+- [x] **S94-01 — Copy guard.** Add review-only copy checks for recommendation, certainty, instruction, and saved-plan language.
+- [x] **S95-01 — Product go/no-go.** Combine usefulness, density, checklist, example, copy, and saved-plan checks into one Details-only decision.
 
-### Sprint 90 Definition Of Done
+### Sprint 95 Definition Of Done
 
-- Materiality, explanation, limitations, and usefulness closeout appear only in Details.
-- Small movements are held rather than overstated.
-- Blocked prototype evidence remains blocked in the usefulness closeout.
-- Copy states what the prototype does not mean.
-- Example matrix covers the new explanation layer and saved-plan boundaries.
+- Density, checklist, copy, and product go/no-go appear only in Details.
+- Overview remains unchanged and does not gain prototype readiness panels.
+- Product UI does not claim to run the full example matrix for a single plan.
+- Example matrix covers the new readiness layer and saved-plan boundaries.
+- The go/no-go can hold or block without applying strategy output.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 95: Contained Prototype Product Go/No-Go
+
+**Complete 2026-05-21.** Added a Details-only product go/no-go that combines usefulness, density, checklist, example, copy, and saved-plan checks before any broader drawdown work.
+
+Sprint 95 checkpoint doc: [`docs/sprint_95_contained_prototype_product_go_no_go.md`](docs/sprint_95_contained_prototype_product_go_no_go.md).
+
+### Sprint 94: Contained Prototype Copy Guard
+
+**Complete 2026-05-21.** Added copy guard rows that keep the contained prototype review-oriented and protect the saved-plan boundary.
+
+Sprint 94 checkpoint doc: [`docs/sprint_94_contained_prototype_copy_guard.md`](docs/sprint_94_contained_prototype_copy_guard.md).
+
+### Sprint 93: Contained Prototype Example Gate
+
+**Complete 2026-05-21.** Added an example gate for contained prototype readiness while keeping the live product clear that the full matrix is checked in tests.
+
+Sprint 93 checkpoint doc: [`docs/sprint_93_contained_prototype_example_gate.md`](docs/sprint_93_contained_prototype_example_gate.md).
+
+### Sprint 92: Contained Prototype Review Checklist
+
+**Complete 2026-05-21.** Added a Details-only checklist so users read the main answer, materiality, limits, and unchanged-plan boundary before interpreting the prototype.
+
+Sprint 92 checkpoint doc: [`docs/sprint_92_contained_prototype_review_checklist.md`](docs/sprint_92_contained_prototype_review_checklist.md).
+
+### Sprint 91: Contained Prototype Details Density
+
+**Complete 2026-05-21.** Added a density selector that holds the contained prototype if the Details surface becomes too crowded.
+
+Sprint 91 checkpoint doc: [`docs/sprint_91_contained_prototype_density.md`](docs/sprint_91_contained_prototype_density.md).
 
 ### Sprint 90: Contained Prototype Usefulness Closeout
 

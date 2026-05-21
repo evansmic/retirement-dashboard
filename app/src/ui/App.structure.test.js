@@ -110,6 +110,10 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Why it moved');
     expect(appSource).toContain('Prototype limits');
     expect(appSource).toContain('Prototype usefulness');
+    expect(appSource).toContain('Details density check');
+    expect(appSource).toContain('Prototype review checklist');
+    expect(appSource).toContain('Prototype copy guard');
+    expect(appSource).toContain('Contained prototype go/no-go');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');

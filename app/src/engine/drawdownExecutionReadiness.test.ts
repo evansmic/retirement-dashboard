@@ -10,10 +10,15 @@ import {
   runContainedDrawdownExecutionPrototype,
   runInternalDrawdownDryRun,
   scoreMockedDrawdownAdapterResult,
+  selectContainedDrawdownCopyGuard,
+  selectContainedDrawdownDetailsDensity,
   selectContainedDrawdownExplanation,
+  selectContainedDrawdownExampleGate,
   selectContainedDrawdownLimitations,
   selectContainedDrawdownMateriality,
+  selectContainedDrawdownProductGoNoGo,
   selectContainedDrawdownPrototypeSummary,
+  selectContainedDrawdownReviewChecklist,
   selectContainedDrawdownUsefulnessCloseout,
   selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
@@ -243,6 +248,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('containedDrawdownExplanation');
     expect(saved.plan).not.toHaveProperty('containedDrawdownLimitations');
     expect(saved.plan).not.toHaveProperty('containedDrawdownUsefulnessCloseout');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownDetailsDensity');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownReviewChecklist');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownExampleGate');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownCopyGuard');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownProductGoNoGo');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -693,5 +703,112 @@ describe('drawdown execution readiness contract', () => {
     expect(materiality.status).toBe('minorMovement');
     expect(explanation.status).toBe('heldBack');
     expect(closeout.status).toBe('holdForClearerEvidence');
+  });
+
+  it('summarizes contained prototype density, checklist, copy guard, and product go/no-go', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+    const prototype = runContainedDrawdownExecutionPrototype({
+      plan,
+      adapterValidation,
+      containment,
+      runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan, prototype });
+    const materiality = selectContainedDrawdownMateriality(prototype);
+    const explanation = selectContainedDrawdownExplanation({ prototype, materiality });
+    const limitations = selectContainedDrawdownLimitations();
+    const usefulness = selectContainedDrawdownUsefulnessCloseout({ plan, summary, materiality, explanation, limitations });
+    const density = selectContainedDrawdownDetailsDensity({ prototype, materiality, explanation, limitations, usefulness });
+    const checklist = selectContainedDrawdownReviewChecklist({ usefulness, materiality, limitations });
+    const exampleGate = selectContainedDrawdownExampleGate({ exampleCount: 4, blockedCount: 0, heldCount: 0 });
+    const copyGuard = selectContainedDrawdownCopyGuard(plan);
+    const productGoNoGo = selectContainedDrawdownProductGoNoGo({
+      plan,
+      usefulness,
+      density,
+      checklist,
+      exampleGate,
+      copyGuard
+    });
+
+    expect(density).toMatchObject({
+      status: 'compactEnough',
+      disposition: 'containedPrototypeDensityOnly'
+    });
+    expect(density.visibleSectionCount).toBeLessThanOrEqual(5);
+    expect(checklist).toMatchObject({
+      status: 'readyForReview',
+      disposition: 'containedPrototypeChecklistOnly'
+    });
+    expect(exampleGate).toMatchObject({
+      status: 'examplesClear',
+      disposition: 'containedPrototypeExampleGateOnly'
+    });
+    expect(copyGuard).toMatchObject({
+      status: 'copyClear',
+      disposition: 'containedPrototypeCopyGuardOnly'
+    });
+    expect(productGoNoGo).toMatchObject({
+      status: 'keepInDetails',
+      disposition: 'containedPrototypeProductGoNoGoOnly'
+    });
+    expect(productGoNoGo.reviewNote).toContain('does not move the prototype into Overview');
+  });
+
+  it('holds product go/no-go when contained prototype is dense or examples need review', () => {
+    const smallPrototype = runContainedDrawdownExecutionPrototype({
+      plan,
+      adapterValidation: {
+        status: 'acceptedForMockScoring',
+        adapter: {
+          disposition: 'adapterDraftOnly',
+          year: 2028,
+          accountBucket: 'registered',
+          direction: 'increase',
+          amount: 5000,
+          sourcePayload: 'runtimeReviewDraftOnly'
+        },
+        rows: [],
+        reason: 'Accepted for test.',
+        reviewNote: 'Adapter validation only.',
+        disposition: 'adapterValidationOnly'
+      },
+      containment: {
+        status: 'containedForReview',
+        rows: [],
+        reviewNote: 'Containment guard only.',
+        disposition: 'executionContainmentGuardOnly'
+      },
+      runner: () => baseline
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan, prototype: smallPrototype });
+    const materiality = selectContainedDrawdownMateriality(smallPrototype);
+    const explanation = selectContainedDrawdownExplanation({ prototype: smallPrototype, materiality });
+    const limitations = selectContainedDrawdownLimitations();
+    const usefulness = selectContainedDrawdownUsefulnessCloseout({ plan, summary, materiality, explanation, limitations });
+    const density = selectContainedDrawdownDetailsDensity({ prototype: smallPrototype, materiality, explanation, limitations, usefulness });
+    const checklist = selectContainedDrawdownReviewChecklist({ usefulness, materiality, limitations });
+    const exampleGate = selectContainedDrawdownExampleGate({ exampleCount: 4, blockedCount: 0, heldCount: 1 });
+    const copyGuard = selectContainedDrawdownCopyGuard(plan);
+    const productGoNoGo = selectContainedDrawdownProductGoNoGo({
+      plan,
+      usefulness,
+      density,
+      checklist,
+      exampleGate,
+      copyGuard
+    });
+
+    expect(usefulness.status).toBe('holdForClearerEvidence');
+    expect(checklist.status).toBe('holdBeforeReview');
+    expect(exampleGate.status).toBe('needsExampleReview');
+    expect(productGoNoGo.status).toBe('holdForUxPolish');
   });
 });

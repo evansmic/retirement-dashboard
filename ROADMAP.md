@@ -125,6 +125,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 66. **Sprint 88 — Contained prototype limitations.** Make scenario-only and not-advice boundaries visible.
 67. **Sprint 89 — Contained prototype example and copy guard.** Run all examples through the explanation layer.
 68. **Sprint 90 — Contained prototype usefulness closeout.** Summarize whether the contained prototype is useful enough to keep reviewing.
+69. **Sprint 91 — Contained prototype Details density.** Hold the contained prototype if its Details surface becomes too crowded.
+70. **Sprint 92 — Contained prototype review checklist.** Add a short checklist before users interpret the contained prototype.
+71. **Sprint 93 — Contained prototype example gate.** Keep example readiness as test/runtime evidence without product-view overclaiming.
+72. **Sprint 94 — Contained prototype copy guard.** Protect review-only language and saved-plan boundaries.
+73. **Sprint 95 — Contained prototype product go/no-go.** Combine readiness signals into one Details-only decision before broader drawdown work.
 
 ## Medium-Term Roadmap
 
@@ -213,6 +218,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 88 — Contained prototype limitations.** Complete 2026-05-21. Added visible limitations to keep the prototype humble.
 - **Sprint 89 — Contained prototype example and copy guard.** Complete 2026-05-21. Extended all-example coverage for materiality, explanation, limitations, and usefulness.
 - **Sprint 90 — Contained prototype usefulness closeout.** Complete 2026-05-21. Added a usefulness closeout before broader drawdown work.
+- **Sprint 91 — Contained prototype Details density.** Complete 2026-05-21. Added Details density checks for the contained prototype.
+- **Sprint 92 — Contained prototype review checklist.** Complete 2026-05-21. Added a short review checklist before interpreting prototype evidence.
+- **Sprint 93 — Contained prototype example gate.** Complete 2026-05-21. Added example readiness gating while keeping product UI honest about test-only matrix coverage.
+- **Sprint 94 — Contained prototype copy guard.** Complete 2026-05-21. Added copy and saved-plan boundary checks.
+- **Sprint 95 — Contained prototype product go/no-go.** Complete 2026-05-21. Added a combined Details-only go/no-go for broader drawdown readiness.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
