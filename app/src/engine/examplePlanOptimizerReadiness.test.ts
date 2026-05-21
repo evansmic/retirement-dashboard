@@ -39,9 +39,14 @@ import {
   selectDrawdownReviewPreview,
   selectDrawdownVisibleReviewGate,
   selectTaxAwareDrawdownV1ExampleGate,
+  selectTaxAwareDrawdownV1ConsumerCloseout,
+  selectTaxAwareDrawdownV1ConsumerExampleGate,
+  selectTaxAwareDrawdownV1ConsumerLimits,
+  selectTaxAwareDrawdownV1ConsumerSummary,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
-  selectTaxAwareDrawdownV1PhaseCloseout
+  selectTaxAwareDrawdownV1PhaseCloseout,
+  selectTaxAwareDrawdownV1SafetyChecklist
 } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
@@ -358,6 +363,20 @@ describe('example-plan optimizer readiness matrix', () => {
         review: v1Review,
         exampleGate: v1ExampleGate
       });
+      const v1ConsumerSummary = selectTaxAwareDrawdownV1ConsumerSummary({ execution: v1Execution, review: v1Review });
+      const v1SafetyChecklist = selectTaxAwareDrawdownV1SafetyChecklist({ plan, execution: v1Execution });
+      const v1ConsumerLimits = selectTaxAwareDrawdownV1ConsumerLimits();
+      const v1ConsumerExampleGate = selectTaxAwareDrawdownV1ConsumerExampleGate({
+        exampleCount: examplePlanCards.length,
+        heldOrBlockedCount: 0
+      });
+      const v1ConsumerCloseout = selectTaxAwareDrawdownV1ConsumerCloseout({
+        plan,
+        summary: v1ConsumerSummary,
+        safety: v1SafetyChecklist,
+        limits: v1ConsumerLimits,
+        exampleGate: v1ConsumerExampleGate
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -397,7 +416,12 @@ describe('example-plan optimizer readiness matrix', () => {
         v1Execution,
         v1Review,
         v1ExampleGate,
-        v1Closeout
+        v1Closeout,
+        v1ConsumerSummary,
+        v1SafetyChecklist,
+        v1ConsumerLimits,
+        v1ConsumerExampleGate,
+        v1ConsumerCloseout
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -490,6 +514,20 @@ describe('example-plan optimizer readiness matrix', () => {
       });
       expect(['readyForConsumerUx', 'holdForMoreGuardrails', 'stopBeforeConsumerUx']).toContain(v1Closeout.status);
       expect(v1Closeout.disposition).toBe('v1DrawdownExecutionPhaseCloseoutOnly');
+      expect(['clearForReview', 'needsCare', 'blocked']).toContain(v1ConsumerSummary.status);
+      expect(v1ConsumerSummary.disposition).toBe('v1DrawdownConsumerSummaryOnly');
+      expect(['ready', 'hold', 'blocked']).toContain(v1SafetyChecklist.status);
+      expect(v1SafetyChecklist.disposition).toBe('v1DrawdownSafetyChecklistOnly');
+      expect(v1ConsumerLimits).toMatchObject({
+        status: 'visible',
+        disposition: 'v1DrawdownConsumerLimitsOnly'
+      });
+      expect(v1ConsumerExampleGate).toMatchObject({
+        status: 'examplesClear',
+        disposition: 'v1DrawdownConsumerExampleGateOnly'
+      });
+      expect(['readyForUxCopy', 'holdForCopyPolish', 'blocked']).toContain(v1ConsumerCloseout.status);
+      expect(v1ConsumerCloseout.disposition).toBe('v1DrawdownConsumerCloseoutOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -552,6 +590,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionReview');
       expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionExampleGate');
       expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionPhaseCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerSummary');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownSafetyChecklist');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerLimits');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerExampleGate');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerCloseout');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

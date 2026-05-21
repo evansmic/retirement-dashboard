@@ -140,6 +140,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 81. **Sprint 103 — V1 bounded execution result.** Run the bounded scenario and compare funding, tax, OAS recovery, and estate.
 82. **Sprint 104 — V1 execution review and example gate.** Keep executed results review-only and covered across examples.
 83. **Sprint 105 — V1 execution phase closeout.** Decide whether bounded execution is ready for later consumer UX.
+84. **Sprint 106 — V1 drawdown plain summary.** Explain what ran, what changed, and what did not change.
+85. **Sprint 107 — V1 drawdown safety checklist.** Add funding, estate, saved-plan, and instruction checks.
+86. **Sprint 108 — V1 drawdown consumer limits.** Keep single-scenario and not-advice limits visible.
+87. **Sprint 109 — V1 drawdown consumer example gate.** Extend example coverage to the consumer-readable layer.
+88. **Sprint 110 — V1 drawdown consumer closeout.** Decide whether bounded execution output is ready for UX copy.
 
 ## Medium-Term Roadmap
 
@@ -243,6 +248,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 103 — V1 bounded execution result.** Complete 2026-05-21. Ran one bounded scenario comparison with harm checks.
 - **Sprint 104 — V1 execution review and example gate.** Complete 2026-05-21. Added review and example coverage for the executed scenario.
 - **Sprint 105 — V1 execution phase closeout.** Complete 2026-05-21. Added a closeout before later consumer execution UX.
+- **Sprint 106 — V1 drawdown plain summary.** Complete 2026-05-21. Added what-ran, what-changed, and unchanged-plan summary.
+- **Sprint 107 — V1 drawdown safety checklist.** Complete 2026-05-21. Added funding, estate, saved-plan, and instruction checks.
+- **Sprint 108 — V1 drawdown consumer limits.** Complete 2026-05-21. Added visible limits for the bounded execution result.
+- **Sprint 109 — V1 drawdown consumer example gate.** Complete 2026-05-21. Added example coverage for the consumer-readable layer.
+- **Sprint 110 — V1 drawdown consumer closeout.** Complete 2026-05-21. Added closeout before UX copy work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

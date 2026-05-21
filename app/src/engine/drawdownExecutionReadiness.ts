@@ -572,6 +572,65 @@ export type TaxAwareDrawdownV1PhaseCloseout = {
   disposition: 'v1DrawdownExecutionPhaseCloseoutOnly';
 };
 
+export type TaxAwareDrawdownV1ConsumerSummary = {
+  status: 'clearForReview' | 'needsCare' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'whatRan' | 'whatChanged' | 'whatDidNotChange';
+    label: string;
+    status: 'ok' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownConsumerSummaryOnly';
+};
+
+export type TaxAwareDrawdownV1SafetyChecklist = {
+  status: 'ready' | 'hold' | 'blocked';
+  rows: Array<{
+    id: 'funding' | 'estate' | 'savedPlan' | 'instructions';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownSafetyChecklistOnly';
+};
+
+export type TaxAwareDrawdownV1ConsumerLimits = {
+  status: 'visible';
+  rows: Array<{
+    id: 'singleScenario' | 'notAdvice' | 'notSaved' | 'notFullDrawdownPlan';
+    label: string;
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownConsumerLimitsOnly';
+};
+
+export type TaxAwareDrawdownV1ConsumerExampleGate = {
+  status: 'examplesClear' | 'needsExampleReview';
+  exampleCount: number;
+  heldOrBlockedCount: number;
+  reviewNote: string;
+  disposition: 'v1DrawdownConsumerExampleGateOnly';
+};
+
+export type TaxAwareDrawdownV1ConsumerCloseout = {
+  status: 'readyForUxCopy' | 'holdForCopyPolish' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'summary' | 'safety' | 'limits' | 'examples' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownConsumerCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -2721,6 +2780,217 @@ export function selectTaxAwareDrawdownV1PhaseCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1ConsumerSummary({
+  execution,
+  review
+}: {
+  execution: TaxAwareDrawdownV1ExecutionResult;
+  review: TaxAwareDrawdownV1ExecutionReview;
+}): TaxAwareDrawdownV1ConsumerSummary {
+  const blocked = execution.status === 'blocked' || review.status === 'blocked';
+  const held = execution.status === 'notReady' || review.status === 'holdForReview';
+  const taxRow = execution.rows.find((row) => row.id === 'tax');
+  const fundingRow = execution.rows.find((row) => row.id === 'funding');
+  return {
+    status: blocked ? 'blocked' : held ? 'needsCare' : 'clearForReview',
+    headline: blocked
+      ? 'Do not use this drawdown check yet.'
+      : held
+        ? 'Read this drawdown check carefully.'
+        : 'A bounded drawdown check is ready to review.',
+    detail:
+      'This translates the bounded execution result into plain language before any later consumer-facing drawdown design.',
+    rows: [
+      {
+        id: 'whatRan',
+        label: 'What ran',
+        status: execution.status === 'reviewOnly' ? 'ok' : execution.status === 'notReady' ? 'review' : 'blocked',
+        detail: 'One bounded registered-timing scenario ran against the current plan.'
+      },
+      {
+        id: 'whatChanged',
+        label: 'What changed',
+        status: blocked ? 'blocked' : 'review',
+        detail: `${fundingRow?.label || 'Funding'}: ${fundingRow?.value || 'not available'}. ${taxRow?.label || 'Tax'}: ${taxRow?.value || 'not available'}.`
+      },
+      {
+        id: 'whatDidNotChange',
+        label: 'What did not change',
+        status: 'ok',
+        detail: 'The saved plan, withdrawal order, and household inputs did not change.'
+      }
+    ],
+    reviewNote:
+      'Consumer summary only. It explains the executed scenario and does not create a recommendation or saved change.',
+    disposition: 'v1DrawdownConsumerSummaryOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1SafetyChecklist({
+  plan,
+  execution
+}: {
+  plan: V2PlanPayload;
+  execution: TaxAwareDrawdownV1ExecutionResult;
+}): TaxAwareDrawdownV1SafetyChecklist {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const funding = execution.rows.find((row) => row.id === 'funding');
+  const estate = execution.rows.find((row) => row.id === 'estate');
+  const rows: TaxAwareDrawdownV1SafetyChecklist['rows'] = [
+    {
+      id: 'funding',
+      label: 'Funding check',
+      status: funding?.status === 'blocked' ? 'blocked' : execution.status === 'notReady' ? 'hold' : 'ready',
+      detail: funding?.detail || 'Funding movement is not available yet.'
+    },
+    {
+      id: 'estate',
+      label: 'Estate check',
+      status: estate?.status === 'blocked' ? 'blocked' : 'ready',
+      detail: estate?.detail || 'Estate movement is not available yet.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan check',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No bounded execution output is saved.' : 'Saved plan output contains bounded execution data.'
+    },
+    {
+      id: 'instructions',
+      label: 'Instruction check',
+      status: 'ready',
+      detail: 'The result does not tell the household which account to withdraw from in any year.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'hold' : 'ready',
+    rows,
+    reviewNote:
+      'Safety checklist only. It keeps the executed scenario from becoming advice or a saved plan change.',
+    disposition: 'v1DrawdownSafetyChecklistOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ConsumerLimits(): TaxAwareDrawdownV1ConsumerLimits {
+  return {
+    status: 'visible',
+    rows: [
+      {
+        id: 'singleScenario',
+        label: 'One scenario',
+        detail: 'This is one bounded execution check, not a full drawdown strategy.'
+      },
+      {
+        id: 'notAdvice',
+        label: 'Review only',
+        detail: 'It is not financial advice, tax advice, or a filing instruction.'
+      },
+      {
+        id: 'notSaved',
+        label: 'Not saved',
+        detail: 'The result is not written into the editable plan file.'
+      },
+      {
+        id: 'notFullDrawdownPlan',
+        label: 'Not a full drawdown plan',
+        detail: 'It does not provide account-by-account withdrawal instructions.'
+      }
+    ],
+    reviewNote:
+      'Consumer limits only. These limits stay visible before any broader drawdown execution UX.',
+    disposition: 'v1DrawdownConsumerLimitsOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ConsumerExampleGate({
+  exampleCount,
+  heldOrBlockedCount
+}: {
+  exampleCount: number;
+  heldOrBlockedCount: number;
+}): TaxAwareDrawdownV1ConsumerExampleGate {
+  const hasMatrixEvidence = exampleCount > 0;
+  return {
+    status: hasMatrixEvidence && heldOrBlockedCount === 0 ? 'examplesClear' : 'needsExampleReview',
+    exampleCount,
+    heldOrBlockedCount,
+    reviewNote: hasMatrixEvidence
+      ? 'Consumer example gate only. It checks built-in examples and does not save execution output.'
+      : 'Consumer example gate only. The product view does not run the built-in example matrix.',
+    disposition: 'v1DrawdownConsumerExampleGateOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ConsumerCloseout({
+  plan,
+  summary,
+  safety,
+  limits,
+  exampleGate
+}: {
+  plan: V2PlanPayload;
+  summary: TaxAwareDrawdownV1ConsumerSummary;
+  safety: TaxAwareDrawdownV1SafetyChecklist;
+  limits: TaxAwareDrawdownV1ConsumerLimits;
+  exampleGate: TaxAwareDrawdownV1ConsumerExampleGate;
+}): TaxAwareDrawdownV1ConsumerCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ConsumerCloseout['rows'] = [
+    {
+      id: 'summary',
+      label: 'Plain summary',
+      status: summary.status === 'clearForReview' ? 'ready' : summary.status === 'needsCare' ? 'hold' : 'blocked',
+      detail: summary.headline
+    },
+    {
+      id: 'safety',
+      label: 'Safety checklist',
+      status: safety.status === 'ready' ? 'ready' : safety.status === 'hold' ? 'hold' : 'blocked',
+      detail: safety.reviewNote
+    },
+    {
+      id: 'limits',
+      label: 'Visible limits',
+      status: limits.status === 'visible' ? 'ready' : 'hold',
+      detail: limits.reviewNote
+    },
+    {
+      id: 'examples',
+      label: 'Example gate',
+      status: exampleGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail: exampleGate.status === 'examplesClear'
+        ? `${exampleGate.exampleCount} examples are clear.`
+        : exampleGate.exampleCount > 0
+          ? `${exampleGate.heldOrBlockedCount} example(s) need review.`
+          : 'Example coverage is checked in tests, not in this product view.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No consumer closeout output is saved.' : 'Saved plan output contains consumer closeout data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForCopyPolish' : 'readyForUxCopy',
+    headline: hasBlocked
+      ? 'Do not move the drawdown check into consumer UX.'
+      : hasHold
+        ? 'Hold the drawdown check for copy polish.'
+        : 'Ready for consumer UX copy.',
+    detail:
+      'This closeout decides whether the bounded execution result is clear enough for the next consumer-facing design pass.',
+    rows,
+    reviewNote:
+      'Consumer closeout only. It does not save output, apply a strategy, or create account instructions.',
+    disposition: 'v1DrawdownConsumerCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -2763,6 +3033,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownExecutionReview' in saved) &&
     !('v1DrawdownExecutionExampleGate' in saved) &&
     !('v1DrawdownExecutionPhaseCloseout' in saved) &&
+    !('v1DrawdownConsumerSummary' in saved) &&
+    !('v1DrawdownSafetyChecklist' in saved) &&
+    !('v1DrawdownConsumerLimits' in saved) &&
+    !('v1DrawdownConsumerExampleGate' in saved) &&
+    !('v1DrawdownConsumerCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

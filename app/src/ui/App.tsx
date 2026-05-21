@@ -103,7 +103,12 @@ import type {
   TaxAwareDrawdownV1ExecutionIntent,
   TaxAwareDrawdownV1ExecutionResult,
   TaxAwareDrawdownV1ExecutionReview,
-  TaxAwareDrawdownV1PhaseCloseout
+  TaxAwareDrawdownV1PhaseCloseout,
+  TaxAwareDrawdownV1ConsumerCloseout,
+  TaxAwareDrawdownV1ConsumerExampleGate,
+  TaxAwareDrawdownV1ConsumerLimits,
+  TaxAwareDrawdownV1ConsumerSummary,
+  TaxAwareDrawdownV1SafetyChecklist
 } from '../engine/drawdownExecutionReadiness';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
@@ -185,6 +190,11 @@ type BridgePreview = {
   v1DrawdownExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
   v1DrawdownExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
   v1DrawdownExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
+  v1DrawdownConsumerSummary: TaxAwareDrawdownV1ConsumerSummary | null;
+  v1DrawdownSafetyChecklist: TaxAwareDrawdownV1SafetyChecklist | null;
+  v1DrawdownConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
+  v1DrawdownConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
+  v1DrawdownConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -471,6 +481,11 @@ export function App() {
     v1DrawdownExecutionReview: null,
     v1DrawdownExecutionExampleGate: null,
     v1DrawdownExecutionPhaseCloseout: null,
+    v1DrawdownConsumerSummary: null,
+    v1DrawdownSafetyChecklist: null,
+    v1DrawdownConsumerLimits: null,
+    v1DrawdownConsumerExampleGate: null,
+    v1DrawdownConsumerCloseout: null,
     error: '',
     loading: false
   });
@@ -521,6 +536,11 @@ export function App() {
         v1DrawdownExecutionReview: null,
         v1DrawdownExecutionExampleGate: null,
         v1DrawdownExecutionPhaseCloseout: null,
+        v1DrawdownConsumerSummary: null,
+        v1DrawdownSafetyChecklist: null,
+        v1DrawdownConsumerLimits: null,
+        v1DrawdownConsumerExampleGate: null,
+        v1DrawdownConsumerCloseout: null,
         error: '',
         loading: false
       });
@@ -571,10 +591,15 @@ export function App() {
             selectDrawdownPrototypeReadinessReview,
             selectDrawdownReviewPreview,
             selectDrawdownVisibleReviewGate,
+            selectTaxAwareDrawdownV1ConsumerCloseout,
+            selectTaxAwareDrawdownV1ConsumerExampleGate,
+            selectTaxAwareDrawdownV1ConsumerLimits,
+            selectTaxAwareDrawdownV1ConsumerSummary,
             selectTaxAwareDrawdownV1ExampleGate,
             selectTaxAwareDrawdownV1ExecutionIntent,
             selectTaxAwareDrawdownV1ExecutionReview,
-            selectTaxAwareDrawdownV1PhaseCloseout
+            selectTaxAwareDrawdownV1PhaseCloseout,
+            selectTaxAwareDrawdownV1SafetyChecklist
           }
         ]) => {
         const preview = runResultsPreviewBundle(plan);
@@ -740,6 +765,26 @@ export function App() {
           review: v1DrawdownExecutionReview,
           exampleGate: v1DrawdownExecutionExampleGate
         });
+        const v1DrawdownConsumerSummary = selectTaxAwareDrawdownV1ConsumerSummary({
+          execution: v1DrawdownExecutionResult,
+          review: v1DrawdownExecutionReview
+        });
+        const v1DrawdownSafetyChecklist = selectTaxAwareDrawdownV1SafetyChecklist({
+          plan,
+          execution: v1DrawdownExecutionResult
+        });
+        const v1DrawdownConsumerLimits = selectTaxAwareDrawdownV1ConsumerLimits();
+        const v1DrawdownConsumerExampleGate = selectTaxAwareDrawdownV1ConsumerExampleGate({
+          exampleCount: 0,
+          heldOrBlockedCount: 0
+        });
+        const v1DrawdownConsumerCloseout = selectTaxAwareDrawdownV1ConsumerCloseout({
+          plan,
+          summary: v1DrawdownConsumerSummary,
+          safety: v1DrawdownSafetyChecklist,
+          limits: v1DrawdownConsumerLimits,
+          exampleGate: v1DrawdownConsumerExampleGate
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -778,6 +823,11 @@ export function App() {
             v1DrawdownExecutionReview,
             v1DrawdownExecutionExampleGate,
             v1DrawdownExecutionPhaseCloseout,
+            v1DrawdownConsumerSummary,
+            v1DrawdownSafetyChecklist,
+            v1DrawdownConsumerLimits,
+            v1DrawdownConsumerExampleGate,
+            v1DrawdownConsumerCloseout,
             error: '',
             loading: false
           });
@@ -825,6 +875,11 @@ export function App() {
               v1DrawdownExecutionReview: null,
               v1DrawdownExecutionExampleGate: null,
               v1DrawdownExecutionPhaseCloseout: null,
+              v1DrawdownConsumerSummary: null,
+              v1DrawdownSafetyChecklist: null,
+              v1DrawdownConsumerLimits: null,
+              v1DrawdownConsumerExampleGate: null,
+              v1DrawdownConsumerCloseout: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -1045,6 +1100,11 @@ export function App() {
               v1DrawdownExecutionReview={bridgePreview.v1DrawdownExecutionReview}
               v1DrawdownExecutionExampleGate={bridgePreview.v1DrawdownExecutionExampleGate}
               v1DrawdownExecutionPhaseCloseout={bridgePreview.v1DrawdownExecutionPhaseCloseout}
+              v1DrawdownConsumerSummary={bridgePreview.v1DrawdownConsumerSummary}
+              v1DrawdownSafetyChecklist={bridgePreview.v1DrawdownSafetyChecklist}
+              v1DrawdownConsumerLimits={bridgePreview.v1DrawdownConsumerLimits}
+              v1DrawdownConsumerExampleGate={bridgePreview.v1DrawdownConsumerExampleGate}
+              v1DrawdownConsumerCloseout={bridgePreview.v1DrawdownConsumerCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2627,6 +2687,11 @@ function ResultsHandoffPanel({
   v1DrawdownExecutionReview,
   v1DrawdownExecutionExampleGate,
   v1DrawdownExecutionPhaseCloseout,
+  v1DrawdownConsumerSummary,
+  v1DrawdownSafetyChecklist,
+  v1DrawdownConsumerLimits,
+  v1DrawdownConsumerExampleGate,
+  v1DrawdownConsumerCloseout,
   title,
   validation
 }: {
@@ -2675,6 +2740,11 @@ function ResultsHandoffPanel({
   v1DrawdownExecutionReview: BridgePreview['v1DrawdownExecutionReview'];
   v1DrawdownExecutionExampleGate: BridgePreview['v1DrawdownExecutionExampleGate'];
   v1DrawdownExecutionPhaseCloseout: BridgePreview['v1DrawdownExecutionPhaseCloseout'];
+  v1DrawdownConsumerSummary: BridgePreview['v1DrawdownConsumerSummary'];
+  v1DrawdownSafetyChecklist: BridgePreview['v1DrawdownSafetyChecklist'];
+  v1DrawdownConsumerLimits: BridgePreview['v1DrawdownConsumerLimits'];
+  v1DrawdownConsumerExampleGate: BridgePreview['v1DrawdownConsumerExampleGate'];
+  v1DrawdownConsumerCloseout: BridgePreview['v1DrawdownConsumerCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2815,6 +2885,11 @@ function ResultsHandoffPanel({
             v1DrawdownExecutionReview={v1DrawdownExecutionReview}
             v1DrawdownExecutionExampleGate={v1DrawdownExecutionExampleGate}
             v1DrawdownExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
+            v1DrawdownConsumerSummary={v1DrawdownConsumerSummary}
+            v1DrawdownSafetyChecklist={v1DrawdownSafetyChecklist}
+            v1DrawdownConsumerLimits={v1DrawdownConsumerLimits}
+            v1DrawdownConsumerExampleGate={v1DrawdownConsumerExampleGate}
+            v1DrawdownConsumerCloseout={v1DrawdownConsumerCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -3335,6 +3410,11 @@ function DetailsResultsPanel({
   v1DrawdownExecutionReview,
   v1DrawdownExecutionExampleGate,
   v1DrawdownExecutionPhaseCloseout,
+  v1DrawdownConsumerSummary,
+  v1DrawdownSafetyChecklist,
+  v1DrawdownConsumerLimits,
+  v1DrawdownConsumerExampleGate,
+  v1DrawdownConsumerCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -3392,6 +3472,11 @@ function DetailsResultsPanel({
   v1DrawdownExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
   v1DrawdownExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
   v1DrawdownExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
+  v1DrawdownConsumerSummary: TaxAwareDrawdownV1ConsumerSummary | null;
+  v1DrawdownSafetyChecklist: TaxAwareDrawdownV1SafetyChecklist | null;
+  v1DrawdownConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
+  v1DrawdownConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
+  v1DrawdownConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3535,6 +3620,11 @@ function DetailsResultsPanel({
         v1ExecutionReview={v1DrawdownExecutionReview}
         v1ExecutionExampleGate={v1DrawdownExecutionExampleGate}
         v1ExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
+        v1ConsumerSummary={v1DrawdownConsumerSummary}
+        v1SafetyChecklist={v1DrawdownSafetyChecklist}
+        v1ConsumerLimits={v1DrawdownConsumerLimits}
+        v1ConsumerExampleGate={v1DrawdownConsumerExampleGate}
+        v1ConsumerCloseout={v1DrawdownConsumerCloseout}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -4364,6 +4454,11 @@ function DrawdownExecutionBoundaryPanel({
   v1ExecutionReview,
   v1ExecutionExampleGate,
   v1ExecutionPhaseCloseout,
+  v1ConsumerSummary,
+  v1SafetyChecklist,
+  v1ConsumerLimits,
+  v1ConsumerExampleGate,
+  v1ConsumerCloseout,
   containedReviewChecklist,
   containedUsefulnessCloseout,
   containmentGuard,
@@ -4395,6 +4490,11 @@ function DrawdownExecutionBoundaryPanel({
   v1ExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
   v1ExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
   v1ExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
+  v1ConsumerSummary: TaxAwareDrawdownV1ConsumerSummary | null;
+  v1SafetyChecklist: TaxAwareDrawdownV1SafetyChecklist | null;
+  v1ConsumerLimits: TaxAwareDrawdownV1ConsumerLimits | null;
+  v1ConsumerExampleGate: TaxAwareDrawdownV1ConsumerExampleGate | null;
+  v1ConsumerCloseout: TaxAwareDrawdownV1ConsumerCloseout | null;
   containedReviewChecklist: ContainedDrawdownReviewChecklist | null;
   containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
@@ -4938,6 +5038,102 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{v1ExecutionPhaseCloseout.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ConsumerSummary?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown plain summary</p>
+            <h4>{v1ConsumerSummary.headline}</h4>
+            <p>{v1ConsumerSummary.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ConsumerSummary.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ok' ? 'OK' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ConsumerSummary.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1SafetyChecklist?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown safety checklist</p>
+            <h4>{v1SafetyChecklist.status === 'ready' ? 'Safety checks are clear' : v1SafetyChecklist.status === 'hold' ? 'Safety checks need review' : 'Safety checks blocked'}</h4>
+            <p>These checks keep the executed scenario from becoming a household instruction.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1SafetyChecklist.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1SafetyChecklist.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ConsumerLimits?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown limits</p>
+            <h4>What this check does not do</h4>
+            <p>These limits stay visible before the executed result moves toward consumer-facing UX.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ConsumerLimits.rows.map((row) => (
+              <article className="optimizer-eligibility-note eligibility-review" key={row.id}>
+                <strong>{row.label}</strong>
+                <span>Limit</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ConsumerLimits.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ConsumerExampleGate ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown example gate</p>
+            <h4>{v1ConsumerExampleGate.status === 'examplesClear' ? 'Built-in examples are clear' : 'Example coverage stays in review'}</h4>
+            <p>{v1ConsumerExampleGate.reviewNote}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            <article className={`optimizer-eligibility-note eligibility-${v1ConsumerExampleGate.status === 'examplesClear' ? 'ok' : 'review'}`}>
+              <strong>Example coverage</strong>
+              <span>{v1ConsumerExampleGate.status === 'examplesClear' ? 'Ready' : 'Hold'}</span>
+              <p>
+                {v1ConsumerExampleGate.exampleCount > 0
+                  ? `${v1ConsumerExampleGate.exampleCount} example(s) checked; ${v1ConsumerExampleGate.heldOrBlockedCount} need review.`
+                  : 'The live product view leaves full example coverage to the test matrix.'}
+              </p>
+            </article>
+          </div>
+        </div>
+      ) : null}
+      {v1ConsumerCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded drawdown consumer closeout</p>
+            <h4>{v1ConsumerCloseout.headline}</h4>
+            <p>{v1ConsumerCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ConsumerCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ConsumerCloseout.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (

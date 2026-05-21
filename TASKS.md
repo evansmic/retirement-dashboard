@@ -4,38 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 105: V1 Drawdown Execution Phase Closeout
+## Latest Sprint — Sprint 110: V1 Drawdown Consumer Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: confirm that v1 includes a narrow, bounded tax-aware drawdown execution path while keeping the first execution review conservative, unsaved, and non-advisory.
+Goal: make the first bounded drawdown execution result easier for consumers to read while keeping it conservative, unsaved, and non-advisory.
 
 Non-scope: broad account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 105 checkpoint doc: [`docs/sprint_105_v1_drawdown_execution_phase_closeout.md`](docs/sprint_105_v1_drawdown_execution_phase_closeout.md).
+Sprint 110 checkpoint doc: [`docs/sprint_110_v1_drawdown_consumer_closeout.md`](docs/sprint_110_v1_drawdown_consumer_closeout.md).
 
-### Sprint 101-105 Candidate Implementation Tickets
+### Sprint 106-110 Candidate Implementation Tickets
 
-- [x] **S101-01 — V1 execution intent.** Record that v1 should include bounded drawdown execution, not only review scenarios.
-- [x] **S102-01 — Bounded execution candidate.** Convert one accepted draft shape into one existing-engine scenario candidate.
-- [x] **S103-01 — Executed scenario result.** Run the bounded candidate and compare funding, tax, OAS recovery, and estate movement.
-- [x] **S104-01 — Execution review and example gate.** Keep the executed result review-only and covered by built-in examples.
-- [x] **S105-01 — Execution phase closeout.** Decide whether the bounded execution path is ready for later consumer UX.
+- [x] **S106-01 — Plain summary.** Translate the bounded execution result into what ran, what changed, and what did not change.
+- [x] **S107-01 — Safety checklist.** Add funding, estate, saved-plan, and instruction checks.
+- [x] **S108-01 — Consumer limits.** Keep single-scenario, not-advice, not-saved, and not-full-plan limits visible.
+- [x] **S109-01 — Consumer example gate.** Extend all-example coverage to the consumer-readable layer.
+- [x] **S110-01 — Consumer closeout.** Decide whether bounded execution output is ready for later consumer UX copy.
 
-### Sprint 105 Definition Of Done
+### Sprint 110 Definition Of Done
 
-- V1 execution intent, candidate, result, review, example gate, and closeout appear only in Details.
+- Plain summary, safety checklist, limits, consumer example gate, and consumer closeout appear only in Details.
 - Overview remains unchanged and does not gain prototype readiness panels.
 - Product UI does not claim to run the full example matrix for a single plan.
 - Example matrix covers the new v1 execution layer and saved-plan boundaries.
 - The executed scenario can be reviewed, held, or blocked without applying strategy output.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 110: V1 Drawdown Consumer Closeout
+
+**Complete 2026-05-21.** Added a Details-only closeout for whether bounded execution output is clear enough for later consumer UX copy.
+
+Sprint 110 checkpoint doc: [`docs/sprint_110_v1_drawdown_consumer_closeout.md`](docs/sprint_110_v1_drawdown_consumer_closeout.md).
+
+### Sprint 109: V1 Drawdown Consumer Example Gate
+
+**Complete 2026-05-21.** Extended all-example coverage to the consumer-readable bounded execution layer.
+
+Sprint 109 checkpoint doc: [`docs/sprint_109_v1_drawdown_consumer_example_gate.md`](docs/sprint_109_v1_drawdown_consumer_example_gate.md).
+
+### Sprint 108: V1 Drawdown Consumer Limits
+
+**Complete 2026-05-21.** Added visible limits explaining that the bounded execution result is one scenario, not advice, not saved, and not a full drawdown plan.
+
+Sprint 108 checkpoint doc: [`docs/sprint_108_v1_drawdown_consumer_limits.md`](docs/sprint_108_v1_drawdown_consumer_limits.md).
+
+### Sprint 107: V1 Drawdown Safety Checklist
+
+**Complete 2026-05-21.** Added funding, estate, saved-plan, and instruction checks for the bounded execution result.
+
+Sprint 107 checkpoint doc: [`docs/sprint_107_v1_drawdown_safety_checklist.md`](docs/sprint_107_v1_drawdown_safety_checklist.md).
+
+### Sprint 106: V1 Drawdown Plain Summary
+
+**Complete 2026-05-21.** Added a plain summary that explains what ran, what changed, and what did not change in the bounded execution result.
+
+Sprint 106 checkpoint doc: [`docs/sprint_106_v1_drawdown_plain_summary.md`](docs/sprint_106_v1_drawdown_plain_summary.md).
 
 ### Sprint 105: V1 Drawdown Execution Phase Closeout
 

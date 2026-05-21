@@ -39,9 +39,14 @@ import {
   selectDrawdownReviewPreview,
   selectDrawdownVisibleReviewGate,
   selectTaxAwareDrawdownV1ExampleGate,
+  selectTaxAwareDrawdownV1ConsumerCloseout,
+  selectTaxAwareDrawdownV1ConsumerExampleGate,
+  selectTaxAwareDrawdownV1ConsumerLimits,
+  selectTaxAwareDrawdownV1ConsumerSummary,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
   selectTaxAwareDrawdownV1PhaseCloseout,
+  selectTaxAwareDrawdownV1SafetyChecklist,
   validateDrawdownAnnualOverrideAdapter,
   validateRuntimeDrawdownPayload,
   type DrawdownAnnualOverrideAdapterDraft,
@@ -275,6 +280,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionReview');
     expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionExampleGate');
     expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionPhaseCloseout');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerSummary');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownSafetyChecklist');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerLimits');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerExampleGate');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownConsumerCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -868,6 +878,40 @@ describe('drawdown execution readiness contract', () => {
     });
     expect(execution.reviewNote).toContain('executed scenario comparison');
     expect(review.reviewNote).toContain('not a recommendation');
+
+    const consumerSummary = selectTaxAwareDrawdownV1ConsumerSummary({ execution, review });
+    const safety = selectTaxAwareDrawdownV1SafetyChecklist({ plan, execution });
+    const limits = selectTaxAwareDrawdownV1ConsumerLimits();
+    const consumerExampleGate = selectTaxAwareDrawdownV1ConsumerExampleGate({ exampleCount: 4, heldOrBlockedCount: 0 });
+    const consumerCloseout = selectTaxAwareDrawdownV1ConsumerCloseout({
+      plan,
+      summary: consumerSummary,
+      safety,
+      limits,
+      exampleGate: consumerExampleGate
+    });
+
+    expect(consumerSummary).toMatchObject({
+      status: 'clearForReview',
+      disposition: 'v1DrawdownConsumerSummaryOnly'
+    });
+    expect(safety).toMatchObject({
+      status: 'ready',
+      disposition: 'v1DrawdownSafetyChecklistOnly'
+    });
+    expect(limits).toMatchObject({
+      status: 'visible',
+      disposition: 'v1DrawdownConsumerLimitsOnly'
+    });
+    expect(consumerExampleGate).toMatchObject({
+      status: 'examplesClear',
+      disposition: 'v1DrawdownConsumerExampleGateOnly'
+    });
+    expect(consumerCloseout).toMatchObject({
+      status: 'readyForUxCopy',
+      disposition: 'v1DrawdownConsumerCloseoutOnly'
+    });
+    expect(consumerCloseout.reviewNote).toContain('does not save output');
   });
 
   it('holds product go/no-go when contained prototype is dense or examples need review', () => {
@@ -981,5 +1025,22 @@ describe('drawdown execution readiness contract', () => {
     expect(review.status).toBe('holdForReview');
     expect(v1ExampleGate.status).toBe('needsExampleReview');
     expect(v1Closeout.status).toBe('holdForMoreGuardrails');
+
+    const consumerSummary = selectTaxAwareDrawdownV1ConsumerSummary({ execution, review });
+    const safety = selectTaxAwareDrawdownV1SafetyChecklist({ plan, execution });
+    const limits = selectTaxAwareDrawdownV1ConsumerLimits();
+    const consumerExampleGate = selectTaxAwareDrawdownV1ConsumerExampleGate({ exampleCount: 4, heldOrBlockedCount: 1 });
+    const consumerCloseout = selectTaxAwareDrawdownV1ConsumerCloseout({
+      plan,
+      summary: consumerSummary,
+      safety,
+      limits,
+      exampleGate: consumerExampleGate
+    });
+
+    expect(consumerSummary.status).toBe('needsCare');
+    expect(safety.status).toBe('hold');
+    expect(consumerExampleGate.status).toBe('needsExampleReview');
+    expect(consumerCloseout.status).toBe('holdForCopyPolish');
   });
 });

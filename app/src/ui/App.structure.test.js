@@ -125,6 +125,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Bounded execution review');
     expect(appSource).toContain('V1 execution example gate');
     expect(appSource).toContain('V1 execution phase closeout');
+    expect(appSource).toContain('Bounded drawdown plain summary');
+    expect(appSource).toContain('Bounded drawdown safety checklist');
+    expect(appSource).toContain('Bounded drawdown limits');
+    expect(appSource).toContain('Bounded drawdown example gate');
+    expect(appSource).toContain('Bounded drawdown consumer closeout');
     expect(appSource).toContain('not a saved plan change or account instruction');
     expect(appSource).toContain('does not promote it today');
     expect(appSource).toContain('does not change your plan');
