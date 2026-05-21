@@ -291,6 +291,64 @@ export type ContainedDrawdownPrototypeSummary = {
   disposition: 'containedPrototypeSummaryOnly';
 };
 
+export type ContainedDrawdownMaterialityRow = {
+  id: 'funding' | 'tax' | 'oasRecovery' | 'estate';
+  label: string;
+  status: 'material' | 'immaterial' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownMateriality = {
+  status: 'materialForReview' | 'minorMovement' | 'blocked';
+  headline: string;
+  rows: ContainedDrawdownMaterialityRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeMaterialityOnly';
+};
+
+export type ContainedDrawdownExplanationRow = {
+  id: 'whyMoved' | 'whyCautious' | 'whatItDoesNotMean';
+  label: string;
+  detail: string;
+};
+
+export type ContainedDrawdownExplanation = {
+  status: 'available' | 'heldBack' | 'blocked';
+  headline: string;
+  rows: ContainedDrawdownExplanationRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeExplanationOnly';
+};
+
+export type ContainedDrawdownLimitationRow = {
+  id: 'scenarioOnly' | 'noAnnualOverride' | 'notAdvice' | 'needsReview';
+  label: string;
+  detail: string;
+};
+
+export type ContainedDrawdownLimitations = {
+  status: 'visible';
+  rows: ContainedDrawdownLimitationRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeLimitationsOnly';
+};
+
+export type ContainedDrawdownUsefulnessCloseoutRow = {
+  id: 'summary' | 'materiality' | 'explanation' | 'limitations' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownUsefulnessCloseout = {
+  status: 'usefulForReview' | 'holdForClearerEvidence' | 'notUseful';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownUsefulnessCloseoutRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeUsefulnessOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -1435,6 +1493,198 @@ export function selectContainedDrawdownPrototypeSummary({
   };
 }
 
+export function selectContainedDrawdownMateriality(prototype: ContainedDrawdownExecutionPrototype): ContainedDrawdownMateriality {
+  if (prototype.status === 'blocked') {
+    return {
+      status: 'blocked',
+      headline: 'Materiality is blocked by harm checks.',
+      rows: prototype.rows
+        .filter((row): row is ContainedDrawdownPrototypeEvidenceRow & { id: 'funding' | 'tax' | 'oasRecovery' | 'estate' } =>
+          ['funding', 'tax', 'oasRecovery', 'estate'].includes(row.id)
+        )
+        .map((row) => ({
+          id: row.id,
+          label: row.label,
+          status: row.status === 'blocked' ? 'blocked' : 'review',
+          detail: row.detail
+        })),
+      reviewNote: 'Materiality check only. Blocked evidence is not treated as useful household guidance.',
+      disposition: 'containedPrototypeMaterialityOnly'
+    };
+  }
+
+  const rows: ContainedDrawdownMaterialityRow[] = prototype.rows
+    .filter((row): row is ContainedDrawdownPrototypeEvidenceRow & { id: 'funding' | 'tax' | 'oasRecovery' | 'estate' } =>
+      ['funding', 'tax', 'oasRecovery', 'estate'].includes(row.id)
+    )
+    .map((row) => {
+      const movement = Math.abs(numberFromDisplay(row.value));
+      const material = row.id === 'funding' ? movement >= 1 : movement >= 500;
+      return {
+        id: row.id,
+        label: row.label,
+        status: row.status === 'review' ? 'review' : material ? 'material' : 'immaterial',
+        detail: material
+          ? `${row.label} moved enough to keep in review.`
+          : `${row.label} did not move enough to treat as a strong signal.`
+      };
+    });
+  const hasMaterial = rows.some((row) => row.status === 'material' || row.status === 'review');
+  return {
+    status: hasMaterial ? 'materialForReview' : 'minorMovement',
+    headline: hasMaterial ? 'Contained prototype has reviewable movement.' : 'Contained prototype movement is small.',
+    rows,
+    reviewNote:
+      'Materiality check only. It helps decide whether the contained prototype is worth reading, not whether to change the plan.',
+    disposition: 'containedPrototypeMaterialityOnly'
+  };
+}
+
+export function selectContainedDrawdownExplanation({
+  prototype,
+  materiality
+}: {
+  prototype: ContainedDrawdownExecutionPrototype;
+  materiality: ContainedDrawdownMateriality;
+}): ContainedDrawdownExplanation {
+  const taxRow = prototype.rows.find((row) => row.id === 'tax');
+  const oasRow = prototype.rows.find((row) => row.id === 'oasRecovery');
+  const estateRow = prototype.rows.find((row) => row.id === 'estate');
+  const status: ContainedDrawdownExplanation['status'] =
+    prototype.status === 'blocked' ? 'blocked' : prototype.status === 'heldBack' || materiality.status === 'minorMovement' ? 'heldBack' : 'available';
+
+  return {
+    status,
+    headline:
+      status === 'available'
+        ? 'Why the contained prototype moved'
+        : status === 'blocked'
+          ? 'Why the contained prototype is blocked'
+          : 'Why the contained prototype is only a light signal',
+    rows: [
+      {
+        id: 'whyMoved',
+        label: 'What moved',
+        detail:
+          status === 'blocked'
+            ? 'The contained scenario showed a funding or estate concern, so it is not useful as a next-step signal.'
+            : `The main movements are lifetime tax ${taxRow?.value || '$0'}, OAS recovery ${oasRow?.value || '$0'}, and projected money left ${estateRow?.value || '$0'}.`
+      },
+      {
+        id: 'whyCautious',
+        label: 'Why to be cautious',
+        detail:
+          materiality.status === 'minorMovement'
+            ? 'The movement is small, so this should not distract from the main retirement answer.'
+            : 'This is one bounded scenario, not a full tax-aware drawdown plan.'
+      },
+      {
+        id: 'whatItDoesNotMean',
+        label: 'What it does not mean',
+        detail: 'It does not mean the household should change withdrawals or use this as filing guidance.'
+      }
+    ],
+    reviewNote:
+      'Explanation only. It translates the contained prototype into review language without creating a recommendation.',
+    disposition: 'containedPrototypeExplanationOnly'
+  };
+}
+
+export function selectContainedDrawdownLimitations(): ContainedDrawdownLimitations {
+  return {
+    status: 'visible',
+    rows: [
+      {
+        id: 'scenarioOnly',
+        label: 'Scenario only',
+        detail: 'This compares one bounded scenario against the current plan.'
+      },
+      {
+        id: 'noAnnualOverride',
+        label: 'No custom annual override',
+        detail: 'The calculation does not run custom year-by-year withdrawal instructions.'
+      },
+      {
+        id: 'notAdvice',
+        label: 'Not advice',
+        detail: 'The output is for review and does not tell the household what to file or withdraw.'
+      },
+      {
+        id: 'needsReview',
+        label: 'Needs review',
+        detail: 'Tax, locked-in account, survivor, estate, and cash-flow details still need household review.'
+      }
+    ],
+    reviewNote:
+      'Limitations only. These notes keep the contained prototype from sounding more certain than it is.',
+    disposition: 'containedPrototypeLimitationsOnly'
+  };
+}
+
+export function selectContainedDrawdownUsefulnessCloseout({
+  plan,
+  summary,
+  materiality,
+  explanation,
+  limitations
+}: {
+  plan: V2PlanPayload;
+  summary: ContainedDrawdownPrototypeSummary;
+  materiality: ContainedDrawdownMateriality;
+  explanation: ContainedDrawdownExplanation;
+  limitations: ContainedDrawdownLimitations;
+}): ContainedDrawdownUsefulnessCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: ContainedDrawdownUsefulnessCloseoutRow[] = [
+    {
+      id: 'summary',
+      label: 'Prototype summary',
+      status: summary.status === 'readyForReview' ? 'ready' : summary.status === 'holdForReview' ? 'hold' : 'blocked',
+      detail: summary.headline
+    },
+    {
+      id: 'materiality',
+      label: 'Materiality',
+      status: materiality.status === 'materialForReview' ? 'ready' : materiality.status === 'minorMovement' ? 'hold' : 'blocked',
+      detail: materiality.headline
+    },
+    {
+      id: 'explanation',
+      label: 'Explanation',
+      status: explanation.status === 'available' ? 'ready' : explanation.status === 'heldBack' ? 'hold' : 'blocked',
+      detail: explanation.headline
+    },
+    {
+      id: 'limitations',
+      label: 'Limitations',
+      status: limitations.status === 'visible' ? 'ready' : 'hold',
+      detail: limitations.reviewNote
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No contained prototype usefulness output is saved.' : 'Saved plan output contains contained prototype usefulness data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'notUseful' : hasHold ? 'holdForClearerEvidence' : 'usefulForReview',
+    headline: hasBlocked
+      ? 'Contained prototype is not useful yet.'
+      : hasHold
+        ? 'Contained prototype needs clearer evidence.'
+        : 'Contained prototype is useful for review.',
+    detail:
+      'This closeout checks whether the contained prototype is clear enough to keep in Details before broader drawdown work.',
+    rows,
+    reviewNote:
+      'Usefulness closeout only. It does not change withdrawal order, apply a strategy, or save output.',
+    disposition: 'containedPrototypeUsefulnessOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -1457,6 +1707,10 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('drawdownExecutionPhaseCloseout' in saved) &&
     !('containedDrawdownExecutionPrototype' in saved) &&
     !('containedDrawdownPrototypeSummary' in saved) &&
+    !('containedDrawdownMateriality' in saved) &&
+    !('containedDrawdownExplanation' in saved) &&
+    !('containedDrawdownLimitations' in saved) &&
+    !('containedDrawdownUsefulnessCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );
@@ -1597,4 +1851,10 @@ function signedWhole(value: number): string {
 
 function n(value: unknown): number {
   return Number.isFinite(Number(value)) ? Number(value) : 0;
+}
+
+function numberFromDisplay(value: string): number {
+  const normalized = value.replace(/[$,+\s]/g, '');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

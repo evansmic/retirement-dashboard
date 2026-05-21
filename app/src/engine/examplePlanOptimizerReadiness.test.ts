@@ -10,7 +10,11 @@ import {
   buildDrawdownExecutionContract,
   emptyMockedExecutionScorecard,
   runContainedDrawdownExecutionPrototype,
+  selectContainedDrawdownExplanation,
+  selectContainedDrawdownLimitations,
+  selectContainedDrawdownMateriality,
   selectContainedDrawdownPrototypeSummary,
+  selectContainedDrawdownUsefulnessCloseout,
   selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
   selectDrawdownExecutionContainmentGuard,
@@ -250,6 +254,16 @@ describe('example-plan optimizer readiness matrix', () => {
       });
       const containedPrototype = runContainedDrawdownExecutionPrototype({ plan, adapterValidation, containment });
       const containedPrototypeSummary = selectContainedDrawdownPrototypeSummary({ plan, prototype: containedPrototype });
+      const containedMateriality = selectContainedDrawdownMateriality(containedPrototype);
+      const containedExplanation = selectContainedDrawdownExplanation({ prototype: containedPrototype, materiality: containedMateriality });
+      const containedLimitations = selectContainedDrawdownLimitations();
+      const containedUsefulness = selectContainedDrawdownUsefulnessCloseout({
+        plan,
+        summary: containedPrototypeSummary,
+        materiality: containedMateriality,
+        explanation: containedExplanation,
+        limitations: containedLimitations
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -269,7 +283,11 @@ describe('example-plan optimizer readiness matrix', () => {
         exampleCheckpoint,
         phaseCloseout,
         containedPrototype,
-        containedPrototypeSummary
+        containedPrototypeSummary,
+        containedMateriality,
+        containedExplanation,
+        containedLimitations,
+        containedUsefulness
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -313,6 +331,16 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(containedPrototype.disposition).toBe('containedExecutionPrototypeOnly');
       expect(['readyForReview', 'holdForReview', 'blocked']).toContain(containedPrototypeSummary.status);
       expect(containedPrototypeSummary.disposition).toBe('containedPrototypeSummaryOnly');
+      expect(['materialForReview', 'minorMovement', 'blocked']).toContain(containedMateriality.status);
+      expect(containedMateriality.disposition).toBe('containedPrototypeMaterialityOnly');
+      expect(['available', 'heldBack', 'blocked']).toContain(containedExplanation.status);
+      expect(containedExplanation.disposition).toBe('containedPrototypeExplanationOnly');
+      expect(containedLimitations).toMatchObject({
+        status: 'visible',
+        disposition: 'containedPrototypeLimitationsOnly'
+      });
+      expect(['usefulForReview', 'holdForClearerEvidence', 'notUseful']).toContain(containedUsefulness.status);
+      expect(containedUsefulness.disposition).toBe('containedPrototypeUsefulnessOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -355,6 +383,10 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('drawdownExecutionPhaseCloseout');
       expect(saved.plan).not.toHaveProperty('containedDrawdownExecutionPrototype');
       expect(saved.plan).not.toHaveProperty('containedDrawdownPrototypeSummary');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownMateriality');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownExplanation');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownLimitations');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownUsefulnessCloseout');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

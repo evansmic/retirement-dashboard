@@ -4,39 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 85: Contained Drawdown Prototype Review
+## Latest Sprint — Sprint 90: Contained Prototype Usefulness Closeout
 
-**Status:** Complete 2026-05-20.
+**Status:** Complete 2026-05-21.
 
-Goal: run one tiny contained drawdown scenario using existing engine plumbing, explain it in Details as review evidence, and keep it blocked or held whenever funding, estate, or boundary checks are not clear.
+Goal: make the contained drawdown prototype easier to interpret by adding materiality, explanation, limitations, example coverage, and a usefulness closeout before any broader execution work.
 
 Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 85 checkpoint doc: [`docs/sprint_85_contained_drawdown_prototype_review.md`](docs/sprint_85_contained_drawdown_prototype_review.md).
+Sprint 90 checkpoint doc: [`docs/sprint_90_contained_prototype_usefulness_closeout.md`](docs/sprint_90_contained_prototype_usefulness_closeout.md).
 
-### Sprint 81-85 Candidate Implementation Tickets
+### Sprint 86-90 Candidate Implementation Tickets
 
-- [x] **S81-01 — One contained real scenario.** Run one bounded draft shape through existing scenario plumbing, not custom annual overrides.
-- [x] **S82-01 — Prototype harm checks.** Block the contained prototype when funding worsens or an entered estate goal is weakened.
-- [x] **S83-01 — Details-only prototype evidence.** Surface funding, tax, OAS recovery, estate, and calculation-boundary rows in Details.
-- [x] **S84-01 — Example matrix coverage.** Run built-in examples through the contained prototype and confirm copy and saved-plan boundaries.
-- [x] **S85-01 — Prototype summary.** Summarize ready, hold, or blocked status without creating any plan action.
+- [x] **S86-01 — Prototype materiality.** Decide whether contained prototype movements are large enough to keep in review.
+- [x] **S87-01 — Why-it-moved explanation.** Explain tax, OAS recovery, and projected-money-left movement in plain language.
+- [x] **S88-01 — Prototype limitations.** Add visible limits so the prototype does not sound more certain than it is.
+- [x] **S89-01 — Example and copy guard.** Extend all-example coverage across materiality, explanation, limitations, usefulness, and saved-plan boundaries.
+- [x] **S90-01 — Usefulness closeout.** Summarize whether the contained prototype is useful, needs clearer evidence, or should not be used.
 
-### Sprint 85 Definition Of Done
+### Sprint 90 Definition Of Done
 
-- Contained prototype appears only in Details.
-- Prototype uses existing scenario engine plumbing and does not execute custom annual overrides.
-- Funding or entered estate-goal harm blocks the contained prototype.
-- Copy frames the result as review evidence, not an instruction or recommendation.
-- Example matrix covers contained prototype status and saved-plan boundaries.
+- Materiality, explanation, limitations, and usefulness closeout appear only in Details.
+- Small movements are held rather than overstated.
+- Blocked prototype evidence remains blocked in the usefulness closeout.
+- Copy states what the prototype does not mean.
+- Example matrix covers the new explanation layer and saved-plan boundaries.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 90: Contained Prototype Usefulness Closeout
+
+**Complete 2026-05-21.** Added a Details-only usefulness closeout that says whether the contained prototype is useful for review, needs clearer evidence, or should not be used.
+
+Sprint 90 checkpoint doc: [`docs/sprint_90_contained_prototype_usefulness_closeout.md`](docs/sprint_90_contained_prototype_usefulness_closeout.md).
+
+### Sprint 89: Contained Prototype Example And Copy Guard
+
+**Complete 2026-05-21.** Extended all-example coverage across contained prototype materiality, explanation, limitations, usefulness, copy posture, and saved-plan boundaries.
+
+Sprint 89 checkpoint doc: [`docs/sprint_89_contained_prototype_example_copy_guard.md`](docs/sprint_89_contained_prototype_example_copy_guard.md).
+
+### Sprint 88: Contained Prototype Limitations
+
+**Complete 2026-05-21.** Added visible limitations explaining that the contained prototype is a scenario, not custom annual override execution, advice, or a filing instruction.
+
+Sprint 88 checkpoint doc: [`docs/sprint_88_contained_prototype_limitations.md`](docs/sprint_88_contained_prototype_limitations.md).
+
+### Sprint 87: Contained Prototype Explanation
+
+**Complete 2026-05-21.** Added plain why-it-moved explanation rows for contained prototype movement and caution.
+
+Sprint 87 checkpoint doc: [`docs/sprint_87_contained_prototype_explanation.md`](docs/sprint_87_contained_prototype_explanation.md).
+
+### Sprint 86: Contained Prototype Materiality
+
+**Complete 2026-05-21.** Added a materiality selector so small contained prototype movement is held rather than overemphasized.
+
+Sprint 86 checkpoint doc: [`docs/sprint_86_contained_prototype_materiality.md`](docs/sprint_86_contained_prototype_materiality.md).
 
 ### Sprint 85: Contained Drawdown Prototype Review
 

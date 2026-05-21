@@ -10,7 +10,11 @@ import {
   runContainedDrawdownExecutionPrototype,
   runInternalDrawdownDryRun,
   scoreMockedDrawdownAdapterResult,
+  selectContainedDrawdownExplanation,
+  selectContainedDrawdownLimitations,
+  selectContainedDrawdownMateriality,
   selectContainedDrawdownPrototypeSummary,
+  selectContainedDrawdownUsefulnessCloseout,
   selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
   selectDrawdownExecutionContainmentGuard,
@@ -235,6 +239,10 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('drawdownExecutionPhaseCloseout');
     expect(saved.plan).not.toHaveProperty('containedDrawdownExecutionPrototype');
     expect(saved.plan).not.toHaveProperty('containedDrawdownPrototypeSummary');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownMateriality');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownExplanation');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownLimitations');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownUsefulnessCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -609,5 +617,81 @@ describe('drawdown execution readiness contract', () => {
     expect(prototype.status).toBe('blocked');
     expect(prototype.rows.some((row) => row.status === 'blocked')).toBe(true);
     expect(summary.status).toBe('blocked');
+  });
+
+  it('explains material contained prototype movement without making it advice', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+    const prototype = runContainedDrawdownExecutionPrototype({
+      plan,
+      adapterValidation,
+      containment,
+      runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan, prototype });
+    const materiality = selectContainedDrawdownMateriality(prototype);
+    const explanation = selectContainedDrawdownExplanation({ prototype, materiality });
+    const limitations = selectContainedDrawdownLimitations();
+    const closeout = selectContainedDrawdownUsefulnessCloseout({ plan, summary, materiality, explanation, limitations });
+
+    expect(materiality).toMatchObject({
+      status: 'materialForReview',
+      disposition: 'containedPrototypeMaterialityOnly'
+    });
+    expect(explanation).toMatchObject({
+      status: 'available',
+      disposition: 'containedPrototypeExplanationOnly'
+    });
+    expect(explanation.rows.map((row) => row.id)).toEqual(['whyMoved', 'whyCautious', 'whatItDoesNotMean']);
+    expect(limitations.rows.map((row) => row.id)).toEqual(['scenarioOnly', 'noAnnualOverride', 'notAdvice', 'needsReview']);
+    expect(closeout).toMatchObject({
+      status: 'usefulForReview',
+      disposition: 'containedPrototypeUsefulnessOnly'
+    });
+    expect(JSON.stringify({ materiality, explanation, limitations, closeout }).toLowerCase()).not.toContain('recommended withdrawal strategy');
+    expect(JSON.stringify({ materiality, explanation, limitations, closeout }).toLowerCase()).not.toContain('optimal drawdown');
+  });
+
+  it('holds usefulness when contained prototype movement is too small', () => {
+    const smallPrototype = runContainedDrawdownExecutionPrototype({
+      plan,
+      adapterValidation: {
+        status: 'acceptedForMockScoring',
+        adapter: {
+          disposition: 'adapterDraftOnly',
+          year: 2028,
+          accountBucket: 'registered',
+          direction: 'increase',
+          amount: 5000,
+          sourcePayload: 'runtimeReviewDraftOnly'
+        },
+        rows: [],
+        reason: 'Accepted for test.',
+        reviewNote: 'Adapter validation only.',
+        disposition: 'adapterValidationOnly'
+      },
+      containment: {
+        status: 'containedForReview',
+        rows: [],
+        reviewNote: 'Containment guard only.',
+        disposition: 'executionContainmentGuardOnly'
+      },
+      runner: () => baseline
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan, prototype: smallPrototype });
+    const materiality = selectContainedDrawdownMateriality(smallPrototype);
+    const explanation = selectContainedDrawdownExplanation({ prototype: smallPrototype, materiality });
+    const limitations = selectContainedDrawdownLimitations();
+    const closeout = selectContainedDrawdownUsefulnessCloseout({ plan, summary, materiality, explanation, limitations });
+
+    expect(materiality.status).toBe('minorMovement');
+    expect(explanation.status).toBe('heldBack');
+    expect(closeout.status).toBe('holdForClearerEvidence');
   });
 });

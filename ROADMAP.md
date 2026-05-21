@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 85 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, phase closeout, and one contained real scenario comparison shown as review evidence.
+Sprint 90 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, phase closeout, one contained real scenario comparison, materiality, explanation, limitations, and usefulness closeout.
 
-Completed Sprint 81-85 slices:
+Completed Sprint 86-90 slices:
 
-- Added one contained scenario comparison using existing engine plumbing.
-- Added harm checks that block the contained prototype when funding worsens or an entered estate goal may be weakened.
-- Surfaced contained prototype evidence in Details only.
-- Extended built-in example coverage across contained prototype status, summary status, copy posture, and saved-plan boundaries.
-- Added a contained prototype summary that says ready, hold, or blocked.
+- Added materiality checks so small contained prototype movement is held rather than overstated.
+- Added plain why-it-moved explanation rows.
+- Added visible limitations for scenario-only, no custom annual override, not-advice, and needs-review boundaries.
+- Extended built-in example coverage across the explanation layer.
+- Added a usefulness closeout for useful, hold, or not-useful status.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
-- Kept Sprints 81-85 as review work, not detailed account instructions.
+- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, materiality, explanation, limitations, usefulness closeout, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
+- Kept Sprints 86-90 as interpretation work, not detailed account instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -120,6 +120,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 61. **Sprint 83 — Details-only prototype evidence.** Surface contained prototype evidence in Details only.
 62. **Sprint 84 — Contained prototype example matrix.** Run all built-in examples through the contained prototype layer.
 63. **Sprint 85 — Contained drawdown prototype review.** Summarize whether the contained prototype is ready, held, or blocked.
+64. **Sprint 86 — Contained prototype materiality.** Hold small movements rather than overemphasizing them.
+65. **Sprint 87 — Contained prototype explanation.** Explain why the contained scenario moved in plain review language.
+66. **Sprint 88 — Contained prototype limitations.** Make scenario-only and not-advice boundaries visible.
+67. **Sprint 89 — Contained prototype example and copy guard.** Run all examples through the explanation layer.
+68. **Sprint 90 — Contained prototype usefulness closeout.** Summarize whether the contained prototype is useful enough to keep reviewing.
 
 ## Medium-Term Roadmap
 
@@ -203,6 +208,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 83 — Details-only prototype evidence.** Complete 2026-05-20. Surfaced contained prototype evidence in Details only.
 - **Sprint 84 — Contained prototype example matrix.** Complete 2026-05-20. Extended all-example coverage for contained prototype status, summary, copy posture, and persistence.
 - **Sprint 85 — Contained drawdown prototype review.** Complete 2026-05-20. Added a contained prototype summary before broader drawdown execution work.
+- **Sprint 86 — Contained prototype materiality.** Complete 2026-05-21. Added materiality checks for contained prototype movement.
+- **Sprint 87 — Contained prototype explanation.** Complete 2026-05-21. Added plain explanation rows for contained prototype movement and caution.
+- **Sprint 88 — Contained prototype limitations.** Complete 2026-05-21. Added visible limitations to keep the prototype humble.
+- **Sprint 89 — Contained prototype example and copy guard.** Complete 2026-05-21. Extended all-example coverage for materiality, explanation, limitations, and usefulness.
+- **Sprint 90 — Contained prototype usefulness closeout.** Complete 2026-05-21. Added a usefulness closeout before broader drawdown work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

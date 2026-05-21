@@ -72,7 +72,11 @@ import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type {
   ContainedDrawdownExecutionPrototype,
+  ContainedDrawdownExplanation,
+  ContainedDrawdownLimitations,
+  ContainedDrawdownMateriality,
   ContainedDrawdownPrototypeSummary,
+  ContainedDrawdownUsefulnessCloseout,
   DrawdownAdapterValidation,
   DrawdownAdapterAuditTrail,
   DrawdownExecutionBoundaryDecision,
@@ -145,6 +149,10 @@ type BridgePreview = {
   drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
   containedDrawdownPrototype: ContainedDrawdownExecutionPrototype | null;
   containedDrawdownPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
+  containedDrawdownMateriality: ContainedDrawdownMateriality | null;
+  containedDrawdownExplanation: ContainedDrawdownExplanation | null;
+  containedDrawdownLimitations: ContainedDrawdownLimitations | null;
+  containedDrawdownUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -411,6 +419,10 @@ export function App() {
     drawdownExecutionPhaseCloseout: null,
     containedDrawdownPrototype: null,
     containedDrawdownPrototypeSummary: null,
+    containedDrawdownMateriality: null,
+    containedDrawdownExplanation: null,
+    containedDrawdownLimitations: null,
+    containedDrawdownUsefulnessCloseout: null,
     error: '',
     loading: false
   });
@@ -441,6 +453,10 @@ export function App() {
         drawdownExecutionPhaseCloseout: null,
         containedDrawdownPrototype: null,
         containedDrawdownPrototypeSummary: null,
+        containedDrawdownMateriality: null,
+        containedDrawdownExplanation: null,
+        containedDrawdownLimitations: null,
+        containedDrawdownUsefulnessCloseout: null,
         error: '',
         loading: false
       });
@@ -464,7 +480,11 @@ export function App() {
              buildDrawdownExecutionContract,
              emptyMockedExecutionScorecard,
              runContainedDrawdownExecutionPrototype,
+             selectContainedDrawdownExplanation,
+             selectContainedDrawdownLimitations,
+             selectContainedDrawdownMateriality,
              selectContainedDrawdownPrototypeSummary,
+             selectContainedDrawdownUsefulnessCloseout,
              selectDrawdownAdapterAuditTrail,
              selectDrawdownExecutionBoundaryDecision,
              selectDrawdownExecutionContainmentGuard,
@@ -543,6 +563,19 @@ export function App() {
           plan,
           prototype: containedDrawdownPrototype
         });
+        const containedDrawdownMateriality = selectContainedDrawdownMateriality(containedDrawdownPrototype);
+        const containedDrawdownExplanation = selectContainedDrawdownExplanation({
+          prototype: containedDrawdownPrototype,
+          materiality: containedDrawdownMateriality
+        });
+        const containedDrawdownLimitations = selectContainedDrawdownLimitations();
+        const containedDrawdownUsefulnessCloseout = selectContainedDrawdownUsefulnessCloseout({
+          plan,
+          summary: containedDrawdownPrototypeSummary,
+          materiality: containedDrawdownMateriality,
+          explanation: containedDrawdownExplanation,
+          limitations: containedDrawdownLimitations
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -561,6 +594,10 @@ export function App() {
             drawdownExecutionPhaseCloseout,
             containedDrawdownPrototype,
             containedDrawdownPrototypeSummary,
+            containedDrawdownMateriality,
+            containedDrawdownExplanation,
+            containedDrawdownLimitations,
+            containedDrawdownUsefulnessCloseout,
             error: '',
             loading: false
           });
@@ -588,6 +625,10 @@ export function App() {
               drawdownExecutionPhaseCloseout: null,
               containedDrawdownPrototype: null,
               containedDrawdownPrototypeSummary: null,
+              containedDrawdownMateriality: null,
+              containedDrawdownExplanation: null,
+              containedDrawdownLimitations: null,
+              containedDrawdownUsefulnessCloseout: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -788,6 +829,10 @@ export function App() {
               drawdownExecutionPhaseCloseout={bridgePreview.drawdownExecutionPhaseCloseout}
               containedDrawdownPrototype={bridgePreview.containedDrawdownPrototype}
               containedDrawdownPrototypeSummary={bridgePreview.containedDrawdownPrototypeSummary}
+              containedDrawdownMateriality={bridgePreview.containedDrawdownMateriality}
+              containedDrawdownExplanation={bridgePreview.containedDrawdownExplanation}
+              containedDrawdownLimitations={bridgePreview.containedDrawdownLimitations}
+              containedDrawdownUsefulnessCloseout={bridgePreview.containedDrawdownUsefulnessCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2350,6 +2395,10 @@ function ResultsHandoffPanel({
   drawdownExecutionPhaseCloseout,
   containedDrawdownPrototype,
   containedDrawdownPrototypeSummary,
+  containedDrawdownMateriality,
+  containedDrawdownExplanation,
+  containedDrawdownLimitations,
+  containedDrawdownUsefulnessCloseout,
   title,
   validation
 }: {
@@ -2378,6 +2427,10 @@ function ResultsHandoffPanel({
   drawdownExecutionPhaseCloseout: BridgePreview['drawdownExecutionPhaseCloseout'];
   containedDrawdownPrototype: BridgePreview['containedDrawdownPrototype'];
   containedDrawdownPrototypeSummary: BridgePreview['containedDrawdownPrototypeSummary'];
+  containedDrawdownMateriality: BridgePreview['containedDrawdownMateriality'];
+  containedDrawdownExplanation: BridgePreview['containedDrawdownExplanation'];
+  containedDrawdownLimitations: BridgePreview['containedDrawdownLimitations'];
+  containedDrawdownUsefulnessCloseout: BridgePreview['containedDrawdownUsefulnessCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2498,6 +2551,10 @@ function ResultsHandoffPanel({
             drawdownExecutionPhaseCloseout={drawdownExecutionPhaseCloseout}
             containedDrawdownPrototype={containedDrawdownPrototype}
             containedDrawdownPrototypeSummary={containedDrawdownPrototypeSummary}
+            containedDrawdownMateriality={containedDrawdownMateriality}
+            containedDrawdownExplanation={containedDrawdownExplanation}
+            containedDrawdownLimitations={containedDrawdownLimitations}
+            containedDrawdownUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2998,6 +3055,10 @@ function DetailsResultsPanel({
   drawdownExecutionPhaseCloseout,
   containedDrawdownPrototype,
   containedDrawdownPrototypeSummary,
+  containedDrawdownMateriality,
+  containedDrawdownExplanation,
+  containedDrawdownLimitations,
+  containedDrawdownUsefulnessCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -3035,6 +3096,10 @@ function DetailsResultsPanel({
   drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
   containedDrawdownPrototype: ContainedDrawdownExecutionPrototype | null;
   containedDrawdownPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
+  containedDrawdownMateriality: ContainedDrawdownMateriality | null;
+  containedDrawdownExplanation: ContainedDrawdownExplanation | null;
+  containedDrawdownLimitations: ContainedDrawdownLimitations | null;
+  containedDrawdownUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3158,6 +3223,10 @@ function DetailsResultsPanel({
         preflight={drawdownExecutionPreflight}
         containedPrototype={containedDrawdownPrototype}
         containedPrototypeSummary={containedDrawdownPrototypeSummary}
+        containedMateriality={containedDrawdownMateriality}
+        containedExplanation={containedDrawdownExplanation}
+        containedLimitations={containedDrawdownLimitations}
+        containedUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -3967,8 +4036,12 @@ function DrawdownExecutionBoundaryPanel({
   adapterValidation,
   auditTrail,
   boundary,
+  containedExplanation,
+  containedLimitations,
+  containedMateriality,
   containedPrototype,
   containedPrototypeSummary,
+  containedUsefulnessCloseout,
   containmentGuard,
   phaseCloseout,
   preflight,
@@ -3978,8 +4051,12 @@ function DrawdownExecutionBoundaryPanel({
   adapterValidation: DrawdownAdapterValidation | null;
   auditTrail: DrawdownAdapterAuditTrail | null;
   boundary: DrawdownExecutionBoundaryDecision | null;
+  containedExplanation: ContainedDrawdownExplanation | null;
+  containedLimitations: ContainedDrawdownLimitations | null;
+  containedMateriality: ContainedDrawdownMateriality | null;
   containedPrototype: ContainedDrawdownExecutionPrototype | null;
   containedPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
+  containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
   phaseCloseout: DrawdownExecutionPhaseCloseout | null;
   preflight: DrawdownExecutionPreflight | null;
@@ -4158,6 +4235,82 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{containedPrototypeSummary.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedMateriality?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype materiality</p>
+            <h4>{containedMateriality.headline}</h4>
+            <p>This checks whether the contained scenario moved enough to be worth reading.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedMateriality.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'material' ? 'ok' : row.status === 'blocked' ? 'blocked' : 'review'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'material' ? 'Material' : row.status === 'immaterial' ? 'Small' : row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedMateriality.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedExplanation?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Why it moved</p>
+            <h4>{containedExplanation.headline}</h4>
+            <p>This translates the scenario movement into plain review language.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedExplanation.rows.map((row) => (
+              <article className="optimizer-eligibility-note eligibility-review" key={row.id}>
+                <strong>{row.label}</strong>
+                <span>Review</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedExplanation.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedLimitations?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype limits</p>
+            <h4>What this does not do</h4>
+            <p>These limits keep the contained prototype from sounding more certain than it is.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedLimitations.rows.map((row) => (
+              <article className="optimizer-eligibility-note eligibility-review" key={row.id}>
+                <strong>{row.label}</strong>
+                <span>Limit</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedLimitations.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedUsefulnessCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype usefulness</p>
+            <h4>{containedUsefulnessCloseout.headline}</h4>
+            <p>{containedUsefulnessCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedUsefulnessCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedUsefulnessCloseout.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (
