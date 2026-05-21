@@ -8,8 +8,10 @@ import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails }
 import {
   buildDrawdownAnnualOverrideAdapterDraft,
   buildDrawdownExecutionContract,
+  buildTaxAwareDrawdownV1ExecutionCandidate,
   emptyMockedExecutionScorecard,
   runContainedDrawdownExecutionPrototype,
+  runTaxAwareDrawdownV1Execution,
   selectContainedDrawdownBlockerRegister,
   selectContainedDrawdownCopyGuard,
   selectContainedDrawdownDetailsDensity,
@@ -35,7 +37,11 @@ import {
   selectDrawdownPhaseReview,
   selectDrawdownPrototypeReadinessReview,
   selectDrawdownReviewPreview,
-  selectDrawdownVisibleReviewGate
+  selectDrawdownVisibleReviewGate,
+  selectTaxAwareDrawdownV1ExampleGate,
+  selectTaxAwareDrawdownV1ExecutionIntent,
+  selectTaxAwareDrawdownV1ExecutionReview,
+  selectTaxAwareDrawdownV1PhaseCloseout
 } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
@@ -329,6 +335,29 @@ describe('example-plan optimizer readiness matrix', () => {
         blockerRegister: containedBlockerRegister,
         examplePromotionGate: containedExamplePromotionGate
       });
+      const v1Intent = selectTaxAwareDrawdownV1ExecutionIntent({ plan, phaseMilestone: containedPhaseMilestone });
+      const v1Candidate = buildTaxAwareDrawdownV1ExecutionCandidate({
+        plan,
+        intent: v1Intent,
+        adapterValidation
+      });
+      const v1Execution = runTaxAwareDrawdownV1Execution({ plan, candidate: v1Candidate });
+      const v1Review = selectTaxAwareDrawdownV1ExecutionReview({
+        plan,
+        intent: v1Intent,
+        candidate: v1Candidate,
+        execution: v1Execution
+      });
+      const v1ExampleGate = selectTaxAwareDrawdownV1ExampleGate({
+        exampleCount: examplePlanCards.length,
+        heldOrBlockedCount: 0
+      });
+      const v1Closeout = selectTaxAwareDrawdownV1PhaseCloseout({
+        plan,
+        intent: v1Intent,
+        review: v1Review,
+        exampleGate: v1ExampleGate
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -362,7 +391,13 @@ describe('example-plan optimizer readiness matrix', () => {
         containedNextStepGuide,
         containedBlockerRegister,
         containedExamplePromotionGate,
-        containedPhaseMilestone
+        containedPhaseMilestone,
+        v1Intent,
+        v1Candidate,
+        v1Execution,
+        v1Review,
+        v1ExampleGate,
+        v1Closeout
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -441,6 +476,20 @@ describe('example-plan optimizer readiness matrix', () => {
       });
       expect(['readyForNextDesignPhase', 'holdBeforeNextPhase', 'stopBeforeNextPhase']).toContain(containedPhaseMilestone.status);
       expect(containedPhaseMilestone.disposition).toBe('containedPrototypePhaseMilestoneOnly');
+      expect(['readyForBoundedExecution', 'holdForReadiness', 'blocked']).toContain(v1Intent.status);
+      expect(v1Intent.disposition).toBe('v1DrawdownExecutionIntentOnly');
+      expect(['ready', 'hold', 'blocked']).toContain(v1Candidate.status);
+      expect(v1Candidate.disposition).toBe('v1DrawdownExecutionCandidateOnly');
+      expect(['reviewOnly', 'blocked', 'notReady']).toContain(v1Execution.status);
+      expect(v1Execution.disposition).toBe('v1DrawdownExecutionResultOnly');
+      expect(['readyForUserReview', 'holdForReview', 'blocked']).toContain(v1Review.status);
+      expect(v1Review.disposition).toBe('v1DrawdownExecutionReviewOnly');
+      expect(v1ExampleGate).toMatchObject({
+        status: 'examplesClear',
+        disposition: 'v1DrawdownExecutionExampleGateOnly'
+      });
+      expect(['readyForConsumerUx', 'holdForMoreGuardrails', 'stopBeforeConsumerUx']).toContain(v1Closeout.status);
+      expect(v1Closeout.disposition).toBe('v1DrawdownExecutionPhaseCloseoutOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -497,6 +546,12 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('containedDrawdownBlockerRegister');
       expect(saved.plan).not.toHaveProperty('containedDrawdownExamplePromotionGate');
       expect(saved.plan).not.toHaveProperty('containedDrawdownPhaseMilestoneCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionIntent');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionCandidate');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionResult');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionReview');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionExampleGate');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionPhaseCloseout');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

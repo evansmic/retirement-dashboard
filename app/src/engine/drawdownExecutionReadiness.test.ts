@@ -5,10 +5,12 @@ import { runSingleDrawdownComparison } from './drawdownComparison';
 import {
   buildDrawdownAnnualOverrideAdapterDraft,
   buildDrawdownExecutionContract,
+  buildTaxAwareDrawdownV1ExecutionCandidate,
   drawdownExecutionSavedPlanGuard,
   emptyMockedExecutionScorecard,
   runContainedDrawdownExecutionPrototype,
   runInternalDrawdownDryRun,
+  runTaxAwareDrawdownV1Execution,
   scoreMockedDrawdownAdapterResult,
   selectContainedDrawdownBlockerRegister,
   selectContainedDrawdownCopyGuard,
@@ -36,6 +38,10 @@ import {
   selectDrawdownPrototypeReadinessReview,
   selectDrawdownReviewPreview,
   selectDrawdownVisibleReviewGate,
+  selectTaxAwareDrawdownV1ExampleGate,
+  selectTaxAwareDrawdownV1ExecutionIntent,
+  selectTaxAwareDrawdownV1ExecutionReview,
+  selectTaxAwareDrawdownV1PhaseCloseout,
   validateDrawdownAnnualOverrideAdapter,
   validateRuntimeDrawdownPayload,
   type DrawdownAnnualOverrideAdapterDraft,
@@ -263,6 +269,12 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('containedDrawdownBlockerRegister');
     expect(saved.plan).not.toHaveProperty('containedDrawdownExamplePromotionGate');
     expect(saved.plan).not.toHaveProperty('containedDrawdownPhaseMilestoneCloseout');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionIntent');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionCandidate');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionResult');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionReview');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionExampleGate');
+    expect(saved.plan).not.toHaveProperty('v1DrawdownExecutionPhaseCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -817,6 +829,45 @@ describe('drawdown execution readiness contract', () => {
       disposition: 'containedPrototypePhaseMilestoneOnly'
     });
     expect(phaseMilestone.reviewNote).toContain('does not execute drawdown changes');
+
+    const intent = selectTaxAwareDrawdownV1ExecutionIntent({ plan, phaseMilestone });
+    const candidate = buildTaxAwareDrawdownV1ExecutionCandidate({ plan, intent, adapterValidation });
+    const execution = runTaxAwareDrawdownV1Execution({
+      plan,
+      candidate,
+      runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+    });
+    const review = selectTaxAwareDrawdownV1ExecutionReview({ plan, intent, candidate, execution });
+    const v1ExampleGate = selectTaxAwareDrawdownV1ExampleGate({ exampleCount: 4, heldOrBlockedCount: 0 });
+    const v1Closeout = selectTaxAwareDrawdownV1PhaseCloseout({ plan, intent, review, exampleGate: v1ExampleGate });
+
+    expect(intent).toMatchObject({
+      status: 'readyForBoundedExecution',
+      disposition: 'v1DrawdownExecutionIntentOnly'
+    });
+    expect(candidate).toMatchObject({
+      status: 'ready',
+      candidateId: 'boundedRegisteredTimingExecution',
+      disposition: 'v1DrawdownExecutionCandidateOnly'
+    });
+    expect(execution).toMatchObject({
+      status: 'reviewOnly',
+      disposition: 'v1DrawdownExecutionResultOnly'
+    });
+    expect(review).toMatchObject({
+      status: 'readyForUserReview',
+      disposition: 'v1DrawdownExecutionReviewOnly'
+    });
+    expect(v1ExampleGate).toMatchObject({
+      status: 'examplesClear',
+      disposition: 'v1DrawdownExecutionExampleGateOnly'
+    });
+    expect(v1Closeout).toMatchObject({
+      status: 'readyForConsumerUx',
+      disposition: 'v1DrawdownExecutionPhaseCloseoutOnly'
+    });
+    expect(execution.reviewNote).toContain('executed scenario comparison');
+    expect(review.reviewNote).toContain('not a recommendation');
   });
 
   it('holds product go/no-go when contained prototype is dense or examples need review', () => {
@@ -898,5 +949,37 @@ describe('drawdown execution readiness contract', () => {
     expect(blockerRegister.status).toBe('hasHolds');
     expect(examplePromotionGate.status).toBe('needsExampleReview');
     expect(phaseMilestone.status).toBe('holdBeforeNextPhase');
+
+    const intent = selectTaxAwareDrawdownV1ExecutionIntent({ plan, phaseMilestone });
+    const candidate = buildTaxAwareDrawdownV1ExecutionCandidate({
+      plan,
+      intent,
+      adapterValidation: {
+        status: 'acceptedForMockScoring',
+        adapter: {
+          disposition: 'adapterDraftOnly',
+          year: 2028,
+          accountBucket: 'registered',
+          direction: 'increase',
+          amount: 5000,
+          sourcePayload: 'runtimeReviewDraftOnly'
+        },
+        rows: [],
+        reason: 'Accepted for test.',
+        reviewNote: 'Adapter validation only.',
+        disposition: 'adapterValidationOnly'
+      }
+    });
+    const execution = runTaxAwareDrawdownV1Execution({ plan, candidate, runner: () => baseline });
+    const review = selectTaxAwareDrawdownV1ExecutionReview({ plan, intent, candidate, execution });
+    const v1ExampleGate = selectTaxAwareDrawdownV1ExampleGate({ exampleCount: 4, heldOrBlockedCount: 1 });
+    const v1Closeout = selectTaxAwareDrawdownV1PhaseCloseout({ plan, intent, review, exampleGate: v1ExampleGate });
+
+    expect(intent.status).toBe('holdForReadiness');
+    expect(candidate.status).toBe('hold');
+    expect(execution.status).toBe('notReady');
+    expect(review.status).toBe('holdForReview');
+    expect(v1ExampleGate.status).toBe('needsExampleReview');
+    expect(v1Closeout.status).toBe('holdForMoreGuardrails');
   });
 });

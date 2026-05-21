@@ -119,6 +119,13 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Prototype blocker register');
     expect(appSource).toContain('Example promotion gate');
     expect(appSource).toContain('Contained prototype milestone');
+    expect(appSource).toContain('V1 drawdown execution intent');
+    expect(appSource).toContain('Bounded execution candidate');
+    expect(appSource).toContain('Bounded execution result');
+    expect(appSource).toContain('Bounded execution review');
+    expect(appSource).toContain('V1 execution example gate');
+    expect(appSource).toContain('V1 execution phase closeout');
+    expect(appSource).toContain('not a saved plan change or account instruction');
     expect(appSource).toContain('does not promote it today');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');

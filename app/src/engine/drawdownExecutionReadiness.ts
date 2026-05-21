@@ -488,6 +488,90 @@ export type ContainedDrawdownPhaseMilestoneCloseout = {
   disposition: 'containedPrototypePhaseMilestoneOnly';
 };
 
+export type TaxAwareDrawdownV1ExecutionIntentRow = {
+  id: 'v1Scope' | 'phaseMilestone' | 'executionBoundary' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type TaxAwareDrawdownV1ExecutionIntent = {
+  status: 'readyForBoundedExecution' | 'holdForReadiness' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: TaxAwareDrawdownV1ExecutionIntentRow[];
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionIntentOnly';
+};
+
+export type TaxAwareDrawdownV1ExecutionCandidate = {
+  status: 'ready' | 'hold' | 'blocked';
+  candidateId: 'boundedRegisteredTimingExecution' | null;
+  label: string;
+  amount: number;
+  config: SimulationConfig | null;
+  rows: Array<{
+    id: 'intent' | 'adapter' | 'amount' | 'enginePath';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionCandidateOnly';
+};
+
+export type TaxAwareDrawdownV1ExecutionResult = {
+  status: 'reviewOnly' | 'blocked' | 'notReady';
+  baseline: ReturnType<typeof metricsFromResult> | null;
+  candidate: ReturnType<typeof metricsFromResult> | null;
+  rows: Array<{
+    id: 'funding' | 'tax' | 'oasRecovery' | 'estate';
+    label: string;
+    value: string;
+    status: 'ok' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  reason: string;
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionResultOnly';
+};
+
+export type TaxAwareDrawdownV1ExecutionReview = {
+  status: 'readyForUserReview' | 'holdForReview' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'intent' | 'candidate' | 'execution' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionReviewOnly';
+};
+
+export type TaxAwareDrawdownV1ExampleGate = {
+  status: 'examplesClear' | 'needsExampleReview';
+  exampleCount: number;
+  heldOrBlockedCount: number;
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionExampleGateOnly';
+};
+
+export type TaxAwareDrawdownV1PhaseCloseout = {
+  status: 'readyForConsumerUx' | 'holdForMoreGuardrails' | 'stopBeforeConsumerUx';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'intent' | 'review' | 'examples' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownExecutionPhaseCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -2314,6 +2398,329 @@ export function selectContainedDrawdownPhaseMilestoneCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1ExecutionIntent({
+  plan,
+  phaseMilestone
+}: {
+  plan: V2PlanPayload;
+  phaseMilestone: ContainedDrawdownPhaseMilestoneCloseout;
+}): TaxAwareDrawdownV1ExecutionIntent {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ExecutionIntentRow[] = [
+    {
+      id: 'v1Scope',
+      label: 'V1 scope',
+      status: 'ready',
+      detail: 'V1 is allowed to include one bounded drawdown execution review before broader instructions.'
+    },
+    {
+      id: 'phaseMilestone',
+      label: 'Contained prototype milestone',
+      status: phaseMilestone.status === 'readyForNextDesignPhase' ? 'ready' : phaseMilestone.status === 'holdBeforeNextPhase' ? 'hold' : 'blocked',
+      detail: phaseMilestone.headline
+    },
+    {
+      id: 'executionBoundary',
+      label: 'Execution boundary',
+      status: 'ready',
+      detail: 'The first executable path uses existing engine scenario plumbing, not custom saved annual overrides.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No v1 execution intent is saved.' : 'Saved plan output contains v1 execution intent data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForReadiness' : 'readyForBoundedExecution',
+    headline: hasBlocked
+      ? 'Do not start v1 drawdown execution.'
+      : hasHold
+        ? 'Hold v1 drawdown execution for readiness.'
+        : 'V1 can include bounded drawdown execution.',
+    detail:
+      'This records the product intent: v1 should include a small, review-first execution path before any full account-by-account drawdown plan.',
+    rows,
+    reviewNote:
+      'V1 execution intent only. It does not apply a strategy, save output, or create household instructions.',
+    disposition: 'v1DrawdownExecutionIntentOnly'
+  };
+}
+
+export function buildTaxAwareDrawdownV1ExecutionCandidate({
+  plan,
+  intent,
+  adapterValidation
+}: {
+  plan: V2PlanPayload;
+  intent: TaxAwareDrawdownV1ExecutionIntent;
+  adapterValidation: DrawdownAdapterValidation;
+}): TaxAwareDrawdownV1ExecutionCandidate {
+  const adapter = adapterValidation.adapter;
+  const amount = adapter ? Math.min(adapter.amount, 10000) : 0;
+  const ready = intent.status === 'readyForBoundedExecution' && adapterValidation.status === 'acceptedForMockScoring' && Boolean(adapter) && amount > 0;
+  const config = ready ? containedPrototypeConfigForPlan(plan, amount) : null;
+  return {
+    status: ready ? 'ready' : intent.status === 'blocked' || adapterValidation.status === 'rejected' ? 'blocked' : 'hold',
+    candidateId: ready ? 'boundedRegisteredTimingExecution' : null,
+    label: ready ? 'Bounded registered timing execution' : 'Bounded execution candidate held',
+    amount,
+    config,
+    rows: [
+      {
+        id: 'intent',
+        label: 'V1 execution intent',
+        status: intent.status === 'readyForBoundedExecution' ? 'ready' : intent.status === 'holdForReadiness' ? 'hold' : 'blocked',
+        detail: intent.headline
+      },
+      {
+        id: 'adapter',
+        label: 'Accepted draft shape',
+        status: adapterValidation.status === 'acceptedForMockScoring' ? 'ready' : 'blocked',
+        detail: adapterValidation.reason
+      },
+      {
+        id: 'amount',
+        label: 'Bounded amount',
+        status: amount > 0 ? 'ready' : 'blocked',
+        detail: amount > 0 ? `The execution candidate uses a bounded ${moneyDelta(amount).replace('+', '')} registered amount.` : 'No bounded amount is available.'
+      },
+      {
+        id: 'enginePath',
+        label: 'Engine path',
+        status: ready ? 'ready' : 'hold',
+        detail: 'The candidate can run through the existing registered-timing scenario path without saved annual overrides.'
+      }
+    ],
+    reviewNote:
+      'Execution candidate only. It prepares one existing-engine scenario and does not save or apply it.',
+    disposition: 'v1DrawdownExecutionCandidateOnly'
+  };
+}
+
+export function runTaxAwareDrawdownV1Execution({
+  plan,
+  candidate,
+  runner = runSimulationSafely
+}: {
+  plan: V2PlanPayload;
+  candidate: TaxAwareDrawdownV1ExecutionCandidate;
+  runner?: (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
+}): TaxAwareDrawdownV1ExecutionResult {
+  if (candidate.status !== 'ready' || !candidate.config) {
+    return {
+      status: candidate.status === 'blocked' ? 'blocked' : 'notReady',
+      baseline: null,
+      candidate: null,
+      rows: [],
+      reason: candidate.label,
+      reviewNote:
+        'V1 execution result only. It did not run because the bounded candidate is not ready.',
+      disposition: 'v1DrawdownExecutionResultOnly'
+    };
+  }
+  const baselineResult = runner(plan, baselineConfigForPlan(plan));
+  const candidateResult = runner(plan, candidate.config);
+  if (!baselineResult.years?.length || !candidateResult.years?.length) {
+    return {
+      status: 'blocked',
+      baseline: null,
+      candidate: null,
+      rows: [],
+      reason: 'The bounded execution could not produce complete projection rows.',
+      reviewNote:
+        'V1 execution result only. No output is saved or applied.',
+      disposition: 'v1DrawdownExecutionResultOnly'
+    };
+  }
+  const baseline = metricsFromResult(baselineResult);
+  const executed = metricsFromResult(candidateResult);
+  const fundedYearsDelta = executed.fundedYears - baseline.fundedYears;
+  const lifetimeTaxDelta = executed.lifetimeTax - baseline.lifetimeTax;
+  const oasRecoveryTaxDelta = executed.oasRecoveryTax - baseline.oasRecoveryTax;
+  const projectedMoneyLeftDelta = executed.projectedMoneyLeft - baseline.projectedMoneyLeft;
+  const fundingHarm = fundedYearsDelta < 0 || shortfallEarlier(executed.firstShortfallYear, baseline.firstShortfallYear);
+  const estateHarm = n(plan.inheritance) > 0 && projectedMoneyLeftDelta < 0;
+  const blocked = fundingHarm || estateHarm;
+  return {
+    status: blocked ? 'blocked' : 'reviewOnly',
+    baseline,
+    candidate: executed,
+    rows: [
+      {
+        id: 'funding',
+        label: 'Funding movement',
+        value: signedWhole(fundedYearsDelta),
+        status: fundingHarm ? 'blocked' : 'ok',
+        detail: fundingHarm ? 'The bounded execution weakens funding.' : 'The bounded execution does not weaken funding.'
+      },
+      {
+        id: 'tax',
+        label: 'Lifetime tax movement',
+        value: moneyDelta(lifetimeTaxDelta),
+        status: lifetimeTaxDelta < 0 ? 'ok' : 'review',
+        detail: 'Compares the current plan against one bounded registered-timing execution.'
+      },
+      {
+        id: 'oasRecovery',
+        label: 'OAS recovery movement',
+        value: moneyDelta(oasRecoveryTaxDelta),
+        status: oasRecoveryTaxDelta <= 0 ? 'ok' : 'review',
+        detail: 'Shows whether benefit recovery tax rises or falls in the bounded execution.'
+      },
+      {
+        id: 'estate',
+        label: 'Projected money left',
+        value: moneyDelta(projectedMoneyLeftDelta),
+        status: estateHarm ? 'blocked' : 'review',
+        detail: estateHarm ? 'The bounded execution weakens the entered estate goal.' : 'Estate movement remains review evidence.'
+      }
+    ],
+    reason: blocked ? 'The bounded execution is blocked by harm checks.' : 'The bounded execution is available for review.',
+    reviewNote:
+      'V1 execution result only. This is an executed scenario comparison, not a saved plan change or account instruction.',
+    disposition: 'v1DrawdownExecutionResultOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ExecutionReview({
+  plan,
+  intent,
+  candidate,
+  execution
+}: {
+  plan: V2PlanPayload;
+  intent: TaxAwareDrawdownV1ExecutionIntent;
+  candidate: TaxAwareDrawdownV1ExecutionCandidate;
+  execution: TaxAwareDrawdownV1ExecutionResult;
+}): TaxAwareDrawdownV1ExecutionReview {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ExecutionReview['rows'] = [
+    {
+      id: 'intent',
+      label: 'V1 intent',
+      status: intent.status === 'readyForBoundedExecution' ? 'ready' : intent.status === 'holdForReadiness' ? 'hold' : 'blocked',
+      detail: intent.headline
+    },
+    {
+      id: 'candidate',
+      label: 'Execution candidate',
+      status: candidate.status === 'ready' ? 'ready' : candidate.status === 'hold' ? 'hold' : 'blocked',
+      detail: candidate.label
+    },
+    {
+      id: 'execution',
+      label: 'Execution result',
+      status: execution.status === 'reviewOnly' ? 'ready' : execution.status === 'notReady' ? 'hold' : 'blocked',
+      detail: execution.reason
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No v1 execution review output is saved.' : 'Saved plan output contains v1 execution review data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForReview' : 'readyForUserReview',
+    headline: hasBlocked
+      ? 'Bounded drawdown execution is blocked.'
+      : hasHold
+        ? 'Bounded drawdown execution needs more review.'
+        : 'Bounded drawdown execution is ready to review.',
+    detail:
+      'This is the first v1 execution review: it runs one bounded scenario and explains the result without changing the saved plan.',
+    rows,
+    reviewNote:
+      'Execution review only. It is not a recommendation, filing instruction, saved change, or account-by-account drawdown plan.',
+    disposition: 'v1DrawdownExecutionReviewOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ExampleGate({
+  exampleCount,
+  heldOrBlockedCount
+}: {
+  exampleCount: number;
+  heldOrBlockedCount: number;
+}): TaxAwareDrawdownV1ExampleGate {
+  const hasMatrixEvidence = exampleCount > 0;
+  return {
+    status: hasMatrixEvidence && heldOrBlockedCount === 0 ? 'examplesClear' : 'needsExampleReview',
+    exampleCount,
+    heldOrBlockedCount,
+    reviewNote: hasMatrixEvidence
+      ? 'V1 execution example gate only. It checks built-in examples and does not save execution output.'
+      : 'V1 execution example gate only. The product view does not run the built-in example matrix.',
+    disposition: 'v1DrawdownExecutionExampleGateOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1PhaseCloseout({
+  plan,
+  intent,
+  review,
+  exampleGate
+}: {
+  plan: V2PlanPayload;
+  intent: TaxAwareDrawdownV1ExecutionIntent;
+  review: TaxAwareDrawdownV1ExecutionReview;
+  exampleGate: TaxAwareDrawdownV1ExampleGate;
+}): TaxAwareDrawdownV1PhaseCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1PhaseCloseout['rows'] = [
+    {
+      id: 'intent',
+      label: 'V1 execution intent',
+      status: intent.status === 'readyForBoundedExecution' ? 'ready' : intent.status === 'holdForReadiness' ? 'hold' : 'blocked',
+      detail: intent.headline
+    },
+    {
+      id: 'review',
+      label: 'Execution review',
+      status: review.status === 'readyForUserReview' ? 'ready' : review.status === 'holdForReview' ? 'hold' : 'blocked',
+      detail: review.headline
+    },
+    {
+      id: 'examples',
+      label: 'Example gate',
+      status: exampleGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail: exampleGate.status === 'examplesClear'
+        ? `${exampleGate.exampleCount} examples are clear.`
+        : exampleGate.exampleCount > 0
+          ? `${exampleGate.heldOrBlockedCount} example(s) need review.`
+          : 'Example coverage is checked in tests, not in this product view.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No v1 execution closeout output is saved.' : 'Saved plan output contains v1 execution closeout data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'stopBeforeConsumerUx' : hasHold ? 'holdForMoreGuardrails' : 'readyForConsumerUx',
+    headline: hasBlocked
+      ? 'Stop before consumer drawdown UX.'
+      : hasHold
+        ? 'Hold before consumer drawdown UX.'
+        : 'Ready for consumer drawdown UX design.',
+    detail:
+      'This closeout confirms whether the first bounded execution path is ready for a later consumer-facing design pass.',
+    rows,
+    reviewNote:
+      'V1 execution phase closeout only. It does not save output, apply a strategy, or create account instructions.',
+    disposition: 'v1DrawdownExecutionPhaseCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -2350,6 +2757,12 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('containedDrawdownBlockerRegister' in saved) &&
     !('containedDrawdownExamplePromotionGate' in saved) &&
     !('containedDrawdownPhaseMilestoneCloseout' in saved) &&
+    !('v1DrawdownExecutionIntent' in saved) &&
+    !('v1DrawdownExecutionCandidate' in saved) &&
+    !('v1DrawdownExecutionResult' in saved) &&
+    !('v1DrawdownExecutionReview' in saved) &&
+    !('v1DrawdownExecutionExampleGate' in saved) &&
+    !('v1DrawdownExecutionPhaseCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

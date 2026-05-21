@@ -97,7 +97,13 @@ import type {
   DrawdownPhaseReview,
   DrawdownPrototypeReadinessReview,
   DrawdownReviewPreview,
-  DrawdownVisibleReviewGate
+  DrawdownVisibleReviewGate,
+  TaxAwareDrawdownV1ExampleGate,
+  TaxAwareDrawdownV1ExecutionCandidate,
+  TaxAwareDrawdownV1ExecutionIntent,
+  TaxAwareDrawdownV1ExecutionResult,
+  TaxAwareDrawdownV1ExecutionReview,
+  TaxAwareDrawdownV1PhaseCloseout
 } from '../engine/drawdownExecutionReadiness';
 import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
@@ -173,6 +179,12 @@ type BridgePreview = {
   containedDrawdownBlockerRegister: ContainedDrawdownBlockerRegister | null;
   containedDrawdownExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
   containedDrawdownPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
+  v1DrawdownExecutionIntent: TaxAwareDrawdownV1ExecutionIntent | null;
+  v1DrawdownExecutionCandidate: TaxAwareDrawdownV1ExecutionCandidate | null;
+  v1DrawdownExecutionResult: TaxAwareDrawdownV1ExecutionResult | null;
+  v1DrawdownExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
+  v1DrawdownExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
+  v1DrawdownExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -453,6 +465,12 @@ export function App() {
     containedDrawdownBlockerRegister: null,
     containedDrawdownExamplePromotionGate: null,
     containedDrawdownPhaseMilestoneCloseout: null,
+    v1DrawdownExecutionIntent: null,
+    v1DrawdownExecutionCandidate: null,
+    v1DrawdownExecutionResult: null,
+    v1DrawdownExecutionReview: null,
+    v1DrawdownExecutionExampleGate: null,
+    v1DrawdownExecutionPhaseCloseout: null,
     error: '',
     loading: false
   });
@@ -497,6 +515,12 @@ export function App() {
         containedDrawdownBlockerRegister: null,
         containedDrawdownExamplePromotionGate: null,
         containedDrawdownPhaseMilestoneCloseout: null,
+        v1DrawdownExecutionIntent: null,
+        v1DrawdownExecutionCandidate: null,
+        v1DrawdownExecutionResult: null,
+        v1DrawdownExecutionReview: null,
+        v1DrawdownExecutionExampleGate: null,
+        v1DrawdownExecutionPhaseCloseout: null,
         error: '',
         loading: false
       });
@@ -518,8 +542,10 @@ export function App() {
           {
              buildDrawdownAnnualOverrideAdapterDraft,
              buildDrawdownExecutionContract,
+             buildTaxAwareDrawdownV1ExecutionCandidate,
              emptyMockedExecutionScorecard,
              runContainedDrawdownExecutionPrototype,
+             runTaxAwareDrawdownV1Execution,
              selectContainedDrawdownCopyGuard,
              selectContainedDrawdownDetailsDensity,
              selectContainedDrawdownExplanation,
@@ -544,7 +570,11 @@ export function App() {
              selectDrawdownPhaseReview,
             selectDrawdownPrototypeReadinessReview,
             selectDrawdownReviewPreview,
-            selectDrawdownVisibleReviewGate
+            selectDrawdownVisibleReviewGate,
+            selectTaxAwareDrawdownV1ExampleGate,
+            selectTaxAwareDrawdownV1ExecutionIntent,
+            selectTaxAwareDrawdownV1ExecutionReview,
+            selectTaxAwareDrawdownV1PhaseCloseout
           }
         ]) => {
         const preview = runResultsPreviewBundle(plan);
@@ -681,6 +711,35 @@ export function App() {
           blockerRegister: containedDrawdownBlockerRegister,
           examplePromotionGate: containedDrawdownExamplePromotionGate
         });
+        const v1DrawdownExecutionIntent = selectTaxAwareDrawdownV1ExecutionIntent({
+          plan,
+          phaseMilestone: containedDrawdownPhaseMilestoneCloseout
+        });
+        const v1DrawdownExecutionCandidate = buildTaxAwareDrawdownV1ExecutionCandidate({
+          plan,
+          intent: v1DrawdownExecutionIntent,
+          adapterValidation: drawdownAdapterValidation
+        });
+        const v1DrawdownExecutionResult = runTaxAwareDrawdownV1Execution({
+          plan,
+          candidate: v1DrawdownExecutionCandidate
+        });
+        const v1DrawdownExecutionReview = selectTaxAwareDrawdownV1ExecutionReview({
+          plan,
+          intent: v1DrawdownExecutionIntent,
+          candidate: v1DrawdownExecutionCandidate,
+          execution: v1DrawdownExecutionResult
+        });
+        const v1DrawdownExecutionExampleGate = selectTaxAwareDrawdownV1ExampleGate({
+          exampleCount: 0,
+          heldOrBlockedCount: 0
+        });
+        const v1DrawdownExecutionPhaseCloseout = selectTaxAwareDrawdownV1PhaseCloseout({
+          plan,
+          intent: v1DrawdownExecutionIntent,
+          review: v1DrawdownExecutionReview,
+          exampleGate: v1DrawdownExecutionExampleGate
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -713,6 +772,12 @@ export function App() {
             containedDrawdownBlockerRegister,
             containedDrawdownExamplePromotionGate,
             containedDrawdownPhaseMilestoneCloseout,
+            v1DrawdownExecutionIntent,
+            v1DrawdownExecutionCandidate,
+            v1DrawdownExecutionResult,
+            v1DrawdownExecutionReview,
+            v1DrawdownExecutionExampleGate,
+            v1DrawdownExecutionPhaseCloseout,
             error: '',
             loading: false
           });
@@ -754,6 +819,12 @@ export function App() {
               containedDrawdownBlockerRegister: null,
               containedDrawdownExamplePromotionGate: null,
               containedDrawdownPhaseMilestoneCloseout: null,
+              v1DrawdownExecutionIntent: null,
+              v1DrawdownExecutionCandidate: null,
+              v1DrawdownExecutionResult: null,
+              v1DrawdownExecutionReview: null,
+              v1DrawdownExecutionExampleGate: null,
+              v1DrawdownExecutionPhaseCloseout: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -968,6 +1039,12 @@ export function App() {
               containedDrawdownBlockerRegister={bridgePreview.containedDrawdownBlockerRegister}
               containedDrawdownExamplePromotionGate={bridgePreview.containedDrawdownExamplePromotionGate}
               containedDrawdownPhaseMilestoneCloseout={bridgePreview.containedDrawdownPhaseMilestoneCloseout}
+              v1DrawdownExecutionIntent={bridgePreview.v1DrawdownExecutionIntent}
+              v1DrawdownExecutionCandidate={bridgePreview.v1DrawdownExecutionCandidate}
+              v1DrawdownExecutionResult={bridgePreview.v1DrawdownExecutionResult}
+              v1DrawdownExecutionReview={bridgePreview.v1DrawdownExecutionReview}
+              v1DrawdownExecutionExampleGate={bridgePreview.v1DrawdownExecutionExampleGate}
+              v1DrawdownExecutionPhaseCloseout={bridgePreview.v1DrawdownExecutionPhaseCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2544,6 +2621,12 @@ function ResultsHandoffPanel({
   containedDrawdownBlockerRegister,
   containedDrawdownExamplePromotionGate,
   containedDrawdownPhaseMilestoneCloseout,
+  v1DrawdownExecutionIntent,
+  v1DrawdownExecutionCandidate,
+  v1DrawdownExecutionResult,
+  v1DrawdownExecutionReview,
+  v1DrawdownExecutionExampleGate,
+  v1DrawdownExecutionPhaseCloseout,
   title,
   validation
 }: {
@@ -2586,6 +2669,12 @@ function ResultsHandoffPanel({
   containedDrawdownBlockerRegister: BridgePreview['containedDrawdownBlockerRegister'];
   containedDrawdownExamplePromotionGate: BridgePreview['containedDrawdownExamplePromotionGate'];
   containedDrawdownPhaseMilestoneCloseout: BridgePreview['containedDrawdownPhaseMilestoneCloseout'];
+  v1DrawdownExecutionIntent: BridgePreview['v1DrawdownExecutionIntent'];
+  v1DrawdownExecutionCandidate: BridgePreview['v1DrawdownExecutionCandidate'];
+  v1DrawdownExecutionResult: BridgePreview['v1DrawdownExecutionResult'];
+  v1DrawdownExecutionReview: BridgePreview['v1DrawdownExecutionReview'];
+  v1DrawdownExecutionExampleGate: BridgePreview['v1DrawdownExecutionExampleGate'];
+  v1DrawdownExecutionPhaseCloseout: BridgePreview['v1DrawdownExecutionPhaseCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2720,6 +2809,12 @@ function ResultsHandoffPanel({
             containedDrawdownBlockerRegister={containedDrawdownBlockerRegister}
             containedDrawdownExamplePromotionGate={containedDrawdownExamplePromotionGate}
             containedDrawdownPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
+            v1DrawdownExecutionIntent={v1DrawdownExecutionIntent}
+            v1DrawdownExecutionCandidate={v1DrawdownExecutionCandidate}
+            v1DrawdownExecutionResult={v1DrawdownExecutionResult}
+            v1DrawdownExecutionReview={v1DrawdownExecutionReview}
+            v1DrawdownExecutionExampleGate={v1DrawdownExecutionExampleGate}
+            v1DrawdownExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -3234,6 +3329,12 @@ function DetailsResultsPanel({
   containedDrawdownBlockerRegister,
   containedDrawdownExamplePromotionGate,
   containedDrawdownPhaseMilestoneCloseout,
+  v1DrawdownExecutionIntent,
+  v1DrawdownExecutionCandidate,
+  v1DrawdownExecutionResult,
+  v1DrawdownExecutionReview,
+  v1DrawdownExecutionExampleGate,
+  v1DrawdownExecutionPhaseCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -3285,6 +3386,12 @@ function DetailsResultsPanel({
   containedDrawdownBlockerRegister: ContainedDrawdownBlockerRegister | null;
   containedDrawdownExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
   containedDrawdownPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
+  v1DrawdownExecutionIntent: TaxAwareDrawdownV1ExecutionIntent | null;
+  v1DrawdownExecutionCandidate: TaxAwareDrawdownV1ExecutionCandidate | null;
+  v1DrawdownExecutionResult: TaxAwareDrawdownV1ExecutionResult | null;
+  v1DrawdownExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
+  v1DrawdownExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
+  v1DrawdownExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3422,6 +3529,12 @@ function DetailsResultsPanel({
         containedBlockerRegister={containedDrawdownBlockerRegister}
         containedExamplePromotionGate={containedDrawdownExamplePromotionGate}
         containedPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
+        v1ExecutionIntent={v1DrawdownExecutionIntent}
+        v1ExecutionCandidate={v1DrawdownExecutionCandidate}
+        v1ExecutionResult={v1DrawdownExecutionResult}
+        v1ExecutionReview={v1DrawdownExecutionReview}
+        v1ExecutionExampleGate={v1DrawdownExecutionExampleGate}
+        v1ExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -4245,6 +4358,12 @@ function DrawdownExecutionBoundaryPanel({
   containedBlockerRegister,
   containedExamplePromotionGate,
   containedPhaseMilestoneCloseout,
+  v1ExecutionIntent,
+  v1ExecutionCandidate,
+  v1ExecutionResult,
+  v1ExecutionReview,
+  v1ExecutionExampleGate,
+  v1ExecutionPhaseCloseout,
   containedReviewChecklist,
   containedUsefulnessCloseout,
   containmentGuard,
@@ -4270,6 +4389,12 @@ function DrawdownExecutionBoundaryPanel({
   containedBlockerRegister: ContainedDrawdownBlockerRegister | null;
   containedExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
   containedPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
+  v1ExecutionIntent: TaxAwareDrawdownV1ExecutionIntent | null;
+  v1ExecutionCandidate: TaxAwareDrawdownV1ExecutionCandidate | null;
+  v1ExecutionResult: TaxAwareDrawdownV1ExecutionResult | null;
+  v1ExecutionReview: TaxAwareDrawdownV1ExecutionReview | null;
+  v1ExecutionExampleGate: TaxAwareDrawdownV1ExampleGate | null;
+  v1ExecutionPhaseCloseout: TaxAwareDrawdownV1PhaseCloseout | null;
   containedReviewChecklist: ContainedDrawdownReviewChecklist | null;
   containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
@@ -4698,6 +4823,121 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{containedPhaseMilestoneCloseout.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ExecutionIntent?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">V1 drawdown execution intent</p>
+            <h4>{v1ExecutionIntent.headline}</h4>
+            <p>{v1ExecutionIntent.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ExecutionIntent.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ExecutionIntent.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ExecutionCandidate?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded execution candidate</p>
+            <h4>{v1ExecutionCandidate.label}</h4>
+            <p>This prepares one existing-engine registered timing scenario for review.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ExecutionCandidate.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ExecutionCandidate.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ExecutionResult?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded execution result</p>
+            <h4>{v1ExecutionResult.reason}</h4>
+            <p>This is an executed scenario comparison. It is not a saved plan change or account instruction.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ExecutionResult.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.value}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ExecutionResult.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ExecutionReview?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Bounded execution review</p>
+            <h4>{v1ExecutionReview.headline}</h4>
+            <p>{v1ExecutionReview.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ExecutionReview.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ExecutionReview.reviewNote}</p>
+        </div>
+      ) : null}
+      {v1ExecutionExampleGate ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">V1 execution example gate</p>
+            <h4>{v1ExecutionExampleGate.status === 'examplesClear' ? 'Built-in examples are clear' : 'Example coverage stays in review'}</h4>
+            <p>{v1ExecutionExampleGate.reviewNote}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            <article className={`optimizer-eligibility-note eligibility-${v1ExecutionExampleGate.status === 'examplesClear' ? 'ok' : 'review'}`}>
+              <strong>Example coverage</strong>
+              <span>{v1ExecutionExampleGate.status === 'examplesClear' ? 'Ready' : 'Hold'}</span>
+              <p>
+                {v1ExecutionExampleGate.exampleCount > 0
+                  ? `${v1ExecutionExampleGate.exampleCount} example(s) checked; ${v1ExecutionExampleGate.heldOrBlockedCount} need review.`
+                  : 'The live product view leaves full example coverage to the test matrix.'}
+              </p>
+            </article>
+          </div>
+        </div>
+      ) : null}
+      {v1ExecutionPhaseCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">V1 execution phase closeout</p>
+            <h4>{v1ExecutionPhaseCloseout.headline}</h4>
+            <p>{v1ExecutionPhaseCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {v1ExecutionPhaseCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{v1ExecutionPhaseCloseout.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (

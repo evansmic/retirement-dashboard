@@ -135,6 +135,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 76. **Sprint 98 — Contained prototype blocker register.** Summarize held and blocked signals.
 77. **Sprint 99 — Contained prototype example promotion gate.** Extend example coverage to the promotion-readiness layer.
 78. **Sprint 100 — Contained prototype phase milestone.** Close the contained prototype phase before broader drawdown work.
+79. **Sprint 101 — V1 drawdown execution intent.** Commit v1 to a bounded execution path, not only review scenarios.
+80. **Sprint 102 — V1 bounded execution candidate.** Convert one accepted draft shape into one executable existing-engine scenario.
+81. **Sprint 103 — V1 bounded execution result.** Run the bounded scenario and compare funding, tax, OAS recovery, and estate.
+82. **Sprint 104 — V1 execution review and example gate.** Keep executed results review-only and covered across examples.
+83. **Sprint 105 — V1 execution phase closeout.** Decide whether bounded execution is ready for later consumer UX.
 
 ## Medium-Term Roadmap
 
@@ -233,6 +238,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 98 — Contained prototype blocker register.** Complete 2026-05-21. Added held and blocked signal tracking for the contained prototype.
 - **Sprint 99 — Contained prototype example promotion gate.** Complete 2026-05-21. Added example promotion gate coverage.
 - **Sprint 100 — Contained prototype phase milestone.** Complete 2026-05-21. Added a combined milestone closeout before broader drawdown work.
+- **Sprint 101 — V1 drawdown execution intent.** Complete 2026-05-21. Recorded that v1 includes bounded execution.
+- **Sprint 102 — V1 bounded execution candidate.** Complete 2026-05-21. Added one existing-engine execution candidate from an accepted draft shape.
+- **Sprint 103 — V1 bounded execution result.** Complete 2026-05-21. Ran one bounded scenario comparison with harm checks.
+- **Sprint 104 — V1 execution review and example gate.** Complete 2026-05-21. Added review and example coverage for the executed scenario.
+- **Sprint 105 — V1 execution phase closeout.** Complete 2026-05-21. Added a closeout before later consumer execution UX.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

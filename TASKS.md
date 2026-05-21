@@ -4,38 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 100: Contained Prototype Phase Milestone
+## Latest Sprint — Sprint 105: V1 Drawdown Execution Phase Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: close the contained drawdown prototype phase with a conservative milestone that can continue, hold, or stop before any broader execution work.
+Goal: confirm that v1 includes a narrow, bounded tax-aware drawdown execution path while keeping the first execution review conservative, unsaved, and non-advisory.
 
-Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
+Non-scope: broad account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 100 checkpoint doc: [`docs/sprint_100_contained_prototype_phase_milestone.md`](docs/sprint_100_contained_prototype_phase_milestone.md).
+Sprint 105 checkpoint doc: [`docs/sprint_105_v1_drawdown_execution_phase_closeout.md`](docs/sprint_105_v1_drawdown_execution_phase_closeout.md).
 
-### Sprint 96-100 Candidate Implementation Tickets
+### Sprint 101-105 Candidate Implementation Tickets
 
-- [x] **S96-01 — Promotion readiness.** Decide whether the contained prototype can be considered for later UX work without promoting it now.
-- [x] **S97-01 — Next-step guide.** Add plain review steps that do not become account instructions.
-- [x] **S98-01 — Blocker register.** Summarize held and blocked signals before any later drawdown phase.
-- [x] **S99-01 — Example promotion gate.** Extend example-matrix coverage to the promotion-readiness layer.
-- [x] **S100-01 — Phase milestone.** Combine promotion readiness, next steps, blockers, examples, and saved-plan checks into a phase closeout.
+- [x] **S101-01 — V1 execution intent.** Record that v1 should include bounded drawdown execution, not only review scenarios.
+- [x] **S102-01 — Bounded execution candidate.** Convert one accepted draft shape into one existing-engine scenario candidate.
+- [x] **S103-01 — Executed scenario result.** Run the bounded candidate and compare funding, tax, OAS recovery, and estate movement.
+- [x] **S104-01 — Execution review and example gate.** Keep the executed result review-only and covered by built-in examples.
+- [x] **S105-01 — Execution phase closeout.** Decide whether the bounded execution path is ready for later consumer UX.
 
-### Sprint 100 Definition Of Done
+### Sprint 105 Definition Of Done
 
-- Promotion readiness, next steps, blocker register, example promotion gate, and milestone closeout appear only in Details.
+- V1 execution intent, candidate, result, review, example gate, and closeout appear only in Details.
 - Overview remains unchanged and does not gain prototype readiness panels.
 - Product UI does not claim to run the full example matrix for a single plan.
-- Example matrix covers the new promotion layer and saved-plan boundaries.
-- The milestone can hold or stop without applying strategy output.
-- Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, mocked payload, or prototype output is persisted.
+- Example matrix covers the new v1 execution layer and saved-plan boundaries.
+- The executed scenario can be reviewed, held, or blocked without applying strategy output.
+- No custom annual override payload is saved.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 105: V1 Drawdown Execution Phase Closeout
+
+**Complete 2026-05-21.** Added a Details-only closeout for whether the first bounded execution path is ready for later consumer UX.
+
+Sprint 105 checkpoint doc: [`docs/sprint_105_v1_drawdown_execution_phase_closeout.md`](docs/sprint_105_v1_drawdown_execution_phase_closeout.md).
+
+### Sprint 104: V1 Drawdown Execution Review And Example Gate
+
+**Complete 2026-05-21.** Added review and example-gate coverage for the first bounded execution result while keeping it unsaved and non-advisory.
+
+Sprint 104 checkpoint doc: [`docs/sprint_104_v1_drawdown_execution_review.md`](docs/sprint_104_v1_drawdown_execution_review.md).
+
+### Sprint 103: V1 Bounded Execution Result
+
+**Complete 2026-05-21.** Ran one bounded registered-timing scenario through existing engine plumbing and compared funding, tax, OAS recovery, and estate movement.
+
+Sprint 103 checkpoint doc: [`docs/sprint_103_v1_bounded_execution_result.md`](docs/sprint_103_v1_bounded_execution_result.md).
+
+### Sprint 102: V1 Bounded Execution Candidate
+
+**Complete 2026-05-21.** Converted one accepted draft shape into one existing-engine execution candidate without saving annual overrides.
+
+Sprint 102 checkpoint doc: [`docs/sprint_102_v1_bounded_execution_candidate.md`](docs/sprint_102_v1_bounded_execution_candidate.md).
+
+### Sprint 101: V1 Drawdown Execution Intent
+
+**Complete 2026-05-21.** Recorded the product decision that v1 should include bounded drawdown execution, while keeping the first execution path small and review-first.
+
+Sprint 101 checkpoint doc: [`docs/sprint_101_v1_drawdown_execution_intent.md`](docs/sprint_101_v1_drawdown_execution_intent.md).
 
 ### Sprint 100: Contained Prototype Phase Milestone
 
