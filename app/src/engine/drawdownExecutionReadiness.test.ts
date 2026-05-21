@@ -7,8 +7,10 @@ import {
   buildDrawdownExecutionContract,
   drawdownExecutionSavedPlanGuard,
   emptyMockedExecutionScorecard,
+  runContainedDrawdownExecutionPrototype,
   runInternalDrawdownDryRun,
   scoreMockedDrawdownAdapterResult,
+  selectContainedDrawdownPrototypeSummary,
   selectDrawdownAdapterAuditTrail,
   selectDrawdownExecutionBoundaryDecision,
   selectDrawdownExecutionContainmentGuard,
@@ -231,6 +233,8 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('drawdownExecutionContainmentGuard');
     expect(saved.plan).not.toHaveProperty('drawdownExecutionExampleMatrixCheckpoint');
     expect(saved.plan).not.toHaveProperty('drawdownExecutionPhaseCloseout');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownExecutionPrototype');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownPrototypeSummary');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -546,5 +550,64 @@ describe('drawdown execution readiness contract', () => {
     const reviewExamples = selectDrawdownExecutionExampleMatrixCheckpoint({ exampleCount: 4, heldOrBlockedCount: 1 });
     const heldCloseout = selectDrawdownExecutionPhaseCloseout({ plan, preflight, auditTrail, containment, exampleCheckpoint: reviewExamples });
     expect(heldCloseout.status).toBe('holdBeforeNextPhase');
+  });
+
+  it('runs one contained real scenario prototype without applying annual overrides', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+    const prototype = runContainedDrawdownExecutionPrototype({
+      plan,
+      adapterValidation,
+      containment,
+      runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan, prototype });
+
+    expect(prototype).toMatchObject({
+      status: 'reviewOnly',
+      disposition: 'containedExecutionPrototypeOnly'
+    });
+    expect(prototype.rows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate', 'engineBoundary']);
+    expect(prototype.detail).toContain('does not execute annual overrides');
+    expect(prototype.reviewNote).toContain('does not apply a strategy');
+    expect(summary).toMatchObject({
+      status: 'readyForReview',
+      disposition: 'containedPrototypeSummaryOnly'
+    });
+  });
+
+  it('blocks the contained prototype when the real scenario weakens funding or estate goals', () => {
+    const comparison = runSingleDrawdownComparison(plan, (_plan, config) => (config.meltdown ? comparisonCandidate : baseline));
+    const contract = buildDrawdownExecutionContract({ plan, comparison });
+    const gate = selectDrawdownVisibleReviewGate({ plan, comparison, contract });
+    const preview = selectDrawdownReviewPreview({ gate, comparison, spendingStressStatus: 'balanced' });
+    const phase = selectDrawdownPhaseReview({ plan, gate, preview });
+    const boundary = selectDrawdownExecutionBoundaryDecision({ plan, phase, preview });
+    const adapterValidation = buildDrawdownAnnualOverrideAdapterDraft({ plan, boundary, contract });
+    const containment = selectDrawdownExecutionContainmentGuard({ plan, adapterValidation });
+    const harmfulCandidate: SimulationResult = {
+      years: comparisonCandidate.years.map((row, index) => ({
+        ...row,
+        shortfall: index === 1 ? 1000 : 0,
+        bal_total: index === 1 ? 450000 : row.bal_total
+      }))
+    };
+    const prototype = runContainedDrawdownExecutionPrototype({
+      plan: { ...plan, inheritance: 100000 },
+      adapterValidation,
+      containment,
+      runner: (_plan, config) => (config.meltdown ? harmfulCandidate : baseline)
+    });
+    const summary = selectContainedDrawdownPrototypeSummary({ plan: { ...plan, inheritance: 100000 }, prototype });
+
+    expect(prototype.status).toBe('blocked');
+    expect(prototype.rows.some((row) => row.status === 'blocked')).toBe(true);
+    expect(summary.status).toBe('blocked');
   });
 });

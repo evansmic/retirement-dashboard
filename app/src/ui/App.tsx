@@ -71,6 +71,8 @@ import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type {
+  ContainedDrawdownExecutionPrototype,
+  ContainedDrawdownPrototypeSummary,
   DrawdownAdapterValidation,
   DrawdownAdapterAuditTrail,
   DrawdownExecutionBoundaryDecision,
@@ -141,6 +143,8 @@ type BridgePreview = {
   drawdownAdapterAuditTrail: DrawdownAdapterAuditTrail | null;
   drawdownExecutionContainmentGuard: DrawdownExecutionContainmentGuard | null;
   drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
+  containedDrawdownPrototype: ContainedDrawdownExecutionPrototype | null;
+  containedDrawdownPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
   error: string;
   loading: boolean;
 };
@@ -405,6 +409,8 @@ export function App() {
     drawdownAdapterAuditTrail: null,
     drawdownExecutionContainmentGuard: null,
     drawdownExecutionPhaseCloseout: null,
+    containedDrawdownPrototype: null,
+    containedDrawdownPrototypeSummary: null,
     error: '',
     loading: false
   });
@@ -433,6 +439,8 @@ export function App() {
         drawdownAdapterAuditTrail: null,
         drawdownExecutionContainmentGuard: null,
         drawdownExecutionPhaseCloseout: null,
+        containedDrawdownPrototype: null,
+        containedDrawdownPrototypeSummary: null,
         error: '',
         loading: false
       });
@@ -455,6 +463,8 @@ export function App() {
              buildDrawdownAnnualOverrideAdapterDraft,
              buildDrawdownExecutionContract,
              emptyMockedExecutionScorecard,
+             runContainedDrawdownExecutionPrototype,
+             selectContainedDrawdownPrototypeSummary,
              selectDrawdownAdapterAuditTrail,
              selectDrawdownExecutionBoundaryDecision,
              selectDrawdownExecutionContainmentGuard,
@@ -524,6 +534,15 @@ export function App() {
           auditTrail: drawdownAdapterAuditTrail,
           containment: drawdownExecutionContainmentGuard
         });
+        const containedDrawdownPrototype = runContainedDrawdownExecutionPrototype({
+          plan,
+          adapterValidation: drawdownAdapterValidation,
+          containment: drawdownExecutionContainmentGuard
+        });
+        const containedDrawdownPrototypeSummary = selectContainedDrawdownPrototypeSummary({
+          plan,
+          prototype: containedDrawdownPrototype
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -540,6 +559,8 @@ export function App() {
             drawdownAdapterAuditTrail,
             drawdownExecutionContainmentGuard,
             drawdownExecutionPhaseCloseout,
+            containedDrawdownPrototype,
+            containedDrawdownPrototypeSummary,
             error: '',
             loading: false
           });
@@ -565,6 +586,8 @@ export function App() {
               drawdownAdapterAuditTrail: null,
               drawdownExecutionContainmentGuard: null,
               drawdownExecutionPhaseCloseout: null,
+              containedDrawdownPrototype: null,
+              containedDrawdownPrototypeSummary: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -763,6 +786,8 @@ export function App() {
               drawdownAdapterAuditTrail={bridgePreview.drawdownAdapterAuditTrail}
               drawdownExecutionContainmentGuard={bridgePreview.drawdownExecutionContainmentGuard}
               drawdownExecutionPhaseCloseout={bridgePreview.drawdownExecutionPhaseCloseout}
+              containedDrawdownPrototype={bridgePreview.containedDrawdownPrototype}
+              containedDrawdownPrototypeSummary={bridgePreview.containedDrawdownPrototypeSummary}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2323,6 +2348,8 @@ function ResultsHandoffPanel({
   drawdownAdapterAuditTrail,
   drawdownExecutionContainmentGuard,
   drawdownExecutionPhaseCloseout,
+  containedDrawdownPrototype,
+  containedDrawdownPrototypeSummary,
   title,
   validation
 }: {
@@ -2349,6 +2376,8 @@ function ResultsHandoffPanel({
   drawdownAdapterAuditTrail: BridgePreview['drawdownAdapterAuditTrail'];
   drawdownExecutionContainmentGuard: BridgePreview['drawdownExecutionContainmentGuard'];
   drawdownExecutionPhaseCloseout: BridgePreview['drawdownExecutionPhaseCloseout'];
+  containedDrawdownPrototype: BridgePreview['containedDrawdownPrototype'];
+  containedDrawdownPrototypeSummary: BridgePreview['containedDrawdownPrototypeSummary'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2467,6 +2496,8 @@ function ResultsHandoffPanel({
             drawdownAdapterAuditTrail={drawdownAdapterAuditTrail}
             drawdownExecutionContainmentGuard={drawdownExecutionContainmentGuard}
             drawdownExecutionPhaseCloseout={drawdownExecutionPhaseCloseout}
+            containedDrawdownPrototype={containedDrawdownPrototype}
+            containedDrawdownPrototypeSummary={containedDrawdownPrototypeSummary}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -2965,6 +2996,8 @@ function DetailsResultsPanel({
   drawdownAdapterAuditTrail,
   drawdownExecutionContainmentGuard,
   drawdownExecutionPhaseCloseout,
+  containedDrawdownPrototype,
+  containedDrawdownPrototypeSummary,
   overview,
   planHealth,
   projectionMilestones,
@@ -3000,6 +3033,8 @@ function DetailsResultsPanel({
   drawdownAdapterAuditTrail: DrawdownAdapterAuditTrail | null;
   drawdownExecutionContainmentGuard: DrawdownExecutionContainmentGuard | null;
   drawdownExecutionPhaseCloseout: DrawdownExecutionPhaseCloseout | null;
+  containedDrawdownPrototype: ContainedDrawdownExecutionPrototype | null;
+  containedDrawdownPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3121,6 +3156,8 @@ function DetailsResultsPanel({
         containmentGuard={drawdownExecutionContainmentGuard}
         phaseCloseout={drawdownExecutionPhaseCloseout}
         preflight={drawdownExecutionPreflight}
+        containedPrototype={containedDrawdownPrototype}
+        containedPrototypeSummary={containedDrawdownPrototypeSummary}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -3930,6 +3967,8 @@ function DrawdownExecutionBoundaryPanel({
   adapterValidation,
   auditTrail,
   boundary,
+  containedPrototype,
+  containedPrototypeSummary,
   containmentGuard,
   phaseCloseout,
   preflight,
@@ -3939,6 +3978,8 @@ function DrawdownExecutionBoundaryPanel({
   adapterValidation: DrawdownAdapterValidation | null;
   auditTrail: DrawdownAdapterAuditTrail | null;
   boundary: DrawdownExecutionBoundaryDecision | null;
+  containedPrototype: ContainedDrawdownExecutionPrototype | null;
+  containedPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
   phaseCloseout: DrawdownExecutionPhaseCloseout | null;
   preflight: DrawdownExecutionPreflight | null;
@@ -4081,6 +4122,44 @@ function DrawdownExecutionBoundaryPanel({
       ) : (
         <p className="table-note">Execution boundary details appear after the drawdown preview checks run.</p>
       )}
+      {containedPrototype?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Contained drawdown prototype</p>
+            <h4>{containedPrototype.headline}</h4>
+            <p>{containedPrototype.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedPrototype.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ok' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.value}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedPrototype.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedPrototypeSummary?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Contained prototype summary</p>
+            <h4>{containedPrototypeSummary.headline}</h4>
+            <p>{containedPrototypeSummary.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedPrototypeSummary.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedPrototypeSummary.reviewNote}</p>
+        </div>
+      ) : null}
       {phaseCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>

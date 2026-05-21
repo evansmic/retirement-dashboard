@@ -104,6 +104,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Draft audit trail');
     expect(appSource).toContain('Containment guard');
     expect(appSource).toContain('Execution phase closeout');
+    expect(appSource).toContain('Contained drawdown prototype');
+    expect(appSource).toContain('Contained prototype summary');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');

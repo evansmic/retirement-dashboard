@@ -258,6 +258,39 @@ export type DrawdownExecutionPhaseCloseout = {
   disposition: 'executionPhaseCloseoutOnly';
 };
 
+export type ContainedDrawdownPrototypeEvidenceRow = {
+  id: 'funding' | 'tax' | 'oasRecovery' | 'estate' | 'engineBoundary';
+  label: string;
+  value: string;
+  status: 'ok' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownExecutionPrototype = {
+  status: 'reviewOnly' | 'heldBack' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownPrototypeEvidenceRow[];
+  reviewNote: string;
+  disposition: 'containedExecutionPrototypeOnly';
+};
+
+export type ContainedDrawdownPrototypeSummaryRow = {
+  id: 'prototype' | 'harm' | 'copy' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownPrototypeSummary = {
+  status: 'readyForReview' | 'holdForReview' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownPrototypeSummaryRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeSummaryOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -1263,6 +1296,145 @@ export function selectDrawdownExecutionPhaseCloseout({
   };
 }
 
+export function runContainedDrawdownExecutionPrototype({
+  plan,
+  adapterValidation,
+  containment,
+  runner = runSimulationSafely
+}: {
+  plan: V2PlanPayload;
+  adapterValidation: DrawdownAdapterValidation;
+  containment: DrawdownExecutionContainmentGuard;
+  runner?: (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
+}): ContainedDrawdownExecutionPrototype {
+  if (adapterValidation.status !== 'acceptedForMockScoring' || !adapterValidation.adapter) {
+    return heldContainedPrototype('The contained prototype is held because no accepted draft adapter is available.');
+  }
+  if (containment.status !== 'containedForReview') {
+    return blockedContainedPrototype('The contained prototype is blocked by the containment guard.');
+  }
+  if (!drawdownExecutionSavedPlanGuard(plan)) {
+    return blockedContainedPrototype('The contained prototype is blocked because drawdown execution output appears in the saved plan boundary.');
+  }
+
+  const amount = Math.min(adapterValidation.adapter.amount, 10000);
+  const baseline = runner(plan, baselineConfigForPlan(plan));
+  const candidate = runner(plan, containedPrototypeConfigForPlan(plan, amount));
+  if (!baseline.years?.length || !candidate.years?.length) {
+    return blockedContainedPrototype('The contained prototype could not produce complete projection rows.');
+  }
+
+  const baselineMetrics = metricsFromResult(baseline);
+  const candidateMetrics = metricsFromResult(candidate);
+  const fundedYearsDelta = candidateMetrics.fundedYears - baselineMetrics.fundedYears;
+  const lifetimeTaxDelta = candidateMetrics.lifetimeTax - baselineMetrics.lifetimeTax;
+  const oasRecoveryTaxDelta = candidateMetrics.oasRecoveryTax - baselineMetrics.oasRecoveryTax;
+  const projectedMoneyLeftDelta = candidateMetrics.projectedMoneyLeft - baselineMetrics.projectedMoneyLeft;
+  const fundingHarm = fundedYearsDelta < 0 || shortfallEarlier(candidateMetrics.firstShortfallYear, baselineMetrics.firstShortfallYear);
+  const estateHarm = n(plan.inheritance) > 0 && projectedMoneyLeftDelta < 0;
+  const blocked = fundingHarm || estateHarm;
+
+  return {
+    status: blocked ? 'blocked' : 'reviewOnly',
+    headline: blocked ? 'Contained drawdown prototype is blocked.' : 'Contained drawdown prototype is ready for review.',
+    detail:
+      'This uses existing engine scenario plumbing to compare one bounded draft shape. It does not execute annual overrides or change the plan.',
+    rows: [
+      {
+        id: 'funding',
+        label: 'Funding movement',
+        value: signedWhole(fundedYearsDelta),
+        status: fundingHarm ? 'blocked' : 'ok',
+        detail: fundingHarm ? 'Funding worsens in the contained prototype.' : 'Funding does not worsen in the contained prototype.'
+      },
+      {
+        id: 'tax',
+        label: 'Lifetime tax movement',
+        value: moneyDelta(lifetimeTaxDelta),
+        status: lifetimeTaxDelta > 0 ? 'review' : 'ok',
+        detail: 'Compares the current plan with one bounded contained scenario.'
+      },
+      {
+        id: 'oasRecovery',
+        label: 'OAS recovery movement',
+        value: moneyDelta(oasRecoveryTaxDelta),
+        status: oasRecoveryTaxDelta > 0 ? 'review' : 'ok',
+        detail: 'Keeps benefit recovery movement visible without creating a household action.'
+      },
+      {
+        id: 'estate',
+        label: 'Projected money left',
+        value: moneyDelta(projectedMoneyLeftDelta),
+        status: estateHarm ? 'blocked' : 'ok',
+        detail: estateHarm ? 'The entered estate goal could be weakened.' : 'No entered estate-goal harm is visible.'
+      },
+      {
+        id: 'engineBoundary',
+        label: 'Calculation boundary',
+        value: 'Scenario only',
+        status: 'review',
+        detail: 'This uses the existing scenario engine path, not custom year-by-year withdrawal overrides.'
+      }
+    ],
+    reviewNote:
+      'Contained prototype only. It does not apply a strategy, does not run custom annual overrides, does not create detailed account instructions, and does not save output.',
+    disposition: 'containedExecutionPrototypeOnly'
+  };
+}
+
+export function selectContainedDrawdownPrototypeSummary({
+  plan,
+  prototype
+}: {
+  plan: V2PlanPayload;
+  prototype: ContainedDrawdownExecutionPrototype;
+}): ContainedDrawdownPrototypeSummary {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const blockedEvidence = prototype.rows.some((row) => row.status === 'blocked');
+  const rows: ContainedDrawdownPrototypeSummaryRow[] = [
+    {
+      id: 'prototype',
+      label: 'Contained prototype',
+      status: prototype.status === 'reviewOnly' ? 'ready' : prototype.status === 'heldBack' ? 'hold' : 'blocked',
+      detail: prototype.headline
+    },
+    {
+      id: 'harm',
+      label: 'Harm check',
+      status: blockedEvidence || prototype.status === 'blocked' ? 'blocked' : 'ready',
+      detail: blockedEvidence ? 'Funding or estate harm is visible.' : 'No funding or entered estate-goal harm is visible.'
+    },
+    {
+      id: 'copy',
+      label: 'Copy boundary',
+      status: 'ready',
+      detail: 'Copy stays framed as review evidence, not instructions or advice.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan audit',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No contained prototype output is saved.' : 'Saved plan output contains contained prototype data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForReview' : 'readyForReview',
+    headline: hasBlocked
+      ? 'Contained prototype is blocked.'
+      : hasHold
+        ? 'Contained prototype is held for review.'
+        : 'Contained prototype is ready for review.',
+    detail:
+      'This summary decides whether the one contained scenario can be read as review evidence before any broader execution work.',
+    rows,
+    reviewNote:
+      'Contained prototype summary only. It does not change withdrawal order, apply a strategy, or save output.',
+    disposition: 'containedPrototypeSummaryOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -1283,9 +1455,45 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('drawdownExecutionContainmentGuard' in saved) &&
     !('drawdownExecutionExampleMatrixCheckpoint' in saved) &&
     !('drawdownExecutionPhaseCloseout' in saved) &&
+    !('containedDrawdownExecutionPrototype' in saved) &&
+    !('containedDrawdownPrototypeSummary' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );
+}
+
+function containedPrototypeConfigForPlan(plan: V2PlanPayload, amount: number): SimulationConfig {
+  return {
+    ...baselineConfigForPlan(plan),
+    meltdown: true,
+    withdrawalOrder: 'meltdown',
+    meltdownDraw60_64: amount,
+    meltdownDraw65plus: amount
+  };
+}
+
+function heldContainedPrototype(reason: string): ContainedDrawdownExecutionPrototype {
+  return {
+    status: 'heldBack',
+    headline: 'Contained drawdown prototype is held back.',
+    detail: reason,
+    rows: [],
+    reviewNote:
+      'Contained prototype only. It does not apply a strategy, does not run custom annual overrides, and does not save output.',
+    disposition: 'containedExecutionPrototypeOnly'
+  };
+}
+
+function blockedContainedPrototype(reason: string): ContainedDrawdownExecutionPrototype {
+  return {
+    status: 'blocked',
+    headline: 'Contained drawdown prototype is blocked.',
+    detail: reason,
+    rows: [],
+    reviewNote:
+      'Contained prototype only. It does not apply a strategy, does not run custom annual overrides, and does not save output.',
+    disposition: 'containedExecutionPrototypeOnly'
+  };
 }
 
 function blockedPreview(reason: string, status: 'heldBack' | 'blocked'): DrawdownReviewPreview {

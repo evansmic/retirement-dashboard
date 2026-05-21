@@ -4,39 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 80: Drawdown Execution Phase Closeout
+## Latest Sprint — Sprint 85: Contained Drawdown Prototype Review
 
 **Status:** Complete 2026-05-20.
 
-Goal: add the last readiness layer before any real drawdown execution prototype by checking preflight, audit trail, containment, examples, and saved-plan boundaries.
+Goal: run one tiny contained drawdown scenario using existing engine plumbing, explain it in Details as review evidence, and keep it blocked or held whenever funding, estate, or boundary checks are not clear.
 
 Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 80 checkpoint doc: [`docs/sprint_80_drawdown_execution_phase_closeout.md`](docs/sprint_80_drawdown_execution_phase_closeout.md).
+Sprint 85 checkpoint doc: [`docs/sprint_85_contained_drawdown_prototype_review.md`](docs/sprint_85_contained_drawdown_prototype_review.md).
 
-### Sprint 76-80 Candidate Implementation Tickets
+### Sprint 81-85 Candidate Implementation Tickets
 
-- [x] **S76-01 — Prototype preflight.** Check go/no-go, adapter, account mix, locked-in accounts, saved-plan boundary, and product path before any real prototype.
-- [x] **S77-01 — Adapter audit trail.** Explain the draft adapter source, year, account area, amount band, direction, and guardrails without creating instructions.
-- [x] **S78-01 — Execution containment guard.** Prove the work remains Details-only, has no plan action, does not run override calculations, does not save output, and uses only one draft shape.
-- [x] **S79-01 — Example matrix checkpoint.** Extend all-example coverage across preflight, audit trail, containment, closeout, copy posture, and saved-plan boundaries.
-- [x] **S80-01 — Phase closeout.** Summarize whether the next phase is ready, should hold, or must stop before real execution work.
+- [x] **S81-01 — One contained real scenario.** Run one bounded draft shape through existing scenario plumbing, not custom annual overrides.
+- [x] **S82-01 — Prototype harm checks.** Block the contained prototype when funding worsens or an entered estate goal is weakened.
+- [x] **S83-01 — Details-only prototype evidence.** Surface funding, tax, OAS recovery, estate, and calculation-boundary rows in Details.
+- [x] **S84-01 — Example matrix coverage.** Run built-in examples through the contained prototype and confirm copy and saved-plan boundaries.
+- [x] **S85-01 — Prototype summary.** Summarize ready, hold, or blocked status without creating any plan action.
 
-### Sprint 80 Definition Of Done
+### Sprint 85 Definition Of Done
 
-- Prototype preflight, draft audit trail, containment guard, and phase closeout appear only in Details.
-- Preflight intentionally holds while the product path remains closed.
-- Adapter audit trail explains the draft shape without turning it into household instructions.
-- Containment guard confirms there is no product action, override calculation, saved output, or multi-draft expansion.
-- Example matrix covers the new execution-readiness layer.
+- Contained prototype appears only in Details.
+- Prototype uses existing scenario engine plumbing and does not execute custom annual overrides.
+- Funding or entered estate-goal harm blocks the contained prototype.
+- Copy frames the result as review evidence, not an instruction or recommendation.
+- Example matrix covers contained prototype status and saved-plan boundaries.
 - Overview remains unchanged.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 85: Contained Drawdown Prototype Review
+
+**Complete 2026-05-20.** Added a Details-only contained prototype summary that turns one scenario comparison into ready, hold, or blocked review evidence without creating a plan action.
+
+Sprint 85 checkpoint doc: [`docs/sprint_85_contained_drawdown_prototype_review.md`](docs/sprint_85_contained_drawdown_prototype_review.md).
+
+### Sprint 84: Contained Prototype Example Matrix
+
+**Complete 2026-05-20.** Extended all-example coverage across contained prototype status, summary status, copy posture, and persistence boundaries.
+
+Sprint 84 checkpoint doc: [`docs/sprint_84_contained_prototype_example_matrix.md`](docs/sprint_84_contained_prototype_example_matrix.md).
+
+### Sprint 83: Details-Only Prototype Evidence
+
+**Complete 2026-05-20.** Surfaced contained prototype evidence in Details only, with funding, tax, OAS recovery, estate, and calculation-boundary rows.
+
+Sprint 83 checkpoint doc: [`docs/sprint_83_details_only_prototype_evidence.md`](docs/sprint_83_details_only_prototype_evidence.md).
+
+### Sprint 82: Prototype Harm Checks
+
+**Complete 2026-05-20.** Blocked the contained prototype when funding worsens or an entered estate goal may be weakened.
+
+Sprint 82 checkpoint doc: [`docs/sprint_82_prototype_harm_checks.md`](docs/sprint_82_prototype_harm_checks.md).
+
+### Sprint 81: One Contained Real Scenario
+
+**Complete 2026-05-20.** Added one contained scenario comparison using existing engine plumbing while keeping current withdrawal order, empty annual overrides, and saved plans unchanged.
+
+Sprint 81 checkpoint doc: [`docs/sprint_81_one_contained_real_scenario.md`](docs/sprint_81_one_contained_real_scenario.md).
 
 ### Sprint 80: Drawdown Execution Phase Closeout
 

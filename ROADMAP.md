@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 80 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, and phase closeout.
+Sprint 85 is complete. Tax-aware drawdown work now has a final visible-review gate, a Details-only preview, stress/harm checks, example-matrix coverage, a phase review, an execution boundary decision, a draft adapter shape, adapter rejection checks, a test-only mocked scorecard, an execution prototype go/no-go review, preflight, audit trail, containment guard, example checkpoint, phase closeout, and one contained real scenario comparison shown as review evidence.
 
-Completed Sprint 76-80 slices:
+Completed Sprint 81-85 slices:
 
-- Added preflight checks for go/no-go, adapter, account mix, locked-in accounts, saved-plan boundary, and the still-closed product path.
-- Added an audit trail for the draft adapter source, year, account area, amount band, direction, and guardrails.
-- Added a containment guard proving the work remains Details-only with no plan action, override calculation, saved output, or multi-draft expansion.
-- Extended built-in example coverage across the new execution-readiness layer.
-- Added a phase closeout that says whether the next phase is ready, should hold, or must stop.
+- Added one contained scenario comparison using existing engine plumbing.
+- Added harm checks that block the contained prototype when funding worsens or an entered estate goal may be weakened.
+- Surfaced contained prototype evidence in Details only.
+- Extended built-in example coverage across contained prototype status, summary status, copy posture, and saved-plan boundaries.
+- Added a contained prototype summary that says ready, hold, or blocked.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
-- Kept Sprints 76-80 as readiness work, not detailed account instructions.
+- Confirmed prototype, draft, sandbox, readiness, hidden comparison, decision gate, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, runtime payload, internal dry-run, mocked payload, and comparison output remain draft/test/review work and unsaved.
+- Kept Sprints 81-85 as review work, not detailed account instructions.
 
 ## Consumer Roadmap Sequence
 
@@ -115,6 +115,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 56. **Sprint 78 — Execution containment guard.** Prove the work remains Details-only with no plan action, override calculation, or saved output.
 57. **Sprint 79 — Execution example matrix checkpoint.** Run the new execution-readiness layer across all built-in examples.
 58. **Sprint 80 — Drawdown execution phase closeout.** Summarize whether the next phase is ready, should hold, or must stop.
+59. **Sprint 81 — One contained real scenario.** Run one bounded draft shape through existing scenario plumbing without custom annual overrides.
+60. **Sprint 82 — Prototype harm checks.** Block the contained prototype when funding or entered estate goals weaken.
+61. **Sprint 83 — Details-only prototype evidence.** Surface contained prototype evidence in Details only.
+62. **Sprint 84 — Contained prototype example matrix.** Run all built-in examples through the contained prototype layer.
+63. **Sprint 85 — Contained drawdown prototype review.** Summarize whether the contained prototype is ready, held, or blocked.
 
 ## Medium-Term Roadmap
 
@@ -193,6 +198,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 78 — Execution containment guard.** Complete 2026-05-20. Added containment rows for Details-only, no plan action, no override calculation, no saved output, and one draft shape.
 - **Sprint 79 — Execution example matrix checkpoint.** Complete 2026-05-20. Extended all-example coverage for the execution-readiness layer.
 - **Sprint 80 — Drawdown execution phase closeout.** Complete 2026-05-20. Added a Details-only phase closeout before the next drawdown phase.
+- **Sprint 81 — One contained real scenario.** Complete 2026-05-20. Added one contained scenario comparison using existing engine plumbing without custom annual overrides.
+- **Sprint 82 — Prototype harm checks.** Complete 2026-05-20. Blocked contained prototype evidence when funding or entered estate goals weaken.
+- **Sprint 83 — Details-only prototype evidence.** Complete 2026-05-20. Surfaced contained prototype evidence in Details only.
+- **Sprint 84 — Contained prototype example matrix.** Complete 2026-05-20. Extended all-example coverage for contained prototype status, summary, copy posture, and persistence.
+- **Sprint 85 — Contained drawdown prototype review.** Complete 2026-05-20. Added a contained prototype summary before broader drawdown execution work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
