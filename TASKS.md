@@ -4,38 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 120: Engine Extraction Readiness Closeout
+## Latest Sprint — Sprint 125: Stress Helper Extraction Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: prepare the next engine extraction phase by documenting explicit plan-object boundaries, preview runner ownership, stress extraction gaps, example coverage, and closeout status without changing simulation math or optimizer behavior.
+Goal: extract the review-facing baseline stress helpers behind an engine-owned module while preserving existing UI selectors, simulation math, saved plan files, and optimizer behavior.
 
-Non-scope: simulation math changes, stress-model redesign, optimizer expansion, account-by-account instructions, automatic strategy application, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, spending-stress rerun migration, stress-model redesign, optimizer expansion, account-by-account instructions, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 120 checkpoint doc: [`docs/sprint_120_engine_extraction_closeout.md`](docs/sprint_120_engine_extraction_closeout.md).
+Sprint 125 checkpoint doc: [`docs/sprint_125_stress_helper_closeout.md`](docs/sprint_125_stress_helper_closeout.md).
 
-### Sprint 116-120 Candidate Implementation Tickets
+### Sprint 121-125 Candidate Implementation Tickets
 
-- [x] **S116-01 — Runtime boundary metadata.** Record the current explicit plan-object simulation boundary and remaining bridge ownership.
-- [x] **S117-01 — Preview runner boundary.** Record runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
-- [x] **S118-01 — Extraction readiness selector.** Summarize ready, held, and blocked extraction signals without changing engine math.
-- [x] **S119-01 — Example and persistence gate.** Check built-in examples and saved-plan boundaries for extraction readiness output.
-- [x] **S120-01 — Phase closeout.** Mark the next logical slice as narrow stress-helper extraction.
+- [x] **S121-01 — Stress helper module.** Move baseline stress indicator, row, and summary logic behind an engine-owned helper.
+- [x] **S122-01 — Compatibility exports.** Keep existing `resultSelectors` exports stable for React callers.
+- [x] **S123-01 — Stress extraction boundary.** Add runtime-only metadata describing what moved and what remains held.
+- [x] **S124-01 — Example and persistence coverage.** Run bundled examples through the extracted baseline stress helpers and saved-plan guardrails.
+- [x] **S125-01 — Stress helper closeout.** Mark scenario stress, Monte Carlo, and historical sequence migration as later slices.
 
-### Sprint 120 Definition Of Done
+### Sprint 125 Definition Of Done
 
-- Runtime boundary metadata confirms explicit plan input and simulation-result output.
-- Preview runner metadata confirms injectable runner behavior and working-copy scenario construction.
-- Extraction readiness identifies the stress module as the next held extraction target.
-- Built-in examples produce finite baseline results through the current preview bundle.
-- No engine extraction readiness, next-step, example-gate, or closeout output is persisted.
+- Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
+- Existing React imports through `resultSelectors` continue to work.
+- Stress extraction readiness identifies spending-stress reruns, Monte Carlo, and historical sequence stress as held/later.
+- Built-in examples produce finite extracted baseline stress summaries.
+- No stress extraction readiness, boundary, row, or summary output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 125: Stress Helper Extraction Closeout
+
+**Complete 2026-05-21.** Added a closeout that keeps scenario stress, Monte Carlo, and historical sequence migration as later slices after baseline stress helper extraction.
+
+Sprint 125 checkpoint doc: [`docs/sprint_125_stress_helper_closeout.md`](docs/sprint_125_stress_helper_closeout.md).
+
+### Sprint 124: Stress Helper Example And Persistence Coverage
+
+**Complete 2026-05-21.** Added bundled-example and saved-plan coverage for the extracted baseline stress helpers.
+
+Sprint 124 checkpoint doc: [`docs/sprint_124_stress_helper_example_coverage.md`](docs/sprint_124_stress_helper_example_coverage.md).
+
+### Sprint 123: Stress Extraction Boundary
+
+**Complete 2026-05-21.** Added runtime-only metadata for baseline stress helper ownership and held/later stress surfaces.
+
+Sprint 123 checkpoint doc: [`docs/sprint_123_stress_extraction_boundary.md`](docs/sprint_123_stress_extraction_boundary.md).
+
+### Sprint 122: Stress Selector Compatibility Exports
+
+**Complete 2026-05-21.** Kept existing `resultSelectors` stress exports stable while moving implementation ownership.
+
+Sprint 122 checkpoint doc: [`docs/sprint_122_stress_selector_compatibility.md`](docs/sprint_122_stress_selector_compatibility.md).
+
+### Sprint 121: Baseline Stress Helper Module
+
+**Complete 2026-05-21.** Moved baseline stress indicator, stress row, and summary logic into an engine-owned stress helper module.
+
+Sprint 121 checkpoint doc: [`docs/sprint_121_baseline_stress_helper_module.md`](docs/sprint_121_baseline_stress_helper_module.md).
 
 ### Sprint 120: Engine Extraction Readiness Closeout
 

@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 120 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, and the next engine extraction phase now has explicit readiness metadata. The next logical slice is narrow stress-helper extraction while keeping optimizer behavior unchanged.
+Sprint 125 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, and the baseline stress read now lives behind an engine-owned helper module. The next logical slice is scenario-stress ownership or continued native module cleanup while keeping optimizer behavior unchanged.
 
-Completed Sprint 116-120 slices:
+Completed Sprint 121-125 slices:
 
-- Recorded the current explicit plan-object simulation boundary.
-- Recorded preview runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
-- Added extraction readiness rows for explicit plan input, runner injection, scenario copies, stress extraction, dashboard state, and saved-plan boundary.
-- Added example-plan coverage proving built-in examples still produce finite baseline results through the preview bundle.
-- Added a phase closeout that points to narrow stress-helper extraction next.
+- Moved baseline stress indicators, stress rows, and stress summary logic into `stressSelectors`.
+- Kept existing `resultSelectors` exports stable for React callers.
+- Added stress extraction boundary metadata for what moved and what remains held.
+- Added example-plan coverage proving built-in examples still produce finite extracted baseline stress summaries.
+- Added a closeout that leaves spending-stress reruns, Monte Carlo, and historical sequence stress for later slices.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed extraction readiness, next-step, example-gate, closeout, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 116-120 as extraction readiness work, not optimizer expansion or simulation math changes.
+- Confirmed stress extraction readiness, stress boundary output, stress rows, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 121-125 as stress-helper extraction work, not optimizer expansion or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -155,6 +155,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 96. **Sprint 118 — Engine extraction readiness selector.** Summarize ready, held, and blocked extraction signals without changing engine math.
 97. **Sprint 119 — Engine extraction example and persistence gate.** Check built-in examples and saved-plan boundaries for extraction readiness output.
 98. **Sprint 120 — Engine extraction readiness closeout.** Mark narrow stress-helper extraction as the next logical slice.
+99. **Sprint 121 — Baseline stress helper module.** Move baseline stress read logic behind an engine-owned helper.
+100. **Sprint 122 — Stress selector compatibility exports.** Keep existing React-facing stress selectors stable.
+101. **Sprint 123 — Stress extraction boundary.** Record what moved and what remains held for later stress migration.
+102. **Sprint 124 — Stress helper example coverage.** Run built-in examples through extracted baseline stress helpers.
+103. **Sprint 125 — Stress helper extraction closeout.** Mark scenario stress, Monte Carlo, and historical sequence migration as later slices.
 
 ## Medium-Term Roadmap
 
@@ -273,6 +278,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 118 — Engine extraction readiness selector.** Complete 2026-05-21. Added runtime-only extraction readiness rows.
 - **Sprint 119 — Engine extraction example and persistence gate.** Complete 2026-05-21. Added built-in example and saved-plan coverage.
 - **Sprint 120 — Engine extraction readiness closeout.** Complete 2026-05-21. Marked narrow stress-helper extraction as the next logical slice.
+- **Sprint 121 — Baseline stress helper module.** Complete 2026-05-21. Moved baseline stress read logic into an engine-owned helper.
+- **Sprint 122 — Stress selector compatibility exports.** Complete 2026-05-21. Kept React-facing stress selectors stable.
+- **Sprint 123 — Stress extraction boundary.** Complete 2026-05-21. Added runtime-only metadata for extracted and held stress surfaces.
+- **Sprint 124 — Stress helper example coverage.** Complete 2026-05-21. Added built-in example and saved-plan coverage.
+- **Sprint 125 — Stress helper extraction closeout.** Complete 2026-05-21. Kept scenario stress, Monte Carlo, and historical sequence migration as later slices.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
