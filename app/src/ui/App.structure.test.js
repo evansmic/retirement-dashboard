@@ -114,6 +114,12 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Prototype review checklist');
     expect(appSource).toContain('Prototype copy guard');
     expect(appSource).toContain('Contained prototype go/no-go');
+    expect(appSource).toContain('Prototype promotion readiness');
+    expect(appSource).toContain('Prototype next steps');
+    expect(appSource).toContain('Prototype blocker register');
+    expect(appSource).toContain('Example promotion gate');
+    expect(appSource).toContain('Contained prototype milestone');
+    expect(appSource).toContain('does not promote it today');
     expect(appSource).toContain('does not change your plan');
     expect(appSource).toContain('create account instructions');
     expect(appSource).toContain('does not change withdrawal order');

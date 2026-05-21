@@ -418,6 +418,76 @@ export type ContainedDrawdownProductGoNoGo = {
   disposition: 'containedPrototypeProductGoNoGoOnly';
 };
 
+export type ContainedDrawdownPromotionReadinessRow = {
+  id: 'productGoNoGo' | 'evidenceClarity' | 'detailsContainment' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownPromotionReadiness = {
+  status: 'readyForLaterUx' | 'holdInDetails' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownPromotionReadinessRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypePromotionReadinessOnly';
+};
+
+export type ContainedDrawdownNextStepGuideRow = {
+  id: 'readAnswer' | 'checkEvidence' | 'reviewInputs' | 'waitForExecution';
+  label: string;
+  status: 'review' | 'hold';
+  detail: string;
+};
+
+export type ContainedDrawdownNextStepGuide = {
+  status: 'available' | 'held';
+  rows: ContainedDrawdownNextStepGuideRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeNextStepGuideOnly';
+};
+
+export type ContainedDrawdownBlockerRegisterRow = {
+  id: 'blockedSignals' | 'heldSignals' | 'savedPlan' | 'executionBoundary';
+  label: string;
+  status: 'clear' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownBlockerRegister = {
+  status: 'clear' | 'hasHolds' | 'blocked';
+  blockedCount: number;
+  holdCount: number;
+  rows: ContainedDrawdownBlockerRegisterRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypeBlockerRegisterOnly';
+};
+
+export type ContainedDrawdownExamplePromotionGate = {
+  status: 'examplesClear' | 'needsExampleReview';
+  exampleCount: number;
+  heldOrBlockedCount: number;
+  reviewNote: string;
+  disposition: 'containedPrototypeExamplePromotionGateOnly';
+};
+
+export type ContainedDrawdownPhaseMilestoneCloseoutRow = {
+  id: 'promotion' | 'nextSteps' | 'blockers' | 'examples' | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type ContainedDrawdownPhaseMilestoneCloseout = {
+  status: 'readyForNextDesignPhase' | 'holdBeforeNextPhase' | 'stopBeforeNextPhase';
+  headline: string;
+  detail: string;
+  rows: ContainedDrawdownPhaseMilestoneCloseoutRow[];
+  reviewNote: string;
+  disposition: 'containedPrototypePhaseMilestoneOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -1990,6 +2060,260 @@ export function selectContainedDrawdownProductGoNoGo({
   };
 }
 
+export function selectContainedDrawdownPromotionReadiness({
+  plan,
+  productGoNoGo,
+  usefulness,
+  density,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  productGoNoGo: ContainedDrawdownProductGoNoGo;
+  usefulness: ContainedDrawdownUsefulnessCloseout;
+  density: ContainedDrawdownDetailsDensity;
+  copyGuard: ContainedDrawdownCopyGuard;
+}): ContainedDrawdownPromotionReadiness {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: ContainedDrawdownPromotionReadinessRow[] = [
+    {
+      id: 'productGoNoGo',
+      label: 'Product go/no-go',
+      status: productGoNoGo.status === 'keepInDetails' ? 'ready' : productGoNoGo.status === 'holdForUxPolish' ? 'hold' : 'blocked',
+      detail: productGoNoGo.headline
+    },
+    {
+      id: 'evidenceClarity',
+      label: 'Evidence clarity',
+      status: usefulness.status === 'usefulForReview' ? 'ready' : usefulness.status === 'holdForClearerEvidence' ? 'hold' : 'blocked',
+      detail: usefulness.detail
+    },
+    {
+      id: 'detailsContainment',
+      label: 'Details containment',
+      status: density.status === 'compactEnough' ? 'ready' : 'hold',
+      detail: density.status === 'compactEnough'
+        ? 'The contained prototype remains compact enough for Details.'
+        : 'The contained prototype needs a lighter Details presentation before it moves further.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean && copyGuard.status === 'copyClear' ? 'ready' : 'blocked',
+      detail: savedPlanClean && copyGuard.status === 'copyClear'
+        ? 'No promotion-readiness output is saved.'
+        : 'Saved output or copy posture needs review before any later product step.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdInDetails' : 'readyForLaterUx',
+    headline: hasBlocked
+      ? 'Do not move this prototype forward.'
+      : hasHold
+        ? 'Keep this prototype in Details for now.'
+        : 'Ready for a later UX review.',
+    detail:
+      'This readiness check decides whether the contained prototype can be considered for later presentation work. It does not promote it today.',
+    rows,
+    reviewNote:
+      'Promotion readiness only. It does not move the prototype, run annual overrides, change withdrawal order, or save output.',
+    disposition: 'containedPrototypePromotionReadinessOnly'
+  };
+}
+
+export function selectContainedDrawdownNextStepGuide({
+  promotionReadiness,
+  productGoNoGo
+}: {
+  promotionReadiness: ContainedDrawdownPromotionReadiness;
+  productGoNoGo: ContainedDrawdownProductGoNoGo;
+}): ContainedDrawdownNextStepGuide {
+  const held = promotionReadiness.status !== 'readyForLaterUx';
+  return {
+    status: held ? 'held' : 'available',
+    rows: [
+      {
+        id: 'readAnswer',
+        label: 'Start with the main answer',
+        status: 'review',
+        detail: 'Use the retirement answer and spending estimate first; the prototype is supporting context.'
+      },
+      {
+        id: 'checkEvidence',
+        label: 'Check the evidence',
+        status: productGoNoGo.status === 'doNotPromote' ? 'hold' : 'review',
+        detail: 'Read funding, tax, OAS recovery, estate, and limitation rows before drawing conclusions.'
+      },
+      {
+        id: 'reviewInputs',
+        label: 'Review household inputs',
+        status: 'review',
+        detail: 'Confirm benefit timing, registered balances, locked-in accounts, survivor setup, and estate intent.'
+      },
+      {
+        id: 'waitForExecution',
+        label: 'Wait for execution work',
+        status: 'hold',
+        detail: 'This prototype does not tell the household which account to use in any year.'
+      }
+    ],
+    reviewNote:
+      'Next-step guide only. It helps people read the evidence and does not create account instructions.',
+    disposition: 'containedPrototypeNextStepGuideOnly'
+  };
+}
+
+export function selectContainedDrawdownBlockerRegister({
+  plan,
+  promotionReadiness,
+  productGoNoGo,
+  checklist,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  promotionReadiness: ContainedDrawdownPromotionReadiness;
+  productGoNoGo: ContainedDrawdownProductGoNoGo;
+  checklist: ContainedDrawdownReviewChecklist;
+  copyGuard: ContainedDrawdownCopyGuard;
+}): ContainedDrawdownBlockerRegister {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const blockedCount = [
+    promotionReadiness.status === 'blocked',
+    productGoNoGo.status === 'doNotPromote',
+    checklist.status === 'blocked',
+    copyGuard.status === 'blocked',
+    !savedPlanClean
+  ].filter(Boolean).length;
+  const holdCount = [
+    promotionReadiness.status === 'holdInDetails',
+    productGoNoGo.status === 'holdForUxPolish',
+    checklist.status === 'holdBeforeReview'
+  ].filter(Boolean).length;
+  const rows: ContainedDrawdownBlockerRegisterRow[] = [
+    {
+      id: 'blockedSignals',
+      label: 'Blocked signals',
+      status: blockedCount > 0 ? 'blocked' : 'clear',
+      detail: blockedCount > 0 ? `${blockedCount} blocked signal(s) need review.` : 'No blocked signals found.'
+    },
+    {
+      id: 'heldSignals',
+      label: 'Held signals',
+      status: holdCount > 0 ? 'hold' : 'clear',
+      detail: holdCount > 0 ? `${holdCount} held signal(s) should stay in Details.` : 'No held signals found.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'clear' : 'blocked',
+      detail: savedPlanClean ? 'Saved plan output is clean.' : 'Saved plan output contains runtime readiness data.'
+    },
+    {
+      id: 'executionBoundary',
+      label: 'Execution boundary',
+      status: 'clear',
+      detail: 'Current withdrawal order remains the source of truth and annual overrides remain empty.'
+    }
+  ];
+  return {
+    status: blockedCount > 0 ? 'blocked' : holdCount > 0 ? 'hasHolds' : 'clear',
+    blockedCount,
+    holdCount,
+    rows,
+    reviewNote:
+      'Blocker register only. It summarizes holds and blocks without applying or saving a strategy.',
+    disposition: 'containedPrototypeBlockerRegisterOnly'
+  };
+}
+
+export function selectContainedDrawdownExamplePromotionGate({
+  exampleCount,
+  heldOrBlockedCount
+}: {
+  exampleCount: number;
+  heldOrBlockedCount: number;
+}): ContainedDrawdownExamplePromotionGate {
+  const hasMatrixEvidence = exampleCount > 0;
+  return {
+    status: hasMatrixEvidence && heldOrBlockedCount === 0 ? 'examplesClear' : 'needsExampleReview',
+    exampleCount,
+    heldOrBlockedCount,
+    reviewNote: hasMatrixEvidence
+      ? 'Example promotion gate only. It checks built-in examples and does not save prototype output.'
+      : 'Example promotion gate only. The product view does not run the built-in example matrix.',
+    disposition: 'containedPrototypeExamplePromotionGateOnly'
+  };
+}
+
+export function selectContainedDrawdownPhaseMilestoneCloseout({
+  plan,
+  promotionReadiness,
+  nextStepGuide,
+  blockerRegister,
+  examplePromotionGate
+}: {
+  plan: V2PlanPayload;
+  promotionReadiness: ContainedDrawdownPromotionReadiness;
+  nextStepGuide: ContainedDrawdownNextStepGuide;
+  blockerRegister: ContainedDrawdownBlockerRegister;
+  examplePromotionGate: ContainedDrawdownExamplePromotionGate;
+}): ContainedDrawdownPhaseMilestoneCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: ContainedDrawdownPhaseMilestoneCloseoutRow[] = [
+    {
+      id: 'promotion',
+      label: 'Promotion readiness',
+      status: promotionReadiness.status === 'readyForLaterUx' ? 'ready' : promotionReadiness.status === 'holdInDetails' ? 'hold' : 'blocked',
+      detail: promotionReadiness.headline
+    },
+    {
+      id: 'nextSteps',
+      label: 'Next-step guide',
+      status: nextStepGuide.status === 'available' ? 'ready' : 'hold',
+      detail: nextStepGuide.reviewNote
+    },
+    {
+      id: 'blockers',
+      label: 'Blocker register',
+      status: blockerRegister.status === 'clear' ? 'ready' : blockerRegister.status === 'hasHolds' ? 'hold' : 'blocked',
+      detail: `${blockerRegister.blockedCount} blocked and ${blockerRegister.holdCount} held signal(s).`
+    },
+    {
+      id: 'examples',
+      label: 'Example promotion gate',
+      status: examplePromotionGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail: examplePromotionGate.status === 'examplesClear'
+        ? `${examplePromotionGate.exampleCount} examples are clear.`
+        : examplePromotionGate.exampleCount > 0
+          ? `${examplePromotionGate.heldOrBlockedCount} example(s) need review.`
+          : 'Example promotion coverage is checked in tests, not in this product view.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No phase milestone output is saved.' : 'Saved plan output contains phase milestone data.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+  return {
+    status: hasBlocked ? 'stopBeforeNextPhase' : hasHold ? 'holdBeforeNextPhase' : 'readyForNextDesignPhase',
+    headline: hasBlocked
+      ? 'Stop before the next drawdown phase.'
+      : hasHold
+        ? 'Hold before the next drawdown phase.'
+        : 'Ready for the next drawdown design phase.',
+    detail:
+      'This milestone closes the contained prototype phase without opening annual override execution.',
+    rows,
+    reviewNote:
+      'Phase milestone only. It does not execute drawdown changes, move the prototype into Overview, or save output.',
+    disposition: 'containedPrototypePhaseMilestoneOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -2021,6 +2345,11 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('containedDrawdownExampleGate' in saved) &&
     !('containedDrawdownCopyGuard' in saved) &&
     !('containedDrawdownProductGoNoGo' in saved) &&
+    !('containedDrawdownPromotionReadiness' in saved) &&
+    !('containedDrawdownNextStepGuide' in saved) &&
+    !('containedDrawdownBlockerRegister' in saved) &&
+    !('containedDrawdownExamplePromotionGate' in saved) &&
+    !('containedDrawdownPhaseMilestoneCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

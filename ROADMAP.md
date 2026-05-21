@@ -130,6 +130,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 71. **Sprint 93 — Contained prototype example gate.** Keep example readiness as test/runtime evidence without product-view overclaiming.
 72. **Sprint 94 — Contained prototype copy guard.** Protect review-only language and saved-plan boundaries.
 73. **Sprint 95 — Contained prototype product go/no-go.** Combine readiness signals into one Details-only decision before broader drawdown work.
+74. **Sprint 96 — Contained prototype promotion readiness.** Decide whether later UX consideration is possible without promoting the prototype now.
+75. **Sprint 97 — Contained prototype next-step guide.** Add review steps that do not become account instructions.
+76. **Sprint 98 — Contained prototype blocker register.** Summarize held and blocked signals.
+77. **Sprint 99 — Contained prototype example promotion gate.** Extend example coverage to the promotion-readiness layer.
+78. **Sprint 100 — Contained prototype phase milestone.** Close the contained prototype phase before broader drawdown work.
 
 ## Medium-Term Roadmap
 
@@ -223,6 +228,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 93 — Contained prototype example gate.** Complete 2026-05-21. Added example readiness gating while keeping product UI honest about test-only matrix coverage.
 - **Sprint 94 — Contained prototype copy guard.** Complete 2026-05-21. Added copy and saved-plan boundary checks.
 - **Sprint 95 — Contained prototype product go/no-go.** Complete 2026-05-21. Added a combined Details-only go/no-go for broader drawdown readiness.
+- **Sprint 96 — Contained prototype promotion readiness.** Complete 2026-05-21. Added conservative promotion-readiness checks without moving the prototype.
+- **Sprint 97 — Contained prototype next-step guide.** Complete 2026-05-21. Added review steps that avoid account instructions.
+- **Sprint 98 — Contained prototype blocker register.** Complete 2026-05-21. Added held and blocked signal tracking for the contained prototype.
+- **Sprint 99 — Contained prototype example promotion gate.** Complete 2026-05-21. Added example promotion gate coverage.
+- **Sprint 100 — Contained prototype phase milestone.** Complete 2026-05-21. Added a combined milestone closeout before broader drawdown work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

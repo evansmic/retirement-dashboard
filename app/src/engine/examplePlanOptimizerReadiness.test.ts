@@ -10,13 +10,18 @@ import {
   buildDrawdownExecutionContract,
   emptyMockedExecutionScorecard,
   runContainedDrawdownExecutionPrototype,
+  selectContainedDrawdownBlockerRegister,
   selectContainedDrawdownCopyGuard,
   selectContainedDrawdownDetailsDensity,
   selectContainedDrawdownExplanation,
   selectContainedDrawdownExampleGate,
+  selectContainedDrawdownExamplePromotionGate,
   selectContainedDrawdownLimitations,
   selectContainedDrawdownMateriality,
+  selectContainedDrawdownNextStepGuide,
+  selectContainedDrawdownPhaseMilestoneCloseout,
   selectContainedDrawdownProductGoNoGo,
+  selectContainedDrawdownPromotionReadiness,
   selectContainedDrawdownPrototypeSummary,
   selectContainedDrawdownReviewChecklist,
   selectContainedDrawdownUsefulnessCloseout,
@@ -295,6 +300,35 @@ describe('example-plan optimizer readiness matrix', () => {
         exampleGate: containedExampleGate,
         copyGuard: containedCopyGuard
       });
+      const containedPromotionReadiness = selectContainedDrawdownPromotionReadiness({
+        plan,
+        productGoNoGo: containedProductGoNoGo,
+        usefulness: containedUsefulness,
+        density: containedDetailsDensity,
+        copyGuard: containedCopyGuard
+      });
+      const containedNextStepGuide = selectContainedDrawdownNextStepGuide({
+        promotionReadiness: containedPromotionReadiness,
+        productGoNoGo: containedProductGoNoGo
+      });
+      const containedBlockerRegister = selectContainedDrawdownBlockerRegister({
+        plan,
+        promotionReadiness: containedPromotionReadiness,
+        productGoNoGo: containedProductGoNoGo,
+        checklist: containedReviewChecklist,
+        copyGuard: containedCopyGuard
+      });
+      const containedExamplePromotionGate = selectContainedDrawdownExamplePromotionGate({
+        exampleCount: examplePlanCards.length,
+        heldOrBlockedCount: 0
+      });
+      const containedPhaseMilestone = selectContainedDrawdownPhaseMilestoneCloseout({
+        plan,
+        promotionReadiness: containedPromotionReadiness,
+        nextStepGuide: containedNextStepGuide,
+        blockerRegister: containedBlockerRegister,
+        examplePromotionGate: containedExamplePromotionGate
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -323,7 +357,12 @@ describe('example-plan optimizer readiness matrix', () => {
         containedReviewChecklist,
         containedExampleGate,
         containedCopyGuard,
-        containedProductGoNoGo
+        containedProductGoNoGo,
+        containedPromotionReadiness,
+        containedNextStepGuide,
+        containedBlockerRegister,
+        containedExamplePromotionGate,
+        containedPhaseMilestone
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -390,6 +429,18 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(['keepInDetails', 'holdForUxPolish', 'doNotPromote']).toContain(containedProductGoNoGo.status);
       expect(containedProductGoNoGo.disposition).toBe('containedPrototypeProductGoNoGoOnly');
       expect(containedProductGoNoGo.reviewNote).toContain('does not move the prototype into Overview');
+      expect(['readyForLaterUx', 'holdInDetails', 'blocked']).toContain(containedPromotionReadiness.status);
+      expect(containedPromotionReadiness.disposition).toBe('containedPrototypePromotionReadinessOnly');
+      expect(['available', 'held']).toContain(containedNextStepGuide.status);
+      expect(containedNextStepGuide.disposition).toBe('containedPrototypeNextStepGuideOnly');
+      expect(['clear', 'hasHolds', 'blocked']).toContain(containedBlockerRegister.status);
+      expect(containedBlockerRegister.disposition).toBe('containedPrototypeBlockerRegisterOnly');
+      expect(containedExamplePromotionGate).toMatchObject({
+        status: 'examplesClear',
+        disposition: 'containedPrototypeExamplePromotionGateOnly'
+      });
+      expect(['readyForNextDesignPhase', 'holdBeforeNextPhase', 'stopBeforeNextPhase']).toContain(containedPhaseMilestone.status);
+      expect(containedPhaseMilestone.disposition).toBe('containedPrototypePhaseMilestoneOnly');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -441,6 +492,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('containedDrawdownExampleGate');
       expect(saved.plan).not.toHaveProperty('containedDrawdownCopyGuard');
       expect(saved.plan).not.toHaveProperty('containedDrawdownProductGoNoGo');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownPromotionReadiness');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownNextStepGuide');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownBlockerRegister');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownExamplePromotionGate');
+      expect(saved.plan).not.toHaveProperty('containedDrawdownPhaseMilestoneCloseout');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

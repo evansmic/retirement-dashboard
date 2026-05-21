@@ -4,39 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 95: Contained Prototype Product Go/No-Go
+## Latest Sprint — Sprint 100: Contained Prototype Phase Milestone
 
 **Status:** Complete 2026-05-21.
 
-Goal: decide whether the contained drawdown prototype should stay in Details, hold for UX polish, or stop before any broader execution work.
+Goal: close the contained drawdown prototype phase with a conservative milestone that can continue, hold, or stop before any broader execution work.
 
 Non-scope: product annual override execution, detailed account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new engine schema/output, cloud accounts, advisor tooling, or report migration.
 
-Sprint 95 checkpoint doc: [`docs/sprint_95_contained_prototype_product_go_no_go.md`](docs/sprint_95_contained_prototype_product_go_no_go.md).
+Sprint 100 checkpoint doc: [`docs/sprint_100_contained_prototype_phase_milestone.md`](docs/sprint_100_contained_prototype_phase_milestone.md).
 
-### Sprint 91-95 Candidate Implementation Tickets
+### Sprint 96-100 Candidate Implementation Tickets
 
-- [x] **S91-01 — Details density check.** Count the contained prototype Details surface and hold if it becomes too dense.
-- [x] **S92-01 — Review checklist.** Add a short reading checklist before users interpret contained prototype evidence.
-- [x] **S93-01 — Example gate.** Keep all-example readiness as a test/runtime gate without pretending the product view reruns the matrix.
-- [x] **S94-01 — Copy guard.** Add review-only copy checks for recommendation, certainty, instruction, and saved-plan language.
-- [x] **S95-01 — Product go/no-go.** Combine usefulness, density, checklist, example, copy, and saved-plan checks into one Details-only decision.
+- [x] **S96-01 — Promotion readiness.** Decide whether the contained prototype can be considered for later UX work without promoting it now.
+- [x] **S97-01 — Next-step guide.** Add plain review steps that do not become account instructions.
+- [x] **S98-01 — Blocker register.** Summarize held and blocked signals before any later drawdown phase.
+- [x] **S99-01 — Example promotion gate.** Extend example-matrix coverage to the promotion-readiness layer.
+- [x] **S100-01 — Phase milestone.** Combine promotion readiness, next steps, blockers, examples, and saved-plan checks into a phase closeout.
 
-### Sprint 95 Definition Of Done
+### Sprint 100 Definition Of Done
 
-- Density, checklist, copy, and product go/no-go appear only in Details.
+- Promotion readiness, next steps, blocker register, example promotion gate, and milestone closeout appear only in Details.
 - Overview remains unchanged and does not gain prototype readiness panels.
 - Product UI does not claim to run the full example matrix for a single plan.
-- Example matrix covers the new readiness layer and saved-plan boundaries.
-- The go/no-go can hold or block without applying strategy output.
-- Overview remains unchanged.
+- Example matrix covers the new promotion layer and saved-plan boundaries.
+- The milestone can hold or stop without applying strategy output.
 - Optimizer contract remains current-order with no annual overrides.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 100: Contained Prototype Phase Milestone
+
+**Complete 2026-05-21.** Added a Details-only phase milestone that combines promotion readiness, next steps, blockers, example promotion coverage, and saved-plan checks before any broader drawdown work.
+
+Sprint 100 checkpoint doc: [`docs/sprint_100_contained_prototype_phase_milestone.md`](docs/sprint_100_contained_prototype_phase_milestone.md).
+
+### Sprint 99: Contained Prototype Example Promotion Gate
+
+**Complete 2026-05-21.** Added an example promotion gate so the new promotion-readiness layer remains covered by built-in example checks without overclaiming in the live product view.
+
+Sprint 99 checkpoint doc: [`docs/sprint_99_contained_prototype_example_promotion_gate.md`](docs/sprint_99_contained_prototype_example_promotion_gate.md).
+
+### Sprint 98: Contained Prototype Blocker Register
+
+**Complete 2026-05-21.** Added a compact register of held and blocked signals before any later drawdown phase.
+
+Sprint 98 checkpoint doc: [`docs/sprint_98_contained_prototype_blocker_register.md`](docs/sprint_98_contained_prototype_blocker_register.md).
+
+### Sprint 97: Contained Prototype Next-Step Guide
+
+**Complete 2026-05-21.** Added a Details-only guide for how to read the contained prototype without treating it as account instructions.
+
+Sprint 97 checkpoint doc: [`docs/sprint_97_contained_prototype_next_step_guide.md`](docs/sprint_97_contained_prototype_next_step_guide.md).
+
+### Sprint 96: Contained Prototype Promotion Readiness
+
+**Complete 2026-05-21.** Added a conservative promotion-readiness selector that can ready, hold, or block later UX consideration without promoting the prototype today.
+
+Sprint 96 checkpoint doc: [`docs/sprint_96_contained_prototype_promotion_readiness.md`](docs/sprint_96_contained_prototype_promotion_readiness.md).
 
 ### Sprint 95: Contained Prototype Product Go/No-Go
 

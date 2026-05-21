@@ -72,13 +72,18 @@ import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
 import type {
   ContainedDrawdownCopyGuard,
+  ContainedDrawdownBlockerRegister,
   ContainedDrawdownDetailsDensity,
   ContainedDrawdownExecutionPrototype,
   ContainedDrawdownExampleGate,
+  ContainedDrawdownExamplePromotionGate,
   ContainedDrawdownExplanation,
   ContainedDrawdownLimitations,
   ContainedDrawdownMateriality,
+  ContainedDrawdownNextStepGuide,
+  ContainedDrawdownPhaseMilestoneCloseout,
   ContainedDrawdownProductGoNoGo,
+  ContainedDrawdownPromotionReadiness,
   ContainedDrawdownPrototypeSummary,
   ContainedDrawdownReviewChecklist,
   ContainedDrawdownUsefulnessCloseout,
@@ -163,6 +168,11 @@ type BridgePreview = {
   containedDrawdownExampleGate: ContainedDrawdownExampleGate | null;
   containedDrawdownCopyGuard: ContainedDrawdownCopyGuard | null;
   containedDrawdownProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
+  containedDrawdownPromotionReadiness: ContainedDrawdownPromotionReadiness | null;
+  containedDrawdownNextStepGuide: ContainedDrawdownNextStepGuide | null;
+  containedDrawdownBlockerRegister: ContainedDrawdownBlockerRegister | null;
+  containedDrawdownExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
+  containedDrawdownPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
   error: string;
   loading: boolean;
 };
@@ -438,6 +448,11 @@ export function App() {
     containedDrawdownExampleGate: null,
     containedDrawdownCopyGuard: null,
     containedDrawdownProductGoNoGo: null,
+    containedDrawdownPromotionReadiness: null,
+    containedDrawdownNextStepGuide: null,
+    containedDrawdownBlockerRegister: null,
+    containedDrawdownExamplePromotionGate: null,
+    containedDrawdownPhaseMilestoneCloseout: null,
     error: '',
     loading: false
   });
@@ -477,6 +492,11 @@ export function App() {
         containedDrawdownExampleGate: null,
         containedDrawdownCopyGuard: null,
         containedDrawdownProductGoNoGo: null,
+        containedDrawdownPromotionReadiness: null,
+        containedDrawdownNextStepGuide: null,
+        containedDrawdownBlockerRegister: null,
+        containedDrawdownExamplePromotionGate: null,
+        containedDrawdownPhaseMilestoneCloseout: null,
         error: '',
         loading: false
       });
@@ -504,9 +524,14 @@ export function App() {
              selectContainedDrawdownDetailsDensity,
              selectContainedDrawdownExplanation,
              selectContainedDrawdownExampleGate,
+             selectContainedDrawdownExamplePromotionGate,
              selectContainedDrawdownLimitations,
              selectContainedDrawdownMateriality,
+             selectContainedDrawdownBlockerRegister,
+             selectContainedDrawdownNextStepGuide,
+             selectContainedDrawdownPhaseMilestoneCloseout,
              selectContainedDrawdownProductGoNoGo,
+             selectContainedDrawdownPromotionReadiness,
              selectContainedDrawdownPrototypeSummary,
              selectContainedDrawdownReviewChecklist,
              selectContainedDrawdownUsefulnessCloseout,
@@ -627,6 +652,35 @@ export function App() {
           exampleGate: containedDrawdownExampleGate,
           copyGuard: containedDrawdownCopyGuard
         });
+        const containedDrawdownPromotionReadiness = selectContainedDrawdownPromotionReadiness({
+          plan,
+          productGoNoGo: containedDrawdownProductGoNoGo,
+          usefulness: containedDrawdownUsefulnessCloseout,
+          density: containedDrawdownDetailsDensity,
+          copyGuard: containedDrawdownCopyGuard
+        });
+        const containedDrawdownNextStepGuide = selectContainedDrawdownNextStepGuide({
+          promotionReadiness: containedDrawdownPromotionReadiness,
+          productGoNoGo: containedDrawdownProductGoNoGo
+        });
+        const containedDrawdownBlockerRegister = selectContainedDrawdownBlockerRegister({
+          plan,
+          promotionReadiness: containedDrawdownPromotionReadiness,
+          productGoNoGo: containedDrawdownProductGoNoGo,
+          checklist: containedDrawdownReviewChecklist,
+          copyGuard: containedDrawdownCopyGuard
+        });
+        const containedDrawdownExamplePromotionGate = selectContainedDrawdownExamplePromotionGate({
+          exampleCount: 0,
+          heldOrBlockedCount: 0
+        });
+        const containedDrawdownPhaseMilestoneCloseout = selectContainedDrawdownPhaseMilestoneCloseout({
+          plan,
+          promotionReadiness: containedDrawdownPromotionReadiness,
+          nextStepGuide: containedDrawdownNextStepGuide,
+          blockerRegister: containedDrawdownBlockerRegister,
+          examplePromotionGate: containedDrawdownExamplePromotionGate
+        });
         if (!cancelled) {
           setBridgePreview({
             ...preview,
@@ -654,6 +708,11 @@ export function App() {
             containedDrawdownExampleGate,
             containedDrawdownCopyGuard,
             containedDrawdownProductGoNoGo,
+            containedDrawdownPromotionReadiness,
+            containedDrawdownNextStepGuide,
+            containedDrawdownBlockerRegister,
+            containedDrawdownExamplePromotionGate,
+            containedDrawdownPhaseMilestoneCloseout,
             error: '',
             loading: false
           });
@@ -690,6 +749,11 @@ export function App() {
               containedDrawdownExampleGate: null,
               containedDrawdownCopyGuard: null,
               containedDrawdownProductGoNoGo: null,
+              containedDrawdownPromotionReadiness: null,
+              containedDrawdownNextStepGuide: null,
+              containedDrawdownBlockerRegister: null,
+              containedDrawdownExamplePromotionGate: null,
+              containedDrawdownPhaseMilestoneCloseout: null,
               error: err instanceof Error ? err.message : 'Could not run preview calculation.',
               loading: false
             });
@@ -899,6 +963,11 @@ export function App() {
               containedDrawdownExampleGate={bridgePreview.containedDrawdownExampleGate}
               containedDrawdownCopyGuard={bridgePreview.containedDrawdownCopyGuard}
               containedDrawdownProductGoNoGo={bridgePreview.containedDrawdownProductGoNoGo}
+              containedDrawdownPromotionReadiness={bridgePreview.containedDrawdownPromotionReadiness}
+              containedDrawdownNextStepGuide={bridgePreview.containedDrawdownNextStepGuide}
+              containedDrawdownBlockerRegister={bridgePreview.containedDrawdownBlockerRegister}
+              containedDrawdownExamplePromotionGate={bridgePreview.containedDrawdownExamplePromotionGate}
+              containedDrawdownPhaseMilestoneCloseout={bridgePreview.containedDrawdownPhaseMilestoneCloseout}
               title={domainPlan.title}
               validation={validation}
             />
@@ -2470,6 +2539,11 @@ function ResultsHandoffPanel({
   containedDrawdownExampleGate,
   containedDrawdownCopyGuard,
   containedDrawdownProductGoNoGo,
+  containedDrawdownPromotionReadiness,
+  containedDrawdownNextStepGuide,
+  containedDrawdownBlockerRegister,
+  containedDrawdownExamplePromotionGate,
+  containedDrawdownPhaseMilestoneCloseout,
   title,
   validation
 }: {
@@ -2507,6 +2581,11 @@ function ResultsHandoffPanel({
   containedDrawdownExampleGate: BridgePreview['containedDrawdownExampleGate'];
   containedDrawdownCopyGuard: BridgePreview['containedDrawdownCopyGuard'];
   containedDrawdownProductGoNoGo: BridgePreview['containedDrawdownProductGoNoGo'];
+  containedDrawdownPromotionReadiness: BridgePreview['containedDrawdownPromotionReadiness'];
+  containedDrawdownNextStepGuide: BridgePreview['containedDrawdownNextStepGuide'];
+  containedDrawdownBlockerRegister: BridgePreview['containedDrawdownBlockerRegister'];
+  containedDrawdownExamplePromotionGate: BridgePreview['containedDrawdownExamplePromotionGate'];
+  containedDrawdownPhaseMilestoneCloseout: BridgePreview['containedDrawdownPhaseMilestoneCloseout'];
   title: string;
   validation: PlanValidationResult | null;
 }) {
@@ -2636,6 +2715,11 @@ function ResultsHandoffPanel({
             containedDrawdownExampleGate={containedDrawdownExampleGate}
             containedDrawdownCopyGuard={containedDrawdownCopyGuard}
             containedDrawdownProductGoNoGo={containedDrawdownProductGoNoGo}
+            containedDrawdownPromotionReadiness={containedDrawdownPromotionReadiness}
+            containedDrawdownNextStepGuide={containedDrawdownNextStepGuide}
+            containedDrawdownBlockerRegister={containedDrawdownBlockerRegister}
+            containedDrawdownExamplePromotionGate={containedDrawdownExamplePromotionGate}
+            containedDrawdownPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
             loading={loading}
             onSection={onSection}
             overview={overview}
@@ -3145,6 +3229,11 @@ function DetailsResultsPanel({
   containedDrawdownExampleGate,
   containedDrawdownCopyGuard,
   containedDrawdownProductGoNoGo,
+  containedDrawdownPromotionReadiness,
+  containedDrawdownNextStepGuide,
+  containedDrawdownBlockerRegister,
+  containedDrawdownExamplePromotionGate,
+  containedDrawdownPhaseMilestoneCloseout,
   overview,
   planHealth,
   projectionMilestones,
@@ -3191,6 +3280,11 @@ function DetailsResultsPanel({
   containedDrawdownExampleGate: ContainedDrawdownExampleGate | null;
   containedDrawdownCopyGuard: ContainedDrawdownCopyGuard | null;
   containedDrawdownProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
+  containedDrawdownPromotionReadiness: ContainedDrawdownPromotionReadiness | null;
+  containedDrawdownNextStepGuide: ContainedDrawdownNextStepGuide | null;
+  containedDrawdownBlockerRegister: ContainedDrawdownBlockerRegister | null;
+  containedDrawdownExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
+  containedDrawdownPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
   overview: ReturnType<typeof selectOverviewMetrics>;
   planHealth: ReturnType<typeof selectPlanHealthExplainer>;
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
@@ -3323,6 +3417,11 @@ function DetailsResultsPanel({
         containedExampleGate={containedDrawdownExampleGate}
         containedCopyGuard={containedDrawdownCopyGuard}
         containedProductGoNoGo={containedDrawdownProductGoNoGo}
+        containedPromotionReadiness={containedDrawdownPromotionReadiness}
+        containedNextStepGuide={containedDrawdownNextStepGuide}
+        containedBlockerRegister={containedDrawdownBlockerRegister}
+        containedExamplePromotionGate={containedDrawdownExamplePromotionGate}
+        containedPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
         goNoGo={drawdownExecutionGoNoGo}
         loading={loading}
       />
@@ -4139,8 +4238,13 @@ function DrawdownExecutionBoundaryPanel({
   containedLimitations,
   containedMateriality,
   containedProductGoNoGo,
+  containedPromotionReadiness,
   containedPrototype,
   containedPrototypeSummary,
+  containedNextStepGuide,
+  containedBlockerRegister,
+  containedExamplePromotionGate,
+  containedPhaseMilestoneCloseout,
   containedReviewChecklist,
   containedUsefulnessCloseout,
   containmentGuard,
@@ -4159,8 +4263,13 @@ function DrawdownExecutionBoundaryPanel({
   containedLimitations: ContainedDrawdownLimitations | null;
   containedMateriality: ContainedDrawdownMateriality | null;
   containedProductGoNoGo: ContainedDrawdownProductGoNoGo | null;
+  containedPromotionReadiness: ContainedDrawdownPromotionReadiness | null;
   containedPrototype: ContainedDrawdownExecutionPrototype | null;
   containedPrototypeSummary: ContainedDrawdownPrototypeSummary | null;
+  containedNextStepGuide: ContainedDrawdownNextStepGuide | null;
+  containedBlockerRegister: ContainedDrawdownBlockerRegister | null;
+  containedExamplePromotionGate: ContainedDrawdownExamplePromotionGate | null;
+  containedPhaseMilestoneCloseout: ContainedDrawdownPhaseMilestoneCloseout | null;
   containedReviewChecklist: ContainedDrawdownReviewChecklist | null;
   containedUsefulnessCloseout: ContainedDrawdownUsefulnessCloseout | null;
   containmentGuard: DrawdownExecutionContainmentGuard | null;
@@ -4493,6 +4602,102 @@ function DrawdownExecutionBoundaryPanel({
             ))}
           </div>
           <p className="table-note">{containedProductGoNoGo.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedPromotionReadiness?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype promotion readiness</p>
+            <h4>{containedPromotionReadiness.headline}</h4>
+            <p>{containedPromotionReadiness.detail} It does not promote it today.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedPromotionReadiness.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedPromotionReadiness.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedNextStepGuide?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype next steps</p>
+            <h4>{containedNextStepGuide.status === 'available' ? 'How to read this evidence' : 'Keep this evidence in review'}</h4>
+            <p>These next steps help people review the prototype without treating it as a drawdown plan.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedNextStepGuide.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'review' ? 'Review' : 'Hold'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedNextStepGuide.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedBlockerRegister?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Prototype blocker register</p>
+            <h4>{containedBlockerRegister.status === 'clear' ? 'No blockers found' : containedBlockerRegister.status === 'hasHolds' ? 'Holds remain' : 'Blockers remain'}</h4>
+            <p>This summarizes what must stay held or blocked before a later drawdown phase.</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedBlockerRegister.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'clear' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'clear' ? 'Clear' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedBlockerRegister.reviewNote}</p>
+        </div>
+      ) : null}
+      {containedExamplePromotionGate ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Example promotion gate</p>
+            <h4>{containedExamplePromotionGate.status === 'examplesClear' ? 'Built-in examples are clear' : 'Example coverage stays in review'}</h4>
+            <p>{containedExamplePromotionGate.reviewNote}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            <article className={`optimizer-eligibility-note eligibility-${containedExamplePromotionGate.status === 'examplesClear' ? 'ok' : 'review'}`}>
+              <strong>Example coverage</strong>
+              <span>{containedExamplePromotionGate.status === 'examplesClear' ? 'Ready' : 'Hold'}</span>
+              <p>
+                {containedExamplePromotionGate.exampleCount > 0
+                  ? `${containedExamplePromotionGate.exampleCount} example(s) checked; ${containedExamplePromotionGate.heldOrBlockedCount} need review.`
+                  : 'The live product view leaves full example coverage to the test matrix.'}
+              </p>
+            </article>
+          </div>
+        </div>
+      ) : null}
+      {containedPhaseMilestoneCloseout?.rows.length ? (
+        <div className="drawdown-decision-gate">
+          <div>
+            <p className="eyebrow">Contained prototype milestone</p>
+            <h4>{containedPhaseMilestoneCloseout.headline}</h4>
+            <p>{containedPhaseMilestoneCloseout.detail}</p>
+          </div>
+          <div className="optimizer-eligibility-list">
+            {containedPhaseMilestoneCloseout.rows.map((row) => (
+              <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'hold' ? 'review' : 'blocked'}`} key={row.id}>
+                <strong>{row.label}</strong>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'hold' ? 'Hold' : 'Blocked'}</span>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{containedPhaseMilestoneCloseout.reviewNote}</p>
         </div>
       ) : null}
       {phaseCloseout?.rows.length ? (

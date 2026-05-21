@@ -10,13 +10,18 @@ import {
   runContainedDrawdownExecutionPrototype,
   runInternalDrawdownDryRun,
   scoreMockedDrawdownAdapterResult,
+  selectContainedDrawdownBlockerRegister,
   selectContainedDrawdownCopyGuard,
   selectContainedDrawdownDetailsDensity,
   selectContainedDrawdownExplanation,
   selectContainedDrawdownExampleGate,
+  selectContainedDrawdownExamplePromotionGate,
   selectContainedDrawdownLimitations,
   selectContainedDrawdownMateriality,
+  selectContainedDrawdownNextStepGuide,
+  selectContainedDrawdownPhaseMilestoneCloseout,
   selectContainedDrawdownProductGoNoGo,
+  selectContainedDrawdownPromotionReadiness,
   selectContainedDrawdownPrototypeSummary,
   selectContainedDrawdownReviewChecklist,
   selectContainedDrawdownUsefulnessCloseout,
@@ -253,6 +258,11 @@ describe('drawdown execution readiness contract', () => {
     expect(saved.plan).not.toHaveProperty('containedDrawdownExampleGate');
     expect(saved.plan).not.toHaveProperty('containedDrawdownCopyGuard');
     expect(saved.plan).not.toHaveProperty('containedDrawdownProductGoNoGo');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownPromotionReadiness');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownNextStepGuide');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownBlockerRegister');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownExamplePromotionGate');
+    expect(saved.plan).not.toHaveProperty('containedDrawdownPhaseMilestoneCloseout');
     expect(saved.plan).not.toHaveProperty('annualOverrides');
     expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
   });
@@ -737,6 +747,32 @@ describe('drawdown execution readiness contract', () => {
       exampleGate,
       copyGuard
     });
+    const promotionReadiness = selectContainedDrawdownPromotionReadiness({
+      plan,
+      productGoNoGo,
+      usefulness,
+      density,
+      copyGuard
+    });
+    const nextStepGuide = selectContainedDrawdownNextStepGuide({ promotionReadiness, productGoNoGo });
+    const blockerRegister = selectContainedDrawdownBlockerRegister({
+      plan,
+      promotionReadiness,
+      productGoNoGo,
+      checklist,
+      copyGuard
+    });
+    const examplePromotionGate = selectContainedDrawdownExamplePromotionGate({
+      exampleCount: 4,
+      heldOrBlockedCount: 0
+    });
+    const phaseMilestone = selectContainedDrawdownPhaseMilestoneCloseout({
+      plan,
+      promotionReadiness,
+      nextStepGuide,
+      blockerRegister,
+      examplePromotionGate
+    });
 
     expect(density).toMatchObject({
       status: 'compactEnough',
@@ -760,6 +796,27 @@ describe('drawdown execution readiness contract', () => {
       disposition: 'containedPrototypeProductGoNoGoOnly'
     });
     expect(productGoNoGo.reviewNote).toContain('does not move the prototype into Overview');
+    expect(promotionReadiness).toMatchObject({
+      status: 'readyForLaterUx',
+      disposition: 'containedPrototypePromotionReadinessOnly'
+    });
+    expect(nextStepGuide).toMatchObject({
+      status: 'available',
+      disposition: 'containedPrototypeNextStepGuideOnly'
+    });
+    expect(blockerRegister).toMatchObject({
+      status: 'clear',
+      disposition: 'containedPrototypeBlockerRegisterOnly'
+    });
+    expect(examplePromotionGate).toMatchObject({
+      status: 'examplesClear',
+      disposition: 'containedPrototypeExamplePromotionGateOnly'
+    });
+    expect(phaseMilestone).toMatchObject({
+      status: 'readyForNextDesignPhase',
+      disposition: 'containedPrototypePhaseMilestoneOnly'
+    });
+    expect(phaseMilestone.reviewNote).toContain('does not execute drawdown changes');
   });
 
   it('holds product go/no-go when contained prototype is dense or examples need review', () => {
@@ -805,10 +862,41 @@ describe('drawdown execution readiness contract', () => {
       exampleGate,
       copyGuard
     });
+    const promotionReadiness = selectContainedDrawdownPromotionReadiness({
+      plan,
+      productGoNoGo,
+      usefulness,
+      density,
+      copyGuard
+    });
+    const nextStepGuide = selectContainedDrawdownNextStepGuide({ promotionReadiness, productGoNoGo });
+    const blockerRegister = selectContainedDrawdownBlockerRegister({
+      plan,
+      promotionReadiness,
+      productGoNoGo,
+      checklist,
+      copyGuard
+    });
+    const examplePromotionGate = selectContainedDrawdownExamplePromotionGate({
+      exampleCount: 4,
+      heldOrBlockedCount: 1
+    });
+    const phaseMilestone = selectContainedDrawdownPhaseMilestoneCloseout({
+      plan,
+      promotionReadiness,
+      nextStepGuide,
+      blockerRegister,
+      examplePromotionGate
+    });
 
     expect(usefulness.status).toBe('holdForClearerEvidence');
     expect(checklist.status).toBe('holdBeforeReview');
     expect(exampleGate.status).toBe('needsExampleReview');
     expect(productGoNoGo.status).toBe('holdForUxPolish');
+    expect(promotionReadiness.status).toBe('holdInDetails');
+    expect(nextStepGuide.status).toBe('held');
+    expect(blockerRegister.status).toBe('hasHolds');
+    expect(examplePromotionGate.status).toBe('needsExampleReview');
+    expect(phaseMilestone.status).toBe('holdBeforeNextPhase');
   });
 });
