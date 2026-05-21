@@ -22,6 +22,32 @@ export type SimulationOptions = {
   source?: 'extracted-engine';
 };
 
+export type EngineRuntimeBoundary = {
+  planInput: 'v2PlanPayload';
+  resultOutput: 'simulationResult';
+  sourceOwner: 'extractedSimulationModule';
+  bridgeStatus: 'browserSourceBridge';
+  usesDashboardGlobal: boolean;
+  nativeModuleStatus: 'notYetNativeEsm';
+  stressModuleStatus: 'stillInsideSimulationModule';
+  annualOverrideExecution: 'notSupported';
+  savedPlanOutput: 'none';
+  disposition: 'engineRuntimeBoundaryOnly';
+};
+
+export const engineRuntimeBoundary: EngineRuntimeBoundary = {
+  planInput: 'v2PlanPayload',
+  resultOutput: 'simulationResult',
+  sourceOwner: 'extractedSimulationModule',
+  bridgeStatus: 'browserSourceBridge',
+  usesDashboardGlobal: false,
+  nativeModuleStatus: 'notYetNativeEsm',
+  stressModuleStatus: 'stillInsideSimulationModule',
+  annualOverrideExecution: 'notSupported',
+  savedPlanOutput: 'none',
+  disposition: 'engineRuntimeBoundaryOnly'
+};
+
 export function runSimulation(
   plan: V2PlanPayload,
   config: SimulationConfig = {},

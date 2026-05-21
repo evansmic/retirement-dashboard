@@ -4,38 +4,68 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 115: Bounded Drawdown UX Readiness Closeout
+## Latest Sprint — Sprint 120: Engine Extraction Readiness Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: make the first bounded drawdown execution result feel closer to a consumer-readable Details surface while keeping it conservative, unsaved, and non-advisory.
+Goal: prepare the next engine extraction phase by documenting explicit plan-object boundaries, preview runner ownership, stress extraction gaps, example coverage, and closeout status without changing simulation math or optimizer behavior.
 
-Non-scope: broad account-by-account instructions, automatic strategy application, highlighted drawdown recommendations, persisted optimizer output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, stress-model redesign, optimizer expansion, account-by-account instructions, automatic strategy application, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 115 checkpoint doc: [`docs/sprint_115_bounded_drawdown_ux_readiness.md`](docs/sprint_115_bounded_drawdown_ux_readiness.md).
+Sprint 120 checkpoint doc: [`docs/sprint_120_engine_extraction_closeout.md`](docs/sprint_120_engine_extraction_closeout.md).
 
-### Sprint 111-115 Candidate Implementation Tickets
+### Sprint 116-120 Candidate Implementation Tickets
 
-- [x] **S111-01 — UX headline.** Add a plain Details-only headline for the bounded drawdown check.
-- [x] **S112-01 — Comparison card.** Translate the execution evidence into a compact current-plan comparison card.
-- [x] **S113-01 — Review actions.** Add short next review actions that do not become account instructions.
-- [x] **S114-01 — UX copy guard.** Keep recommendation, guarantee, instruction, and saved-plan boundaries explicit.
-- [x] **S115-01 — UX readiness closeout.** Decide whether the bounded drawdown UX candidate is ready for later design polish.
+- [x] **S116-01 — Runtime boundary metadata.** Record the current explicit plan-object simulation boundary and remaining bridge ownership.
+- [x] **S117-01 — Preview runner boundary.** Record runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
+- [x] **S118-01 — Extraction readiness selector.** Summarize ready, held, and blocked extraction signals without changing engine math.
+- [x] **S119-01 — Example and persistence gate.** Check built-in examples and saved-plan boundaries for extraction readiness output.
+- [x] **S120-01 — Phase closeout.** Mark the next logical slice as narrow stress-helper extraction.
 
-### Sprint 115 Definition Of Done
+### Sprint 120 Definition Of Done
 
-- UX headline, comparison card, review actions, copy guard, and readiness closeout appear only in Details.
-- Overview remains unchanged and does not gain prototype readiness panels.
-- Product UI does not claim to run the full example matrix for a single plan.
-- Example matrix covers the new UX candidate layer and saved-plan boundaries.
-- The bounded drawdown check can be ready, held, or blocked without applying strategy output.
+- Runtime boundary metadata confirms explicit plan input and simulation-result output.
+- Preview runner metadata confirms injectable runner behavior and working-copy scenario construction.
+- Extraction readiness identifies the stress module as the next held extraction target.
+- Built-in examples produce finite baseline results through the current preview bundle.
+- No engine extraction readiness, next-step, example-gate, or closeout output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 120: Engine Extraction Readiness Closeout
+
+**Complete 2026-05-21.** Added a closeout that marks narrow stress-helper extraction as the next logical slice while preserving simulation math and optimizer behavior.
+
+Sprint 120 checkpoint doc: [`docs/sprint_120_engine_extraction_closeout.md`](docs/sprint_120_engine_extraction_closeout.md).
+
+### Sprint 119: Engine Extraction Example And Persistence Gate
+
+**Complete 2026-05-21.** Added example-plan coverage and saved-plan guardrails for extraction readiness output.
+
+Sprint 119 checkpoint doc: [`docs/sprint_119_engine_extraction_example_gate.md`](docs/sprint_119_engine_extraction_example_gate.md).
+
+### Sprint 118: Engine Extraction Readiness Selector
+
+**Complete 2026-05-21.** Added a runtime-only readiness selector for extraction boundaries and remaining held items.
+
+Sprint 118 checkpoint doc: [`docs/sprint_118_engine_extraction_readiness_selector.md`](docs/sprint_118_engine_extraction_readiness_selector.md).
+
+### Sprint 117: Preview Runner Boundary
+
+**Complete 2026-05-21.** Recorded preview runner injection, working-copy scenario, survivor config, and non-persistence boundaries.
+
+Sprint 117 checkpoint doc: [`docs/sprint_117_preview_runner_boundary.md`](docs/sprint_117_preview_runner_boundary.md).
+
+### Sprint 116: Runtime Boundary Metadata
+
+**Complete 2026-05-21.** Recorded the current plan-object simulation boundary and remaining browser-source bridge ownership.
+
+Sprint 116 checkpoint doc: [`docs/sprint_116_runtime_boundary_metadata.md`](docs/sprint_116_runtime_boundary_metadata.md).
 
 ### Sprint 115: Bounded Drawdown UX Readiness Closeout
 

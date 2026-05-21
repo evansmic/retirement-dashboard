@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 115 is complete. Tax-aware drawdown work now has a conservative v1 bounded execution path plus a consumer-readable Details UX candidate. The path remains unsaved, non-advisory, and outside Overview.
+Sprint 120 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, and the next engine extraction phase now has explicit readiness metadata. The next logical slice is narrow stress-helper extraction while keeping optimizer behavior unchanged.
 
-Completed Sprint 111-115 slices:
+Completed Sprint 116-120 slices:
 
-- Added a plain headline for the bounded drawdown check.
-- Added a compact comparison card for funding, tax, OAS recovery, and estate evidence.
-- Added short review actions that do not become account-by-account instructions.
-- Added UX copy guards for recommendation, guarantee, instruction, and saved-plan boundaries.
-- Added a UX readiness closeout for later design polish.
+- Recorded the current explicit plan-object simulation boundary.
+- Recorded preview runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
+- Added extraction readiness rows for explicit plan input, runner injection, scenario copies, stress extraction, dashboard state, and saved-plan boundary.
+- Added example-plan coverage proving built-in examples still produce finite baseline results through the preview bundle.
+- Added a phase closeout that points to narrow stress-helper extraction next.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed UX headline, comparison card, review actions, copy guard, readiness closeout, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 111-115 as Details UX readiness work, not broader execution or advice.
+- Confirmed extraction readiness, next-step, example-gate, closeout, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 116-120 as extraction readiness work, not optimizer expansion or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -150,6 +150,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 91. **Sprint 113 — Bounded drawdown review actions.** Add short review actions without creating account instructions.
 92. **Sprint 114 — Bounded drawdown UX copy guard.** Keep recommendation, guarantee, instruction, and saved-plan boundaries explicit.
 93. **Sprint 115 — Bounded drawdown UX readiness closeout.** Decide whether the bounded drawdown UX candidate is ready for later design polish.
+94. **Sprint 116 — Runtime boundary metadata.** Record explicit plan-object simulation boundaries and remaining bridge ownership.
+95. **Sprint 117 — Preview runner boundary.** Record runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
+96. **Sprint 118 — Engine extraction readiness selector.** Summarize ready, held, and blocked extraction signals without changing engine math.
+97. **Sprint 119 — Engine extraction example and persistence gate.** Check built-in examples and saved-plan boundaries for extraction readiness output.
+98. **Sprint 120 — Engine extraction readiness closeout.** Mark narrow stress-helper extraction as the next logical slice.
 
 ## Medium-Term Roadmap
 
@@ -263,6 +268,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 113 — Bounded drawdown review actions.** Complete 2026-05-21. Added short review actions without creating account instructions.
 - **Sprint 114 — Bounded drawdown UX copy guard.** Complete 2026-05-21. Added copy guardrails for recommendation, guarantee, instruction, and saved-plan boundaries.
 - **Sprint 115 — Bounded drawdown UX readiness closeout.** Complete 2026-05-21. Added a closeout for whether the UX candidate is ready for later design polish.
+- **Sprint 116 — Runtime boundary metadata.** Complete 2026-05-21. Recorded explicit plan-object simulation boundaries and remaining bridge ownership.
+- **Sprint 117 — Preview runner boundary.** Complete 2026-05-21. Recorded runner injection, working-copy scenarios, survivor config, and non-persistence boundaries.
+- **Sprint 118 — Engine extraction readiness selector.** Complete 2026-05-21. Added runtime-only extraction readiness rows.
+- **Sprint 119 — Engine extraction example and persistence gate.** Complete 2026-05-21. Added built-in example and saved-plan coverage.
+- **Sprint 120 — Engine extraction readiness closeout.** Complete 2026-05-21. Marked narrow stress-helper extraction as the next logical slice.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

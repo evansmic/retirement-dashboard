@@ -19,6 +19,28 @@ export type ResultsPreviewBundle = {
 
 export type PreviewSimulationRunner = (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
 
+export type PreviewRunnerBoundary = {
+  runnerInjection: boolean;
+  baselineUsesExplicitPlan: boolean;
+  scenarioWorkingCopies: boolean;
+  spendingStressWorkingCopies: boolean;
+  survivorUsesExplicitConfig: boolean;
+  appOwnsScenarioConstruction: boolean;
+  persistedOutput: 'none';
+  disposition: 'previewRunnerBoundaryOnly';
+};
+
+export const previewRunnerBoundary: PreviewRunnerBoundary = {
+  runnerInjection: true,
+  baselineUsesExplicitPlan: true,
+  scenarioWorkingCopies: true,
+  spendingStressWorkingCopies: true,
+  survivorUsesExplicitConfig: true,
+  appOwnsScenarioConstruction: false,
+  persistedOutput: 'none',
+  disposition: 'previewRunnerBoundaryOnly'
+};
+
 export function buildBaselinePreviewConfig(plan: V2PlanPayload): SimulationConfig {
   return {
     cppAgeF: 65,
