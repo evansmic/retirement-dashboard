@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 145 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, and contained injected-runner prototype. The next logical slice is a probe-backed detailed-stress runner bridge or continued native module cleanup while keeping optimizer behavior unchanged.
+Sprint 150 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, and probe-backed bridge readiness layer. The next logical slice is manual detailed-report comparison or continued native module cleanup while keeping optimizer behavior unchanged.
 
-Completed Sprint 141-145 slices:
+Completed Sprint 146-150 slices:
 
-- Added a copied explicit plan/config request for detailed-stress adapter work.
-- Added a contained injected-runner prototype harness.
-- Blocked failed validation, missing runner, thrown runner, and malformed output shape paths.
-- Kept request, prototype result, and closeout output runtime-only.
-- Closed the batch as ready for a future probe-backed runner bridge, not a migration.
+- Added runtime-only probe coverage summary for detailed stress bridge work.
+- Required prototype closeout, probe coverage, runner injection, and saved-plan guardrails before bridge checks.
+- Added a guarded bridge run that calls the injected runner only when bridge readiness is clean.
+- Kept coverage, bridge, bridge run, and closeout output runtime-only.
+- Closed the batch as ready for manual detailed-report comparison, not a migration.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed detailed stress adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 141-145 as contained prototype work, not optimizer expansion, stress migration, or simulation math changes.
+- Confirmed detailed stress probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 146-150 as bridge readiness work, not optimizer expansion, stress migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -180,6 +180,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 121. **Sprint 143 — Detailed stress prototype output validation.** Accept only existing detailed stress shape metadata.
 122. **Sprint 144 — Detailed stress prototype persistence guardrails.** Keep request, result, and closeout output runtime-only.
 123. **Sprint 145 — Detailed stress prototype closeout.** Mark the next safe slice as a probe-backed runner bridge.
+124. **Sprint 146 — Detailed stress probe coverage summary.** Record probe coverage and known route-probe caveat for bridge work.
+125. **Sprint 147 — Detailed stress probe-backed bridge readiness.** Require prototype, coverage, runner injection, and saved-plan guardrails.
+126. **Sprint 148 — Detailed stress guarded bridge run.** Call the injected runner only when bridge readiness is clean.
+127. **Sprint 149 — Detailed stress bridge persistence guardrails.** Keep coverage, bridge, bridge run, and closeout output runtime-only.
+128. **Sprint 150 — Detailed stress bridge closeout.** Mark the next safe slice as manual detailed-report comparison.
 
 ## Medium-Term Roadmap
 
@@ -323,6 +328,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 143 — Detailed stress prototype output validation.** Complete 2026-05-22. Blocked malformed detailed stress output shape metadata.
 - **Sprint 144 — Detailed stress prototype persistence guardrails.** Complete 2026-05-22. Kept request, result, and closeout output runtime-only.
 - **Sprint 145 — Detailed stress prototype closeout.** Complete 2026-05-22. Closed the batch as ready for a future probe-backed runner bridge.
+- **Sprint 146 — Detailed stress probe coverage summary.** Complete 2026-05-22. Added runtime-only probe coverage summary for bridge work.
+- **Sprint 147 — Detailed stress probe-backed bridge readiness.** Complete 2026-05-22. Required prototype, coverage, runner injection, and saved-plan guardrails.
+- **Sprint 148 — Detailed stress guarded bridge run.** Complete 2026-05-22. Added a bridge run that calls only when readiness is clean.
+- **Sprint 149 — Detailed stress bridge persistence guardrails.** Complete 2026-05-22. Kept bridge evidence runtime-only.
+- **Sprint 150 — Detailed stress bridge closeout.** Complete 2026-05-22. Closed the batch as ready for manual detailed-report comparison.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

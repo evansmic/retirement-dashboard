@@ -247,6 +247,64 @@ export type DetailedStressPrototypeBatchCloseout = {
   disposition: 'detailedStressPrototypeBatchCloseoutOnly';
 };
 
+export type DetailedStressProbeCoverage = {
+  status: 'covered' | 'missingCoverage' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'monteCarlo' | 'progressiveMonteCarlo' | 'historicalSequence' | 'parity' | 'routeCaveat';
+    label: string;
+    status: 'covered' | 'caveat' | 'missing' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressProbeCoverageOnly';
+};
+
+export type DetailedStressProbeBackedRunnerBridge = {
+  status: 'readyForManualBridge' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'prototypeCloseout' | 'probeCoverage' | 'runnerInjection' | 'executionBoundary' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressProbeBackedRunnerBridgeOnly';
+};
+
+export type DetailedStressProbeBackedBridgeRun = {
+  status: 'bridgeComplete' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  prototype: DetailedStressInjectedRunnerPrototype;
+  bridge: DetailedStressProbeBackedRunnerBridge;
+  rows: Array<{
+    id: 'bridge' | 'request' | 'runner' | 'outputShape' | 'persistence';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressProbeBackedBridgeRunOnly';
+};
+
+export type DetailedStressBridgeBatchCloseout = {
+  status: 'readyForManualReportComparison' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'coverage' | 'bridge' | 'bridgeRun' | 'nextStep';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressBridgeBatchCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -1384,5 +1442,278 @@ export function selectDetailedStressPrototypeBatchCloseout({
     reviewNote:
       'Detailed stress prototype closeout only. It does not move Monte Carlo, run historical replay in React, change optimizer behavior, or persist output.',
     disposition: 'detailedStressPrototypeBatchCloseoutOnly'
+  };
+}
+
+export function selectDetailedStressProbeCoverage({
+  monteCarloCovered = true,
+  progressiveMonteCarloCovered = true,
+  historicalSequenceCovered = true,
+  parityCovered = true,
+  routeProbeCaveat = true
+}: {
+  monteCarloCovered?: boolean;
+  progressiveMonteCarloCovered?: boolean;
+  historicalSequenceCovered?: boolean;
+  parityCovered?: boolean;
+  routeProbeCaveat?: boolean;
+} = {}): DetailedStressProbeCoverage {
+  const rows: DetailedStressProbeCoverage['rows'] = [
+    {
+      id: 'monteCarlo',
+      label: 'Monte Carlo probe',
+      status: monteCarloCovered ? 'covered' : 'missing',
+      detail: monteCarloCovered
+        ? 'Existing probes cover the synchronous Monte Carlo shape.'
+        : 'Synchronous Monte Carlo probe coverage is required before bridge work continues.'
+    },
+    {
+      id: 'progressiveMonteCarlo',
+      label: 'Progressive Monte Carlo probe',
+      status: progressiveMonteCarloCovered ? 'covered' : 'missing',
+      detail: progressiveMonteCarloCovered
+        ? 'Existing probes cover progressive Monte Carlo lifecycle behavior.'
+        : 'Progressive Monte Carlo lifecycle coverage is required before bridge work continues.'
+    },
+    {
+      id: 'historicalSequence',
+      label: 'Historical replay probe',
+      status: historicalSequenceCovered ? 'covered' : 'missing',
+      detail: historicalSequenceCovered
+        ? 'Existing probes cover historical sequence stress behavior.'
+        : 'Historical sequence probe coverage is required before bridge work continues.'
+    },
+    {
+      id: 'parity',
+      label: 'Engine parity probes',
+      status: parityCovered ? 'covered' : 'missing',
+      detail: parityCovered
+        ? 'Engine parity probes continue to protect the extracted simulation boundary.'
+        : 'Engine parity probes must pass before detailed stress bridge work continues.'
+    },
+    {
+      id: 'routeCaveat',
+      label: 'Route probe caveat',
+      status: routeProbeCaveat ? 'caveat' : 'covered',
+      detail: routeProbeCaveat
+        ? 'The local route probe may be blocked by localhost bind permissions; this does not change detailed stress math coverage.'
+        : 'No local route-probe caveat was reported.'
+    }
+  ];
+  const missing = rows.some((row) => row.status === 'missing' || row.status === 'blocked');
+
+  return {
+    status: missing ? 'missingCoverage' : 'covered',
+    headline: missing ? 'Detailed stress probe coverage needs cleanup.' : 'Detailed stress probe coverage is ready.',
+    detail: missing
+      ? 'Probe-backed bridge work should wait until detailed stress coverage is complete.'
+      : 'The bridge can rely on existing detailed stress probes while keeping execution ownership unchanged.',
+    rows,
+    reviewNote:
+      'Probe coverage review only. It does not run detailed stress in React, change stress calculations, or save probe output.',
+    disposition: 'detailedStressProbeCoverageOnly'
+  };
+}
+
+export function selectDetailedStressProbeBackedRunnerBridge({
+  prototypeCloseout,
+  probeCoverage,
+  injectedRunnerAvailable = true,
+  savedPlanClean = true
+}: {
+  prototypeCloseout: DetailedStressPrototypeBatchCloseout;
+  probeCoverage: DetailedStressProbeCoverage;
+  injectedRunnerAvailable?: boolean;
+  savedPlanClean?: boolean;
+}): DetailedStressProbeBackedRunnerBridge {
+  const rows: DetailedStressProbeBackedRunnerBridge['rows'] = [
+    {
+      id: 'prototypeCloseout',
+      label: 'Prototype closeout',
+      status: prototypeCloseout.status === 'readyForProbeBackedRunner' ? 'ready' : prototypeCloseout.status === 'blocked' ? 'blocked' : 'hold',
+      detail: prototypeCloseout.headline
+    },
+    {
+      id: 'probeCoverage',
+      label: 'Probe coverage',
+      status: probeCoverage.status === 'covered' ? 'ready' : 'blocked',
+      detail: probeCoverage.headline
+    },
+    {
+      id: 'runnerInjection',
+      label: 'Injected runner',
+      status: injectedRunnerAvailable ? 'ready' : 'hold',
+      detail: injectedRunnerAvailable
+        ? 'A supplied runner can be used by the bridge.'
+        : 'The bridge waits until a supplied runner is available.'
+    },
+    {
+      id: 'executionBoundary',
+      label: 'Execution boundary',
+      status: 'hold',
+      detail: 'Detailed stress execution remains owned by the detailed-report path.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean
+        ? 'Bridge output remains runtime-only.'
+        : 'Bridge output must not enter editable plan files.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+
+  return {
+    status: blocked ? 'blocked' : injectedRunnerAvailable ? 'readyForManualBridge' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress bridge is blocked.'
+      : injectedRunnerAvailable
+        ? 'Detailed stress bridge is ready for a manual injected-runner check.'
+        : 'Detailed stress bridge is waiting for a supplied runner.',
+    detail: blocked
+      ? 'Probe coverage, prototype closeout, and saved-plan boundaries must be clean before bridge checks.'
+      : 'The bridge can call an injected detailed-report runner while keeping stress execution ownership unchanged.',
+    rows,
+    reviewNote:
+      'Probe-backed bridge only. It does not move Monte Carlo, run historical replay in React, change stress math, or persist bridge output.',
+    disposition: 'detailedStressProbeBackedRunnerBridgeOnly'
+  };
+}
+
+export function runDetailedStressProbeBackedBridge({
+  plan,
+  config = {},
+  adapterValidation,
+  bridge,
+  runner
+}: {
+  plan: V2PlanPayload;
+  config?: SimulationConfig;
+  adapterValidation: DetailedStressAdapterValidation;
+  bridge: DetailedStressProbeBackedRunnerBridge;
+  runner?: DetailedStressInjectedRunner;
+}): DetailedStressProbeBackedBridgeRun {
+  const bridgeReady = bridge.status === 'readyForManualBridge';
+  const prototype = runDetailedStressInjectedRunnerPrototype({
+    plan,
+    config,
+    adapterValidation,
+    runner: bridgeReady ? runner : undefined
+  });
+  const complete = bridgeReady && prototype.status === 'prototypeComplete';
+  const blocked = bridge.status === 'blocked' || prototype.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : complete ? 'bridgeComplete' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress bridge run is blocked.'
+      : complete
+        ? 'Detailed stress bridge run completed.'
+        : 'Detailed stress bridge run is on hold.',
+    detail: blocked
+      ? 'Bridge readiness and injected-runner output must be clean before this can move forward.'
+      : complete
+        ? 'The probe-backed bridge accepted explicit inputs and returned existing detailed stress shape metadata.'
+        : 'The bridge did not run because readiness or runner injection is not complete.',
+    prototype,
+    bridge,
+    rows: [
+      {
+        id: 'bridge',
+        label: 'Bridge readiness',
+        status: bridge.status === 'readyForManualBridge' ? 'ready' : bridge.status === 'blocked' ? 'blocked' : 'hold',
+        detail: bridge.headline
+      },
+      {
+        id: 'request',
+        label: 'Explicit request',
+        status: prototype.request ? 'ready' : 'blocked',
+        detail: prototype.request
+          ? 'Bridge run used a copied explicit plan/config request.'
+          : 'Bridge run could not create an explicit request.'
+      },
+      {
+        id: 'runner',
+        label: 'Injected runner',
+        status: prototype.runnerCalled ? (prototype.status === 'blocked' ? 'blocked' : 'ready') : 'hold',
+        detail: prototype.runnerCalled
+          ? 'The supplied runner was called through the bridge.'
+          : 'No detailed stress runner was called.'
+      },
+      {
+        id: 'outputShape',
+        label: 'Output shape',
+        status: prototype.result ? 'ready' : prototype.status === 'blocked' ? 'blocked' : 'hold',
+        detail: prototype.result
+          ? 'Runner output matched existing detailed stress shape metadata.'
+          : 'No accepted detailed stress output shape is available yet.'
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        status: 'ready',
+        detail: 'Bridge run output remains runtime-only.'
+      }
+    ],
+    reviewNote:
+      'Probe-backed bridge run only. It does not move Monte Carlo, run historical replay in React, change optimizer behavior, or save bridge output.',
+    disposition: 'detailedStressProbeBackedBridgeRunOnly'
+  };
+}
+
+export function selectDetailedStressBridgeBatchCloseout({
+  probeCoverage,
+  bridge,
+  bridgeRun
+}: {
+  probeCoverage: DetailedStressProbeCoverage;
+  bridge: DetailedStressProbeBackedRunnerBridge;
+  bridgeRun: DetailedStressProbeBackedBridgeRun;
+}): DetailedStressBridgeBatchCloseout {
+  const blocked = probeCoverage.status !== 'covered' || bridge.status === 'blocked' || bridgeRun.status === 'blocked';
+  const complete = bridgeRun.status === 'bridgeComplete';
+
+  return {
+    status: blocked ? 'blocked' : complete ? 'readyForManualReportComparison' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress bridge batch is blocked.'
+      : complete
+        ? 'Ready for manual detailed-report comparison.'
+        : 'Hold before detailed-report comparison.',
+    detail: blocked
+      ? 'Coverage, bridge readiness, and bridge run output must be clean before comparison work.'
+      : complete
+        ? 'The next safe slice is comparing bridge output against the detailed report without moving execution ownership.'
+        : 'The bridge is not complete enough for report comparison yet.',
+    rows: [
+      {
+        id: 'coverage',
+        label: 'Probe coverage',
+        status: probeCoverage.status === 'covered' ? 'ready' : 'blocked',
+        detail: probeCoverage.headline
+      },
+      {
+        id: 'bridge',
+        label: 'Bridge readiness',
+        status: bridge.status === 'readyForManualBridge' ? 'ready' : bridge.status === 'blocked' ? 'blocked' : 'hold',
+        detail: bridge.headline
+      },
+      {
+        id: 'bridgeRun',
+        label: 'Bridge run',
+        status: bridgeRun.status === 'bridgeComplete' ? 'ready' : bridgeRun.status === 'blocked' ? 'blocked' : 'hold',
+        detail: bridgeRun.headline
+      },
+      {
+        id: 'nextStep',
+        label: 'Next step',
+        status: complete ? 'ready' : 'hold',
+        detail: 'Compare bridge output against the detailed report before any migration decision.'
+      }
+    ],
+    reviewNote:
+      'Detailed stress bridge closeout only. It does not migrate detailed stress execution, alter stress math, change optimizer behavior, or persist bridge output.',
+    disposition: 'detailedStressBridgeBatchCloseoutOnly'
   };
 }

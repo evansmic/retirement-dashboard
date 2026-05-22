@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 145: Detailed Stress Injected Runner Prototype Closeout
+## Latest Sprint — Sprint 150: Detailed Stress Probe-Backed Bridge Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: prove a contained detailed-stress injected-runner prototype can accept explicit plan/config inputs and validate returned existing-shape metadata without moving Monte Carlo or historical sequence execution into React.
+Goal: add a probe-backed detailed-stress runner bridge layer that checks coverage, bridge readiness, and injected-runner output before any manual detailed-report comparison.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted prototype output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted bridge output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 145 checkpoint doc: [`docs/sprint_145_detailed_stress_prototype_closeout.md`](docs/sprint_145_detailed_stress_prototype_closeout.md).
+Sprint 150 checkpoint doc: [`docs/sprint_150_detailed_stress_bridge_closeout.md`](docs/sprint_150_detailed_stress_bridge_closeout.md).
 
-### Sprint 141-145 Candidate Implementation Tickets
+### Sprint 146-150 Candidate Implementation Tickets
 
-- [x] **S141-01 — Explicit detailed-stress request.** Build a copied plan/config request only after adapter validation passes.
-- [x] **S142-01 — Injected-runner prototype harness.** Call only a supplied runner and never implement detailed stress execution in React.
-- [x] **S143-01 — Output-shape validation.** Accept only existing detailed stress shape metadata and block malformed results.
-- [x] **S144-01 — Prototype persistence guardrails.** Keep request, runner result, and closeout output runtime-only.
-- [x] **S145-01 — Prototype closeout tests/docs.** Mark the next safe slice as a probe-backed runner bridge.
+- [x] **S146-01 — Probe coverage summary.** Record detailed-stress probe coverage and known route-probe caveat.
+- [x] **S147-01 — Probe-backed bridge readiness.** Require prototype closeout, probe coverage, runner injection, and saved-plan guardrails.
+- [x] **S148-01 — Guarded bridge run.** Call the injected runner only when bridge readiness is clean.
+- [x] **S149-01 — Bridge persistence guardrails.** Keep coverage, bridge, bridge run, and closeout output runtime-only.
+- [x] **S150-01 — Bridge closeout tests/docs.** Mark the next safe slice as manual detailed-report comparison.
 
-### Sprint 145 Definition Of Done
+### Sprint 150 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -34,15 +34,48 @@ Sprint 145 checkpoint doc: [`docs/sprint_145_detailed_stress_prototype_closeout.
 - Contained prototype creates copied explicit requests only after validation passes.
 - Contained prototype calls only a supplied injected runner.
 - Contained prototype blocks missing runners, failed validation, and malformed output shapes.
-- Closeout marks a probe-backed runner bridge as the next safe step.
+- Probe coverage summary records Monte Carlo, progressive Monte Carlo, historical replay, engine parity, and route-probe caveat state.
+- Probe-backed bridge runs only when prototype closeout, probe coverage, runner injection, and saved-plan guardrails are clean.
+- Bridge run calls only the supplied injected runner and accepts only existing detailed stress shape metadata.
+- Closeout marks manual detailed-report comparison as the next safe step.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 150: Detailed Stress Probe-Backed Bridge Closeout
+
+**Complete 2026-05-22.** Closed the bridge batch as ready for manual detailed-report comparison while keeping detailed stress execution in the detailed-report path.
+
+Sprint 150 checkpoint doc: [`docs/sprint_150_detailed_stress_bridge_closeout.md`](docs/sprint_150_detailed_stress_bridge_closeout.md).
+
+### Sprint 149: Detailed Stress Bridge Persistence Guardrails
+
+**Complete 2026-05-22.** Kept detailed-stress coverage, bridge, bridge run, and closeout output runtime-only.
+
+Sprint 149 checkpoint doc: [`docs/sprint_149_detailed_stress_bridge_persistence.md`](docs/sprint_149_detailed_stress_bridge_persistence.md).
+
+### Sprint 148: Detailed Stress Guarded Bridge Run
+
+**Complete 2026-05-22.** Added a bridge runner that calls the injected runner only when bridge readiness is clean.
+
+Sprint 148 checkpoint doc: [`docs/sprint_148_detailed_stress_guarded_bridge_run.md`](docs/sprint_148_detailed_stress_guarded_bridge_run.md).
+
+### Sprint 147: Detailed Stress Probe-Backed Bridge Readiness
+
+**Complete 2026-05-22.** Required prototype closeout, probe coverage, runner injection, and saved-plan guardrails before bridge checks.
+
+Sprint 147 checkpoint doc: [`docs/sprint_147_detailed_stress_probe_backed_bridge.md`](docs/sprint_147_detailed_stress_probe_backed_bridge.md).
+
+### Sprint 146: Detailed Stress Probe Coverage Summary
+
+**Complete 2026-05-22.** Added runtime-only probe coverage summary for detailed stress bridge work.
+
+Sprint 146 checkpoint doc: [`docs/sprint_146_detailed_stress_probe_coverage.md`](docs/sprint_146_detailed_stress_probe_coverage.md).
 
 ### Sprint 145: Detailed Stress Injected Runner Prototype Closeout
 

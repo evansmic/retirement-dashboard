@@ -8,11 +8,15 @@ import {
   createDetailedStressAdapterRequest,
   runSpendingStressResults,
   runDetailedStressInjectedRunnerPrototype,
+  runDetailedStressProbeBackedBridge,
   selectDetailedStressAdapterBatchCloseout,
   selectDetailedStressAdapterContract,
   selectDetailedStressAdapterValidation,
   selectDetailedStressBoundaryReview,
+  selectDetailedStressBridgeBatchCloseout,
   selectDetailedStressMigrationCloseout,
+  selectDetailedStressProbeBackedRunnerBridge,
+  selectDetailedStressProbeCoverage,
   selectDetailedStressPrototypeBatchCloseout,
   selectStressExtractionReadinessSummary,
   selectStressIndicatorRows,
@@ -166,6 +170,10 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('detailedStressAdapterRequest');
       expect(saved.plan).not.toHaveProperty('detailedStressInjectedRunnerPrototype');
       expect(saved.plan).not.toHaveProperty('detailedStressPrototypeBatchCloseout');
+      expect(saved.plan).not.toHaveProperty('detailedStressProbeCoverage');
+      expect(saved.plan).not.toHaveProperty('detailedStressProbeBackedRunnerBridge');
+      expect(saved.plan).not.toHaveProperty('detailedStressProbeBackedBridgeRun');
+      expect(saved.plan).not.toHaveProperty('detailedStressBridgeBatchCloseout');
     }
   });
 
@@ -498,5 +506,198 @@ describe('stress selectors extraction', () => {
     expect(closeout.rows.map((row) => row.id)).toEqual(['request', 'prototype', 'executionBoundary', 'persistence']);
     expect(closeout.rows.find((row) => row.id === 'executionBoundary')).toMatchObject({ status: 'hold' });
     expect(closeout.reviewNote).toContain('does not move Monte Carlo');
+  });
+
+  function readyAdapterValidation() {
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    return selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+  }
+
+  function readyPrototypeCloseout() {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const adapterValidation = readyAdapterValidation();
+    const prototype = runDetailedStressInjectedRunnerPrototype({
+      plan,
+      adapterValidation,
+      runner: () => ({
+        shape: 'existingDetailedStressShape',
+        status: 'complete',
+        fullSpendingFundedRate: 0.7,
+        monteCarloRunCount: 100,
+        historicalSequenceCount: 3,
+        notes: []
+      })
+    });
+    return { adapterValidation, prototypeCloseout: selectDetailedStressPrototypeBatchCloseout({ adapterValidation, prototype }) };
+  }
+
+  it('summarizes probe coverage for a future detailed-stress bridge without running stress in React', () => {
+    const coverage = selectDetailedStressProbeCoverage();
+
+    expect(coverage).toMatchObject({
+      status: 'covered',
+      disposition: 'detailedStressProbeCoverageOnly'
+    });
+    expect(coverage.rows.map((row) => row.id)).toEqual([
+      'monteCarlo',
+      'progressiveMonteCarlo',
+      'historicalSequence',
+      'parity',
+      'routeCaveat'
+    ]);
+    expect(coverage.rows.find((row) => row.id === 'routeCaveat')).toMatchObject({ status: 'caveat' });
+    expect(coverage.reviewNote).toContain('does not run detailed stress in React');
+  });
+
+  it('blocks bridge readiness when required detailed-stress probe coverage is missing', () => {
+    const coverage = selectDetailedStressProbeCoverage({ historicalSequenceCovered: false, parityCovered: false });
+
+    expect(coverage.status).toBe('missingCoverage');
+    expect(coverage.rows.find((row) => row.id === 'historicalSequence')).toMatchObject({ status: 'missing' });
+    expect(coverage.rows.find((row) => row.id === 'parity')).toMatchObject({ status: 'missing' });
+  });
+
+  it('marks a probe-backed runner bridge ready only when prototype and coverage are clean', () => {
+    const { prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage()
+    });
+
+    expect(bridge).toMatchObject({
+      status: 'readyForManualBridge',
+      disposition: 'detailedStressProbeBackedRunnerBridgeOnly'
+    });
+    expect(bridge.rows.map((row) => row.id)).toEqual([
+      'prototypeCloseout',
+      'probeCoverage',
+      'runnerInjection',
+      'executionBoundary',
+      'savedPlan'
+    ]);
+    expect(bridge.rows.find((row) => row.id === 'executionBoundary')).toMatchObject({ status: 'hold' });
+    expect(bridge.reviewNote).toContain('does not move Monte Carlo');
+  });
+
+  it('holds or blocks the probe-backed runner bridge when runner or persistence boundaries are not ready', () => {
+    const { prototypeCloseout } = readyPrototypeCloseout();
+    const waiting = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage(),
+      injectedRunnerAvailable: false
+    });
+    const blocked = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage(),
+      savedPlanClean: false
+    });
+
+    expect(waiting.status).toBe('holdDetailedStress');
+    expect(waiting.rows.find((row) => row.id === 'runnerInjection')).toMatchObject({ status: 'hold' });
+    expect(blocked.status).toBe('blocked');
+    expect(blocked.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('runs a probe-backed bridge through the injected runner and keeps output runtime-only', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const { adapterValidation, prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage()
+    });
+    const calls: string[] = [];
+    const bridgeRun = runDetailedStressProbeBackedBridge({
+      plan,
+      config: { returnRate: 0.05 },
+      adapterValidation,
+      bridge,
+      runner: (request) => {
+        calls.push(request.source);
+        return {
+          shape: 'existingDetailedStressShape',
+          status: 'complete',
+          fullSpendingFundedRate: 0.9,
+          monteCarloRunCount: 200,
+          historicalSequenceCount: 4,
+          notes: ['Bridge runner supplied by detailed-report path.']
+        };
+      }
+    });
+
+    expect(calls).toEqual(['explicitPlanAndConfig']);
+    expect(bridgeRun).toMatchObject({
+      status: 'bridgeComplete',
+      disposition: 'detailedStressProbeBackedBridgeRunOnly'
+    });
+    expect(bridgeRun.rows.find((row) => row.id === 'runner')).toMatchObject({ status: 'ready' });
+    expect(bridgeRun.rows.find((row) => row.id === 'outputShape')).toMatchObject({ status: 'ready' });
+    expect(bridgeRun.reviewNote).toContain('does not move Monte Carlo');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('detailedStressProbeBackedBridgeRun');
+  });
+
+  it('does not call the injected runner when the probe-backed bridge is not ready', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const { adapterValidation, prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage({ monteCarloCovered: false })
+    });
+    let calls = 0;
+    const bridgeRun = runDetailedStressProbeBackedBridge({
+      plan,
+      adapterValidation,
+      bridge,
+      runner: () => {
+        calls += 1;
+        return {
+          shape: 'existingDetailedStressShape',
+          status: 'complete',
+          fullSpendingFundedRate: 0.9,
+          monteCarloRunCount: 200,
+          historicalSequenceCount: 4,
+          notes: []
+        };
+      }
+    });
+
+    expect(calls).toBe(0);
+    expect(bridgeRun.status).toBe('blocked');
+    expect(bridgeRun.prototype.runnerCalled).toBe(false);
+  });
+
+  it('closes the bridge batch as ready for manual detailed-report comparison', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const probeCoverage = selectDetailedStressProbeCoverage();
+    const { adapterValidation, prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({ prototypeCloseout, probeCoverage });
+    const bridgeRun = runDetailedStressProbeBackedBridge({
+      plan,
+      adapterValidation,
+      bridge,
+      runner: () => ({
+        shape: 'existingDetailedStressShape',
+        status: 'complete',
+        fullSpendingFundedRate: 0.85,
+        monteCarloRunCount: 200,
+        historicalSequenceCount: 4,
+        notes: []
+      })
+    });
+    const closeout = selectDetailedStressBridgeBatchCloseout({ probeCoverage, bridge, bridgeRun });
+
+    expect(closeout).toMatchObject({
+      status: 'readyForManualReportComparison',
+      disposition: 'detailedStressBridgeBatchCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['coverage', 'bridge', 'bridgeRun', 'nextStep']);
+    expect(closeout.reviewNote).toContain('does not migrate detailed stress execution');
   });
 });
