@@ -1,0 +1,88 @@
+# V1 Checkpoint Human Tester Guide
+
+Thank you for testing this retirement planner. This is not a financial advice review. We are testing whether the product is understandable, trustworthy, and useful for planning conversations.
+
+Please use fictional or example data only. Do not enter private financial information.
+
+## What To Test
+
+Use at least one built-in example plan. If you have time, try three:
+
+- one single-person example,
+- one couple example,
+- one example that feels tight, complicated, or pension-heavy.
+
+## Tester Walkthrough
+
+1. Open the planner.
+2. Load a built-in example plan.
+3. Go to Results.
+4. Spend 60 to 90 seconds on the first Results screen only.
+5. Without opening detailed pages yet, write down:
+   - whether you think the household can retire,
+   - how confident the plan seems,
+   - what spending number you noticed,
+   - what the first thing to review should be.
+6. Open Details.
+7. Look for checkpoint, drawdown, tax, and optimizer-review sections.
+8. Open Taxes and Household Resilience if the example includes a couple.
+9. Open Save / Export.
+10. Save an editable plan and open the printable report if available.
+
+## Questions We Care About Most
+
+### First Impression
+
+- In your own words, what did the first Results screen tell you?
+- Could you answer “Can I retire?” within 60 to 90 seconds?
+- Did anything feel too technical, too dense, or too confident?
+- Did the page make clear that spending numbers are planning estimates, not guarantees?
+
+### Trust
+
+- Did the tool feel careful with uncertainty?
+- Did any wording sound like personalized financial advice?
+- Did any number look too precise for a long-term projection?
+- Did you understand what was saved locally?
+- Did you understand the difference between saving the editable plan and opening a printable report?
+
+### Review Actions
+
+- Were the “review first” items useful?
+- Were there too many items?
+- Did any important next step feel missing?
+- Did anything feel like the tool was pushing the user toward a choice too strongly?
+
+### Taxes, Benefits, And Drawdown
+
+- Did CPP/OAS/tax/drawdown sections feel understandable?
+- Did anything sound like a recommendation to withdraw from specific accounts?
+- Did the tool explain trade-offs without telling the household what to do?
+- For couples, did survivor or pension-continuation information feel clear?
+
+### Visual And UX Feedback
+
+Please separate visual feedback from calculation or trust issues.
+
+- What looked polished?
+- What looked unfinished?
+- Were charts easy to understand?
+- Were colors, spacing, icons, or layout distracting?
+- Was anything hard to read on your screen size?
+
+## How To Classify Feedback
+
+Use these labels when possible:
+
+- **Fix before v1:** This would reduce trust, confuse users, or make the result feel unsafe.
+- **Review during checkpoint:** This needs discussion or more tester feedback.
+- **Later UX pass:** This is useful visual/layout polish, but it does not block engine readiness.
+
+## Final Tester Summary
+
+Please end with:
+
+- The top 3 things that increased your trust.
+- The top 3 things that reduced your trust.
+- The one thing you would fix before showing this to more people.
+- Whether you would feel comfortable using this for a planning conversation, knowing it is not advice.
