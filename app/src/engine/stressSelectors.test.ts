@@ -5,12 +5,15 @@ import type { SimulationResult } from '../types/plan';
 import { runResultsPreviewBundle } from './previewScenarios';
 import type { SimulationConfig } from './runSimulation';
 import {
+  createDetailedStressAdapterRequest,
   runSpendingStressResults,
+  runDetailedStressInjectedRunnerPrototype,
   selectDetailedStressAdapterBatchCloseout,
   selectDetailedStressAdapterContract,
   selectDetailedStressAdapterValidation,
   selectDetailedStressBoundaryReview,
   selectDetailedStressMigrationCloseout,
+  selectDetailedStressPrototypeBatchCloseout,
   selectStressExtractionReadinessSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -160,6 +163,9 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('detailedStressAdapterContract');
       expect(saved.plan).not.toHaveProperty('detailedStressAdapterValidation');
       expect(saved.plan).not.toHaveProperty('detailedStressAdapterBatchCloseout');
+      expect(saved.plan).not.toHaveProperty('detailedStressAdapterRequest');
+      expect(saved.plan).not.toHaveProperty('detailedStressInjectedRunnerPrototype');
+      expect(saved.plan).not.toHaveProperty('detailedStressPrototypeBatchCloseout');
     }
   });
 
@@ -315,5 +321,182 @@ describe('stress selectors extraction', () => {
     expect(closeout.rows.find((row) => row.id === 'execution')).toMatchObject({ status: 'hold' });
     expect(closeout.reviewNote).toContain('does not add optimizer behavior');
     expect(closeout.reviewNote).toContain('run detailed stress in React');
+  });
+
+  it('creates a copied explicit request for a detailed-stress injected runner', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const validation = selectDetailedStressAdapterValidation({
+      boundaryReview: selectDetailedStressBoundaryReview(),
+      migrationCloseout: selectDetailedStressMigrationCloseout({
+        boundaryReview: selectDetailedStressBoundaryReview(),
+        stressReadiness: selectStressExtractionReadinessSummary()
+      }),
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+    const request = createDetailedStressAdapterRequest({
+      plan,
+      config: { returnRate: 0.04, withdrawalOrder: 'default' },
+      adapterValidation: validation
+    });
+
+    expect(request).toMatchObject({
+      requestId: 'detailedStressExplicitPlanRequest',
+      source: 'explicitPlanAndConfig',
+      readsGlobalDashboardState: false,
+      persistedOutput: 'none',
+      disposition: 'detailedStressAdapterRequestOnly'
+    });
+    expect(request?.plan).not.toBe(plan);
+    expect(request?.config).toEqual({ returnRate: 0.04, withdrawalOrder: 'default' });
+    if (request) request.plan.spending.gogo = 1;
+    expect(plan.spending.gogo).toBe(createExamplePlan(examplePlanCards[0].id).spending.gogo);
+  });
+
+  it('does not create a detailed-stress request when adapter validation is blocked', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const boundaryReview = selectDetailedStressBoundaryReview({ includeProbeCoverage: false });
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    const validation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+
+    expect(createDetailedStressAdapterRequest({ plan, adapterValidation: validation })).toBeNull();
+  });
+
+  it('runs only an injected detailed-stress runner and accepts existing output shape metadata', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    const adapterValidation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+    const calls: string[] = [];
+    const prototype = runDetailedStressInjectedRunnerPrototype({
+      plan,
+      config: { returnRate: 0.05 },
+      adapterValidation,
+      runner: (request) => {
+        calls.push(request.source);
+        expect(request.plan).not.toBe(plan);
+        return {
+          shape: 'existingDetailedStressShape',
+          status: 'complete',
+          fullSpendingFundedRate: 0.82,
+          monteCarloRunCount: 200,
+          historicalSequenceCount: 4,
+          notes: ['Detailed stress runner was injected for prototype coverage.']
+        };
+      }
+    });
+
+    expect(calls).toEqual(['explicitPlanAndConfig']);
+    expect(prototype).toMatchObject({
+      status: 'prototypeComplete',
+      runnerCalled: true,
+      disposition: 'detailedStressInjectedRunnerPrototypeOnly'
+    });
+    expect(prototype.rows.find((row) => row.id === 'outputShape')).toMatchObject({ status: 'ready' });
+    expect(prototype.result).toMatchObject({
+      shape: 'existingDetailedStressShape',
+      fullSpendingFundedRate: 0.82
+    });
+    expect(prototype.reviewNote).toContain('does not run Monte Carlo in React');
+  });
+
+  it('holds the detailed-stress prototype when no injected runner is supplied', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    const adapterValidation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+    const prototype = runDetailedStressInjectedRunnerPrototype({ plan, adapterValidation });
+
+    expect(prototype.status).toBe('notReady');
+    expect(prototype.runnerCalled).toBe(false);
+    expect(prototype.result).toBeNull();
+    expect(prototype.rows.find((row) => row.id === 'runner')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('blocks detailed-stress prototype output that does not match existing shape metadata', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    const adapterValidation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+    const prototype = runDetailedStressInjectedRunnerPrototype({
+      plan,
+      adapterValidation,
+      runner: () =>
+        ({
+          shape: 'changedDetailedStressShape',
+          status: 'complete',
+          fullSpendingFundedRate: 2,
+          monteCarloRunCount: -1,
+          historicalSequenceCount: null,
+          notes: []
+        }) as never
+    });
+
+    expect(prototype.status).toBe('blocked');
+    expect(prototype.runnerCalled).toBe(true);
+    expect(prototype.result).toBeNull();
+    expect(prototype.rows.find((row) => row.id === 'outputShape')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('closes the detailed-stress prototype batch as ready for a later probe-backed runner', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({
+      boundaryReview,
+      stressReadiness: selectStressExtractionReadinessSummary()
+    });
+    const adapterValidation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract: selectDetailedStressAdapterContract()
+    });
+    const prototype = runDetailedStressInjectedRunnerPrototype({
+      plan,
+      adapterValidation,
+      runner: () => ({
+        shape: 'existingDetailedStressShape',
+        status: 'complete',
+        fullSpendingFundedRate: 0.75,
+        monteCarloRunCount: 100,
+        historicalSequenceCount: 3,
+        notes: []
+      })
+    });
+    const closeout = selectDetailedStressPrototypeBatchCloseout({ adapterValidation, prototype });
+
+    expect(closeout).toMatchObject({
+      status: 'readyForProbeBackedRunner',
+      disposition: 'detailedStressPrototypeBatchCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['request', 'prototype', 'executionBoundary', 'persistence']);
+    expect(closeout.rows.find((row) => row.id === 'executionBoundary')).toMatchObject({ status: 'hold' });
+    expect(closeout.reviewNote).toContain('does not move Monte Carlo');
   });
 });

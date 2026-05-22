@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 140: Detailed Stress Adapter Contract Closeout
+## Latest Sprint — Sprint 145: Detailed Stress Injected Runner Prototype Closeout
 
-**Status:** Complete 2026-05-21.
+**Status:** Complete 2026-05-22.
 
-Goal: define and validate a thin detailed-stress adapter contract so a later prototype can use explicit plan/config inputs with an injected runner while Monte Carlo and historical sequence execution remain in the detailed-report path.
+Goal: prove a contained detailed-stress injected-runner prototype can accept explicit plan/config inputs and validate returned existing-shape metadata without moving Monte Carlo or historical sequence execution into React.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted adapter output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted prototype output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 140 checkpoint doc: [`docs/sprint_140_detailed_stress_adapter_closeout.md`](docs/sprint_140_detailed_stress_adapter_closeout.md).
+Sprint 145 checkpoint doc: [`docs/sprint_145_detailed_stress_prototype_closeout.md`](docs/sprint_145_detailed_stress_prototype_closeout.md).
 
-### Sprint 136-140 Candidate Implementation Tickets
+### Sprint 141-145 Candidate Implementation Tickets
 
-- [x] **S136-01 — Thin adapter contract shape.** Add runtime-only contract metadata for explicit plan/config inputs.
-- [x] **S137-01 — Injected runner boundary.** Keep Monte Carlo and historical replay behind detailed-report runner ownership.
-- [x] **S138-01 — Output shape and persistence guardrails.** Require existing detailed stress shapes and unsaved adapter output.
-- [x] **S139-01 — Adapter validation selector.** Validate boundary review, migration closeout, probes, and saved-plan guardrails together.
-- [x] **S140-01 — Adapter contract closeout tests/docs.** Mark the next safe slice as a contained injected-runner prototype.
+- [x] **S141-01 — Explicit detailed-stress request.** Build a copied plan/config request only after adapter validation passes.
+- [x] **S142-01 — Injected-runner prototype harness.** Call only a supplied runner and never implement detailed stress execution in React.
+- [x] **S143-01 — Output-shape validation.** Accept only existing detailed stress shape metadata and block malformed results.
+- [x] **S144-01 — Prototype persistence guardrails.** Keep request, runner result, and closeout output runtime-only.
+- [x] **S145-01 — Prototype closeout tests/docs.** Mark the next safe slice as a probe-backed runner bridge.
 
-### Sprint 140 Definition Of Done
+### Sprint 145 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -31,15 +31,48 @@ Sprint 140 checkpoint doc: [`docs/sprint_140_detailed_stress_adapter_closeout.md
 - Thin adapter contract accepts explicit plan/config inputs only.
 - Thin adapter contract allows injected runner ownership only; React does not directly run Monte Carlo or historical replay.
 - Adapter validation requires existing detailed stress output shapes and clean saved-plan boundaries.
-- Closeout marks a contained injected-runner prototype as the next safe step.
+- Contained prototype creates copied explicit requests only after validation passes.
+- Contained prototype calls only a supplied injected runner.
+- Contained prototype blocks missing runners, failed validation, and malformed output shapes.
+- Closeout marks a probe-backed runner bridge as the next safe step.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 145: Detailed Stress Injected Runner Prototype Closeout
+
+**Complete 2026-05-22.** Closed the prototype batch as ready for a future probe-backed runner bridge while keeping detailed stress execution in the detailed-report path.
+
+Sprint 145 checkpoint doc: [`docs/sprint_145_detailed_stress_prototype_closeout.md`](docs/sprint_145_detailed_stress_prototype_closeout.md).
+
+### Sprint 144: Detailed Stress Prototype Persistence Guardrails
+
+**Complete 2026-05-22.** Kept detailed-stress prototype request, result, and closeout output runtime-only.
+
+Sprint 144 checkpoint doc: [`docs/sprint_144_detailed_stress_prototype_persistence.md`](docs/sprint_144_detailed_stress_prototype_persistence.md).
+
+### Sprint 143: Detailed Stress Prototype Output Validation
+
+**Complete 2026-05-22.** Blocked injected-runner results that do not match existing detailed stress shape metadata.
+
+Sprint 143 checkpoint doc: [`docs/sprint_143_detailed_stress_prototype_output_validation.md`](docs/sprint_143_detailed_stress_prototype_output_validation.md).
+
+### Sprint 142: Detailed Stress Injected Runner Harness
+
+**Complete 2026-05-22.** Added a contained prototype harness that calls only a supplied injected runner.
+
+Sprint 142 checkpoint doc: [`docs/sprint_142_detailed_stress_injected_runner_harness.md`](docs/sprint_142_detailed_stress_injected_runner_harness.md).
+
+### Sprint 141: Detailed Stress Explicit Request
+
+**Complete 2026-05-22.** Added a copied explicit plan/config request for future detailed-stress adapter work.
+
+Sprint 141 checkpoint doc: [`docs/sprint_141_detailed_stress_explicit_request.md`](docs/sprint_141_detailed_stress_explicit_request.md).
 
 ### Sprint 140: Detailed Stress Adapter Contract Closeout
 

@@ -193,6 +193,60 @@ export type DetailedStressAdapterBatchCloseout = {
   disposition: 'detailedStressAdapterBatchCloseoutOnly';
 };
 
+export type DetailedStressAdapterRequest = {
+  requestId: 'detailedStressExplicitPlanRequest';
+  plan: V2PlanPayload;
+  config: SimulationConfig;
+  source: 'explicitPlanAndConfig';
+  readsGlobalDashboardState: false;
+  persistedOutput: 'none';
+  disposition: 'detailedStressAdapterRequestOnly';
+};
+
+export type DetailedStressInjectedRunnerResult = {
+  shape: 'existingDetailedStressShape';
+  status: 'complete' | 'unavailable';
+  fullSpendingFundedRate: number | null;
+  monteCarloRunCount: number | null;
+  historicalSequenceCount: number | null;
+  notes: string[];
+};
+
+export type DetailedStressInjectedRunner = (
+  request: DetailedStressAdapterRequest
+) => DetailedStressInjectedRunnerResult;
+
+export type DetailedStressInjectedRunnerPrototype = {
+  status: 'prototypeComplete' | 'notReady' | 'blocked';
+  headline: string;
+  detail: string;
+  request: DetailedStressAdapterRequest | null;
+  runnerCalled: boolean;
+  result: DetailedStressInjectedRunnerResult | null;
+  rows: Array<{
+    id: 'validation' | 'request' | 'runner' | 'outputShape' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressInjectedRunnerPrototypeOnly';
+};
+
+export type DetailedStressPrototypeBatchCloseout = {
+  status: 'readyForProbeBackedRunner' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'request' | 'prototype' | 'executionBoundary' | 'persistence';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressPrototypeBatchCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -1106,5 +1160,229 @@ export function selectDetailedStressAdapterBatchCloseout({
     reviewNote:
       'Detailed stress adapter batch closeout only. It does not add optimizer behavior, run detailed stress in React, change stress math, or persist adapter output.',
     disposition: 'detailedStressAdapterBatchCloseoutOnly'
+  };
+}
+
+export function createDetailedStressAdapterRequest({
+  plan,
+  config = {},
+  adapterValidation
+}: {
+  plan: V2PlanPayload;
+  config?: SimulationConfig;
+  adapterValidation: DetailedStressAdapterValidation;
+}): DetailedStressAdapterRequest | null {
+  if (adapterValidation.status !== 'validForPrototype') return null;
+
+  return {
+    requestId: 'detailedStressExplicitPlanRequest',
+    plan: extractPlanPayload(plan),
+    config: { ...config },
+    source: 'explicitPlanAndConfig',
+    readsGlobalDashboardState: false,
+    persistedOutput: 'none',
+    disposition: 'detailedStressAdapterRequestOnly'
+  };
+}
+
+function injectedRunnerResultIsValid(
+  result: DetailedStressInjectedRunnerResult | null | undefined
+): result is DetailedStressInjectedRunnerResult {
+  return (
+    !!result &&
+    result.shape === 'existingDetailedStressShape' &&
+    (result.status === 'complete' || result.status === 'unavailable') &&
+    (result.fullSpendingFundedRate === null ||
+      (Number.isFinite(result.fullSpendingFundedRate) &&
+        result.fullSpendingFundedRate >= 0 &&
+        result.fullSpendingFundedRate <= 1)) &&
+    (result.monteCarloRunCount === null ||
+      (Number.isFinite(result.monteCarloRunCount) && result.monteCarloRunCount >= 0)) &&
+    (result.historicalSequenceCount === null ||
+      (Number.isFinite(result.historicalSequenceCount) && result.historicalSequenceCount >= 0)) &&
+    Array.isArray(result.notes)
+  );
+}
+
+export function runDetailedStressInjectedRunnerPrototype({
+  plan,
+  config = {},
+  adapterValidation,
+  runner
+}: {
+  plan: V2PlanPayload;
+  config?: SimulationConfig;
+  adapterValidation: DetailedStressAdapterValidation;
+  runner?: DetailedStressInjectedRunner;
+}): DetailedStressInjectedRunnerPrototype {
+  const validationReady = adapterValidation.status === 'validForPrototype';
+  const request = createDetailedStressAdapterRequest({ plan, config, adapterValidation });
+  const rows: DetailedStressInjectedRunnerPrototype['rows'] = [
+    {
+      id: 'validation',
+      label: 'Adapter validation',
+      status: validationReady ? 'ready' : 'blocked',
+      detail: validationReady
+        ? 'Adapter validation is clean enough for a contained injected-runner prototype.'
+        : 'Adapter validation must pass before a prototype runner can be called.'
+    },
+    {
+      id: 'request',
+      label: 'Explicit request',
+      status: request ? 'ready' : 'blocked',
+      detail: request
+        ? 'The prototype request uses an explicit plan copy and explicit stress settings.'
+        : 'No detailed stress request was created.'
+    },
+    {
+      id: 'runner',
+      label: 'Injected runner',
+      status: runner ? 'hold' : 'blocked',
+      detail: runner
+        ? 'The prototype can call an injected detailed-report runner supplied by tests or a later bridge.'
+        : 'No injected runner was supplied, so no detailed stress execution is attempted.'
+    },
+    {
+      id: 'outputShape',
+      label: 'Output shape',
+      status: 'hold',
+      detail: 'Runner output must match the existing detailed stress shape before it can be shown anywhere.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: 'ready',
+      detail: 'Prototype output remains runtime-only and is not written into editable plan files.'
+    }
+  ];
+
+  if (!validationReady || !request) {
+    return {
+      status: 'blocked',
+      headline: 'Detailed stress prototype is blocked.',
+      detail: 'Adapter validation must pass before an injected runner can be called.',
+      request,
+      runnerCalled: false,
+      result: null,
+      rows,
+      reviewNote:
+        'Injected-runner prototype only. It does not run Monte Carlo in React, migrate historical replay, change stress math, or save output.',
+      disposition: 'detailedStressInjectedRunnerPrototypeOnly'
+    };
+  }
+
+  if (!runner) {
+    return {
+      status: 'notReady',
+      headline: 'Detailed stress prototype is waiting for an injected runner.',
+      detail: 'The explicit request is ready, but no runner was provided.',
+      request,
+      runnerCalled: false,
+      result: null,
+      rows,
+      reviewNote:
+        'Injected-runner prototype only. It does not run Monte Carlo in React, migrate historical replay, change stress math, or save output.',
+      disposition: 'detailedStressInjectedRunnerPrototypeOnly'
+    };
+  }
+
+  try {
+    const result = runner(request);
+    const validResult = injectedRunnerResultIsValid(result);
+    const nextRows = rows.map((row) =>
+      row.id === 'outputShape'
+        ? {
+            ...row,
+            status: validResult ? ('ready' as const) : ('blocked' as const),
+            detail: validResult
+              ? 'The injected runner returned the existing detailed stress shape.'
+              : 'The injected runner returned an unsupported detailed stress shape.'
+          }
+        : row
+    );
+
+    return {
+      status: validResult ? 'prototypeComplete' : 'blocked',
+      headline: validResult
+        ? 'Contained detailed stress prototype completed.'
+        : 'Detailed stress prototype returned an unsupported shape.',
+      detail: validResult
+        ? 'An injected runner accepted the explicit request and returned existing detailed stress output shape metadata.'
+        : 'The prototype runner output must match the existing detailed stress shape before it can be used.',
+      request,
+      runnerCalled: true,
+      result: validResult ? result : null,
+      rows: nextRows,
+      reviewNote:
+        'Injected-runner prototype only. It does not run Monte Carlo in React, migrate historical replay, change stress math, or save output.',
+      disposition: 'detailedStressInjectedRunnerPrototypeOnly'
+    };
+  } catch {
+    return {
+      status: 'blocked',
+      headline: 'Detailed stress prototype runner failed.',
+      detail: 'The injected runner must complete cleanly before this bridge can move forward.',
+      request,
+      runnerCalled: true,
+      result: null,
+      rows: rows.map((row) => (row.id === 'runner' ? { ...row, status: 'blocked' as const } : row)),
+      reviewNote:
+        'Injected-runner prototype only. It does not run Monte Carlo in React, migrate historical replay, change stress math, or save output.',
+      disposition: 'detailedStressInjectedRunnerPrototypeOnly'
+    };
+  }
+}
+
+export function selectDetailedStressPrototypeBatchCloseout({
+  adapterValidation,
+  prototype
+}: {
+  adapterValidation: DetailedStressAdapterValidation;
+  prototype: DetailedStressInjectedRunnerPrototype;
+}): DetailedStressPrototypeBatchCloseout {
+  const blocked = adapterValidation.status === 'blocked' || prototype.status === 'blocked';
+  const complete = prototype.status === 'prototypeComplete';
+
+  return {
+    status: blocked ? 'blocked' : complete ? 'readyForProbeBackedRunner' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress prototype batch is blocked.'
+      : complete
+        ? 'Ready to connect a probe-backed detailed stress runner later.'
+        : 'Hold detailed stress until a runner is supplied.',
+    detail: blocked
+      ? 'Clean up validation or injected-runner output before moving forward.'
+      : complete
+        ? 'The contained prototype can pass explicit inputs through an injected runner without changing detailed stress ownership.'
+        : 'The request shape is ready, but detailed stress execution still needs an injected runner.',
+    rows: [
+      {
+        id: 'request',
+        label: 'Explicit request',
+        status: prototype.request ? 'ready' : 'blocked',
+        detail: 'The prototype uses a copied plan and explicit stress settings.'
+      },
+      {
+        id: 'prototype',
+        label: 'Prototype run',
+        status: prototype.status === 'prototypeComplete' ? 'ready' : prototype.status === 'blocked' ? 'blocked' : 'hold',
+        detail: prototype.headline
+      },
+      {
+        id: 'executionBoundary',
+        label: 'Execution boundary',
+        status: 'hold',
+        detail: 'Detailed stress execution remains owned by the detailed-report path.'
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        status: 'ready',
+        detail: 'Request, prototype, and closeout output remain runtime-only.'
+      }
+    ],
+    reviewNote:
+      'Detailed stress prototype closeout only. It does not move Monte Carlo, run historical replay in React, change optimizer behavior, or persist output.',
+    disposition: 'detailedStressPrototypeBatchCloseoutOnly'
   };
 }
