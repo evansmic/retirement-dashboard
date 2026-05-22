@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 135 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review. The next logical slice is a thin detailed-stress adapter contract or continued native module cleanup while keeping optimizer behavior unchanged.
+Sprint 140 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review plus a thin adapter contract. The next logical slice is a contained injected-runner prototype for detailed stress or continued native module cleanup while keeping optimizer behavior unchanged.
 
-Completed Sprint 131-135 slices:
+Completed Sprint 136-140 slices:
 
-- Mapped detailed-report ownership for Monte Carlo, progressive Monte Carlo, historical sequence replay, and full-spending-funded metrics.
-- Added runtime-only rows for probe coverage and saved-plan boundaries.
-- Kept detailed stress execution in the detailed-report path.
-- Marked a future thin adapter contract as the next safe migration step.
-- Added blocked and adapter-ready tests for detailed stress boundary review.
+- Added a runtime-only thin adapter contract for explicit plan/config inputs.
+- Kept Monte Carlo and historical replay behind detailed-report runner ownership.
+- Required existing detailed stress output shapes and no adapter output persistence.
+- Added validation that combines boundary review, migration closeout, probe coverage, and saved-plan guardrails.
+- Closed the batch as ready for a contained injected-runner prototype, not a migration.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed detailed stress boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 131-135 as boundary review work, not optimizer expansion, stress migration, or simulation math changes.
+- Confirmed detailed stress adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 136-140 as adapter-contract work, not optimizer expansion, stress migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -170,6 +170,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 111. **Sprint 133 — Detailed stress no-migration closeout.** Keep detailed stress execution in the detailed-report path.
 112. **Sprint 134 — Detailed stress adapter next step.** Mark adapter-contract design as the next safe migration slice.
 113. **Sprint 135 — Detailed stress boundary closeout.** Cover blocked and adapter-ready states without moving detailed stress execution.
+114. **Sprint 136 — Thin detailed stress adapter contract.** Add runtime-only explicit plan/config adapter metadata.
+115. **Sprint 137 — Detailed stress injected runner boundary.** Keep Monte Carlo and historical replay behind detailed-report runner ownership.
+116. **Sprint 138 — Detailed stress output guardrails.** Require existing detailed stress output shapes and unsaved adapter output.
+117. **Sprint 139 — Detailed stress adapter validation.** Validate boundary review, migration closeout, probes, and saved-plan guardrails together.
+118. **Sprint 140 — Detailed stress adapter contract closeout.** Mark the next safe slice as a contained injected-runner prototype.
 
 ## Medium-Term Roadmap
 
@@ -303,6 +308,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 133 — Detailed stress no-migration closeout.** Complete 2026-05-21. Kept detailed stress execution in the detailed-report path.
 - **Sprint 134 — Detailed stress adapter next step.** Complete 2026-05-21. Marked adapter-contract design as the next safe migration slice.
 - **Sprint 135 — Detailed stress boundary closeout.** Complete 2026-05-21. Covered blocked and adapter-ready states without moving detailed stress execution.
+- **Sprint 136 — Thin detailed stress adapter contract.** Complete 2026-05-21. Added runtime-only explicit plan/config adapter metadata.
+- **Sprint 137 — Detailed stress injected runner boundary.** Complete 2026-05-21. Kept detailed stress execution behind detailed-report runner ownership.
+- **Sprint 138 — Detailed stress output guardrails.** Complete 2026-05-21. Required existing output shapes and unsaved adapter output.
+- **Sprint 139 — Detailed stress adapter validation.** Complete 2026-05-21. Validated boundary review, migration closeout, probes, and saved-plan guardrails together.
+- **Sprint 140 — Detailed stress adapter contract closeout.** Complete 2026-05-21. Closed the batch as ready for a contained injected-runner prototype.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

@@ -6,6 +6,9 @@ import { runResultsPreviewBundle } from './previewScenarios';
 import type { SimulationConfig } from './runSimulation';
 import {
   runSpendingStressResults,
+  selectDetailedStressAdapterBatchCloseout,
+  selectDetailedStressAdapterContract,
+  selectDetailedStressAdapterValidation,
   selectDetailedStressBoundaryReview,
   selectDetailedStressMigrationCloseout,
   selectStressExtractionReadinessSummary,
@@ -154,6 +157,9 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('stressTestRows');
       expect(saved.plan).not.toHaveProperty('detailedStressBoundaryReview');
       expect(saved.plan).not.toHaveProperty('detailedStressMigrationCloseout');
+      expect(saved.plan).not.toHaveProperty('detailedStressAdapterContract');
+      expect(saved.plan).not.toHaveProperty('detailedStressAdapterValidation');
+      expect(saved.plan).not.toHaveProperty('detailedStressAdapterBatchCloseout');
     }
   });
 
@@ -199,5 +205,115 @@ describe('stress selectors extraction', () => {
     expect(closeout.rows.map((row) => row.id)).toEqual(['boundaryReview', 'baselineStress', 'spendingStress', 'savedPlan']);
     expect(closeout.detail).toContain('adapter contract');
     expect(closeout.reviewNote).toContain('does not move Monte Carlo');
+  });
+
+  it('defines a thin detailed-stress adapter contract without moving execution into React', () => {
+    const contract = selectDetailedStressAdapterContract();
+
+    expect(contract).toMatchObject({
+      status: 'readyForInjectedRunner',
+      disposition: 'detailedStressAdapterContractOnly',
+      inputBoundary: {
+        acceptsExplicitPlan: true,
+        acceptsExplicitConfig: true,
+        readsGlobalDashboardState: false
+      },
+      executionBoundary: {
+        owner: 'detailedReportEngine',
+        reactMayRunMonteCarlo: false,
+        reactMayRunHistoricalReplay: false,
+        runnerMode: 'injectedOnly'
+      },
+      outputBoundary: {
+        returnsExistingShapes: true,
+        changesStressMath: false,
+        persistedOutput: 'none'
+      }
+    });
+    expect(contract.rows.map((row) => row.id)).toEqual([
+      'inputPlan',
+      'inputConfig',
+      'runnerOwnership',
+      'outputShape',
+      'savedPlan'
+    ]);
+    expect(contract.rows.find((row) => row.id === 'runnerOwnership')).toMatchObject({ status: 'hold' });
+    expect(contract.reviewNote).toContain('does not run Monte Carlo');
+  });
+
+  it('blocks detailed-stress adapter contracts that leak execution, shapes, or saved output', () => {
+    const contract = selectDetailedStressAdapterContract({
+      readsGlobalDashboardState: true,
+      reactMayRunMonteCarlo: true,
+      reactMayRunHistoricalReplay: true,
+      runnerMode: 'directReactExecution',
+      returnsExistingShapes: false,
+      changesStressMath: true,
+      persistedOutput: 'adapterOutputLeaked'
+    });
+
+    expect(contract.status).toBe('blocked');
+    expect(contract.rows.find((row) => row.id === 'inputPlan')).toMatchObject({ status: 'blocked' });
+    expect(contract.rows.find((row) => row.id === 'runnerOwnership')).toMatchObject({ status: 'blocked' });
+    expect(contract.rows.find((row) => row.id === 'outputShape')).toMatchObject({ status: 'blocked' });
+    expect(contract.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('validates the detailed-stress adapter only as an injected-runner prototype', () => {
+    const stressReadiness = selectStressExtractionReadinessSummary();
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({ boundaryReview, stressReadiness });
+    const adapterContract = selectDetailedStressAdapterContract();
+    const validation = selectDetailedStressAdapterValidation({ boundaryReview, migrationCloseout, adapterContract });
+
+    expect(validation).toMatchObject({
+      status: 'validForPrototype',
+      disposition: 'detailedStressAdapterValidationOnly'
+    });
+    expect(validation.rows.map((row) => row.id)).toEqual([
+      'boundaryReview',
+      'migrationCloseout',
+      'adapterContract',
+      'probeCoverage',
+      'savedPlan'
+    ]);
+    expect(validation.rows.find((row) => row.id === 'boundaryReview')).toMatchObject({ status: 'hold' });
+    expect(validation.rows.find((row) => row.id === 'adapterContract')).toMatchObject({ status: 'ready' });
+    expect(validation.nextStep).toContain('injected runner wrapper');
+    expect(validation.reviewNote).toContain('does not execute stress scenarios');
+  });
+
+  it('blocks detailed-stress adapter validation when contract or saved-plan guardrails fail', () => {
+    const stressReadiness = selectStressExtractionReadinessSummary();
+    const boundaryReview = selectDetailedStressBoundaryReview({ savedPlanClean: false });
+    const migrationCloseout = selectDetailedStressMigrationCloseout({ boundaryReview, stressReadiness });
+    const adapterContract = selectDetailedStressAdapterContract({ persistedOutput: 'adapterOutputLeaked' });
+    const validation = selectDetailedStressAdapterValidation({ boundaryReview, migrationCloseout, adapterContract });
+
+    expect(validation.status).toBe('blocked');
+    expect(validation.rows.find((row) => row.id === 'adapterContract')).toMatchObject({ status: 'blocked' });
+    expect(validation.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('closes the adapter batch as prototype-ready without adding stress execution', () => {
+    const stressReadiness = selectStressExtractionReadinessSummary();
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const migrationCloseout = selectDetailedStressMigrationCloseout({ boundaryReview, stressReadiness });
+    const adapterContract = selectDetailedStressAdapterContract();
+    const adapterValidation = selectDetailedStressAdapterValidation({
+      boundaryReview,
+      migrationCloseout,
+      adapterContract
+    });
+    const closeout = selectDetailedStressAdapterBatchCloseout({ adapterContract, adapterValidation });
+
+    expect(closeout).toMatchObject({
+      status: 'readyForThinAdapterPrototype',
+      disposition: 'detailedStressAdapterBatchCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['contract', 'validation', 'execution', 'persistence']);
+    expect(closeout.rows.find((row) => row.id === 'execution')).toMatchObject({ status: 'hold' });
+    expect(closeout.reviewNote).toContain('does not add optimizer behavior');
+    expect(closeout.reviewNote).toContain('run detailed stress in React');
   });
 });

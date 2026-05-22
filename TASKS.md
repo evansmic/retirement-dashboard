@@ -4,39 +4,72 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 135: Detailed Stress Boundary Closeout
+## Latest Sprint — Sprint 140: Detailed Stress Adapter Contract Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: review the Monte Carlo and historical sequence stress boundary before any migration, keeping detailed stress execution in the detailed-report path while preparing a future thin adapter contract.
+Goal: define and validate a thin detailed-stress adapter contract so a later prototype can use explicit plan/config inputs with an injected runner while Monte Carlo and historical sequence execution remain in the detailed-report path.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, stress-model redesign, optimizer expansion, account-by-account instructions, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted adapter output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 135 checkpoint doc: [`docs/sprint_135_detailed_stress_boundary_closeout.md`](docs/sprint_135_detailed_stress_boundary_closeout.md).
+Sprint 140 checkpoint doc: [`docs/sprint_140_detailed_stress_adapter_closeout.md`](docs/sprint_140_detailed_stress_adapter_closeout.md).
 
-### Sprint 131-135 Candidate Implementation Tickets
+### Sprint 136-140 Candidate Implementation Tickets
 
-- [x] **S131-01 — Detailed stress boundary map.** Record Monte Carlo, progressive Monte Carlo, historical sequence, and full-spending-funded ownership.
-- [x] **S132-01 — Probe and saved-plan guardrails.** Add runtime-only rows for probe coverage and saved-plan boundaries.
-- [x] **S133-01 — No-migration closeout.** Keep detailed stress execution in the detailed-report path for now.
-- [x] **S134-01 — Thin adapter next step.** Mark the next safe slice as adapter-contract design, not execution migration.
-- [x] **S135-01 — Boundary closeout tests/docs.** Cover blocked and adapter-ready states and update sprint docs.
+- [x] **S136-01 — Thin adapter contract shape.** Add runtime-only contract metadata for explicit plan/config inputs.
+- [x] **S137-01 — Injected runner boundary.** Keep Monte Carlo and historical replay behind detailed-report runner ownership.
+- [x] **S138-01 — Output shape and persistence guardrails.** Require existing detailed stress shapes and unsaved adapter output.
+- [x] **S139-01 — Adapter validation selector.** Validate boundary review, migration closeout, probes, and saved-plan guardrails together.
+- [x] **S140-01 — Adapter contract closeout tests/docs.** Mark the next safe slice as a contained injected-runner prototype.
 
-### Sprint 135 Definition Of Done
+### Sprint 140 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
 - Monte Carlo, progressive Monte Carlo, and historical sequence stress remain in the detailed-report path.
 - Boundary review identifies probe coverage and saved-plan guardrails before any later migration.
-- Closeout marks a future thin adapter contract as the next safe step.
+- Thin adapter contract accepts explicit plan/config inputs only.
+- Thin adapter contract allows injected runner ownership only; React does not directly run Monte Carlo or historical replay.
+- Adapter validation requires existing detailed stress output shapes and clean saved-plan boundaries.
+- Closeout marks a contained injected-runner prototype as the next safe step.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 140: Detailed Stress Adapter Contract Closeout
+
+**Complete 2026-05-21.** Closed the adapter-contract batch as ready for a contained injected-runner prototype while keeping detailed stress execution in the detailed-report path.
+
+Sprint 140 checkpoint doc: [`docs/sprint_140_detailed_stress_adapter_closeout.md`](docs/sprint_140_detailed_stress_adapter_closeout.md).
+
+### Sprint 139: Detailed Stress Adapter Validation
+
+**Complete 2026-05-21.** Added validation that combines boundary review, migration closeout, adapter contract, probe coverage, and saved-plan boundaries.
+
+Sprint 139 checkpoint doc: [`docs/sprint_139_detailed_stress_adapter_validation.md`](docs/sprint_139_detailed_stress_adapter_validation.md).
+
+### Sprint 138: Detailed Stress Output Guardrails
+
+**Complete 2026-05-21.** Required future adapter work to return existing detailed stress shapes and keep adapter output runtime-only.
+
+Sprint 138 checkpoint doc: [`docs/sprint_138_detailed_stress_output_guardrails.md`](docs/sprint_138_detailed_stress_output_guardrails.md).
+
+### Sprint 137: Detailed Stress Injected Runner Boundary
+
+**Complete 2026-05-21.** Kept Monte Carlo and historical replay behind detailed-report runner ownership instead of allowing direct React execution.
+
+Sprint 137 checkpoint doc: [`docs/sprint_137_detailed_stress_injected_runner_boundary.md`](docs/sprint_137_detailed_stress_injected_runner_boundary.md).
+
+### Sprint 136: Thin Detailed Stress Adapter Contract
+
+**Complete 2026-05-21.** Added runtime-only contract metadata for explicit plan/config inputs and a future injected detailed-stress runner.
+
+Sprint 136 checkpoint doc: [`docs/sprint_136_thin_detailed_stress_adapter_contract.md`](docs/sprint_136_thin_detailed_stress_adapter_contract.md).
 
 ### Sprint 135: Detailed Stress Boundary Closeout
 

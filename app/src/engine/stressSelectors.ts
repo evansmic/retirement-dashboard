@@ -134,6 +134,65 @@ export type DetailedStressMigrationCloseout = {
   disposition: 'detailedStressMigrationCloseoutOnly';
 };
 
+export type DetailedStressAdapterContract = {
+  status: 'readyForInjectedRunner' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  inputBoundary: {
+    acceptsExplicitPlan: boolean;
+    acceptsExplicitConfig: boolean;
+    readsGlobalDashboardState: boolean;
+  };
+  executionBoundary: {
+    owner: 'detailedReportEngine';
+    reactMayRunMonteCarlo: boolean;
+    reactMayRunHistoricalReplay: boolean;
+    runnerMode: 'injectedOnly' | 'directReactExecution';
+  };
+  outputBoundary: {
+    returnsExistingShapes: boolean;
+    changesStressMath: boolean;
+    persistedOutput: 'none' | 'adapterOutputLeaked';
+  };
+  rows: Array<{
+    id: 'inputPlan' | 'inputConfig' | 'runnerOwnership' | 'outputShape' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressAdapterContractOnly';
+};
+
+export type DetailedStressAdapterValidation = {
+  status: 'validForPrototype' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'boundaryReview' | 'migrationCloseout' | 'adapterContract' | 'probeCoverage' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  nextStep: string;
+  reviewNote: string;
+  disposition: 'detailedStressAdapterValidationOnly';
+};
+
+export type DetailedStressAdapterBatchCloseout = {
+  status: 'readyForThinAdapterPrototype' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'contract' | 'validation' | 'execution' | 'persistence';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressAdapterBatchCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -826,5 +885,226 @@ export function selectDetailedStressMigrationCloseout({
     reviewNote:
       'Detailed stress migration closeout only. It does not move Monte Carlo, run historical replay in React, change optimizer behavior, or save stress output.',
     disposition: 'detailedStressMigrationCloseoutOnly'
+  };
+}
+
+export function selectDetailedStressAdapterContract({
+  acceptsExplicitPlan = true,
+  acceptsExplicitConfig = true,
+  readsGlobalDashboardState = false,
+  reactMayRunMonteCarlo = false,
+  reactMayRunHistoricalReplay = false,
+  runnerMode = 'injectedOnly',
+  returnsExistingShapes = true,
+  changesStressMath = false,
+  persistedOutput = 'none'
+}: {
+  acceptsExplicitPlan?: boolean;
+  acceptsExplicitConfig?: boolean;
+  readsGlobalDashboardState?: boolean;
+  reactMayRunMonteCarlo?: boolean;
+  reactMayRunHistoricalReplay?: boolean;
+  runnerMode?: DetailedStressAdapterContract['executionBoundary']['runnerMode'];
+  returnsExistingShapes?: boolean;
+  changesStressMath?: boolean;
+  persistedOutput?: DetailedStressAdapterContract['outputBoundary']['persistedOutput'];
+} = {}): DetailedStressAdapterContract {
+  const inputPlanReady = acceptsExplicitPlan && !readsGlobalDashboardState;
+  const inputConfigReady = acceptsExplicitConfig && !readsGlobalDashboardState;
+  const runnerReady = runnerMode === 'injectedOnly' && !reactMayRunMonteCarlo && !reactMayRunHistoricalReplay;
+  const outputReady = returnsExistingShapes && !changesStressMath;
+  const savedPlanReady = persistedOutput === 'none';
+  const rows: DetailedStressAdapterContract['rows'] = [
+    {
+      id: 'inputPlan',
+      label: 'Explicit plan input',
+      status: inputPlanReady ? 'ready' : 'blocked',
+      detail: inputPlanReady
+        ? 'The adapter contract accepts an explicit plan object instead of reading dashboard state.'
+        : 'The adapter must accept an explicit plan object and avoid dashboard state.'
+    },
+    {
+      id: 'inputConfig',
+      label: 'Explicit stress settings',
+      status: inputConfigReady ? 'ready' : 'blocked',
+      detail: inputConfigReady
+        ? 'Stress settings are passed as explicit config for a future runner.'
+        : 'Stress settings must be passed explicitly before the adapter can be prototyped.'
+    },
+    {
+      id: 'runnerOwnership',
+      label: 'Runner ownership',
+      status: runnerReady ? 'hold' : 'blocked',
+      detail: runnerReady
+        ? 'Monte Carlo and historical replay stay in the detailed-report engine path behind an injected runner.'
+        : 'React must not directly run Monte Carlo or historical replay in this contract.'
+    },
+    {
+      id: 'outputShape',
+      label: 'Existing output shape',
+      status: outputReady ? 'ready' : 'blocked',
+      detail: outputReady
+        ? 'The adapter must return the existing detailed stress shapes unchanged.'
+        : 'The adapter cannot change detailed stress math or output shapes.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: savedPlanReady ? 'ready' : 'blocked',
+      detail: savedPlanReady
+        ? 'Adapter output remains runtime/report evidence and does not enter editable plan files.'
+        : 'Adapter output must not be written into editable plan files.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+
+  return {
+    status: blocked ? 'blocked' : 'readyForInjectedRunner',
+    headline: blocked
+      ? 'Detailed stress adapter contract needs cleanup.'
+      : 'Thin detailed-stress adapter contract is ready to prototype.',
+    detail: blocked
+      ? 'The adapter must keep explicit inputs, injected execution, existing output shapes, and clean saved-plan boundaries.'
+      : 'This contract can connect explicit plan inputs to the existing detailed stress runner later without moving stress execution into React.',
+    inputBoundary: {
+      acceptsExplicitPlan,
+      acceptsExplicitConfig,
+      readsGlobalDashboardState
+    },
+    executionBoundary: {
+      owner: 'detailedReportEngine',
+      reactMayRunMonteCarlo,
+      reactMayRunHistoricalReplay,
+      runnerMode
+    },
+    outputBoundary: {
+      returnsExistingShapes,
+      changesStressMath,
+      persistedOutput
+    },
+    rows,
+    reviewNote:
+      'Adapter contract only. It does not run Monte Carlo, run historical replay, change stress calculations, or save detailed stress output.',
+    disposition: 'detailedStressAdapterContractOnly'
+  };
+}
+
+export function selectDetailedStressAdapterValidation({
+  boundaryReview,
+  migrationCloseout,
+  adapterContract
+}: {
+  boundaryReview: DetailedStressBoundaryReview;
+  migrationCloseout: DetailedStressMigrationCloseout;
+  adapterContract: DetailedStressAdapterContract;
+}): DetailedStressAdapterValidation {
+  const probeStatus = boundaryReview.rows.find((row) => row.id === 'probeCoverage')?.status ?? 'blocked';
+  const savedPlanStatus =
+    boundaryReview.rows.find((row) => row.id === 'savedPlan')?.status === 'ready' &&
+    migrationCloseout.rows.find((row) => row.id === 'savedPlan')?.status === 'ready' &&
+    adapterContract.rows.find((row) => row.id === 'savedPlan')?.status === 'ready'
+      ? 'ready'
+      : 'blocked';
+  const rows: DetailedStressAdapterValidation['rows'] = [
+    {
+      id: 'boundaryReview',
+      label: 'Boundary review',
+      status: boundaryReview.status === 'blocked' ? 'blocked' : 'hold',
+      detail: boundaryReview.headline
+    },
+    {
+      id: 'migrationCloseout',
+      label: 'Migration closeout',
+      status: migrationCloseout.status === 'blocked' ? 'blocked' : 'hold',
+      detail: migrationCloseout.headline
+    },
+    {
+      id: 'adapterContract',
+      label: 'Adapter contract',
+      status: adapterContract.status === 'blocked' ? 'blocked' : 'ready',
+      detail: adapterContract.headline
+    },
+    {
+      id: 'probeCoverage',
+      label: 'Probe coverage',
+      status: probeStatus,
+      detail: 'Existing probes must continue to protect detailed stress execution before any adapter prototype.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: savedPlanStatus,
+      detail: 'Detailed stress adapter evidence must remain runtime-only.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+
+  return {
+    status: blocked ? 'blocked' : 'validForPrototype',
+    headline: blocked
+      ? 'Hold the detailed stress adapter.'
+      : 'Detailed stress adapter is valid for a narrow prototype.',
+    detail: blocked
+      ? 'A boundary, probe, or saved-plan check failed.'
+      : 'The adapter can be prototyped as an injected runner contract while detailed stress execution stays where it is.',
+    rows,
+    nextStep: 'Prototype an injected runner wrapper that accepts explicit inputs and returns existing detailed stress shapes unchanged.',
+    reviewNote:
+      'Adapter validation only. It does not execute stress scenarios, migrate Monte Carlo, migrate historical replay, or save adapter output.',
+    disposition: 'detailedStressAdapterValidationOnly'
+  };
+}
+
+export function selectDetailedStressAdapterBatchCloseout({
+  adapterContract,
+  adapterValidation
+}: {
+  adapterContract: DetailedStressAdapterContract;
+  adapterValidation: DetailedStressAdapterValidation;
+}): DetailedStressAdapterBatchCloseout {
+  const blocked = adapterContract.status === 'blocked' || adapterValidation.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForThinAdapterPrototype',
+    headline: blocked
+      ? 'Detailed stress adapter batch is blocked.'
+      : 'Ready for a contained detailed-stress adapter prototype.',
+    detail: blocked
+      ? 'Clean up the adapter contract or validation rows before prototyping.'
+      : 'The next sprint can add a contained injected-runner prototype without moving Monte Carlo or historical replay into React.',
+    rows: [
+      {
+        id: 'contract',
+        label: 'Contract',
+        status: adapterContract.status === 'blocked' ? 'blocked' : 'ready',
+        detail: adapterContract.headline
+      },
+      {
+        id: 'validation',
+        label: 'Validation',
+        status: adapterValidation.status === 'blocked' ? 'blocked' : 'ready',
+        detail: adapterValidation.headline
+      },
+      {
+        id: 'execution',
+        label: 'Execution boundary',
+        status:
+          adapterContract.executionBoundary.runnerMode === 'injectedOnly' &&
+          !adapterContract.executionBoundary.reactMayRunMonteCarlo &&
+          !adapterContract.executionBoundary.reactMayRunHistoricalReplay
+            ? 'hold'
+            : 'blocked',
+        detail: 'Detailed stress execution remains in the detailed-report engine path.'
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        status: adapterContract.outputBoundary.persistedOutput === 'none' ? 'ready' : 'blocked',
+        detail: 'Adapter contract and validation output remain unsaved.'
+      }
+    ],
+    reviewNote:
+      'Detailed stress adapter batch closeout only. It does not add optimizer behavior, run detailed stress in React, change stress math, or persist adapter output.',
+    disposition: 'detailedStressAdapterBatchCloseoutOnly'
   };
 }
