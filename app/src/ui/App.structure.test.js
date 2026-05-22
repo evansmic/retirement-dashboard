@@ -142,6 +142,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Drawdown review copy guard');
     expect(appSource).toContain('Drawdown review closeout');
     expect(appSource).toContain('Release readiness checkpoint');
+    expect(appSource).toContain('Feedback review package');
     expect(appSource).toContain('without turning it into a plan change');
     expect(appSource).toContain('without creating account instructions');
     expect(appSource).toContain('not a saved plan change or account instruction');
@@ -157,6 +158,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('Drawdown review in this plan');
     expect(overviewBranch).not.toContain('Drawdown Details placement');
     expect(overviewBranch).not.toContain('Release readiness checkpoint');
+    expect(overviewBranch).not.toContain('Feedback review package');
     expect(appSource).not.toContain('optimal drawdown');
     expect(appSource).not.toContain('recommended withdrawal strategy');
     expect(appSource).not.toContain('safe spend');

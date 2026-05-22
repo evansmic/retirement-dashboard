@@ -25,6 +25,7 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectFeedbackReviewPackage,
   selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
@@ -1338,5 +1339,66 @@ describe('result selectors', () => {
     expect(checkpoint.rows.find((row) => row.id === 'inputs')).toMatchObject({ status: 'blocked' });
     expect(checkpoint.rows.find((row) => row.id === 'localSave')).toMatchObject({ status: 'blocked' });
     expect(checkpoint.rows.find((row) => row.id === 'verification')).toMatchObject({ status: 'review' });
+  });
+
+  it('builds a feedback review package from release readiness without persisting output', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const resultsReadiness = selectResultsReadinessSummary(recommended);
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const releaseReadiness = selectReleaseReadinessCheckpoint({
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'ready',
+      drawdownCopyStatus: 'ready'
+    });
+    const feedbackPackage = selectFeedbackReviewPackage({
+      releaseReadiness,
+      recommendedLabel: recommended.recommendedLabel
+    });
+
+    expect(['ready', 'review', 'blocked']).toContain(feedbackPackage.status);
+    expect(feedbackPackage.rows.map((row) => row.id)).toEqual([
+      'exampleRun',
+      'firstScreen',
+      'spendingLanguage',
+      'drawdownDetails',
+      'localTrust',
+      'verification',
+      'uxReviewScope'
+    ]);
+    expect(feedbackPackage.reviewScript).toHaveLength(5);
+    expect(feedbackPackage.reviewScript[0]).toContain('built-in examples');
+    expect(feedbackPackage.reviewNote).toContain('does not change calculations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('feedbackReviewPackage');
+  });
+
+  it('blocks the feedback review package when release readiness is blocked', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const resultsReadiness = selectResultsReadinessSummary(recommended);
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const releaseReadiness = selectReleaseReadinessCheckpoint({
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'blocked',
+      drawdownCopyStatus: 'ready',
+      savedPlanClean: false,
+      verificationReady: false
+    });
+    const feedbackPackage = selectFeedbackReviewPackage({
+      releaseReadiness,
+      recommendedLabel: recommended.recommendedLabel,
+      examplesReady: false,
+      verificationReady: false,
+      broadUxReviewDeferred: true
+    });
+
+    expect(feedbackPackage.status).toBe('blocked');
+    expect(feedbackPackage.rows.find((row) => row.id === 'firstScreen')).toMatchObject({ status: 'blocked' });
+    expect(feedbackPackage.rows.find((row) => row.id === 'drawdownDetails')).toMatchObject({ status: 'blocked' });
+    expect(feedbackPackage.rows.find((row) => row.id === 'exampleRun')).toMatchObject({ status: 'review' });
   });
 });

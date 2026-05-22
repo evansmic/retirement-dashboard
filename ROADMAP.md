@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 185 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, v1 drawdown re-entry closeout, recommended-plan drawdown review polish, Details-facing implementation, consumer-facing drawdown review copy, and a release-readiness checkpoint. The next logical slice is preparing the broader v1 user/model feedback package.
+Sprint 190 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, v1 drawdown re-entry closeout, recommended-plan drawdown review polish, Details-facing implementation, consumer-facing drawdown review copy, release-readiness checkpoint, and feedback review package. The next logical slice is the broader v1 user/model feedback checkpoint.
 
-Completed Sprint 181-185 slices:
+Completed Sprint 186-190 slices:
 
-- Added a runtime-only release-readiness checkpoint for inputs, first answer, spending, drawdown review, examples, local save, verification, and feedback scope.
-- Surfaced the checkpoint in Details only.
-- Added ready and blocked selector tests without persisting checkpoint output.
-- Retested that the checkpoint does not add Overview density.
-- Closed the batch as checkpoint preparation, not the full v1 review itself.
+- Added a runtime-only feedback review package for examples, first screen, spending language, drawdown details, local trust, verification, and UI/UX scope.
+- Surfaced the package in Details alongside release readiness.
+- Added ready and blocked selector tests without persisting feedback package output.
+- Retested that the package does not add Overview density.
+- Closed the batch as feedback package preparation, not the full v1 review itself.
 - Preserved current withdrawal order and empty annual overrides.
 - Confirmed v1 recommended-plan drawdown review, details placement, review copy guard, recommended-plan closeout, re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 181-185 as checkpoint work, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
+- Kept Sprints 186-190 as feedback package work, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -220,6 +220,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 161. **Sprint 183 — Release readiness guardrail tests.** Cover ready and blocked checkpoint states without persisted output.
 162. **Sprint 184 — Release readiness Overview boundary.** Keep the checkpoint out of Overview.
 163. **Sprint 185 — Release readiness checkpoint closeout.** Close checkpoint preparation before the broader v1 feedback package.
+164. **Sprint 186 — Feedback review package selector.** Add a runtime-only package for the upcoming v1 feedback pass.
+165. **Sprint 187 — Feedback review Details surface.** Show feedback rows and review script in Details only.
+166. **Sprint 188 — Feedback review package guardrails.** Cover ready and blocked package states without persisted output.
+167. **Sprint 189 — Feedback review Overview boundary.** Keep the feedback package out of Overview.
+168. **Sprint 190 — Feedback review package closeout.** Close package preparation before the broader feedback checkpoint.
 
 ## Medium-Term Roadmap
 
@@ -403,6 +408,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 183 — Release readiness guardrail tests.** Complete 2026-05-22. Added ready and blocked checkpoint tests without persisted output.
 - **Sprint 184 — Release readiness Overview boundary.** Complete 2026-05-22. Kept the release-readiness checkpoint out of Overview.
 - **Sprint 185 — Release readiness checkpoint closeout.** Complete 2026-05-22. Closed checkpoint preparation before the broader v1 feedback package.
+- **Sprint 186 — Feedback review package selector.** Complete 2026-05-22. Added a runtime-only package for the upcoming v1 feedback pass.
+- **Sprint 187 — Feedback review Details surface.** Complete 2026-05-22. Surfaced feedback rows and review script in Details.
+- **Sprint 188 — Feedback review package guardrails.** Complete 2026-05-22. Added ready and blocked package tests without persisted output.
+- **Sprint 189 — Feedback review Overview boundary.** Complete 2026-05-22. Kept the feedback package out of Overview.
+- **Sprint 190 — Feedback review package closeout.** Complete 2026-05-22. Closed package preparation before the broader feedback checkpoint.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

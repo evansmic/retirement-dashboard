@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 185: Release Readiness Checkpoint Closeout
+## Latest Sprint — Sprint 190: Feedback Review Package Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: add a narrow release-readiness checkpoint before the larger v1 user/model feedback pass.
+Goal: prepare a narrow feedback review package that organizes the later v1 user/model feedback pass without starting the full visual redesign.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 185 checkpoint doc: [`docs/sprint_185_release_readiness_checkpoint_closeout.md`](docs/sprint_185_release_readiness_checkpoint_closeout.md).
+Sprint 190 checkpoint doc: [`docs/sprint_190_feedback_review_package_closeout.md`](docs/sprint_190_feedback_review_package_closeout.md).
 
-### Sprint 181-185 Candidate Implementation Tickets
+### Sprint 186-190 Candidate Implementation Tickets
 
-- [x] **S181-01 — Release readiness selector.** Add a runtime-only checkpoint for inputs, first answer, spending, drawdown review, examples, local save, verification, and feedback scope.
-- [x] **S182-01 — Details checkpoint surface.** Show the checkpoint in Details without adding Overview density.
-- [x] **S183-01 — Checkpoint guardrail tests.** Cover ready and blocked checkpoint states without persisting output.
-- [x] **S184-01 — Overview boundary test.** Confirm the checkpoint remains out of Overview.
-- [x] **S185-01 — Release checkpoint closeout.** Document the batch and keep broad UI/UX review deferred until the v1 checkpoint.
+- [x] **S186-01 — Feedback package selector.** Add a runtime-only package for examples, first screen, spending language, drawdown details, local trust, verification, and UI/UX scope.
+- [x] **S187-01 — Details feedback surface.** Show the package in Details alongside release readiness.
+- [x] **S188-01 — Feedback package tests.** Cover ready and blocked package states without persisting output.
+- [x] **S189-01 — Overview boundary test.** Confirm the feedback package remains out of Overview.
+- [x] **S190-01 — Feedback package closeout.** Document the batch and keep the full v1 review as the next larger checkpoint.
 
-### Sprint 185 Definition Of Done
+### Sprint 190 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -59,6 +59,9 @@ Sprint 185 checkpoint doc: [`docs/sprint_185_release_readiness_checkpoint_closeo
 - Release readiness checkpoint summarizes inputs, first answer, spending estimate, drawdown review, examples, local save, verification, and feedback scope.
 - Release readiness checkpoint appears in Details, not Overview.
 - Release readiness checkpoint output remains runtime-only and unsaved.
+- Feedback review package organizes example runs, first-screen clarity, spending language, drawdown review, local trust, verification, and UI/UX scope.
+- Feedback review package appears in Details, not Overview.
+- Feedback review package output remains runtime-only and unsaved.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -67,6 +70,36 @@ Sprint 185 checkpoint doc: [`docs/sprint_185_release_readiness_checkpoint_closeo
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 190: Feedback Review Package Closeout
+
+**Complete 2026-05-22.** Closed the feedback review package batch before the broader v1 feedback pass.
+
+Sprint 190 checkpoint doc: [`docs/sprint_190_feedback_review_package_closeout.md`](docs/sprint_190_feedback_review_package_closeout.md).
+
+### Sprint 189: Feedback Review Overview Boundary
+
+**Complete 2026-05-22.** Confirmed the feedback review package remains in Details and out of Overview.
+
+Sprint 189 checkpoint doc: [`docs/sprint_189_feedback_review_overview_boundary.md`](docs/sprint_189_feedback_review_overview_boundary.md).
+
+### Sprint 188: Feedback Review Package Guardrail Tests
+
+**Complete 2026-05-22.** Added tests for ready and blocked feedback review package states without persisted output.
+
+Sprint 188 checkpoint doc: [`docs/sprint_188_feedback_review_package_guardrails.md`](docs/sprint_188_feedback_review_package_guardrails.md).
+
+### Sprint 187: Feedback Review Details Surface
+
+**Complete 2026-05-22.** Surfaced the feedback review package in Details.
+
+Sprint 187 checkpoint doc: [`docs/sprint_187_feedback_review_details_surface.md`](docs/sprint_187_feedback_review_details_surface.md).
+
+### Sprint 186: Feedback Review Package Selector
+
+**Complete 2026-05-22.** Added a runtime-only feedback review package selector.
+
+Sprint 186 checkpoint doc: [`docs/sprint_186_feedback_review_package_selector.md`](docs/sprint_186_feedback_review_package_selector.md).
 
 ### Sprint 185: Release Readiness Checkpoint Closeout
 

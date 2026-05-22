@@ -43,6 +43,7 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectFeedbackReviewPackage,
   selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
@@ -2982,6 +2983,13 @@ function ResultsHandoffPanel({
     savedPlanClean: true,
     verificationReady: true
   });
+  const feedbackReviewPackage = selectFeedbackReviewPackage({
+    releaseReadiness: releaseReadinessCheckpoint,
+    recommendedLabel: recommendedPath.recommendedLabel,
+    examplesReady: true,
+    verificationReady: true,
+    broadUxReviewDeferred: true
+  });
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -3095,6 +3103,7 @@ function ResultsHandoffPanel({
             projectionMilestones={projectionMilestones}
             reconciliation={reconciliation}
             reconciliationDiagnostics={reconciliationDiagnostics}
+            feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
@@ -3630,6 +3639,7 @@ function DetailsResultsPanel({
   projectionMilestones,
   reconciliation,
   reconciliationDiagnostics,
+  feedbackReviewPackage,
   releaseReadinessCheckpoint,
   readinessSummary,
   scenarioAssumptionRows,
@@ -3704,6 +3714,7 @@ function DetailsResultsPanel({
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
   reconciliation: ReturnType<typeof selectCashFlowReconciliation>;
   reconciliationDiagnostics: ReturnType<typeof selectReconciliationDiagnostics>;
+  feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
@@ -3802,6 +3813,7 @@ function DetailsResultsPanel({
       <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
       <div className="result-section-label">Decision Checks</div>
       <ReleaseReadinessCheckpointPanel checkpoint={releaseReadinessCheckpoint} />
+      <FeedbackReviewPackagePanel feedbackPackage={feedbackReviewPackage} />
       <DecisionChecklistPanel items={decisionChecklist} />
       <DecisionDetailPanel rows={decisionDetailRows} />
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
@@ -5757,6 +5769,38 @@ function ReleaseReadinessCheckpointPanel({
         ))}
       </div>
       <p className="table-note">{checkpoint.reviewNote}</p>
+    </section>
+  );
+}
+
+function FeedbackReviewPackagePanel({
+  feedbackPackage
+}: {
+  feedbackPackage: ReturnType<typeof selectFeedbackReviewPackage>;
+}) {
+  return (
+    <section className={`decision-panel feedback-review-panel checklist-${feedbackPackage.status}`}>
+      <div>
+        <p className="eyebrow">Feedback review package</p>
+        <h3>{feedbackPackage.headline}</h3>
+        <p>{feedbackPackage.detail}</p>
+      </div>
+      <div className="optimizer-eligibility-list">
+        {feedbackPackage.rows.map((row) => (
+          <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+            <strong>{row.label}</strong>
+            <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+            <p>{row.detail}</p>
+            <small>{row.reviewPrompt}</small>
+          </article>
+        ))}
+      </div>
+      <ol className="review-script-list">
+        {feedbackPackage.reviewScript.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+      <p className="table-note">{feedbackPackage.reviewNote}</p>
     </section>
   );
 }

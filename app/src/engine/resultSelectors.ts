@@ -606,6 +606,22 @@ export type ReleaseReadinessCheckpoint = {
   reviewNote: string;
 };
 
+export type FeedbackReviewPackage = {
+  status: 'ready' | 'review' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'exampleRun' | 'firstScreen' | 'spendingLanguage' | 'drawdownDetails' | 'localTrust' | 'verification' | 'uxReviewScope';
+    label: string;
+    status: 'ready' | 'review' | 'blocked';
+    detail: string;
+    reviewPrompt: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+  reviewScript: string[];
+  reviewNote: string;
+};
+
 export type ReleaseReadinessCheckpointInput = {
   validation?: RecommendationValidation;
   resultsReadiness: ResultsReadinessSummary;
@@ -616,6 +632,14 @@ export type ReleaseReadinessCheckpointInput = {
   examplesReady?: boolean;
   savedPlanClean?: boolean;
   verificationReady?: boolean;
+};
+
+export type FeedbackReviewPackageInput = {
+  releaseReadiness: ReleaseReadinessCheckpoint;
+  recommendedLabel: string;
+  examplesReady?: boolean;
+  verificationReady?: boolean;
+  broadUxReviewDeferred?: boolean;
 };
 
 export type RetirementAnswerStatus =
@@ -4081,6 +4105,106 @@ export function selectReleaseReadinessCheckpoint({
     rows,
     reviewNote:
       'Release readiness checkpoint only. It does not change calculations, save review output, or start the full visual redesign.'
+  };
+}
+
+export function selectFeedbackReviewPackage({
+  releaseReadiness,
+  recommendedLabel,
+  examplesReady = true,
+  verificationReady = true,
+  broadUxReviewDeferred = true
+}: FeedbackReviewPackageInput): FeedbackReviewPackage {
+  const releaseBlocked = releaseReadiness.status === 'blocked';
+  const releaseNeedsReview = releaseReadiness.status === 'review';
+  const rowStatus = (ready: boolean): 'ready' | 'review' => (ready ? 'ready' : 'review');
+  const rows: FeedbackReviewPackage['rows'] = [
+    {
+      id: 'exampleRun',
+      label: 'Example review set',
+      status: rowStatus(examplesReady),
+      detail: examplesReady
+        ? 'Use the built-in examples as the first feedback set.'
+        : 'Run the built-in examples before starting the feedback pass.',
+      reviewPrompt: 'Can a reviewer load diverse examples and understand the result without extra explanation?',
+      detailArea: 'details'
+    },
+    {
+      id: 'firstScreen',
+      label: 'First Results screen',
+      status: releaseBlocked ? 'blocked' : releaseNeedsReview ? 'review' : 'ready',
+      detail:
+        releaseReadiness.status === 'ready'
+          ? 'The first screen is ready to be reviewed for clarity.'
+          : 'The first screen should be reviewed carefully because readiness items remain open.',
+      reviewPrompt: 'Can a non-expert answer “Can I retire?” and “What should I review first?” within 60 to 90 seconds?',
+      detailArea: 'overview'
+    },
+    {
+      id: 'spendingLanguage',
+      label: 'Spending language',
+      status: releaseBlocked ? 'blocked' : 'ready',
+      detail: 'Spending should remain framed as a planning estimate in today’s dollars.',
+      reviewPrompt: 'Does any spending copy sound guaranteed, advice-like, or overly precise?',
+      detailArea: 'overview'
+    },
+    {
+      id: 'drawdownDetails',
+      label: 'Drawdown review',
+      status: releaseBlocked ? 'blocked' : releaseNeedsReview ? 'review' : 'ready',
+      detail: 'Drawdown review stays in Details and should read as evidence, not instructions.',
+      reviewPrompt: 'Does the drawdown section explain what changed without telling the household what to withdraw?',
+      detailArea: 'details'
+    },
+    {
+      id: 'localTrust',
+      label: 'Local save and report trust',
+      status: releaseReadiness.rows.find((row) => row.id === 'localSave')?.status ?? 'review',
+      detail: 'Save and report handoff should stay clear, local-first, and separate.',
+      reviewPrompt: 'Does the user understand the difference between saving an editable plan and opening a printable report?',
+      detailArea: 'exportSave'
+    },
+    {
+      id: 'verification',
+      label: 'Verification evidence',
+      status: rowStatus(verificationReady),
+      detail: verificationReady ? 'Tests, build, and probes are available as review evidence.' : 'Run verification before feedback review.',
+      reviewPrompt: 'Are test, build, probe, and no-plan-file results captured for the review?',
+      detailArea: 'details'
+    },
+    {
+      id: 'uxReviewScope',
+      label: 'UI/UX review scope',
+      status: broadUxReviewDeferred ? 'ready' : 'review',
+      detail: broadUxReviewDeferred
+        ? 'Full visual review is intentionally held for the checkpoint.'
+        : 'Clarify whether visual redesign is starting now or still held.',
+      reviewPrompt: 'List visual, layout, chart, color, icon, and information-presentation feedback separately from engine readiness.',
+      detailArea: 'details'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const review = rows.some((row) => row.status === 'review');
+
+  return {
+    status: blocked ? 'blocked' : review ? 'review' : 'ready',
+    headline: blocked
+      ? 'Feedback review package is blocked.'
+      : review
+        ? 'Feedback review package needs a quick check.'
+        : 'Feedback review package is ready.',
+    detail:
+      `Use this package to review ${recommendedLabel || 'the current plan'} across examples, first-screen clarity, spending language, drawdown review, local trust, and verification.`,
+    rows,
+    reviewScript: [
+      'Load three to five built-in examples that cover single, couple, tight, comfortable, DB pension, estate, and home-equity cases.',
+      'Start in Overview and check whether the retirement answer, spending estimate, and top review actions are clear within 60 to 90 seconds.',
+      'Open Details and inspect drawdown review, release readiness, and verification evidence without treating them as instructions.',
+      'Save an editable plan and open the printable report to confirm the local-first handoff still feels trustworthy.',
+      'Capture UI/UX feedback separately for the checkpoint so visual polish does not blur engine readiness.'
+    ],
+    reviewNote:
+      'Feedback review package only. It does not change calculations, save review output, start visual redesign, or apply plan changes.'
   };
 }
 
