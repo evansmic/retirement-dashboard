@@ -589,6 +589,35 @@ export type ResultsReadinessRow = {
   detailArea: ResultsWorkspaceSection;
 };
 
+export type ReleaseReadinessStatus = 'ready' | 'review' | 'blocked';
+
+export type ReleaseReadinessCheckpoint = {
+  status: ReleaseReadinessStatus;
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'inputs' | 'firstAnswer' | 'spending' | 'drawdownReview' | 'examples' | 'localSave' | 'verification' | 'feedbackScope';
+    label: string;
+    status: ReleaseReadinessStatus;
+    detail: string;
+    action: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+  reviewNote: string;
+};
+
+export type ReleaseReadinessCheckpointInput = {
+  validation?: RecommendationValidation;
+  resultsReadiness: ResultsReadinessSummary;
+  retirementAnswer: RetirementAnswerSummary;
+  spendingCapacity: SpendingCapacitySummary;
+  drawdownReviewStatus?: 'ready' | 'review' | 'blocked' | null;
+  drawdownCopyStatus?: 'ready' | 'review' | 'blocked' | null;
+  examplesReady?: boolean;
+  savedPlanClean?: boolean;
+  verificationReady?: boolean;
+};
+
 export type RetirementAnswerStatus =
   | 'cannotTell'
   | 'notReady'
@@ -3914,6 +3943,145 @@ export function selectResultsReadinessRows(
       detailArea: 'exportSave'
     }
   ];
+}
+
+export function selectReleaseReadinessCheckpoint({
+  validation = null,
+  resultsReadiness,
+  retirementAnswer,
+  spendingCapacity,
+  drawdownReviewStatus = null,
+  drawdownCopyStatus = null,
+  examplesReady = true,
+  savedPlanClean = true,
+  verificationReady = true
+}: ReleaseReadinessCheckpointInput): ReleaseReadinessCheckpoint {
+  const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
+  const firstAnswerStatus: ReleaseReadinessStatus =
+    retirementAnswer.status === 'cannotTell' || retirementAnswer.status === 'notReady'
+      ? 'blocked'
+      : retirementAnswer.status === 'tight' || retirementAnswer.status === 'onTrackReview' || retirementAnswer.status === 'estateHeavy'
+        ? 'review'
+        : 'ready';
+  const spendingStatus: ReleaseReadinessStatus =
+    spendingCapacity.status === 'cannotTell' || spendingCapacity.status === 'needsReduction'
+      ? spendingCapacity.status === 'cannotTell'
+        ? 'blocked'
+        : 'review'
+      : spendingCapacity.status === 'tight'
+        ? 'review'
+        : 'ready';
+  const drawdownStatus: ReleaseReadinessStatus =
+    drawdownReviewStatus === 'blocked' || drawdownCopyStatus === 'blocked'
+      ? 'blocked'
+      : drawdownReviewStatus === 'ready' && (drawdownCopyStatus === 'ready' || drawdownCopyStatus === null)
+        ? 'ready'
+        : 'review';
+
+  const rows: ReleaseReadinessCheckpoint['rows'] = [
+    {
+      id: 'inputs',
+      label: 'Inputs and blockers',
+      status: validationBlocked || resultsReadiness.status === 'blocked' ? 'blocked' : resultsReadiness.status === 'review' ? 'review' : 'ready',
+      detail: validationBlocked
+        ? 'Clear guided intake blockers before the plan is ready for release review.'
+        : resultsReadiness.status === 'review'
+          ? 'The plan can be reviewed, with a few visible readiness items still open.'
+          : 'No blocking input issues are visible in the readiness checks.',
+      action: 'Review Guided Intake and the Money-in / money-out check.',
+      detailArea: 'details'
+    },
+    {
+      id: 'firstAnswer',
+      label: 'First retirement answer',
+      status: firstAnswerStatus,
+      detail:
+        firstAnswerStatus === 'blocked'
+          ? 'The first answer cannot be trusted until the plan can generate a clear retirement result.'
+          : firstAnswerStatus === 'review'
+            ? 'The first answer is visible, but it should be tested in review with a few plan types.'
+            : 'The first answer is clear enough to include in release review.',
+      action: 'Open Overview and confirm the retirement answer is understandable in under a minute.',
+      detailArea: 'overview'
+    },
+    {
+      id: 'spending',
+      label: 'Spending estimate',
+      status: spendingStatus,
+      detail:
+        spendingStatus === 'blocked'
+          ? 'The spending estimate is not available yet.'
+          : spendingStatus === 'review'
+            ? 'The spending estimate needs careful review language before users rely on it.'
+            : 'The spending estimate is present and framed as a planning estimate.',
+      action: 'Check that today’s dollars and planning-estimate language remain visible.',
+      detailArea: 'overview'
+    },
+    {
+      id: 'drawdownReview',
+      label: 'Drawdown review',
+      status: drawdownStatus,
+      detail:
+        drawdownStatus === 'blocked'
+          ? 'The drawdown review has a blocked readiness or wording signal.'
+          : drawdownStatus === 'review'
+            ? 'The drawdown review is available but should stay in Details for checkpoint review.'
+            : 'The drawdown review is ready to be included as Details evidence.',
+      action: 'Review Details for clear no-plan-change and no-instruction boundaries.',
+      detailArea: 'details'
+    },
+    {
+      id: 'examples',
+      label: 'Example coverage',
+      status: examplesReady ? 'ready' : 'review',
+      detail: examplesReady ? 'Built-in example coverage is available for the checkpoint.' : 'Run the example matrix before the release review.',
+      action: 'Use the built-in examples as the first review set.',
+      detailArea: 'details'
+    },
+    {
+      id: 'localSave',
+      label: 'Local save boundary',
+      status: savedPlanClean && resultsReadiness.saveStatus !== 'blocked' ? 'ready' : 'blocked',
+      detail:
+        savedPlanClean && resultsReadiness.saveStatus !== 'blocked'
+          ? 'Save remains local-first and does not include review output.'
+          : 'Local save or persistence guardrails need cleanup before release review.',
+      action: 'Save an editable plan and confirm review output is not persisted.',
+      detailArea: 'exportSave'
+    },
+    {
+      id: 'verification',
+      label: 'Verification',
+      status: verificationReady ? 'ready' : 'review',
+      detail: verificationReady ? 'Tests, build, and probes can support the checkpoint.' : 'Run the full verification set before checkpoint review.',
+      action: 'Run tests, build, parity probes, route probes, and the no-plan-file check.',
+      detailArea: 'details'
+    },
+    {
+      id: 'feedbackScope',
+      label: 'Feedback scope',
+      status: 'ready',
+      detail: 'The checkpoint can invite model and user feedback without starting the full visual redesign yet.',
+      action: 'Hold broad UI/UX redesign until the full release checkpoint review.',
+      detailArea: 'details'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const review = rows.some((row) => row.status === 'review');
+
+  return {
+    status: blocked ? 'blocked' : review ? 'review' : 'ready',
+    headline: blocked
+      ? 'Release review is blocked for now.'
+      : review
+        ? 'Release review is close, with a few items to inspect.'
+        : 'Release review is ready to prepare.',
+    detail:
+      'This checkpoint gathers the main readiness signals before the broader user and model feedback pass.',
+    rows,
+    reviewNote:
+      'Release readiness checkpoint only. It does not change calculations, save review output, or start the full visual redesign.'
+  };
 }
 
 function selectRecommendedStressContext(

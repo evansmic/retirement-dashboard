@@ -43,6 +43,7 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
   selectRetirementAnswerSummary,
@@ -2960,6 +2961,27 @@ function ResultsHandoffPanel({
   const optimizerInputReview = selectOptimizerInputReview(optimizerBoundaries);
   const readinessSummary = selectResultsReadinessSummary(recommendedPath, validation);
   const readinessRows = selectResultsReadinessRows(recommendedPath, validation);
+  const releaseReadinessCheckpoint = selectReleaseReadinessCheckpoint({
+    validation,
+    resultsReadiness: readinessSummary,
+    retirementAnswer,
+    spendingCapacity,
+    drawdownReviewStatus: v1DrawdownRecommendedPlanCloseout
+      ? v1DrawdownRecommendedPlanCloseout.status === 'readyForImplementation'
+        ? 'ready'
+        : v1DrawdownRecommendedPlanCloseout.status === 'blocked'
+          ? 'blocked'
+          : 'review'
+      : 'review',
+    drawdownCopyStatus: v1DrawdownReviewCopyGuard
+      ? v1DrawdownReviewCopyGuard.status === 'clear'
+        ? 'ready'
+        : 'blocked'
+      : 'review',
+    examplesReady: true,
+    savedPlanClean: true,
+    verificationReady: true
+  });
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -3073,6 +3095,7 @@ function ResultsHandoffPanel({
             projectionMilestones={projectionMilestones}
             reconciliation={reconciliation}
             reconciliationDiagnostics={reconciliationDiagnostics}
+            releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
             scenarioComparisonRows={scenarioComparisonRows}
@@ -3607,6 +3630,7 @@ function DetailsResultsPanel({
   projectionMilestones,
   reconciliation,
   reconciliationDiagnostics,
+  releaseReadinessCheckpoint,
   readinessSummary,
   scenarioAssumptionRows,
   scenarioComparisonRows,
@@ -3680,6 +3704,7 @@ function DetailsResultsPanel({
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
   reconciliation: ReturnType<typeof selectCashFlowReconciliation>;
   reconciliationDiagnostics: ReturnType<typeof selectReconciliationDiagnostics>;
+  releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
   scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
@@ -3776,6 +3801,7 @@ function DetailsResultsPanel({
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
       <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
       <div className="result-section-label">Decision Checks</div>
+      <ReleaseReadinessCheckpointPanel checkpoint={releaseReadinessCheckpoint} />
       <DecisionChecklistPanel items={decisionChecklist} />
       <DecisionDetailPanel rows={decisionDetailRows} />
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
@@ -5704,6 +5730,33 @@ function SourceStoryPanel({ story }: { story: ReturnType<typeof selectSourceReco
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function ReleaseReadinessCheckpointPanel({
+  checkpoint
+}: {
+  checkpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
+}) {
+  return (
+    <section className={`decision-panel release-readiness-panel checklist-${checkpoint.status}`}>
+      <div>
+        <p className="eyebrow">Release readiness checkpoint</p>
+        <h3>{checkpoint.headline}</h3>
+        <p>{checkpoint.detail}</p>
+      </div>
+      <div className="optimizer-eligibility-list">
+        {checkpoint.rows.map((row) => (
+          <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+            <strong>{row.label}</strong>
+            <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+            <p>{row.detail}</p>
+            <small>{row.action}</small>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{checkpoint.reviewNote}</p>
     </section>
   );
 }

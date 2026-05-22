@@ -25,6 +25,7 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
   selectRetirementAnswerSummary,
@@ -1270,5 +1271,72 @@ describe('result selectors', () => {
     expect(rows.find((row) => row.id === 'taxes')?.detailArea).toBe('taxes');
     expect(rows.find((row) => row.id === 'householdResilience')?.detailArea).toBe('householdResilience');
     expect(Object.keys(planFixture)).not.toContain('resultsReadiness');
+  });
+
+  it('builds a release readiness checkpoint without persisting output', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const resultsReadiness = selectResultsReadinessSummary(recommended);
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const checkpoint = selectReleaseReadinessCheckpoint({
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'ready',
+      drawdownCopyStatus: 'ready',
+      examplesReady: true,
+      savedPlanClean: true,
+      verificationReady: true
+    });
+
+    expect(['ready', 'review', 'blocked']).toContain(checkpoint.status);
+    expect(checkpoint.headline).toContain('Release review');
+    expect(checkpoint.rows.map((row) => row.id)).toEqual([
+      'inputs',
+      'firstAnswer',
+      'spending',
+      'drawdownReview',
+      'examples',
+      'localSave',
+      'verification',
+      'feedbackScope'
+    ]);
+    expect(checkpoint.rows.find((row) => row.id === 'drawdownReview')).toMatchObject({
+      status: 'ready',
+      detailArea: 'details'
+    });
+    expect(checkpoint.reviewNote).toContain('does not change calculations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('releaseReadinessCheckpoint');
+  });
+
+  it('blocks the release readiness checkpoint when validation or save boundaries fail', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture, {
+      canGenerate: false,
+      blockers: [{ field: 'p1.name' }]
+    });
+    const resultsReadiness = selectResultsReadinessSummary(recommended, {
+      canGenerate: false,
+      blockers: [{ field: 'p1.name' }]
+    });
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture, {
+      canGenerate: false,
+      blockers: [{ field: 'p1.name' }]
+    });
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const checkpoint = selectReleaseReadinessCheckpoint({
+      validation: { canGenerate: false, blockers: [{ field: 'p1.name' }] },
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'review',
+      drawdownCopyStatus: 'ready',
+      savedPlanClean: false,
+      verificationReady: false
+    });
+
+    expect(checkpoint.status).toBe('blocked');
+    expect(checkpoint.rows.find((row) => row.id === 'inputs')).toMatchObject({ status: 'blocked' });
+    expect(checkpoint.rows.find((row) => row.id === 'localSave')).toMatchObject({ status: 'blocked' });
+    expect(checkpoint.rows.find((row) => row.id === 'verification')).toMatchObject({ status: 'review' });
   });
 });

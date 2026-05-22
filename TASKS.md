@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 180: Drawdown Review Copy Polish Closeout
+## Latest Sprint — Sprint 185: Release Readiness Checkpoint Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: polish the visible drawdown review language so the Details experience reads like a consumer plan review rather than an implementation checkpoint.
+Goal: add a narrow release-readiness checkpoint before the larger v1 user/model feedback pass.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 180 checkpoint doc: [`docs/sprint_180_drawdown_review_copy_polish_closeout.md`](docs/sprint_180_drawdown_review_copy_polish_closeout.md).
+Sprint 185 checkpoint doc: [`docs/sprint_185_release_readiness_checkpoint_closeout.md`](docs/sprint_185_release_readiness_checkpoint_closeout.md).
 
-### Sprint 176-180 Candidate Implementation Tickets
+### Sprint 181-185 Candidate Implementation Tickets
 
-- [x] **S176-01 — Visible label scrub.** Replace visible `V1`, `bounded`, and implementation-style drawdown headings in React Details.
-- [x] **S177-01 — Selector copy polish.** Reword consumer-facing selector headlines, details, and notes that flow into the page.
-- [x] **S178-01 — Plain-language guardrail test.** Add selector coverage that blocks implementation labels from the recommended-plan drawdown copy.
-- [x] **S179-01 — Overview boundary retest.** Keep drawdown review copy out of Overview after the label scrub.
-- [x] **S180-01 — Copy polish closeout.** Document the batch and keep the next path aimed at v1 checkpoint preparation.
+- [x] **S181-01 — Release readiness selector.** Add a runtime-only checkpoint for inputs, first answer, spending, drawdown review, examples, local save, verification, and feedback scope.
+- [x] **S182-01 — Details checkpoint surface.** Show the checkpoint in Details without adding Overview density.
+- [x] **S183-01 — Checkpoint guardrail tests.** Cover ready and blocked checkpoint states without persisting output.
+- [x] **S184-01 — Overview boundary test.** Confirm the checkpoint remains out of Overview.
+- [x] **S185-01 — Release checkpoint closeout.** Document the batch and keep broad UI/UX review deferred until the v1 checkpoint.
 
-### Sprint 180 Definition Of Done
+### Sprint 185 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -56,6 +56,9 @@ Sprint 180 checkpoint doc: [`docs/sprint_180_drawdown_review_copy_polish_closeou
 - Visible React Details labels use consumer-facing drawdown review language instead of implementation labels.
 - Selector copy that flows into the recommended-plan drawdown review avoids `V1`, `bounded`, and instruction-style phrasing.
 - Recommended-plan drawdown copy has explicit test coverage for plain-language guardrails.
+- Release readiness checkpoint summarizes inputs, first answer, spending estimate, drawdown review, examples, local save, verification, and feedback scope.
+- Release readiness checkpoint appears in Details, not Overview.
+- Release readiness checkpoint output remains runtime-only and unsaved.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -64,6 +67,36 @@ Sprint 180 checkpoint doc: [`docs/sprint_180_drawdown_review_copy_polish_closeou
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 185: Release Readiness Checkpoint Closeout
+
+**Complete 2026-05-22.** Closed the release-readiness checkpoint batch before the broader v1 feedback pass.
+
+Sprint 185 checkpoint doc: [`docs/sprint_185_release_readiness_checkpoint_closeout.md`](docs/sprint_185_release_readiness_checkpoint_closeout.md).
+
+### Sprint 184: Release Readiness Overview Boundary
+
+**Complete 2026-05-22.** Confirmed the release-readiness checkpoint remains in Details and out of Overview.
+
+Sprint 184 checkpoint doc: [`docs/sprint_184_release_readiness_overview_boundary.md`](docs/sprint_184_release_readiness_overview_boundary.md).
+
+### Sprint 183: Release Readiness Guardrail Tests
+
+**Complete 2026-05-22.** Added selector tests for ready and blocked release-readiness states without persisted output.
+
+Sprint 183 checkpoint doc: [`docs/sprint_183_release_readiness_guardrail_tests.md`](docs/sprint_183_release_readiness_guardrail_tests.md).
+
+### Sprint 182: Release Readiness Details Surface
+
+**Complete 2026-05-22.** Surfaced release-readiness rows in Details.
+
+Sprint 182 checkpoint doc: [`docs/sprint_182_release_readiness_details_surface.md`](docs/sprint_182_release_readiness_details_surface.md).
+
+### Sprint 181: Release Readiness Selector
+
+**Complete 2026-05-22.** Added runtime-only release-readiness checkpoint selector.
+
+Sprint 181 checkpoint doc: [`docs/sprint_181_release_readiness_selector.md`](docs/sprint_181_release_readiness_selector.md).
 
 ### Sprint 180: Drawdown Review Copy Polish Closeout
 
