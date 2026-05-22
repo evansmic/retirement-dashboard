@@ -6,6 +6,8 @@ import { runResultsPreviewBundle } from './previewScenarios';
 import type { SimulationConfig } from './runSimulation';
 import {
   runSpendingStressResults,
+  selectDetailedStressBoundaryReview,
+  selectDetailedStressMigrationCloseout,
   selectStressExtractionReadinessSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -150,6 +152,52 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('stressExtractionBoundary');
       expect(saved.plan).not.toHaveProperty('stressTestSummary');
       expect(saved.plan).not.toHaveProperty('stressTestRows');
+      expect(saved.plan).not.toHaveProperty('detailedStressBoundaryReview');
+      expect(saved.plan).not.toHaveProperty('detailedStressMigrationCloseout');
     }
+  });
+
+  it('reviews detailed Monte Carlo and historical stress boundaries without moving them', () => {
+    const review = selectDetailedStressBoundaryReview();
+
+    expect(review).toMatchObject({
+      status: 'holdInDetailedReport',
+      disposition: 'detailedStressBoundaryReviewOnly'
+    });
+    expect(review.rows.map((row) => row.id)).toEqual([
+      'monteCarlo',
+      'progressiveMonteCarlo',
+      'historicalSequence',
+      'fullSpendingFunded',
+      'dashboardOwnership',
+      'probeCoverage',
+      'savedPlan'
+    ]);
+    expect(review.rows.find((row) => row.id === 'monteCarlo')).toMatchObject({ status: 'hold' });
+    expect(review.rows.find((row) => row.id === 'historicalSequence')).toMatchObject({ status: 'hold' });
+    expect(review.rows.find((row) => row.id === 'probeCoverage')).toMatchObject({ status: 'ready' });
+    expect(review.reviewNote).toContain('does not run Monte Carlo in React');
+  });
+
+  it('blocks detailed stress boundary review when probes or saved-plan boundaries are not clean', () => {
+    const review = selectDetailedStressBoundaryReview({ includeProbeCoverage: false, savedPlanClean: false });
+
+    expect(review.status).toBe('blocked');
+    expect(review.rows.find((row) => row.id === 'probeCoverage')).toMatchObject({ status: 'blocked' });
+    expect(review.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('closes detailed stress migration as adapter-ready, not migrated', () => {
+    const stressReadiness = selectStressExtractionReadinessSummary();
+    const boundaryReview = selectDetailedStressBoundaryReview();
+    const closeout = selectDetailedStressMigrationCloseout({ boundaryReview, stressReadiness });
+
+    expect(closeout).toMatchObject({
+      status: 'readyForThinAdapter',
+      disposition: 'detailedStressMigrationCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['boundaryReview', 'baselineStress', 'spendingStress', 'savedPlan']);
+    expect(closeout.detail).toContain('adapter contract');
+    expect(closeout.reviewNote).toContain('does not move Monte Carlo');
   });
 });

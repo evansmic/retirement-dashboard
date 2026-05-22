@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 130 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, and baseline plus nearby spending stress now live behind the engine-owned stress helper module. The next logical slice is Monte Carlo/historical stress boundary review or continued native module cleanup while keeping optimizer behavior unchanged.
+Sprint 135 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review. The next logical slice is a thin detailed-stress adapter contract or continued native module cleanup while keeping optimizer behavior unchanged.
 
-Completed Sprint 126-130 slices:
+Completed Sprint 131-135 slices:
 
-- Moved nearby spending-stress working-copy reruns into `stressSelectors`.
-- Moved spending-stress interpretation into `stressSelectors`.
-- Kept the existing preview bundle shape and `resultSelectors` exports stable.
-- Added guardrail coverage for working copies, higher-spending skip logic, bundled examples, and saved-plan boundaries.
-- Updated stress extraction readiness so spending stress is owned by the helper while Monte Carlo and historical sequence remain later.
+- Mapped detailed-report ownership for Monte Carlo, progressive Monte Carlo, historical sequence replay, and full-spending-funded metrics.
+- Added runtime-only rows for probe coverage and saved-plan boundaries.
+- Kept detailed stress execution in the detailed-report path.
+- Marked a future thin adapter contract as the next safe migration step.
+- Added blocked and adapter-ready tests for detailed stress boundary review.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 126-130 as stress-helper ownership work, not optimizer expansion or simulation math changes.
+- Confirmed detailed stress boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 131-135 as boundary review work, not optimizer expansion, stress migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -165,6 +165,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 106. **Sprint 128 — Preview spending stress compatibility.** Keep preview bundle output stable while delegating spending stress work.
 107. **Sprint 129 — Spending stress guardrail tests.** Cover working copies, skip logic, examples, and saved-plan boundaries.
 108. **Sprint 130 — Spending stress ownership closeout.** Mark spending stress as stress-helper-owned while Monte Carlo and historical sequence remain later.
+109. **Sprint 131 — Detailed stress boundary map.** Record detailed-report ownership for Monte Carlo, progressive Monte Carlo, historical sequence, and full-spending-funded metrics.
+110. **Sprint 132 — Detailed stress probe and persistence guardrails.** Add runtime-only rows for probe coverage and saved-plan boundaries.
+111. **Sprint 133 — Detailed stress no-migration closeout.** Keep detailed stress execution in the detailed-report path.
+112. **Sprint 134 — Detailed stress adapter next step.** Mark adapter-contract design as the next safe migration slice.
+113. **Sprint 135 — Detailed stress boundary closeout.** Cover blocked and adapter-ready states without moving detailed stress execution.
 
 ## Medium-Term Roadmap
 
@@ -293,6 +298,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 128 — Preview spending stress compatibility.** Complete 2026-05-21. Kept preview bundle output stable while delegating spending stress work.
 - **Sprint 129 — Spending stress guardrail tests.** Complete 2026-05-21. Added working-copy, skip-logic, example, and saved-plan coverage.
 - **Sprint 130 — Spending stress ownership closeout.** Complete 2026-05-21. Marked spending stress as stress-helper-owned while richer stress migrations remain later.
+- **Sprint 131 — Detailed stress boundary map.** Complete 2026-05-21. Recorded detailed-report ownership for Monte Carlo and historical stress tools.
+- **Sprint 132 — Detailed stress probe and persistence guardrails.** Complete 2026-05-21. Added probe coverage and saved-plan boundary rows.
+- **Sprint 133 — Detailed stress no-migration closeout.** Complete 2026-05-21. Kept detailed stress execution in the detailed-report path.
+- **Sprint 134 — Detailed stress adapter next step.** Complete 2026-05-21. Marked adapter-contract design as the next safe migration slice.
+- **Sprint 135 — Detailed stress boundary closeout.** Complete 2026-05-21. Covered blocked and adapter-ready states without moving detailed stress execution.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

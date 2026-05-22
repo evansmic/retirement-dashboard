@@ -93,6 +93,47 @@ export type StressExtractionReadinessSummary = {
   disposition: 'stressExtractionReadinessOnly';
 };
 
+export type DetailedStressBoundaryStatus = 'readyForLaterExtraction' | 'holdInDetailedReport' | 'blocked';
+
+export type DetailedStressBoundaryRow = {
+  id:
+    | 'monteCarlo'
+    | 'progressiveMonteCarlo'
+    | 'historicalSequence'
+    | 'fullSpendingFunded'
+    | 'dashboardOwnership'
+    | 'probeCoverage'
+    | 'savedPlan';
+  label: string;
+  status: 'ready' | 'hold' | 'blocked';
+  detail: string;
+  disposition: 'detailedStressBoundaryEvidenceOnly';
+};
+
+export type DetailedStressBoundaryReview = {
+  status: DetailedStressBoundaryStatus;
+  headline: string;
+  detail: string;
+  rows: DetailedStressBoundaryRow[];
+  nextStep: string;
+  reviewNote: string;
+  disposition: 'detailedStressBoundaryReviewOnly';
+};
+
+export type DetailedStressMigrationCloseout = {
+  status: 'readyForThinAdapter' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'boundaryReview' | 'baselineStress' | 'spendingStress' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressMigrationCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -122,6 +163,69 @@ export const stressExtractionBoundary: StressExtractionBoundary = {
   changesSimulationMath: false,
   persistedOutput: 'none',
   disposition: 'stressExtractionBoundaryOnly'
+};
+
+export const detailedStressBoundaryReview: DetailedStressBoundaryReview = {
+  status: 'holdInDetailedReport',
+  headline: 'Detailed stress tools stay in the detailed report for now.',
+  detail:
+    'Monte Carlo, progressive Monte Carlo, and historical sequence replay are still owned by the detailed-report engine path. The React stress helper can review the boundary before any migration.',
+  rows: [
+    {
+      id: 'monteCarlo',
+      label: 'Monte Carlo',
+      status: 'hold',
+      detail: 'The synchronous Monte Carlo engine remains in the detailed-report path and is protected by existing probes.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'progressiveMonteCarlo',
+      label: 'Progressive Monte Carlo',
+      status: 'hold',
+      detail: 'The progressive path remains in the detailed-report path so async lifecycle behavior is not disturbed.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'historicalSequence',
+      label: 'Historical sequence replay',
+      status: 'hold',
+      detail: 'Historical sequence replay remains in the detailed-report path until a thin plan-and-runner adapter is designed.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'fullSpendingFunded',
+      label: 'Full-spending-funded metric',
+      status: 'ready',
+      detail: 'The detailed stress output already uses the consumer-safe full-spending-funded framing.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'dashboardOwnership',
+      label: 'Current ownership',
+      status: 'hold',
+      detail: 'Detailed stress execution is still owned by the extracted detailed-report engine source, not React.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'probeCoverage',
+      label: 'Probe coverage',
+      status: 'ready',
+      detail: 'Existing probes cover Monte Carlo, progressive lifecycle, historical sequence stress, and parity outputs.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: 'ready',
+      detail: 'Detailed stress output remains runtime/report evidence and is not written into editable plan files.',
+      disposition: 'detailedStressBoundaryEvidenceOnly'
+    }
+  ],
+  nextStep:
+    'Before moving detailed stress execution, add a thin adapter contract that accepts an explicit plan and config and returns the existing detailed stress shapes unchanged.',
+  reviewNote:
+    'Detailed stress boundary review only. It does not run Monte Carlo in React, migrate historical replay, change simulation math, or save stress output.',
+  disposition: 'detailedStressBoundaryReviewOnly'
 };
 
 function n(value: number | undefined): number {
@@ -621,13 +725,106 @@ export function selectStressExtractionReadinessSummary(
     headline: blocked
       ? 'Stress extraction needs cleanup.'
       : held
-        ? 'Baseline stress ownership is extracted; scenario stress can move later.'
+        ? 'Baseline and nearby spending stress ownership are extracted; richer stress tools can move later.'
         : 'Stress helper ownership is ready.',
     detail:
-      'This covers the review-facing baseline stress read only. It keeps richer stress tooling and spending reruns on their existing paths for now.',
+      'This covers the review-facing baseline stress read and nearby spending stress. It keeps richer stress tooling on the detailed-report path for now.',
     rows,
     reviewNote:
       'Stress extraction readiness only. It does not change simulation math, optimizer behavior, or saved plan files.',
     disposition: 'stressExtractionReadinessOnly'
+  };
+}
+
+export function selectDetailedStressBoundaryReview({
+  includeProbeCoverage = true,
+  savedPlanClean = true
+}: {
+  includeProbeCoverage?: boolean;
+  savedPlanClean?: boolean;
+} = {}): DetailedStressBoundaryReview {
+  const rows = detailedStressBoundaryReview.rows.map((row) => {
+    if (row.id === 'probeCoverage' && !includeProbeCoverage) {
+      return {
+        ...row,
+        status: 'blocked' as const,
+        detail: 'Probe coverage must be present before detailed stress execution moves.'
+      };
+    }
+    if (row.id === 'savedPlan' && !savedPlanClean) {
+      return {
+        ...row,
+        status: 'blocked' as const,
+        detail: 'Detailed stress output must stay out of editable plan files before migration.'
+      };
+    }
+    return row;
+  });
+  const blocked = rows.some((row) => row.status === 'blocked');
+
+  return {
+    ...detailedStressBoundaryReview,
+    status: blocked ? 'blocked' : 'holdInDetailedReport',
+    headline: blocked
+      ? 'Detailed stress migration is blocked.'
+      : detailedStressBoundaryReview.headline,
+    detail: blocked
+      ? 'Probe coverage and saved-plan boundaries must be clean before detailed stress tools move.'
+      : detailedStressBoundaryReview.detail,
+    rows
+  };
+}
+
+export function selectDetailedStressMigrationCloseout({
+  boundaryReview,
+  stressReadiness
+}: {
+  boundaryReview: DetailedStressBoundaryReview;
+  stressReadiness: StressExtractionReadinessSummary;
+}): DetailedStressMigrationCloseout {
+  const blocked = boundaryReview.status === 'blocked' || stressReadiness.status === 'blocked';
+  const readyForThinAdapter = !blocked && boundaryReview.rows.find((row) => row.id === 'probeCoverage')?.status === 'ready';
+
+  return {
+    status: blocked ? 'blocked' : readyForThinAdapter ? 'readyForThinAdapter' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Hold before detailed stress migration.'
+      : 'Ready to design a thin detailed-stress adapter.',
+    detail: blocked
+      ? 'A boundary or probe check needs cleanup before the richer stress tools move.'
+      : 'The next safe step is an adapter contract, not moving Monte Carlo or historical replay into React yet.',
+    rows: [
+      {
+        id: 'boundaryReview',
+        label: 'Detailed stress boundary',
+        status: boundaryReview.status === 'blocked' ? 'blocked' : 'hold',
+        detail: boundaryReview.headline
+      },
+      {
+        id: 'baselineStress',
+        label: 'Baseline stress helper',
+        status: stressReadiness.rows.find((row) => row.id === 'baselineRows')?.status ?? 'blocked',
+        detail: 'Baseline stress read stays owned by the stress helper.'
+      },
+      {
+        id: 'spendingStress',
+        label: 'Spending stress helper',
+        status: stressReadiness.rows.find((row) => row.id === 'spendingStress')?.status ?? 'blocked',
+        detail: 'Nearby spending stress stays owned by the stress helper.'
+      },
+      {
+        id: 'savedPlan',
+        label: 'Saved-plan boundary',
+        status:
+          boundaryReview.rows.find((row) => row.id === 'savedPlan')?.status === 'ready' &&
+          stressReadiness.rows.find((row) => row.id === 'savedPlan')?.status === 'ready'
+            ? 'ready'
+            : 'blocked',
+        detail: 'Stress migration evidence remains runtime-only.'
+      }
+    ],
+    reviewNote:
+      'Detailed stress migration closeout only. It does not move Monte Carlo, run historical replay in React, change optimizer behavior, or save stress output.',
+    disposition: 'detailedStressMigrationCloseoutOnly'
   };
 }

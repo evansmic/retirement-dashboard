@@ -4,40 +4,69 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 130: Spending Stress Ownership Closeout
+## Latest Sprint — Sprint 135: Detailed Stress Boundary Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: move nearby spending-stress rerun orchestration and summary interpretation into the stress helper boundary while preserving existing preview bundle shape, UI selectors, simulation math, saved plan files, and optimizer behavior.
+Goal: review the Monte Carlo and historical sequence stress boundary before any migration, keeping detailed stress execution in the detailed-report path while preparing a future thin adapter contract.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, stress-model redesign, optimizer expansion, account-by-account instructions, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 130 checkpoint doc: [`docs/sprint_130_spending_stress_ownership_closeout.md`](docs/sprint_130_spending_stress_ownership_closeout.md).
+Sprint 135 checkpoint doc: [`docs/sprint_135_detailed_stress_boundary_closeout.md`](docs/sprint_135_detailed_stress_boundary_closeout.md).
 
-### Sprint 126-130 Candidate Implementation Tickets
+### Sprint 131-135 Candidate Implementation Tickets
 
-- [x] **S126-01 — Spending-stress rerun helper.** Move nearby spending stress working-copy reruns into the stress helper module.
-- [x] **S127-01 — Spending-stress summary helper.** Move fragile, balanced, and room-to-review interpretation into the stress helper module.
-- [x] **S128-01 — Preview compatibility.** Keep `runResultsPreviewBundle` and preview exports stable while delegating spending stress work.
-- [x] **S129-01 — Spending-stress guardrail tests.** Cover working-copy behavior, higher-spending skip logic, examples, and persistence.
-- [x] **S130-01 — Ownership closeout.** Mark spending stress as owned by the stress helper boundary while Monte Carlo and historical sequence remain later.
+- [x] **S131-01 — Detailed stress boundary map.** Record Monte Carlo, progressive Monte Carlo, historical sequence, and full-spending-funded ownership.
+- [x] **S132-01 — Probe and saved-plan guardrails.** Add runtime-only rows for probe coverage and saved-plan boundaries.
+- [x] **S133-01 — No-migration closeout.** Keep detailed stress execution in the detailed-report path for now.
+- [x] **S134-01 — Thin adapter next step.** Mark the next safe slice as adapter-contract design, not execution migration.
+- [x] **S135-01 — Boundary closeout tests/docs.** Cover blocked and adapter-ready states and update sprint docs.
 
-### Sprint 130 Definition Of Done
+### Sprint 135 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
-- Existing React imports through `resultSelectors` continue to work.
-- Existing preview bundle shape continues to expose `spendingStress`.
-- Stress extraction readiness identifies Monte Carlo and historical sequence stress as held/later.
-- Built-in examples produce finite extracted baseline stress summaries.
-- No stress extraction readiness, boundary, row, summary, or spending-stress output is persisted.
+- Monte Carlo, progressive Monte Carlo, and historical sequence stress remain in the detailed-report path.
+- Boundary review identifies probe coverage and saved-plan guardrails before any later migration.
+- Closeout marks a future thin adapter contract as the next safe step.
+- No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 135: Detailed Stress Boundary Closeout
+
+**Complete 2026-05-21.** Marked a future thin detailed-stress adapter as the next safe step while leaving Monte Carlo and historical sequence execution in the detailed-report path.
+
+Sprint 135 checkpoint doc: [`docs/sprint_135_detailed_stress_boundary_closeout.md`](docs/sprint_135_detailed_stress_boundary_closeout.md).
+
+### Sprint 134: Detailed Stress Adapter Next Step
+
+**Complete 2026-05-21.** Recorded the next safe migration slice as adapter-contract design, not execution migration.
+
+Sprint 134 checkpoint doc: [`docs/sprint_134_detailed_stress_adapter_next_step.md`](docs/sprint_134_detailed_stress_adapter_next_step.md).
+
+### Sprint 133: Detailed Stress No-Migration Closeout
+
+**Complete 2026-05-21.** Kept Monte Carlo, progressive Monte Carlo, and historical sequence execution in the detailed-report path.
+
+Sprint 133 checkpoint doc: [`docs/sprint_133_detailed_stress_no_migration.md`](docs/sprint_133_detailed_stress_no_migration.md).
+
+### Sprint 132: Detailed Stress Probe And Persistence Guardrails
+
+**Complete 2026-05-21.** Added runtime-only rows for detailed stress probe coverage and saved-plan boundaries.
+
+Sprint 132 checkpoint doc: [`docs/sprint_132_detailed_stress_probe_persistence.md`](docs/sprint_132_detailed_stress_probe_persistence.md).
+
+### Sprint 131: Detailed Stress Boundary Map
+
+**Complete 2026-05-21.** Recorded detailed-report ownership for Monte Carlo, progressive Monte Carlo, historical sequence replay, and full-spending-funded metrics.
+
+Sprint 131 checkpoint doc: [`docs/sprint_131_detailed_stress_boundary_map.md`](docs/sprint_131_detailed_stress_boundary_map.md).
 
 ### Sprint 130: Spending Stress Ownership Closeout
 
