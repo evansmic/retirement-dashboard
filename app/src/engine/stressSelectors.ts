@@ -345,6 +345,36 @@ export type DetailedStressManualComparisonCloseout = {
   disposition: 'detailedStressManualComparisonCloseoutOnly';
 };
 
+export type DetailedStressV1MigrationDecision = {
+  status: 'deferMigrationForV1' | 'needsReview' | 'blocked';
+  headline: string;
+  detail: string;
+  decision: 'keepDetailedReportForV1' | 'reviewBeforeDecision' | 'blocked';
+  rows: Array<{
+    id: 'comparison' | 'consumerValue' | 'migrationRisk' | 'v1Scope' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  nextStep: string;
+  reviewNote: string;
+  disposition: 'detailedStressV1MigrationDecisionOnly';
+};
+
+export type DetailedStressV1DecisionCloseout = {
+  status: 'readyToReturnToV1Drawdown' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'decision' | 'detailedReportHandoff' | 'reactScope' | 'nextWork';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressV1DecisionCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -1948,5 +1978,141 @@ export function selectDetailedStressManualComparisonCloseout({
     reviewNote:
       'Manual comparison closeout only. It does not alter stress calculations, move detailed stress execution, change optimizer behavior, or persist output.',
     disposition: 'detailedStressManualComparisonCloseoutOnly'
+  };
+}
+
+export function selectDetailedStressV1MigrationDecision({
+  comparisonCloseout,
+  consumerValue = 'low',
+  migrationRisk = 'medium',
+  savedPlanClean = true
+}: {
+  comparisonCloseout: DetailedStressManualComparisonCloseout;
+  consumerValue?: 'low' | 'medium' | 'high';
+  migrationRisk?: 'low' | 'medium' | 'high';
+  savedPlanClean?: boolean;
+}): DetailedStressV1MigrationDecision {
+  const comparisonReady = comparisonCloseout.status === 'readyForStressMigrationDecision';
+  const consumerValueReady = consumerValue !== 'high';
+  const migrationRiskSupportsDeferral = migrationRisk !== 'low';
+  const rows: DetailedStressV1MigrationDecision['rows'] = [
+    {
+      id: 'comparison',
+      label: 'Manual comparison',
+      status: comparisonCloseout.status === 'blocked' ? 'blocked' : comparisonReady ? 'ready' : 'review',
+      detail: comparisonCloseout.headline
+    },
+    {
+      id: 'consumerValue',
+      label: 'Consumer value',
+      status: consumerValueReady ? 'ready' : 'review',
+      detail:
+        consumerValue === 'high'
+          ? 'Detailed stress migration may materially improve the v1 user experience and should be reviewed.'
+          : 'Detailed stress already has a clear detailed-report handoff for v1.'
+    },
+    {
+      id: 'migrationRisk',
+      label: 'Migration risk',
+      status: migrationRiskSupportsDeferral ? 'ready' : 'review',
+      detail:
+        migrationRisk === 'low'
+          ? 'Migration risk appears low, so deferral should be a conscious product choice.'
+          : 'Migration would add risk and testing cost without changing the v1 retirement answer.'
+    },
+    {
+      id: 'v1Scope',
+      label: 'V1 scope',
+      status: 'ready',
+      detail: 'V1 priority remains recommended-plan and bounded drawdown execution, with detailed stress available in the report path.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean
+        ? 'Decision output remains runtime-only.'
+        : 'Decision output must not enter editable plan files.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const needsReview = rows.some((row) => row.status === 'review');
+
+  return {
+    status: blocked ? 'blocked' : needsReview ? 'needsReview' : 'deferMigrationForV1',
+    headline: blocked
+      ? 'Detailed stress v1 decision is blocked.'
+      : needsReview
+        ? 'Detailed stress v1 decision needs review.'
+        : 'Defer detailed stress migration for v1.',
+    detail: blocked
+      ? 'Comparison and saved-plan boundaries must be clean before a v1 decision.'
+      : needsReview
+        ? 'Review product value and migration risk before deciding whether to move detailed stress.'
+        : 'Keep detailed stress in the detailed report for v1 and return focus to recommended-plan and drawdown execution work.',
+    decision: blocked ? 'blocked' : needsReview ? 'reviewBeforeDecision' : 'keepDetailedReportForV1',
+    rows,
+    nextStep: blocked
+      ? 'Clean up blocked detailed-stress decision rows.'
+      : needsReview
+        ? 'Review whether detailed stress migration is important enough for v1.'
+        : 'Return to v1 recommended-plan and bounded drawdown execution work.',
+    reviewNote:
+      'Detailed stress v1 decision only. It does not move Monte Carlo, run historical replay in React, change stress math, or persist decision output.',
+    disposition: 'detailedStressV1MigrationDecisionOnly'
+  };
+}
+
+export function selectDetailedStressV1DecisionCloseout({
+  decision
+}: {
+  decision: DetailedStressV1MigrationDecision;
+}): DetailedStressV1DecisionCloseout {
+  const blocked = decision.status === 'blocked';
+  const deferred = decision.status === 'deferMigrationForV1';
+
+  return {
+    status: blocked ? 'blocked' : deferred ? 'readyToReturnToV1Drawdown' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress decision closeout is blocked.'
+      : deferred
+        ? 'Detailed stress can stay in the detailed report for v1.'
+        : 'Hold before returning to v1 drawdown work.',
+    detail: blocked
+      ? 'Clean up blocked decision rows before moving on.'
+      : deferred
+        ? 'The v1 path can focus again on recommended-plan and bounded drawdown execution while preserving the detailed report handoff.'
+        : 'Resolve detailed stress decision review items before returning to drawdown execution.',
+    rows: [
+      {
+        id: 'decision',
+        label: 'Decision',
+        status: decision.status === 'blocked' ? 'blocked' : deferred ? 'ready' : 'hold',
+        detail: decision.headline
+      },
+      {
+        id: 'detailedReportHandoff',
+        label: 'Detailed report handoff',
+        status: deferred ? 'ready' : 'hold',
+        detail: 'Monte Carlo and historical sequence stress remain available through the detailed report path.'
+      },
+      {
+        id: 'reactScope',
+        label: 'React scope',
+        status: 'ready',
+        detail: 'React keeps baseline stress, nearby spending stress, and bridge evidence without owning detailed stress execution.'
+      },
+      {
+        id: 'nextWork',
+        label: 'Next work',
+        status: deferred ? 'ready' : 'hold',
+        detail: deferred
+          ? 'Resume v1 recommended-plan and bounded drawdown execution work.'
+          : 'Resolve detailed stress decision review items first.'
+      }
+    ],
+    reviewNote:
+      'Detailed stress decision closeout only. It does not change optimizer behavior, migrate detailed stress execution, alter stress math, or save decision output.',
+    disposition: 'detailedStressV1DecisionCloseoutOnly'
   };
 }

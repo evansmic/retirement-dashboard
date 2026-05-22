@@ -21,6 +21,8 @@ import {
   selectDetailedStressProbeBackedRunnerBridge,
   selectDetailedStressProbeCoverage,
   selectDetailedStressPrototypeBatchCloseout,
+  selectDetailedStressV1DecisionCloseout,
+  selectDetailedStressV1MigrationDecision,
   selectStressExtractionReadinessSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -180,6 +182,8 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('detailedStressManualReportReference');
       expect(saved.plan).not.toHaveProperty('detailedStressManualReportComparison');
       expect(saved.plan).not.toHaveProperty('detailedStressManualComparisonCloseout');
+      expect(saved.plan).not.toHaveProperty('detailedStressV1MigrationDecision');
+      expect(saved.plan).not.toHaveProperty('detailedStressV1DecisionCloseout');
     }
   });
 
@@ -837,5 +841,100 @@ describe('stress selectors extraction', () => {
     expect(closeout.status).toBe('holdDetailedStress');
     expect(closeout.rows.find((row) => row.id === 'comparison')).toMatchObject({ status: 'hold' });
     expect(closeout.rows.find((row) => row.id === 'nextDecision')).toMatchObject({ status: 'hold' });
+  });
+
+  function readyManualComparisonCloseout() {
+    const { bridgeRun } = readyBridgeRun();
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference });
+    return selectDetailedStressManualComparisonCloseout({ comparison });
+  }
+
+  it('decides to defer detailed stress migration for v1 when comparison is clean and product value is low', () => {
+    const decision = selectDetailedStressV1MigrationDecision({
+      comparisonCloseout: readyManualComparisonCloseout()
+    });
+
+    expect(decision).toMatchObject({
+      status: 'deferMigrationForV1',
+      decision: 'keepDetailedReportForV1',
+      disposition: 'detailedStressV1MigrationDecisionOnly'
+    });
+    expect(decision.rows.map((row) => row.id)).toEqual([
+      'comparison',
+      'consumerValue',
+      'migrationRisk',
+      'v1Scope',
+      'savedPlan'
+    ]);
+    expect(decision.rows.every((row) => row.status === 'ready')).toBe(true);
+    expect(decision.nextStep).toContain('Return to v1 recommended-plan');
+    expect(decision.reviewNote).toContain('does not move Monte Carlo');
+  });
+
+  it('marks the v1 detailed stress decision for review when consumer value is high or migration risk is low', () => {
+    const decision = selectDetailedStressV1MigrationDecision({
+      comparisonCloseout: readyManualComparisonCloseout(),
+      consumerValue: 'high',
+      migrationRisk: 'low'
+    });
+
+    expect(decision.status).toBe('needsReview');
+    expect(decision.decision).toBe('reviewBeforeDecision');
+    expect(decision.rows.find((row) => row.id === 'consumerValue')).toMatchObject({ status: 'review' });
+    expect(decision.rows.find((row) => row.id === 'migrationRisk')).toMatchObject({ status: 'review' });
+  });
+
+  it('blocks the v1 detailed stress decision when comparison or saved-plan boundaries fail', () => {
+    const { bridgeRun } = readyBridgeRun();
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference, savedPlanClean: false });
+    const comparisonCloseout = selectDetailedStressManualComparisonCloseout({ comparison });
+    const decision = selectDetailedStressV1MigrationDecision({ comparisonCloseout, savedPlanClean: false });
+
+    expect(decision.status).toBe('blocked');
+    expect(decision.decision).toBe('blocked');
+    expect(decision.rows.find((row) => row.id === 'comparison')).toMatchObject({ status: 'blocked' });
+    expect(decision.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('closes deferred detailed stress decision as ready to return to v1 drawdown work', () => {
+    const decision = selectDetailedStressV1MigrationDecision({
+      comparisonCloseout: readyManualComparisonCloseout()
+    });
+    const closeout = selectDetailedStressV1DecisionCloseout({ decision });
+
+    expect(closeout).toMatchObject({
+      status: 'readyToReturnToV1Drawdown',
+      disposition: 'detailedStressV1DecisionCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual([
+      'decision',
+      'detailedReportHandoff',
+      'reactScope',
+      'nextWork'
+    ]);
+    expect(closeout.rows.find((row) => row.id === 'detailedReportHandoff')).toMatchObject({ status: 'ready' });
+    expect(closeout.reviewNote).toContain('does not change optimizer behavior');
+  });
+
+  it('holds closeout when detailed stress decision still needs review', () => {
+    const decision = selectDetailedStressV1MigrationDecision({
+      comparisonCloseout: readyManualComparisonCloseout(),
+      consumerValue: 'high'
+    });
+    const closeout = selectDetailedStressV1DecisionCloseout({ decision });
+
+    expect(closeout.status).toBe('holdDetailedStress');
+    expect(closeout.rows.find((row) => row.id === 'decision')).toMatchObject({ status: 'hold' });
+    expect(closeout.rows.find((row) => row.id === 'nextWork')).toMatchObject({ status: 'hold' });
   });
 });

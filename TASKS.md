@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 155: Detailed Stress Manual Comparison Closeout
+## Latest Sprint — Sprint 160: Detailed Stress V1 Decision Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: compare probe-backed bridge output against detailed-report reference metadata before any migration decision, keeping detailed stress execution in the detailed-report path.
+Goal: make the detailed-stress v1 migrate-or-defer decision explicit and return focus to recommended-plan and bounded drawdown execution work.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted comparison output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted decision output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 155 checkpoint doc: [`docs/sprint_155_detailed_stress_manual_comparison_closeout.md`](docs/sprint_155_detailed_stress_manual_comparison_closeout.md).
+Sprint 160 checkpoint doc: [`docs/sprint_160_detailed_stress_v1_decision_closeout.md`](docs/sprint_160_detailed_stress_v1_decision_closeout.md).
 
-### Sprint 151-155 Candidate Implementation Tickets
+### Sprint 156-160 Candidate Implementation Tickets
 
-- [x] **S151-01 — Detailed-report reference metadata.** Add runtime-only reference shape for manual comparison.
-- [x] **S152-01 — Manual comparison rows.** Compare bridge output to reference shape, funded rate, Monte Carlo run count, and historical sequence count.
-- [x] **S153-01 — Review/block thresholds.** Mark metric mismatches for review and blocked bridge/persistence paths as blocked.
-- [x] **S154-01 — Comparison persistence guardrails.** Keep reference, comparison, and closeout output runtime-only.
-- [x] **S155-01 — Manual comparison closeout tests/docs.** Mark the next checkpoint as migrate-or-defer decision.
+- [x] **S156-01 — V1 decision selector.** Add runtime-only decision rows for comparison, consumer value, migration risk, v1 scope, and saved-plan boundary.
+- [x] **S157-01 — Default v1 deferral decision.** Defer detailed stress migration for v1 when comparison is clean and consumer value is low.
+- [x] **S158-01 — Review/block paths.** Mark high consumer value, low migration risk, blocked comparison, and dirty saved-plan boundary appropriately.
+- [x] **S159-01 — Decision persistence guardrails.** Keep decision and closeout output runtime-only.
+- [x] **S160-01 — Decision closeout tests/docs.** Return next work to recommended-plan and bounded drawdown execution.
 
-### Sprint 155 Definition Of Done
+### Sprint 160 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -40,15 +40,47 @@ Sprint 155 checkpoint doc: [`docs/sprint_155_detailed_stress_manual_comparison_c
 - Manual comparison uses runtime-only detailed-report reference metadata.
 - Manual comparison checks bridge completion, output shape, full-spending-funded rate, Monte Carlo run count, historical sequence count, and saved-plan boundary.
 - Manual comparison marks metric drift for review and blocked bridge/persistence paths as blocked.
-- Closeout marks the next checkpoint as a migrate-or-defer decision for detailed stress in v1.
+- V1 decision defaults to keeping detailed stress in the detailed report when comparison is clean and v1 consumer value is low.
+- V1 decision marks review paths when product value or migration risk argues against default deferral.
+- Decision closeout returns next work to recommended-plan and bounded drawdown execution.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 160: Detailed Stress V1 Decision Closeout
+
+**Complete 2026-05-22.** Closed the detailed-stress decision batch by deferring migration for v1 and returning focus to recommended-plan and bounded drawdown execution.
+
+Sprint 160 checkpoint doc: [`docs/sprint_160_detailed_stress_v1_decision_closeout.md`](docs/sprint_160_detailed_stress_v1_decision_closeout.md).
+
+### Sprint 159: Detailed Stress Decision Persistence Guardrails
+
+**Complete 2026-05-22.** Kept detailed-stress v1 decision and closeout output runtime-only.
+
+Sprint 159 checkpoint doc: [`docs/sprint_159_detailed_stress_decision_persistence.md`](docs/sprint_159_detailed_stress_decision_persistence.md).
+
+### Sprint 158: Detailed Stress Decision Review Paths
+
+**Complete 2026-05-22.** Added review and blocked paths for product value, migration risk, comparison, and saved-plan boundaries.
+
+Sprint 158 checkpoint doc: [`docs/sprint_158_detailed_stress_decision_review_paths.md`](docs/sprint_158_detailed_stress_decision_review_paths.md).
+
+### Sprint 157: Detailed Stress V1 Deferral Decision
+
+**Complete 2026-05-22.** Defaulted clean detailed-stress comparison to keeping detailed stress in the detailed report for v1.
+
+Sprint 157 checkpoint doc: [`docs/sprint_157_detailed_stress_v1_deferral.md`](docs/sprint_157_detailed_stress_v1_deferral.md).
+
+### Sprint 156: Detailed Stress V1 Decision Selector
+
+**Complete 2026-05-22.** Added runtime-only decision rows for the detailed-stress v1 migrate-or-defer checkpoint.
+
+Sprint 156 checkpoint doc: [`docs/sprint_156_detailed_stress_v1_decision_selector.md`](docs/sprint_156_detailed_stress_v1_decision_selector.md).
 
 ### Sprint 155: Detailed Stress Manual Comparison Closeout
 
