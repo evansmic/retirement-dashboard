@@ -11,6 +11,7 @@ import {
   selectCashFlowReconciliation,
   selectCashFlowReconciliationRows,
   selectChartReadyData,
+  selectCheckpointReviewBoard,
   selectDecisionDetailRows,
   selectDecisionChecklist,
   selectDrawdownReadinessSummary,
@@ -1400,5 +1401,90 @@ describe('result selectors', () => {
     expect(feedbackPackage.rows.find((row) => row.id === 'firstScreen')).toMatchObject({ status: 'blocked' });
     expect(feedbackPackage.rows.find((row) => row.id === 'drawdownDetails')).toMatchObject({ status: 'blocked' });
     expect(feedbackPackage.rows.find((row) => row.id === 'exampleRun')).toMatchObject({ status: 'review' });
+  });
+
+  it('builds a checkpoint review board without persisting output', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const resultsReadiness = selectResultsReadinessSummary(recommended);
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const releaseReadiness = selectReleaseReadinessCheckpoint({
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'ready',
+      drawdownCopyStatus: 'ready'
+    });
+    const feedbackPackage = selectFeedbackReviewPackage({
+      releaseReadiness,
+      recommendedLabel: recommended.recommendedLabel
+    });
+    const board = selectCheckpointReviewBoard({
+      releaseReadiness,
+      feedbackPackage,
+      broadUxReviewDeferred: true
+    });
+
+    expect(['ready', 'review', 'blocked']).toContain(board.status);
+    expect(board.rows.map((row) => row.id)).toEqual([
+      'examples',
+      'firstAnswer',
+      'spending',
+      'drawdown',
+      'saveReport',
+      'verification',
+      'visualUx'
+    ]);
+    expect(board.rows.find((row) => row.id === 'visualUx')).toMatchObject({
+      bucket: 'deferToUxPass',
+      detailArea: 'details'
+    });
+    expect(board.fixBeforeFeedbackCount + board.reviewDuringCheckpointCount + board.deferToUxPassCount).toBe(
+      board.rows.length
+    );
+    expect(board.reviewNote).toContain('does not change calculations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('checkpointReviewBoard');
+  });
+
+  it('groups blocked checkpoint items as fixes before feedback', () => {
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const resultsReadiness = selectResultsReadinessSummary(recommended);
+    const retirementAnswer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spendingCapacity = selectSpendingCapacitySummary(fixture, {}, planFixture, retirementAnswer);
+    const releaseReadiness = selectReleaseReadinessCheckpoint({
+      resultsReadiness,
+      retirementAnswer,
+      spendingCapacity,
+      drawdownReviewStatus: 'blocked',
+      drawdownCopyStatus: 'ready',
+      savedPlanClean: false,
+      verificationReady: false
+    });
+    const feedbackPackage = selectFeedbackReviewPackage({
+      releaseReadiness,
+      recommendedLabel: recommended.recommendedLabel,
+      examplesReady: false,
+      verificationReady: false,
+      broadUxReviewDeferred: false
+    });
+    const board = selectCheckpointReviewBoard({
+      releaseReadiness,
+      feedbackPackage,
+      broadUxReviewDeferred: false
+    });
+
+    expect(board.status).toBe('blocked');
+    expect(board.rows.find((row) => row.id === 'drawdown')).toMatchObject({
+      status: 'blocked',
+      bucket: 'fixBeforeFeedback'
+    });
+    expect(board.rows.find((row) => row.id === 'saveReport')).toMatchObject({
+      status: 'blocked',
+      bucket: 'fixBeforeFeedback'
+    });
+    expect(board.rows.find((row) => row.id === 'visualUx')).toMatchObject({
+      status: 'review',
+      bucket: 'deferToUxPass'
+    });
   });
 });

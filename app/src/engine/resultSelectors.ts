@@ -622,6 +622,27 @@ export type FeedbackReviewPackage = {
   reviewNote: string;
 };
 
+export type CheckpointReviewBoardStatus = 'ready' | 'review' | 'blocked';
+
+export type CheckpointReviewBoard = {
+  status: CheckpointReviewBoardStatus;
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'examples' | 'firstAnswer' | 'spending' | 'drawdown' | 'saveReport' | 'verification' | 'visualUx';
+    label: string;
+    status: CheckpointReviewBoardStatus;
+    bucket: 'fixBeforeFeedback' | 'reviewDuringCheckpoint' | 'deferToUxPass';
+    detail: string;
+    checkpointQuestion: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+  fixBeforeFeedbackCount: number;
+  reviewDuringCheckpointCount: number;
+  deferToUxPassCount: number;
+  reviewNote: string;
+};
+
 export type ReleaseReadinessCheckpointInput = {
   validation?: RecommendationValidation;
   resultsReadiness: ResultsReadinessSummary;
@@ -639,6 +660,12 @@ export type FeedbackReviewPackageInput = {
   recommendedLabel: string;
   examplesReady?: boolean;
   verificationReady?: boolean;
+  broadUxReviewDeferred?: boolean;
+};
+
+export type CheckpointReviewBoardInput = {
+  releaseReadiness: ReleaseReadinessCheckpoint;
+  feedbackPackage: FeedbackReviewPackage;
   broadUxReviewDeferred?: boolean;
 };
 
@@ -4205,6 +4232,108 @@ export function selectFeedbackReviewPackage({
     ],
     reviewNote:
       'Feedback review package only. It does not change calculations, save review output, start visual redesign, or apply plan changes.'
+  };
+}
+
+export function selectCheckpointReviewBoard({
+  releaseReadiness,
+  feedbackPackage,
+  broadUxReviewDeferred = true
+}: CheckpointReviewBoardInput): CheckpointReviewBoard {
+  const releaseRow = (id: ReleaseReadinessCheckpoint['rows'][number]['id']) =>
+    releaseReadiness.rows.find((row) => row.id === id);
+  const feedbackRow = (id: FeedbackReviewPackage['rows'][number]['id']) =>
+    feedbackPackage.rows.find((row) => row.id === id);
+  const bucketFor = (
+    status: CheckpointReviewBoardStatus,
+    fallback: CheckpointReviewBoard['rows'][number]['bucket'] = 'reviewDuringCheckpoint'
+  ): CheckpointReviewBoard['rows'][number]['bucket'] => (status === 'blocked' ? 'fixBeforeFeedback' : fallback);
+  const visualStatus: CheckpointReviewBoardStatus = broadUxReviewDeferred ? 'ready' : 'review';
+  const rows: CheckpointReviewBoard['rows'] = [
+    {
+      id: 'examples',
+      label: 'Built-in example run',
+      status: feedbackRow('exampleRun')?.status ?? releaseRow('examples')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('exampleRun')?.status ?? releaseRow('examples')?.status ?? 'review'),
+      detail: 'Use diverse built-in examples as the first checkpoint pass before adding more features.',
+      checkpointQuestion: 'Do the example plans still produce understandable, finite Results without saved review output?',
+      detailArea: 'details'
+    },
+    {
+      id: 'firstAnswer',
+      label: 'First answer clarity',
+      status: feedbackRow('firstScreen')?.status ?? releaseRow('firstAnswer')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('firstScreen')?.status ?? releaseRow('firstAnswer')?.status ?? 'review'),
+      detail: 'Check whether the first Results screen answers the household question calmly and quickly.',
+      checkpointQuestion: 'Can a reviewer understand the retirement answer and top review actions in 60 to 90 seconds?',
+      detailArea: 'overview'
+    },
+    {
+      id: 'spending',
+      label: 'Spending estimate language',
+      status: feedbackRow('spendingLanguage')?.status ?? releaseRow('spending')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('spendingLanguage')?.status ?? releaseRow('spending')?.status ?? 'review'),
+      detail: 'Keep spending framed as a planning estimate in today’s dollars.',
+      checkpointQuestion: 'Does any spending language sound guaranteed, overly precise, or advice-like?',
+      detailArea: 'overview'
+    },
+    {
+      id: 'drawdown',
+      label: 'Drawdown review boundaries',
+      status: feedbackRow('drawdownDetails')?.status ?? releaseRow('drawdownReview')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('drawdownDetails')?.status ?? releaseRow('drawdownReview')?.status ?? 'review'),
+      detail: 'Drawdown review should remain evidence in Details, not account instructions.',
+      checkpointQuestion: 'Does the drawdown section explain what changed without telling the household what to withdraw?',
+      detailArea: 'details'
+    },
+    {
+      id: 'saveReport',
+      label: 'Save and report trust',
+      status: feedbackRow('localTrust')?.status ?? releaseRow('localSave')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('localTrust')?.status ?? releaseRow('localSave')?.status ?? 'review'),
+      detail: 'Confirm editable save and printable report feel distinct and local-first.',
+      checkpointQuestion: 'Does the user understand what is saved locally and what opens as a report?',
+      detailArea: 'exportSave'
+    },
+    {
+      id: 'verification',
+      label: 'Verification evidence',
+      status: feedbackRow('verification')?.status ?? releaseRow('verification')?.status ?? 'review',
+      bucket: bucketFor(feedbackRow('verification')?.status ?? releaseRow('verification')?.status ?? 'review'),
+      detail: 'Use tests, build, probes, and the no-plan-file check as the checkpoint baseline.',
+      checkpointQuestion: 'Are verification results current enough to support model and user review?',
+      detailArea: 'details'
+    },
+    {
+      id: 'visualUx',
+      label: 'Visual and layout review',
+      status: visualStatus,
+      bucket: 'deferToUxPass',
+      detail: broadUxReviewDeferred
+        ? 'Collect visual, chart, color, icon, spacing, and layout feedback for the checkpoint without redesigning now.'
+        : 'Clarify whether broad visual polish is starting now or still held for the checkpoint pass.',
+      checkpointQuestion: 'Which UI/UX issues affect trust before release, and which belong in the later polish pass?',
+      detailArea: 'details'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const review = rows.some((row) => row.status === 'review');
+
+  return {
+    status: blocked ? 'blocked' : review ? 'review' : 'ready',
+    headline: blocked
+      ? 'Checkpoint review has items to fix first.'
+      : review
+        ? 'Checkpoint review is ready, with a few items to inspect.'
+        : 'Checkpoint review is ready to run.',
+    detail:
+      'Use this board to separate must-fix items, checkpoint review questions, and later visual polish.',
+    rows,
+    fixBeforeFeedbackCount: rows.filter((row) => row.bucket === 'fixBeforeFeedback').length,
+    reviewDuringCheckpointCount: rows.filter((row) => row.bucket === 'reviewDuringCheckpoint').length,
+    deferToUxPassCount: rows.filter((row) => row.bucket === 'deferToUxPass').length,
+    reviewNote:
+      'Checkpoint review board only. It does not change calculations, save review output, start visual redesign, or apply plan changes.'
   };
 }
 

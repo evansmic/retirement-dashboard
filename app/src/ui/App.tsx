@@ -29,6 +29,7 @@ import {
   selectAnnualDetailSummary,
   selectCashFlowReconciliation,
   selectCashFlowReconciliationRows,
+  selectCheckpointReviewBoard,
   selectDecisionDetailRows,
   selectDecisionChecklist,
   selectDrawdownReadinessSummary,
@@ -2990,6 +2991,11 @@ function ResultsHandoffPanel({
     verificationReady: true,
     broadUxReviewDeferred: true
   });
+  const checkpointReviewBoard = selectCheckpointReviewBoard({
+    releaseReadiness: releaseReadinessCheckpoint,
+    feedbackPackage: feedbackReviewPackage,
+    broadUxReviewDeferred: true
+  });
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -3103,6 +3109,7 @@ function ResultsHandoffPanel({
             projectionMilestones={projectionMilestones}
             reconciliation={reconciliation}
             reconciliationDiagnostics={reconciliationDiagnostics}
+            checkpointReviewBoard={checkpointReviewBoard}
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             readinessSummary={readinessSummary}
@@ -3639,6 +3646,7 @@ function DetailsResultsPanel({
   projectionMilestones,
   reconciliation,
   reconciliationDiagnostics,
+  checkpointReviewBoard,
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
   readinessSummary,
@@ -3714,6 +3722,7 @@ function DetailsResultsPanel({
   projectionMilestones: ReturnType<typeof selectProjectionMilestones>;
   reconciliation: ReturnType<typeof selectCashFlowReconciliation>;
   reconciliationDiagnostics: ReturnType<typeof selectReconciliationDiagnostics>;
+  checkpointReviewBoard: ReturnType<typeof selectCheckpointReviewBoard>;
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
@@ -3814,6 +3823,7 @@ function DetailsResultsPanel({
       <div className="result-section-label">Decision Checks</div>
       <ReleaseReadinessCheckpointPanel checkpoint={releaseReadinessCheckpoint} />
       <FeedbackReviewPackagePanel feedbackPackage={feedbackReviewPackage} />
+      <CheckpointReviewBoardPanel board={checkpointReviewBoard} />
       <DecisionChecklistPanel items={decisionChecklist} />
       <DecisionDetailPanel rows={decisionDetailRows} />
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
@@ -5801,6 +5811,44 @@ function FeedbackReviewPackagePanel({
         ))}
       </ol>
       <p className="table-note">{feedbackPackage.reviewNote}</p>
+    </section>
+  );
+}
+
+function CheckpointReviewBoardPanel({
+  board
+}: {
+  board: ReturnType<typeof selectCheckpointReviewBoard>;
+}) {
+  const bucketLabel = (bucket: (typeof board.rows)[number]['bucket']) => {
+    if (bucket === 'fixBeforeFeedback') return 'Fix first';
+    if (bucket === 'deferToUxPass') return 'Later UX pass';
+    return 'Review now';
+  };
+
+  return (
+    <section className={`decision-panel checkpoint-review-panel checklist-${board.status}`}>
+      <div>
+        <p className="eyebrow">Release checkpoint review board</p>
+        <h3>{board.headline}</h3>
+        <p>{board.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Fix first" value={String(board.fixBeforeFeedbackCount)} />
+        <Metric label="Review now" value={String(board.reviewDuringCheckpointCount)} />
+        <Metric label="Later UX pass" value={String(board.deferToUxPassCount)} />
+      </div>
+      <div className="optimizer-eligibility-list">
+        {board.rows.map((row) => (
+          <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : row.status === 'review' ? 'review' : 'blocked'}`} key={row.id}>
+            <strong>{row.label}</strong>
+            <span>{bucketLabel(row.bucket)}</span>
+            <p>{row.detail}</p>
+            <small>{row.checkpointQuestion}</small>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{board.reviewNote}</p>
     </section>
   );
 }
