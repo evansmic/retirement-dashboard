@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 170 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, v1 drawdown re-entry closeout, and recommended-plan drawdown review polish. The next logical slice is implementing the Details-facing drawdown review UI or final v1 copy polish.
+Sprint 175 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, v1 drawdown re-entry closeout, recommended-plan drawdown review polish, and Details-facing implementation. The next logical slice is final v1 copy polish around the recommended-plan/drawdown story, followed by v1 checkpoint preparation.
 
-Completed Sprint 166-170 slices:
+Completed Sprint 171-175 slices:
 
-- Framed bounded drawdown execution as recommended-plan Details review evidence.
-- Kept comparison rows, limits, and review actions in Details, not Overview.
-- Added copy guardrails for advice-like, instruction-like, saved-output, and Overview-heavy framing.
-- Kept review, placement, copy, and closeout output runtime-only.
-- Closed the batch as ready for Details-facing implementation.
+- Wired v1 drawdown re-entry and recommended-plan review selectors into React preview state.
+- Surfaced recommended-plan drawdown review, Details placement, copy guard, and closeout evidence in Details.
+- Kept the drawdown review out of Overview.
+- Added structure tests for Details-only placement and consumer copy boundaries.
+- Closed the batch as a Details-facing implementation, not broader UX redesign.
 - Preserved current withdrawal order and empty annual overrides.
 - Confirmed v1 recommended-plan drawdown review, details placement, review copy guard, recommended-plan closeout, re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 166-170 as recommended-plan polish work, not optimizer expansion, stress migration, or simulation math changes.
+- Kept Sprints 171-175 as Details implementation work, not optimizer expansion, stress migration, report migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -205,6 +205,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 146. **Sprint 168 — V1 drawdown review copy guard.** Block advice-like, instruction-like, saved-output, and Overview-heavy framing.
 147. **Sprint 169 — Recommended-plan drawdown persistence.** Keep review, placement, copy, and closeout output runtime-only.
 148. **Sprint 170 — Recommended-plan drawdown closeout.** Mark the drawdown review polish ready for implementation.
+149. **Sprint 171 — Details drawdown review wiring.** Thread recommended-plan drawdown review selectors into React preview state.
+150. **Sprint 172 — Recommended-plan drawdown Details UI.** Surface recommended-plan drawdown review, placement, and closeout evidence in Details.
+151. **Sprint 173 — Drawdown review copy guard UI.** Make the review copy guard visible in Details.
+152. **Sprint 174 — Drawdown review Overview and persistence guardrails.** Keep drawdown review implementation out of Overview and saved plans.
+153. **Sprint 175 — Details drawdown review closeout.** Close the Details-facing implementation batch before v1 copy polish.
 
 ## Medium-Term Roadmap
 
@@ -373,6 +378,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 168 — V1 drawdown review copy guard.** Complete 2026-05-22. Added copy guardrails for review-only framing.
 - **Sprint 169 — Recommended-plan drawdown persistence.** Complete 2026-05-22. Kept recommended-plan drawdown polish evidence runtime-only.
 - **Sprint 170 — Recommended-plan drawdown closeout.** Complete 2026-05-22. Marked Details-facing drawdown review polish ready for implementation.
+- **Sprint 171 — Details drawdown review wiring.** Complete 2026-05-22. Threaded recommended-plan drawdown review selectors into React preview state.
+- **Sprint 172 — Recommended-plan drawdown Details UI.** Complete 2026-05-22. Surfaced recommended-plan drawdown review, placement, and closeout evidence in Details.
+- **Sprint 173 — Drawdown review copy guard UI.** Complete 2026-05-22. Made review copy guard checks visible in Details.
+- **Sprint 174 — Drawdown review Overview and persistence guardrails.** Complete 2026-05-22. Added structure coverage for Details-only placement.
+- **Sprint 175 — Details drawdown review closeout.** Complete 2026-05-22. Closed the Details-facing implementation batch before v1 copy polish.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

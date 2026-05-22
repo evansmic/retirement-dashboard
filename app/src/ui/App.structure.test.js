@@ -135,6 +135,12 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Bounded drawdown review actions');
     expect(appSource).toContain('Bounded drawdown UX copy guard');
     expect(appSource).toContain('Bounded drawdown UX readiness');
+    expect(appSource).toContain('V1 drawdown re-entry review');
+    expect(appSource).toContain('V1 drawdown re-entry closeout');
+    expect(appSource).toContain('Recommended-plan drawdown review');
+    expect(appSource).toContain('Bounded drawdown Details placement');
+    expect(appSource).toContain('Drawdown review copy guard');
+    expect(appSource).toContain('Recommended-plan drawdown closeout');
     expect(appSource).toContain('without turning it into a plan change');
     expect(appSource).toContain('without creating account instructions');
     expect(appSource).toContain('not a saved plan change or account instruction');
@@ -147,6 +153,8 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('<HiddenDrawdownComparisonPanel');
     expect(overviewBranch).not.toContain('<DrawdownReviewPreviewPanel');
     expect(overviewBranch).not.toContain('<DrawdownExecutionBoundaryPanel');
+    expect(overviewBranch).not.toContain('Recommended-plan drawdown review');
+    expect(overviewBranch).not.toContain('Bounded drawdown Details placement');
     expect(appSource).not.toContain('optimal drawdown');
     expect(appSource).not.toContain('recommended withdrawal strategy');
     expect(appSource).not.toContain('safe spend');

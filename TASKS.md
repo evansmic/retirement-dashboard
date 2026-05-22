@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 170: Recommended-Plan Drawdown Review Closeout
+## Latest Sprint — Sprint 175: Details Drawdown Review Implementation Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: polish the bounded drawdown result as a recommended-plan Details review item without turning it into instructions, advice, Overview density, or saved plan output.
+Goal: surface the prepared recommended-plan drawdown review in the React Details experience while keeping it out of Overview, out of saved plans, and away from account instructions.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 170 checkpoint doc: [`docs/sprint_170_recommended_plan_drawdown_closeout.md`](docs/sprint_170_recommended_plan_drawdown_closeout.md).
+Sprint 175 checkpoint doc: [`docs/sprint_175_details_drawdown_review_closeout.md`](docs/sprint_175_details_drawdown_review_closeout.md).
 
-### Sprint 166-170 Candidate Implementation Tickets
+### Sprint 171-175 Candidate Implementation Tickets
 
-- [x] **S166-01 — Recommended-plan drawdown review.** Frame bounded drawdown as a Details review item inside the recommended plan.
-- [x] **S167-01 — Details placement.** Keep comparison rows, limits, and next actions in Details, not Overview.
-- [x] **S168-01 — Review copy guard.** Block advice-like, instruction-like, saved-output, or Overview-heavy framing.
-- [x] **S169-01 — Recommended-plan persistence guardrails.** Keep review, placement, copy, and closeout output runtime-only.
-- [x] **S170-01 — Recommended-plan closeout tests/docs.** Mark the drawdown review polish ready for implementation.
+- [x] **S171-01 — Details drawdown review wiring.** Thread re-entry, recommended-plan review, placement, copy guard, and closeout selectors into the React results preview bundle.
+- [x] **S172-01 — Recommended-plan Details UI.** Show the review rows in Details with calm review-oriented copy.
+- [x] **S173-01 — Copy guard UI exposure.** Make review-only and no-instruction copy checks visible in Details.
+- [x] **S174-01 — Overview and persistence guardrails.** Add UI structure coverage that keeps the review out of Overview and saved-plan output.
+- [x] **S175-01 — Details implementation closeout.** Document the batch and verify the drawdown review remains a Details-only surface.
 
-### Sprint 170 Definition Of Done
+### Sprint 175 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -50,6 +50,9 @@ Sprint 170 checkpoint doc: [`docs/sprint_170_recommended_plan_drawdown_closeout.
 - Details placement keeps comparison rows, limits, and review actions out of Overview.
 - Copy guard blocks advice-like, instruction-like, saved-output, or Overview-heavy framing.
 - Closeout marks recommended-plan drawdown review polish ready for implementation.
+- React Results Details renders v1 drawdown re-entry review, re-entry closeout, recommended-plan review, Details placement, review copy guard, and recommended-plan closeout.
+- Overview remains free of the drawdown review implementation panels.
+- UI structure tests protect the Details-only placement and consumer copy boundaries.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -58,6 +61,36 @@ Sprint 170 checkpoint doc: [`docs/sprint_170_recommended_plan_drawdown_closeout.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 175: Details Drawdown Review Closeout
+
+**Complete 2026-05-22.** Closed the Details-facing implementation batch for recommended-plan drawdown review.
+
+Sprint 175 checkpoint doc: [`docs/sprint_175_details_drawdown_review_closeout.md`](docs/sprint_175_details_drawdown_review_closeout.md).
+
+### Sprint 174: Drawdown Review Overview And Persistence Guardrails
+
+**Complete 2026-05-22.** Added structure coverage to keep recommended-plan drawdown review in Details and out of Overview.
+
+Sprint 174 checkpoint doc: [`docs/sprint_174_drawdown_review_overview_persistence_guardrails.md`](docs/sprint_174_drawdown_review_overview_persistence_guardrails.md).
+
+### Sprint 173: Drawdown Review Copy Guard UI
+
+**Complete 2026-05-22.** Surfaced review copy guard checks in Details.
+
+Sprint 173 checkpoint doc: [`docs/sprint_173_drawdown_review_copy_guard_ui.md`](docs/sprint_173_drawdown_review_copy_guard_ui.md).
+
+### Sprint 172: Recommended-Plan Drawdown Details UI
+
+**Complete 2026-05-22.** Added Details cards for recommended-plan drawdown review, placement, and closeout evidence.
+
+Sprint 172 checkpoint doc: [`docs/sprint_172_recommended_plan_drawdown_details_ui.md`](docs/sprint_172_recommended_plan_drawdown_details_ui.md).
+
+### Sprint 171: Details Drawdown Review Wiring
+
+**Complete 2026-05-22.** Wired v1 drawdown re-entry and recommended-plan review selectors into the React preview state.
+
+Sprint 171 checkpoint doc: [`docs/sprint_171_details_drawdown_review_wiring.md`](docs/sprint_171_details_drawdown_review_wiring.md).
 
 ### Sprint 170: Recommended-Plan Drawdown Review Closeout
 
