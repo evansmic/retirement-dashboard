@@ -1,11 +1,21 @@
 import { AnnualSimulationRow, SimulationResult, V2PlanPayload } from '../types/plan';
 import {
   selectStressIndicatorRows as selectStressIndicatorRowsFromStressModule,
+  selectSpendingStressSummary as selectSpendingStressSummaryFromStressModule,
   selectStressTestRows as selectStressTestRowsFromStressModule,
   selectStressTestSummary as selectStressTestSummaryFromStressModule
 } from './stressSelectors';
 import type { StressSeverity } from './stressSelectors';
-export type { StressIndicatorRow, StressSeverity, StressTestRow, StressTestSummary } from './stressSelectors';
+export type {
+  SpendingStressId,
+  SpendingStressRow,
+  SpendingStressStatus,
+  SpendingStressSummary,
+  StressIndicatorRow,
+  StressSeverity,
+  StressTestRow,
+  StressTestSummary
+} from './stressSelectors';
 
 export type ResultsWorkspaceSection =
   | 'overview'
@@ -638,33 +648,6 @@ export type SpendingCapacitySummary = {
   }>;
 };
 
-export type SpendingStressId = 'current' | 'littleLess' | 'meaningfullyLess' | 'littleMore';
-
-export type SpendingStressStatus = 'cannotTell' | 'fragile' | 'balanced' | 'roomToReview';
-
-export type SpendingStressRow = {
-  id: SpendingStressId;
-  label: string;
-  earlySpending: number;
-  fundedYears: number;
-  totalYears: number;
-  firstShortfallYear: number | null;
-  endPortfolio: number;
-  endPortfolioDelta: number;
-  lifetimeTax: number;
-  lifetimeTaxDelta: number;
-  note: string;
-};
-
-export type SpendingStressSummary = {
-  status: SpendingStressStatus;
-  label: string;
-  headline: string;
-  detail: string;
-  rows: SpendingStressRow[];
-  reviewNote: string;
-};
-
 export type EstateIntentStatus = 'cannotTell' | 'needsIntent' | 'taxReview' | 'survivorReview' | 'aligned';
 
 export type EstateIntentSummary = {
@@ -1210,126 +1193,7 @@ export function selectSpendingCapacitySummary(
   };
 }
 
-function summarizeSpendingStressResult(result: SimulationResult | null | undefined) {
-  const rows = rowsFrom(result);
-  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
-  const lastRow = rows[rows.length - 1];
-  return {
-    rows,
-    fundedYears: rows.filter((row) => n(row.shortfall) <= RECONCILIATION_TOLERANCE).length,
-    totalYears: rows.length,
-    firstShortfallYear: firstShortfall ? n(firstShortfall.year) : null,
-    endPortfolio: n(lastRow?.bal_total),
-    lifetimeTax: rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0)
-  };
-}
-
-function spendingStressNote(row: SpendingStressRow): string {
-  if (row.firstShortfallYear) return `First visible shortfall appears in ${row.firstShortfallYear}.`;
-  if (row.id === 'littleMore') return 'Higher spending remains funded in this first-pass stress check.';
-  if (row.id === 'littleLess' || row.id === 'meaningfullyLess') return 'Lower spending stays funded in this first-pass stress check.';
-  return 'Current spending is the comparison point.';
-}
-
-export function selectSpendingStressSummary(
-  baseline: SimulationResult | null | undefined,
-  stressResults: Partial<Record<SpendingStressId, SimulationResult | null | undefined>>,
-  plan: V2PlanPayload | null | undefined
-): SpendingStressSummary {
-  const base = summarizeSpendingStressResult(baseline);
-  const earlySpending = n(plan?.spending?.gogo) || selectOverviewMetrics(baseline).firstYearSpending;
-  const estateTarget = n(plan?.inheritance);
-  if (!base.totalYears || !earlySpending) {
-    return {
-      status: 'cannotTell',
-      label: 'Cannot check spending stress yet',
-      headline: 'Spending stress needs a completed projection first.',
-      detail: 'Clear required inputs, then rerun Results to compare nearby spending levels.',
-      rows: [],
-      reviewNote: 'This check is review evidence only and does not change the saved plan.'
-    };
-  }
-
-  const labels: Record<SpendingStressId, string> = {
-    current: 'Current spending',
-    littleLess: 'A little less',
-    meaningfullyLess: 'Meaningfully less',
-    littleMore: 'A little more'
-  };
-  const multipliers: Record<SpendingStressId, number> = {
-    current: 1,
-    littleLess: 0.95,
-    meaningfullyLess: 0.9,
-    littleMore: 1.05
-  };
-  const order: SpendingStressId[] = ['current', 'littleLess', 'meaningfullyLess', 'littleMore'];
-  const rows = order
-    .map((id) => {
-      const summary = id === 'current' ? base : summarizeSpendingStressResult(stressResults[id]);
-      if (!summary.totalYears) return null;
-      const row: SpendingStressRow = {
-        id,
-        label: labels[id],
-        earlySpending: Math.round(earlySpending * multipliers[id]),
-        fundedYears: summary.fundedYears,
-        totalYears: summary.totalYears,
-        firstShortfallYear: summary.firstShortfallYear,
-        endPortfolio: summary.endPortfolio,
-        endPortfolioDelta: summary.endPortfolio - base.endPortfolio,
-        lifetimeTax: summary.lifetimeTax,
-        lifetimeTaxDelta: summary.lifetimeTax - base.lifetimeTax,
-        note: ''
-      };
-      return { ...row, note: spendingStressNote(row) };
-    })
-    .filter((row): row is SpendingStressRow => Boolean(row));
-
-  const littleLess = rows.find((row) => row.id === 'littleLess');
-  const meaningfullyLess = rows.find((row) => row.id === 'meaningfullyLess');
-  const littleMore = rows.find((row) => row.id === 'littleMore');
-  const lowerRepairs =
-    Boolean(base.firstShortfallYear) &&
-    Boolean((littleLess && !littleLess.firstShortfallYear) || (meaningfullyLess && !meaningfullyLess.firstShortfallYear));
-  const higherCreatesShortfall = Boolean(littleMore?.firstShortfallYear);
-  const higherTaxDelta = littleMore ? littleMore.lifetimeTaxDelta : 0;
-  const higherTaxMaterial = littleMore ? higherTaxDelta > Math.max(5000, Math.abs(base.lifetimeTax) * 0.05) : false;
-  const estateStillVisible = !estateTarget || (littleMore ? littleMore.endPortfolio >= estateTarget : true);
-  const higherHasRoom = Boolean(littleMore && !littleMore.firstShortfallYear && !higherTaxMaterial && estateStillVisible);
-
-  let status: SpendingStressStatus = 'balanced';
-  if (lowerRepairs || higherCreatesShortfall) status = 'fragile';
-  else if (higherHasRoom) status = 'roomToReview';
-
-  const labelByStatus: Record<SpendingStressStatus, string> = {
-    cannotTell: 'Cannot check spending stress yet',
-    fragile: 'Spending looks fragile',
-    balanced: 'Spending looks balanced',
-    roomToReview: 'Spending has room to review'
-  };
-  const headlineByStatus: Record<SpendingStressStatus, string> = {
-    cannotTell: 'Spending stress needs a completed projection first.',
-    fragile: lowerRepairs
-      ? 'Small spending reductions materially improve the funding picture.'
-      : 'A small spending increase creates a visible shortfall.',
-    balanced: 'Nearby spending changes do not materially change readiness in this check.',
-    roomToReview: 'A small spending increase remains funded in this first-pass check.'
-  };
-  const detailByStatus: Record<SpendingStressStatus, string> = {
-    cannotTell: 'Clear required inputs, then rerun Results to compare nearby spending levels.',
-    fragile: 'Use this as a review prompt for lifestyle, timing, tax, and contingency choices before relying on the plan.',
-    balanced: 'This does not prove the spending level is certain; it only shows the nearby stress checks did not change the first-pass answer much.',
-    roomToReview: 'This is room to review, not a recommendation to spend more. Taxes, estate wishes, survivor impact, and market risk still matter.'
-  };
-
-  return {
-    status,
-    label: labelByStatus[status],
-    headline: headlineByStatus[status],
-    detail: detailByStatus[status],
-    rows,
-    reviewNote: 'Spending stress is review evidence only. It does not change your saved plan or apply an optimized strategy.'
-  };
-}
+export const selectSpendingStressSummary = selectSpendingStressSummaryFromStressModule;
 
 export function selectDrawdownReadinessSummary(
   result: SimulationResult | null | undefined,

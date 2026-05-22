@@ -3,7 +3,9 @@ import { createExamplePlan, examplePlanCards } from '../data/examplePlans';
 import { createPlanFile } from '../data/planFile';
 import type { SimulationResult } from '../types/plan';
 import { runResultsPreviewBundle } from './previewScenarios';
+import type { SimulationConfig } from './runSimulation';
 import {
+  runSpendingStressResults,
   selectStressExtractionReadinessSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -77,9 +79,50 @@ describe('stress selectors extraction', () => {
       disposition: 'stressExtractionReadinessOnly'
     });
     expect(readiness.rows.find((row) => row.id === 'baselineRows')).toMatchObject({ status: 'ready' });
-    expect(readiness.rows.find((row) => row.id === 'spendingStress')).toMatchObject({ status: 'hold' });
+    expect(readiness.rows.find((row) => row.id === 'spendingStress')).toMatchObject({ status: 'ready' });
     expect(readiness.rows.find((row) => row.id === 'monteCarlo')).toMatchObject({ status: 'hold' });
     expect(readiness.reviewNote).toContain('does not change simulation math');
+  });
+
+  it('builds nearby spending stress reruns through working copies', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const baseline = withRows([{ year: 2028, shortfall: 0, bal_total: 100000 }]);
+    const calls: Array<{ planSpending: number; config: SimulationConfig }> = [];
+    const results = runSpendingStressResults({
+      plan,
+      baseline,
+      baselineConfig: { returnRate: 0.05, withdrawalOrder: 'default' },
+      runner: (nextPlan, config) => {
+        calls.push({ planSpending: nextPlan.spending.gogo || 0, config });
+        return withRows([{ year: 2028 + calls.length, shortfall: 0, bal_total: 100000 - calls.length }]);
+      }
+    });
+
+    expect(Object.keys(results).sort()).toEqual(['current', 'littleLess', 'littleMore', 'meaningfullyLess']);
+    expect(calls.map((call) => call.planSpending)).toEqual([
+      Math.round((plan.spending.gogo || 0) * 0.95),
+      Math.round((plan.spending.gogo || 0) * 0.9),
+      Math.round((plan.spending.gogo || 0) * 1.05)
+    ]);
+    expect(plan.spending.gogo).toBe(createExamplePlan(examplePlanCards[0].id).spending.gogo);
+  });
+
+  it('skips higher-spending rerun when the baseline already has a visible shortfall', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const baseline = withRows([{ year: 2028, shortfall: 1000, bal_total: 100000 }]);
+    let callCount = 0;
+    const results = runSpendingStressResults({
+      plan,
+      baseline,
+      baselineConfig: {},
+      runner: () => {
+        callCount += 1;
+        return withRows([{ year: 2028 + callCount }]);
+      }
+    });
+
+    expect(results.littleMore).toBeUndefined();
+    expect(callCount).toBe(2);
   });
 
   it('blocks readiness if stress extraction would change simulation math or persist output', () => {

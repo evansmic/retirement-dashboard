@@ -4,31 +4,33 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 125: Stress Helper Extraction Closeout
+## Latest Sprint — Sprint 130: Spending Stress Ownership Closeout
 
 **Status:** Complete 2026-05-21.
 
-Goal: extract the review-facing baseline stress helpers behind an engine-owned module while preserving existing UI selectors, simulation math, saved plan files, and optimizer behavior.
+Goal: move nearby spending-stress rerun orchestration and summary interpretation into the stress helper boundary while preserving existing preview bundle shape, UI selectors, simulation math, saved plan files, and optimizer behavior.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, spending-stress rerun migration, stress-model redesign, optimizer expansion, account-by-account instructions, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, stress-model redesign, optimizer expansion, account-by-account instructions, persisted readiness output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 125 checkpoint doc: [`docs/sprint_125_stress_helper_closeout.md`](docs/sprint_125_stress_helper_closeout.md).
+Sprint 130 checkpoint doc: [`docs/sprint_130_spending_stress_ownership_closeout.md`](docs/sprint_130_spending_stress_ownership_closeout.md).
 
-### Sprint 121-125 Candidate Implementation Tickets
+### Sprint 126-130 Candidate Implementation Tickets
 
-- [x] **S121-01 — Stress helper module.** Move baseline stress indicator, row, and summary logic behind an engine-owned helper.
-- [x] **S122-01 — Compatibility exports.** Keep existing `resultSelectors` exports stable for React callers.
-- [x] **S123-01 — Stress extraction boundary.** Add runtime-only metadata describing what moved and what remains held.
-- [x] **S124-01 — Example and persistence coverage.** Run bundled examples through the extracted baseline stress helpers and saved-plan guardrails.
-- [x] **S125-01 — Stress helper closeout.** Mark scenario stress, Monte Carlo, and historical sequence migration as later slices.
+- [x] **S126-01 — Spending-stress rerun helper.** Move nearby spending stress working-copy reruns into the stress helper module.
+- [x] **S127-01 — Spending-stress summary helper.** Move fragile, balanced, and room-to-review interpretation into the stress helper module.
+- [x] **S128-01 — Preview compatibility.** Keep `runResultsPreviewBundle` and preview exports stable while delegating spending stress work.
+- [x] **S129-01 — Spending-stress guardrail tests.** Cover working-copy behavior, higher-spending skip logic, examples, and persistence.
+- [x] **S130-01 — Ownership closeout.** Mark spending stress as owned by the stress helper boundary while Monte Carlo and historical sequence remain later.
 
-### Sprint 125 Definition Of Done
+### Sprint 130 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
+- Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
 - Existing React imports through `resultSelectors` continue to work.
-- Stress extraction readiness identifies spending-stress reruns, Monte Carlo, and historical sequence stress as held/later.
+- Existing preview bundle shape continues to expose `spendingStress`.
+- Stress extraction readiness identifies Monte Carlo and historical sequence stress as held/later.
 - Built-in examples produce finite extracted baseline stress summaries.
-- No stress extraction readiness, boundary, row, or summary output is persisted.
+- No stress extraction readiness, boundary, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
@@ -36,6 +38,36 @@ Sprint 125 checkpoint doc: [`docs/sprint_125_stress_helper_closeout.md`](docs/sp
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 130: Spending Stress Ownership Closeout
+
+**Complete 2026-05-21.** Marked nearby spending stress as owned by the stress helper boundary while keeping Monte Carlo and historical sequence migration for later.
+
+Sprint 130 checkpoint doc: [`docs/sprint_130_spending_stress_ownership_closeout.md`](docs/sprint_130_spending_stress_ownership_closeout.md).
+
+### Sprint 129: Spending Stress Guardrail Tests
+
+**Complete 2026-05-21.** Added working-copy, higher-spending skip, example, and saved-plan tests for spending stress helper ownership.
+
+Sprint 129 checkpoint doc: [`docs/sprint_129_spending_stress_guardrail_tests.md`](docs/sprint_129_spending_stress_guardrail_tests.md).
+
+### Sprint 128: Preview Spending Stress Compatibility
+
+**Complete 2026-05-21.** Kept the preview bundle and compatibility exports stable while delegating nearby spending stress work.
+
+Sprint 128 checkpoint doc: [`docs/sprint_128_preview_spending_stress_compatibility.md`](docs/sprint_128_preview_spending_stress_compatibility.md).
+
+### Sprint 127: Spending Stress Summary Helper
+
+**Complete 2026-05-21.** Moved spending stress interpretation into the stress helper module.
+
+Sprint 127 checkpoint doc: [`docs/sprint_127_spending_stress_summary_helper.md`](docs/sprint_127_spending_stress_summary_helper.md).
+
+### Sprint 126: Spending Stress Rerun Helper
+
+**Complete 2026-05-21.** Moved nearby spending stress working-copy rerun orchestration into the stress helper module.
+
+Sprint 126 checkpoint doc: [`docs/sprint_126_spending_stress_rerun_helper.md`](docs/sprint_126_spending_stress_rerun_helper.md).
 
 ### Sprint 125: Stress Helper Extraction Closeout
 
