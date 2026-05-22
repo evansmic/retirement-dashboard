@@ -305,6 +305,46 @@ export type DetailedStressBridgeBatchCloseout = {
   disposition: 'detailedStressBridgeBatchCloseoutOnly';
 };
 
+export type DetailedStressManualReportReference = {
+  shape: 'existingDetailedStressShape';
+  fullSpendingFundedRate: number | null;
+  monteCarloRunCount: number | null;
+  historicalSequenceCount: number | null;
+  source: 'detailedReportReference';
+  persistedOutput: 'none';
+  disposition: 'detailedStressManualReportReferenceOnly';
+};
+
+export type DetailedStressManualReportComparison = {
+  status: 'aligned' | 'needsReview' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'bridgeRun' | 'shape' | 'fullSpendingFunded' | 'monteCarloRuns' | 'historicalSequences' | 'savedPlan';
+    label: string;
+    status: 'aligned' | 'review' | 'blocked';
+    bridgeValue: string;
+    referenceValue: string;
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressManualReportComparisonOnly';
+};
+
+export type DetailedStressManualComparisonCloseout = {
+  status: 'readyForStressMigrationDecision' | 'holdDetailedStress' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'comparison' | 'executionBoundary' | 'persistence' | 'nextDecision';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'detailedStressManualComparisonCloseoutOnly';
+};
+
 type TaxPressureRow = {
   year: number;
   tax: number;
@@ -1715,5 +1755,198 @@ export function selectDetailedStressBridgeBatchCloseout({
     reviewNote:
       'Detailed stress bridge closeout only. It does not migrate detailed stress execution, alter stress math, change optimizer behavior, or persist bridge output.',
     disposition: 'detailedStressBridgeBatchCloseoutOnly'
+  };
+}
+
+function formatStressMetric(value: number | null | undefined): string {
+  if (value === null || value === undefined) return 'Not available';
+  return Number.isInteger(value) ? String(value) : value.toFixed(3);
+}
+
+function metricAligned(
+  bridgeValue: number | null | undefined,
+  referenceValue: number | null | undefined,
+  tolerance = 0
+): boolean {
+  if (bridgeValue === null || bridgeValue === undefined || referenceValue === null || referenceValue === undefined) {
+    return bridgeValue === referenceValue;
+  }
+  return Math.abs(bridgeValue - referenceValue) <= tolerance;
+}
+
+export function createDetailedStressManualReportReference({
+  fullSpendingFundedRate,
+  monteCarloRunCount,
+  historicalSequenceCount
+}: {
+  fullSpendingFundedRate: number | null;
+  monteCarloRunCount: number | null;
+  historicalSequenceCount: number | null;
+}): DetailedStressManualReportReference {
+  return {
+    shape: 'existingDetailedStressShape',
+    fullSpendingFundedRate,
+    monteCarloRunCount,
+    historicalSequenceCount,
+    source: 'detailedReportReference',
+    persistedOutput: 'none',
+    disposition: 'detailedStressManualReportReferenceOnly'
+  };
+}
+
+export function selectDetailedStressManualReportComparison({
+  bridgeRun,
+  reference,
+  savedPlanClean = true,
+  fullSpendingFundedTolerance = 0.001
+}: {
+  bridgeRun: DetailedStressProbeBackedBridgeRun;
+  reference: DetailedStressManualReportReference;
+  savedPlanClean?: boolean;
+  fullSpendingFundedTolerance?: number;
+}): DetailedStressManualReportComparison {
+  const bridgeResult = bridgeRun.prototype.result;
+  const bridgeComplete = bridgeRun.status === 'bridgeComplete' && !!bridgeResult;
+  const shapeAligned = bridgeResult?.shape === reference.shape;
+  const fundedAligned =
+    bridgeComplete &&
+    metricAligned(bridgeResult.fullSpendingFundedRate, reference.fullSpendingFundedRate, fullSpendingFundedTolerance);
+  const monteCarloAligned =
+    bridgeComplete && metricAligned(bridgeResult.monteCarloRunCount, reference.monteCarloRunCount);
+  const historicalAligned =
+    bridgeComplete && metricAligned(bridgeResult.historicalSequenceCount, reference.historicalSequenceCount);
+  const rows: DetailedStressManualReportComparison['rows'] = [
+    {
+      id: 'bridgeRun',
+      label: 'Bridge run',
+      status: bridgeComplete ? 'aligned' : bridgeRun.status === 'blocked' ? 'blocked' : 'review',
+      bridgeValue: bridgeRun.status,
+      referenceValue: 'bridgeComplete',
+      detail: bridgeComplete
+        ? 'The bridge run completed before manual comparison.'
+        : 'Manual comparison needs a completed bridge run.'
+    },
+    {
+      id: 'shape',
+      label: 'Output shape',
+      status: shapeAligned ? 'aligned' : 'blocked',
+      bridgeValue: bridgeResult?.shape ?? 'Not available',
+      referenceValue: reference.shape,
+      detail: shapeAligned
+        ? 'Bridge output uses the existing detailed stress shape.'
+        : 'Bridge output shape must match the detailed report reference.'
+    },
+    {
+      id: 'fullSpendingFunded',
+      label: 'Full-spending-funded rate',
+      status: fundedAligned ? 'aligned' : 'review',
+      bridgeValue: formatStressMetric(bridgeResult?.fullSpendingFundedRate),
+      referenceValue: formatStressMetric(reference.fullSpendingFundedRate),
+      detail: fundedAligned
+        ? 'The bridge and detailed report rates align within tolerance.'
+        : 'Review the full-spending-funded rate before trusting the bridge.'
+    },
+    {
+      id: 'monteCarloRuns',
+      label: 'Monte Carlo runs',
+      status: monteCarloAligned ? 'aligned' : 'review',
+      bridgeValue: formatStressMetric(bridgeResult?.monteCarloRunCount),
+      referenceValue: formatStressMetric(reference.monteCarloRunCount),
+      detail: monteCarloAligned
+        ? 'Monte Carlo run count matches the detailed report reference.'
+        : 'Review Monte Carlo run count before migration decisions.'
+    },
+    {
+      id: 'historicalSequences',
+      label: 'Historical sequences',
+      status: historicalAligned ? 'aligned' : 'review',
+      bridgeValue: formatStressMetric(bridgeResult?.historicalSequenceCount),
+      referenceValue: formatStressMetric(reference.historicalSequenceCount),
+      detail: historicalAligned
+        ? 'Historical sequence count matches the detailed report reference.'
+        : 'Review historical sequence count before migration decisions.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved-plan boundary',
+      status: savedPlanClean ? 'aligned' : 'blocked',
+      bridgeValue: savedPlanClean ? 'Runtime only' : 'Needs cleanup',
+      referenceValue: 'Runtime only',
+      detail: savedPlanClean
+        ? 'Manual comparison output remains runtime-only.'
+        : 'Manual comparison output must not enter editable plan files.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const needsReview = rows.some((row) => row.status === 'review');
+
+  return {
+    status: blocked ? 'blocked' : needsReview ? 'needsReview' : 'aligned',
+    headline: blocked
+      ? 'Detailed stress manual comparison is blocked.'
+      : needsReview
+        ? 'Detailed stress manual comparison needs review.'
+        : 'Detailed stress bridge matches the detailed report reference.',
+    detail: blocked
+      ? 'Shape, bridge completion, and saved-plan boundaries must be clean before comparison can support a decision.'
+      : needsReview
+        ? 'Some detailed stress metrics differ from the reference and should be reviewed before any migration decision.'
+        : 'Bridge output aligns with the detailed report reference metadata and can support the next decision checkpoint.',
+    rows,
+    reviewNote:
+      'Manual detailed-stress comparison only. It does not migrate Monte Carlo, run historical replay in React, change stress math, or save comparison output.',
+    disposition: 'detailedStressManualReportComparisonOnly'
+  };
+}
+
+export function selectDetailedStressManualComparisonCloseout({
+  comparison
+}: {
+  comparison: DetailedStressManualReportComparison;
+}): DetailedStressManualComparisonCloseout {
+  const blocked = comparison.status === 'blocked';
+  const aligned = comparison.status === 'aligned';
+
+  return {
+    status: blocked ? 'blocked' : aligned ? 'readyForStressMigrationDecision' : 'holdDetailedStress',
+    headline: blocked
+      ? 'Detailed stress comparison closeout is blocked.'
+      : aligned
+        ? 'Ready for the detailed stress migration-or-deferral decision.'
+        : 'Hold detailed stress migration decisions for review.',
+    detail: blocked
+      ? 'Manual comparison must be cleaned up before the detailed stress path can move forward.'
+      : aligned
+        ? 'The next checkpoint can decide whether detailed stress stays in the detailed report for v1 or moves behind a native adapter later.'
+        : 'Metric differences should be reviewed before deciding whether to migrate or defer detailed stress work.',
+    rows: [
+      {
+        id: 'comparison',
+        label: 'Manual comparison',
+        status: comparison.status === 'aligned' ? 'ready' : comparison.status === 'blocked' ? 'blocked' : 'hold',
+        detail: comparison.headline
+      },
+      {
+        id: 'executionBoundary',
+        label: 'Execution boundary',
+        status: 'hold',
+        detail: 'Detailed stress execution remains owned by the detailed-report path.'
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        status: comparison.rows.find((row) => row.id === 'savedPlan')?.status === 'blocked' ? 'blocked' : 'ready',
+        detail: 'Manual comparison output remains runtime-only.'
+      },
+      {
+        id: 'nextDecision',
+        label: 'Next decision',
+        status: aligned ? 'ready' : 'hold',
+        detail: 'Decide whether detailed stress migration is needed for v1 or should be deferred.'
+      }
+    ],
+    reviewNote:
+      'Manual comparison closeout only. It does not alter stress calculations, move detailed stress execution, change optimizer behavior, or persist output.',
+    disposition: 'detailedStressManualComparisonCloseoutOnly'
   };
 }

@@ -6,6 +6,7 @@ import { runResultsPreviewBundle } from './previewScenarios';
 import type { SimulationConfig } from './runSimulation';
 import {
   createDetailedStressAdapterRequest,
+  createDetailedStressManualReportReference,
   runSpendingStressResults,
   runDetailedStressInjectedRunnerPrototype,
   runDetailedStressProbeBackedBridge,
@@ -14,6 +15,8 @@ import {
   selectDetailedStressAdapterValidation,
   selectDetailedStressBoundaryReview,
   selectDetailedStressBridgeBatchCloseout,
+  selectDetailedStressManualComparisonCloseout,
+  selectDetailedStressManualReportComparison,
   selectDetailedStressMigrationCloseout,
   selectDetailedStressProbeBackedRunnerBridge,
   selectDetailedStressProbeCoverage,
@@ -174,6 +177,9 @@ describe('stress selectors extraction', () => {
       expect(saved.plan).not.toHaveProperty('detailedStressProbeBackedRunnerBridge');
       expect(saved.plan).not.toHaveProperty('detailedStressProbeBackedBridgeRun');
       expect(saved.plan).not.toHaveProperty('detailedStressBridgeBatchCloseout');
+      expect(saved.plan).not.toHaveProperty('detailedStressManualReportReference');
+      expect(saved.plan).not.toHaveProperty('detailedStressManualReportComparison');
+      expect(saved.plan).not.toHaveProperty('detailedStressManualComparisonCloseout');
     }
   });
 
@@ -699,5 +705,137 @@ describe('stress selectors extraction', () => {
     });
     expect(closeout.rows.map((row) => row.id)).toEqual(['coverage', 'bridge', 'bridgeRun', 'nextStep']);
     expect(closeout.reviewNote).toContain('does not migrate detailed stress execution');
+  });
+
+  function readyBridgeRun({
+    fullSpendingFundedRate = 0.85,
+    monteCarloRunCount = 200,
+    historicalSequenceCount = 4
+  }: {
+    fullSpendingFundedRate?: number;
+    monteCarloRunCount?: number;
+    historicalSequenceCount?: number;
+  } = {}) {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const probeCoverage = selectDetailedStressProbeCoverage();
+    const { adapterValidation, prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({ prototypeCloseout, probeCoverage });
+    const bridgeRun = runDetailedStressProbeBackedBridge({
+      plan,
+      adapterValidation,
+      bridge,
+      runner: () => ({
+        shape: 'existingDetailedStressShape',
+        status: 'complete',
+        fullSpendingFundedRate,
+        monteCarloRunCount,
+        historicalSequenceCount,
+        notes: []
+      })
+    });
+    return { plan, bridgeRun };
+  }
+
+  it('compares bridge output to detailed-report reference metadata without migration', () => {
+    const { bridgeRun } = readyBridgeRun();
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference });
+
+    expect(reference).toMatchObject({
+      source: 'detailedReportReference',
+      persistedOutput: 'none',
+      disposition: 'detailedStressManualReportReferenceOnly'
+    });
+    expect(comparison).toMatchObject({
+      status: 'aligned',
+      disposition: 'detailedStressManualReportComparisonOnly'
+    });
+    expect(comparison.rows.map((row) => row.id)).toEqual([
+      'bridgeRun',
+      'shape',
+      'fullSpendingFunded',
+      'monteCarloRuns',
+      'historicalSequences',
+      'savedPlan'
+    ]);
+    expect(comparison.rows.every((row) => row.status === 'aligned')).toBe(true);
+    expect(comparison.reviewNote).toContain('does not migrate Monte Carlo');
+  });
+
+  it('marks manual comparison for review when detailed stress metrics differ', () => {
+    const { bridgeRun } = readyBridgeRun({ fullSpendingFundedRate: 0.85, monteCarloRunCount: 200 });
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.8,
+      monteCarloRunCount: 500,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference });
+
+    expect(comparison.status).toBe('needsReview');
+    expect(comparison.rows.find((row) => row.id === 'fullSpendingFunded')).toMatchObject({ status: 'review' });
+    expect(comparison.rows.find((row) => row.id === 'monteCarloRuns')).toMatchObject({ status: 'review' });
+    expect(comparison.rows.find((row) => row.id === 'historicalSequences')).toMatchObject({ status: 'aligned' });
+  });
+
+  it('blocks manual comparison when bridge run or saved-plan boundaries are not clean', () => {
+    const plan = createExamplePlan(examplePlanCards[0].id);
+    const { adapterValidation, prototypeCloseout } = readyPrototypeCloseout();
+    const bridge = selectDetailedStressProbeBackedRunnerBridge({
+      prototypeCloseout,
+      probeCoverage: selectDetailedStressProbeCoverage({ parityCovered: false })
+    });
+    const bridgeRun = runDetailedStressProbeBackedBridge({ plan, adapterValidation, bridge });
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({
+      bridgeRun,
+      reference,
+      savedPlanClean: false
+    });
+
+    expect(comparison.status).toBe('blocked');
+    expect(comparison.rows.find((row) => row.id === 'bridgeRun')).toMatchObject({ status: 'blocked' });
+    expect(comparison.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('closes aligned manual comparison as ready for a migration-or-deferral decision', () => {
+    const { bridgeRun } = readyBridgeRun();
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference });
+    const closeout = selectDetailedStressManualComparisonCloseout({ comparison });
+
+    expect(closeout).toMatchObject({
+      status: 'readyForStressMigrationDecision',
+      disposition: 'detailedStressManualComparisonCloseoutOnly'
+    });
+    expect(closeout.rows.map((row) => row.id)).toEqual(['comparison', 'executionBoundary', 'persistence', 'nextDecision']);
+    expect(closeout.rows.find((row) => row.id === 'executionBoundary')).toMatchObject({ status: 'hold' });
+    expect(closeout.reviewNote).toContain('does not alter stress calculations');
+  });
+
+  it('holds migration decisions when manual comparison needs review', () => {
+    const { bridgeRun } = readyBridgeRun({ historicalSequenceCount: 3 });
+    const reference = createDetailedStressManualReportReference({
+      fullSpendingFundedRate: 0.85,
+      monteCarloRunCount: 200,
+      historicalSequenceCount: 4
+    });
+    const comparison = selectDetailedStressManualReportComparison({ bridgeRun, reference });
+    const closeout = selectDetailedStressManualComparisonCloseout({ comparison });
+
+    expect(closeout.status).toBe('holdDetailedStress');
+    expect(closeout.rows.find((row) => row.id === 'comparison')).toMatchObject({ status: 'hold' });
+    expect(closeout.rows.find((row) => row.id === 'nextDecision')).toMatchObject({ status: 'hold' });
   });
 });

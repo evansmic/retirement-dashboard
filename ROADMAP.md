@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 150 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, and probe-backed bridge readiness layer. The next logical slice is manual detailed-report comparison or continued native module cleanup while keeping optimizer behavior unchanged.
+Sprint 155 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, and manual detailed-report comparison layer. The next logical slice is the detailed-stress migrate-or-defer decision checkpoint or continued native module cleanup while keeping optimizer behavior unchanged.
 
-Completed Sprint 146-150 slices:
+Completed Sprint 151-155 slices:
 
-- Added runtime-only probe coverage summary for detailed stress bridge work.
-- Required prototype closeout, probe coverage, runner injection, and saved-plan guardrails before bridge checks.
-- Added a guarded bridge run that calls the injected runner only when bridge readiness is clean.
-- Kept coverage, bridge, bridge run, and closeout output runtime-only.
-- Closed the batch as ready for manual detailed-report comparison, not a migration.
+- Added runtime-only detailed-report reference metadata.
+- Compared bridge output to reference metadata across shape, full-spending-funded rate, Monte Carlo runs, and historical sequences.
+- Marked metric drift for review and incomplete bridge/persistence paths as blocked.
+- Kept reference, comparison, and closeout output runtime-only.
+- Closed the batch as ready for a detailed-stress migrate-or-defer decision checkpoint, not a migration.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed detailed stress probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 146-150 as bridge readiness work, not optimizer expansion, stress migration, or simulation math changes.
+- Confirmed detailed stress manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 151-155 as manual comparison work, not optimizer expansion, stress migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -185,6 +185,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 126. **Sprint 148 — Detailed stress guarded bridge run.** Call the injected runner only when bridge readiness is clean.
 127. **Sprint 149 — Detailed stress bridge persistence guardrails.** Keep coverage, bridge, bridge run, and closeout output runtime-only.
 128. **Sprint 150 — Detailed stress bridge closeout.** Mark the next safe slice as manual detailed-report comparison.
+129. **Sprint 151 — Detailed stress report reference metadata.** Add runtime-only detailed-report reference metadata for manual comparison.
+130. **Sprint 152 — Detailed stress manual comparison rows.** Compare bridge output to reference metadata.
+131. **Sprint 153 — Detailed stress review and block thresholds.** Mark metric drift for review and blocked paths as blocked.
+132. **Sprint 154 — Detailed stress comparison persistence guardrails.** Keep reference, comparison, and closeout output runtime-only.
+133. **Sprint 155 — Detailed stress manual comparison closeout.** Mark the next checkpoint as migrate-or-defer decision.
 
 ## Medium-Term Roadmap
 
@@ -333,6 +338,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 148 — Detailed stress guarded bridge run.** Complete 2026-05-22. Added a bridge run that calls only when readiness is clean.
 - **Sprint 149 — Detailed stress bridge persistence guardrails.** Complete 2026-05-22. Kept bridge evidence runtime-only.
 - **Sprint 150 — Detailed stress bridge closeout.** Complete 2026-05-22. Closed the batch as ready for manual detailed-report comparison.
+- **Sprint 151 — Detailed stress report reference metadata.** Complete 2026-05-22. Added runtime-only detailed-report reference metadata.
+- **Sprint 152 — Detailed stress manual comparison rows.** Complete 2026-05-22. Compared bridge output to detailed-report reference metadata.
+- **Sprint 153 — Detailed stress review and block thresholds.** Complete 2026-05-22. Marked metric differences for review and blocked bad paths.
+- **Sprint 154 — Detailed stress comparison persistence guardrails.** Complete 2026-05-22. Kept comparison evidence runtime-only.
+- **Sprint 155 — Detailed stress manual comparison closeout.** Complete 2026-05-22. Closed the batch as ready for a migrate-or-defer checkpoint.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.
