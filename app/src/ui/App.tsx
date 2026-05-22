@@ -5159,7 +5159,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionIntent?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">V1 drawdown execution intent</p>
+            <p className="eyebrow">Drawdown review intent</p>
             <h4>{v1ExecutionIntent.headline}</h4>
             <p>{v1ExecutionIntent.detail}</p>
           </div>
@@ -5178,7 +5178,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionCandidate?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded execution candidate</p>
+            <p className="eyebrow">Drawdown timing check</p>
             <h4>{v1ExecutionCandidate.label}</h4>
             <p>This prepares one existing-engine registered timing scenario for review.</p>
           </div>
@@ -5197,7 +5197,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionResult?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded execution result</p>
+            <p className="eyebrow">Drawdown timing result</p>
             <h4>{v1ExecutionResult.reason}</h4>
             <p>This is an executed scenario comparison. It is not a saved plan change or account instruction.</p>
           </div>
@@ -5216,7 +5216,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionReview?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded execution review</p>
+            <p className="eyebrow">Drawdown timing review</p>
             <h4>{v1ExecutionReview.headline}</h4>
             <p>{v1ExecutionReview.detail}</p>
           </div>
@@ -5235,7 +5235,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionExampleGate ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">V1 execution example gate</p>
+            <p className="eyebrow">Drawdown example gate</p>
             <h4>{v1ExecutionExampleGate.status === 'examplesClear' ? 'Built-in examples are clear' : 'Example coverage stays in review'}</h4>
             <p>{v1ExecutionExampleGate.reviewNote}</p>
           </div>
@@ -5255,7 +5255,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ExecutionPhaseCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">V1 execution phase closeout</p>
+            <p className="eyebrow">Drawdown timing closeout</p>
             <h4>{v1ExecutionPhaseCloseout.headline}</h4>
             <p>{v1ExecutionPhaseCloseout.detail}</p>
           </div>
@@ -5274,7 +5274,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ConsumerSummary?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown plain summary</p>
+            <p className="eyebrow">Drawdown review summary</p>
             <h4>{v1ConsumerSummary.headline}</h4>
             <p>{v1ConsumerSummary.detail}</p>
           </div>
@@ -5293,7 +5293,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1SafetyChecklist?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown safety checklist</p>
+            <p className="eyebrow">Drawdown review safety checklist</p>
             <h4>{v1SafetyChecklist.status === 'ready' ? 'Safety checks are clear' : v1SafetyChecklist.status === 'hold' ? 'Safety checks need review' : 'Safety checks blocked'}</h4>
             <p>These checks keep the executed scenario from becoming a household instruction.</p>
           </div>
@@ -5312,7 +5312,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ConsumerLimits?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown limits</p>
+            <p className="eyebrow">Drawdown review limits</p>
             <h4>What this check does not do</h4>
             <p>These limits stay visible before the executed result moves toward consumer-facing UX.</p>
           </div>
@@ -5331,7 +5331,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ConsumerExampleGate ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown example gate</p>
+            <p className="eyebrow">Drawdown example check</p>
             <h4>{v1ConsumerExampleGate.status === 'examplesClear' ? 'Built-in examples are clear' : 'Example coverage stays in review'}</h4>
             <p>{v1ConsumerExampleGate.reviewNote}</p>
           </div>
@@ -5351,7 +5351,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ConsumerCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown consumer closeout</p>
+            <p className="eyebrow">Drawdown review readiness</p>
             <h4>{v1ConsumerCloseout.headline}</h4>
             <p>{v1ConsumerCloseout.detail}</p>
           </div>
@@ -5370,7 +5370,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1UxHeadline ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown UX headline</p>
+            <p className="eyebrow">Drawdown review headline</p>
             <h4>{v1UxHeadline.headline}</h4>
             <p>{v1UxHeadline.subhead}</p>
           </div>
@@ -5380,8 +5380,8 @@ function DrawdownExecutionBoundaryPanel({
       {v1UxComparisonCard?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown comparison card</p>
-            <h4>{v1UxComparisonCard.status === 'ready' ? 'Current plan vs. bounded check' : v1UxComparisonCard.status === 'hold' ? 'Comparison needs more review' : 'Comparison is blocked'}</h4>
+            <p className="eyebrow">Current plan comparison</p>
+            <h4>{v1UxComparisonCard.status === 'ready' ? 'Current plan vs. timing check' : v1UxComparisonCard.status === 'hold' ? 'Comparison needs more review' : 'Comparison is blocked'}</h4>
             <p>This card keeps the executed scenario readable without turning it into a plan change.</p>
           </div>
           <div className="optimizer-eligibility-list">
@@ -5399,7 +5399,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1UxReviewActions?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown review actions</p>
+            <p className="eyebrow">Drawdown review actions</p>
             <h4>{v1UxReviewActions.status === 'available' ? 'What to review next' : v1UxReviewActions.status === 'held' ? 'Review actions are held' : 'Review actions are blocked'}</h4>
             <p>These actions help the household read the check without creating account instructions.</p>
           </div>
@@ -5418,7 +5418,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1UxCopyGuard?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown UX copy guard</p>
+            <p className="eyebrow">Drawdown wording check</p>
             <h4>{v1UxCopyGuard.status === 'clear' ? 'Copy stays review-oriented' : 'Copy guard blocked'}</h4>
             <p>These checks keep the UX candidate from sounding like advice or an instruction.</p>
           </div>
@@ -5437,7 +5437,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1UxReadinessCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown UX readiness</p>
+            <p className="eyebrow">Drawdown review design readiness</p>
             <h4>{v1UxReadinessCloseout.headline}</h4>
             <p>{v1UxReadinessCloseout.detail}</p>
           </div>
@@ -5456,7 +5456,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ReentryReview?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">V1 drawdown re-entry review</p>
+            <p className="eyebrow">Drawdown review readiness check</p>
             <h4>{v1ReentryReview.headline}</h4>
             <p>{v1ReentryReview.detail}</p>
           </div>
@@ -5475,7 +5475,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1ReentryCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">V1 drawdown re-entry closeout</p>
+            <p className="eyebrow">Drawdown review handoff</p>
             <h4>{v1ReentryCloseout.headline}</h4>
             <p>{v1ReentryCloseout.detail}</p>
           </div>
@@ -5494,7 +5494,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1RecommendedPlanReview?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Recommended-plan drawdown review</p>
+            <p className="eyebrow">Drawdown review in this plan</p>
             <h4>{v1RecommendedPlanReview.headline}</h4>
             <p>{v1RecommendedPlanReview.detail}</p>
           </div>
@@ -5513,7 +5513,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1DetailsPlacement?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Bounded drawdown Details placement</p>
+            <p className="eyebrow">Drawdown Details placement</p>
             <h4>{v1DetailsPlacement.headline}</h4>
             <p>{v1DetailsPlacement.detail}</p>
           </div>
@@ -5551,7 +5551,7 @@ function DrawdownExecutionBoundaryPanel({
       {v1RecommendedPlanCloseout?.rows.length ? (
         <div className="drawdown-decision-gate">
           <div>
-            <p className="eyebrow">Recommended-plan drawdown closeout</p>
+            <p className="eyebrow">Drawdown review closeout</p>
             <h4>{v1RecommendedPlanCloseout.headline}</h4>
             <p>{v1RecommendedPlanCloseout.detail}</p>
           </div>

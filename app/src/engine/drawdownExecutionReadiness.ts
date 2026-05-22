@@ -3158,14 +3158,14 @@ export function selectTaxAwareDrawdownV1UxHeadline({
     status: consumerCloseout.status === 'readyForUxCopy' ? 'ready' : consumerCloseout.status === 'holdForCopyPolish' ? 'hold' : 'blocked',
     headline:
       consumerCloseout.status === 'readyForUxCopy'
-        ? 'Review one bounded drawdown check.'
+        ? 'Review one drawdown timing check.'
         : consumerCloseout.status === 'holdForCopyPolish'
           ? 'Drawdown check needs more polish.'
           : 'Drawdown check is blocked.',
     subhead:
-      'This compares the current plan with one bounded registered-timing scenario. It does not change the editable plan.',
+      'This compares the current plan with one registered-withdrawal timing check. It does not change the editable plan.',
     reviewNote:
-      'UX headline only. It frames the bounded execution result without making a recommendation.',
+      'UX headline only. It frames the drawdown review result without making a recommendation.',
     disposition: 'v1DrawdownUxHeadlineOnly'
   };
 }
@@ -3324,7 +3324,7 @@ export function selectTaxAwareDrawdownV1UxReadinessCloseout({
         ? 'Hold the drawdown UX for polish.'
         : 'Ready for drawdown UX design.',
     detail:
-      'This closeout checks whether the bounded execution result is ready to be shaped into a consumer-facing Details experience.',
+      'This closeout checks whether the drawdown review result is ready to be shaped into a consumer-facing Details experience.',
     rows,
     reviewNote:
       'UX readiness closeout only. It does not move the result into Overview, save output, apply a strategy, or create account instructions.',
@@ -3358,7 +3358,7 @@ export function selectTaxAwareDrawdownV1ReentryReview({
     },
     {
       id: 'executionPhase',
-      label: 'Bounded execution phase',
+      label: 'Drawdown review phase',
       status:
         executionPhase.status === 'readyForConsumerUx'
           ? 'ready'
@@ -3382,13 +3382,13 @@ export function selectTaxAwareDrawdownV1ReentryReview({
       id: 'savedPlan',
       label: 'Saved plan boundary',
       status: savedPlanClean ? 'ready' : 'blocked',
-      detail: savedPlanClean ? 'No v1 drawdown re-entry output is saved.' : 'Saved plan output contains v1 drawdown re-entry data.'
+      detail: savedPlanClean ? 'No drawdown review readiness output is saved.' : 'Saved plan output contains drawdown review readiness data.'
     },
     {
       id: 'scope',
-      label: 'V1 scope',
+      label: 'Review scope',
       status: 'ready',
-      detail: 'Next work stays focused on recommended-plan and bounded drawdown review, not detailed stress migration.'
+      detail: 'Next work stays focused on recommended-plan and drawdown review, not detailed stress migration.'
     }
   ];
   const hasBlocked = rows.some((row) => row.status === 'blocked');
@@ -3397,15 +3397,15 @@ export function selectTaxAwareDrawdownV1ReentryReview({
   return {
     status: hasBlocked ? 'blocked' : hasHold ? 'holdForReadiness' : 'readyForV1Drawdown',
     headline: hasBlocked
-      ? 'Hold before returning to v1 drawdown work.'
+      ? 'Hold before continuing drawdown review work.'
       : hasHold
-        ? 'V1 drawdown re-entry needs one more readiness cleanup.'
-        : 'Ready to return to v1 drawdown work.',
+        ? 'Drawdown review needs one more readiness cleanup.'
+        : 'Ready to continue drawdown review work.',
     detail:
-      'This checkpoint confirms detailed stress has been deferred for v1 and the bounded drawdown path can resume without expanding scope.',
+      'This checkpoint confirms detailed stress remains in the detailed report and the drawdown review can continue without expanding scope.',
     rows,
     reviewNote:
-      'V1 drawdown re-entry review only. It does not apply a strategy, create account instructions, save output, or migrate detailed stress.',
+      'Drawdown review readiness only. It does not apply a strategy, create account instructions, save output, or migrate detailed stress.',
     disposition: 'v1DrawdownReentryReviewOnly'
   };
 }
@@ -3428,9 +3428,9 @@ export function selectTaxAwareDrawdownV1NextSprintPlan({
     },
     {
       id: 'boundedDrawdown',
-      label: 'Bounded drawdown review',
+      label: 'Drawdown review',
       status: reentry.status === 'readyForV1Drawdown' ? 'next' : reentry.status === 'blocked' ? 'blocked' : 'hold',
-      detail: 'Keep the next sprint focused on bounded review language, not account-by-account instructions.'
+      detail: 'Keep the next sprint focused on plain review language, not detailed withdrawal instructions.'
     },
     {
       id: 'detailsCopy',
@@ -3462,7 +3462,7 @@ export function selectTaxAwareDrawdownV1NextSprintPlan({
         ? 'Next drawdown sprint needs cleanup first.'
         : 'Next drawdown sprint is ready.',
     detail:
-      'The next sprint should translate bounded drawdown execution into clearer recommended-plan review evidence while preserving all v1 guardrails.',
+      'The next sprint should translate drawdown execution into clearer recommended-plan review evidence while preserving all guardrails.',
     rows,
     reviewNote:
       'Next sprint plan only. It does not add optimizer behavior, apply drawdown changes, create account instructions, or save output.',
@@ -3483,14 +3483,14 @@ export function selectTaxAwareDrawdownV1ReentryCloseout({
   return {
     status: blocked ? 'blocked' : ready ? 'readyToProceed' : 'holdBeforeProceeding',
     headline: blocked
-      ? 'V1 drawdown re-entry is blocked.'
+      ? 'Drawdown review handoff is blocked.'
       : ready
-        ? 'Ready for the next bounded drawdown sprint.'
-        : 'Hold before the next bounded drawdown sprint.',
+        ? 'Ready for the next drawdown review sprint.'
+        : 'Hold before the next drawdown review sprint.',
     detail: blocked
       ? 'Clean up blocked re-entry or next-sprint rows before proceeding.'
       : ready
-        ? 'Detailed stress remains deferred for v1, and the next sprint can focus on recommended-plan drawdown review polish.'
+        ? 'Detailed stress remains in the detailed report, and the next sprint can focus on recommended-plan drawdown review polish.'
         : 'Resolve held re-entry or example coverage items before proceeding.',
     rows: [
       {
@@ -3509,7 +3509,7 @@ export function selectTaxAwareDrawdownV1ReentryCloseout({
         id: 'detailedStress',
         label: 'Detailed stress',
         status: 'ready',
-        detail: 'Detailed stress stays in the detailed report for v1.'
+        detail: 'Detailed stress stays in the detailed report.'
       },
       {
         id: 'persistence',
@@ -3519,7 +3519,7 @@ export function selectTaxAwareDrawdownV1ReentryCloseout({
       }
     ],
     reviewNote:
-      'V1 drawdown re-entry closeout only. It does not change optimizer behavior, apply a strategy, migrate detailed stress, or save output.',
+      'Drawdown review handoff only. It does not change optimizer behavior, apply a strategy, migrate detailed stress, or save output.',
     disposition: 'v1DrawdownReentryCloseoutOnly'
   };
 }
@@ -3555,7 +3555,7 @@ export function selectTaxAwareDrawdownV1RecommendedPlanReview({
       id: 'drawdownCheck',
       label: 'Drawdown check',
       status: comparison.status === 'ready' ? 'ready' : comparison.status === 'blocked' ? 'blocked' : 'hold',
-      detail: 'Use the bounded comparison rows as review evidence, not account-by-account instructions.'
+      detail: 'Use the comparison rows as review evidence, not detailed withdrawal instructions.'
     },
     {
       id: 'limits',
@@ -3587,7 +3587,7 @@ export function selectTaxAwareDrawdownV1RecommendedPlanReview({
         ? 'Recommended-plan drawdown review needs polish.'
         : 'Recommended-plan drawdown review is ready for Details.',
     detail:
-      'This turns the bounded drawdown result into a Details-level review item inside the recommended plan without changing the plan.',
+      'This turns the drawdown result into a Details-level review item inside the recommended plan without changing the plan.',
     rows,
     reviewNote:
       'Recommended-plan drawdown review only. It does not apply a strategy, create instructions, move into Overview, or save output.',
@@ -3611,7 +3611,7 @@ export function selectTaxAwareDrawdownV1DetailsPlacement({
       id: 'location',
       label: 'Location',
       status: review.status === 'readyForDetails' ? 'ready' : review.status === 'blocked' ? 'blocked' : 'hold',
-      detail: 'Place the bounded drawdown review in Details under the recommended plan.'
+      detail: 'Place the drawdown review in Details under the recommended plan.'
     },
     {
       id: 'headline',
@@ -3648,7 +3648,7 @@ export function selectTaxAwareDrawdownV1DetailsPlacement({
       'This placement keeps the drawdown review close to the recommended plan explanation while avoiding Overview density.',
     rows,
     reviewNote:
-      'Details placement only. It does not move the bounded drawdown result into Overview, apply it, or save output.',
+      'Details placement only. It does not move the drawdown result into Overview, apply it, or save output.',
     disposition: 'v1DrawdownDetailsPlacementOnly'
   };
 }
@@ -3741,7 +3741,7 @@ export function selectTaxAwareDrawdownV1RecommendedPlanCloseout({
         ? 'Recommended-plan drawdown polish needs cleanup.'
         : 'Recommended-plan drawdown polish is ready.',
     detail:
-      'The next implementation can show bounded drawdown review evidence in Details with clear limits and no saved plan change.',
+      'The next implementation can show drawdown review evidence in Details with clear limits and no saved plan change.',
     rows,
     reviewNote:
       'Recommended-plan closeout only. It does not apply a drawdown strategy, create account instructions, move evidence into Overview, or save output.',

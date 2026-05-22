@@ -1275,6 +1275,42 @@ describe('drawdown execution readiness contract', () => {
     expect(closeout.reviewNote).toContain('does not apply a drawdown strategy');
   });
 
+  it('keeps recommended-plan drawdown copy free of implementation labels', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan,
+      reentryCloseout,
+      consumerSummary,
+      comparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard();
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan, review, placement, copyGuard });
+    const visibleCopy = [
+      headline.headline,
+      headline.subhead,
+      headline.reviewNote,
+      review.headline,
+      review.detail,
+      review.reviewNote,
+      placement.headline,
+      placement.detail,
+      placement.reviewNote,
+      closeout.headline,
+      closeout.detail,
+      closeout.reviewNote,
+      ...review.rows.flatMap((row) => [row.label, row.detail]),
+      ...placement.rows.flatMap((row) => [row.label, row.detail]),
+      ...copyGuard.rows.flatMap((row) => [row.label, row.detail]),
+      ...closeout.rows.flatMap((row) => [row.label, row.detail])
+    ].join(' ');
+
+    expect(visibleCopy).not.toMatch(/\bV1\b/i);
+    expect(visibleCopy).not.toMatch(/\bbounded\b/i);
+    expect(visibleCopy).not.toMatch(/account-by-account instructions/i);
+  });
+
   it('holds recommended-plan drawdown polish when re-entry or comparison evidence is not ready', () => {
     const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
     const heldReentry = { ...reentryCloseout, status: 'holdBeforeProceeding' as const, headline: 'Hold before proceeding.' };
