@@ -40,18 +40,18 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 160 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, and explicit v1 deferral decision. The next logical slice is returning to recommended-plan and bounded drawdown execution polish while keeping detailed stress in the detailed report for v1.
+Sprint 165 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, and v1 drawdown re-entry closeout. The next logical slice is recommended-plan drawdown review polish.
 
-Completed Sprint 156-160 slices:
+Completed Sprint 161-165 slices:
 
-- Added runtime-only detailed-stress v1 decision rows.
-- Defaulted clean comparison and low consumer value to keeping detailed stress in the detailed report for v1.
-- Added review paths when product value or migration risk argues against default deferral.
-- Kept decision and closeout output runtime-only.
-- Closed the batch as ready to return to recommended-plan and bounded drawdown execution work.
+- Added runtime-only v1 drawdown re-entry review.
+- Confirmed detailed stress deferral, execution phase, UX readiness, saved-plan boundary, and v1 scope.
+- Marked recommended-plan framing and bounded drawdown review polish as the next sprint focus.
+- Added hold and blocked paths for detailed-stress review, examples, phase, and saved-plan boundaries.
+- Closed the batch as ready for the next bounded drawdown sprint.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 156-160 as decision work, not optimizer expansion, stress migration, or simulation math changes.
+- Confirmed v1 drawdown re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
+- Kept Sprints 161-165 as re-entry work, not optimizer expansion, stress migration, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -195,6 +195,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 136. **Sprint 158 — Detailed stress decision review paths.** Mark product-value and migration-risk exceptions for review.
 137. **Sprint 159 — Detailed stress decision persistence guardrails.** Keep decision and closeout output runtime-only.
 138. **Sprint 160 — Detailed stress v1 decision closeout.** Return focus to recommended-plan and bounded drawdown execution work.
+139. **Sprint 161 — V1 drawdown re-entry review.** Confirm detailed stress deferral and drawdown readiness after the decision checkpoint.
+140. **Sprint 162 — V1 drawdown next sprint plan.** Mark recommended-plan framing and bounded drawdown review polish as next.
+141. **Sprint 163 — V1 drawdown re-entry guardrails.** Add hold and block paths for examples, phase, and saved-plan boundaries.
+142. **Sprint 164 — V1 drawdown re-entry persistence.** Keep re-entry and next-sprint output runtime-only.
+143. **Sprint 165 — V1 drawdown re-entry closeout.** Close the session as ready for the next bounded drawdown sprint.
 
 ## Medium-Term Roadmap
 
@@ -353,6 +358,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 158 — Detailed stress decision review paths.** Complete 2026-05-22. Added review and blocked paths for the v1 decision.
 - **Sprint 159 — Detailed stress decision persistence guardrails.** Complete 2026-05-22. Kept decision evidence runtime-only.
 - **Sprint 160 — Detailed stress v1 decision closeout.** Complete 2026-05-22. Returned focus to recommended-plan and bounded drawdown execution work.
+- **Sprint 161 — V1 drawdown re-entry review.** Complete 2026-05-22. Added runtime-only re-entry review after detailed stress deferral.
+- **Sprint 162 — V1 drawdown next sprint plan.** Complete 2026-05-22. Marked recommended-plan framing and bounded drawdown review polish as next.
+- **Sprint 163 — V1 drawdown re-entry guardrails.** Complete 2026-05-22. Added hold and block paths for re-entry.
+- **Sprint 164 — V1 drawdown re-entry persistence.** Complete 2026-05-22. Kept re-entry evidence runtime-only.
+- **Sprint 165 — V1 drawdown re-entry closeout.** Complete 2026-05-22. Closed the session ready for the next bounded drawdown sprint.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

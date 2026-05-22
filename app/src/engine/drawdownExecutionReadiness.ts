@@ -2,6 +2,7 @@ import { createPlanFile } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import type { DrawdownComparisonDecisionGate, RealDrawdownComparisonResult } from './drawdownComparison';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
+import type { DetailedStressV1DecisionCloseout } from './stressSelectors';
 
 export type DrawdownExecutionAccountBucket = 'registered' | 'tfsa' | 'nonRegistered' | 'cash';
 export type DrawdownExecutionDirection = 'increase' | 'decrease';
@@ -688,6 +689,50 @@ export type TaxAwareDrawdownV1UxReadinessCloseout = {
   }>;
   reviewNote: string;
   disposition: 'v1DrawdownUxReadinessCloseoutOnly';
+};
+
+export type TaxAwareDrawdownV1ReentryReview = {
+  status: 'readyForV1Drawdown' | 'holdForReadiness' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'detailedStressDecision' | 'executionPhase' | 'uxReadiness' | 'savedPlan' | 'scope';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownReentryReviewOnly';
+};
+
+export type TaxAwareDrawdownV1NextWorkItem = {
+  id: 'recommendedPlan' | 'boundedDrawdown' | 'detailsCopy' | 'exampleGate' | 'savedPlan';
+  label: string;
+  status: 'next' | 'ready' | 'hold' | 'blocked';
+  detail: string;
+};
+
+export type TaxAwareDrawdownV1NextSprintPlan = {
+  status: 'readyForNextSprint' | 'holdForCleanup' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: TaxAwareDrawdownV1NextWorkItem[];
+  reviewNote: string;
+  disposition: 'v1DrawdownNextSprintPlanOnly';
+};
+
+export type TaxAwareDrawdownV1ReentryCloseout = {
+  status: 'readyToProceed' | 'holdBeforeProceeding' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'reentry' | 'nextSprint' | 'detailedStress' | 'persistence';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownReentryCloseoutOnly';
 };
 
 export function buildDrawdownExecutionContract({
@@ -3233,6 +3278,198 @@ export function selectTaxAwareDrawdownV1UxReadinessCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1ReentryReview({
+  plan,
+  detailedStressDecision,
+  executionPhase,
+  uxReadiness
+}: {
+  plan: V2PlanPayload;
+  detailedStressDecision: DetailedStressV1DecisionCloseout;
+  executionPhase: TaxAwareDrawdownV1PhaseCloseout;
+  uxReadiness: TaxAwareDrawdownV1UxReadinessCloseout;
+}): TaxAwareDrawdownV1ReentryReview {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ReentryReview['rows'] = [
+    {
+      id: 'detailedStressDecision',
+      label: 'Detailed stress decision',
+      status:
+        detailedStressDecision.status === 'readyToReturnToV1Drawdown'
+          ? 'ready'
+          : detailedStressDecision.status === 'blocked'
+            ? 'blocked'
+            : 'hold',
+      detail: detailedStressDecision.headline
+    },
+    {
+      id: 'executionPhase',
+      label: 'Bounded execution phase',
+      status:
+        executionPhase.status === 'readyForConsumerUx'
+          ? 'ready'
+          : executionPhase.status === 'stopBeforeConsumerUx'
+            ? 'blocked'
+            : 'hold',
+      detail: executionPhase.headline
+    },
+    {
+      id: 'uxReadiness',
+      label: 'Consumer UX readiness',
+      status:
+        uxReadiness.status === 'readyForDesign'
+          ? 'ready'
+          : uxReadiness.status === 'blocked'
+            ? 'blocked'
+            : 'hold',
+      detail: uxReadiness.headline
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No v1 drawdown re-entry output is saved.' : 'Saved plan output contains v1 drawdown re-entry data.'
+    },
+    {
+      id: 'scope',
+      label: 'V1 scope',
+      status: 'ready',
+      detail: 'Next work stays focused on recommended-plan and bounded drawdown review, not detailed stress migration.'
+    }
+  ];
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasHold = rows.some((row) => row.status === 'hold');
+
+  return {
+    status: hasBlocked ? 'blocked' : hasHold ? 'holdForReadiness' : 'readyForV1Drawdown',
+    headline: hasBlocked
+      ? 'Hold before returning to v1 drawdown work.'
+      : hasHold
+        ? 'V1 drawdown re-entry needs one more readiness cleanup.'
+        : 'Ready to return to v1 drawdown work.',
+    detail:
+      'This checkpoint confirms detailed stress has been deferred for v1 and the bounded drawdown path can resume without expanding scope.',
+    rows,
+    reviewNote:
+      'V1 drawdown re-entry review only. It does not apply a strategy, create account instructions, save output, or migrate detailed stress.',
+    disposition: 'v1DrawdownReentryReviewOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1NextSprintPlan({
+  reentry,
+  exampleGateClear = true,
+  savedPlanClean = true
+}: {
+  reentry: TaxAwareDrawdownV1ReentryReview;
+  exampleGateClear?: boolean;
+  savedPlanClean?: boolean;
+}): TaxAwareDrawdownV1NextSprintPlan {
+  const rows: TaxAwareDrawdownV1NextWorkItem[] = [
+    {
+      id: 'recommendedPlan',
+      label: 'Recommended-plan framing',
+      status: reentry.status === 'readyForV1Drawdown' ? 'next' : reentry.status === 'blocked' ? 'blocked' : 'hold',
+      detail: 'Shape the bounded drawdown result as review evidence inside the recommended household plan.'
+    },
+    {
+      id: 'boundedDrawdown',
+      label: 'Bounded drawdown review',
+      status: reentry.status === 'readyForV1Drawdown' ? 'next' : reentry.status === 'blocked' ? 'blocked' : 'hold',
+      detail: 'Keep the next sprint focused on bounded review language, not account-by-account instructions.'
+    },
+    {
+      id: 'detailsCopy',
+      label: 'Details copy',
+      status: 'ready',
+      detail: 'Use calm, review-oriented language and keep Overview light.'
+    },
+    {
+      id: 'exampleGate',
+      label: 'Example gate',
+      status: exampleGateClear ? 'ready' : 'hold',
+      detail: exampleGateClear ? 'Example coverage can support the next sprint.' : 'Example coverage needs review before promotion.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'Next-sprint planning output remains runtime-only.' : 'Next-sprint planning output must not enter saved plans.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForCleanup' : 'readyForNextSprint',
+    headline: blocked
+      ? 'Next drawdown sprint is blocked.'
+      : held
+        ? 'Next drawdown sprint needs cleanup first.'
+        : 'Next drawdown sprint is ready.',
+    detail:
+      'The next sprint should translate bounded drawdown execution into clearer recommended-plan review evidence while preserving all v1 guardrails.',
+    rows,
+    reviewNote:
+      'Next sprint plan only. It does not add optimizer behavior, apply drawdown changes, create account instructions, or save output.',
+    disposition: 'v1DrawdownNextSprintPlanOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ReentryCloseout({
+  reentry,
+  nextSprint
+}: {
+  reentry: TaxAwareDrawdownV1ReentryReview;
+  nextSprint: TaxAwareDrawdownV1NextSprintPlan;
+}): TaxAwareDrawdownV1ReentryCloseout {
+  const blocked = reentry.status === 'blocked' || nextSprint.status === 'blocked';
+  const ready = reentry.status === 'readyForV1Drawdown' && nextSprint.status === 'readyForNextSprint';
+
+  return {
+    status: blocked ? 'blocked' : ready ? 'readyToProceed' : 'holdBeforeProceeding',
+    headline: blocked
+      ? 'V1 drawdown re-entry is blocked.'
+      : ready
+        ? 'Ready for the next bounded drawdown sprint.'
+        : 'Hold before the next bounded drawdown sprint.',
+    detail: blocked
+      ? 'Clean up blocked re-entry or next-sprint rows before proceeding.'
+      : ready
+        ? 'Detailed stress remains deferred for v1, and the next sprint can focus on recommended-plan drawdown review polish.'
+        : 'Resolve held re-entry or example coverage items before proceeding.',
+    rows: [
+      {
+        id: 'reentry',
+        label: 'Re-entry review',
+        status: reentry.status === 'readyForV1Drawdown' ? 'ready' : reentry.status === 'blocked' ? 'blocked' : 'hold',
+        detail: reentry.headline
+      },
+      {
+        id: 'nextSprint',
+        label: 'Next sprint plan',
+        status: nextSprint.status === 'readyForNextSprint' ? 'ready' : nextSprint.status === 'blocked' ? 'blocked' : 'hold',
+        detail: nextSprint.headline
+      },
+      {
+        id: 'detailedStress',
+        label: 'Detailed stress',
+        status: 'ready',
+        detail: 'Detailed stress stays in the detailed report for v1.'
+      },
+      {
+        id: 'persistence',
+        label: 'Persistence',
+        status: 'ready',
+        detail: 'Re-entry and next-sprint output remain runtime-only.'
+      }
+    ],
+    reviewNote:
+      'V1 drawdown re-entry closeout only. It does not change optimizer behavior, apply a strategy, migrate detailed stress, or save output.',
+    disposition: 'v1DrawdownReentryCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -3285,6 +3522,9 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownUxReviewActions' in saved) &&
     !('v1DrawdownUxCopyGuard' in saved) &&
     !('v1DrawdownUxReadinessCloseout' in saved) &&
+    !('v1DrawdownReentryReview' in saved) &&
+    !('v1DrawdownNextSprintPlan' in saved) &&
+    !('v1DrawdownReentryCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

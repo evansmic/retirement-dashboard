@@ -45,7 +45,10 @@ import {
   selectTaxAwareDrawdownV1ConsumerSummary,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
+  selectTaxAwareDrawdownV1NextSprintPlan,
   selectTaxAwareDrawdownV1PhaseCloseout,
+  selectTaxAwareDrawdownV1ReentryCloseout,
+  selectTaxAwareDrawdownV1ReentryReview,
   selectTaxAwareDrawdownV1SafetyChecklist,
   selectTaxAwareDrawdownV1UxComparisonCard,
   selectTaxAwareDrawdownV1UxCopyGuard,
@@ -57,6 +60,7 @@ import {
   type DrawdownAnnualOverrideAdapterDraft,
   type RuntimeDrawdownOverridePayload
 } from './drawdownExecutionReadiness';
+import type { DetailedStressV1DecisionCloseout } from './stressSelectors';
 
 const plan: V2PlanPayload = {
   schemaVersion: 2,
@@ -171,6 +175,39 @@ describe('drawdown execution readiness contract', () => {
     });
     expect(contract.reviewNote).toContain('annual overrides empty');
   });
+
+  function readyDetailedStressDecision(): DetailedStressV1DecisionCloseout {
+    return {
+      status: 'readyToReturnToV1Drawdown',
+      headline: 'Detailed stress can stay in the detailed report for v1.',
+      detail: 'Ready to return to drawdown work.',
+      rows: [],
+      reviewNote: 'decision closeout only',
+      disposition: 'detailedStressV1DecisionCloseoutOnly'
+    };
+  }
+
+  function readyExecutionPhase() {
+    return {
+      status: 'readyForConsumerUx' as const,
+      headline: 'Ready for consumer UX.',
+      detail: 'Bounded execution is ready for UX.',
+      rows: [],
+      reviewNote: 'phase closeout only',
+      disposition: 'v1DrawdownExecutionPhaseCloseoutOnly' as const
+    };
+  }
+
+  function readyUxCloseout() {
+    return {
+      status: 'readyForDesign' as const,
+      headline: 'Ready for drawdown UX design.',
+      detail: 'UX readiness is clear.',
+      rows: [],
+      reviewNote: 'ux readiness only',
+      disposition: 'v1DrawdownUxReadinessCloseoutOnly' as const
+    };
+  }
 
   it('keeps payloads out when the gate is held back', () => {
     const weakCandidate: SimulationResult = {
@@ -1112,5 +1149,84 @@ describe('drawdown execution readiness contract', () => {
     expect(uxActions.status).toBe('held');
     expect(uxCopyGuard.status).toBe('clear');
     expect(uxReadiness.status).toBe('holdForDesignPolish');
+  });
+
+  it('re-enters v1 drawdown work after detailed stress is deferred for v1', () => {
+    const reentry = selectTaxAwareDrawdownV1ReentryReview({
+      plan,
+      detailedStressDecision: readyDetailedStressDecision(),
+      executionPhase: readyExecutionPhase(),
+      uxReadiness: readyUxCloseout()
+    });
+    const nextSprint = selectTaxAwareDrawdownV1NextSprintPlan({ reentry });
+    const closeout = selectTaxAwareDrawdownV1ReentryCloseout({ reentry, nextSprint });
+
+    expect(reentry).toMatchObject({
+      status: 'readyForV1Drawdown',
+      disposition: 'v1DrawdownReentryReviewOnly'
+    });
+    expect(reentry.rows.map((row) => row.id)).toEqual([
+      'detailedStressDecision',
+      'executionPhase',
+      'uxReadiness',
+      'savedPlan',
+      'scope'
+    ]);
+    expect(nextSprint).toMatchObject({
+      status: 'readyForNextSprint',
+      disposition: 'v1DrawdownNextSprintPlanOnly'
+    });
+    expect(nextSprint.rows.find((row) => row.id === 'recommendedPlan')).toMatchObject({ status: 'next' });
+    expect(closeout).toMatchObject({
+      status: 'readyToProceed',
+      disposition: 'v1DrawdownReentryCloseoutOnly'
+    });
+    expect(closeout.reviewNote).toContain('does not change optimizer behavior');
+  });
+
+  it('holds v1 drawdown re-entry when detailed stress or examples still need review', () => {
+    const reentry = selectTaxAwareDrawdownV1ReentryReview({
+      plan,
+      detailedStressDecision: {
+        ...readyDetailedStressDecision(),
+        status: 'holdDetailedStress',
+        headline: 'Detailed stress decision still needs review.'
+      },
+      executionPhase: readyExecutionPhase(),
+      uxReadiness: readyUxCloseout()
+    });
+    const nextSprint = selectTaxAwareDrawdownV1NextSprintPlan({ reentry, exampleGateClear: false });
+    const closeout = selectTaxAwareDrawdownV1ReentryCloseout({ reentry, nextSprint });
+
+    expect(reentry.status).toBe('holdForReadiness');
+    expect(reentry.rows.find((row) => row.id === 'detailedStressDecision')).toMatchObject({ status: 'hold' });
+    expect(nextSprint.status).toBe('holdForCleanup');
+    expect(nextSprint.rows.find((row) => row.id === 'exampleGate')).toMatchObject({ status: 'hold' });
+    expect(closeout.status).toBe('holdBeforeProceeding');
+  });
+
+  it('blocks v1 drawdown re-entry when saved-plan or phase boundaries fail', () => {
+    const dirtyPlan = {
+      ...plan,
+      withdrawalStrategy: { mode: 'currentOrder', annualOverrides: [] }
+    } as V2PlanPayload;
+    const reentry = selectTaxAwareDrawdownV1ReentryReview({
+      plan: dirtyPlan,
+      detailedStressDecision: readyDetailedStressDecision(),
+      executionPhase: {
+        ...readyExecutionPhase(),
+        status: 'stopBeforeConsumerUx',
+        headline: 'Execution phase is blocked.'
+      },
+      uxReadiness: readyUxCloseout()
+    });
+    const nextSprint = selectTaxAwareDrawdownV1NextSprintPlan({ reentry, savedPlanClean: false });
+    const closeout = selectTaxAwareDrawdownV1ReentryCloseout({ reentry, nextSprint });
+
+    expect(reentry.status).toBe('blocked');
+    expect(reentry.rows.find((row) => row.id === 'executionPhase')).toMatchObject({ status: 'blocked' });
+    expect(reentry.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(nextSprint.status).toBe('blocked');
+    expect(closeout.status).toBe('blocked');
   });
 });
