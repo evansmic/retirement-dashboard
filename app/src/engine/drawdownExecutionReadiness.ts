@@ -735,6 +735,60 @@ export type TaxAwareDrawdownV1ReentryCloseout = {
   disposition: 'v1DrawdownReentryCloseoutOnly';
 };
 
+export type TaxAwareDrawdownV1RecommendedPlanReview = {
+  status: 'readyForDetails' | 'holdForPolish' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'reentry' | 'planFraming' | 'drawdownCheck' | 'limits' | 'overviewBoundary' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownRecommendedPlanReviewOnly';
+};
+
+export type TaxAwareDrawdownV1DetailsPlacement = {
+  status: 'detailsReady' | 'holdForPolish' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'location' | 'headline' | 'comparison' | 'limits' | 'nextActions';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownDetailsPlacementOnly';
+};
+
+export type TaxAwareDrawdownV1ReviewCopyGuard = {
+  status: 'clear' | 'blocked';
+  rows: Array<{
+    id: 'notAdvice' | 'notInstruction' | 'notSaved' | 'notOverview';
+    label: string;
+    status: 'ok' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownReviewCopyGuardOnly';
+};
+
+export type TaxAwareDrawdownV1RecommendedPlanCloseout = {
+  status: 'readyForImplementation' | 'holdForPolish' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'review' | 'placement' | 'copy' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownRecommendedPlanCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -3470,6 +3524,231 @@ export function selectTaxAwareDrawdownV1ReentryCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1RecommendedPlanReview({
+  plan,
+  reentryCloseout,
+  consumerSummary,
+  comparison,
+  limits
+}: {
+  plan: V2PlanPayload;
+  reentryCloseout: TaxAwareDrawdownV1ReentryCloseout;
+  consumerSummary: TaxAwareDrawdownV1ConsumerSummary;
+  comparison: TaxAwareDrawdownV1UxComparisonCard;
+  limits: TaxAwareDrawdownV1ConsumerLimits;
+}): TaxAwareDrawdownV1RecommendedPlanReview {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1RecommendedPlanReview['rows'] = [
+    {
+      id: 'reentry',
+      label: 'Re-entry checkpoint',
+      status: reentryCloseout.status === 'readyToProceed' ? 'ready' : reentryCloseout.status === 'blocked' ? 'blocked' : 'hold',
+      detail: reentryCloseout.headline
+    },
+    {
+      id: 'planFraming',
+      label: 'Recommended-plan framing',
+      status: consumerSummary.status === 'clearForReview' ? 'ready' : consumerSummary.status === 'blocked' ? 'blocked' : 'hold',
+      detail: 'Frame the drawdown result as one review check inside the recommended household plan.'
+    },
+    {
+      id: 'drawdownCheck',
+      label: 'Drawdown check',
+      status: comparison.status === 'ready' ? 'ready' : comparison.status === 'blocked' ? 'blocked' : 'hold',
+      detail: 'Use the bounded comparison rows as review evidence, not account-by-account instructions.'
+    },
+    {
+      id: 'limits',
+      label: 'Visible limits',
+      status: limits.status === 'visible' ? 'ready' : 'hold',
+      detail: 'Keep the single-scenario, review-only, not-saved, and not-full-plan limits visible.'
+    },
+    {
+      id: 'overviewBoundary',
+      label: 'Overview boundary',
+      status: 'ready',
+      detail: 'Keep the detailed drawdown review in Details so Overview stays focused on the retirement answer.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No recommended-plan drawdown review output is saved.' : 'Saved plan output contains recommended-plan drawdown review data.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForPolish' : 'readyForDetails',
+    headline: blocked
+      ? 'Recommended-plan drawdown review is blocked.'
+      : held
+        ? 'Recommended-plan drawdown review needs polish.'
+        : 'Recommended-plan drawdown review is ready for Details.',
+    detail:
+      'This turns the bounded drawdown result into a Details-level review item inside the recommended plan without changing the plan.',
+    rows,
+    reviewNote:
+      'Recommended-plan drawdown review only. It does not apply a strategy, create instructions, move into Overview, or save output.',
+    disposition: 'v1DrawdownRecommendedPlanReviewOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1DetailsPlacement({
+  review,
+  headline,
+  comparison,
+  actions
+}: {
+  review: TaxAwareDrawdownV1RecommendedPlanReview;
+  headline: TaxAwareDrawdownV1UxHeadline;
+  comparison: TaxAwareDrawdownV1UxComparisonCard;
+  actions: TaxAwareDrawdownV1UxReviewActions;
+}): TaxAwareDrawdownV1DetailsPlacement {
+  const rows: TaxAwareDrawdownV1DetailsPlacement['rows'] = [
+    {
+      id: 'location',
+      label: 'Location',
+      status: review.status === 'readyForDetails' ? 'ready' : review.status === 'blocked' ? 'blocked' : 'hold',
+      detail: 'Place the bounded drawdown review in Details under the recommended plan.'
+    },
+    {
+      id: 'headline',
+      label: 'Headline',
+      status: headline.status === 'ready' ? 'ready' : headline.status === 'blocked' ? 'blocked' : 'hold',
+      detail: headline.headline
+    },
+    {
+      id: 'comparison',
+      label: 'Comparison rows',
+      status: comparison.status === 'ready' ? 'ready' : comparison.status === 'blocked' ? 'blocked' : 'hold',
+      detail: comparison.reviewNote
+    },
+    {
+      id: 'limits',
+      label: 'Limits',
+      status: 'ready',
+      detail: 'Show clear review-only limits beside the comparison.'
+    },
+    {
+      id: 'nextActions',
+      label: 'Review actions',
+      status: actions.status === 'available' ? 'ready' : actions.status === 'blocked' ? 'blocked' : 'hold',
+      detail: actions.reviewNote
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForPolish' : 'detailsReady',
+    headline: blocked ? 'Drawdown Details placement is blocked.' : held ? 'Drawdown Details placement needs polish.' : 'Drawdown Details placement is ready.',
+    detail:
+      'This placement keeps the drawdown review close to the recommended plan explanation while avoiding Overview density.',
+    rows,
+    reviewNote:
+      'Details placement only. It does not move the bounded drawdown result into Overview, apply it, or save output.',
+    disposition: 'v1DrawdownDetailsPlacementOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ReviewCopyGuard({
+  savedPlanClean = true
+}: {
+  savedPlanClean?: boolean;
+} = {}): TaxAwareDrawdownV1ReviewCopyGuard {
+  const rows: TaxAwareDrawdownV1ReviewCopyGuard['rows'] = [
+    {
+      id: 'notAdvice',
+      label: 'Review wording',
+      status: 'ok',
+      detail: 'Copy frames the result as review evidence, not financial or tax advice.'
+    },
+    {
+      id: 'notInstruction',
+      label: 'No instructions',
+      status: 'ok',
+      detail: 'Copy does not tell the household which account to withdraw from in any year.'
+    },
+    {
+      id: 'notSaved',
+      label: 'Not saved',
+      status: savedPlanClean ? 'ok' : 'blocked',
+      detail: savedPlanClean ? 'Copy states the editable plan is unchanged.' : 'Saved-plan boundary needs cleanup.'
+    },
+    {
+      id: 'notOverview',
+      label: 'Details only',
+      status: 'ok',
+      detail: 'Copy keeps detailed drawdown evidence in Details, not Overview.'
+    }
+  ];
+  return {
+    status: rows.some((row) => row.status === 'blocked') ? 'blocked' : 'clear',
+    rows,
+    reviewNote:
+      'Drawdown review copy guard only. It blocks advice-like, instructional, saved-output, or Overview-heavy framing.',
+    disposition: 'v1DrawdownReviewCopyGuardOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1RecommendedPlanCloseout({
+  plan,
+  review,
+  placement,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  review: TaxAwareDrawdownV1RecommendedPlanReview;
+  placement: TaxAwareDrawdownV1DetailsPlacement;
+  copyGuard: TaxAwareDrawdownV1ReviewCopyGuard;
+}): TaxAwareDrawdownV1RecommendedPlanCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1RecommendedPlanCloseout['rows'] = [
+    {
+      id: 'review',
+      label: 'Recommended-plan review',
+      status: review.status === 'readyForDetails' ? 'ready' : review.status === 'blocked' ? 'blocked' : 'hold',
+      detail: review.headline
+    },
+    {
+      id: 'placement',
+      label: 'Details placement',
+      status: placement.status === 'detailsReady' ? 'ready' : placement.status === 'blocked' ? 'blocked' : 'hold',
+      detail: placement.headline
+    },
+    {
+      id: 'copy',
+      label: 'Copy guard',
+      status: copyGuard.status === 'clear' ? 'ready' : 'blocked',
+      detail: copyGuard.reviewNote
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No recommended-plan closeout output is saved.' : 'Saved plan output contains recommended-plan closeout data.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForPolish' : 'readyForImplementation',
+    headline: blocked
+      ? 'Recommended-plan drawdown polish is blocked.'
+      : held
+        ? 'Recommended-plan drawdown polish needs cleanup.'
+        : 'Recommended-plan drawdown polish is ready.',
+    detail:
+      'The next implementation can show bounded drawdown review evidence in Details with clear limits and no saved plan change.',
+    rows,
+    reviewNote:
+      'Recommended-plan closeout only. It does not apply a drawdown strategy, create account instructions, move evidence into Overview, or save output.',
+    disposition: 'v1DrawdownRecommendedPlanCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -3525,6 +3804,10 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownReentryReview' in saved) &&
     !('v1DrawdownNextSprintPlan' in saved) &&
     !('v1DrawdownReentryCloseout' in saved) &&
+    !('v1DrawdownRecommendedPlanReview' in saved) &&
+    !('v1DrawdownDetailsPlacement' in saved) &&
+    !('v1DrawdownReviewCopyGuard' in saved) &&
+    !('v1DrawdownRecommendedPlanCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

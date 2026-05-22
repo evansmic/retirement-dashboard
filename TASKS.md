@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 165: V1 Drawdown Re-Entry Closeout
+## Latest Sprint — Sprint 170: Recommended-Plan Drawdown Review Closeout
 
 **Status:** Complete 2026-05-22.
 
-Goal: re-enter the v1 drawdown path after deferring detailed stress migration, confirming the next sprint can focus on recommended-plan and bounded drawdown review polish.
+Goal: polish the bounded drawdown result as a recommended-plan Details review item without turning it into instructions, advice, Overview density, or saved plan output.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted re-entry output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 165 checkpoint doc: [`docs/sprint_165_v1_drawdown_reentry_closeout.md`](docs/sprint_165_v1_drawdown_reentry_closeout.md).
+Sprint 170 checkpoint doc: [`docs/sprint_170_recommended_plan_drawdown_closeout.md`](docs/sprint_170_recommended_plan_drawdown_closeout.md).
 
-### Sprint 161-165 Candidate Implementation Tickets
+### Sprint 166-170 Candidate Implementation Tickets
 
-- [x] **S161-01 — V1 drawdown re-entry review.** Confirm detailed stress deferral, execution phase, UX readiness, saved-plan boundary, and scope.
-- [x] **S162-01 — Next sprint plan.** Mark recommended-plan framing and bounded drawdown review as the next work.
-- [x] **S163-01 — Re-entry hold/block paths.** Hold on detailed-stress or example review; block dirty saved-plan or stopped phase paths.
-- [x] **S164-01 — Re-entry persistence guardrails.** Keep re-entry, next-sprint, and closeout output runtime-only.
-- [x] **S165-01 — Re-entry closeout tests/docs.** Close the session as ready for the next bounded drawdown sprint.
+- [x] **S166-01 — Recommended-plan drawdown review.** Frame bounded drawdown as a Details review item inside the recommended plan.
+- [x] **S167-01 — Details placement.** Keep comparison rows, limits, and next actions in Details, not Overview.
+- [x] **S168-01 — Review copy guard.** Block advice-like, instruction-like, saved-output, or Overview-heavy framing.
+- [x] **S169-01 — Recommended-plan persistence guardrails.** Keep review, placement, copy, and closeout output runtime-only.
+- [x] **S170-01 — Recommended-plan closeout tests/docs.** Mark the drawdown review polish ready for implementation.
 
-### Sprint 165 Definition Of Done
+### Sprint 170 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -46,14 +46,48 @@ Sprint 165 checkpoint doc: [`docs/sprint_165_v1_drawdown_reentry_closeout.md`](d
 - V1 drawdown re-entry checks detailed stress deferral, execution phase, UX readiness, saved-plan boundary, and v1 scope.
 - Next sprint plan prioritizes recommended-plan framing and bounded drawdown review polish.
 - Re-entry closeout marks the path ready for the next bounded drawdown sprint.
+- Recommended-plan drawdown review frames bounded execution as review evidence inside Details.
+- Details placement keeps comparison rows, limits, and review actions out of Overview.
+- Copy guard blocks advice-like, instruction-like, saved-output, or Overview-heavy framing.
+- Closeout marks recommended-plan drawdown review polish ready for implementation.
 - No detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 170: Recommended-Plan Drawdown Review Closeout
+
+**Complete 2026-05-22.** Marked recommended-plan drawdown review polish ready for implementation while keeping it review-only and Details-scoped.
+
+Sprint 170 checkpoint doc: [`docs/sprint_170_recommended_plan_drawdown_closeout.md`](docs/sprint_170_recommended_plan_drawdown_closeout.md).
+
+### Sprint 169: Recommended-Plan Drawdown Persistence Guardrails
+
+**Complete 2026-05-22.** Kept recommended-plan drawdown review, placement, copy, and closeout output runtime-only.
+
+Sprint 169 checkpoint doc: [`docs/sprint_169_recommended_plan_drawdown_persistence.md`](docs/sprint_169_recommended_plan_drawdown_persistence.md).
+
+### Sprint 168: V1 Drawdown Review Copy Guard
+
+**Complete 2026-05-22.** Added copy guardrails for advice-like, instruction-like, saved-output, and Overview-heavy framing.
+
+Sprint 168 checkpoint doc: [`docs/sprint_168_v1_drawdown_review_copy_guard.md`](docs/sprint_168_v1_drawdown_review_copy_guard.md).
+
+### Sprint 167: V1 Drawdown Details Placement
+
+**Complete 2026-05-22.** Kept bounded drawdown comparison rows, limits, and review actions in Details.
+
+Sprint 167 checkpoint doc: [`docs/sprint_167_v1_drawdown_details_placement.md`](docs/sprint_167_v1_drawdown_details_placement.md).
+
+### Sprint 166: Recommended-Plan Drawdown Review
+
+**Complete 2026-05-22.** Framed bounded drawdown execution as a recommended-plan Details review item.
+
+Sprint 166 checkpoint doc: [`docs/sprint_166_recommended_plan_drawdown_review.md`](docs/sprint_166_recommended_plan_drawdown_review.md).
 
 ### Sprint 165: V1 Drawdown Re-Entry Closeout
 

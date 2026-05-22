@@ -45,10 +45,14 @@ import {
   selectTaxAwareDrawdownV1ConsumerSummary,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
+  selectTaxAwareDrawdownV1DetailsPlacement,
   selectTaxAwareDrawdownV1NextSprintPlan,
   selectTaxAwareDrawdownV1PhaseCloseout,
+  selectTaxAwareDrawdownV1RecommendedPlanCloseout,
+  selectTaxAwareDrawdownV1RecommendedPlanReview,
   selectTaxAwareDrawdownV1ReentryCloseout,
   selectTaxAwareDrawdownV1ReentryReview,
+  selectTaxAwareDrawdownV1ReviewCopyGuard,
   selectTaxAwareDrawdownV1SafetyChecklist,
   selectTaxAwareDrawdownV1UxComparisonCard,
   selectTaxAwareDrawdownV1UxCopyGuard,
@@ -1182,6 +1186,148 @@ describe('drawdown execution readiness contract', () => {
       disposition: 'v1DrawdownReentryCloseoutOnly'
     });
     expect(closeout.reviewNote).toContain('does not change optimizer behavior');
+  });
+
+  function readyRecommendedPlanInputs() {
+    const execution = runTaxAwareDrawdownV1Execution({
+      plan,
+      candidate: {
+        status: 'ready',
+        candidateId: 'boundedRegisteredTimingExecution',
+        label: 'Bounded registered timing execution',
+        amount: 5000,
+        config: { meltdown: true },
+        rows: [],
+        reviewNote: 'candidate only',
+        disposition: 'v1DrawdownExecutionCandidateOnly'
+      },
+      runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+    });
+    const review = {
+      status: 'readyForUserReview' as const,
+      headline: 'Ready for review.',
+      detail: 'Review only.',
+      rows: [],
+      reviewNote: 'not a recommendation',
+      disposition: 'v1DrawdownExecutionReviewOnly' as const
+    };
+    const consumerSummary = selectTaxAwareDrawdownV1ConsumerSummary({ execution, review });
+    const limits = selectTaxAwareDrawdownV1ConsumerLimits();
+    const consumerCloseout = {
+      status: 'readyForUxCopy' as const,
+      headline: 'Ready for consumer UX copy.',
+      detail: 'Ready.',
+      rows: [],
+      reviewNote: 'consumer closeout only',
+      disposition: 'v1DrawdownConsumerCloseoutOnly' as const
+    };
+    const headline = selectTaxAwareDrawdownV1UxHeadline({ consumerCloseout });
+    const comparison = selectTaxAwareDrawdownV1UxComparisonCard({ execution });
+    const actions = selectTaxAwareDrawdownV1UxReviewActions({ consumerCloseout });
+    const reentry = selectTaxAwareDrawdownV1ReentryReview({
+      plan,
+      detailedStressDecision: readyDetailedStressDecision(),
+      executionPhase: readyExecutionPhase(),
+      uxReadiness: readyUxCloseout()
+    });
+    const nextSprint = selectTaxAwareDrawdownV1NextSprintPlan({ reentry });
+    const reentryCloseout = selectTaxAwareDrawdownV1ReentryCloseout({ reentry, nextSprint });
+    return { consumerSummary, limits, headline, comparison, actions, reentryCloseout };
+  }
+
+  it('places bounded drawdown review inside the recommended plan Details surface', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan,
+      reentryCloseout,
+      consumerSummary,
+      comparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard();
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan, review, placement, copyGuard });
+
+    expect(review).toMatchObject({
+      status: 'readyForDetails',
+      disposition: 'v1DrawdownRecommendedPlanReviewOnly'
+    });
+    expect(review.rows.map((row) => row.id)).toEqual([
+      'reentry',
+      'planFraming',
+      'drawdownCheck',
+      'limits',
+      'overviewBoundary',
+      'savedPlan'
+    ]);
+    expect(placement).toMatchObject({
+      status: 'detailsReady',
+      disposition: 'v1DrawdownDetailsPlacementOnly'
+    });
+    expect(copyGuard).toMatchObject({
+      status: 'clear',
+      disposition: 'v1DrawdownReviewCopyGuardOnly'
+    });
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementation',
+      disposition: 'v1DrawdownRecommendedPlanCloseoutOnly'
+    });
+    expect(closeout.reviewNote).toContain('does not apply a drawdown strategy');
+  });
+
+  it('holds recommended-plan drawdown polish when re-entry or comparison evidence is not ready', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const heldReentry = { ...reentryCloseout, status: 'holdBeforeProceeding' as const, headline: 'Hold before proceeding.' };
+    const heldComparison = { ...comparison, status: 'hold' as const };
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan,
+      reentryCloseout: heldReentry,
+      consumerSummary,
+      comparison: heldComparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({
+      review,
+      headline,
+      comparison: heldComparison,
+      actions
+    });
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({
+      plan,
+      review,
+      placement,
+      copyGuard: selectTaxAwareDrawdownV1ReviewCopyGuard()
+    });
+
+    expect(review.status).toBe('holdForPolish');
+    expect(review.rows.find((row) => row.id === 'reentry')).toMatchObject({ status: 'hold' });
+    expect(review.rows.find((row) => row.id === 'drawdownCheck')).toMatchObject({ status: 'hold' });
+    expect(placement.status).toBe('holdForPolish');
+    expect(closeout.status).toBe('holdForPolish');
+  });
+
+  it('blocks recommended-plan drawdown polish when copy or saved-plan boundaries fail', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const dirtyPlan = {
+      ...plan,
+      v1DrawdownRecommendedPlanReview: { status: 'readyForDetails' }
+    } as V2PlanPayload;
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan: dirtyPlan,
+      reentryCloseout,
+      consumerSummary,
+      comparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard({ savedPlanClean: false });
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan: dirtyPlan, review, placement, copyGuard });
+
+    expect(review.status).toBe('blocked');
+    expect(review.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(copyGuard.status).toBe('blocked');
+    expect(closeout.status).toBe('blocked');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanCloseout');
   });
 
   it('holds v1 drawdown re-entry when detailed stress or examples still need review', () => {
