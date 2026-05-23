@@ -6,7 +6,7 @@ const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
 describe('Results overview structure', () => {
   it('keeps audit-style evidence reachable from Details instead of the Overview flow', () => {
     const overviewStart = appSource.indexOf("activeSection === 'overview'");
-    const overviewEnd = appSource.indexOf('<ResultsReadinessPanel compact', overviewStart);
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
     const overviewBranch = appSource.slice(overviewStart, overviewEnd);
     const detailsStart = appSource.indexOf('function DetailsResultsPanel');
     const detailsEnd = appSource.indexOf('function FirstYearMoneyFlowPanel');
@@ -15,9 +15,10 @@ describe('Results overview structure', () => {
     expect(overviewBranch).toContain('<RetirementAnswerPanel');
     expect(overviewBranch).toContain('<SpendingCapacityPanel');
     expect(overviewBranch).toContain('<ReviewTheseFirstPanel');
-    expect(overviewBranch).toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).toContain('<OverviewHighlightsPanel');
     expect(overviewBranch).toContain('<EstateIntentPanel');
+    expect(overviewBranch).not.toContain('<BoundedOptimizerPanel');
+    expect(overviewBranch).not.toContain('<ResultsReadinessPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
     expect(overviewBranch).not.toContain('<ProjectionPathPanel');
     expect(overviewBranch).not.toContain('<ReconciliationDiagnosticsPanel');
@@ -73,7 +74,7 @@ describe('Results overview structure', () => {
 
   it('shows drawdown readiness in Details without optimizer execution language', () => {
     const overviewStart = appSource.indexOf("activeSection === 'overview'");
-    const overviewEnd = appSource.indexOf('<ResultsReadinessPanel compact', overviewStart);
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
     const overviewBranch = appSource.slice(overviewStart, overviewEnd);
 
     expect(appSource).toContain('Drawdown readiness');
@@ -147,6 +148,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Fix first');
     expect(appSource).toContain('Review now');
     expect(appSource).toContain('Later UX pass');
+    expect(appSource).toContain('SHOW_CHECKPOINT_REVIEW_PANELS');
     expect(appSource).toContain('without turning it into a plan change');
     expect(appSource).toContain('without creating account instructions');
     expect(appSource).toContain('not a saved plan change or account instruction');
@@ -175,6 +177,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Open printable report');
     expect(appSource).toContain('It may look more detailed than this guided Results page');
     expect(appSource).toContain('This saves the household inputs and assumptions');
+    expect(appSource).toContain('This downloaded file is your editable backup');
+    expect(appSource).toContain('Save an editable copy before opening the printable report?');
     expect(appSource).toContain('It is not the');
     expect(appSource).toContain('printable client report');
     expect(appSource).not.toContain('Save .plan.json');
@@ -188,6 +192,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('stable dashboard');
     expect(appSource).not.toContain('legacy charts');
     expect(appSource).not.toContain('source reconciliation');
+    expect(appSource).not.toContain('Meltdown diagnostic');
+    expect(appSource).toContain('Ontario 2026 tax assumptions');
     expect(appSource).not.toContain('cash-flow delta');
     expect(appSource).not.toContain('bounded preview');
     expect(appSource).not.toContain('wasted unnecessarily');

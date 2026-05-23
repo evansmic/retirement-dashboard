@@ -39,6 +39,10 @@ export const previewRunnerBoundary: PreviewRunnerBoundary = {
   disposition: 'previewRunnerBoundaryOnly'
 };
 
+function consumerWithdrawalOrder(value: string | undefined): string {
+  return value === 'meltdown' ? 'default' : value || 'default';
+}
+
 export function buildBaselinePreviewConfig(plan: V2PlanPayload): SimulationConfig {
   return {
     cppAgeF: 65,
@@ -49,7 +53,7 @@ export function buildBaselinePreviewConfig(plan: V2PlanPayload): SimulationConfi
     returnRate: 0.05,
     pensionSplit: false,
     p1Dies: null,
-    withdrawalOrder: plan.assumptions.withdrawalOrder || 'default'
+    withdrawalOrder: consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)
   };
 }
 

@@ -94,6 +94,16 @@ describe('preview scenario runner', () => {
     });
   });
 
+  it('maps older diagnostic withdrawal order settings to the consumer default preview', () => {
+    const plan = testPlan();
+    plan.assumptions.withdrawalOrder = 'meltdown';
+
+    expect(buildBaselinePreviewConfig(plan)).toMatchObject({
+      meltdown: false,
+      withdrawalOrder: 'default'
+    });
+  });
+
   it('creates a retire-later plan without mutating the original plan', () => {
     const plan = testPlan();
     const scenario = createRetireLaterPlan(plan);

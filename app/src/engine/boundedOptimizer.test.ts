@@ -294,6 +294,18 @@ describe('bounded optimizer runner', () => {
     });
   });
 
+  it('does not carry older diagnostic withdrawal order settings into consumer optimizer candidates', () => {
+    const plan = readyPlan();
+    plan.assumptions.withdrawalOrder = 'meltdown';
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+
+    expect(candidates.find((candidate) => candidate.id === 'baseline')?.config).toMatchObject({
+      meltdown: false,
+      withdrawalOrder: 'default'
+    });
+  });
+
   it('adds one bounded CPP sharing candidate for eligible couples without mutating the source plan', () => {
     const plan = cppSharingPlan();
     const candidates = buildBoundedOptimizerCandidates(plan);

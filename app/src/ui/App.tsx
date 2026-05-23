@@ -224,6 +224,9 @@ type BridgePreview = {
   loading: boolean;
 };
 
+const SHOW_CHECKPOINT_REVIEW_PANELS = false;
+const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
+
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
   { id: 'household', label: 'Household', helper: 'Who this plan supports' },
   { id: 'income', label: 'Income', helper: 'Work, pensions, CPP, OAS' },
@@ -330,6 +333,10 @@ function stableDashboardUrlForPlan(plan: V2PlanPayload): string {
 
 function printableReportUrlForPlan(plan: V2PlanPayload): string {
   return stableDashboardUrlForPlan(plan);
+}
+
+function consumerWithdrawalOrder(value: string | undefined): string {
+  return value === 'meltdown' ? 'default' : value || 'default';
 }
 
 function formatMoney(value: number | undefined): string {
@@ -1085,6 +1092,12 @@ export function App() {
     dispatch({ type: 'markSaved', savedAt: new Date().toLocaleString() });
   }
 
+  function offerSaveBeforeLeaving(message: string) {
+    if (state.dirty && window.confirm(message)) {
+      saveEditablePlan();
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -1180,7 +1193,12 @@ export function App() {
               firstYear={bridgeFirstYear?.year}
               lastYear={bridgeLastYear?.year}
               onDownload={saveEditablePlan}
-              onResults={() => dispatch({ type: 'setView', view: 'results' })}
+              onResults={() => {
+                offerSaveBeforeLeaving(
+                  'Save an editable copy before viewing Results? This downloads your local plan file first.'
+                );
+                dispatch({ type: 'setView', view: 'results' });
+              }}
               onStep={(step) => dispatch({ type: 'setStep', step })}
               plan={plan}
               title={domainPlan.title}
@@ -1195,6 +1213,7 @@ export function App() {
               loading={bridgePreview.loading}
               onDownload={saveEditablePlan}
               onSection={(section) => dispatch({ type: 'setResultsSection', section })}
+              hasUnsavedChanges={state.dirty}
               plan={plan}
               result={bridgePreview.result}
               scenarios={bridgePreview.scenarios}
@@ -2155,15 +2174,17 @@ function AssumptionsStep({
           <span>Withdrawal order to test</span>
           <small>Controls which account type is drawn first in this planning run.</small>
           <select
-            value={plan.assumptions.withdrawalOrder || 'default'}
+            value={consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)}
             onChange={(event) => updateAssumption('withdrawalOrder', event.target.value, 'text')}
           >
             <option value="default">Default</option>
             <option value="registered-first">Registered first</option>
             <option value="nonreg-first">Non-registered first</option>
             <option value="tfsa-first">TFSA first</option>
-            <option value="meltdown">Meltdown diagnostic</option>
           </select>
+          {plan.assumptions.withdrawalOrder === 'meltdown' ? (
+            <small>Older diagnostic settings are shown as Default here. Drawdown review checks remain in Results Details.</small>
+          ) : null}
         </label>
         <div className="toggle-grid">
           <label className={`toggle-row ${!coupleMode ? 'disabled' : ''}`}>
@@ -2764,7 +2785,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
         rows={[
           ['Plan end', String(plan.assumptions.planEnd || '-')],
           ['Return / inflation', `${formatPercent(plan.assumptions.returnRate)} / ${formatPercent(plan.assumptions.inflation)}`],
-          ['Withdrawal order to test', plan.assumptions.withdrawalOrder || 'default']
+          ['Withdrawal order to test', consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)]
         ]}
       />
     </div>
@@ -2790,6 +2811,7 @@ function ReviewSummaryCard({ rows, title }: { rows: Array<[string, string]>; tit
 function ResultsHandoffPanel({
   activeSection,
   bridgeError,
+  hasUnsavedChanges,
   loading,
   onDownload,
   onSection,
@@ -2854,6 +2876,7 @@ function ResultsHandoffPanel({
 }: {
   activeSection: ResultsWorkspaceSection;
   bridgeError: string;
+  hasUnsavedChanges: boolean;
   loading: boolean;
   onDownload: () => void;
   onSection: (section: ResultsWorkspaceSection) => void;
@@ -3039,6 +3062,7 @@ function ResultsHandoffPanel({
         <div className="result-intro">
           <p>{intro.summary}</p>
           <p>{intro.handoff}</p>
+          <p>{ONTARIO_TAX_SCOPE_NOTE} Province support will be made explicit before any public launch.</p>
         </div>
 
         {activeSection === 'cashFlow' ? (
@@ -3130,7 +3154,14 @@ function ResultsHandoffPanel({
             summary={annualDetailSummary}
           />
         ) : activeSection === 'exportSave' ? (
-          <ExportSavePanel onDownload={onDownload} plan={plan} readinessRows={readinessRows} readinessSummary={readinessSummary} validation={validation} />
+          <ExportSavePanel
+            hasUnsavedChanges={hasUnsavedChanges}
+            onDownload={onDownload}
+            plan={plan}
+            readinessRows={readinessRows}
+            readinessSummary={readinessSummary}
+            validation={validation}
+          />
         ) : activeSection === 'assumptions' ? (
           <AssumptionsResultsPanel plan={plan} />
         ) : activeSection === 'stressTests' ? (
@@ -3179,7 +3210,6 @@ function ResultsHandoffPanel({
               loading={loading}
               readinessRows={readinessRows}
             />
-            <BoundedOptimizerPanel loading={loading} summary={optimizer} variant="compact" />
             <OverviewHighlightsPanel
               estateIntent={estateIntent}
               loading={loading}
@@ -3188,7 +3218,6 @@ function ResultsHandoffPanel({
               taxStory={taxStorySummary}
             />
             <EstateIntentPanel loading={loading} summary={estateIntent} />
-            <ResultsReadinessPanel compact rows={readinessRows} summary={readinessSummary} />
           </>
         ) : (
           <DeferredResultsPanel section={sectionTitle} />
@@ -3821,9 +3850,13 @@ function DetailsResultsPanel({
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
       <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
       <div className="result-section-label">Decision Checks</div>
-      <ReleaseReadinessCheckpointPanel checkpoint={releaseReadinessCheckpoint} />
-      <FeedbackReviewPackagePanel feedbackPackage={feedbackReviewPackage} />
-      <CheckpointReviewBoardPanel board={checkpointReviewBoard} />
+      {SHOW_CHECKPOINT_REVIEW_PANELS ? (
+        <>
+          <ReleaseReadinessCheckpointPanel checkpoint={releaseReadinessCheckpoint} />
+          <FeedbackReviewPackagePanel feedbackPackage={feedbackReviewPackage} />
+          <CheckpointReviewBoardPanel board={checkpointReviewBoard} />
+        </>
+      ) : null}
       <DecisionChecklistPanel items={decisionChecklist} />
       <DecisionDetailPanel rows={decisionDetailRows} />
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
@@ -6575,6 +6608,7 @@ function TaxesResultsPanel({
           <p className="eyebrow">Tax story</p>
           <h3>{loading ? 'Calculating tax story' : story.headline}</h3>
           <p>{story.detail}</p>
+          <p className="table-note">{ONTARIO_TAX_SCOPE_NOTE}</p>
         </div>
         <div className="summary-grid">
           <Metric label="Peak tax year" value={story.peakTaxYear ? `${story.peakTaxYear} (${formatMoney(story.peakTax)})` : '-'} />
@@ -6758,7 +6792,7 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
     ['Return assumption', formatPercent(plan.assumptions.returnRate)],
     ['Inflation', formatPercent(plan.assumptions.inflation)],
     ['Volatility', formatPercent(plan.assumptions.returnStdDev)],
-    ['Withdrawal order to test', plan.assumptions.withdrawalOrder || 'default'],
+    ['Withdrawal order to test', consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)],
     ['CPP sharing', plan.assumptions.cppSharing ? 'Enabled' : 'Disabled'],
     ['Younger-spouse RRIF age', plan.assumptions.youngerSpouseRrif ? 'Enabled' : 'Disabled'],
     ['Spousal RRSP attribution', plan.assumptions.spousalRrsp ? 'Enabled' : 'Disabled'],
@@ -6768,6 +6802,7 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 
   return (
     <div className="assumptions-results-panel">
+      <p className="table-note">{ONTARIO_TAX_SCOPE_NOTE}</p>
       <div className="review-summary">
         <ReviewSummaryCard title="Run assumptions" rows={rows.slice(0, 6)} />
         <ReviewSummaryCard title="Strategy settings" rows={rows.slice(6)} />
@@ -6777,12 +6812,14 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 }
 
 function ExportSavePanel({
+  hasUnsavedChanges,
   onDownload,
   plan,
   readinessRows,
   readinessSummary,
   validation
 }: {
+  hasUnsavedChanges: boolean;
   onDownload: () => void;
   plan: V2PlanPayload;
   readinessRows: ReturnType<typeof selectResultsReadinessRows>;
@@ -6790,6 +6827,18 @@ function ExportSavePanel({
   validation: PlanValidationResult | null;
 }) {
   const hasBlockers = Boolean(validation && !validation.canGenerate);
+  const printableReportUrl = printableReportUrlForPlan(extractPlanPayload(plan));
+  function openPrintableReport() {
+    if (hasBlockers) return;
+    if (
+      hasUnsavedChanges &&
+      window.confirm('Save an editable copy before opening the printable report? This downloads your local plan file first.')
+    ) {
+      onDownload();
+    }
+    window.location.href = printableReportUrl;
+  }
+
   return (
     <div className="export-save-panel">
       <ResultsReadinessPanel rows={readinessRows} summary={readinessSummary} />
@@ -6801,6 +6850,10 @@ function ExportSavePanel({
           <p>
             This saves the household inputs and assumptions so you can reopen and revise the plan later. It is not the
             printable client report.
+          </p>
+          <p className="table-note">
+            This downloaded file is your editable backup. Keep it somewhere safe because the planner cannot recover it
+            from another device.
           </p>
           <dl className="result-ledger">
             <div>
@@ -6829,13 +6882,15 @@ function ExportSavePanel({
             Open the detailed report view when you want complete schedules, printable charts, and tax/account detail.
             It may look more detailed than this guided Results page while the report experience is being polished.
           </p>
-          <a
-            className={`button ${hasBlockers ? 'disabled-link' : ''}`}
-            href={hasBlockers ? undefined : printableReportUrlForPlan(extractPlanPayload(plan))}
+          <button
+            className="button"
+            type="button"
+            disabled={hasBlockers}
+            onClick={openPrintableReport}
             aria-disabled={hasBlockers}
           >
             Open printable report
-          </a>
+          </button>
         </section>
       </div>
     </div>

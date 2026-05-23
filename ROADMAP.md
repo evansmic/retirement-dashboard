@@ -40,19 +40,19 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 195 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, and detailed Monte Carlo/historical stress now has a no-migration boundary review, thin adapter contract, contained injected-runner prototype, probe-backed bridge readiness layer, manual detailed-report comparison layer, explicit v1 deferral decision, v1 drawdown re-entry closeout, recommended-plan drawdown review polish, Details-facing implementation, consumer-facing drawdown review copy, release-readiness checkpoint, feedback review package, and checkpoint review board. The next logical slice is the broader user/model checkpoint itself, with findings split into fix-first, review-now, and later-UX-pass lanes.
+Sprint 200 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, and checkpoint feedback has now produced a narrow trust-cleanup batch. The next logical slice is explicit pension-splitting baseline investigation before returning to bounded optimizer/drawdown execution.
 
-Completed Sprint 191-195 slices:
+Completed Sprint 196-200 slices:
 
-- Added a runtime-only checkpoint review board that combines release readiness and feedback package signals.
-- Grouped checkpoint rows into fix-first, review-now, and later-UX-pass lanes.
-- Surfaced the board in Details alongside release readiness and the feedback review package.
-- Added ready and blocked selector tests without persisting checkpoint review output.
-- Retested that the checkpoint board does not add Overview density.
-- Closed the batch as checkpoint organization, not visual redesign or model execution.
+- Added local backup reminders and save-before-results/report prompts.
+- Trimmed compact optimizer options and compact readiness diagnostics out of Overview.
+- Made Ontario 2026 tax-assumption scope visible in Results, Taxes, and Assumptions.
+- Removed consumer-facing diagnostic withdrawal wording and mapped older diagnostic values back to Default in consumer preview paths.
+- Gated checkpoint-only review panels out of the normal consumer Details path.
+- Kept the visual mockups as later UI/UX references, not current implementation scope.
 - Preserved current withdrawal order and empty annual overrides.
 - Confirmed v1 recommended-plan drawdown review, details placement, review copy guard, recommended-plan closeout, re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 191-195 as checkpoint board work, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
+- Kept Sprints 196-200 as checkpoint trust cleanup, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -231,6 +231,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 171. **Sprint 193 — Checkpoint review Details surface.** Show the checkpoint board in Details only.
 172. **Sprint 194 — Checkpoint review guardrails.** Cover blocked board states, unsaved output, and Overview boundaries.
 173. **Sprint 195 — Checkpoint review board closeout.** Close the checkpoint board batch before broader user/model review.
+174. **Sprint 196 — Checkpoint trust response.** Keep feedback response focused on trust fixes, not visual redesign.
+175. **Sprint 197 — Save backup trust.** Add local backup reminders and save-before-results/report prompts.
+176. **Sprint 198 — Overview density trim.** Remove compact optimizer/readiness diagnostics from Overview.
+177. **Sprint 199 — Scope and diagnostic copy.** Make Ontario scope visible and remove diagnostic withdrawal wording from consumer intake.
+178. **Sprint 200 — Checkpoint panels gate.** Hide checkpoint-only panels from the normal consumer Details path.
 
 ## Medium-Term Roadmap
 
@@ -424,6 +429,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 193 — Checkpoint review Details surface.** Complete 2026-05-22. Surfaced the checkpoint review board in Details.
 - **Sprint 194 — Checkpoint review guardrails.** Complete 2026-05-22. Added selector and structure tests for board state, placement, and persistence boundaries.
 - **Sprint 195 — Checkpoint review board closeout.** Complete 2026-05-22. Closed the checkpoint board batch before broader user/model review.
+- **Sprint 196 — Checkpoint trust response.** Complete 2026-05-23. Started the checkpoint response batch with narrow trust fixes.
+- **Sprint 197 — Save backup trust.** Complete 2026-05-23. Added backup reminders and save-before-results/report prompts.
+- **Sprint 198 — Overview density trim.** Complete 2026-05-23. Removed compact optimizer and readiness diagnostics from Overview.
+- **Sprint 199 — Scope and diagnostic copy.** Complete 2026-05-23. Made Ontario scope visible and removed diagnostic withdrawal wording from consumer intake.
+- **Sprint 200 — Checkpoint panels gate.** Complete 2026-05-23. Gated checkpoint-only panels out of the normal consumer Details path.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

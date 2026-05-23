@@ -156,6 +156,10 @@ function n(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function consumerWithdrawalOrder(value: string | undefined): string {
+  return value === 'meltdown' ? 'default' : value || 'default';
+}
+
 function baseConfig(plan: V2PlanPayload): SimulationConfig {
   return {
     cppAgeF: 65,
@@ -166,7 +170,7 @@ function baseConfig(plan: V2PlanPayload): SimulationConfig {
     returnRate: 0.05,
     pensionSplit: false,
     p1Dies: null,
-    withdrawalOrder: plan.assumptions.withdrawalOrder || 'default'
+    withdrawalOrder: consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)
   };
 }
 

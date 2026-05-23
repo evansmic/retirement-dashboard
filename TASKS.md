@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 195: Checkpoint Review Board Closeout
+## Latest Sprint — Sprint 200: Checkpoint Panels Gate
 
-**Status:** Complete 2026-05-22.
+**Status:** Complete 2026-05-23.
 
-Goal: add a checkpoint review board that organizes the broader user/model feedback pass into fix-first, review-now, and later-UX-pass lanes without starting the full visual redesign.
+Goal: respond to checkpoint feedback with narrow trust fixes before returning to optimizer execution work.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 195 checkpoint doc: [`docs/sprint_195_checkpoint_review_board_closeout.md`](docs/sprint_195_checkpoint_review_board_closeout.md).
+Sprint 200 checkpoint doc: [`docs/sprint_200_checkpoint_panels_gate.md`](docs/sprint_200_checkpoint_panels_gate.md).
 
-### Sprint 191-195 Candidate Implementation Tickets
+### Sprint 196-200 Candidate Implementation Tickets
 
-- [x] **S191-01 — Checkpoint board selector.** Add a runtime-only board that combines release readiness and feedback package signals.
-- [x] **S192-01 — Checkpoint buckets.** Group items into fix-first, review-now, and later-UX-pass lanes.
-- [x] **S193-01 — Details checkpoint surface.** Show the board in Details without adding Overview density.
-- [x] **S194-01 — Checkpoint guardrail tests.** Cover blocked board states, Details-only placement, and no saved output.
-- [x] **S195-01 — Checkpoint board closeout.** Document the batch and prepare the broader user/model feedback checkpoint.
+- [x] **S196-01 — Checkpoint trust response.** Keep the batch focused on trust fixes and leave visual redesign for later.
+- [x] **S197-01 — Save backup trust.** Add backup reminders and save-before-results/report prompts.
+- [x] **S198-01 — Overview density trim.** Remove compact optimizer/readiness diagnostics from Overview.
+- [x] **S199-01 — Scope and diagnostic copy.** Make Ontario scope visible and remove diagnostic withdrawal wording from consumer intake.
+- [x] **S200-01 — Checkpoint panels gate.** Hide checkpoint-only panels from the normal consumer Details path.
 
-### Sprint 195 Definition Of Done
+### Sprint 200 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -64,8 +64,15 @@ Sprint 195 checkpoint doc: [`docs/sprint_195_checkpoint_review_board_closeout.md
 - Feedback review package output remains runtime-only and unsaved.
 - Checkpoint review board organizes examples, first-answer clarity, spending language, drawdown boundaries, save/report trust, verification, and visual UX feedback.
 - Checkpoint review board separates fix-first, review-now, and later-UX-pass items.
-- Checkpoint review board appears in Details, not Overview.
+- Checkpoint review board is gated out of the normal consumer Details path by default.
 - Checkpoint review board output remains runtime-only and unsaved.
+- Save editable plan includes a local backup reminder.
+- Moving from Review to Results offers to save unsaved local changes first.
+- Opening the printable report offers to save unsaved local changes first.
+- Overview omits compact optimizer options and compact results-readiness diagnostics.
+- Results, Taxes, and Assumptions show Ontario 2026 tax-assumption scope.
+- Consumer intake no longer exposes the Meltdown diagnostic option.
+- Older diagnostic withdrawal-order values map to Default in the consumer preview and bounded optimizer paths.
 - No checkpoint review board, detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -74,6 +81,36 @@ Sprint 195 checkpoint doc: [`docs/sprint_195_checkpoint_review_board_closeout.md
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 200: Checkpoint Panels Gate
+
+**Complete 2026-05-23.** Gated checkpoint-only panels out of the normal consumer Details path.
+
+Sprint 200 checkpoint doc: [`docs/sprint_200_checkpoint_panels_gate.md`](docs/sprint_200_checkpoint_panels_gate.md).
+
+### Sprint 199: Scope And Diagnostic Copy
+
+**Complete 2026-05-23.** Made Ontario 2026 scope visible in Results and removed diagnostic withdrawal wording from consumer intake.
+
+Sprint 199 checkpoint doc: [`docs/sprint_199_scope_and_diagnostic_copy.md`](docs/sprint_199_scope_and_diagnostic_copy.md).
+
+### Sprint 198: Overview Density Trim
+
+**Complete 2026-05-23.** Trimmed compact optimizer and readiness diagnostics from Overview.
+
+Sprint 198 checkpoint doc: [`docs/sprint_198_overview_density_trim.md`](docs/sprint_198_overview_density_trim.md).
+
+### Sprint 197: Save Backup Trust
+
+**Complete 2026-05-23.** Added backup reminders and save-before-results/report prompts.
+
+Sprint 197 checkpoint doc: [`docs/sprint_197_save_backup_trust.md`](docs/sprint_197_save_backup_trust.md).
+
+### Sprint 196: Checkpoint Trust Response
+
+**Complete 2026-05-23.** Started the checkpoint response batch with narrow trust fixes instead of visual redesign.
+
+Sprint 196 checkpoint doc: [`docs/sprint_196_checkpoint_trust_response.md`](docs/sprint_196_checkpoint_trust_response.md).
 
 ### Sprint 195: Checkpoint Review Board Closeout
 
