@@ -238,7 +238,7 @@ describe('bounded optimizer runner', () => {
     });
   });
 
-  it('adds one bounded pension-splitting candidate for eligible two-person plans', () => {
+  it('includes DB pension splitting in the current-plan baseline instead of making it a found option', () => {
     const plan = readyPlan();
     plan.p2 = {
       ...plan.p2,
@@ -257,10 +257,42 @@ describe('bounded optimizer runner', () => {
     plan.assumptions.p1DiesInSurvivor = 2040;
 
     const candidates = buildBoundedOptimizerCandidates(plan);
+    const summary = runBoundedOptimizer(plan, (_candidatePlan, config) =>
+      config.pensionSplit ? result(180000, 78000, null, { oasRecovery: 3000 }) : result(120000, 90000, null, { oasRecovery: 9000 })
+    );
+
+    expect(candidates.find((candidate) => candidate.id === 'baseline')?.config).toMatchObject({ pensionSplit: true });
+    expect(candidates.map((candidate) => candidate.id)).not.toContain('pensionSplit');
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'pensionSplitting')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('included in the current plan baseline')
+    });
+    expect(summary.suggestedCandidateId).toBe('baseline');
+  });
+
+  it('adds one bounded pension-splitting candidate for registered-income review plans without DB pensions', () => {
+    const plan = readyPlan();
+    plan.p2 = {
+      ...plan.p2,
+      name: 'Morgan',
+      dob: 1969,
+      retireYear: 2033,
+      rrsp: 120000,
+      tfsa: 70000,
+      cpp65_monthly: 900,
+      cpp70_monthly: 1250,
+      oas_monthly: 742
+    };
+    plan.p1.oas_monthly = 0;
+    plan.assumptions.cppSharing = true;
+    plan.assumptions.p1DiesInSurvivor = 2040;
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
     const summary = runBoundedOptimizer(plan, (candidatePlan, config) =>
       config.pensionSplit ? result(180000, 78000, null, { oasRecovery: 3000 }) : result(120000, 90000, null, { oasRecovery: 9000 })
     );
 
+    expect(candidates.find((candidate) => candidate.id === 'baseline')?.config).toMatchObject({ pensionSplit: false });
     expect(candidates.map((candidate) => candidate.id)).toContain('pensionSplit');
     expect(candidates.find((candidate) => candidate.id === 'pensionSplit')).toMatchObject({
       label: 'Test pension splitting',

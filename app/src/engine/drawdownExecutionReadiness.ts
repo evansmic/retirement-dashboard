@@ -1,6 +1,7 @@
 import { createPlanFile } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import type { DrawdownComparisonDecisionGate, RealDrawdownComparisonResult } from './drawdownComparison';
+import { shouldIncludeBaselinePensionSplitting } from './pensionSplitting';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 import type { DetailedStressV1DecisionCloseout } from './stressSelectors';
 
@@ -3882,7 +3883,7 @@ function baselineConfigForPlan(plan: V2PlanPayload): SimulationConfig {
     oasAgeM: 65,
     meltdown: false,
     returnRate: 0.05,
-    pensionSplit: false,
+    pensionSplit: shouldIncludeBaselinePensionSplitting(plan),
     p1Dies: null,
     withdrawalOrder: plan.assumptions?.withdrawalOrder || 'default'
   };

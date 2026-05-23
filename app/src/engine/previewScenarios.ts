@@ -1,5 +1,6 @@
 import { extractPlanPayload, p2LooksBlank } from '../data/planFile';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
+import { shouldIncludeBaselinePensionSplitting } from './pensionSplitting';
 import { runSimulationSafely, SimulationConfig } from './runSimulation';
 import { runSpendingStressResults, type SpendingStressResults } from './stressSelectors';
 export { createSpendingStressPlan, type SpendingStressId, type SpendingStressResults } from './stressSelectors';
@@ -51,7 +52,7 @@ export function buildBaselinePreviewConfig(plan: V2PlanPayload): SimulationConfi
     oasAgeM: 65,
     meltdown: false,
     returnRate: 0.05,
-    pensionSplit: false,
+    pensionSplit: shouldIncludeBaselinePensionSplitting(plan),
     p1Dies: null,
     withdrawalOrder: consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)
   };

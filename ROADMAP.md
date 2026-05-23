@@ -40,19 +40,19 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 200 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, and checkpoint feedback has now produced a narrow trust-cleanup batch. The next logical slice is explicit pension-splitting baseline investigation before returning to bounded optimizer/drawdown execution.
+Sprint 205 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, and DB pension splitting is now included in the current-plan baseline for eligible two-person plans. The next logical slice is returning to bounded optimizer/drawdown execution work with the DB pension trust issue handled.
 
-Completed Sprint 196-200 slices:
+Completed Sprint 201-205 slices:
 
-- Added local backup reminders and save-before-results/report prompts.
-- Trimmed compact optimizer options and compact readiness diagnostics out of Overview.
-- Made Ontario 2026 tax-assumption scope visible in Results, Taxes, and Assumptions.
-- Removed consumer-facing diagnostic withdrawal wording and mapped older diagnostic values back to Default in consumer preview paths.
-- Gated checkpoint-only review panels out of the normal consumer Details path.
-- Kept the visual mockups as later UI/UX references, not current implementation scope.
+- Investigated checkpoint feedback about pension splitting and DB pension couples.
+- Added a shared baseline rule for two-person DB pension plans.
+- Included eligible DB pension splitting in current-plan preview, optimizer, hidden comparison, and drawdown readiness baseline configs.
+- Prevented DB pension splitting from appearing as a found optimizer improvement when already included in baseline.
+- Kept registered-income pension-splitting review candidates for eligible non-DB cases.
+- Added plain copy in Overview, Taxes, and Assumptions when DB pension splitting is included.
 - Preserved current withdrawal order and empty annual overrides.
 - Confirmed v1 recommended-plan drawdown review, details placement, review copy guard, recommended-plan closeout, re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 196-200 as checkpoint trust cleanup, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
+- Kept Sprints 201-205 as pension baseline trust cleanup, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
 
 ## Consumer Roadmap Sequence
 
@@ -236,6 +236,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 176. **Sprint 198 — Overview density trim.** Remove compact optimizer/readiness diagnostics from Overview.
 177. **Sprint 199 — Scope and diagnostic copy.** Make Ontario scope visible and remove diagnostic withdrawal wording from consumer intake.
 178. **Sprint 200 — Checkpoint panels gate.** Hide checkpoint-only panels from the normal consumer Details path.
+179. **Sprint 201 — Pension-splitting baseline investigation.** Decide whether DB pension splitting belongs in the current-plan baseline.
+180. **Sprint 202 — Baseline DB pension splitting.** Include DB pension splitting in eligible two-person baseline configs.
+181. **Sprint 203 — Pension candidate discipline.** Keep DB pension splitting from appearing as a found optimizer option.
+182. **Sprint 204 — Pension baseline copy.** Explain baseline inclusion in Results.
+183. **Sprint 205 — Pension baseline guardrails.** Lock the behavior with selector, optimizer, and UI tests.
 
 ## Medium-Term Roadmap
 
@@ -434,6 +439,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 198 — Overview density trim.** Complete 2026-05-23. Removed compact optimizer and readiness diagnostics from Overview.
 - **Sprint 199 — Scope and diagnostic copy.** Complete 2026-05-23. Made Ontario scope visible and removed diagnostic withdrawal wording from consumer intake.
 - **Sprint 200 — Checkpoint panels gate.** Complete 2026-05-23. Gated checkpoint-only panels out of the normal consumer Details path.
+- **Sprint 201 — Pension-splitting baseline investigation.** Complete 2026-05-23. Decided DB pension splitting belongs in the eligible two-person current-plan baseline.
+- **Sprint 202 — Baseline DB pension splitting.** Complete 2026-05-23. Included DB pension splitting in current-plan baseline configs.
+- **Sprint 203 — Pension candidate discipline.** Complete 2026-05-23. Prevented DB pension splitting from appearing as a found optimizer improvement when already included.
+- **Sprint 204 — Pension baseline copy.** Complete 2026-05-23. Added plain Results copy for DB pension baseline inclusion.
+- **Sprint 205 — Pension baseline guardrails.** Complete 2026-05-23. Added tests for baseline, candidate, and UI copy behavior.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

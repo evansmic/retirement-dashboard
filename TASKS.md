@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 200: Checkpoint Panels Gate
+## Latest Sprint — Sprint 205: Pension Baseline Guardrails
 
 **Status:** Complete 2026-05-23.
 
-Goal: respond to checkpoint feedback with narrow trust fixes before returning to optimizer execution work.
+Goal: correct the DB pension-splitting baseline trust issue before returning to optimizer execution work.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 200 checkpoint doc: [`docs/sprint_200_checkpoint_panels_gate.md`](docs/sprint_200_checkpoint_panels_gate.md).
+Sprint 205 checkpoint doc: [`docs/sprint_205_pension_baseline_guardrails.md`](docs/sprint_205_pension_baseline_guardrails.md).
 
-### Sprint 196-200 Candidate Implementation Tickets
+### Sprint 201-205 Candidate Implementation Tickets
 
-- [x] **S196-01 — Checkpoint trust response.** Keep the batch focused on trust fixes and leave visual redesign for later.
-- [x] **S197-01 — Save backup trust.** Add backup reminders and save-before-results/report prompts.
-- [x] **S198-01 — Overview density trim.** Remove compact optimizer/readiness diagnostics from Overview.
-- [x] **S199-01 — Scope and diagnostic copy.** Make Ontario scope visible and remove diagnostic withdrawal wording from consumer intake.
-- [x] **S200-01 — Checkpoint panels gate.** Hide checkpoint-only panels from the normal consumer Details path.
+- [x] **S201-01 — Pension-splitting baseline investigation.** Confirm DB pension splitting should not look like a discovered optimizer improvement.
+- [x] **S202-01 — Baseline DB pension splitting.** Include eligible DB pension splitting in current-plan baseline configs.
+- [x] **S203-01 — Pension candidate discipline.** Skip the pension-splitting candidate when DB splitting is already included in the baseline.
+- [x] **S204-01 — Pension baseline copy.** Explain the baseline inclusion in Overview, Taxes, and Assumptions.
+- [x] **S205-01 — Pension baseline guardrails.** Add tests for baseline, candidate, and visible-copy behavior.
 
-### Sprint 200 Definition Of Done
+### Sprint 205 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -73,6 +73,11 @@ Sprint 200 checkpoint doc: [`docs/sprint_200_checkpoint_panels_gate.md`](docs/sp
 - Results, Taxes, and Assumptions show Ontario 2026 tax-assumption scope.
 - Consumer intake no longer exposes the Meltdown diagnostic option.
 - Older diagnostic withdrawal-order values map to Default in the consumer preview and bounded optimizer paths.
+- Two-person DB pension plans include eligible pension splitting in the current-plan baseline.
+- Two-person DB pension plans do not surface pension splitting as a found optimizer option.
+- Registered-income pension-splitting review candidates remain available for eligible non-DB cases.
+- Taxes, Assumptions, and Overview explain when eligible DB pension splitting is included in the baseline.
+- Hidden drawdown comparison and drawdown readiness baseline configs use the same DB pension-splitting baseline rule.
 - No checkpoint review board, detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -81,6 +86,36 @@ Sprint 200 checkpoint doc: [`docs/sprint_200_checkpoint_panels_gate.md`](docs/sp
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 205: Pension Baseline Guardrails
+
+**Complete 2026-05-23.** Added guardrail tests for DB pension baseline splitting and candidate discipline.
+
+Sprint 205 checkpoint doc: [`docs/sprint_205_pension_baseline_guardrails.md`](docs/sprint_205_pension_baseline_guardrails.md).
+
+### Sprint 204: Pension Baseline Copy
+
+**Complete 2026-05-23.** Explained DB pension-splitting baseline inclusion in Results.
+
+Sprint 204 checkpoint doc: [`docs/sprint_204_pension_baseline_copy.md`](docs/sprint_204_pension_baseline_copy.md).
+
+### Sprint 203: Pension Candidate Discipline
+
+**Complete 2026-05-23.** Prevented DB pension splitting from appearing as a found optimizer option when already included in baseline.
+
+Sprint 203 checkpoint doc: [`docs/sprint_203_pension_candidate_discipline.md`](docs/sprint_203_pension_candidate_discipline.md).
+
+### Sprint 202: Baseline DB Pension Splitting
+
+**Complete 2026-05-23.** Included DB pension splitting in current-plan baseline configs for eligible two-person plans.
+
+Sprint 202 checkpoint doc: [`docs/sprint_202_baseline_db_pension_splitting.md`](docs/sprint_202_baseline_db_pension_splitting.md).
+
+### Sprint 201: Pension-Splitting Baseline Investigation
+
+**Complete 2026-05-23.** Investigated checkpoint feedback and decided DB pension splitting belongs in the baseline for eligible couples.
+
+Sprint 201 checkpoint doc: [`docs/sprint_201_pension_splitting_baseline_investigation.md`](docs/sprint_201_pension_splitting_baseline_investigation.md).
 
 ### Sprint 200: Checkpoint Panels Gate
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../data/defaultPlan';
+import { createExamplePlan } from '../data/examplePlans';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
 import {
   buildBaselinePreviewConfig,
@@ -101,6 +102,14 @@ describe('preview scenario runner', () => {
     expect(buildBaselinePreviewConfig(plan)).toMatchObject({
       meltdown: false,
       withdrawalOrder: 'default'
+    });
+  });
+
+  it('includes baseline pension splitting for two-person DB pension plans', () => {
+    const plan = createExamplePlan('db-pension-couple');
+
+    expect(buildBaselinePreviewConfig(plan)).toMatchObject({
+      pensionSplit: true
     });
   });
 

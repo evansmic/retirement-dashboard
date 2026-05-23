@@ -1,6 +1,7 @@
 import { extractPlanPayload, p2LooksBlank } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import { buildOptimizerContract, type OptimizerContract, type OptimizerLeverId } from './optimizerContract';
+import { hasTwoPersonDbPensionIncome, shouldIncludeBaselinePensionSplitting } from './pensionSplitting';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 
 export type BoundedOptimizerCandidateId =
@@ -168,7 +169,7 @@ function baseConfig(plan: V2PlanPayload): SimulationConfig {
     oasAgeM: 65,
     meltdown: false,
     returnRate: 0.05,
-    pensionSplit: false,
+    pensionSplit: shouldIncludeBaselinePensionSplitting(plan),
     p1Dies: null,
     withdrawalOrder: consumerWithdrawalOrder(plan.assumptions.withdrawalOrder)
   };
@@ -285,8 +286,8 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
     const ageAtEnd = personAgeInYear(person, endYear);
     return ageAtEnd === null || ageAtEnd >= 65;
   });
-  const hasDbPension = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) > 0;
-  const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && (hasDbPension || reachesPensionSplitAge);
+  const hasDbPension = hasTwoPersonDbPensionIncome(plan);
+  const hasPotentialPensionSplit = !p2LooksBlank(plan.p2) && pensionEligibleIncome > 25_000 && !hasDbPension && reachesPensionSplitAge;
   const isTwoPersonPlan = !p2LooksBlank(plan.p2);
   const cppSharingAlreadyOn = Boolean(plan.assumptions.cppSharing);
   const cppSharingReady =
@@ -334,7 +335,9 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
     status: hasPotentialPensionSplit ? 'eligible' : 'skipped',
     reason: hasPotentialPensionSplit
       ? 'Pension-splitting can be reviewed because this two-person plan has pension or registered income to test.'
-      : 'Pension-splitting is skipped until a two-person plan has meaningful pension or registered income.'
+      : hasDbPension
+        ? 'DB pension splitting is included in the current plan baseline for eligible two-person plans.'
+        : 'Pension-splitting is skipped until a two-person plan has meaningful pension or registered income.'
   });
   notes.push({
     lever: 'cppSharing',

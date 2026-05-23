@@ -181,6 +181,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Save an editable copy before opening the printable report?');
     expect(appSource).toContain('It is not the');
     expect(appSource).toContain('printable client report');
+    expect(appSource).toContain('Eligible DB pension splitting is included in the current plan baseline');
     expect(appSource).not.toContain('Save .plan.json');
     expect(appSource).not.toContain('Local .plan.json');
     expect(appSource).not.toContain('Open .plan.json');

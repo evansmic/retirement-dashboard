@@ -73,6 +73,7 @@ import {
 import { PlanPerson, SimulationResult, V2PlanPayload } from '../types/plan';
 import type { BoundedOptimizerSummary } from '../engine/boundedOptimizer';
 import type { RealDrawdownComparisonResult } from '../engine/drawdownComparison';
+import { shouldIncludeBaselinePensionSplitting } from '../engine/pensionSplitting';
 import type {
   ContainedDrawdownCopyGuard,
   ContainedDrawdownBlockerRegister,
@@ -2961,6 +2962,7 @@ function ResultsHandoffPanel({
   const taxDetailRows = selectTaxDetailRows(result);
   const taxReviewRows = selectTaxReviewRows(result);
   const taxStorySummary = selectTaxStorySummary(result);
+  const baselinePensionSplitting = shouldIncludeBaselinePensionSplitting(plan);
   const taxPressureRows = selectTaxPressureRows(result);
   const taxPressureExplanation = selectTaxPressureExplanation(result);
   const stressIndicatorRows = selectStressIndicatorRows(result);
@@ -3183,7 +3185,14 @@ function ResultsHandoffPanel({
             summary={survivorSummary}
           />
         ) : activeSection === 'taxes' ? (
-          <TaxesResultsPanel detailRows={taxDetailRows} loading={loading} reviewRows={taxReviewRows} story={taxStorySummary} summary={taxSummary} />
+          <TaxesResultsPanel
+            baselinePensionSplitting={baselinePensionSplitting}
+            detailRows={taxDetailRows}
+            loading={loading}
+            reviewRows={taxReviewRows}
+            story={taxStorySummary}
+            summary={taxSummary}
+          />
         ) : activeSection === 'accounts' ? (
           <AccountsResultsPanel
             balanceRows={accountBalanceSeries}
@@ -3211,6 +3220,7 @@ function ResultsHandoffPanel({
               readinessRows={readinessRows}
             />
             <OverviewHighlightsPanel
+              baselinePensionSplitting={baselinePensionSplitting}
               estateIntent={estateIntent}
               loading={loading}
               survivorComparison={survivorComparison}
@@ -3520,12 +3530,14 @@ function ReviewTheseFirstPanel({
 }
 
 function OverviewHighlightsPanel({
+  baselinePensionSplitting,
   estateIntent,
   loading,
   survivorComparison,
   survivorSummary,
   taxStory
 }: {
+  baselinePensionSplitting: boolean;
   estateIntent: ReturnType<typeof selectEstateIntentSummary>;
   loading: boolean;
   survivorComparison: ReturnType<typeof selectSurvivorComparison>;
@@ -3547,7 +3559,13 @@ function OverviewHighlightsPanel({
         <article>
           <strong>Taxes</strong>
           <span>{loading ? 'Calculating tax picture.' : taxStory.headline}</span>
-          <em>{taxStory.peakTaxYear ? `Peak tax year ${taxStory.peakTaxYear}` : 'No peak tax year yet'}</em>
+          <em>
+            {baselinePensionSplitting
+              ? 'DB pension splitting included'
+              : taxStory.peakTaxYear
+                ? `Peak tax year ${taxStory.peakTaxYear}`
+                : 'No peak tax year yet'}
+          </em>
         </article>
         <article>
           <strong>Survivor</strong>
@@ -6585,12 +6603,14 @@ function AccountsResultsPanel({
 }
 
 function TaxesResultsPanel({
+  baselinePensionSplitting,
   detailRows,
   loading,
   reviewRows,
   story,
   summary
 }: {
+  baselinePensionSplitting: boolean;
   detailRows: ReturnType<typeof selectTaxDetailRows>;
   loading: boolean;
   reviewRows: ReturnType<typeof selectTaxReviewRows>;
@@ -6609,6 +6629,9 @@ function TaxesResultsPanel({
           <h3>{loading ? 'Calculating tax story' : story.headline}</h3>
           <p>{story.detail}</p>
           <p className="table-note">{ONTARIO_TAX_SCOPE_NOTE}</p>
+          {baselinePensionSplitting ? (
+            <p className="table-note">Eligible DB pension splitting is included in the current plan baseline.</p>
+          ) : null}
         </div>
         <div className="summary-grid">
           <Metric label="Peak tax year" value={story.peakTaxYear ? `${story.peakTaxYear} (${formatMoney(story.peakTax)})` : '-'} />
@@ -6785,6 +6808,7 @@ function StressTestsPanel({
 }
 
 function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
+  const baselinePensionSplitting = shouldIncludeBaselinePensionSplitting(plan);
   const rows: Array<[string, string]> = [
     ['Retirement year', String(plan.assumptions.retireYear || plan.p1.retireYear || '-')],
     ['Plan start', plan.assumptions.planStart ? String(plan.assumptions.planStart) : 'Retirement year'],
@@ -6803,6 +6827,9 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
   return (
     <div className="assumptions-results-panel">
       <p className="table-note">{ONTARIO_TAX_SCOPE_NOTE}</p>
+      {baselinePensionSplitting ? (
+        <p className="table-note">Eligible DB pension splitting is included in the current plan baseline.</p>
+      ) : null}
       <div className="review-summary">
         <ReviewSummaryCard title="Run assumptions" rows={rows.slice(0, 6)} />
         <ReviewSummaryCard title="Strategy settings" rows={rows.slice(6)} />
