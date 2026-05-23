@@ -1,15 +1,31 @@
-const fs = require("fs");
-const html = fs.readFileSync(require("path").join(__dirname, "..", "retirement_dashboard.html") + "", "utf8");
-const m = html.match(/<script>([\s\S]*?)<\/script>/);
-let body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
-const wrapper = `${body}\n  return { SCENARIOS, RESULTS, D };`;
-const f = new Function("window", "document", wrapper);
-const out = f({location:{hash:""}, addEventListener:()=>{}}, {getElementById:()=>null, addEventListener:()=>{}});
-console.log("Baseline: portfolio depletion trajectory (2027-2045)");
-console.log("Year  AgeF  RRSP_F   RRSP_M   TFSA     NonReg   LIF      Total");
-for (const y of out.RESULTS.base.years.filter(x => x.ageF >= 61 && x.ageF <= 80)) {
-  const t = Math.round;
-  console.log(`${y.year}  ${y.ageF.toString().padStart(3)}   $${t(y.bal_rrsp_f||0).toString().padStart(7)} $${t(y.bal_rrsp_m||0).toString().padStart(7)} $${t(y.bal_tfsa||0).toString().padStart(7)} $${t(y.bal_nonreg||0).toString().padStart(7)} $${t(y.bal_lif||0).toString().padStart(7)} $${t(y.bal_total||0).toString().padStart(8)}`);
+// Verifies account balance rows are finite and internally consistent in the extracted engine.
+const { createLegacyEngine } = require('../engine/legacy_engine_bridge.cjs');
+const SimulationEngine = require('../engine/simulation_engine.js');
+
+let passed = 0;
+let failed = 0;
+
+function check(condition, label) {
+  if (condition) {
+    passed += 1;
+    console.log(`  OK ${label}`);
+  } else {
+    failed += 1;
+    console.log(`  FAIL ${label}`);
+  }
 }
-// max spend multiplier
-console.log("\nMax Spend scenario multiplier:", out.RESULTS.maxs.spendMultiplier);
+
+const plan = createLegacyEngine().PRESETS['diy-couple']();
+const engine = SimulationEngine.createSimulationEngine(plan);
+const result = engine.RESULTS.base;
+const rows = result.years.filter((row) => row.ageF >= 61 && row.ageF <= 80);
+
+console.log('\n=== Account balance trajectory ===');
+check(rows.length >= 10, 'projection includes the expected retirement-window balance rows');
+check(rows.every((row) => Number.isFinite(row.bal_total)), 'total balance is finite in each row');
+check(rows.every((row) => row.bal_total >= -1), 'total balance does not go materially negative');
+check(rows.every((row) => Math.abs(row.bal_total - ((row.bal_rrsp || 0) + (row.bal_tfsa || 0) + (row.bal_nonreg || 0) + (row.bal_lif || 0) + (row.bal_cash || 0))) <= 2), 'account buckets reconcile to total balance');
+check(rows.some((row) => row.rrif_draw_f + row.rrif_draw_m > 0), 'registered withdrawals appear in the retirement window');
+
+console.log(`\n=== SUMMARY ===\nPassed: ${passed}\nFailed: ${failed}`);
+process.exit(failed > 0 ? 1 : 0);

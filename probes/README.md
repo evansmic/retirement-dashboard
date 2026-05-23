@@ -1,6 +1,6 @@
 # probes/
 
-Node-based regression probes for the dashboard engine. Each probe loads `retirement_dashboard.html`, extracts its `<script>` block, executes it inside a `new Function()` with a stubbed DOM, and asserts on the simulation output.
+Node-based regression probes for the dashboard and extracted simulation engine. Older probes originally scraped `retirement_dashboard.html`; current canonical probes prefer explicit module entry points such as `engine/simulation_engine.js`, `engine/tax_benefit_helpers.js`, and the legacy bridge helper when preset data is needed.
 
 ## Canonical regression suite (always run these before merging)
 
@@ -22,9 +22,15 @@ Node-based regression probes for the dashboard engine. Each probe loads `retirem
 | `probe_tax_benefit_helpers.js` | Extracted tax/benefit helper module fixtures for RRIF/LIF factors, Ontario tax, OAS clawback, CPP/OAS, mortgage, and LOC helpers (Sprint 0 S0-11) | 16 |
 | `probe_pension_credit.js` | Pension-income-credit eligibility for ordinary taxable income, DB, RRIF/LIF-style income, P2 eligibility, and split pension (Sprint 0 S0-01) | 8 |
 | `probe_tax_ages_64_72.js` | Age 64-72 tax/benefit fixtures for CPP/OAS starts, age credit, Health Premium, OAS clawback, RRIF/LIF minimums, and pension splitting (Sprint 0 S0-02) | 36 |
+| `probe_spousal.js` | Spousal RRSP attribution effects on taxable income during the attribution window using the extracted engine | 6 |
+| `probe_cppshare.js` | CPP sharing equalizes CPP income between spouses once both receive CPP using the extracted engine | 4 |
+| `probe_clawback.js` | OAS recovery tax is computed after pension splitting using the extracted engine | 5 |
+| `probe_balances.js` | Account balance trajectory and bucket-to-total reconciliation using the extracted engine | 5 |
+| `probe_order.js` | Withdrawal-order comparison changes early-year funding sources while preserving finite output | 5 |
+| `probe_sustain.js` | Sustainable-spending scenario metadata remains present and finite using the extracted engine | 6 |
 | `probe_validation_exports.js` | Validation baseline export shape: annual rows, taxable income, balances, withdrawals, tax, benefits, dollar-mode metadata, public-comparator export shape (Sprint 0 S0-07/S0-08) | 217 |
 
-**Total: 537 checks. All must pass — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
+**Total: 585 checks plus route-handoff coverage in the current suite. All must pass outside known sandbox route-binding caveats — also enforced in CI (Sprint 1 #57) via `.github/workflows/probes.yml`.**
 
 ## Run them
 
@@ -41,11 +47,11 @@ node probe_phase5.js
 
 ## Legacy probes
 
-The remaining `probe_*.js` files (probe_balances, probe_clawback, probe_cppshare, probe_events, probe_mc, probe_order, probe_seq, probe_spousal, probe_sustain, probe_wedge) are single-purpose probes from earlier phases. They may rely on assumptions that have shifted as the engine evolved. Useful for diagnosing a specific subsystem; not part of the canonical suite.
+The remaining `probe_*.js` files (probe_events, probe_mc, probe_seq, probe_wedge) are single-purpose probes from earlier phases. They may rely on assumptions that have shifted as the engine evolved. Useful for diagnosing a specific subsystem; not part of the canonical suite.
 
 ## How they work
 
-Each probe:
+Dashboard-backed bridge probes:
 
 1. Reads `../retirement_dashboard.html`.
 2. Pulls out the first `<script>...</script>` block.
@@ -53,6 +59,8 @@ Each probe:
 4. Prepends `../engine/tax_benefit_helpers.js`, then wraps the script body in `new Function("window", "document", body + "; return { ... };")`.
 5. Calls it with stubbed `window` / `document` objects, capturing the engine functions and SCENARIOS/RESULTS objects.
 6. Asserts on the returned data.
+
+Extracted-engine probes call `engine/simulation_engine.js` or `engine/tax_benefit_helpers.js` directly and only use the legacy bridge when they need bundled preset data.
 
 This means the engine must remain pure: any new global window/document touch outside the existing stubs will need a probe-side stub added.
 

@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 205: Pension Baseline Guardrails
+## Latest Sprint — Sprint 210: Probe Repair Closeout
 
 **Status:** Complete 2026-05-23.
 
-Goal: correct the DB pension-splitting baseline trust issue before returning to optimizer execution work.
+Goal: repair the legacy Canadian-rule probes and promote the repaired checks into the canonical probe suite before returning to optimizer execution work.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 205 checkpoint doc: [`docs/sprint_205_pension_baseline_guardrails.md`](docs/sprint_205_pension_baseline_guardrails.md).
+Sprint 210 checkpoint doc: [`docs/sprint_210_probe_repair_closeout.md`](docs/sprint_210_probe_repair_closeout.md).
 
-### Sprint 201-205 Candidate Implementation Tickets
+### Sprint 206-210 Candidate Implementation Tickets
 
-- [x] **S201-01 — Pension-splitting baseline investigation.** Confirm DB pension splitting should not look like a discovered optimizer improvement.
-- [x] **S202-01 — Baseline DB pension splitting.** Include eligible DB pension splitting in current-plan baseline configs.
-- [x] **S203-01 — Pension candidate discipline.** Skip the pension-splitting candidate when DB splitting is already included in the baseline.
-- [x] **S204-01 — Pension baseline copy.** Explain the baseline inclusion in Overview, Taxes, and Assumptions.
-- [x] **S205-01 — Pension baseline guardrails.** Add tests for baseline, candidate, and visible-copy behavior.
+- [x] **S206-01 — Legacy probe repair.** Move broken HTML-scraping probes onto extracted engine entry points.
+- [x] **S207-01 — Canadian-rule probe coverage.** Restore spousal RRSP attribution, CPP sharing, and OAS recovery coverage.
+- [x] **S208-01 — Account and sustain probe coverage.** Restore account-balance, withdrawal-order, and sustainable-spending coverage.
+- [x] **S209-01 — Probe suite promotion.** Add repaired probes to the canonical runner.
+- [x] **S210-01 — Probe repair closeout.** Document the repaired coverage and next path.
 
-### Sprint 205 Definition Of Done
+### Sprint 210 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -78,6 +78,11 @@ Sprint 205 checkpoint doc: [`docs/sprint_205_pension_baseline_guardrails.md`](do
 - Registered-income pension-splitting review candidates remain available for eligible non-DB cases.
 - Taxes, Assumptions, and Overview explain when eligible DB pension splitting is included in the baseline.
 - Hidden drawdown comparison and drawdown readiness baseline configs use the same DB pension-splitting baseline rule.
+- Spousal RRSP attribution, CPP sharing, OAS recovery, account balance, withdrawal-order, and sustainable-spending probes use extracted engine or helper entry points instead of brittle inline-script scraping.
+- Repaired Canadian-rule probes pass individually.
+- Repaired Canadian-rule probes are included in the canonical probe runner.
+- Probe documentation identifies the extracted-engine probes and the remaining legacy single-purpose probes.
+- Probe repair does not change engine math, UI behavior, saved plan schema, or optimizer behavior.
 - No checkpoint review board, detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
 - No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
@@ -86,6 +91,36 @@ Sprint 205 checkpoint doc: [`docs/sprint_205_pension_baseline_guardrails.md`](do
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 210: Probe Repair Closeout
+
+**Complete 2026-05-23.** Closed the legacy probe repair batch and marked the next path back to optimizer/drawdown work.
+
+Sprint 210 checkpoint doc: [`docs/sprint_210_probe_repair_closeout.md`](docs/sprint_210_probe_repair_closeout.md).
+
+### Sprint 209: Probe Suite Promotion
+
+**Complete 2026-05-23.** Promoted the repaired Canadian-rule probes into the canonical runner.
+
+Sprint 209 checkpoint doc: [`docs/sprint_209_probe_suite_promotion.md`](docs/sprint_209_probe_suite_promotion.md).
+
+### Sprint 208: Account And Sustain Probe Coverage
+
+**Complete 2026-05-23.** Repaired account-balance, withdrawal-order, and sustainable-spending probes against the extracted engine.
+
+Sprint 208 checkpoint doc: [`docs/sprint_208_account_and_sustain_probe_coverage.md`](docs/sprint_208_account_and_sustain_probe_coverage.md).
+
+### Sprint 207: Canadian Rule Probe Coverage
+
+**Complete 2026-05-23.** Repaired spousal RRSP, CPP sharing, and OAS recovery probes against the extracted engine.
+
+Sprint 207 checkpoint doc: [`docs/sprint_207_canadian_rule_probe_coverage.md`](docs/sprint_207_canadian_rule_probe_coverage.md).
+
+### Sprint 206: Legacy Probe Repair
+
+**Complete 2026-05-23.** Started the probe repair batch by moving broken legacy probes off brittle HTML inline-script extraction.
+
+Sprint 206 checkpoint doc: [`docs/sprint_206_legacy_probe_repair.md`](docs/sprint_206_legacy_probe_repair.md).
 
 ### Sprint 205: Pension Baseline Guardrails
 

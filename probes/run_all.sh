@@ -22,6 +22,12 @@ PROBES=(
   probe_tax_benefit_helpers.js
   probe_pension_credit.js
   probe_tax_ages_64_72.js
+  probe_spousal.js
+  probe_cppshare.js
+  probe_clawback.js
+  probe_balances.js
+  probe_order.js
+  probe_sustain.js
   probe_validation_exports.js
 )
 

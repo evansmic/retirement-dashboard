@@ -40,19 +40,17 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 205 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, and DB pension splitting is now included in the current-plan baseline for eligible two-person plans. The next logical slice is returning to bounded optimizer/drawdown execution work with the DB pension trust issue handled.
+Sprint 210 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, and the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner. The next logical slice is returning to bounded optimizer/drawdown execution work with the pension baseline and probe coverage trust issues handled.
 
-Completed Sprint 201-205 slices:
+Completed Sprint 206-210 slices:
 
-- Investigated checkpoint feedback about pension splitting and DB pension couples.
-- Added a shared baseline rule for two-person DB pension plans.
-- Included eligible DB pension splitting in current-plan preview, optimizer, hidden comparison, and drawdown readiness baseline configs.
-- Prevented DB pension splitting from appearing as a found optimizer improvement when already included in baseline.
-- Kept registered-income pension-splitting review candidates for eligible non-DB cases.
-- Added plain copy in Overview, Taxes, and Assumptions when DB pension splitting is included.
+- Repaired the legacy probes that broke when the dashboard stopped carrying a single inline combined script.
+- Moved spousal RRSP attribution, CPP sharing, OAS recovery, account balance, withdrawal-order, and sustainable-spending probes onto extracted engine or helper entry points.
+- Kept the legacy bridge only where preset data is needed.
+- Promoted the repaired probes into `probes/run_all.sh`.
+- Updated probe documentation to distinguish canonical extracted-engine probes from remaining single-purpose legacy probes.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed v1 recommended-plan drawdown review, details placement, review copy guard, recommended-plan closeout, re-entry review, next sprint plan, re-entry closeout, detailed stress v1 migration decision, v1 decision closeout, manual report reference, manual comparison, comparison closeout, probe coverage, probe-backed runner bridge, bridge run, bridge closeout, adapter request, injected runner prototype, prototype closeout, adapter contract, adapter validation, adapter batch closeout, boundary review, migration closeout, stress extraction readiness, stress boundary output, stress rows, spending stress output, v1 execution output, contained prototype output, draft output, comparison output, runtime payloads, mocked payloads, and optimizer output remain unsaved.
-- Kept Sprints 201-205 as pension baseline trust cleanup, not optimizer expansion, stress migration, report migration, broad visual redesign, or simulation math changes.
+- Confirmed probe repair does not change engine math, UI behavior, saved plan schema, optimizer behavior, or report behavior.
 
 ## Consumer Roadmap Sequence
 
@@ -241,6 +239,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 181. **Sprint 203 — Pension candidate discipline.** Keep DB pension splitting from appearing as a found optimizer option.
 182. **Sprint 204 — Pension baseline copy.** Explain baseline inclusion in Results.
 183. **Sprint 205 — Pension baseline guardrails.** Lock the behavior with selector, optimizer, and UI tests.
+184. **Sprint 206 — Legacy probe repair.** Move broken legacy probes off brittle dashboard inline-script extraction.
+185. **Sprint 207 — Canadian rule probe coverage.** Restore spousal RRSP, CPP sharing, and OAS recovery coverage.
+186. **Sprint 208 — Account and sustain probe coverage.** Restore account-balance, withdrawal-order, and sustainable-spending coverage.
+187. **Sprint 209 — Probe suite promotion.** Add repaired probes to the canonical runner.
+188. **Sprint 210 — Probe repair closeout.** Close the verification repair batch before returning to optimizer/drawdown work.
 
 ## Medium-Term Roadmap
 
@@ -444,6 +447,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 203 — Pension candidate discipline.** Complete 2026-05-23. Prevented DB pension splitting from appearing as a found optimizer improvement when already included.
 - **Sprint 204 — Pension baseline copy.** Complete 2026-05-23. Added plain Results copy for DB pension baseline inclusion.
 - **Sprint 205 — Pension baseline guardrails.** Complete 2026-05-23. Added tests for baseline, candidate, and UI copy behavior.
+- **Sprint 206 — Legacy probe repair.** Complete 2026-05-23. Moved broken legacy probes off brittle dashboard inline-script extraction.
+- **Sprint 207 — Canadian rule probe coverage.** Complete 2026-05-23. Repaired spousal RRSP, CPP sharing, and OAS recovery probes.
+- **Sprint 208 — Account and sustain probe coverage.** Complete 2026-05-23. Repaired account-balance, withdrawal-order, and sustainable-spending probes.
+- **Sprint 209 — Probe suite promotion.** Complete 2026-05-23. Added the repaired probes to the canonical runner.
+- **Sprint 210 — Probe repair closeout.** Complete 2026-05-23. Closed the verification repair batch and returned the path to optimizer/drawdown work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

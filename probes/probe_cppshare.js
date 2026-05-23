@@ -1,20 +1,31 @@
-// Phase 3.5 verification: CPP sharing equalizes CPP income between spouses.
-const fs = require("fs");
-const html = fs.readFileSync(require("path").join(__dirname, "..", "retirement_dashboard.html") + "", "utf8");
-const m = html.match(/<script>([\s\S]*?)<\/script>/);
-let body = m[1].replace(/window\.location\.hash\.slice\(1\)/g, '""');
-body = body.replace('const D = loadClientData();',
-  'const D = loadClientData(); D.assumptions.cppSharing = true;');
-const wrapper = `${body}\n  return { runSimulation, _cfgBase };`;
-const f = new Function("window", "document", wrapper);
-const out = f({location:{hash:""}, addEventListener:()=>{}}, {getElementById:()=>null, addEventListener:()=>{}});
+// Verifies CPP sharing equalizes CPP income once both spouses are receiving CPP.
+const { createLegacyEngine } = require('../engine/legacy_engine_bridge.cjs');
+const SimulationEngine = require('../engine/simulation_engine.js');
 
-const r = out.runSimulation(out._cfgBase);
-console.log(`Baseline with CPP sharing on:`);
-console.log(`End portfolio: $${Math.round(r.years[r.years.length-1].bal_total).toLocaleString()}`);
-console.log(`Shortfalls:    ${r.years.filter(y=>y.shortfall>500).length}`);
-console.log(`Lifetime tax:  $${Math.round(r.totalTax).toLocaleString()}\n`);
-console.log(`CPP values once both receiving (look for equal cpp_f = cpp_m):`);
-for(const y of r.years.filter(x => x.ageF>=65 && x.ageF<=70)){
-  console.log(`  ${y.year} F:${y.ageF} cpp_f:$${Math.round(y.cpp_f)}  cpp_m:$${Math.round(y.cpp_m)}  (sum=$${Math.round(y.cpp_f+y.cpp_m)})`);
+let passed = 0;
+let failed = 0;
+
+function check(condition, label) {
+  if (condition) {
+    passed += 1;
+    console.log(`  OK ${label}`);
+  } else {
+    failed += 1;
+    console.log(`  FAIL ${label}`);
+  }
 }
+
+const plan = createLegacyEngine().PRESETS['diy-couple']();
+plan.assumptions.cppSharing = true;
+const engine = SimulationEngine.createSimulationEngine(plan);
+const result = engine.runSimulation(engine.SCENARIOS.base.cfg);
+const receivingRows = result.years.filter((row) => row.cpp_f > 0 && row.cpp_m > 0);
+
+console.log('\n=== CPP sharing ===');
+check(receivingRows.length > 0, 'projection includes years where both spouses receive CPP');
+check(receivingRows.every((row) => Math.abs(row.cpp_f - row.cpp_m) <= 1), 'CPP sharing equalizes CPP income between spouses');
+check(receivingRows.every((row) => row.cpp_f + row.cpp_m > 0), 'shared CPP remains positive after split');
+check(Number.isFinite(result.totalTax), 'simulation returns finite lifetime tax with CPP sharing enabled');
+
+console.log(`\n=== SUMMARY ===\nPassed: ${passed}\nFailed: ${failed}`);
+process.exit(failed > 0 ? 1 : 0);
