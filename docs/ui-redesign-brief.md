@@ -470,3 +470,29 @@ That is more important than:
 - more complexity
 - more technical inputs
 - more analytics
+
+---
+# Visual Reference Mockups
+
+The following images are reference boards for the later UI/UX phase. They should guide look, feel, hierarchy, and component language, but they are not binding implementation specs and should not override engine, persistence, non-advisory, or progressive-disclosure boundaries.
+
+- `docs/assets/dashboard-mockup-gpt.png` — desktop design-system and dashboard reference.
+- `docs/assets/mobile-screen-mockups.png` — full user journey and mobile-first flow reference.
+- `docs/assets/ipad-mockups.png` — tablet/dashboard responsive layout reference.
+
+Use these references to preserve:
+- calm premium SaaS direction
+- strong first-answer hierarchy
+- local-first save/status visibility
+- reusable intake field states
+- responsive app shell patterns
+- recommendation cards that remain review-oriented
+- progressive disclosure from first answer to deeper analysis
+
+Do not copy these patterns literally where they would:
+- make Overview too dense
+- imply statistical certainty without model support
+- present optimizer output as advice
+- hide Ontario/province scope
+- weaken local backup reminders
+- turn Details into a consumer-facing engineering checklist
