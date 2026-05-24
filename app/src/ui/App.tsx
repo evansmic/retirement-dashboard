@@ -227,6 +227,9 @@ type BridgePreview = {
 
 const SHOW_CHECKPOINT_REVIEW_PANELS = false;
 const SHOW_DRAWDOWN_RESEARCH_PANELS = false;
+const SHOW_MONEY_FLOW_RESEARCH_PANELS = false;
+const SHOW_OPTION_RESEARCH_PANELS = false;
+const SHOW_SCENARIO_RESEARCH_PANELS = false;
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
@@ -3930,7 +3933,9 @@ function DetailsResultsPanel({
       <div className="result-section-label">Money Flow</div>
       <SourceStoryPanel story={sourceStory} />
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
-      <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
+      {SHOW_MONEY_FLOW_RESEARCH_PANELS ? (
+        <ReconciliationDiagnosticsPanel diagnostics={reconciliationDiagnostics} loading={loading} />
+      ) : null}
       <div className="result-section-label">Decision Checks</div>
       {SHOW_CHECKPOINT_REVIEW_PANELS ? (
         <>
@@ -3949,9 +3954,13 @@ function DetailsResultsPanel({
         scenarioAssumptionRows={scenarioAssumptionRows}
       />
       <SpendingStressPanel loading={loading} summary={spendingStress} />
-      <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
-      <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
-      <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
+      {SHOW_SCENARIO_RESEARCH_PANELS ? (
+        <>
+          <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
+          <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
+        </>
+      ) : null}
+      <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />
       <CompactDrawdownReviewSummaryPanel
         actions={v1DrawdownUxReviewActions}
         closeout={v1DrawdownRecommendedPlanCloseout}
@@ -3960,6 +3969,9 @@ function DetailsResultsPanel({
         loading={loading}
         safety={v1DrawdownSafetyChecklist}
       />
+      {SHOW_OPTION_RESEARCH_PANELS ? (
+        <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
+      ) : null}
       {SHOW_DRAWDOWN_RESEARCH_PANELS ? (
         <>
           <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />

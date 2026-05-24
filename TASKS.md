@@ -4,30 +4,31 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 250: Drawdown Details Compaction Closeout
+## Latest Sprint — Sprint 265: Money Flow Details Compaction Closeout
 
 **Status:** Complete 2026-05-24.
 
-Goal: keep the normal Details path compact by showing one consumer-facing drawdown review summary while preserving deeper drawdown diagnostics behind the internal research gate.
+Goal: keep the normal Details money-flow path readable while preserving reconciliation diagnostics behind an internal gate.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 250 checkpoint doc: [`docs/sprint_250_drawdown_details_compaction_closeout.md`](docs/sprint_250_drawdown_details_compaction_closeout.md).
+Sprint 265 checkpoint doc: [`docs/sprint_265_money_flow_details_compaction_closeout.md`](docs/sprint_265_money_flow_details_compaction_closeout.md).
 
-### Sprint 246-250 Candidate Implementation Tickets
+### Sprint 261-265 Candidate Implementation Tickets
 
-- [x] **S246-01 — Details drawdown density review.** Review the normal Details drawdown surface after the Overview trim.
-- [x] **S247-01 — Research gate tightening.** Move the older drawdown readiness diagnostic behind the existing research-panel gate.
-- [x] **S248-01 — Compact surface guard.** Add structure coverage for the compact drawdown Details path.
-- [x] **S249-01 — Diagnostic preservation.** Preserve deeper drawdown diagnostics in the hidden research branch.
-- [x] **S250-01 — Drawdown Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
+- [x] **S261-01 — Details money-flow density review.** Review the normal Details money-flow surface after scenario compaction.
+- [x] **S262-01 — Money Flow research gate.** Move reconciliation diagnostics behind a disabled internal gate.
+- [x] **S263-01 — Consumer summary preservation.** Keep Money Flow story and first-year ledger visible in Details.
+- [x] **S264-01 — Money Flow structure guard.** Add structure coverage for compact money-flow placement and diagnostics gating.
+- [x] **S265-01 — Money Flow Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
 
-### Sprint 250 Definition Of Done
+### Sprint 265 Definition Of Done
 
-- Normal Details renders the compact drawdown review summary as the visible drawdown surface.
-- Drawdown readiness, hidden comparison, prototype, and execution diagnostics remain gated behind `SHOW_DRAWDOWN_RESEARCH_PANELS`.
-- Overview remains free of drawdown review diagnostics.
-- UI structure tests protect the compact Details path and research-gated diagnostics.
+- Normal Details renders Money Flow story and first-year ledger as visible money-flow evidence.
+- Reconciliation diagnostics remain gated behind `SHOW_MONEY_FLOW_RESEARCH_PANELS`.
+- Money Flow remains available for deeper review outside the first Results screen.
+- Overview remains free of money-flow diagnostics.
+- UI structure tests protect compact Details money-flow placement and diagnostics gating.
 - Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
 - No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
 - Verification passes and no private `.plan.json` files are created.
@@ -118,6 +119,96 @@ Sprint 250 checkpoint doc: [`docs/sprint_250_drawdown_details_compaction_closeou
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 265: Money Flow Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented the Money Flow Details compaction batch and preserved engine/schema boundaries.
+
+Sprint 265 checkpoint doc: [`docs/sprint_265_money_flow_details_compaction_closeout.md`](docs/sprint_265_money_flow_details_compaction_closeout.md).
+
+### Sprint 264: Money Flow Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for compact money-flow placement and reconciliation diagnostics gating.
+
+Sprint 264 checkpoint doc: [`docs/sprint_264_money_flow_structure_guard.md`](docs/sprint_264_money_flow_structure_guard.md).
+
+### Sprint 263: Money Flow Consumer Summary Preservation
+
+**Complete 2026-05-24.** Kept Money Flow story and first-year ledger visible while gating technical diagnostics.
+
+Sprint 263 checkpoint doc: [`docs/sprint_263_money_flow_consumer_summary_preservation.md`](docs/sprint_263_money_flow_consumer_summary_preservation.md).
+
+### Sprint 262: Money Flow Research Gate
+
+**Complete 2026-05-24.** Preserved reconciliation diagnostics behind a disabled internal research gate.
+
+Sprint 262 checkpoint doc: [`docs/sprint_262_money_flow_research_gate.md`](docs/sprint_262_money_flow_research_gate.md).
+
+### Sprint 261: Details Money Flow Density Review
+
+**Complete 2026-05-24.** Reviewed Details money-flow density and kept consumer summaries as the normal path.
+
+Sprint 261 checkpoint doc: [`docs/sprint_261_details_money_flow_density_review.md`](docs/sprint_261_details_money_flow_density_review.md).
+
+### Sprint 260: Scenario Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented the scenario Details compaction batch and preserved engine/schema boundaries.
+
+Sprint 260 checkpoint doc: [`docs/sprint_260_scenario_details_compaction_closeout.md`](docs/sprint_260_scenario_details_compaction_closeout.md).
+
+### Sprint 259: Scenario Surface Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for compact scenario placement and raw-table gating.
+
+Sprint 259 checkpoint doc: [`docs/sprint_259_scenario_surface_structure_guard.md`](docs/sprint_259_scenario_surface_structure_guard.md).
+
+### Sprint 258: Scenario Consumer Summary Preservation
+
+**Complete 2026-05-24.** Kept CPP/OAS timing review and spending stress visible while gating raw scenario tables.
+
+Sprint 258 checkpoint doc: [`docs/sprint_258_scenario_consumer_summary_preservation.md`](docs/sprint_258_scenario_consumer_summary_preservation.md).
+
+### Sprint 257: Scenario Research Gate
+
+**Complete 2026-05-24.** Preserved scenario assumption and comparison tables behind a disabled internal research gate.
+
+Sprint 257 checkpoint doc: [`docs/sprint_257_scenario_research_gate.md`](docs/sprint_257_scenario_research_gate.md).
+
+### Sprint 256: Details Scenario Density Review
+
+**Complete 2026-05-24.** Reviewed Details scenario density and kept consumer summaries as the normal path.
+
+Sprint 256 checkpoint doc: [`docs/sprint_256_details_scenario_density_review.md`](docs/sprint_256_details_scenario_density_review.md).
+
+### Sprint 255: Option Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented the option Details compaction batch and preserved engine/schema boundaries.
+
+Sprint 255 checkpoint doc: [`docs/sprint_255_option_details_compaction_closeout.md`](docs/sprint_255_option_details_compaction_closeout.md).
+
+### Sprint 254: Option Surface Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for compact option placement and full-panel gating.
+
+Sprint 254 checkpoint doc: [`docs/sprint_254_option_surface_structure_guard.md`](docs/sprint_254_option_surface_structure_guard.md).
+
+### Sprint 253: Option Research Gate
+
+**Complete 2026-05-24.** Preserved the full plan-options panel behind a disabled internal research gate.
+
+Sprint 253 checkpoint doc: [`docs/sprint_253_option_research_gate.md`](docs/sprint_253_option_research_gate.md).
+
+### Sprint 252: Compact Option Details Surface
+
+**Complete 2026-05-24.** Switched normal Details to the compact plan-options surface.
+
+Sprint 252 checkpoint doc: [`docs/sprint_252_compact_option_details_surface.md`](docs/sprint_252_compact_option_details_surface.md).
+
+### Sprint 251: Details Option Density Review
+
+**Complete 2026-05-24.** Reviewed Details option density and selected the existing compact panel for the normal consumer path.
+
+Sprint 251 checkpoint doc: [`docs/sprint_251_details_option_density_review.md`](docs/sprint_251_details_option_density_review.md).
 
 ### Sprint 250: Drawdown Details Compaction Closeout
 

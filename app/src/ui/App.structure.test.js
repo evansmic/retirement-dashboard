@@ -20,6 +20,8 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).not.toContain('<ResultsReadinessPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
+    expect(overviewBranch).not.toContain('<ScenarioAssumptionsPanel');
+    expect(overviewBranch).not.toContain('<ScenarioComparisonPanel');
     expect(overviewBranch).not.toContain('<ProjectionPathPanel');
     expect(overviewBranch).not.toContain('<ReconciliationDiagnosticsPanel');
     expect(overviewBranch).not.toContain('<TaxPressurePanel');
@@ -27,14 +29,32 @@ describe('Results overview structure', () => {
 
     expect(detailsPanel).toContain('<ProjectionPathPanel');
     expect(detailsPanel).toContain('<EstateIntentPanel');
-    expect(detailsPanel).toContain('<ReconciliationDiagnosticsPanel');
+    expect(detailsPanel).toContain('<SourceStoryPanel');
+    expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
     expect(detailsPanel).toContain('<TaxPressurePanel');
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
-    expect(detailsPanel).toContain('<BoundedOptimizerPanel');
+    expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
     expect(detailsPanel).toContain('<CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('keeps normal Details money-flow evidence readable while preserving diagnostics behind a gate', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const sourceStoryIndex = detailsPanel.indexOf('<SourceStoryPanel');
+    const firstYearIndex = detailsPanel.indexOf('<FirstYearMoneyFlowPanel');
+    const moneyFlowGateIndex = detailsPanel.indexOf('SHOW_MONEY_FLOW_RESEARCH_PANELS');
+    const moneyFlowResearchBranch = detailsPanel.slice(moneyFlowGateIndex);
+
+    expect(appSource).toContain('SHOW_MONEY_FLOW_RESEARCH_PANELS = false');
+    expect(sourceStoryIndex).toBeGreaterThan(0);
+    expect(firstYearIndex).toBeGreaterThan(sourceStoryIndex);
+    expect(moneyFlowGateIndex).toBeGreaterThan(firstYearIndex);
+    expect(moneyFlowResearchBranch).toContain('<ReconciliationDiagnosticsPanel');
+    expect(detailsPanel.slice(0, moneyFlowGateIndex)).not.toContain('<ReconciliationDiagnosticsPanel');
   });
 
   it('keeps the Overview first screen reduced to answer, spending, review actions, and compact highlights', () => {
@@ -81,14 +101,49 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('First option to review means it cleared the highlight checks');
     expect(appSource).toContain('Review-only means the result is useful evidence');
     expect(appSource).toContain('save optimizer results');
+    expect(appSource).toContain('SHOW_OPTION_RESEARCH_PANELS = false');
+    expect(appSource).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');
   });
 
+  it('keeps the normal Details option surface compact while preserving full option research behind a gate', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const compactOptionIndex = detailsPanel.indexOf('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
+    const optionGateIndex = detailsPanel.indexOf('SHOW_OPTION_RESEARCH_PANELS');
+    const optionResearchBranch = detailsPanel.slice(optionGateIndex);
+
+    expect(compactOptionIndex).toBeGreaterThan(0);
+    expect(optionGateIndex).toBeGreaterThan(compactOptionIndex);
+    expect(optionResearchBranch).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
+  });
+
   it('shows spending stress as review evidence without advice language', () => {
     expect(appSource).toContain('Spending stress check');
+    expect(appSource).toContain('SHOW_SCENARIO_RESEARCH_PANELS = false');
     expect(appSource).not.toContain('safe spend');
     expect(appSource).not.toContain('you can spend more');
+  });
+
+  it('keeps normal Details scenario evidence compact while preserving tables behind a gate', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const benefitIndex = detailsPanel.indexOf('<BenefitTimingReadinessPanel');
+    const stressIndex = detailsPanel.indexOf('<SpendingStressPanel');
+    const scenarioGateIndex = detailsPanel.indexOf('SHOW_SCENARIO_RESEARCH_PANELS');
+    const scenarioResearchBranch = detailsPanel.slice(scenarioGateIndex);
+
+    expect(benefitIndex).toBeGreaterThan(0);
+    expect(stressIndex).toBeGreaterThan(benefitIndex);
+    expect(scenarioGateIndex).toBeGreaterThan(stressIndex);
+    expect(scenarioResearchBranch).toContain('<ScenarioAssumptionsPanel');
+    expect(scenarioResearchBranch).toContain('<ScenarioComparisonPanel');
+    expect(detailsPanel.slice(0, scenarioGateIndex)).not.toContain('<ScenarioAssumptionsPanel');
+    expect(detailsPanel.slice(0, scenarioGateIndex)).not.toContain('<ScenarioComparisonPanel');
   });
 
   it('shows drawdown readiness in Details without optimizer execution language', () => {

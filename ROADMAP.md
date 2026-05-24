@@ -40,15 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 250 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, the first human-tester intake friction items have been addressed without broad UI redesign, the normal consumer Details path now shows one compact drawdown review summary instead of the full internal research stack, the older drawdown readiness diagnostic is gated with the hidden research panels, the latest intake copy clarifies immediate draft behavior, first validation items, and current income-source scope, CPP/OAS timing is now explained as an age-65 current baseline with an age-70 review test rather than a saved editable input, and the Results Overview has been reduced to the answer, spending capacity, top review actions, and compact estate/tax/survivor highlights. The next logical slice is continuing bounded drawdown/recommended-plan work while keeping the public-facing Details surface compact and deferring schema-expanding income and benefit-timing inputs.
+Sprint 265 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, the first human-tester intake friction items have been addressed without broad UI redesign, the normal consumer Details path now shows one compact drawdown review summary instead of the full internal research stack, the older drawdown readiness diagnostic is gated with the hidden research panels, normal Details uses compact plan-options review while full option research is gated, normal Details keeps benefit timing and spending stress while raw scenario tables are gated, normal Details keeps Money Flow story and first-year ledger while reconciliation diagnostics are gated, the latest intake copy clarifies immediate draft behavior, first validation items, and current income-source scope, CPP/OAS timing is now explained as an age-65 current baseline with an age-70 review test rather than a saved editable input, and the Results Overview has been reduced to the answer, spending capacity, top review actions, and compact estate/tax/survivor highlights. The next logical slice is continuing bounded drawdown/recommended-plan work while keeping the public-facing Details surface compact and deferring schema-expanding income and benefit-timing inputs.
 
-Completed Sprint 246-250 slices:
+Completed Sprint 261-265 slices:
 
-- Reviewed normal Details drawdown density after the Overview reduction.
-- Kept one compact drawdown review summary visible in the consumer Details path.
-- Moved older drawdown readiness diagnostics behind the existing research-panel gate.
-- Preserved hidden research diagnostics instead of deleting them.
-- Added UI structure coverage for compact Details placement and gated diagnostics.
+- Reviewed normal Details money-flow density after scenario compaction.
+- Kept Money Flow story and first-year funding ledger visible in Details.
+- Preserved reconciliation diagnostics behind a disabled internal research gate.
+- Added UI structure coverage for compact money-flow placement and diagnostics gating.
 - Preserved engine math, optimizer behavior, drawdown behavior, saved plan schema, and engine output schema.
 
 ## Consumer Roadmap Sequence
