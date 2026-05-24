@@ -226,6 +226,7 @@ type BridgePreview = {
 };
 
 const SHOW_CHECKPOINT_REVIEW_PANELS = false;
+const SHOW_DECISION_RESEARCH_PANELS = false;
 const SHOW_DRAWDOWN_RESEARCH_PANELS = false;
 const SHOW_MONEY_FLOW_RESEARCH_PANELS = false;
 const SHOW_OPTION_RESEARCH_PANELS = false;
@@ -3960,8 +3961,12 @@ function DetailsResultsPanel({
         </>
       ) : null}
       <DecisionChecklistPanel items={decisionChecklist} />
-      <DecisionDetailPanel rows={decisionDetailRows} />
-      <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
+      {SHOW_DECISION_RESEARCH_PANELS ? (
+        <>
+          <DecisionDetailPanel rows={decisionDetailRows} />
+          <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
+        </>
+      ) : null}
       <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       <div className="result-section-label">Scenario evidence</div>
       <BenefitTimingReadinessPanel
@@ -3985,7 +3990,11 @@ function DetailsResultsPanel({
         safety={v1DrawdownSafetyChecklist}
       />
       {SHOW_OPTION_RESEARCH_PANELS ? (
-        <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
+        <>
+          <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
+          <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
+          <OptimizerInputReviewPanel summary={optimizerInputReview} />
+        </>
       ) : null}
       {SHOW_DRAWDOWN_RESEARCH_PANELS ? (
         <>
@@ -4043,8 +4052,6 @@ function DetailsResultsPanel({
           />
         </>
       ) : null}
-      <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
-      <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
   );
 }

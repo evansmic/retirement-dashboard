@@ -27,17 +27,33 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('<TaxPressurePanel');
     expect(overviewBranch).not.toContain('<OptimizerBoundaryPanel');
 
-    expect(detailsPanel).toContain('<ProjectionPathPanel');
     expect(detailsPanel).toContain('<EstateIntentPanel');
     expect(detailsPanel).toContain('<SourceStoryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+    expect(detailsPanel).toContain('<DecisionChecklistPanel');
     expect(detailsPanel).toContain('<TaxPressurePanel');
-    expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
     expect(detailsPanel).toContain('<CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('keeps normal Details decision evidence compact while preserving detail tables behind a gate', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const checklistIndex = detailsPanel.indexOf('<DecisionChecklistPanel');
+    const decisionGateIndex = detailsPanel.indexOf('SHOW_DECISION_RESEARCH_PANELS');
+    const decisionResearchBranch = detailsPanel.slice(decisionGateIndex);
+
+    expect(appSource).toContain('SHOW_DECISION_RESEARCH_PANELS = false');
+    expect(checklistIndex).toBeGreaterThan(0);
+    expect(decisionGateIndex).toBeGreaterThan(checklistIndex);
+    expect(decisionResearchBranch).toContain('<DecisionDetailPanel');
+    expect(decisionResearchBranch).toContain('<ProjectionPathPanel');
+    expect(detailsPanel.slice(0, decisionGateIndex)).not.toContain('<DecisionDetailPanel');
+    expect(detailsPanel.slice(0, decisionGateIndex)).not.toContain('<ProjectionPathPanel');
   });
 
   it('keeps normal Details money-flow evidence readable while preserving diagnostics behind a gate', () => {
@@ -118,7 +134,11 @@ describe('Results overview structure', () => {
     expect(compactOptionIndex).toBeGreaterThan(0);
     expect(optionGateIndex).toBeGreaterThan(compactOptionIndex);
     expect(optionResearchBranch).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
+    expect(optionResearchBranch).toContain('<OptimizerBoundaryPanel');
+    expect(optionResearchBranch).toContain('<OptimizerInputReviewPanel');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerBoundaryPanel');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerInputReviewPanel');
   });
 
   it('shows spending stress as review evidence without advice language', () => {

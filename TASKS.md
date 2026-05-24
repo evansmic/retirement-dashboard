@@ -4,31 +4,31 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 270: Annual CSV Export Closeout
+## Latest Sprint — Sprint 280: Decision Details Compaction Closeout
 
 **Status:** Complete 2026-05-24.
 
-Goal: let testers download year-by-year projection detail as a local CSV export without changing the saved plan or engine output schema.
+Goal: keep normal Details focused on the decision checklist while preserving decision detail and projection-path diagnostics behind an internal gate.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 270 checkpoint doc: [`docs/sprint_270_annual_csv_export_closeout.md`](docs/sprint_270_annual_csv_export_closeout.md).
+Sprint 280 checkpoint doc: [`docs/sprint_280_decision_details_compaction_closeout.md`](docs/sprint_280_decision_details_compaction_closeout.md).
 
-### Sprint 266-270 Candidate Implementation Tickets
+### Sprint 276-280 Candidate Implementation Tickets
 
-- [x] **S266-01 — Annual CSV feedback review.** Treat tester CSV export feedback as report-adjacent local output work.
-- [x] **S267-01 — CSV builder.** Build CSV content from existing annual detail selector rows.
-- [x] **S268-01 — CSV UI.** Add Download year-by-year CSV actions to Year-by-year and Save & print.
-- [x] **S269-01 — CSV structure guard.** Add structure coverage for CSV export copy and saved-plan boundaries.
-- [x] **S270-01 — Annual CSV closeout.** Document the batch and preserve engine/schema boundaries.
+- [x] **S276-01 — Decision details density review.** Review remaining decision-detail diagnostics in normal Details.
+- [x] **S277-01 — Decision research gate.** Move decision detail and projection path behind a disabled internal gate.
+- [x] **S278-01 — Checklist preservation.** Keep the decision checklist visible as the normal consumer surface.
+- [x] **S279-01 — Structure guard.** Add coverage for checklist placement and decision-detail gating.
+- [x] **S280-01 — Decision Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
 
-### Sprint 270 Definition Of Done
+### Sprint 280 Definition Of Done
 
-- Users can download year-by-year projection detail as a CSV file.
-- CSV output is derived from `selectAnnualDetailRows`.
-- CSV actions appear in Year-by-year and Save & print.
-- CSV copy makes clear it is a local results export, not an editable plan backup.
-- UI structure tests protect CSV export copy, filename, MIME type, and saved-plan boundary.
+- Normal Details renders the decision checklist as the visible decision surface.
+- Decision detail and projection path remain gated behind `SHOW_DECISION_RESEARCH_PANELS`.
+- Tax pressure remains visible as the Canadian tax review surface.
+- Overview remains free of decision diagnostics.
+- UI structure tests protect checklist placement and decision-detail gating.
 - Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
 - No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
 - Verification passes and no private `.plan.json` files are created.
@@ -119,6 +119,66 @@ Sprint 270 checkpoint doc: [`docs/sprint_270_annual_csv_export_closeout.md`](doc
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 280: Decision Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented decision Details compaction and preserved engine/schema boundaries.
+
+Sprint 280 checkpoint doc: [`docs/sprint_280_decision_details_compaction_closeout.md`](docs/sprint_280_decision_details_compaction_closeout.md).
+
+### Sprint 279: Decision Surface Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for checklist placement and decision-detail gating.
+
+Sprint 279 checkpoint doc: [`docs/sprint_279_decision_surface_structure_guard.md`](docs/sprint_279_decision_surface_structure_guard.md).
+
+### Sprint 278: Decision Checklist Preservation
+
+**Complete 2026-05-24.** Kept the decision checklist visible while gating lower-level decision diagnostics.
+
+Sprint 278 checkpoint doc: [`docs/sprint_278_decision_checklist_preservation.md`](docs/sprint_278_decision_checklist_preservation.md).
+
+### Sprint 277: Decision Research Gate
+
+**Complete 2026-05-24.** Preserved decision detail and projection path behind a disabled internal research gate.
+
+Sprint 277 checkpoint doc: [`docs/sprint_277_decision_research_gate.md`](docs/sprint_277_decision_research_gate.md).
+
+### Sprint 276: Decision Details Density Review
+
+**Complete 2026-05-24.** Reviewed decision Details density and kept the checklist as the normal consumer surface.
+
+Sprint 276 checkpoint doc: [`docs/sprint_276_decision_details_density_review.md`](docs/sprint_276_decision_details_density_review.md).
+
+### Sprint 275: Optimizer Prep Compaction Closeout
+
+**Complete 2026-05-24.** Documented optimizer-prep compaction and preserved engine/schema boundaries.
+
+Sprint 275 checkpoint doc: [`docs/sprint_275_optimizer_prep_compaction_closeout.md`](docs/sprint_275_optimizer_prep_compaction_closeout.md).
+
+### Sprint 274: Optimizer Prep Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for compact option placement and optimizer-prep gating.
+
+Sprint 274 checkpoint doc: [`docs/sprint_274_optimizer_prep_structure_guard.md`](docs/sprint_274_optimizer_prep_structure_guard.md).
+
+### Sprint 273: Option Prep Consumer Boundary
+
+**Complete 2026-05-24.** Kept future search-space and optimizer-permission diagnostics out of the normal consumer path.
+
+Sprint 273 checkpoint doc: [`docs/sprint_273_option_prep_consumer_boundary.md`](docs/sprint_273_option_prep_consumer_boundary.md).
+
+### Sprint 272: Optimizer Prep Research Gate
+
+**Complete 2026-05-24.** Moved optimizer boundary and input review panels behind the option research gate.
+
+Sprint 272 checkpoint doc: [`docs/sprint_272_optimizer_prep_research_gate.md`](docs/sprint_272_optimizer_prep_research_gate.md).
+
+### Sprint 271: Optimizer Prep Density Review
+
+**Complete 2026-05-24.** Reviewed optimizer-prep Details density and kept compact plan options as the normal consumer surface.
+
+Sprint 271 checkpoint doc: [`docs/sprint_271_optimizer_prep_density_review.md`](docs/sprint_271_optimizer_prep_density_review.md).
 
 ### Sprint 270: Annual CSV Export Closeout
 
