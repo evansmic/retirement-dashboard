@@ -40,17 +40,17 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 210 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, and the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner. The next logical slice is returning to bounded optimizer/drawdown execution work with the pension baseline and probe coverage trust issues handled.
+Sprint 215 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, and the bounded drawdown check now has a final recommended-plan implementation gate. The next logical slice is a v1 checkpoint review of whether this bounded drawdown check is ready to keep, hold, or simplify before broader recommended-plan work.
 
-Completed Sprint 206-210 slices:
+Completed Sprint 211-215 slices:
 
-- Repaired the legacy probes that broke when the dashboard stopped carrying a single inline combined script.
-- Moved spousal RRSP attribution, CPP sharing, OAS recovery, account balance, withdrawal-order, and sustainable-spending probes onto extracted engine or helper entry points.
-- Kept the legacy bridge only where preset data is needed.
-- Promoted the repaired probes into `probes/run_all.sh`.
-- Updated probe documentation to distinguish canonical extracted-engine probes from remaining single-purpose legacy probes.
+- Added a final runtime-only gate before bounded drawdown evidence is treated as recommended-plan evidence.
+- Combined recommended-plan closeout, plain summary, safety checks, visible limits, copy boundary, and saved-plan boundary.
+- Added a plain recommended-plan narrative for the bounded drawdown check.
+- Added a built-in example gate for this drawdown implementation layer.
+- Added a closeout that marks the next path as v1 checkpoint review, not broader drawdown execution.
 - Preserved current withdrawal order and empty annual overrides.
-- Confirmed probe repair does not change engine math, UI behavior, saved plan schema, optimizer behavior, or report behavior.
+- Confirmed the new gate, narrative, example gate, and closeout do not change engine math, UI behavior, saved plan schema, optimizer behavior, or report behavior.
 
 ## Consumer Roadmap Sequence
 
@@ -244,6 +244,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 186. **Sprint 208 — Account and sustain probe coverage.** Restore account-balance, withdrawal-order, and sustainable-spending coverage.
 187. **Sprint 209 — Probe suite promotion.** Add repaired probes to the canonical runner.
 188. **Sprint 210 — Probe repair closeout.** Close the verification repair batch before returning to optimizer/drawdown work.
+189. **Sprint 211 — Drawdown implementation gate.** Gate recommended-plan placement around closeout, safety, limits, copy, and saved-plan boundaries.
+190. **Sprint 212 — Drawdown recommended-plan narrative.** Translate the bounded drawdown check into plain review evidence.
+191. **Sprint 213 — Drawdown recommended-plan example gate.** Keep built-in example coverage as a readiness gate.
+192. **Sprint 214 — Drawdown implementation copy and persistence.** Protect non-advisory copy and unsaved output.
+193. **Sprint 215 — Drawdown implementation closeout.** Combine gate, narrative, examples, and persistence into a v1 checkpoint closeout.
 
 ## Medium-Term Roadmap
 
@@ -452,6 +457,11 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 208 — Account and sustain probe coverage.** Complete 2026-05-23. Repaired account-balance, withdrawal-order, and sustainable-spending probes.
 - **Sprint 209 — Probe suite promotion.** Complete 2026-05-23. Added the repaired probes to the canonical runner.
 - **Sprint 210 — Probe repair closeout.** Complete 2026-05-23. Closed the verification repair batch and returned the path to optimizer/drawdown work.
+- **Sprint 211 — Drawdown implementation gate.** Complete 2026-05-23. Added a final runtime-only gate before bounded drawdown evidence can be treated as recommended-plan evidence.
+- **Sprint 212 — Drawdown recommended-plan narrative.** Complete 2026-05-23. Added a plain narrative around the bounded drawdown check.
+- **Sprint 213 — Drawdown recommended-plan example gate.** Complete 2026-05-23. Added a built-in example coverage gate for recommended-plan drawdown readiness.
+- **Sprint 214 — Drawdown implementation copy and persistence.** Complete 2026-05-23. Added copy and persistence guardrails for the new implementation layer.
+- **Sprint 215 — Drawdown implementation closeout.** Complete 2026-05-23. Closed the implementation gate batch before the next v1 checkpoint.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

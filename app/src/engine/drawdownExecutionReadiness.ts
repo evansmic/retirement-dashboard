@@ -790,6 +790,56 @@ export type TaxAwareDrawdownV1RecommendedPlanCloseout = {
   disposition: 'v1DrawdownRecommendedPlanCloseoutOnly';
 };
 
+export type TaxAwareDrawdownV1ImplementationGate = {
+  status: 'readyForRecommendedPlan' | 'holdForMoreReview' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'closeout' | 'summary' | 'safety' | 'limits' | 'copy' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownImplementationGateOnly';
+};
+
+export type TaxAwareDrawdownV1RecommendedPlanNarrative = {
+  status: 'ready' | 'held' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'answer' | 'comparison' | 'reviewActions' | 'limits';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownRecommendedPlanNarrativeOnly';
+};
+
+export type TaxAwareDrawdownV1RecommendedPlanExampleGate = {
+  status: 'examplesClear' | 'needsExampleReview';
+  exampleCount: number;
+  heldOrBlockedCount: number;
+  reviewNote: string;
+  disposition: 'v1DrawdownRecommendedPlanExampleGateOnly';
+};
+
+export type TaxAwareDrawdownV1ImplementationCloseout = {
+  status: 'readyForV1Checkpoint' | 'holdForReview' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'gate' | 'narrative' | 'examples' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownImplementationCloseoutOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -3750,6 +3800,214 @@ export function selectTaxAwareDrawdownV1RecommendedPlanCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1ImplementationGate({
+  plan,
+  closeout,
+  consumerSummary,
+  safety,
+  limits,
+  copyGuard
+}: {
+  plan: V2PlanPayload;
+  closeout: TaxAwareDrawdownV1RecommendedPlanCloseout;
+  consumerSummary: TaxAwareDrawdownV1ConsumerSummary;
+  safety: TaxAwareDrawdownV1SafetyChecklist;
+  limits: TaxAwareDrawdownV1ConsumerLimits;
+  copyGuard: TaxAwareDrawdownV1ReviewCopyGuard;
+}): TaxAwareDrawdownV1ImplementationGate {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ImplementationGate['rows'] = [
+    {
+      id: 'closeout',
+      label: 'Recommended-plan closeout',
+      status: closeout.status === 'readyForImplementation' ? 'ready' : closeout.status === 'holdForPolish' ? 'hold' : 'blocked',
+      detail: closeout.headline
+    },
+    {
+      id: 'summary',
+      label: 'Plain summary',
+      status: consumerSummary.status === 'clearForReview' ? 'ready' : consumerSummary.status === 'needsCare' ? 'hold' : 'blocked',
+      detail: consumerSummary.headline
+    },
+    {
+      id: 'safety',
+      label: 'Safety checks',
+      status: safety.status === 'ready' ? 'ready' : safety.status === 'hold' ? 'hold' : 'blocked',
+      detail: safety.reviewNote
+    },
+    {
+      id: 'limits',
+      label: 'Visible limits',
+      status: limits.status === 'visible' ? 'ready' : 'hold',
+      detail: limits.reviewNote
+    },
+    {
+      id: 'copy',
+      label: 'Copy boundary',
+      status: copyGuard.status === 'clear' ? 'ready' : 'blocked',
+      detail: copyGuard.reviewNote
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No drawdown implementation gate output is saved.' : 'Saved plan output contains drawdown implementation gate data.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForMoreReview' : 'readyForRecommendedPlan',
+    headline: blocked
+      ? 'Do not place the drawdown check in the recommended plan yet.'
+      : held
+        ? 'Hold the drawdown check for more review.'
+        : 'Ready to place the drawdown check in the recommended plan.',
+    detail:
+      'This gate checks whether the drawdown timing result is safe to present as one review item inside the recommended household plan.',
+    rows,
+    reviewNote:
+      'Implementation gate only. It does not apply a drawdown strategy, create instructions, move the check into Overview, or save output.',
+    disposition: 'v1DrawdownImplementationGateOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1RecommendedPlanNarrative({
+  gate,
+  headline,
+  comparison,
+  actions,
+  limits
+}: {
+  gate: TaxAwareDrawdownV1ImplementationGate;
+  headline: TaxAwareDrawdownV1UxHeadline;
+  comparison: TaxAwareDrawdownV1UxComparisonCard;
+  actions: TaxAwareDrawdownV1UxReviewActions;
+  limits: TaxAwareDrawdownV1ConsumerLimits;
+}): TaxAwareDrawdownV1RecommendedPlanNarrative {
+  const rows: TaxAwareDrawdownV1RecommendedPlanNarrative['rows'] = [
+    {
+      id: 'answer',
+      label: 'Plain answer',
+      status: headline.status === 'ready' ? 'ready' : headline.status === 'hold' ? 'hold' : 'blocked',
+      detail: headline.headline
+    },
+    {
+      id: 'comparison',
+      label: 'Current-plan comparison',
+      status: comparison.status === 'ready' ? 'ready' : comparison.status === 'hold' ? 'hold' : 'blocked',
+      detail: comparison.reviewNote
+    },
+    {
+      id: 'reviewActions',
+      label: 'Review actions',
+      status: actions.status === 'available' ? 'ready' : actions.status === 'held' ? 'hold' : 'blocked',
+      detail: actions.reviewNote
+    },
+    {
+      id: 'limits',
+      label: 'Visible limits',
+      status: limits.status === 'visible' ? 'ready' : 'hold',
+      detail: 'Keep review-only, single-scenario, not-saved, and not-full-plan limits with the narrative.'
+    }
+  ];
+  const blocked = gate.status === 'blocked' || rows.some((row) => row.status === 'blocked');
+  const held = gate.status === 'holdForMoreReview' || rows.some((row) => row.status === 'hold');
+  return {
+    status: blocked ? 'blocked' : held ? 'held' : 'ready',
+    headline: blocked
+      ? 'Drawdown narrative is blocked.'
+      : held
+        ? 'Drawdown narrative should stay held.'
+        : 'Drawdown narrative is ready for the recommended plan.',
+    detail:
+      'This narrative keeps the drawdown check understandable as plan review evidence, not as a new instruction or automatic change.',
+    rows,
+    reviewNote:
+      'Recommended-plan narrative only. It summarizes review evidence and does not recommend, apply, or save a drawdown change.',
+    disposition: 'v1DrawdownRecommendedPlanNarrativeOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1RecommendedPlanExampleGate({
+  exampleCount,
+  heldOrBlockedCount
+}: {
+  exampleCount: number;
+  heldOrBlockedCount: number;
+}): TaxAwareDrawdownV1RecommendedPlanExampleGate {
+  const hasMatrixEvidence = exampleCount > 0;
+  return {
+    status: hasMatrixEvidence && heldOrBlockedCount === 0 ? 'examplesClear' : 'needsExampleReview',
+    exampleCount,
+    heldOrBlockedCount,
+    reviewNote: hasMatrixEvidence
+      ? 'Recommended-plan example gate only. It checks built-in examples and does not save drawdown output.'
+      : 'Recommended-plan example gate only. The product view leaves full example coverage to tests.',
+    disposition: 'v1DrawdownRecommendedPlanExampleGateOnly'
+  };
+}
+
+export function selectTaxAwareDrawdownV1ImplementationCloseout({
+  plan,
+  gate,
+  narrative,
+  exampleGate
+}: {
+  plan: V2PlanPayload;
+  gate: TaxAwareDrawdownV1ImplementationGate;
+  narrative: TaxAwareDrawdownV1RecommendedPlanNarrative;
+  exampleGate: TaxAwareDrawdownV1RecommendedPlanExampleGate;
+}): TaxAwareDrawdownV1ImplementationCloseout {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1ImplementationCloseout['rows'] = [
+    {
+      id: 'gate',
+      label: 'Implementation gate',
+      status: gate.status === 'readyForRecommendedPlan' ? 'ready' : gate.status === 'holdForMoreReview' ? 'hold' : 'blocked',
+      detail: gate.headline
+    },
+    {
+      id: 'narrative',
+      label: 'Recommended-plan narrative',
+      status: narrative.status === 'ready' ? 'ready' : narrative.status === 'held' ? 'hold' : 'blocked',
+      detail: narrative.headline
+    },
+    {
+      id: 'examples',
+      label: 'Example gate',
+      status: exampleGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail: exampleGate.status === 'examplesClear'
+        ? `${exampleGate.exampleCount} example(s) are clear.`
+        : exampleGate.exampleCount > 0
+          ? `${exampleGate.heldOrBlockedCount} example(s) need review.`
+          : 'Example coverage is checked in tests, not in this product view.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No drawdown implementation closeout output is saved.' : 'Saved plan output contains drawdown implementation closeout data.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+  return {
+    status: blocked ? 'blocked' : held ? 'holdForReview' : 'readyForV1Checkpoint',
+    headline: blocked
+      ? 'Stop before the v1 drawdown checkpoint.'
+      : held
+        ? 'Hold before the v1 drawdown checkpoint.'
+        : 'Ready for the v1 drawdown checkpoint.',
+    detail:
+      'This closeout confirms the recommended-plan drawdown check is still review-only, Details-level, and unsaved before the next checkpoint.',
+    rows,
+    reviewNote:
+      'Implementation closeout only. It does not apply a strategy, create account instructions, move output into Overview, or save output.',
+    disposition: 'v1DrawdownImplementationCloseoutOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -3809,6 +4067,10 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownDetailsPlacement' in saved) &&
     !('v1DrawdownReviewCopyGuard' in saved) &&
     !('v1DrawdownRecommendedPlanCloseout' in saved) &&
+    !('v1DrawdownImplementationGate' in saved) &&
+    !('v1DrawdownRecommendedPlanNarrative' in saved) &&
+    !('v1DrawdownRecommendedPlanExampleGate' in saved) &&
+    !('v1DrawdownImplementationCloseout' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

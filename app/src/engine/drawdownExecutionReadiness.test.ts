@@ -46,9 +46,13 @@ import {
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
   selectTaxAwareDrawdownV1DetailsPlacement,
+  selectTaxAwareDrawdownV1ImplementationCloseout,
+  selectTaxAwareDrawdownV1ImplementationGate,
   selectTaxAwareDrawdownV1NextSprintPlan,
   selectTaxAwareDrawdownV1PhaseCloseout,
   selectTaxAwareDrawdownV1RecommendedPlanCloseout,
+  selectTaxAwareDrawdownV1RecommendedPlanExampleGate,
+  selectTaxAwareDrawdownV1RecommendedPlanNarrative,
   selectTaxAwareDrawdownV1RecommendedPlanReview,
   selectTaxAwareDrawdownV1ReentryCloseout,
   selectTaxAwareDrawdownV1ReentryReview,
@@ -1364,6 +1368,211 @@ describe('drawdown execution readiness contract', () => {
     expect(copyGuard.status).toBe('blocked');
     expect(closeout.status).toBe('blocked');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanCloseout');
+  });
+
+  it('gates recommended-plan drawdown implementation before the v1 checkpoint', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const safety = selectTaxAwareDrawdownV1SafetyChecklist({
+      plan,
+      execution: runTaxAwareDrawdownV1Execution({
+        plan,
+        candidate: {
+          status: 'ready',
+          candidateId: 'boundedRegisteredTimingExecution',
+          label: 'Bounded registered timing execution',
+          amount: 5000,
+          config: { meltdown: true },
+          rows: [],
+          reviewNote: 'candidate only',
+          disposition: 'v1DrawdownExecutionCandidateOnly'
+        },
+        runner: (_plan, config) => (config.meltdown ? comparisonCandidate : baseline)
+      })
+    });
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan,
+      reentryCloseout,
+      consumerSummary,
+      comparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard();
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan, review, placement, copyGuard });
+    const gate = selectTaxAwareDrawdownV1ImplementationGate({
+      plan,
+      closeout,
+      consumerSummary,
+      safety,
+      limits,
+      copyGuard
+    });
+    const narrative = selectTaxAwareDrawdownV1RecommendedPlanNarrative({
+      gate,
+      headline,
+      comparison,
+      actions,
+      limits
+    });
+    const exampleGate = selectTaxAwareDrawdownV1RecommendedPlanExampleGate({
+      exampleCount: 4,
+      heldOrBlockedCount: 0
+    });
+    const implementationCloseout = selectTaxAwareDrawdownV1ImplementationCloseout({
+      plan,
+      gate,
+      narrative,
+      exampleGate
+    });
+
+    expect(gate).toMatchObject({
+      status: 'readyForRecommendedPlan',
+      disposition: 'v1DrawdownImplementationGateOnly'
+    });
+    expect(gate.rows.map((row) => row.id)).toEqual(['closeout', 'summary', 'safety', 'limits', 'copy', 'savedPlan']);
+    expect(narrative).toMatchObject({
+      status: 'ready',
+      disposition: 'v1DrawdownRecommendedPlanNarrativeOnly'
+    });
+    expect(exampleGate).toMatchObject({
+      status: 'examplesClear',
+      disposition: 'v1DrawdownRecommendedPlanExampleGateOnly'
+    });
+    expect(implementationCloseout).toMatchObject({
+      status: 'readyForV1Checkpoint',
+      disposition: 'v1DrawdownImplementationCloseoutOnly'
+    });
+    expect(implementationCloseout.reviewNote).toContain('does not apply a strategy');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownImplementationGate');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanNarrative');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanExampleGate');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownImplementationCloseout');
+
+    const visibleCopy = [
+      gate.headline,
+      gate.detail,
+      gate.reviewNote,
+      narrative.headline,
+      narrative.detail,
+      narrative.reviewNote,
+      implementationCloseout.headline,
+      implementationCloseout.detail,
+      implementationCloseout.reviewNote,
+      ...gate.rows.flatMap((row) => [row.label, row.detail]),
+      ...narrative.rows.flatMap((row) => [row.label, row.detail]),
+      ...implementationCloseout.rows.flatMap((row) => [row.label, row.detail])
+    ].join(' ');
+
+    expect(visibleCopy).not.toMatch(/recommended withdrawal strategy/i);
+    expect(visibleCopy).not.toMatch(/optimal drawdown/i);
+    expect(visibleCopy).not.toMatch(/safe spend/i);
+    expect(visibleCopy).not.toMatch(/guaranteed/i);
+  });
+
+  it('holds implementation closeout when examples or narrative evidence need review', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const heldComparison = { ...comparison, status: 'hold' as const };
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan,
+      reentryCloseout,
+      consumerSummary,
+      comparison: heldComparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison: heldComparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard();
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan, review, placement, copyGuard });
+    const gate = selectTaxAwareDrawdownV1ImplementationGate({
+      plan,
+      closeout,
+      consumerSummary,
+      safety: {
+        status: 'hold',
+        rows: [],
+        reviewNote: 'Safety checklist needs review.',
+        disposition: 'v1DrawdownSafetyChecklistOnly'
+      },
+      limits,
+      copyGuard
+    });
+    const narrative = selectTaxAwareDrawdownV1RecommendedPlanNarrative({
+      gate,
+      headline,
+      comparison: heldComparison,
+      actions,
+      limits
+    });
+    const exampleGate = selectTaxAwareDrawdownV1RecommendedPlanExampleGate({
+      exampleCount: 4,
+      heldOrBlockedCount: 1
+    });
+    const implementationCloseout = selectTaxAwareDrawdownV1ImplementationCloseout({
+      plan,
+      gate,
+      narrative,
+      exampleGate
+    });
+
+    expect(gate.status).toBe('holdForMoreReview');
+    expect(narrative.status).toBe('held');
+    expect(exampleGate.status).toBe('needsExampleReview');
+    expect(implementationCloseout.status).toBe('holdForReview');
+    expect(implementationCloseout.rows.find((row) => row.id === 'examples')).toMatchObject({ status: 'hold' });
+  });
+
+  it('blocks implementation gate when saved-plan or copy boundaries fail', () => {
+    const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
+    const dirtyPlan = {
+      ...plan,
+      v1DrawdownImplementationGate: { status: 'readyForRecommendedPlan' }
+    } as V2PlanPayload;
+    const review = selectTaxAwareDrawdownV1RecommendedPlanReview({
+      plan: dirtyPlan,
+      reentryCloseout,
+      consumerSummary,
+      comparison,
+      limits
+    });
+    const placement = selectTaxAwareDrawdownV1DetailsPlacement({ review, headline, comparison, actions });
+    const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard({ savedPlanClean: false });
+    const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({
+      plan: dirtyPlan,
+      review,
+      placement,
+      copyGuard
+    });
+    const gate = selectTaxAwareDrawdownV1ImplementationGate({
+      plan: dirtyPlan,
+      closeout,
+      consumerSummary,
+      safety: {
+        status: 'ready',
+        rows: [],
+        reviewNote: 'Safety checklist only.',
+        disposition: 'v1DrawdownSafetyChecklistOnly'
+      },
+      limits,
+      copyGuard
+    });
+    const narrative = selectTaxAwareDrawdownV1RecommendedPlanNarrative({
+      gate,
+      headline,
+      comparison,
+      actions,
+      limits
+    });
+    const implementationCloseout = selectTaxAwareDrawdownV1ImplementationCloseout({
+      plan: dirtyPlan,
+      gate,
+      narrative,
+      exampleGate: selectTaxAwareDrawdownV1RecommendedPlanExampleGate({ exampleCount: 4, heldOrBlockedCount: 0 })
+    });
+
+    expect(gate.status).toBe('blocked');
+    expect(gate.rows.find((row) => row.id === 'copy')).toMatchObject({ status: 'blocked' });
+    expect(gate.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(narrative.status).toBe('blocked');
+    expect(implementationCloseout.status).toBe('blocked');
   });
 
   it('holds v1 drawdown re-entry when detailed stress or examples still need review', () => {

@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 210: Probe Repair Closeout
+## Latest Sprint — Sprint 215: Drawdown Implementation Closeout
 
 **Status:** Complete 2026-05-23.
 
-Goal: repair the legacy Canadian-rule probes and promote the repaired checks into the canonical probe suite before returning to optimizer execution work.
+Goal: add a final recommended-plan implementation gate around the bounded drawdown check before the next v1 checkpoint.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 210 checkpoint doc: [`docs/sprint_210_probe_repair_closeout.md`](docs/sprint_210_probe_repair_closeout.md).
+Sprint 215 checkpoint doc: [`docs/sprint_215_drawdown_implementation_closeout.md`](docs/sprint_215_drawdown_implementation_closeout.md).
 
-### Sprint 206-210 Candidate Implementation Tickets
+### Sprint 211-215 Candidate Implementation Tickets
 
-- [x] **S206-01 — Legacy probe repair.** Move broken HTML-scraping probes onto extracted engine entry points.
-- [x] **S207-01 — Canadian-rule probe coverage.** Restore spousal RRSP attribution, CPP sharing, and OAS recovery coverage.
-- [x] **S208-01 — Account and sustain probe coverage.** Restore account-balance, withdrawal-order, and sustainable-spending coverage.
-- [x] **S209-01 — Probe suite promotion.** Add repaired probes to the canonical runner.
-- [x] **S210-01 — Probe repair closeout.** Document the repaired coverage and next path.
+- [x] **S211-01 — Drawdown implementation gate.** Gate recommended-plan placement around closeout, safety, limits, copy, and saved-plan boundaries.
+- [x] **S212-01 — Recommended-plan narrative.** Translate the bounded drawdown check into plain review evidence.
+- [x] **S213-01 — Example gate.** Keep built-in example coverage as a readiness gate.
+- [x] **S214-01 — Copy and persistence guardrails.** Protect non-advisory copy and unsaved output.
+- [x] **S215-01 — Implementation closeout.** Combine gate, narrative, examples, and persistence into a v1 checkpoint closeout.
 
-### Sprint 210 Definition Of Done
+### Sprint 215 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -83,14 +83,49 @@ Sprint 210 checkpoint doc: [`docs/sprint_210_probe_repair_closeout.md`](docs/spr
 - Repaired Canadian-rule probes are included in the canonical probe runner.
 - Probe documentation identifies the extracted-engine probes and the remaining legacy single-purpose probes.
 - Probe repair does not change engine math, UI behavior, saved plan schema, or optimizer behavior.
+- Recommended-plan drawdown implementation gate combines closeout, plain summary, safety checks, visible limits, copy boundary, and saved-plan boundary.
+- Recommended-plan drawdown narrative stays review-oriented and avoids account instructions.
+- Recommended-plan example gate records clear and needs-review states without running example matrices in product UI.
+- Implementation closeout combines gate, narrative, examples, and saved-plan boundary before the next v1 checkpoint.
+- New drawdown implementation gate, narrative, example gate, and closeout output remain runtime-only and unsaved.
 - No checkpoint review board, detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, v1 drawdown implementation gate, v1 recommended-plan drawdown narrative, v1 recommended-plan drawdown example gate, v1 drawdown implementation closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 215: Drawdown Implementation Closeout
+
+**Complete 2026-05-23.** Closed the recommended-plan drawdown implementation gate batch before the next v1 checkpoint.
+
+Sprint 215 checkpoint doc: [`docs/sprint_215_drawdown_implementation_closeout.md`](docs/sprint_215_drawdown_implementation_closeout.md).
+
+### Sprint 214: Drawdown Implementation Copy And Persistence
+
+**Complete 2026-05-23.** Added copy and persistence guardrails for the new implementation gate.
+
+Sprint 214 checkpoint doc: [`docs/sprint_214_drawdown_implementation_copy_persistence.md`](docs/sprint_214_drawdown_implementation_copy_persistence.md).
+
+### Sprint 213: Drawdown Recommended-Plan Example Gate
+
+**Complete 2026-05-23.** Added a built-in example coverage gate for recommended-plan drawdown readiness.
+
+Sprint 213 checkpoint doc: [`docs/sprint_213_drawdown_recommended_plan_example_gate.md`](docs/sprint_213_drawdown_recommended_plan_example_gate.md).
+
+### Sprint 212: Drawdown Recommended-Plan Narrative
+
+**Complete 2026-05-23.** Added a runtime-only narrative selector for the bounded drawdown check inside the recommended-plan story.
+
+Sprint 212 checkpoint doc: [`docs/sprint_212_drawdown_recommended_plan_narrative.md`](docs/sprint_212_drawdown_recommended_plan_narrative.md).
+
+### Sprint 211: Drawdown Implementation Gate
+
+**Complete 2026-05-23.** Added a runtime-only implementation gate before bounded drawdown evidence can be treated as recommended-plan evidence.
+
+Sprint 211 checkpoint doc: [`docs/sprint_211_drawdown_implementation_gate.md`](docs/sprint_211_drawdown_implementation_gate.md).
 
 ### Sprint 210: Probe Repair Closeout
 
