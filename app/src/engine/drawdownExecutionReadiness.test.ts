@@ -45,6 +45,7 @@ import {
   selectTaxAwareDrawdownV1ConsumerSummary,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
+  selectTaxAwareDrawdownV1CheckpointReview,
   selectTaxAwareDrawdownV1DetailsPlacement,
   selectTaxAwareDrawdownV1ImplementationCloseout,
   selectTaxAwareDrawdownV1ImplementationGate,
@@ -1424,6 +1425,12 @@ describe('drawdown execution readiness contract', () => {
       narrative,
       exampleGate
     });
+    const checkpoint = selectTaxAwareDrawdownV1CheckpointReview({
+      plan,
+      implementationCloseout,
+      narrative,
+      exampleGate
+    });
 
     expect(gate).toMatchObject({
       status: 'readyForRecommendedPlan',
@@ -1442,11 +1449,17 @@ describe('drawdown execution readiness contract', () => {
       status: 'readyForV1Checkpoint',
       disposition: 'v1DrawdownImplementationCloseoutOnly'
     });
+    expect(checkpoint).toMatchObject({
+      status: 'readyForFeedback',
+      disposition: 'v1DrawdownCheckpointReviewOnly'
+    });
     expect(implementationCloseout.reviewNote).toContain('does not apply a strategy');
+    expect(checkpoint.reviewNote).toContain('does not apply a strategy');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownImplementationGate');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanNarrative');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanExampleGate');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownImplementationCloseout');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownCheckpointReview');
 
     const visibleCopy = [
       gate.headline,
@@ -1458,9 +1471,13 @@ describe('drawdown execution readiness contract', () => {
       implementationCloseout.headline,
       implementationCloseout.detail,
       implementationCloseout.reviewNote,
+      checkpoint.headline,
+      checkpoint.detail,
+      checkpoint.reviewNote,
       ...gate.rows.flatMap((row) => [row.label, row.detail]),
       ...narrative.rows.flatMap((row) => [row.label, row.detail]),
-      ...implementationCloseout.rows.flatMap((row) => [row.label, row.detail])
+      ...implementationCloseout.rows.flatMap((row) => [row.label, row.detail]),
+      ...checkpoint.rows.flatMap((row) => [row.label, row.detail])
     ].join(' ');
 
     expect(visibleCopy).not.toMatch(/recommended withdrawal strategy/i);
@@ -1512,11 +1529,18 @@ describe('drawdown execution readiness contract', () => {
       narrative,
       exampleGate
     });
+    const checkpoint = selectTaxAwareDrawdownV1CheckpointReview({
+      plan,
+      implementationCloseout,
+      narrative,
+      exampleGate
+    });
 
     expect(gate.status).toBe('holdForMoreReview');
     expect(narrative.status).toBe('held');
     expect(exampleGate.status).toBe('needsExampleReview');
     expect(implementationCloseout.status).toBe('holdForReview');
+    expect(checkpoint.status).toBe('holdForCleanup');
     expect(implementationCloseout.rows.find((row) => row.id === 'examples')).toMatchObject({ status: 'hold' });
   });
 
@@ -1567,12 +1591,20 @@ describe('drawdown execution readiness contract', () => {
       narrative,
       exampleGate: selectTaxAwareDrawdownV1RecommendedPlanExampleGate({ exampleCount: 4, heldOrBlockedCount: 0 })
     });
+    const checkpoint = selectTaxAwareDrawdownV1CheckpointReview({
+      plan: dirtyPlan,
+      implementationCloseout,
+      narrative,
+      exampleGate: selectTaxAwareDrawdownV1RecommendedPlanExampleGate({ exampleCount: 4, heldOrBlockedCount: 0 })
+    });
 
     expect(gate.status).toBe('blocked');
     expect(gate.rows.find((row) => row.id === 'copy')).toMatchObject({ status: 'blocked' });
     expect(gate.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
     expect(narrative.status).toBe('blocked');
     expect(implementationCloseout.status).toBe('blocked');
+    expect(checkpoint.status).toBe('simplifyBeforeV1');
+    expect(checkpoint.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
   });
 
   it('holds v1 drawdown re-entry when detailed stress or examples still need review', () => {

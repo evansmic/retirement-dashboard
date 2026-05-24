@@ -205,8 +205,16 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Locked-in account (LIRA)');
     expect(appSource).toContain('Locked-in income account (LIF)');
     expect(appSource).toContain('Canada Pension Plan (CPP) at 65');
+    expect(appSource).toContain('CPP at 60 is calculated from the 65 estimate');
     expect(appSource).toContain('Old Age Security (OAS) monthly');
     expect(appSource).toContain('Withdrawal order to test');
+    expect(appSource).toContain('Pension plus bridge before 65, today');
+    expect(appSource).toContain('Pension from 65 onward, today');
+    expect(appSource).toContain('Use the statement value. If unsure, 2%');
+    expect(appSource).toContain('Go / slow / no-go spending, today');
+    expect(appSource).toContain('Inputs stay here until you save an editable plan file');
+    expect(appSource).toContain('scrollToWorkspaceTop');
+    expect(appSource).toContain('needs-attention');
     expect(appSource).not.toContain('Example: ${action.label}');
     expect(appSource).not.toContain('CPP 65 monthly');
     expect(appSource).not.toContain('OAS monthly</span>');

@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 215: Drawdown Implementation Closeout
+## Latest Sprint — Sprint 225: Future Income Expansion Notes
 
 **Status:** Complete 2026-05-23.
 
-Goal: add a final recommended-plan implementation gate around the bounded drawdown check before the next v1 checkpoint.
+Goal: respond to preliminary human tester intake feedback without broad UI redesign or schema expansion.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 215 checkpoint doc: [`docs/sprint_215_drawdown_implementation_closeout.md`](docs/sprint_215_drawdown_implementation_closeout.md).
+Sprint 225 checkpoint doc: [`docs/sprint_225_future_income_expansion_notes.md`](docs/sprint_225_future_income_expansion_notes.md).
 
-### Sprint 211-215 Candidate Implementation Tickets
+### Sprint 221-225 Candidate Implementation Tickets
 
-- [x] **S211-01 — Drawdown implementation gate.** Gate recommended-plan placement around closeout, safety, limits, copy, and saved-plan boundaries.
-- [x] **S212-01 — Recommended-plan narrative.** Translate the bounded drawdown check into plain review evidence.
-- [x] **S213-01 — Example gate.** Keep built-in example coverage as a readiness gate.
-- [x] **S214-01 — Copy and persistence guardrails.** Protect non-advisory copy and unsaved output.
-- [x] **S215-01 — Implementation closeout.** Combine gate, narrative, examples, and persistence into a v1 checkpoint closeout.
+- [x] **S221-01 — Intake navigation and save clarity.** Scroll to top on step changes and clarify local save behavior.
+- [x] **S222-01 — Required field guidance.** Highlight missing/review-needed intake fields.
+- [x] **S223-01 — Today’s dollars label audit.** Clarify DB pension, bridge pension, and spending labels.
+- [x] **S224-01 — CPP/OAS input clarity.** Explain CPP at 65 input and timing tests.
+- [x] **S225-01 — Future income expansion notes.** Capture multiple pensions, rental income, and one-time additions as future schema work.
 
-### Sprint 215 Definition Of Done
+### Sprint 225 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -88,14 +88,86 @@ Sprint 215 checkpoint doc: [`docs/sprint_215_drawdown_implementation_closeout.md
 - Recommended-plan example gate records clear and needs-review states without running example matrices in product UI.
 - Implementation closeout combines gate, narrative, examples, and saved-plan boundary before the next v1 checkpoint.
 - New drawdown implementation gate, narrative, example gate, and closeout output remain runtime-only and unsaved.
+- V1 checkpoint review combines implementation closeout, recommended-plan narrative, example evidence, and saved-plan boundary.
+- Built-in example matrix covers the checkpoint review layer.
+- Checkpoint review can mark ready for feedback, hold for cleanup, or simplify before v1.
+- Checkpoint review copy remains review-oriented and non-instructional.
+- Checkpoint review output remains runtime-only and unsaved.
+- Intake moves to the top of the next step after Continue or step navigation.
+- Local save behavior is visible during intake.
+- Income and spending fields with validation issues can be visually highlighted.
+- DB pension and bridge pension copy uses today's-dollar language.
+- Spending phase copy uses go / slow / no-go language while keeping today’s-dollar framing.
+- CPP/OAS copy explains that CPP at 65 is the main Service Canada estimate and CPP at 60 is calculated in timing tests.
+- Multiple DB pensions, rental income, and expected one-time additions are documented as future modelling scope without changing schema.
 - No checkpoint review board, detailed stress boundary, migration closeout, stress readiness, row, summary, or spending-stress output is persisted.
 - No custom annual override payload is saved.
-- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, v1 drawdown implementation gate, v1 recommended-plan drawdown narrative, v1 recommended-plan drawdown example gate, v1 drawdown implementation closeout, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
+- No drawdown draft, sandbox, comparison readiness, hidden comparison, decision gate, runtime payload, internal dry-run, readiness review, visible gate, preview, phase review, boundary decision, adapter validation, mocked scorecard, go/no-go, preflight, audit trail, containment guard, example checkpoint, closeout, contained prototype, contained prototype summary, materiality, explanation, limitations, usefulness closeout, density, checklist, example gate, copy guard, product go/no-go, promotion readiness, next-step guide, blocker register, example promotion gate, phase milestone, v1 execution intent, v1 execution candidate, v1 execution result, v1 execution review, v1 execution example gate, v1 execution phase closeout, v1 consumer summary, v1 safety checklist, v1 consumer limits, v1 consumer example gate, v1 consumer closeout, v1 UX headline, v1 UX comparison card, v1 UX review actions, v1 UX copy guard, v1 UX readiness closeout, v1 drawdown re-entry review, v1 drawdown next sprint plan, v1 drawdown re-entry closeout, v1 recommended-plan drawdown review, v1 drawdown details placement, v1 drawdown review copy guard, v1 recommended-plan drawdown closeout, v1 drawdown implementation gate, v1 recommended-plan drawdown narrative, v1 recommended-plan drawdown example gate, v1 drawdown implementation closeout, v1 drawdown checkpoint review, engine extraction readiness, engine extraction next steps, engine extraction example gate, engine extraction phase closeout, stress extraction readiness, stress extraction boundary, detailed stress boundary review, detailed stress migration closeout, detailed stress adapter contract, detailed stress adapter validation, detailed stress adapter batch closeout, detailed stress adapter request, detailed stress injected runner prototype, detailed stress prototype batch closeout, detailed stress probe coverage, detailed stress probe-backed runner bridge, detailed stress probe-backed bridge run, detailed stress bridge batch closeout, detailed stress manual report reference, detailed stress manual report comparison, detailed stress manual comparison closeout, detailed stress v1 migration decision, detailed stress v1 decision closeout, stress test summary, stress test rows, mocked payload, or prototype output is persisted.
 - No optimizer output is persisted.
 - No engine output or saved plan schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 225: Future Income Expansion Notes
+
+**Complete 2026-05-23.** Captured multiple pensions, rental income, and one-time additions as future modelling work.
+
+Sprint 225 checkpoint doc: [`docs/sprint_225_future_income_expansion_notes.md`](docs/sprint_225_future_income_expansion_notes.md).
+
+### Sprint 224: CPP/OAS Input Clarity
+
+**Complete 2026-05-23.** Clarified CPP at 65 input, CPP timing tests, and OAS estimate copy.
+
+Sprint 224 checkpoint doc: [`docs/sprint_224_cpp_oas_input_clarity.md`](docs/sprint_224_cpp_oas_input_clarity.md).
+
+### Sprint 223: Today’s Dollars Label Audit
+
+**Complete 2026-05-23.** Clarified today’s-dollar framing for DB pension, bridge pension, and spending labels.
+
+Sprint 223 checkpoint doc: [`docs/sprint_223_today_dollars_label_audit.md`](docs/sprint_223_today_dollars_label_audit.md).
+
+### Sprint 222: Required Field Guidance
+
+**Complete 2026-05-23.** Added field-level attention styling and validation warnings for income/spending friction points.
+
+Sprint 222 checkpoint doc: [`docs/sprint_222_required_field_guidance.md`](docs/sprint_222_required_field_guidance.md).
+
+### Sprint 221: Intake Navigation And Save Clarity
+
+**Complete 2026-05-23.** Added top-of-step navigation behavior and clearer local-save copy.
+
+Sprint 221 checkpoint doc: [`docs/sprint_221_intake_navigation_save_clarity.md`](docs/sprint_221_intake_navigation_save_clarity.md).
+
+### Sprint 220: Drawdown Checkpoint Closeout
+
+**Complete 2026-05-23.** Closed the bounded drawdown checkpoint batch before the next development pass.
+
+Sprint 220 checkpoint doc: [`docs/sprint_220_drawdown_checkpoint_closeout.md`](docs/sprint_220_drawdown_checkpoint_closeout.md).
+
+### Sprint 219: Drawdown Checkpoint Persistence
+
+**Complete 2026-05-23.** Locked the checkpoint review output out of saved editable plan files.
+
+Sprint 219 checkpoint doc: [`docs/sprint_219_drawdown_checkpoint_persistence.md`](docs/sprint_219_drawdown_checkpoint_persistence.md).
+
+### Sprint 218: Drawdown Checkpoint Copy Guard
+
+**Complete 2026-05-23.** Protected the checkpoint layer from recommendation, certainty, and instruction language.
+
+Sprint 218 checkpoint doc: [`docs/sprint_218_drawdown_checkpoint_copy_guard.md`](docs/sprint_218_drawdown_checkpoint_copy_guard.md).
+
+### Sprint 217: Drawdown Checkpoint Example Matrix
+
+**Complete 2026-05-23.** Extended built-in example coverage through the drawdown checkpoint review.
+
+Sprint 217 checkpoint doc: [`docs/sprint_217_drawdown_checkpoint_example_matrix.md`](docs/sprint_217_drawdown_checkpoint_example_matrix.md).
+
+### Sprint 216: Drawdown V1 Checkpoint Review
+
+**Complete 2026-05-23.** Added a runtime-only checkpoint review for the bounded drawdown implementation layer.
+
+Sprint 216 checkpoint doc: [`docs/sprint_216_drawdown_v1_checkpoint_review.md`](docs/sprint_216_drawdown_v1_checkpoint_review.md).
 
 ### Sprint 215: Drawdown Implementation Closeout
 

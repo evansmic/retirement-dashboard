@@ -40,17 +40,17 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 215 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, and the bounded drawdown check now has a final recommended-plan implementation gate. The next logical slice is a v1 checkpoint review of whether this bounded drawdown check is ready to keep, hold, or simplify before broader recommended-plan work.
+Sprint 225 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, and the first human-tester intake friction items have been addressed without broad UI redesign. The next logical slice is deciding whether to simplify the Details drawdown surface, keep it as-is for the v1 checkpoint, or prepare a very small consumer-facing summary after review.
 
-Completed Sprint 211-215 slices:
+Completed Sprint 221-225 slices:
 
-- Added a final runtime-only gate before bounded drawdown evidence is treated as recommended-plan evidence.
-- Combined recommended-plan closeout, plain summary, safety checks, visible limits, copy boundary, and saved-plan boundary.
-- Added a plain recommended-plan narrative for the bounded drawdown check.
-- Added a built-in example gate for this drawdown implementation layer.
-- Added a closeout that marks the next path as v1 checkpoint review, not broader drawdown execution.
-- Preserved current withdrawal order and empty annual overrides.
-- Confirmed the new gate, narrative, example gate, and closeout do not change engine math, UI behavior, saved plan schema, optimizer behavior, or report behavior.
+- Added top-of-step scrolling after intake navigation.
+- Added visible local-save status copy during intake.
+- Added field-level attention styling for income and spending issues.
+- Clarified DB pension, bridge pension, and spending labels as today's-dollar values.
+- Clarified CPP/OAS intake copy and removed misleading nonzero placeholders.
+- Documented multiple DB pensions, rental income, and one-time additions as future modelling scope.
+- Preserved current withdrawal order, empty annual overrides, saved plan schema, and engine output schema.
 
 ## Consumer Roadmap Sequence
 
@@ -249,6 +249,16 @@ Near-term product work should prioritize interpretation and journey simplificati
 191. **Sprint 213 — Drawdown recommended-plan example gate.** Keep built-in example coverage as a readiness gate.
 192. **Sprint 214 — Drawdown implementation copy and persistence.** Protect non-advisory copy and unsaved output.
 193. **Sprint 215 — Drawdown implementation closeout.** Combine gate, narrative, examples, and persistence into a v1 checkpoint closeout.
+194. **Sprint 216 — Drawdown v1 checkpoint review.** Decide ready, hold, or simplify before v1 feedback.
+195. **Sprint 217 — Drawdown checkpoint example matrix.** Extend built-in example coverage through the checkpoint layer.
+196. **Sprint 218 — Drawdown checkpoint copy guard.** Protect recommendation, certainty, and instruction boundaries.
+197. **Sprint 219 — Drawdown checkpoint persistence.** Keep checkpoint output out of saved plan files.
+198. **Sprint 220 — Drawdown checkpoint closeout.** Mark the next path as feedback/checkpoint assessment, not broader execution.
+199. **Sprint 221 — Intake navigation and save clarity.** Scroll to top on step changes and clarify local save behavior.
+200. **Sprint 222 — Required field guidance.** Highlight missing or review-needed intake fields.
+201. **Sprint 223 — Today’s dollars label audit.** Clarify DB pension, bridge pension, and spending labels.
+202. **Sprint 224 — CPP/OAS input clarity.** Explain CPP at 65 input and timing tests.
+203. **Sprint 225 — Future income expansion notes.** Capture multiple pensions, rental income, and one-time additions as future schema work.
 
 ## Medium-Term Roadmap
 
@@ -462,6 +472,16 @@ Near-term product work should prioritize interpretation and journey simplificati
 - **Sprint 213 — Drawdown recommended-plan example gate.** Complete 2026-05-23. Added a built-in example coverage gate for recommended-plan drawdown readiness.
 - **Sprint 214 — Drawdown implementation copy and persistence.** Complete 2026-05-23. Added copy and persistence guardrails for the new implementation layer.
 - **Sprint 215 — Drawdown implementation closeout.** Complete 2026-05-23. Closed the implementation gate batch before the next v1 checkpoint.
+- **Sprint 216 — Drawdown v1 checkpoint review.** Complete 2026-05-23. Added a runtime-only checkpoint review for the bounded drawdown implementation layer.
+- **Sprint 217 — Drawdown checkpoint example matrix.** Complete 2026-05-23. Extended built-in example coverage through the checkpoint review layer.
+- **Sprint 218 — Drawdown checkpoint copy guard.** Complete 2026-05-23. Protected checkpoint copy from recommendation, certainty, and instruction language.
+- **Sprint 219 — Drawdown checkpoint persistence.** Complete 2026-05-23. Locked checkpoint review output out of saved plan files.
+- **Sprint 220 — Drawdown checkpoint closeout.** Complete 2026-05-23. Closed the checkpoint batch before the next development pass.
+- **Sprint 221 — Intake navigation and save clarity.** Complete 2026-05-23. Added top-of-step navigation behavior and clearer local-save copy.
+- **Sprint 222 — Required field guidance.** Complete 2026-05-23. Added field-level attention styling and validation warnings for income/spending friction points.
+- **Sprint 223 — Today’s dollars label audit.** Complete 2026-05-23. Clarified today's-dollar framing for DB pension, bridge pension, and spending labels.
+- **Sprint 224 — CPP/OAS input clarity.** Complete 2026-05-23. Clarified CPP at 65 input, CPP timing tests, and OAS estimate copy.
+- **Sprint 225 — Future income expansion notes.** Complete 2026-05-23. Captured multiple pensions, rental income, and one-time additions as future modelling work.
 - **Engine extraction continuation.** Continue extracting simulation and stress modules so future scenario cards and the optimizer can run against explicit plan objects instead of global `D`.
 - **Recommended-plan optimizer.** Build only after the decision-readiness layer is clear. First optimizer pass should cover CPP/OAS timing, withdrawal order, pension split/share settings, meltdown/guardrail strategy, and estate trade-offs.
 - **Phase 7 — Provinces.** Abstract Ontario-specific tax behind a province selector. BC and Alberta first; Quebec is larger scope due to QPP and distinct tax rules.

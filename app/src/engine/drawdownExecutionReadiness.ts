@@ -840,6 +840,20 @@ export type TaxAwareDrawdownV1ImplementationCloseout = {
   disposition: 'v1DrawdownImplementationCloseoutOnly';
 };
 
+export type TaxAwareDrawdownV1CheckpointReview = {
+  status: 'readyForFeedback' | 'holdForCleanup' | 'simplifyBeforeV1';
+  headline: string;
+  detail: string;
+  rows: Array<{
+    id: 'implementation' | 'narrative' | 'examples' | 'savedPlan';
+    label: string;
+    status: 'ready' | 'hold' | 'blocked';
+    detail: string;
+  }>;
+  reviewNote: string;
+  disposition: 'v1DrawdownCheckpointReviewOnly';
+};
+
 export function buildDrawdownExecutionContract({
   plan,
   comparison
@@ -4008,6 +4022,72 @@ export function selectTaxAwareDrawdownV1ImplementationCloseout({
   };
 }
 
+export function selectTaxAwareDrawdownV1CheckpointReview({
+  plan,
+  implementationCloseout,
+  narrative,
+  exampleGate
+}: {
+  plan: V2PlanPayload;
+  implementationCloseout: TaxAwareDrawdownV1ImplementationCloseout;
+  narrative: TaxAwareDrawdownV1RecommendedPlanNarrative;
+  exampleGate: TaxAwareDrawdownV1RecommendedPlanExampleGate;
+}): TaxAwareDrawdownV1CheckpointReview {
+  const savedPlanClean = drawdownExecutionSavedPlanGuard(plan);
+  const rows: TaxAwareDrawdownV1CheckpointReview['rows'] = [
+    {
+      id: 'implementation',
+      label: 'Implementation closeout',
+      status:
+        implementationCloseout.status === 'readyForV1Checkpoint'
+          ? 'ready'
+          : implementationCloseout.status === 'holdForReview'
+            ? 'hold'
+            : 'blocked',
+      detail: implementationCloseout.headline
+    },
+    {
+      id: 'narrative',
+      label: 'Recommended-plan narrative',
+      status: narrative.status === 'ready' ? 'ready' : narrative.status === 'held' ? 'hold' : 'blocked',
+      detail: narrative.headline
+    },
+    {
+      id: 'examples',
+      label: 'Example evidence',
+      status: exampleGate.status === 'examplesClear' ? 'ready' : 'hold',
+      detail:
+        exampleGate.status === 'examplesClear'
+          ? `${exampleGate.exampleCount} example(s) are clear.`
+          : exampleGate.exampleCount > 0
+            ? `${exampleGate.heldOrBlockedCount} example(s) need review before feedback.`
+            : 'Example evidence should be confirmed in tests before feedback.'
+    },
+    {
+      id: 'savedPlan',
+      label: 'Saved plan boundary',
+      status: savedPlanClean ? 'ready' : 'blocked',
+      detail: savedPlanClean ? 'No drawdown checkpoint output is saved.' : 'Saved plan output contains drawdown checkpoint data.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'blocked');
+  const held = rows.some((row) => row.status === 'hold');
+  return {
+    status: blocked ? 'simplifyBeforeV1' : held ? 'holdForCleanup' : 'readyForFeedback',
+    headline: blocked
+      ? 'Simplify the drawdown check before v1.'
+      : held
+        ? 'Hold the drawdown check for cleanup.'
+        : 'Drawdown check is ready for feedback.',
+    detail:
+      'This checkpoint decides whether the bounded drawdown check should enter the next feedback pass, hold for cleanup, or be simplified.',
+    rows,
+    reviewNote:
+      'Checkpoint review only. It does not apply a strategy, create account instructions, move output into Overview, or save output.',
+    disposition: 'v1DrawdownCheckpointReviewOnly'
+  };
+}
+
 export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
   const saved = createPlanFile(plan).plan as Record<string, unknown>;
   return (
@@ -4071,6 +4151,7 @@ export function drawdownExecutionSavedPlanGuard(plan: V2PlanPayload): boolean {
     !('v1DrawdownRecommendedPlanNarrative' in saved) &&
     !('v1DrawdownRecommendedPlanExampleGate' in saved) &&
     !('v1DrawdownImplementationCloseout' in saved) &&
+    !('v1DrawdownCheckpointReview' in saved) &&
     !('annualOverrides' in saved) &&
     !('withdrawalStrategy' in saved)
   );

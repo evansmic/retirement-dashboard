@@ -43,9 +43,21 @@ import {
   selectTaxAwareDrawdownV1ConsumerExampleGate,
   selectTaxAwareDrawdownV1ConsumerLimits,
   selectTaxAwareDrawdownV1ConsumerSummary,
+  selectTaxAwareDrawdownV1CheckpointReview,
+  selectTaxAwareDrawdownV1DetailsPlacement,
   selectTaxAwareDrawdownV1ExecutionIntent,
   selectTaxAwareDrawdownV1ExecutionReview,
   selectTaxAwareDrawdownV1PhaseCloseout,
+  selectTaxAwareDrawdownV1ImplementationCloseout,
+  selectTaxAwareDrawdownV1ImplementationGate,
+  selectTaxAwareDrawdownV1NextSprintPlan,
+  selectTaxAwareDrawdownV1RecommendedPlanCloseout,
+  selectTaxAwareDrawdownV1RecommendedPlanExampleGate,
+  selectTaxAwareDrawdownV1RecommendedPlanNarrative,
+  selectTaxAwareDrawdownV1RecommendedPlanReview,
+  selectTaxAwareDrawdownV1ReentryCloseout,
+  selectTaxAwareDrawdownV1ReentryReview,
+  selectTaxAwareDrawdownV1ReviewCopyGuard,
   selectTaxAwareDrawdownV1SafetyChecklist,
   selectTaxAwareDrawdownV1UxComparisonCard,
   selectTaxAwareDrawdownV1UxCopyGuard,
@@ -393,6 +405,74 @@ describe('example-plan optimizer readiness matrix', () => {
         actions: v1UxActions,
         copyGuard: v1UxCopyGuard
       });
+      const v1Reentry = selectTaxAwareDrawdownV1ReentryReview({
+        plan,
+        detailedStressDecision: {
+          status: 'readyToReturnToV1Drawdown',
+          headline: 'Detailed stress stays in the detailed report for v1.',
+          detail: 'Detailed stress stays in the detailed report while bounded drawdown review remains in Details.',
+          rows: [],
+          reviewNote: 'Detailed stress decision closeout only.',
+          disposition: 'detailedStressV1DecisionCloseoutOnly'
+        },
+        executionPhase: v1Closeout,
+        uxReadiness: v1UxReadiness
+      });
+      const v1ReentryCloseout = selectTaxAwareDrawdownV1ReentryCloseout({
+        reentry: v1Reentry,
+        nextSprint: selectTaxAwareDrawdownV1NextSprintPlan({ reentry: v1Reentry })
+      });
+      const v1RecommendedPlanReview = selectTaxAwareDrawdownV1RecommendedPlanReview({
+        plan,
+        reentryCloseout: v1ReentryCloseout,
+        consumerSummary: v1ConsumerSummary,
+        comparison: v1UxComparison,
+        limits: v1ConsumerLimits
+      });
+      const v1DetailsPlacement = selectTaxAwareDrawdownV1DetailsPlacement({
+        review: v1RecommendedPlanReview,
+        headline: v1UxHeadline,
+        comparison: v1UxComparison,
+        actions: v1UxActions
+      });
+      const v1ReviewCopyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard();
+      const v1RecommendedPlanCloseout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({
+        plan,
+        review: v1RecommendedPlanReview,
+        placement: v1DetailsPlacement,
+        copyGuard: v1ReviewCopyGuard
+      });
+      const v1ImplementationGate = selectTaxAwareDrawdownV1ImplementationGate({
+        plan,
+        closeout: v1RecommendedPlanCloseout,
+        consumerSummary: v1ConsumerSummary,
+        safety: v1SafetyChecklist,
+        limits: v1ConsumerLimits,
+        copyGuard: v1ReviewCopyGuard
+      });
+      const v1RecommendedPlanNarrative = selectTaxAwareDrawdownV1RecommendedPlanNarrative({
+        gate: v1ImplementationGate,
+        headline: v1UxHeadline,
+        comparison: v1UxComparison,
+        actions: v1UxActions,
+        limits: v1ConsumerLimits
+      });
+      const v1RecommendedPlanExampleGate = selectTaxAwareDrawdownV1RecommendedPlanExampleGate({
+        exampleCount: examplePlanCards.length,
+        heldOrBlockedCount: 0
+      });
+      const v1ImplementationCloseout = selectTaxAwareDrawdownV1ImplementationCloseout({
+        plan,
+        gate: v1ImplementationGate,
+        narrative: v1RecommendedPlanNarrative,
+        exampleGate: v1RecommendedPlanExampleGate
+      });
+      const v1CheckpointReview = selectTaxAwareDrawdownV1CheckpointReview({
+        plan,
+        implementationCloseout: v1ImplementationCloseout,
+        narrative: v1RecommendedPlanNarrative,
+        exampleGate: v1RecommendedPlanExampleGate
+      });
       const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
       const saved = createPlanFile(plan);
       const copy = JSON.stringify({
@@ -442,7 +522,18 @@ describe('example-plan optimizer readiness matrix', () => {
         v1UxComparison,
         v1UxActions,
         v1UxCopyGuard,
-        v1UxReadiness
+        v1UxReadiness,
+        v1Reentry,
+        v1ReentryCloseout,
+        v1RecommendedPlanReview,
+        v1DetailsPlacement,
+        v1ReviewCopyGuard,
+        v1RecommendedPlanCloseout,
+        v1ImplementationGate,
+        v1RecommendedPlanNarrative,
+        v1RecommendedPlanExampleGate,
+        v1ImplementationCloseout,
+        v1CheckpointReview
       }).toLowerCase();
 
       expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
@@ -559,6 +650,31 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(v1UxCopyGuard.disposition).toBe('v1DrawdownUxCopyGuardOnly');
       expect(['readyForDesign', 'holdForDesignPolish', 'blocked']).toContain(v1UxReadiness.status);
       expect(v1UxReadiness.disposition).toBe('v1DrawdownUxReadinessCloseoutOnly');
+      expect(['readyForV1Drawdown', 'holdForReadiness', 'blocked']).toContain(v1Reentry.status);
+      expect(v1Reentry.disposition).toBe('v1DrawdownReentryReviewOnly');
+      expect(['readyToProceed', 'holdBeforeProceeding', 'blocked']).toContain(v1ReentryCloseout.status);
+      expect(v1ReentryCloseout.disposition).toBe('v1DrawdownReentryCloseoutOnly');
+      expect(['readyForDetails', 'holdForPolish', 'blocked']).toContain(v1RecommendedPlanReview.status);
+      expect(v1RecommendedPlanReview.disposition).toBe('v1DrawdownRecommendedPlanReviewOnly');
+      expect(['detailsReady', 'holdForPolish', 'blocked']).toContain(v1DetailsPlacement.status);
+      expect(v1DetailsPlacement.disposition).toBe('v1DrawdownDetailsPlacementOnly');
+      expect(['clear', 'blocked']).toContain(v1ReviewCopyGuard.status);
+      expect(v1ReviewCopyGuard.disposition).toBe('v1DrawdownReviewCopyGuardOnly');
+      expect(['readyForImplementation', 'holdForPolish', 'blocked']).toContain(v1RecommendedPlanCloseout.status);
+      expect(v1RecommendedPlanCloseout.disposition).toBe('v1DrawdownRecommendedPlanCloseoutOnly');
+      expect(['readyForRecommendedPlan', 'holdForMoreReview', 'blocked']).toContain(v1ImplementationGate.status);
+      expect(v1ImplementationGate.disposition).toBe('v1DrawdownImplementationGateOnly');
+      expect(['ready', 'held', 'blocked']).toContain(v1RecommendedPlanNarrative.status);
+      expect(v1RecommendedPlanNarrative.disposition).toBe('v1DrawdownRecommendedPlanNarrativeOnly');
+      expect(v1RecommendedPlanExampleGate).toMatchObject({
+        status: 'examplesClear',
+        disposition: 'v1DrawdownRecommendedPlanExampleGateOnly'
+      });
+      expect(['readyForV1Checkpoint', 'holdForReview', 'blocked']).toContain(v1ImplementationCloseout.status);
+      expect(v1ImplementationCloseout.disposition).toBe('v1DrawdownImplementationCloseoutOnly');
+      expect(['readyForFeedback', 'holdForCleanup', 'simplifyBeforeV1']).toContain(v1CheckpointReview.status);
+      expect(v1CheckpointReview.disposition).toBe('v1DrawdownCheckpointReviewOnly');
+      expect(v1CheckpointReview.reviewNote).toContain('does not apply a strategy');
       if (comparison.status === 'reviewOnly') {
         expect(comparison.evidenceRows.map((row) => row.id)).toEqual(['funding', 'tax', 'oasRecovery', 'estate']);
         expect(comparison.decisionGate.rows.map((row) => row.id)).toEqual(['materiality', 'funding', 'estate', 'survivor', 'lockedIn', 'savedPlan']);
@@ -631,6 +747,18 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(saved.plan).not.toHaveProperty('v1DrawdownUxReviewActions');
       expect(saved.plan).not.toHaveProperty('v1DrawdownUxCopyGuard');
       expect(saved.plan).not.toHaveProperty('v1DrawdownUxReadinessCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownReentryReview');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownNextSprintPlan');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownReentryCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownRecommendedPlanReview');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownDetailsPlacement');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownReviewCopyGuard');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownRecommendedPlanCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownImplementationGate');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownRecommendedPlanNarrative');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownRecommendedPlanExampleGate');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownImplementationCloseout');
+      expect(saved.plan).not.toHaveProperty('v1DrawdownCheckpointReview');
       expect(saved.plan).not.toHaveProperty('annualOverrides');
       for (const phrase of forbidden) {
         expect(copy, `${card.id} hidden comparison forbidden phrase: ${phrase}`).not.toContain(phrase);

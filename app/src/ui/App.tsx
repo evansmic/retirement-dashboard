@@ -472,6 +472,19 @@ function survivorMonthlyValue(person: PlanPerson, monthlyField: 'cppSurv_u65_mo'
   return person.cppSurv_o65_mo || (person.cppSurvivor_over65 ? Math.round(person.cppSurvivor_over65 / 12) : 0);
 }
 
+function scrollToWorkspaceTop() {
+  window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+function issueCodes(issues: IntakeValidationIssue[]): Set<string> {
+  return new Set(issues.map((issue) => issue.code));
+}
+
+function fieldIssueClass(issues: Set<string>, codes: string[]): string {
+  if (codes.some((code) => issues.has(code))) return 'needs-attention';
+  return '';
+}
+
 export function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [bridgePreview, setBridgePreview] = useState<BridgePreview>({
@@ -1129,6 +1142,10 @@ export function App() {
           <span>Editable plan</span>
           <strong>{state.dirty ? 'Unsaved local changes' : state.lastSavedAt ? `Saved ${state.lastSavedAt}` : 'No changes'}</strong>
         </div>
+        <div>
+          <span>How saving works</span>
+          <strong>Inputs stay here until you save an editable plan file</strong>
+        </div>
       </section>
 
       <div className="workspace-layout">
@@ -1176,9 +1193,16 @@ export function App() {
                 const currentIndex = intakeSteps.findIndex((step) => step.id === state.activeStep);
                 const nextStep = intakeSteps[Math.min(currentIndex + 1, intakeSteps.length - 1)];
                 dispatch({ type: 'setStep', step: nextStep.id });
+                scrollToWorkspaceTop();
               }}
-              onReview={() => dispatch({ type: 'setStep', step: 'review' })}
-              onStep={(step) => dispatch({ type: 'setStep', step })}
+              onReview={() => {
+                dispatch({ type: 'setStep', step: 'review' });
+                scrollToWorkspaceTop();
+              }}
+              onStep={(step) => {
+                dispatch({ type: 'setStep', step });
+                scrollToWorkspaceTop();
+              }}
               onHouseholdMode={setHouseholdMode}
               onUpdatePlan={updatePlan}
               householdMode={state.householdMode}
@@ -1419,7 +1443,7 @@ function IntakePanel({
             plan={plan}
           />
         ) : isIncomeStep ? (
-          <IncomeStep householdMode={householdMode} onUpdatePlan={onUpdatePlan} plan={plan} />
+          <IncomeStep householdMode={householdMode} issues={currentStepIssues} onUpdatePlan={onUpdatePlan} plan={plan} />
         ) : isAccountsStep ? (
           <AccountsStep householdMode={householdMode} onUpdatePlan={onUpdatePlan} plan={plan} />
         ) : isRealEstateStep ? (
@@ -1427,7 +1451,7 @@ function IntakePanel({
         ) : isDebtsStep ? (
           <DebtsStep onUpdatePlan={onUpdatePlan} plan={plan} />
         ) : isSpendingStep ? (
-          <SpendingEventsStep onUpdatePlan={onUpdatePlan} plan={plan} />
+          <SpendingEventsStep issues={currentStepIssues} onUpdatePlan={onUpdatePlan} plan={plan} />
         ) : isAssumptionsStep ? (
           <AssumptionsStep householdMode={householdMode} onUpdatePlan={onUpdatePlan} plan={plan} />
         ) : (
@@ -1866,12 +1890,15 @@ function DebtsStep({
 }
 
 function SpendingEventsStep({
+  issues,
   onUpdatePlan,
   plan
 }: {
+  issues: IntakeValidationIssue[];
   onUpdatePlan: (mutator: (draft: V2PlanPayload) => void) => void;
   plan: V2PlanPayload;
 }) {
+  const attention = issueCodes(issues);
   function updateSpending(field: 'gogo' | 'gogoEnd' | 'slowgo' | 'slowgoEnd' | 'nogo', value: string) {
     onUpdatePlan((draft) => {
       draft.spending = {
@@ -1916,12 +1943,12 @@ function SpendingEventsStep({
       <fieldset className="field-group single-column">
         <legend>Retirement lifestyle spending</legend>
         <p>
-          Enter annual after-tax lifestyle spending for each phase. These are the numbers the Results page uses to
+          Enter annual after-tax lifestyle spending in today's dollars for each phase. These are the numbers the Results page uses to
           judge comfort, flexibility, and whether the plan is preserving more estate than intended.
         </p>
-        <div className="field-row three">
-          <label className="field">
-            <span>Early retirement spending</span>
+        <div className="field-row three spending-phase-row">
+          <label className={`field ${fieldIssueClass(attention, ['gogo_spending'])}`}>
+            <span>Go phase spending</span>
             <small>Travel, projects, hobbies, and active years after work stops.</small>
             <input
               inputMode="numeric"
@@ -1931,8 +1958,8 @@ function SpendingEventsStep({
               placeholder="80000"
             />
           </label>
-          <label className="field">
-            <span>Early spending ends at age</span>
+          <label className={`field ${fieldIssueClass(attention, ['spending_phase_ages'])}`}>
+            <span>Go phase ends at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -1942,7 +1969,7 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>Later retirement spending</span>
+            <span>Slow phase spending</span>
             <small>A steadier phase when travel or large discretionary spending may slow.</small>
             <input
               inputMode="numeric"
@@ -1953,9 +1980,9 @@ function SpendingEventsStep({
             />
           </label>
         </div>
-        <div className="field-row">
-          <label className="field">
-            <span>Later spending ends at age</span>
+        <div className="field-row spending-phase-row">
+          <label className={`field ${fieldIssueClass(attention, ['spending_phase_ages', 'spending_phase_order'])}`}>
+            <span>Slow phase ends at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -1965,7 +1992,7 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>Late-life spending</span>
+            <span>No-go phase spending</span>
             <small>Ongoing lifestyle spending in later years; care costs should be added as one-time or separate estimates if needed.</small>
             <input
               inputMode="numeric"
@@ -2258,14 +2285,17 @@ function AssumptionsStep({
 
 function IncomeStep({
   householdMode,
+  issues,
   onUpdatePlan,
   plan
 }: {
   householdMode: 'single' | 'couple';
+  issues: IntakeValidationIssue[];
   onUpdatePlan: (mutator: (draft: V2PlanPayload) => void) => void;
   plan: V2PlanPayload;
 }) {
   const person2Enabled = householdMode === 'couple';
+  const attention = issueCodes(issues);
 
   function updatePerson(person: 'p1' | 'p2', field: keyof PlanPerson, value: string, mode: 'number' | 'percent' = 'number') {
     onUpdatePlan((draft) => {
@@ -2292,11 +2322,12 @@ function IncomeStep({
       <div className="person-grid">
         <IncomePersonCard
           heading="Person 1 income"
+          issues={attention}
           person={plan.p1}
+          personKey="p1"
           onChange={(field, value, mode) => updatePerson('p1', field, value, mode)}
         />
         <IncomePersonCard
-          blankZero
           disabled={!person2Enabled}
           heading="Person 2 income"
           helper={
@@ -2304,7 +2335,9 @@ function IncomeStep({
               ? 'Used for couple projections and retirement-year income timing.'
               : 'Inactive while the household is set to single.'
           }
+          issues={attention}
           person={plan.p2}
+          personKey="p2"
           onChange={(field, value, mode) => updatePerson('p2', field, value, mode)}
         />
       </div>
@@ -2347,16 +2380,21 @@ function IncomePersonCard({
   disabled = false,
   heading,
   helper = 'Use annual employment and pension amounts plus monthly government benefit estimates. Leave items blank if they do not apply.',
+  issues,
   onChange,
-  person
+  person,
+  personKey
 }: {
   blankZero?: boolean;
   disabled?: boolean;
   heading: string;
   helper?: string;
+  issues: Set<string>;
   onChange: (field: keyof PlanPerson, value: string, mode?: 'number' | 'percent') => void;
   person: PlanPerson;
+  personKey: 'p1' | 'p2';
 }) {
+  const code = (suffix: string) => `${personKey}_${suffix}`;
   return (
     <fieldset className={`person-card income-card ${disabled ? 'disabled' : ''}`} disabled={disabled}>
       <legend>{heading}</legend>
@@ -2372,7 +2410,7 @@ function IncomePersonCard({
             type="number"
             value={displayNumber(person.salary, blankZero)}
             onChange={(event) => onChange('salary', event.target.value)}
-            placeholder="100000"
+            placeholder="0"
           />
         </label>
         <div className="field-row">
@@ -2402,11 +2440,11 @@ function IncomePersonCard({
       <div className="field-section">
         <strong>Defined benefit pension</strong>
         <p className="field-hint">
-          Some pensions include a temporary bridge before 65. Enter the before-65 and 65+ annual amounts from the pension estimate, then add the spouse continuation from the pension statement.
+          Enter today's-dollar annual amounts from the pension estimate. If there is a temporary bridge, include it in the before-65 amount; the model uses the lower 65+ amount after age 65.
         </p>
         <div className="field-row">
           <label className="field">
-            <span>Before 65 annual</span>
+            <span>Pension plus bridge before 65, today's dollars</span>
             <input
               inputMode="numeric"
               type="number"
@@ -2416,7 +2454,7 @@ function IncomePersonCard({
             />
           </label>
           <label className="field">
-            <span>65+ annual</span>
+            <span>Pension from 65 onward, today's dollars</span>
             <input
               inputMode="numeric"
               type="number"
@@ -2437,14 +2475,15 @@ function IncomePersonCard({
               placeholder="2030"
             />
           </label>
-          <label className="field">
+          <label className={`field ${fieldIssueClass(issues, [code('db_index')])}`}>
             <span>Indexing %</span>
+            <small>Use the statement value. If unsure, 2% is a reasonable review estimate for an indexed pension.</small>
             <input
               inputMode="decimal"
               type="number"
               value={displayPercent(person.db_index, blankZero)}
               onChange={(event) => onChange('db_index', event.target.value, 'percent')}
-              placeholder="2.2"
+              placeholder="2"
             />
           </label>
         </div>
@@ -2476,31 +2515,31 @@ function IncomePersonCard({
 
       <div className="field-section">
         <strong>CPP and OAS estimates</strong>
-        <p className="field-hint">Use Service Canada estimates where possible. CPP fields are monthly amounts before tax; OAS is the estimated monthly benefit before any clawback.</p>
+        <p className="field-hint">Use the CPP monthly estimate at 65 from Service Canada. The planner can test earlier or later start ages from that estimate; OAS is today's monthly estimate before any recovery tax.</p>
         <div className="field-row three">
-          <label className="field">
+          <label className={`field ${fieldIssueClass(issues, [code('cpp')])}`}>
             <span>Canada Pension Plan (CPP) at 65</span>
-            <small>Your estimated monthly CPP if started at 65.</small>
+            <small>Your estimated monthly CPP if started at 65. CPP at 60 is calculated from the 65 estimate in timing tests.</small>
             <input
               inputMode="numeric"
               type="number"
               value={displayNumber(person.cpp65_monthly, blankZero)}
               onChange={(event) => onChange('cpp65_monthly', event.target.value)}
-              placeholder="1268"
+              placeholder="0"
             />
           </label>
           <label className="field">
             <span>Canada Pension Plan (CPP) at 70</span>
-            <small>Your estimated monthly CPP if delayed to 70.</small>
+            <small>Optional. Leave at 0 if you only have the CPP at 65 estimate.</small>
             <input
               inputMode="numeric"
               type="number"
               value={displayNumber(person.cpp70_monthly, blankZero)}
               onChange={(event) => onChange('cpp70_monthly', event.target.value)}
-              placeholder="1800"
+              placeholder="0"
             />
           </label>
-          <label className="field">
+          <label className={`field ${fieldIssueClass(issues, [code('oas')])}`}>
             <span>Old Age Security (OAS) monthly</span>
             <small>Use today's monthly OAS estimate before income-tested recovery tax.</small>
             <input
@@ -2508,7 +2547,7 @@ function IncomePersonCard({
               type="number"
               value={displayNumber(person.oas_monthly, blankZero)}
               onChange={(event) => onChange('oas_monthly', event.target.value)}
-              placeholder="742"
+              placeholder="0"
             />
           </label>
         </div>
@@ -2750,7 +2789,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
         title="Income"
         rows={[
           ['Salary', formatMoney(sumPeople(plan, 'salary'))],
-          ['DB pension before 65', formatMoney(sumPeople(plan, 'db_before65'))],
+          ['DB pension plus bridge before 65, today’s dollars', formatMoney(sumPeople(plan, 'db_before65'))],
           ['DB survivor continuation', dbSurvivorSetupText(plan)],
           ['CPP at 65 monthly', formatMoney(sumPeople(plan, 'cpp65_monthly'))],
           ['Old Age Security monthly', formatMoney(sumPeople(plan, 'oas_monthly'))]
@@ -2776,7 +2815,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
       <ReviewSummaryCard
         title="Spending & events"
         rows={[
-          ['Early / later / late-life spending', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
+          ['Go / slow / no-go spending, today’s dollars', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
           ['One-time expenses', String((plan.oneOffs || []).length)],
           ['Bequest target', formatMoney(plan.inheritance)]
         ]}

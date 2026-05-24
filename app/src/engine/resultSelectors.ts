@@ -1158,7 +1158,7 @@ export function selectSpendingCapacitySummary(
 
   const labelByStatus: Record<SpendingCapacityStatus, string> = {
     cannotTell: 'Cannot estimate yet',
-    needsReduction: 'Spending needs repair',
+    needsReduction: 'Early spending may need adjustment',
     tight: 'Spending looks tight',
     balanced: 'Spending looks supportable',
     flexible: 'Spending may have room'
@@ -1166,7 +1166,7 @@ export function selectSpendingCapacitySummary(
   const headlineByStatus: Record<SpendingCapacityStatus, string> = {
     cannotTell: 'Spending capacity needs the retirement answer to calculate first.',
     needsReduction: spendLessRows.length && !spendLessShortfall
-      ? 'A lower early-spending test repairs the visible shortfall.'
+      ? 'A lower early-retirement spending test removes the visible shortfall.'
       : 'The current spending target is higher than the plan can comfortably support in the visible projection.',
     tight: 'Current spending appears possible, but the cushion is limited.',
     balanced: 'Current spending appears reasonable under the base assumptions.',
@@ -1192,7 +1192,7 @@ export function selectSpendingCapacitySummary(
         : earlySpending;
   const planningEstimateLabel =
     status === 'needsReduction'
-      ? 'Repair planning estimate'
+      ? 'Lower early-spending estimate for review'
       : status === 'flexible' && estimatedAnnualRoom > 0
         ? 'Spending estimate for review'
         : 'Current spending estimate';
@@ -1225,10 +1225,10 @@ export function selectSpendingCapacitySummary(
   if (status === 'needsReduction' || status === 'tight') {
     reviewActions.push({
       id: 'spendLess',
-      label: status === 'needsReduction' ? 'Review a repair amount' : 'Protect the cushion',
+      label: status === 'needsReduction' ? 'Review lower early spending' : 'Protect the cushion',
       detail:
         repairEarlySpending > 0
-          ? `The first repair test uses ${moneyText(repairEarlySpending)} in early retirement.`
+          ? `The lower-spending test uses ${moneyText(repairEarlySpending)} in early retirement.`
           : 'Review spending together with work timing, benefits, tax, and real estate choices.',
       detailArea: 'stressTests'
     });

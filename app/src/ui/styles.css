@@ -453,6 +453,19 @@ button.secondary,
   gap: 6px;
 }
 
+.field.needs-attention {
+  border: 1px solid #d8cfb0;
+  border-radius: var(--radius);
+  background: #f7f5ee;
+  padding: 10px;
+}
+
+.field.needs-attention input,
+.field.needs-attention select {
+  border-color: #bca866;
+  background: #ffffff;
+}
+
 .field.full {
   width: 100%;
 }
@@ -488,6 +501,14 @@ button.secondary,
 
 .field-row.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.spending-phase-row {
+  align-items: stretch;
+}
+
+.spending-phase-row .field {
+  align-content: start;
 }
 
 .single-column {

@@ -95,8 +95,17 @@ export function validatePlanForGuidedIntake(plan: V2PlanPayload): PlanValidation
   if (n(plan.p1.oas_monthly) <= 0) {
     warn('p1_oas', 'Income', 'Person 1 has no OAS estimate entered.');
   }
+  if ((n(plan.p1.db_before65) > 0 || n(plan.p1.db_after65) > 0) && n(plan.p1.db_index) <= 0) {
+    warn('p1_db_index', 'Income', 'Person 1 has a DB pension but no indexing estimate entered.');
+  }
   if (p2Active && n(plan.p2.cpp65_monthly) <= 0 && n(plan.p2.cpp70_monthly) <= 0) {
     warn('p2_cpp', 'Income', 'Person 2 has no CPP estimate entered.');
+  }
+  if (p2Active && n(plan.p2.oas_monthly) <= 0) {
+    warn('p2_oas', 'Income', 'Person 2 has no OAS estimate entered.');
+  }
+  if (p2Active && (n(plan.p2.db_before65) > 0 || n(plan.p2.db_after65) > 0) && n(plan.p2.db_index) <= 0) {
+    warn('p2_db_index', 'Income', 'Person 2 has a DB pension but no indexing estimate entered.');
   }
   if (n(plan.p1.nonreg) > 0 && n(plan.p1.nonregAcb) <= 0) {
     warn('p1_nonreg_acb', 'Accounts', 'Person 1 has non-registered assets but no ACB entered.');
