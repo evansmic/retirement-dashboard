@@ -40,16 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 225 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, and the first human-tester intake friction items have been addressed without broad UI redesign. The next logical slice is deciding whether to simplify the Details drawdown surface, keep it as-is for the v1 checkpoint, or prepare a very small consumer-facing summary after review.
+Sprint 240 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, the first human-tester intake friction items have been addressed without broad UI redesign, the normal consumer Details path now shows one compact drawdown review summary instead of the full internal research stack, the latest intake copy clarifies immediate draft behavior, first validation items, and current income-source scope, and CPP/OAS timing is now explained as an age-65 current baseline with an age-70 review test rather than a saved editable input. The next logical slice is continuing bounded drawdown/recommended-plan work while keeping the public-facing Details surface compact and deferring schema-expanding income and benefit-timing inputs.
 
-Completed Sprint 221-225 slices:
+Completed Sprint 236-240 slices:
 
-- Added top-of-step scrolling after intake navigation.
-- Added visible local-save status copy during intake.
-- Added field-level attention styling for income and spending issues.
-- Clarified DB pension, bridge pension, and spending labels as today's-dollar values.
-- Clarified CPP/OAS intake copy and removed misleading nonzero placeholders.
-- Documented multiple DB pensions, rental income, and one-time additions as future modelling scope.
+- Made the current CPP/OAS baseline timing explicit as age 65.
+- Added a concise Details panel for CPP/OAS timing review readiness.
+- Reworded delay-to-70 copy as a review test rather than an instruction.
+- Protected the boundary that CPP/OAS start ages are not saved editable inputs yet.
+- Documented the benefit timing readiness batch before any future schema work.
 - Preserved current withdrawal order, empty annual overrides, saved plan schema, and engine output schema.
 
 ## Consumer Roadmap Sequence

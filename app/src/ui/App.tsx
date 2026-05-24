@@ -226,6 +226,7 @@ type BridgePreview = {
 };
 
 const SHOW_CHECKPOINT_REVIEW_PANELS = false;
+const SHOW_DRAWDOWN_RESEARCH_PANELS = false;
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
@@ -1434,6 +1435,12 @@ function IntakePanel({
         <p className="eyebrow">Guided intake</p>
         <h2>{currentStep.label}</h2>
         <p>{stepCopy(currentStep.id, plan)}</p>
+        <div className="validation-panel ok intake-save-note">
+          <strong>Working draft</strong>
+          <span>
+            Changes update this plan as soon as you type. Use Save editable plan to download the local backup file.
+          </span>
+        </div>
         {currentStepIssues.length > 0 ? <SectionValidationSummary issues={currentStepIssues} /> : null}
         {isHouseholdStep ? (
           <HouseholdStep
@@ -2198,6 +2205,13 @@ function AssumptionsStep({
           These are planning switches for tax and withdrawal timing. If unsure, leave the defaults and review the Results
           tax and estate sections first.
         </p>
+        <div className="validation-panel ok">
+          <strong>CPP/OAS timing in this version</strong>
+          <span>
+            The current plan baseline starts CPP and OAS at 65. Results can test delaying benefits as a review option,
+            but start ages are not saved as editable inputs yet.
+          </span>
+        </div>
         <label className="field full">
           <span>Withdrawal order to test</span>
           <small>Controls which account type is drawn first in this planning run.</small>
@@ -2340,6 +2354,14 @@ function IncomeStep({
           personKey="p2"
           onChange={(field, value, mode) => updatePerson('p2', field, value, mode)}
         />
+      </div>
+
+      <div className="validation-panel ok">
+        <strong>Income sources in this version</strong>
+        <span>
+          For multiple DB pensions, combine amounts only when they share the same start year and indexing. Rental income,
+          separate pension records, and recurring other income are documented future inputs.
+        </span>
       </div>
 
       <fieldset className={`field-group survivor-fields ${!person2Enabled ? 'disabled' : ''}`} disabled={!person2Enabled}>
@@ -3919,65 +3941,158 @@ function DetailsResultsPanel({
       <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
       <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       <div className="result-section-label">Scenario evidence</div>
+      <BenefitTimingReadinessPanel
+        boundedOptimizer={boundedOptimizer}
+        scenarioAssumptionRows={scenarioAssumptionRows}
+      />
       <SpendingStressPanel loading={loading} summary={spendingStress} />
       <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
       <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
-      <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
-      <DrawdownPrototypeReadinessPanel loading={loading} review={drawdownPrototypeReadiness} />
-      <DrawdownReviewPreviewPanel gate={drawdownVisibleReviewGate} loading={loading} phase={drawdownPhaseReview} preview={drawdownReviewPreview} />
-      <DrawdownExecutionBoundaryPanel
-        adapterValidation={drawdownAdapterValidation}
-        auditTrail={drawdownAdapterAuditTrail}
-        boundary={drawdownExecutionBoundary}
-        containmentGuard={drawdownExecutionContainmentGuard}
-        phaseCloseout={drawdownExecutionPhaseCloseout}
-        preflight={drawdownExecutionPreflight}
-        containedPrototype={containedDrawdownPrototype}
-        containedPrototypeSummary={containedDrawdownPrototypeSummary}
-        containedMateriality={containedDrawdownMateriality}
-        containedExplanation={containedDrawdownExplanation}
-        containedLimitations={containedDrawdownLimitations}
-        containedUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
-        containedDetailsDensity={containedDrawdownDetailsDensity}
-        containedReviewChecklist={containedDrawdownReviewChecklist}
-        containedExampleGate={containedDrawdownExampleGate}
-        containedCopyGuard={containedDrawdownCopyGuard}
-        containedProductGoNoGo={containedDrawdownProductGoNoGo}
-        containedPromotionReadiness={containedDrawdownPromotionReadiness}
-        containedNextStepGuide={containedDrawdownNextStepGuide}
-        containedBlockerRegister={containedDrawdownBlockerRegister}
-        containedExamplePromotionGate={containedDrawdownExamplePromotionGate}
-        containedPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
-        v1ExecutionIntent={v1DrawdownExecutionIntent}
-        v1ExecutionCandidate={v1DrawdownExecutionCandidate}
-        v1ExecutionResult={v1DrawdownExecutionResult}
-        v1ExecutionReview={v1DrawdownExecutionReview}
-        v1ExecutionExampleGate={v1DrawdownExecutionExampleGate}
-        v1ExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
-        v1ConsumerSummary={v1DrawdownConsumerSummary}
-        v1SafetyChecklist={v1DrawdownSafetyChecklist}
-        v1ConsumerLimits={v1DrawdownConsumerLimits}
-        v1ConsumerExampleGate={v1DrawdownConsumerExampleGate}
-        v1ConsumerCloseout={v1DrawdownConsumerCloseout}
-        v1UxHeadline={v1DrawdownUxHeadline}
-        v1UxComparisonCard={v1DrawdownUxComparisonCard}
-        v1UxReviewActions={v1DrawdownUxReviewActions}
-        v1UxCopyGuard={v1DrawdownUxCopyGuard}
-        v1UxReadinessCloseout={v1DrawdownUxReadinessCloseout}
-        v1ReentryReview={v1DrawdownReentryReview}
-        v1ReentryCloseout={v1DrawdownReentryCloseout}
-        v1RecommendedPlanReview={v1DrawdownRecommendedPlanReview}
-        v1DetailsPlacement={v1DrawdownDetailsPlacement}
-        v1ReviewCopyGuard={v1DrawdownReviewCopyGuard}
-        v1RecommendedPlanCloseout={v1DrawdownRecommendedPlanCloseout}
-        goNoGo={drawdownExecutionGoNoGo}
+      <CompactDrawdownReviewSummaryPanel
+        actions={v1DrawdownUxReviewActions}
+        closeout={v1DrawdownRecommendedPlanCloseout}
+        comparison={v1DrawdownUxComparisonCard}
+        headline={v1DrawdownUxHeadline}
         loading={loading}
+        safety={v1DrawdownSafetyChecklist}
       />
+      {SHOW_DRAWDOWN_RESEARCH_PANELS ? (
+        <>
+          <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
+          <DrawdownPrototypeReadinessPanel loading={loading} review={drawdownPrototypeReadiness} />
+          <DrawdownReviewPreviewPanel gate={drawdownVisibleReviewGate} loading={loading} phase={drawdownPhaseReview} preview={drawdownReviewPreview} />
+          <DrawdownExecutionBoundaryPanel
+            adapterValidation={drawdownAdapterValidation}
+            auditTrail={drawdownAdapterAuditTrail}
+            boundary={drawdownExecutionBoundary}
+            containmentGuard={drawdownExecutionContainmentGuard}
+            phaseCloseout={drawdownExecutionPhaseCloseout}
+            preflight={drawdownExecutionPreflight}
+            containedPrototype={containedDrawdownPrototype}
+            containedPrototypeSummary={containedDrawdownPrototypeSummary}
+            containedMateriality={containedDrawdownMateriality}
+            containedExplanation={containedDrawdownExplanation}
+            containedLimitations={containedDrawdownLimitations}
+            containedUsefulnessCloseout={containedDrawdownUsefulnessCloseout}
+            containedDetailsDensity={containedDrawdownDetailsDensity}
+            containedReviewChecklist={containedDrawdownReviewChecklist}
+            containedExampleGate={containedDrawdownExampleGate}
+            containedCopyGuard={containedDrawdownCopyGuard}
+            containedProductGoNoGo={containedDrawdownProductGoNoGo}
+            containedPromotionReadiness={containedDrawdownPromotionReadiness}
+            containedNextStepGuide={containedDrawdownNextStepGuide}
+            containedBlockerRegister={containedDrawdownBlockerRegister}
+            containedExamplePromotionGate={containedDrawdownExamplePromotionGate}
+            containedPhaseMilestoneCloseout={containedDrawdownPhaseMilestoneCloseout}
+            v1ExecutionIntent={v1DrawdownExecutionIntent}
+            v1ExecutionCandidate={v1DrawdownExecutionCandidate}
+            v1ExecutionResult={v1DrawdownExecutionResult}
+            v1ExecutionReview={v1DrawdownExecutionReview}
+            v1ExecutionExampleGate={v1DrawdownExecutionExampleGate}
+            v1ExecutionPhaseCloseout={v1DrawdownExecutionPhaseCloseout}
+            v1ConsumerSummary={v1DrawdownConsumerSummary}
+            v1SafetyChecklist={v1DrawdownSafetyChecklist}
+            v1ConsumerLimits={v1DrawdownConsumerLimits}
+            v1ConsumerExampleGate={v1DrawdownConsumerExampleGate}
+            v1ConsumerCloseout={v1DrawdownConsumerCloseout}
+            v1UxHeadline={v1DrawdownUxHeadline}
+            v1UxComparisonCard={v1DrawdownUxComparisonCard}
+            v1UxReviewActions={v1DrawdownUxReviewActions}
+            v1UxCopyGuard={v1DrawdownUxCopyGuard}
+            v1UxReadinessCloseout={v1DrawdownUxReadinessCloseout}
+            v1ReentryReview={v1DrawdownReentryReview}
+            v1ReentryCloseout={v1DrawdownReentryCloseout}
+            v1RecommendedPlanReview={v1DrawdownRecommendedPlanReview}
+            v1DetailsPlacement={v1DrawdownDetailsPlacement}
+            v1ReviewCopyGuard={v1DrawdownReviewCopyGuard}
+            v1RecommendedPlanCloseout={v1DrawdownRecommendedPlanCloseout}
+            goNoGo={drawdownExecutionGoNoGo}
+            loading={loading}
+          />
+        </>
+      ) : null}
       <OptimizerBoundaryPanel loading={loading} summary={optimizerBoundaries} />
       <OptimizerInputReviewPanel summary={optimizerInputReview} />
     </div>
+  );
+}
+
+function CompactDrawdownReviewSummaryPanel({
+  actions,
+  closeout,
+  comparison,
+  headline,
+  loading,
+  safety
+}: {
+  actions: TaxAwareDrawdownV1UxReviewActions | null;
+  closeout: TaxAwareDrawdownV1RecommendedPlanCloseout | null;
+  comparison: TaxAwareDrawdownV1UxComparisonCard | null;
+  headline: TaxAwareDrawdownV1UxHeadline | null;
+  loading: boolean;
+  safety: TaxAwareDrawdownV1SafetyChecklist | null;
+}) {
+  const status =
+    closeout?.status === 'readyForImplementation'
+      ? 'Ready for review'
+      : closeout?.status === 'blocked'
+        ? 'Needs cleanup'
+        : loading
+          ? 'Checking'
+          : 'Review carefully';
+  const visibleRows = comparison?.rows.slice(0, 4) || [];
+  const visibleActions = actions?.rows.slice(0, 3) || [];
+
+  return (
+    <section className="result-card compact-drawdown-review">
+      <p className="eyebrow">Drawdown review</p>
+      <h3>{loading ? 'Checking drawdown review' : headline?.headline || 'Drawdown review is available in Details.'}</h3>
+      <p>
+        {headline?.subhead ||
+          'This is a tax-aware timing check for review. It does not change the saved plan or create account-by-account instructions.'}
+      </p>
+      <div className="summary-grid">
+        <Metric label="Status" value={status} />
+        <Metric label="Plan file" value="Unchanged" />
+        <Metric label="Instructions" value="None created" />
+        <Metric label="Where to review" value="Details only" />
+      </div>
+      {visibleRows.length ? (
+        <div className="result-table-wrap">
+          <table className="result-table">
+            <thead>
+              <tr>
+                <th>Check</th>
+                <th>Read</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.label}</td>
+                  <td>{row.value}</td>
+                  <td>{row.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      {visibleActions.length ? (
+        <ul className="compact-list">
+          {visibleActions.map((row) => (
+            <li key={row.id}>{row.label}: {row.detail}</li>
+          ))}
+        </ul>
+      ) : null}
+      <p className="table-note">
+        {safety?.reviewNote ||
+          'Drawdown review is planning evidence only. It does not apply a strategy, save output, or tell you which account to withdraw from.'}
+      </p>
+    </section>
   );
 }
 
@@ -4045,6 +4160,53 @@ function FirstYearMoneyFlowPanel({
         </dl>
       </section>
     </div>
+  );
+}
+
+function BenefitTimingReadinessPanel({
+  boundedOptimizer,
+  scenarioAssumptionRows
+}: {
+  boundedOptimizer: BoundedOptimizerSummary | null;
+  scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
+}) {
+  const benefitEligibility = boundedOptimizer?.eligibilityNotes.find((note) => note.lever === 'benefitTiming');
+  const delayScenario = scenarioAssumptionRows.find((row) => row.id === 'delayBenefits');
+  const status =
+    benefitEligibility?.status === 'eligible'
+      ? 'Ready for review'
+      : benefitEligibility?.status === 'needsReview'
+        ? 'Needs input review'
+        : 'Held until inputs are ready';
+
+  return (
+    <section className="result-card benefit-timing-readiness">
+      <div>
+        <p className="eyebrow">CPP/OAS timing review</p>
+        <h3>Benefit timing is a review check, not a saved setting yet.</h3>
+        <p>
+          The current plan baseline starts CPP and OAS at 65. The Results review can compare a delay-to-70 test when
+          estimates and ages support it, but the editable plan does not save CPP/OAS start ages yet.
+        </p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Current plan baseline" value={delayScenario?.baseline || 'CPP/OAS age 65'} />
+        <Metric label="Review test" value={delayScenario?.scenario || 'CPP/OAS age 70'} />
+        <Metric label="Readiness" value={status} />
+        <Metric label="Saved plan" value="Start ages unchanged" />
+      </div>
+      {benefitEligibility ? (
+        <p className="table-note">{benefitEligibility.reason}</p>
+      ) : (
+        <p className="table-note">
+          Enter CPP at 65 and OAS monthly estimates before treating benefit timing as a meaningful review check.
+        </p>
+      )}
+      <p className="table-note">
+        This does not recommend when to start benefits. Confirm eligibility, health assumptions, bridge-year spending,
+        and CRA or Service Canada details before relying on a timing comparison.
+      </p>
+    </section>
   );
 }
 
@@ -6866,6 +7028,10 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
   return (
     <div className="assumptions-results-panel">
       <p className="table-note">{ONTARIO_TAX_SCOPE_NOTE}</p>
+      <p className="table-note">
+        Current-plan CPP/OAS timing starts at 65. Delay-to-70 timing is tested only as review evidence in Results and is
+        not saved as an editable start-age setting yet.
+      </p>
       {baselinePensionSplitting ? (
         <p className="table-note">Eligible DB pension splitting is included in the current plan baseline.</p>
       ) : null}
@@ -7579,9 +7745,11 @@ function validationIssueCountForStep(validation: PlanValidationResult | null, st
 
 function SectionValidationSummary({ issues }: { issues: IntakeValidationIssue[] }) {
   const blockerCount = issues.filter((issue) => issue.severity === 'blocker').length;
+  const firstIssue = issues[0];
   return (
     <div className={`section-validation-summary ${blockerCount > 0 ? 'has-blockers' : 'has-warnings'}`}>
       <strong>{blockerCount > 0 ? 'Fix this section before results' : 'Review this section'}</strong>
+      {firstIssue ? <p>Start with: {firstIssue.message}</p> : null}
       <ul>
         {issues.map((issue) => (
           <li key={issue.code}>

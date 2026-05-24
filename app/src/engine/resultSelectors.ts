@@ -2313,7 +2313,7 @@ function optimizerReviewCopy(
     benefitTiming: {
       guardrail: 'Explore CPP/OAS timing only after the monthly estimates are credible.',
       reviewQuestion: 'Would the household consider delaying benefits if it improves later-life security?',
-      suggestedNextStep: permission === 'needsDecision' ? 'Add CPP/OAS estimates first.' : 'Review Delay CPP/OAS to 70 as the first benefit-timing test.'
+      suggestedNextStep: permission === 'needsDecision' ? 'Add CPP/OAS estimates first.' : 'Review the age-70 CPP/OAS timing test before changing assumptions.'
     },
     withdrawalOrder: {
       guardrail: 'Preserve the current withdrawal-order setting until a tax-aware drawdown optimizer exists.',
@@ -3226,10 +3226,10 @@ export function selectScenarioCards(
     },
     {
       id: 'delayBenefits',
-      label: 'Delay CPP/OAS to 70',
+      label: 'Review delaying CPP/OAS to 70',
       status: hasBenefitTiming ? 'ready' : 'needsInput',
       lever: hasBenefitTiming ? 'Compare age 65 to age 70' : 'Enter CPP/OAS estimates',
-      baseline: 'Baseline uses the current preview timing',
+      baseline: 'Current plan baseline starts CPP/OAS at 65',
       detail: scenarioDetail(result, comparisons.delayBenefits),
       ...scenarioComparison(result, comparisons.delayBenefits)
     }
@@ -3340,7 +3340,7 @@ export function selectScenarioChoiceCards(
     ),
     choiceForScenario(
       'delayBenefits',
-      'Delay CPP/OAS to 70',
+      'Review delaying CPP/OAS to 70',
       'Compare the current benefit timing with age-70 government benefits.',
       'Understanding whether higher later-life guaranteed income improves the household plan.',
       'The household may need to fund more spending from savings before benefits start.',
@@ -3359,7 +3359,7 @@ export function selectScenarioComparisonRows(
   const definitions: Array<{ id: ScenarioCard['id']; label: string }> = [
     { id: 'retireLater', label: 'Retire two years later' },
     { id: 'spendLessGogo', label: 'Spend a little less early' },
-    { id: 'delayBenefits', label: 'Delay CPP/OAS to 70' }
+    { id: 'delayBenefits', label: 'Review delaying CPP/OAS to 70' }
   ];
 
   return definitions.map(({ id, label }) => {
@@ -3425,7 +3425,7 @@ export function selectScenarioAssumptionRows(plan: V2PlanPayload | null | undefi
     },
     {
       id: 'delayBenefits',
-      label: 'Delay CPP/OAS to 70',
+      label: 'Review delaying CPP/OAS to 70',
       baseline: benefitBaseline,
       scenario: 'CPP/OAS age 70',
       changed: true
@@ -3800,7 +3800,7 @@ export function selectRecommendedPath(
     { id: 'baseline', label: 'Current plan', result: baseline },
     { id: 'retireLater', label: 'Work two years longer', result: comparisons.retireLater },
     { id: 'spendLessGogo', label: 'Spend a little less early', result: comparisons.spendLessGogo },
-    { id: 'delayBenefits', label: 'Delay CPP/OAS to 70', result: comparisons.delayBenefits }
+    { id: 'delayBenefits', label: 'Review delaying CPP/OAS to 70', result: comparisons.delayBenefits }
   ];
 
   const validationBlocked = validation?.canGenerate === false || Boolean(validation?.blockers && validation.blockers.length > 0);
@@ -4462,7 +4462,7 @@ function selectRecommendedBreakRisks(
     label: 'CPP/OAS timing',
     severity: delayBenefitsCandidate?.recommended ? 'watch' : delayBenefitsCandidate && delayBenefitsCandidate.endPortfolioDelta > 0 ? 'review' : 'ok',
     detail: delayBenefitsCandidate?.recommended
-      ? 'The selected path depends on delayed CPP/OAS claiming assumptions.'
+      ? 'The selected path depends on the age-70 CPP/OAS review test.'
       : delayBenefitsCandidate && delayBenefitsCandidate.endPortfolioDelta > 0
         ? `Delaying CPP/OAS improves terminal portfolio by ${Math.round(delayBenefitsCandidate.endPortfolioDelta).toLocaleString()}.`
         : 'Delayed public benefits do not overtake the selected path in this first-pass review.',
@@ -4687,12 +4687,12 @@ function selectRecommendedRiskDetails(
           headline: 'This shows whether delayed public benefits materially change the result.',
           detail: 'This first-pass test delays CPP and OAS claiming to age 70 for comparison.',
           metrics: [
-            detailMetric('baselineTiming', 'Current preview timing', 'CPP/OAS at 65', 'neutral'),
-            detailMetric('scenarioTiming', 'Delay scenario', 'CPP/OAS at 70', 'neutral'),
+            detailMetric('baselineTiming', 'Current plan baseline', 'CPP/OAS at 65', 'neutral'),
+            detailMetric('scenarioTiming', 'Review test', 'CPP/OAS at 70', 'neutral'),
             detailMetric('endPortfolioDelta', 'End portfolio delta', signedMoneyText(delayComparison.endPortfolioDelta), n(delayComparison.endPortfolioDelta) > 0 ? 'ok' : 'neutral'),
             detailMetric('taxDelta', 'Lifetime tax delta', signedMoneyText(selectTaxSummaryMetrics(comparisons.delayBenefits).lifetimeTax - selectTaxSummaryMetrics(baseline).lifetimeTax), 'neutral')
           ],
-          evidenceRows: scenarioEvidenceRows('benefit', 'Delay CPP/OAS to 70', comparisons.delayBenefits, delayComparison),
+          evidenceRows: scenarioEvidenceRows('benefit', 'Review delaying CPP/OAS to 70', comparisons.delayBenefits, delayComparison),
           handoff: risk.handoff
         };
       case 'shortfall':

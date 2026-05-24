@@ -4,25 +4,25 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 225: Future Income Expansion Notes
+## Latest Sprint — Sprint 240: Benefit Timing UX Readiness Closeout
 
 **Status:** Complete 2026-05-23.
 
-Goal: respond to preliminary human tester intake feedback without broad UI redesign or schema expansion.
+Goal: make CPP/OAS timing understandable before editable benefit-age fields are considered.
 
 Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
 
-Sprint 225 checkpoint doc: [`docs/sprint_225_future_income_expansion_notes.md`](docs/sprint_225_future_income_expansion_notes.md).
+Sprint 240 checkpoint doc: [`docs/sprint_240_benefit_timing_ux_readiness_closeout.md`](docs/sprint_240_benefit_timing_ux_readiness_closeout.md).
 
-### Sprint 221-225 Candidate Implementation Tickets
+### Sprint 236-240 Candidate Implementation Tickets
 
-- [x] **S221-01 — Intake navigation and save clarity.** Scroll to top on step changes and clarify local save behavior.
-- [x] **S222-01 — Required field guidance.** Highlight missing/review-needed intake fields.
-- [x] **S223-01 — Today’s dollars label audit.** Clarify DB pension, bridge pension, and spending labels.
-- [x] **S224-01 — CPP/OAS input clarity.** Explain CPP at 65 input and timing tests.
-- [x] **S225-01 — Future income expansion notes.** Capture multiple pensions, rental income, and one-time additions as future schema work.
+- [x] **S236-01 — Benefit baseline language.** Make current CPP/OAS baseline timing explicit as age 65.
+- [x] **S237-01 — Benefit timing Details summary.** Add a concise Details panel for the age-70 timing review check.
+- [x] **S238-01 — Delay-test copy discipline.** Reword delay labels as review tests rather than instructions.
+- [x] **S239-01 — Saved setting boundary.** Keep CPP/OAS start ages out of saved editable inputs and protect that copy.
+- [x] **S240-01 — Benefit timing closeout.** Document the readiness batch before any future schema work.
 
-### Sprint 225 Definition Of Done
+### Sprint 240 Definition Of Done
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -108,6 +108,96 @@ Sprint 225 checkpoint doc: [`docs/sprint_225_future_income_expansion_notes.md`](
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 240: Benefit Timing UX Readiness Closeout
+
+**Complete 2026-05-23.** Documented the benefit timing readiness batch and kept editable start-age schema work deferred.
+
+Sprint 240 checkpoint doc: [`docs/sprint_240_benefit_timing_ux_readiness_closeout.md`](docs/sprint_240_benefit_timing_ux_readiness_closeout.md).
+
+### Sprint 239: Saved Setting Boundary
+
+**Complete 2026-05-23.** Protected copy explaining that CPP/OAS start ages are not saved editable inputs yet.
+
+Sprint 239 checkpoint doc: [`docs/sprint_239_benefit_timing_saved_setting_boundary.md`](docs/sprint_239_benefit_timing_saved_setting_boundary.md).
+
+### Sprint 238: Delay-Test Copy Discipline
+
+**Complete 2026-05-23.** Reworded CPP/OAS delay copy as a review test rather than an instruction or recommendation.
+
+Sprint 238 checkpoint doc: [`docs/sprint_238_benefit_timing_copy_discipline.md`](docs/sprint_238_benefit_timing_copy_discipline.md).
+
+### Sprint 237: Benefit Timing Details Summary
+
+**Complete 2026-05-23.** Added a concise Details panel for CPP/OAS age-65 baseline and age-70 review-test readiness.
+
+Sprint 237 checkpoint doc: [`docs/sprint_237_benefit_timing_details_summary.md`](docs/sprint_237_benefit_timing_details_summary.md).
+
+### Sprint 236: Benefit Baseline Language
+
+**Complete 2026-05-23.** Made current CPP/OAS baseline timing explicit as age 65 in Results and Assumptions copy.
+
+Sprint 236 checkpoint doc: [`docs/sprint_236_benefit_baseline_language.md`](docs/sprint_236_benefit_baseline_language.md).
+
+### Sprint 235: Tester Friction Closeout
+
+**Complete 2026-05-23.** Documented the tester-friction copy batch and kept broader income schema work deferred.
+
+Sprint 235 checkpoint doc: [`docs/sprint_235_tester_friction_closeout.md`](docs/sprint_235_tester_friction_closeout.md).
+
+### Sprint 234: Benefit Timing Scope Note
+
+**Complete 2026-05-23.** Clarified that current baseline CPP/OAS starts at 65 and timing changes are reviewed in Results rather than saved as editable inputs.
+
+Sprint 234 checkpoint doc: [`docs/sprint_234_benefit_timing_scope_note.md`](docs/sprint_234_benefit_timing_scope_note.md).
+
+### Sprint 233: Income Scope Note
+
+**Complete 2026-05-23.** Added a plain intake note for multiple DB pensions, rental income, separate pension records, and recurring other income.
+
+Sprint 233 checkpoint doc: [`docs/sprint_233_income_scope_note.md`](docs/sprint_233_income_scope_note.md).
+
+### Sprint 232: First Issue Guidance
+
+**Complete 2026-05-23.** Added a first-item prompt to section validation summaries so testers know what to fix or review first.
+
+Sprint 232 checkpoint doc: [`docs/sprint_232_first_issue_guidance.md`](docs/sprint_232_first_issue_guidance.md).
+
+### Sprint 231: Immediate Draft Clarity
+
+**Complete 2026-05-23.** Clarified that typed inputs update the working draft immediately and Save downloads the editable backup file.
+
+Sprint 231 checkpoint doc: [`docs/sprint_231_immediate_draft_clarity.md`](docs/sprint_231_immediate_draft_clarity.md).
+
+### Sprint 230: Checkpoint Cleanup Closeout
+
+**Complete 2026-05-23.** Documented the checkpoint cleanup batch and preserved the next path toward bounded drawdown and recommended-plan work.
+
+Sprint 230 checkpoint doc: [`docs/sprint_230_checkpoint_cleanup_closeout.md`](docs/sprint_230_checkpoint_cleanup_closeout.md).
+
+### Sprint 229: Scope And Backup Copy Guard
+
+**Complete 2026-05-23.** Kept Ontario 2026 tax-scope copy and local editable-backup reminders protected in UI structure coverage.
+
+Sprint 229 checkpoint doc: [`docs/sprint_229_scope_backup_copy_guard.md`](docs/sprint_229_scope_backup_copy_guard.md).
+
+### Sprint 228: Save/Report Trust Guard
+
+**Complete 2026-05-23.** Preserved save-before-results and save-before-print behavior so users are prompted to download an editable copy before major handoffs.
+
+Sprint 228 checkpoint doc: [`docs/sprint_228_save_report_trust_guard.md`](docs/sprint_228_save_report_trust_guard.md).
+
+### Sprint 227: Compact Drawdown Review Summary
+
+**Complete 2026-05-23.** Added one compact Details summary for the drawdown review so useful evidence remains visible without showing the internal research stack.
+
+Sprint 227 checkpoint doc: [`docs/sprint_227_compact_drawdown_review_summary.md`](docs/sprint_227_compact_drawdown_review_summary.md).
+
+### Sprint 226: Details Drawdown Simplification
+
+**Complete 2026-05-23.** Gated internal drawdown research panels out of the normal consumer Details path by default.
+
+Sprint 226 checkpoint doc: [`docs/sprint_226_details_drawdown_simplification.md`](docs/sprint_226_details_drawdown_simplification.md).
 
 ### Sprint 225: Future Income Expansion Notes
 

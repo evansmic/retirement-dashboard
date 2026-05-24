@@ -518,7 +518,7 @@ export function buildBoundedOptimizerCandidates(
   if (eligible(eligibilityNotes, 'benefitTiming')) {
     candidates.push({
       id: 'delayBenefits',
-      label: 'Delay CPP/OAS to 70',
+      label: 'Test CPP/OAS at 70',
       plan: extractPlanPayload(plan),
       config: { ...config, cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 },
       changedLevers: ['benefitTiming'],
