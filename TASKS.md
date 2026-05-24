@@ -4,32 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 307: Optimizer Checkpoint Decision
+## Latest Sprint — Sprint 321: Optimizer V1 Direction Closeout
 
 **Status:** Complete 2026-05-24.
 
-Goal: stop the cleanup batch and decide whether the product is ready to proceed into optimizer prep.
+Goal: implement the first local-first Canadian plan-to-review optimizer direction without annual account instructions or saved optimizer output.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 307 checkpoint doc: [`docs/sprint_307_optimizer_checkpoint_decision.md`](docs/sprint_307_optimizer_checkpoint_decision.md).
+Sprint 321 checkpoint doc: [`docs/sprint_308_321_optimizer_v1_direction.md`](docs/sprint_308_321_optimizer_v1_direction.md).
 
-### Sprint 302-307 Candidate Implementation Tickets
+### Sprint 308-321 Candidate Implementation Tickets
 
-- [x] **S302-01 — Intake review item closeout.** Keep blockers separate from non-blocking review items.
-- [x] **S303-01 — Results copy consistency.** Tighten review-first wording around plan options and guardrails.
-- [x] **S304-01 — Output boundary guard.** Reconfirm local editable backup, printable report, and CSV boundaries.
-- [x] **S305-01 — Details density final audit.** Protect the compact normal Details evidence set.
-- [x] **S306-01 — Feedback readiness package.** Record what is ready for feedback and what remains deferred.
-- [x] **S307-01 — Optimizer checkpoint decision.** Decide to proceed to optimizer prep next without starting optimizer implementation.
+- [x] **S308-01 — Optimizer input readiness review.** Add runtime-only readiness rows for optimizer inputs.
+- [x] **S309-01 — Candidate boundary map.** Define included and deferred candidate families.
+- [x] **S310-01 — Objective and guardrail contract.** Record max after-tax spend, conservative deterministic guardrails, and runtime-only output.
+- [x] **S311-01 — CPP/OAS grid shape.** Describe valid benefit age ranges for active people.
+- [x] **S312-01 — Broad withdrawal family shape.** Describe broad withdrawal families while deferring annual overrides.
+- [x] **S313-01 — Candidate runner harness.** Add engine-supported 65/70 benefit-timing seed candidates while preserving runtime-only candidate output.
+- [x] **S314-01 — Scoring and ranking.** Add sustainable annual/monthly spend evidence into candidate scoring and UI.
+- [x] **S315-01 — Explanation layer.** Surface why the plan moved, guardrails, and what to review first.
+- [x] **S316-01 — Details-first UI surface.** Show optimizer direction and candidate boundaries in Details.
+- [x] **S317-S321 — Example, harm, copy, verification, and closeout.** Guard copy and document optimizer v1 direction readiness.
 
-### Sprint 307 Definition Of Done
+### Sprint 321 Definition Of Done
 
-- S302-S307 cleanup plan is documented.
-- Guided-intake review items, Results review labels, local output boundaries, and Details density are guarded.
-- Feedback readiness and deferred scope are documented.
-- The checkpoint decision is explicit: proceed to optimizer prep next, not optimizer implementation.
-- No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
+- Optimizer readiness, candidate-family boundaries, objective contract, and staged search shape are runtime-only.
+- Benefit timing execution is seeded only with the current engine-supported 65/70 configs; wider CPP age execution remains next work.
+- Details shows the optimizer direction as plan-to-review evidence.
+- Annual account-level overrides and Monte Carlo-in-loop search remain deferred.
+- No saved optimizer output, saved plan schema change, or engine output schema change is introduced.
 - Verification passes and no private `.plan.json` files are created.
 
 ### Historical Definition Of Done Coverage
@@ -118,6 +122,12 @@ Sprint 307 checkpoint doc: [`docs/sprint_307_optimizer_checkpoint_decision.md`](
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 321: Optimizer V1 Direction Closeout
+
+**Complete 2026-05-24.** Implemented the first local-first Canadian plan-to-review optimizer direction as runtime-only evidence.
+
+Sprint 321 checkpoint doc: [`docs/sprint_308_321_optimizer_v1_direction.md`](docs/sprint_308_321_optimizer_v1_direction.md).
 
 ### Sprint 307: Optimizer Checkpoint Decision
 

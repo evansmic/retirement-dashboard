@@ -136,6 +136,15 @@ describe('Results overview structure', () => {
   it('explains bounded optimizer output without advice or saved-output language', () => {
     expect(appSource).toContain('Plan to review');
     expect(appSource).toContain('Plan options to review');
+    expect(appSource).toContain('Local-first plan-to-review optimizer');
+    expect(appSource).toContain('Max after-tax spend');
+    expect(appSource).toContain('Monthly spend reviewed');
+    expect(appSource).toContain('Optimizer direction');
+    expect(appSource).toContain('Input readiness');
+    expect(appSource).toContain('What must be ready before optimizer prep');
+    expect(appSource).toContain('Staged grid shape');
+    expect(appSource).toContain('Benefit timing and broad withdrawal families first');
+    expect(appSource).toContain('No annual account instructions in this version.');
     expect(appSource).toContain('Why this option');
     expect(appSource).toContain('Trade-offs');
     expect(appSource).toContain('Check before using');
@@ -167,6 +176,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('SHOW_OPTION_RESEARCH_PANELS = false');
     expect(appSource).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />');
     expect(appSource).not.toContain('Apply optimized plan');
+    expect(appSource).not.toContain('Year-by-year action plan');
     expect(appSource).not.toContain('Guaranteed');
     expect(appSource).not.toContain('Suggested plan to review');
     expect(appSource).not.toContain('Recommended path');

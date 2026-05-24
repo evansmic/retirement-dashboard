@@ -4428,10 +4428,31 @@ function BoundedOptimizerPanel({
 
       <div className="summary-grid">
         <Metric label="Options checked" value={loading ? 'Calculating' : String(summary?.candidateCount || 0)} />
+        <Metric label="Objective" value={summary ? 'Max after-tax spend' : '-'} />
+        <Metric label="Monthly spend reviewed" value={suggested ? formatMoney(suggested.sustainableAnnualSpend / 12) : '-'} />
         <Metric label="Funded years" value={suggested ? `${suggested.fundedYears}/${suggested.totalYears}` : '-'} />
         <Metric label="First shortfall" value={suggested?.firstShortfallYear ? String(suggested.firstShortfallYear) : suggested ? 'None' : '-'} />
         <Metric label="Projected money left" value={suggested ? formatMoney(suggested.endPortfolio) : '-'} />
       </div>
+
+      {summary ? (
+        <section className="optimizer-guardrail-panel">
+          <div>
+            <p className="eyebrow">Optimizer direction</p>
+            <h3>Local-first plan-to-review optimizer</h3>
+            <p>{summary.objective.detail}</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.candidateFamilies.map((family) => (
+              <article className={`optimizer-guardrail-row guardrail-${family.status}`} key={family.id}>
+                <span>{family.status === 'included' ? 'Included' : family.status === 'deferred' ? 'Later' : 'Blocked'}</span>
+                <strong>{family.label}</strong>
+                <p>{family.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
@@ -4449,6 +4470,56 @@ function BoundedOptimizerPanel({
             </div>
           ))}
         </div>
+      ) : null}
+
+      {!isCompact && summary?.readinessRows.length ? (
+        <section className="optimizer-guardrail-panel">
+          <div>
+            <p className="eyebrow">Input readiness</p>
+            <h3>What must be ready before optimizer prep</h3>
+            <p>These checks keep max-spend optimization bounded to household inputs the current Canadian engine can support.</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.readinessRows.map((row) => (
+              <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+                <strong>{row.label}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {!isCompact && summary?.searchPlan ? (
+        <section className="optimizer-option-group-panel">
+          <div>
+            <p className="eyebrow">Staged grid shape</p>
+            <h3>Benefit timing and broad withdrawal families first</h3>
+            <p>{summary.searchPlan.detail}</p>
+          </div>
+          <div className="optimizer-option-group-grid">
+            {summary.searchPlan.benefitSearch.map((space) => (
+              <article className="optimizer-option-group-row" key={space.person}>
+                <span>{space.status === 'ready' ? 'Ready' : 'Blocked'}</span>
+                <strong>{space.label}</strong>
+                <p>
+                  CPP ages {space.cppAges.length ? `${space.cppAges[0]}-${space.cppAges[space.cppAges.length - 1]}` : 'not ready'}; OAS ages{' '}
+                  {space.oasAges.length ? `${space.oasAges[0]}-${space.oasAges[space.oasAges.length - 1]}` : 'not ready'}.
+                </p>
+                <small>{space.reason}</small>
+              </article>
+            ))}
+            {summary.searchPlan.withdrawalFamilies.map((family) => (
+              <article className="optimizer-option-group-row" key={family.id}>
+                <span>{family.status === 'current' ? 'Current' : family.status === 'included' ? 'Included' : 'Blocked'}</span>
+                <strong>{family.label}</strong>
+                <p>{family.detail}</p>
+                <small>No annual account instructions in this version.</small>
+              </article>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {summary?.explanation ? (

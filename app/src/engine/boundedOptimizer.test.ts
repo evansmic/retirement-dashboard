@@ -110,6 +110,8 @@ describe('bounded optimizer runner', () => {
       'spendLess10',
       'retireLater1',
       'retireLater2',
+      'benefitGridCpp65Oas70',
+      'benefitGridCpp70Oas65',
       'delayBenefits',
       'withdrawalRegisteredFirst',
       'withdrawalNonRegisteredFirst'
@@ -121,6 +123,12 @@ describe('bounded optimizer runner', () => {
       oasAgeF: 70,
       oasAgeM: 70
     });
+    expect(candidates.find((candidate) => candidate.id === 'benefitGridCpp70Oas65')?.config).toMatchObject({
+      cppAgeF: 70,
+      cppAgeM: 70,
+      oasAgeF: 65,
+      oasAgeM: 65
+    });
   });
 
   it('runs candidates through the provided runner and does not persist optimizer output', () => {
@@ -131,6 +139,8 @@ describe('bounded optimizer runner', () => {
       spendLess10: result(125000, 87000, null),
       retireLater1: result(130000, 86000, null),
       retireLater2: result(140000, 85000, null),
+      benefitGridCpp65Oas70: result(118000, 89000, null),
+      benefitGridCpp70Oas65: result(119000, 88000, null),
       delayBenefits: result(155000, 83000, null),
       withdrawalRegisteredFirst: result(170000, 80000, null),
       withdrawalNonRegisteredFirst: result(160000, 82000, null)
@@ -143,24 +153,59 @@ describe('bounded optimizer runner', () => {
           ? 'withdrawalRegisteredFirst'
           : config.withdrawalOrder === 'nonreg-first'
             ? 'withdrawalNonRegisteredFirst'
-            : config.cppAgeF === 70
-              ? 'delayBenefits'
-              : candidatePlan.p1.retireYear === 2034
-                ? 'retireLater2'
-                : candidatePlan.p1.retireYear === 2033
-                  ? 'retireLater1'
-                  : candidatePlan.spending.gogo === 76500
-                    ? 'spendLess10'
-                    : candidatePlan.spending.gogo === 80750
-                      ? 'spendLess5'
-                      : 'baseline';
+            : config.cppAgeF === 65 && config.oasAgeF === 70
+              ? 'benefitGridCpp65Oas70'
+              : config.cppAgeF === 70 && config.oasAgeF === 65
+                ? 'benefitGridCpp70Oas65'
+                : config.cppAgeF === 70
+                  ? 'delayBenefits'
+                  : candidatePlan.p1.retireYear === 2034
+                    ? 'retireLater2'
+                    : candidatePlan.p1.retireYear === 2033
+                      ? 'retireLater1'
+                      : candidatePlan.spending.gogo === 76500
+                        ? 'spendLess10'
+                        : candidatePlan.spending.gogo === 80750
+                          ? 'spendLess5'
+                          : 'baseline';
       return byCandidate[id] || result(0, 0);
     });
 
     expect(summary.status).toBe('ready');
     expect(summary.execution).toBe('boundedSearch');
+    expect(summary.objective).toMatchObject({
+      primaryObjective: 'maximizeSustainableAfterTaxSpend',
+      outputTone: 'planToReview',
+      riskGuardrail: 'conservativeDeterministicFunding',
+      monteCarloRole: 'validationLater',
+      savedOutput: 'none'
+    });
     expect(summary.suggestedCandidateId).toBe('withdrawalRegisteredFirst');
-    expect(summary.candidates).toHaveLength(8);
+    expect(summary.candidates).toHaveLength(10);
+    expect(summary.candidates.find((candidate) => candidate.id === 'withdrawalRegisteredFirst')?.sustainableAnnualSpend).toBe(85000);
+    expect(summary.readinessRows.find((row) => row.id === 'spending')).toMatchObject({ status: 'ready' });
+    expect(summary.readinessRows.find((row) => row.id === 'benefitEstimates')).toMatchObject({ status: 'ready' });
+    expect(summary.readinessRows.find((row) => row.id === 'accountBuckets')).toMatchObject({ status: 'ready' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'benefitTimingGrid')).toMatchObject({ status: 'included' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'broadWithdrawalFamilies')).toMatchObject({ status: 'included' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'annualOverrides')).toMatchObject({ status: 'deferred' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'monteCarloValidation')).toMatchObject({ status: 'deferred' });
+    expect(summary.searchPlan).toMatchObject({
+      strategy: 'stagedGrid',
+      jointCoupleSearch: false,
+      annualOverrides: 'deferred'
+    });
+    expect(summary.searchPlan.benefitSearch[0]).toMatchObject({
+      person: 'p1',
+      cppAges: expect.arrayContaining([64, 65, 70]),
+      oasAges: expect.arrayContaining([65, 70])
+    });
+    expect(summary.searchPlan.withdrawalFamilies.map((family) => family.id)).toEqual([
+      'currentOrder',
+      'default',
+      'registeredFirst',
+      'nonRegisteredFirst'
+    ]);
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
@@ -189,7 +234,7 @@ describe('bounded optimizer runner', () => {
       status: 'canHighlight',
       reason: expect.stringContaining('without changing lifestyle or work timing')
     });
-    expect(calls).toHaveLength(8);
+    expect(calls).toHaveLength(10);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
 
@@ -414,6 +459,33 @@ describe('bounded optimizer runner', () => {
       status: 'skipped',
       reason: expect.stringContaining('already included')
     });
+  });
+
+  it('marks optimizer readiness gaps for missing benefits, weak buckets, partial home sale, and survivor setup', () => {
+    const plan = cppSharingPlan();
+    plan.p1.cpp65_monthly = 0;
+    plan.p1.cpp70_monthly = 0;
+    plan.p1.oas_monthly = 0;
+    plan.p1.rrsp = 0;
+    plan.p1.tfsa = 0;
+    plan.p1.nonreg = 0;
+    plan.p2.rrsp = 0;
+    plan.p2.tfsa = 0;
+    plan.p2.nonreg = 0;
+    plan.downsize = { year: 2040, netProceeds: 0 };
+    plan.assumptions.p1DiesInSurvivor = 0;
+
+    const summary = runBoundedOptimizer(plan, () => result(100000, 90000));
+
+    expect(summary.readinessRows.find((row) => row.id === 'benefitEstimates')).toMatchObject({ status: 'blocked' });
+    expect(summary.readinessRows.find((row) => row.id === 'accountBuckets')).toMatchObject({ status: 'review' });
+    expect(summary.readinessRows.find((row) => row.id === 'homeSale')).toMatchObject({ status: 'blocked' });
+    expect(summary.readinessRows.find((row) => row.id === 'survivor')).toMatchObject({ status: 'review' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'benefitTimingGrid')).toMatchObject({ status: 'blocked' });
+    expect(summary.candidateFamilies.find((family) => family.id === 'broadWithdrawalFamilies')).toMatchObject({ status: 'blocked' });
+    expect(summary.searchPlan.jointCoupleSearch).toBe(true);
+    expect(summary.searchPlan.benefitSearch).toHaveLength(2);
+    expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });
   });
 
   it('adds one home-sale reliance candidate only when downsize year and proceeds are entered', () => {

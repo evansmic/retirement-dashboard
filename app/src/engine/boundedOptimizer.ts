@@ -11,6 +11,8 @@ export type BoundedOptimizerCandidateId =
   | 'retireLater1'
   | 'retireLater2'
   | 'delayBenefits'
+  | 'benefitGridCpp65Oas70'
+  | 'benefitGridCpp70Oas65'
   | 'pensionSplit'
   | 'cppSharing'
   | 'withoutDownsize'
@@ -44,6 +46,7 @@ export type BoundedOptimizerCandidateRow = {
   totalYears: number;
   fundedThroughYear: number | null;
   firstShortfallYear: number | null;
+  sustainableAnnualSpend: number;
   endPortfolio: number;
   endPortfolioDelta: number;
   lifetimeTax: number;
@@ -124,10 +127,70 @@ export type BoundedOptimizerDriverRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type OptimizerReadinessRow = {
+  id:
+    | 'spending'
+    | 'benefitEstimates'
+    | 'benefitAgeRange'
+    | 'accountBuckets'
+    | 'estateTarget'
+    | 'homeSale'
+    | 'survivor'
+    | 'taxScope';
+  label: string;
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerCandidateFamily = {
+  id: 'benefitTimingGrid' | 'broadWithdrawalFamilies' | 'annualOverrides' | 'monteCarloValidation';
+  label: string;
+  status: 'included' | 'deferred' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerObjectiveContract = {
+  primaryObjective: 'maximizeSustainableAfterTaxSpend';
+  outputTone: 'planToReview';
+  riskGuardrail: 'conservativeDeterministicFunding';
+  monteCarloRole: 'validationLater';
+  savedOutput: 'none';
+  detail: string;
+};
+
+export type OptimizerBenefitSearchSpace = {
+  person: 'p1' | 'p2';
+  label: string;
+  cppAges: number[];
+  oasAges: number[];
+  status: 'ready' | 'blocked';
+  reason: string;
+};
+
+export type OptimizerWithdrawalFamily = {
+  id: 'currentOrder' | 'default' | 'registeredFirst' | 'nonRegisteredFirst';
+  label: string;
+  status: 'included' | 'current' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerSearchPlan = {
+  strategy: 'stagedGrid';
+  jointCoupleSearch: boolean;
+  benefitSearch: OptimizerBenefitSearchSpace[];
+  withdrawalFamilies: OptimizerWithdrawalFamily[];
+  annualOverrides: 'deferred';
+  detail: string;
+};
+
 export type BoundedOptimizerSummary = {
   status: 'blocked' | 'ready';
   execution: 'boundedSearch';
   contract: OptimizerContract;
+  objective: OptimizerObjectiveContract;
+  readinessRows: OptimizerReadinessRow[];
+  candidateFamilies: OptimizerCandidateFamily[];
+  searchPlan: OptimizerSearchPlan;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -225,6 +288,209 @@ function personCanStillDelayBenefits(person: V2PlanPayload['p1'], startYear: num
   const startAge = personAgeInYear(person, startYear);
   const reachesAge70 = n(person.dob) > 0 && endYear >= n(person.dob) + 70;
   return hasCppAndOasEstimate(person) && startAge !== null && startAge < 70 && reachesAge70;
+}
+
+function benefitAgeRange(start: number, end: number, minAge: number, maxAge: number): number[] {
+  const startAge = Math.max(start, minAge);
+  const endAge = Math.min(end, maxAge);
+  if (!Number.isFinite(startAge) || !Number.isFinite(endAge) || endAge < startAge) return [];
+  return Array.from({ length: endAge - startAge + 1 }, (_item, index) => startAge + index);
+}
+
+function personBenefitSearchSpace(
+  key: 'p1' | 'p2',
+  person: V2PlanPayload['p1'],
+  startYear: number,
+  endYear: number
+): OptimizerBenefitSearchSpace {
+  const birthYear = n(person.dob);
+  const startAge = personAgeInYear(person, startYear);
+  const endAge = birthYear > 0 ? endYear - birthYear : null;
+  const cppAges = hasCppEstimate(person) && startAge !== null && endAge !== null ? benefitAgeRange(Math.max(60, startAge), endAge, 60, 70) : [];
+  const oasAges = n(person.oas_monthly) > 0 && startAge !== null && endAge !== null ? benefitAgeRange(Math.max(65, startAge), endAge, 65, 70) : [];
+  const label = personLabel(key, person);
+  const status = cppAges.length > 0 && oasAges.length > 0 ? 'ready' : 'blocked';
+  return {
+    person: key,
+    label,
+    cppAges,
+    oasAges,
+    status,
+    reason:
+      status === 'ready'
+        ? `${label} can be included in a CPP/OAS age grid.`
+        : `${label} needs benefit estimates and projection years that include valid CPP/OAS start ages.`
+  };
+}
+
+function buildReadinessRows(plan: V2PlanPayload, contract: OptimizerContract, eligibilityNotes: BoundedOptimizerEligibilityNote[]): OptimizerReadinessRow[] {
+  const startYear = projectionStartYear(plan);
+  const endYear = projectionEndYear(plan);
+  const people = activePeople(plan);
+  const benefitSpaces = people.map(({ key, person }) => personBenefitSearchSpace(key, person, startYear, endYear));
+  const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
+  const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
+  const estateTarget = n(plan.inheritance);
+  const downsizeYear = n(plan.downsize?.year);
+  const downsizeProceeds = n(plan.downsize?.netProceeds);
+  const hasPartialHomeSale = (downsizeYear > 0 || downsizeProceeds > 0) && !(downsizeYear > 0 && downsizeProceeds > 0);
+  const survivorNote = eligibilityNotes.find((note) => note.lever === 'survivor');
+  const spendingReady = canExplore(contract, 'spending') && n(plan.spending.gogo) >= 30_000;
+  const accountsReady = registered > 10_000 && flexible > 10_000;
+  const benefitEstimateReady = people.every(({ person }) => hasCppAndOasEstimate(person));
+  const benefitGridReady = benefitSpaces.every((space) => space.status === 'ready');
+
+  return [
+    {
+      id: 'spending',
+      label: 'Spending target',
+      status: spendingReady ? 'ready' : 'blocked',
+      detail: spendingReady
+        ? 'Early, later, and late-life spending can anchor a max after-tax spending review.'
+        : 'Add a realistic spending target before optimizing for sustainable spending.'
+    },
+    {
+      id: 'benefitEstimates',
+      label: 'CPP/OAS estimates',
+      status: benefitEstimateReady ? 'ready' : 'blocked',
+      detail: benefitEstimateReady
+        ? 'CPP and OAS estimates are present for each active person.'
+        : 'CPP at 65 and monthly OAS estimates are needed before testing benefit timing.'
+    },
+    {
+      id: 'benefitAgeRange',
+      label: 'Benefit age range',
+      status: benefitGridReady ? 'ready' : 'review',
+      detail: benefitGridReady
+        ? 'The projection includes valid CPP/OAS start ages for the staged grid.'
+        : 'The grid will be limited until each active person has valid CPP/OAS start ages inside the projection.'
+    },
+    {
+      id: 'accountBuckets',
+      label: 'Account buckets',
+      status: accountsReady ? 'ready' : 'review',
+      detail: accountsReady
+        ? 'Registered and flexible account buckets are meaningful enough for broad withdrawal-family checks.'
+        : 'Broad withdrawal-family checks need meaningful balances in registered and flexible buckets.'
+    },
+    {
+      id: 'estateTarget',
+      label: 'Estate target',
+      status: estateTarget > 0 ? 'ready' : 'review',
+      detail: estateTarget > 0
+        ? 'The optimizer must preserve the entered estate target unless the household changes it.'
+        : 'No estate target is entered, so spending-room output should mention the estate trade-off.'
+    },
+    {
+      id: 'homeSale',
+      label: 'Home-sale assumption',
+      status: hasPartialHomeSale ? 'blocked' : downsizeYear > 0 && downsizeProceeds > 0 ? 'ready' : 'review',
+      detail: hasPartialHomeSale
+        ? 'Home-sale assumptions need both a year and net cash amount before reliance checks are useful.'
+        : downsizeYear > 0 && downsizeProceeds > 0
+          ? 'Home-sale cash is preserved as an entered household assumption and can be tested only as a reliance check.'
+          : 'No home-sale cash is entered; the optimizer must not invent one.'
+    },
+    {
+      id: 'survivor',
+      label: 'Survivor setup',
+      status: survivorNote ? 'review' : 'ready',
+      detail: survivorNote?.reason || 'Survivor setup does not block the first optimizer review for this plan.'
+    },
+    {
+      id: 'taxScope',
+      label: 'Tax scope',
+      status: 'ready',
+      detail: 'The optimizer review uses the same Ontario 2026 tax assumptions as Results.'
+    }
+  ];
+}
+
+function buildCandidateFamilies(readinessRows: OptimizerReadinessRow[]): OptimizerCandidateFamily[] {
+  const benefitReady = readinessRows.find((row) => row.id === 'benefitEstimates')?.status === 'ready';
+  const ageReady = readinessRows.find((row) => row.id === 'benefitAgeRange')?.status === 'ready';
+  const accountReady = readinessRows.find((row) => row.id === 'accountBuckets')?.status === 'ready';
+  return [
+    {
+      id: 'benefitTimingGrid',
+      label: 'CPP/OAS timing grid',
+      status: benefitReady && ageReady ? 'included' : 'blocked',
+      detail: benefitReady && ageReady
+        ? 'CPP ages 60-70 and OAS ages 65-70 can be described for a staged grid where eligible.'
+        : 'Benefit timing grid waits for benefit estimates and valid age ranges.'
+    },
+    {
+      id: 'broadWithdrawalFamilies',
+      label: 'Broad withdrawal families',
+      status: accountReady ? 'included' : 'blocked',
+      detail: accountReady
+        ? 'Current, default, registered-first, and non-registered-first families can be compared at a high level.'
+        : 'Broad withdrawal families wait for meaningful registered and flexible account balances.'
+    },
+    {
+      id: 'annualOverrides',
+      label: 'Year-by-year withdrawal actions',
+      status: 'deferred',
+      detail: 'Annual account-level overrides are deferred until broad family search is trusted.'
+    },
+    {
+      id: 'monteCarloValidation',
+      label: 'Monte Carlo validation',
+      status: 'deferred',
+      detail: 'Monte Carlo validates later; it is not inside the first local search loop.'
+    }
+  ];
+}
+
+function buildObjectiveContract(): OptimizerObjectiveContract {
+  return {
+    primaryObjective: 'maximizeSustainableAfterTaxSpend',
+    outputTone: 'planToReview',
+    riskGuardrail: 'conservativeDeterministicFunding',
+    monteCarloRole: 'validationLater',
+    savedOutput: 'none',
+    detail: 'Maximize sustainable after-tax spending only after deterministic funding, estate, bridge-year, survivor, and local-output guardrails are respected.'
+  };
+}
+
+function buildSearchPlan(plan: V2PlanPayload): OptimizerSearchPlan {
+  const startYear = projectionStartYear(plan);
+  const endYear = projectionEndYear(plan);
+  const currentOrder = consumerWithdrawalOrder(plan.assumptions.withdrawalOrder);
+  const withdrawalFamilies: OptimizerWithdrawalFamily[] = [
+    {
+      id: 'currentOrder',
+      label: 'Current order',
+      status: 'current',
+      detail: `Current plan withdrawal order: ${currentOrder}.`
+    },
+    {
+      id: 'default',
+      label: 'Default family',
+      status: currentOrder === 'default' ? 'current' : 'included',
+      detail: 'High-level default withdrawal-order family.'
+    },
+    {
+      id: 'registeredFirst',
+      label: 'Registered-first family',
+      status: 'included',
+      detail: 'Broad family check only; not year-by-year account instructions.'
+    },
+    {
+      id: 'nonRegisteredFirst',
+      label: 'Non-registered-first family',
+      status: 'included',
+      detail: 'Broad family check only; not year-by-year account instructions.'
+    }
+  ];
+  return {
+    strategy: 'stagedGrid',
+    jointCoupleSearch: !p2LooksBlank(plan.p2),
+    benefitSearch: activePeople(plan).map(({ key, person }) => personBenefitSearchSpace(key, person, startYear, endYear)),
+    withdrawalFamilies,
+    annualOverrides: 'deferred',
+    detail: 'The first optimizer path uses a staged grid: benefit timing and broad withdrawal families before any annual override execution.'
+  };
 }
 
 function personLabel(key: 'p1' | 'p2', person: V2PlanPayload['p1']): string {
@@ -436,6 +702,26 @@ function withCppSharing(plan: V2PlanPayload): V2PlanPayload {
   return next;
 }
 
+function benefitGridCandidate(
+  id: BoundedOptimizerCandidateId,
+  label: string,
+  plan: V2PlanPayload,
+  config: SimulationConfig,
+  cppAge: 65 | 70,
+  oasAge: 65 | 70
+): BoundedOptimizerCandidateDefinition {
+  return {
+    id,
+    label,
+    plan: extractPlanPayload(plan),
+    config: { ...config, cppAgeF: cppAge, cppAgeM: cppAge, oasAgeF: oasAge, oasAgeM: oasAge },
+    changedLevers: ['benefitTiming'],
+    changeSummary: `Start CPP at ${cppAge} and OAS at ${oasAge} in this test`,
+    reviewNote: 'Review health, bridge funding, and benefit estimates before choosing timing.',
+    disruptionPenalty: Math.abs(cppAge - 65) * 1_500 + Math.abs(oasAge - 65) * 1_500
+  };
+}
+
 function withoutDownsize(plan: V2PlanPayload): V2PlanPayload {
   const next = extractPlanPayload(plan);
   next.downsize = { ...(next.downsize || {}), year: 0, netProceeds: 0 };
@@ -516,16 +802,20 @@ export function buildBoundedOptimizerCandidates(
   }
 
   if (eligible(eligibilityNotes, 'benefitTiming')) {
-    candidates.push({
-      id: 'delayBenefits',
-      label: 'Test CPP/OAS at 70',
-      plan: extractPlanPayload(plan),
-      config: { ...config, cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 },
-      changedLevers: ['benefitTiming'],
-      changeSummary: 'Start CPP/OAS at 70 in this test',
-      reviewNote: 'Review health, bridge funding, and benefit estimates before choosing timing.',
-      disruptionPenalty: 5_000
-    });
+    candidates.push(
+      benefitGridCandidate('benefitGridCpp65Oas70', 'Test CPP at 65 / OAS at 70', plan, config, 65, 70),
+      benefitGridCandidate('benefitGridCpp70Oas65', 'Test CPP at 70 / OAS at 65', plan, config, 70, 65),
+      {
+        id: 'delayBenefits',
+        label: 'Test CPP/OAS at 70',
+        plan: extractPlanPayload(plan),
+        config: { ...config, cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 },
+        changedLevers: ['benefitTiming'],
+        changeSummary: 'Start CPP/OAS at 70 in this test',
+        reviewNote: 'Review health, bridge funding, and benefit estimates before choosing timing.',
+        disruptionPenalty: 5_000
+      }
+    );
   }
 
   if (eligible(eligibilityNotes, 'pensionSplitting')) {
@@ -583,7 +873,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  return candidates.slice(0, 11);
+  return candidates.slice(0, 20);
 }
 
 function summarizeResult(result: SimulationResult | null | undefined) {
@@ -593,12 +883,17 @@ function summarizeResult(result: SimulationResult | null | undefined) {
   const fundedYears = rows.filter((row) => n(row.shortfall) <= 1).length;
   const lastRow = rows[rows.length - 1];
   const fundedThroughYear = firstShortfall ? n(firstShortfall.year) - 1 : lastRow ? n(lastRow.year) : null;
+  const fundedRows = rows.filter((row) => n(row.shortfall) <= 1);
+  const sustainableAnnualSpend = fundedRows.length
+    ? Math.min(...fundedRows.map((row) => n(row.totalAftaxYear || row.spending)).filter((value) => value > 0))
+    : 0;
   return {
     rows,
     fundedYears,
     totalYears: rows.length,
     fundedThroughYear,
     firstShortfallYear: firstShortfall ? n(firstShortfall.year) : null,
+    sustainableAnnualSpend,
     endPortfolio: n(lastRow?.bal_total),
     lifetimeTax: totalTax || rows.reduce((sum, row) => sum + n(row.totalTaxYear), 0),
     firstYearTax: n(rows[0]?.totalTaxYear),
@@ -616,9 +911,10 @@ function scoreCandidate(
   const fixedShortfallBonus = baseline.firstShortfallYear && !summary.firstShortfallYear ? 500_000 : 0;
   const noShortfallBonus = summary.firstShortfallYear ? 0 : 100_000;
   const fundedScore = summary.fundedYears * 25_000;
+  const spendingScore = summary.sustainableAnnualSpend * 3;
   const portfolioScore = summary.endPortfolio / 25;
   const taxScore = (baseline.lifetimeTax - summary.lifetimeTax) / 5;
-  return fixedShortfallBonus + noShortfallBonus + fundedScore + portfolioScore + taxScore - disruptionPenalty;
+  return fixedShortfallBonus + noShortfallBonus + fundedScore + spendingScore + portfolioScore + taxScore - disruptionPenalty;
 }
 
 function isDisruptiveChoice(row: Pick<BoundedOptimizerCandidateRow, 'changedLevers'>): boolean {
@@ -1161,6 +1457,7 @@ export function runBoundedOptimizer(
       totalYears: summary.totalYears,
       fundedThroughYear: summary.fundedThroughYear,
       firstShortfallYear: summary.firstShortfallYear,
+      sustainableAnnualSpend: summary.sustainableAnnualSpend,
       endPortfolio: summary.endPortfolio,
       endPortfolioDelta: summary.endPortfolio - baselineSummary.endPortfolio,
       lifetimeTax: summary.lifetimeTax,
@@ -1207,6 +1504,10 @@ export function runBoundedOptimizer(
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
     execution: 'boundedSearch',
     contract,
+    objective: buildObjectiveContract(),
+    readinessRows: buildReadinessRows(plan, contract, eligibilityNotes),
+    candidateFamilies: buildCandidateFamilies(buildReadinessRows(plan, contract, eligibilityNotes)),
+    searchPlan: buildSearchPlan(plan),
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',
