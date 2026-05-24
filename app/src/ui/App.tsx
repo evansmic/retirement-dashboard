@@ -231,6 +231,7 @@ const SHOW_DRAWDOWN_RESEARCH_PANELS = false;
 const SHOW_MONEY_FLOW_RESEARCH_PANELS = false;
 const SHOW_OPTION_RESEARCH_PANELS = false;
 const SHOW_SCENARIO_RESEARCH_PANELS = false;
+const SHOW_TAX_RESEARCH_PANELS = false;
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
@@ -3967,7 +3968,10 @@ function DetailsResultsPanel({
           <ProjectionPathPanel loading={loading} rows={projectionMilestones} />
         </>
       ) : null}
-      <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
+      <CompactTaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
+      {SHOW_TAX_RESEARCH_PANELS ? (
+        <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
+      ) : null}
       <div className="result-section-label">Scenario evidence</div>
       <BenefitTimingReadinessPanel
         boundedOptimizer={boundedOptimizer}
@@ -4262,7 +4266,7 @@ function RecommendedPathPanel({
   return (
     <section className={`recommended-path-panel ${summary.recommendedCandidateId ? '' : 'watch-card'}`}>
       <div>
-        <p className="eyebrow">Suggested plan to review</p>
+        <p className="eyebrow">Plan to review</p>
         <h3>{loading ? 'Calculating plan choices' : summary.recommendedLabel}</h3>
         <p>{summary.headline}</p>
       </div>
@@ -4359,7 +4363,7 @@ function RecommendedPathPanel({
             {summary.candidateRows.map((row) => (
               <tr className={row.blocked ? 'warning-row' : row.recommended ? 'selected-row' : ''} key={row.id}>
                 <td>{row.label}</td>
-                <td>{row.reviewStatus}</td>
+                <td>{row.reviewStatus === 'recommended' ? 'review first' : row.reviewStatus}</td>
                 <td>{row.fundedThroughYear || '-'}</td>
                 <td>{row.firstShortfallYear || '-'}</td>
                 <td className={row.endPortfolioDelta >= 0 ? 'ok-value' : 'bad-value'}>
@@ -4385,8 +4389,9 @@ function RecommendedPathPanel({
         ))}
       </div>
       <p className="table-note">
-        This is a first-pass planning comparison, not financial advice or a full optimizer. Open the printable report for
-        complete annual detail before acting on a path.
+        Treat it as a plan-review label, not advice. The first option to review under the current trust checks is not a
+        recommendation, financial advice, or a full optimizer. Open the printable report for complete annual detail
+        before acting on a path.
       </p>
     </section>
   );
@@ -6189,6 +6194,43 @@ function DecisionDetailPanel({ rows }: { rows: ReturnType<typeof selectDecisionD
   );
 }
 
+function CompactTaxPressurePanel({
+  explanation,
+  loading,
+  rows
+}: {
+  explanation: ReturnType<typeof selectTaxPressureExplanation>;
+  loading: boolean;
+  rows: ReturnType<typeof selectTaxPressureRows>;
+}) {
+  const firstHighPressure = rows.find((row) => row.pressure === 'high') || rows[0] || null;
+  const explanationRows = explanation.rows.slice(0, 2);
+
+  return (
+    <section className="decision-panel compact-tax-pressure-panel">
+      <div>
+        <p className="eyebrow">Tax review</p>
+        <h3>Canadian tax pressure at a glance</h3>
+        <p>{explanation.headline}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Scope" value={ONTARIO_TAX_SCOPE_NOTE} />
+        <Metric label="Review years" value={loading ? 'Calculating' : String(rows.length)} />
+        <Metric label="First pressure year" value={firstHighPressure ? String(firstHighPressure.year) : '-'} />
+        <Metric label="Review area" value={resultsSectionTitle('taxes')} />
+      </div>
+      {explanationRows.length ? (
+        <ul className="compact-list">
+          {explanationRows.map((row) => (
+            <li key={`${row.year}-${row.reason}`}>{row.year}: {row.explanation}</li>
+          ))}
+        </ul>
+      ) : null}
+      <p className="table-note">Open Taxes for the full taxable income, tax, OAS recovery, and registered-draw timeline.</p>
+    </section>
+  );
+}
+
 function TaxPressurePanel({
   explanation,
   loading,
@@ -7116,6 +7158,26 @@ function ExportSavePanel({
     <div className="export-save-panel">
       <ResultsReadinessPanel rows={readinessRows} summary={readinessSummary} />
 
+      <section className="result-card export-boundary-panel">
+        <p className="eyebrow">Local files</p>
+        <h3>Choose the file that matches what you need.</h3>
+        <dl className="result-ledger">
+          <div>
+            <dt>Editable plan backup</dt>
+            <dd>Use Save editable plan when you want to reopen and change inputs later.</dd>
+          </div>
+          <div>
+            <dt>Printable report</dt>
+            <dd>Use Open printable report when you want readable charts, tables, and schedules.</dd>
+          </div>
+          <div>
+            <dt>CSV results export</dt>
+            <dd>Use Download year-by-year CSV when you want projection rows for spreadsheet review.</dd>
+          </div>
+        </dl>
+        <p className="table-note">Only the editable plan backup is meant to be reopened by this planner.</p>
+      </section>
+
       <div className="result-overview-grid">
         <section className="result-card">
           <p className="eyebrow">Save your inputs</p>
@@ -7215,7 +7277,7 @@ function ResultsReadinessPanel({
         <p>{summary.detail}</p>
       </div>
       <div className="summary-grid">
-        <Metric label="Recommended path" value={summary.recommendedLabel} />
+        <Metric label="Plan to review" value={summary.recommendedLabel} />
         <Metric label="Ready" value={String(summary.readyCount)} />
         <Metric label="Review" value={String(summary.reviewCount)} />
         <Metric label="Blocked" value={String(summary.blockedCount)} />

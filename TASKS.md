@@ -4,31 +4,30 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 280: Decision Details Compaction Closeout
+## Latest Sprint — Sprint 300: V1 Engine Optimizer Checkpoint
 
 **Status:** Complete 2026-05-24.
 
-Goal: keep normal Details focused on the decision checklist while preserving decision detail and projection-path diagnostics behind an internal gate.
+Goal: close the v1 feedback readiness run before deciding whether to proceed to the engine/optimizer checkpoint.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 280 checkpoint doc: [`docs/sprint_280_decision_details_compaction_closeout.md`](docs/sprint_280_decision_details_compaction_closeout.md).
+Sprint 300 checkpoint doc: [`docs/sprint_300_v1_engine_optimizer_checkpoint.md`](docs/sprint_300_v1_engine_optimizer_checkpoint.md).
 
-### Sprint 276-280 Candidate Implementation Tickets
+### Sprint 296-300 Candidate Implementation Tickets
 
-- [x] **S276-01 — Decision details density review.** Review remaining decision-detail diagnostics in normal Details.
-- [x] **S277-01 — Decision research gate.** Move decision detail and projection path behind a disabled internal gate.
-- [x] **S278-01 — Checklist preservation.** Keep the decision checklist visible as the normal consumer surface.
-- [x] **S279-01 — Structure guard.** Add coverage for checklist placement and decision-detail gating.
-- [x] **S280-01 — Decision Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
+- [x] **S296-01 — V1 feedback readiness review.** Review Overview, Details, Save & print, CSV, and review-label posture.
+- [x] **S297-01 — Research gate checkpoint.** Add coverage that normal consumer research gates stay disabled.
+- [x] **S298-01 — Feedback fix list.** Record the current fix-first trust cleanup posture.
+- [x] **S299-01 — Verification package.** Define the final checkpoint verification package and known route-probe caveat.
+- [x] **S300-01 — V1 checkpoint closeout.** Document readiness for the next engine/optimizer decision.
 
-### Sprint 280 Definition Of Done
+### Sprint 300 Definition Of Done
 
-- Normal Details renders the decision checklist as the visible decision surface.
-- Decision detail and projection path remain gated behind `SHOW_DECISION_RESEARCH_PANELS`.
-- Tax pressure remains visible as the Canadian tax review surface.
-- Overview remains free of decision diagnostics.
-- UI structure tests protect checklist placement and decision-detail gating.
+- Overview, Details, Save & print, CSV export, and plan-review copy are ready for the next feedback pass.
+- Research diagnostics remain preserved but disabled by default.
+- UI structure tests protect disabled research gates for the normal consumer path.
+- The known route-probe sandbox caveat is documented as non-blocking when it is the only full-probe failure.
 - Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
 - No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
 - Verification passes and no private `.plan.json` files are created.
@@ -119,6 +118,126 @@ Sprint 280 checkpoint doc: [`docs/sprint_280_decision_details_compaction_closeou
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 300: V1 Engine Optimizer Checkpoint
+
+**Complete 2026-05-24.** Closed the v1 feedback readiness run before the next engine/optimizer checkpoint decision.
+
+Sprint 300 checkpoint doc: [`docs/sprint_300_v1_engine_optimizer_checkpoint.md`](docs/sprint_300_v1_engine_optimizer_checkpoint.md).
+
+### Sprint 299: V1 Feedback Verification Package
+
+**Complete 2026-05-24.** Recorded the final verification package and known route-probe caveat.
+
+Sprint 299 checkpoint doc: [`docs/sprint_299_v1_feedback_verification_package.md`](docs/sprint_299_v1_feedback_verification_package.md).
+
+### Sprint 298: V1 Feedback Fix List
+
+**Complete 2026-05-24.** Recorded the trust-cleanup posture before the next checkpoint decision.
+
+Sprint 298 checkpoint doc: [`docs/sprint_298_v1_feedback_fix_list.md`](docs/sprint_298_v1_feedback_fix_list.md).
+
+### Sprint 297: Research Gate Checkpoint
+
+**Complete 2026-05-24.** Added UI structure coverage that normal consumer research gates remain disabled.
+
+Sprint 297 checkpoint doc: [`docs/sprint_297_research_gate_checkpoint.md`](docs/sprint_297_research_gate_checkpoint.md).
+
+### Sprint 296: V1 Feedback Readiness Review
+
+**Complete 2026-05-24.** Reviewed v1 feedback readiness across Overview, Details, Save & print, CSV, and review-label copy.
+
+Sprint 296 checkpoint doc: [`docs/sprint_296_v1_feedback_readiness_review.md`](docs/sprint_296_v1_feedback_readiness_review.md).
+
+### Sprint 295: Export Boundary Closeout
+
+**Complete 2026-05-24.** Documented local output boundary polish and preserved engine/schema boundaries.
+
+Sprint 295 checkpoint doc: [`docs/sprint_295_export_boundary_closeout.md`](docs/sprint_295_export_boundary_closeout.md).
+
+### Sprint 294: Local Output Trust
+
+**Complete 2026-05-24.** Preserved local-first trust across editable backup, report, and CSV output actions.
+
+Sprint 294 checkpoint doc: [`docs/sprint_294_local_output_trust.md`](docs/sprint_294_local_output_trust.md).
+
+### Sprint 293: Export Copy Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for local output labels and reopen boundaries.
+
+Sprint 293 checkpoint doc: [`docs/sprint_293_export_copy_guard.md`](docs/sprint_293_export_copy_guard.md).
+
+### Sprint 292: Export Boundary Note
+
+**Complete 2026-05-24.** Added an upfront Save & print note explaining editable backup, printable report, and CSV results export.
+
+Sprint 292 checkpoint doc: [`docs/sprint_292_export_boundary_note.md`](docs/sprint_292_export_boundary_note.md).
+
+### Sprint 291: Save Export Boundary Review
+
+**Complete 2026-05-24.** Reviewed Save & print after the annual CSV export batch.
+
+Sprint 291 checkpoint doc: [`docs/sprint_291_save_export_boundary_review.md`](docs/sprint_291_save_export_boundary_review.md).
+
+### Sprint 290: Recommended Plan Copy Closeout
+
+**Complete 2026-05-24.** Documented recommended-plan copy discipline and preserved engine/schema boundaries.
+
+Sprint 290 checkpoint doc: [`docs/sprint_290_recommended_plan_copy_closeout.md`](docs/sprint_290_recommended_plan_copy_closeout.md).
+
+### Sprint 289: Recommended Copy Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage blocking advice-like recommendation labels from active React source.
+
+Sprint 289 checkpoint doc: [`docs/sprint_289_recommended_copy_structure_guard.md`](docs/sprint_289_recommended_copy_structure_guard.md).
+
+### Sprint 288: Review Label Boundary
+
+**Complete 2026-05-24.** Made plan-review labels explicit as review evidence, not advice.
+
+Sprint 288 checkpoint doc: [`docs/sprint_288_review_label_boundary.md`](docs/sprint_288_review_label_boundary.md).
+
+### Sprint 287: Plan-To-Review Copy Tightening
+
+**Complete 2026-05-24.** Reworded visible plan-selection labels toward plan-to-review language.
+
+Sprint 287 checkpoint doc: [`docs/sprint_287_plan_to_review_copy_tightening.md`](docs/sprint_287_plan_to_review_copy_tightening.md).
+
+### Sprint 286: Recommended Plan Language Review
+
+**Complete 2026-05-24.** Reviewed suggested/recommended labels for advice-like tone.
+
+Sprint 286 checkpoint doc: [`docs/sprint_286_recommended_plan_language_review.md`](docs/sprint_286_recommended_plan_language_review.md).
+
+### Sprint 285: Tax Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented tax Details compaction and preserved engine/schema boundaries.
+
+Sprint 285 checkpoint doc: [`docs/sprint_285_tax_details_compaction_closeout.md`](docs/sprint_285_tax_details_compaction_closeout.md).
+
+### Sprint 284: Tax Scope Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for compact tax placement, Ontario scope, and full-table gating.
+
+Sprint 284 checkpoint doc: [`docs/sprint_284_tax_scope_structure_guard.md`](docs/sprint_284_tax_scope_structure_guard.md).
+
+### Sprint 283: Tax Research Gate
+
+**Complete 2026-05-24.** Preserved the full tax-pressure table behind a disabled internal research gate.
+
+Sprint 283 checkpoint doc: [`docs/sprint_283_tax_research_gate.md`](docs/sprint_283_tax_research_gate.md).
+
+### Sprint 282: Compact Tax Pressure Summary
+
+**Complete 2026-05-24.** Added a compact tax-pressure summary for normal Details.
+
+Sprint 282 checkpoint doc: [`docs/sprint_282_compact_tax_pressure_summary.md`](docs/sprint_282_compact_tax_pressure_summary.md).
+
+### Sprint 281: Tax Details Density Review
+
+**Complete 2026-05-24.** Reviewed tax Details density and kept full tax rows in the Taxes section or research path.
+
+Sprint 281 checkpoint doc: [`docs/sprint_281_tax_details_density_review.md`](docs/sprint_281_tax_details_density_review.md).
 
 ### Sprint 280: Decision Details Compaction Closeout
 

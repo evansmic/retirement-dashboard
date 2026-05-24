@@ -3866,12 +3866,12 @@ export function selectRecommendedPath(
 
   return {
     recommendedCandidateId: recommendedRow?.id ?? null,
-    recommendedLabel: recommendedRow?.label ?? 'No suggested plan',
+    recommendedLabel: recommendedRow?.label ?? 'No plan to review yet',
     headline: recommendedRow
       ? baselineEstateHeavy
         ? 'The current plan is strongly funded; review lifestyle and estate intent before cutting spending.'
-        : `${recommendedRow.label} is the strongest preview candidate under the current trust checks.`
-      : 'No suggested plan is available until blockers are cleared.',
+        : `${recommendedRow.label} is the first option to review under the current trust checks.`
+      : 'No plan can be reviewed until blockers are cleared.',
     confidence,
     stressContext,
     breakRisks,
@@ -4221,7 +4221,7 @@ export function selectFeedbackReviewPackage({
         ? 'Feedback review package needs a quick check.'
         : 'Feedback review package is ready.',
     detail:
-      `Use this package to review ${recommendedLabel || 'the current plan'} across examples, first-screen clarity, spending language, drawdown review, local trust, and verification.`,
+      `Use this package to review ${recommendedLabel || 'the current plan'} across examples, first-screen clarity, spending language, drawdown review, local trust, and verification. Treat it as a plan-review label, not advice.`,
     rows,
     reviewScript: [
       'Load three to five built-in examples that cover single, couple, tight, comfortable, DB pension, estate, and home-equity cases.',

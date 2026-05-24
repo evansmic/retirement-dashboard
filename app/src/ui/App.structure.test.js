@@ -31,12 +31,53 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<SourceStoryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
     expect(detailsPanel).toContain('<DecisionChecklistPanel');
-    expect(detailsPanel).toContain('<TaxPressurePanel');
+    expect(detailsPanel).toContain('<CompactTaxPressurePanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
     expect(detailsPanel).toContain('<CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('keeps normal consumer research gates disabled for the v1 feedback checkpoint', () => {
+    const disabledGates = [
+      'SHOW_CHECKPOINT_REVIEW_PANELS = false',
+      'SHOW_DECISION_RESEARCH_PANELS = false',
+      'SHOW_DRAWDOWN_RESEARCH_PANELS = false',
+      'SHOW_MONEY_FLOW_RESEARCH_PANELS = false',
+      'SHOW_OPTION_RESEARCH_PANELS = false',
+      'SHOW_SCENARIO_RESEARCH_PANELS = false',
+      'SHOW_TAX_RESEARCH_PANELS = false'
+    ];
+
+    disabledGates.forEach((gate) => {
+      expect(appSource).toContain(gate);
+    });
+    expect(appSource).not.toContain('SHOW_CHECKPOINT_REVIEW_PANELS = true');
+    expect(appSource).not.toContain('SHOW_DECISION_RESEARCH_PANELS = true');
+    expect(appSource).not.toContain('SHOW_DRAWDOWN_RESEARCH_PANELS = true');
+    expect(appSource).not.toContain('SHOW_MONEY_FLOW_RESEARCH_PANELS = true');
+    expect(appSource).not.toContain('SHOW_OPTION_RESEARCH_PANELS = true');
+    expect(appSource).not.toContain('SHOW_SCENARIO_RESEARCH_PANELS = true');
+    expect(appSource).not.toContain('SHOW_TAX_RESEARCH_PANELS = true');
+  });
+
+  it('keeps normal Details tax evidence compact while preserving the full tax table behind a gate', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const compactTaxIndex = detailsPanel.indexOf('<CompactTaxPressurePanel');
+    const taxGateIndex = detailsPanel.indexOf('SHOW_TAX_RESEARCH_PANELS');
+    const taxResearchBranch = detailsPanel.slice(taxGateIndex);
+
+    expect(appSource).toContain('SHOW_TAX_RESEARCH_PANELS = false');
+    expect(appSource).toContain('Canadian tax pressure at a glance');
+    expect(appSource).toContain('Open Taxes for the full taxable income, tax, OAS recovery, and registered-draw timeline.');
+    expect(compactTaxIndex).toBeGreaterThan(0);
+    expect(taxGateIndex).toBeGreaterThan(compactTaxIndex);
+    expect(taxResearchBranch).toContain('<TaxPressurePanel');
+    expect(detailsPanel.slice(0, taxGateIndex)).not.toContain('<TaxPressurePanel');
+    expect(appSource).toContain('Ontario 2026 tax assumptions');
   });
 
   it('keeps normal Details decision evidence compact while preserving detail tables behind a gate', () => {
@@ -91,6 +132,7 @@ describe('Results overview structure', () => {
   });
 
   it('explains bounded optimizer output without advice or saved-output language', () => {
+    expect(appSource).toContain('Plan to review');
     expect(appSource).toContain('Plan options to review');
     expect(appSource).toContain('Why this option');
     expect(appSource).toContain('Trade-offs');
@@ -115,12 +157,18 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('What kind of choices were checked');
     expect(appSource).toContain('lifestyle choices, timing choices, tax checks, drawdown review, and home or estate assumptions');
     expect(appSource).toContain('First option to review means it cleared the highlight checks');
+    expect(appSource).toContain('first option to review under the current trust checks');
+    expect(appSource).toContain('Treat it as a plan-review label, not advice');
     expect(appSource).toContain('Review-only means the result is useful evidence');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).toContain('SHOW_OPTION_RESEARCH_PANELS = false');
     expect(appSource).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />');
     expect(appSource).not.toContain('Apply optimized plan');
     expect(appSource).not.toContain('Guaranteed');
+    expect(appSource).not.toContain('Suggested plan to review');
+    expect(appSource).not.toContain('Recommended path');
+    expect(appSource).not.toContain('strongest preview candidate');
+    expect(appSource).not.toContain('No suggested plan');
   });
 
   it('keeps the normal Details option surface compact while preserving full option research behind a gate', () => {
@@ -295,6 +343,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Save editable plan');
     expect(appSource).toContain('Open printable report');
     expect(appSource).toContain('Download year-by-year CSV');
+    expect(appSource).toContain('Choose the file that matches what you need.');
+    expect(appSource).toContain('Editable plan backup');
+    expect(appSource).toContain('Printable report');
+    expect(appSource).toContain('CSV results export');
+    expect(appSource).toContain('Only the editable plan backup is meant to be reopened by this planner.');
     expect(appSource).toContain('This is a local results');
     expect(appSource).toContain('Plan file');
     expect(appSource).toContain('Unchanged');
