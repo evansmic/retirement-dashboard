@@ -16,7 +16,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).toContain('<SpendingCapacityPanel');
     expect(overviewBranch).toContain('<ReviewTheseFirstPanel');
     expect(overviewBranch).toContain('<OverviewHighlightsPanel');
-    expect(overviewBranch).toContain('<EstateIntentPanel');
+    expect(overviewBranch).not.toContain('<EstateIntentPanel');
     expect(overviewBranch).not.toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).not.toContain('<ResultsReadinessPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
@@ -26,13 +26,32 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('<OptimizerBoundaryPanel');
 
     expect(detailsPanel).toContain('<ProjectionPathPanel');
+    expect(detailsPanel).toContain('<EstateIntentPanel');
     expect(detailsPanel).toContain('<ReconciliationDiagnosticsPanel');
     expect(detailsPanel).toContain('<TaxPressurePanel');
     expect(detailsPanel).toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel');
-    expect(detailsPanel).toContain('<DrawdownReadinessPanel');
-    expect(detailsPanel).toContain('<HiddenDrawdownComparisonPanel');
+    expect(detailsPanel).toContain('<CompactDrawdownReviewSummaryPanel');
+    expect(detailsPanel).not.toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />\n      <CompactDrawdownReviewSummaryPanel');
+    expect(detailsPanel).not.toContain('<HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('keeps the Overview first screen reduced to answer, spending, review actions, and compact highlights', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+    const renderedPanels = [...overviewBranch.matchAll(/<([A-Z][A-Za-z0-9]+Panel)\b/g)].map((match) => match[1]);
+
+    expect(renderedPanels).toEqual([
+      'RetirementAnswerPanel',
+      'SpendingCapacityPanel',
+      'ReviewTheseFirstPanel',
+      'OverviewHighlightsPanel'
+    ]);
+    expect(overviewBranch).not.toContain('estate-intent-panel');
+    expect(overviewBranch).not.toContain('tax-pressure');
+    expect(overviewBranch).not.toContain('diagnostic');
   });
 
   it('explains bounded optimizer output without advice or saved-output language', () => {
@@ -144,6 +163,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Drawdown review closeout');
     expect(appSource).toContain('SHOW_DRAWDOWN_RESEARCH_PANELS = false');
     expect(appSource).toContain('<CompactDrawdownReviewSummaryPanel');
+    expect(appSource).toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />');
     expect(appSource).toContain('This is a tax-aware timing check for review');
     expect(appSource).toContain('Plan file');
     expect(appSource).toContain('Unchanged');
@@ -177,6 +197,23 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('recommended withdrawal strategy');
     expect(appSource).not.toContain('safe spend');
     expect(appSource).not.toContain('guaranteed');
+  });
+
+  it('keeps the normal Details drawdown surface compact by gating research diagnostics', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const compactSummaryIndex = detailsPanel.indexOf('<CompactDrawdownReviewSummaryPanel');
+    const researchGateIndex = detailsPanel.indexOf('SHOW_DRAWDOWN_RESEARCH_PANELS');
+    const researchBranch = detailsPanel.slice(researchGateIndex);
+
+    expect(compactSummaryIndex).toBeGreaterThan(0);
+    expect(researchGateIndex).toBeGreaterThan(compactSummaryIndex);
+    expect(researchBranch).toContain('<DrawdownReadinessPanel');
+    expect(researchBranch).toContain('<HiddenDrawdownComparisonPanel');
+    expect(researchBranch).toContain('<DrawdownExecutionBoundaryPanel');
+    expect(detailsPanel.slice(0, researchGateIndex)).not.toContain('<DrawdownReadinessPanel');
+    expect(detailsPanel.slice(0, researchGateIndex)).not.toContain('<HiddenDrawdownComparisonPanel');
   });
 
   it('keeps save and report actions distinct in the consumer UI', () => {

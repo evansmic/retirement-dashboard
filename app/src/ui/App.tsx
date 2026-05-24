@@ -3139,6 +3139,7 @@ function ResultsHandoffPanel({
             optimizerInputReview={optimizerInputReview}
             boundedOptimizer={optimizer}
             drawdownReadiness={drawdownReadiness}
+            estateIntent={estateIntent}
             hiddenDrawdownComparison={hiddenDrawdownComparison}
             drawdownPrototypeReadiness={drawdownPrototypeReadiness}
             drawdownVisibleReviewGate={drawdownVisibleReviewGate}
@@ -3288,7 +3289,6 @@ function ResultsHandoffPanel({
               survivorSummary={survivorSummary}
               taxStory={taxStorySummary}
             />
-            <EstateIntentPanel loading={loading} summary={estateIntent} />
           </>
         ) : (
           <DeferredResultsPanel section={sectionTitle} />
@@ -3334,7 +3334,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
     case 'overview':
       return {
         summary:
-          'Overview starts with the retirement answer: whether the plan appears supportable, how spending fits, what estate choices may matter, and what to review next.',
+          'Overview starts with the retirement answer: whether the plan appears supportable, how spending fits, and what to review next.',
         handoff: stableHandoff
       };
     case 'annualDetail':
@@ -3699,6 +3699,7 @@ function DetailsResultsPanel({
   optimizerInputReview,
   boundedOptimizer,
   drawdownReadiness,
+  estateIntent,
   hiddenDrawdownComparison,
   drawdownPrototypeReadiness,
   drawdownVisibleReviewGate,
@@ -3775,6 +3776,7 @@ function DetailsResultsPanel({
   optimizerInputReview: ReturnType<typeof selectOptimizerInputReview>;
   boundedOptimizer: BoundedOptimizerSummary | null;
   drawdownReadiness: ReturnType<typeof selectDrawdownReadinessSummary>;
+  estateIntent: ReturnType<typeof selectEstateIntentSummary>;
   hiddenDrawdownComparison: RealDrawdownComparisonResult | null;
   drawdownPrototypeReadiness: DrawdownPrototypeReadinessReview | null;
   drawdownVisibleReviewGate: DrawdownVisibleReviewGate | null;
@@ -3924,6 +3926,7 @@ function DetailsResultsPanel({
 
       <div className="result-section-label">Planning evidence</div>
       <PlanHealthPanel health={planHealth} loading={loading} />
+      <EstateIntentPanel loading={loading} summary={estateIntent} />
       <div className="result-section-label">Money Flow</div>
       <SourceStoryPanel story={sourceStory} />
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
@@ -3949,7 +3952,6 @@ function DetailsResultsPanel({
       <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
       <ScenarioComparisonPanel loading={loading} rows={scenarioComparisonRows} />
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />
-      <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
       <CompactDrawdownReviewSummaryPanel
         actions={v1DrawdownUxReviewActions}
         closeout={v1DrawdownRecommendedPlanCloseout}
@@ -3960,6 +3962,7 @@ function DetailsResultsPanel({
       />
       {SHOW_DRAWDOWN_RESEARCH_PANELS ? (
         <>
+          <DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />
           <HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />
           <DrawdownPrototypeReadinessPanel loading={loading} review={drawdownPrototypeReadiness} />
           <DrawdownReviewPreviewPanel gate={drawdownVisibleReviewGate} loading={loading} phase={drawdownPhaseReview} preview={drawdownReviewPreview} />

@@ -4,25 +4,35 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 240: Benefit Timing UX Readiness Closeout
+## Latest Sprint — Sprint 250: Drawdown Details Compaction Closeout
 
-**Status:** Complete 2026-05-23.
+**Status:** Complete 2026-05-24.
 
-Goal: make CPP/OAS timing understandable before editable benefit-age fields are considered.
+Goal: keep the normal Details path compact by showing one consumer-facing drawdown review summary while preserving deeper drawdown diagnostics behind the internal research gate.
 
-Non-scope: simulation math changes, Monte Carlo migration, historical sequence migration, direct React stress execution, stress-model redesign, optimizer expansion, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, or report migration.
+Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 240 checkpoint doc: [`docs/sprint_240_benefit_timing_ux_readiness_closeout.md`](docs/sprint_240_benefit_timing_ux_readiness_closeout.md).
+Sprint 250 checkpoint doc: [`docs/sprint_250_drawdown_details_compaction_closeout.md`](docs/sprint_250_drawdown_details_compaction_closeout.md).
 
-### Sprint 236-240 Candidate Implementation Tickets
+### Sprint 246-250 Candidate Implementation Tickets
 
-- [x] **S236-01 — Benefit baseline language.** Make current CPP/OAS baseline timing explicit as age 65.
-- [x] **S237-01 — Benefit timing Details summary.** Add a concise Details panel for the age-70 timing review check.
-- [x] **S238-01 — Delay-test copy discipline.** Reword delay labels as review tests rather than instructions.
-- [x] **S239-01 — Saved setting boundary.** Keep CPP/OAS start ages out of saved editable inputs and protect that copy.
-- [x] **S240-01 — Benefit timing closeout.** Document the readiness batch before any future schema work.
+- [x] **S246-01 — Details drawdown density review.** Review the normal Details drawdown surface after the Overview trim.
+- [x] **S247-01 — Research gate tightening.** Move the older drawdown readiness diagnostic behind the existing research-panel gate.
+- [x] **S248-01 — Compact surface guard.** Add structure coverage for the compact drawdown Details path.
+- [x] **S249-01 — Diagnostic preservation.** Preserve deeper drawdown diagnostics in the hidden research branch.
+- [x] **S250-01 — Drawdown Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
 
-### Sprint 240 Definition Of Done
+### Sprint 250 Definition Of Done
+
+- Normal Details renders the compact drawdown review summary as the visible drawdown surface.
+- Drawdown readiness, hidden comparison, prototype, and execution diagnostics remain gated behind `SHOW_DRAWDOWN_RESEARCH_PANELS`.
+- Overview remains free of drawdown review diagnostics.
+- UI structure tests protect the compact Details path and research-gated diagnostics.
+- Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
+- No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
+- Verification passes and no private `.plan.json` files are created.
+
+### Historical Definition Of Done Coverage
 
 - Baseline stress indicators, stress rows, and stress summary are owned by `stressSelectors`.
 - Nearby spending-stress reruns and spending-stress summary interpretation are owned by `stressSelectors`.
@@ -108,6 +118,66 @@ Sprint 240 checkpoint doc: [`docs/sprint_240_benefit_timing_ux_readiness_closeou
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 250: Drawdown Details Compaction Closeout
+
+**Complete 2026-05-24.** Documented the drawdown Details compaction batch and preserved engine/schema boundaries.
+
+Sprint 250 checkpoint doc: [`docs/sprint_250_drawdown_details_compaction_closeout.md`](docs/sprint_250_drawdown_details_compaction_closeout.md).
+
+### Sprint 249: Details Diagnostic Preservation
+
+**Complete 2026-05-24.** Preserved deeper drawdown diagnostics behind the hidden research branch.
+
+Sprint 249 checkpoint doc: [`docs/sprint_249_details_diagnostic_preservation.md`](docs/sprint_249_details_diagnostic_preservation.md).
+
+### Sprint 248: Compact Drawdown Surface Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for the compact drawdown Details surface and hidden research diagnostics.
+
+Sprint 248 checkpoint doc: [`docs/sprint_248_compact_drawdown_surface_guard.md`](docs/sprint_248_compact_drawdown_surface_guard.md).
+
+### Sprint 247: Drawdown Research Gate Tightening
+
+**Complete 2026-05-24.** Moved the older drawdown readiness diagnostic panel behind the existing research-panel gate.
+
+Sprint 247 checkpoint doc: [`docs/sprint_247_drawdown_research_gate_tightening.md`](docs/sprint_247_drawdown_research_gate_tightening.md).
+
+### Sprint 246: Details Drawdown Density Review
+
+**Complete 2026-05-24.** Reviewed Details drawdown density and kept the compact summary as the normal consumer surface.
+
+Sprint 246 checkpoint doc: [`docs/sprint_246_details_drawdown_density_review.md`](docs/sprint_246_details_drawdown_density_review.md).
+
+### Sprint 245: Results First-Screen Reduction Closeout
+
+**Complete 2026-05-24.** Documented the first-screen reduction batch and preserved engine/schema boundaries.
+
+Sprint 245 checkpoint doc: [`docs/sprint_245_results_first_screen_reduction_closeout.md`](docs/sprint_245_results_first_screen_reduction_closeout.md).
+
+### Sprint 244: Details Planning Evidence Preservation
+
+**Complete 2026-05-24.** Kept demoted estate and tax-efficiency detail reachable in Details.
+
+Sprint 244 checkpoint doc: [`docs/sprint_244_details_planning_evidence_preservation.md`](docs/sprint_244_details_planning_evidence_preservation.md).
+
+### Sprint 243: Overview First-Screen Guard
+
+**Complete 2026-05-24.** Added UI structure coverage to keep Overview limited to answer, spending, review actions, and compact highlights.
+
+Sprint 243 checkpoint doc: [`docs/sprint_243_overview_first_screen_guard.md`](docs/sprint_243_overview_first_screen_guard.md).
+
+### Sprint 242: Overview Estate Detail Demotion
+
+**Complete 2026-05-24.** Moved the full estate wishes and tax-efficiency panel from Overview to Details.
+
+Sprint 242 checkpoint doc: [`docs/sprint_242_overview_estate_detail_demotion.md`](docs/sprint_242_overview_estate_detail_demotion.md).
+
+### Sprint 241: Overview Density Review
+
+**Complete 2026-05-24.** Reviewed the Results Overview and identified the full estate detail panel as the remaining first-screen density to demote.
+
+Sprint 241 checkpoint doc: [`docs/sprint_241_overview_density_review.md`](docs/sprint_241_overview_density_review.md).
 
 ### Sprint 240: Benefit Timing UX Readiness Closeout
 
