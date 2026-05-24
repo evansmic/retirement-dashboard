@@ -4,31 +4,31 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 265: Money Flow Details Compaction Closeout
+## Latest Sprint — Sprint 270: Annual CSV Export Closeout
 
 **Status:** Complete 2026-05-24.
 
-Goal: keep the normal Details money-flow path readable while preserving reconciliation diagnostics behind an internal gate.
+Goal: let testers download year-by-year projection detail as a local CSV export without changing the saved plan or engine output schema.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 265 checkpoint doc: [`docs/sprint_265_money_flow_details_compaction_closeout.md`](docs/sprint_265_money_flow_details_compaction_closeout.md).
+Sprint 270 checkpoint doc: [`docs/sprint_270_annual_csv_export_closeout.md`](docs/sprint_270_annual_csv_export_closeout.md).
 
-### Sprint 261-265 Candidate Implementation Tickets
+### Sprint 266-270 Candidate Implementation Tickets
 
-- [x] **S261-01 — Details money-flow density review.** Review the normal Details money-flow surface after scenario compaction.
-- [x] **S262-01 — Money Flow research gate.** Move reconciliation diagnostics behind a disabled internal gate.
-- [x] **S263-01 — Consumer summary preservation.** Keep Money Flow story and first-year ledger visible in Details.
-- [x] **S264-01 — Money Flow structure guard.** Add structure coverage for compact money-flow placement and diagnostics gating.
-- [x] **S265-01 — Money Flow Details closeout.** Document the compaction batch and preserve engine/schema boundaries.
+- [x] **S266-01 — Annual CSV feedback review.** Treat tester CSV export feedback as report-adjacent local output work.
+- [x] **S267-01 — CSV builder.** Build CSV content from existing annual detail selector rows.
+- [x] **S268-01 — CSV UI.** Add Download year-by-year CSV actions to Year-by-year and Save & print.
+- [x] **S269-01 — CSV structure guard.** Add structure coverage for CSV export copy and saved-plan boundaries.
+- [x] **S270-01 — Annual CSV closeout.** Document the batch and preserve engine/schema boundaries.
 
-### Sprint 265 Definition Of Done
+### Sprint 270 Definition Of Done
 
-- Normal Details renders Money Flow story and first-year ledger as visible money-flow evidence.
-- Reconciliation diagnostics remain gated behind `SHOW_MONEY_FLOW_RESEARCH_PANELS`.
-- Money Flow remains available for deeper review outside the first Results screen.
-- Overview remains free of money-flow diagnostics.
-- UI structure tests protect compact Details money-flow placement and diagnostics gating.
+- Users can download year-by-year projection detail as a CSV file.
+- CSV output is derived from `selectAnnualDetailRows`.
+- CSV actions appear in Year-by-year and Save & print.
+- CSV copy makes clear it is a local results export, not an editable plan backup.
+- UI structure tests protect CSV export copy, filename, MIME type, and saved-plan boundary.
 - Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
 - No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
 - Verification passes and no private `.plan.json` files are created.
@@ -119,6 +119,36 @@ Sprint 265 checkpoint doc: [`docs/sprint_265_money_flow_details_compaction_close
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 270: Annual CSV Export Closeout
+
+**Complete 2026-05-24.** Documented the annual CSV export batch and preserved engine/schema boundaries.
+
+Sprint 270 checkpoint doc: [`docs/sprint_270_annual_csv_export_closeout.md`](docs/sprint_270_annual_csv_export_closeout.md).
+
+### Sprint 269: Annual CSV Structure Guard
+
+**Complete 2026-05-24.** Added UI structure coverage for CSV export copy, filename, MIME type, and saved-plan boundaries.
+
+Sprint 269 checkpoint doc: [`docs/sprint_269_annual_csv_structure_guard.md`](docs/sprint_269_annual_csv_structure_guard.md).
+
+### Sprint 268: Annual CSV UI
+
+**Complete 2026-05-24.** Added Download year-by-year CSV actions to Year-by-year and Save & print.
+
+Sprint 268 checkpoint doc: [`docs/sprint_268_annual_csv_ui.md`](docs/sprint_268_annual_csv_ui.md).
+
+### Sprint 267: Annual Detail CSV Builder
+
+**Complete 2026-05-24.** Added a local CSV builder for existing annual detail selector rows.
+
+Sprint 267 checkpoint doc: [`docs/sprint_267_annual_detail_csv_builder.md`](docs/sprint_267_annual_detail_csv_builder.md).
+
+### Sprint 266: Annual CSV Feedback Review
+
+**Complete 2026-05-24.** Reviewed tester CSV export feedback as local-first, report-adjacent Results work.
+
+Sprint 266 checkpoint doc: [`docs/sprint_266_annual_csv_feedback_review.md`](docs/sprint_266_annual_csv_feedback_review.md).
 
 ### Sprint 265: Money Flow Details Compaction Closeout
 

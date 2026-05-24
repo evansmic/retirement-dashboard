@@ -274,6 +274,10 @@ describe('Results overview structure', () => {
   it('keeps save and report actions distinct in the consumer UI', () => {
     expect(appSource).toContain('Save editable plan');
     expect(appSource).toContain('Open printable report');
+    expect(appSource).toContain('Download year-by-year CSV');
+    expect(appSource).toContain('This is a local results');
+    expect(appSource).toContain('Plan file');
+    expect(appSource).toContain('Unchanged');
     expect(appSource).toContain('It may look more detailed than this guided Results page');
     expect(appSource).toContain('This saves the household inputs and assumptions');
     expect(appSource).toContain('This downloaded file is your editable backup');
@@ -284,6 +288,18 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Save .plan.json');
     expect(appSource).not.toContain('Local .plan.json');
     expect(appSource).not.toContain('Open .plan.json');
+  });
+
+  it('exports year-by-year CSV from annual detail rows without changing saved plan copy', () => {
+    expect(appSource).toContain('annualDetailRowsToCsv');
+    expect(appSource).toContain('text/csv;charset=utf-8');
+    expect(appSource).toContain('-year-by-year.csv');
+    expect(appSource).toContain('AnnualDetailCsvRow');
+    expect(appSource).toContain('Registered withdrawals');
+    expect(appSource).toContain('Money-flow check');
+    expect(appSource).toContain('This is a local results');
+    expect(appSource).not.toContain('save annual detail');
+    expect(appSource).not.toContain('saved CSV');
   });
 
   it('keeps visible React copy free of internal engineering phrases', () => {

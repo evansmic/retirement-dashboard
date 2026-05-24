@@ -3085,6 +3085,18 @@ function ResultsHandoffPanel({
     feedbackPackage: feedbackReviewPackage,
     broadUxReviewDeferred: true
   });
+  function downloadAnnualDetailCsv() {
+    const csv = annualDetailRowsToCsv(annualDetailRows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeFilenamePart(plan.title || 'retirement-plan')}-year-by-year.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -3215,6 +3227,7 @@ function ResultsHandoffPanel({
         ) : activeSection === 'annualDetail' ? (
           <AnnualDetailPanel
             loading={loading}
+            onDownloadCsv={downloadAnnualDetailCsv}
             portfolioSeries={portfolioChartSeries}
             rows={annualDetailRows}
             spendingTaxSeries={spendingTaxChartSeries}
@@ -3222,7 +3235,9 @@ function ResultsHandoffPanel({
           />
         ) : activeSection === 'exportSave' ? (
           <ExportSavePanel
+            annualDetailRows={annualDetailRows}
             hasUnsavedChanges={hasUnsavedChanges}
+            onDownloadAnnualCsv={downloadAnnualDetailCsv}
             onDownload={onDownload}
             plan={plan}
             readinessRows={readinessRows}
@@ -7059,14 +7074,18 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 }
 
 function ExportSavePanel({
+  annualDetailRows,
   hasUnsavedChanges,
+  onDownloadAnnualCsv,
   onDownload,
   plan,
   readinessRows,
   readinessSummary,
   validation
 }: {
+  annualDetailRows: ReturnType<typeof selectAnnualDetailRows>;
   hasUnsavedChanges: boolean;
+  onDownloadAnnualCsv: () => void;
   onDownload: () => void;
   plan: V2PlanPayload;
   readinessRows: ReturnType<typeof selectResultsReadinessRows>;
@@ -7139,6 +7158,32 @@ function ExportSavePanel({
             Open printable report
           </button>
         </section>
+
+        <section className="result-card">
+          <p className="eyebrow">Download details</p>
+          <h3>Download year-by-year CSV</h3>
+          <p>
+            Download the annual projection rows as a spreadsheet-friendly file for review. This is a local results
+            export, not an editable plan backup.
+          </p>
+          <dl className="result-ledger">
+            <div>
+              <dt>Rows</dt>
+              <dd>{annualDetailRows.length}</dd>
+            </div>
+            <div>
+              <dt>File type</dt>
+              <dd>CSV spreadsheet</dd>
+            </div>
+            <div>
+              <dt>Plan file</dt>
+              <dd>Unchanged</dd>
+            </div>
+          </dl>
+          <button className="ghost" type="button" onClick={onDownloadAnnualCsv} disabled={!annualDetailRows.length}>
+            Download year-by-year CSV
+          </button>
+        </section>
       </div>
     </div>
   );
@@ -7200,14 +7245,63 @@ function ResultsReadinessPanel({
   );
 }
 
+type AnnualDetailCsvRow = ReturnType<typeof selectAnnualDetailRows>[number];
+
+const annualDetailCsvColumns: Array<{ id: keyof AnnualDetailCsvRow; label: string }> = [
+  { id: 'year', label: 'Year' },
+  { id: 'ages', label: 'Age(s)' },
+  { id: 'spending', label: 'Spending' },
+  { id: 'afterTaxSpending', label: 'After-tax spending' },
+  { id: 'fundingBeforeTax', label: 'Funding before tax' },
+  { id: 'tax', label: 'Tax' },
+  { id: 'shortfall', label: 'Shortfall' },
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'salary', label: 'Salary' },
+  { id: 'dbPension', label: 'DB pension' },
+  { id: 'cpp', label: 'CPP' },
+  { id: 'oas', label: 'OAS' },
+  { id: 'registeredWithdrawals', label: 'Registered withdrawals' },
+  { id: 'tfsaWithdrawals', label: 'TFSA withdrawals' },
+  { id: 'nonRegisteredWithdrawals', label: 'Non-registered withdrawals' },
+  { id: 'cashWedgeWithdrawals', label: 'Cash wedge withdrawals' },
+  { id: 'otherInflows', label: 'Other inflows' },
+  { id: 'taxableIncome', label: 'Taxable income' },
+  { id: 'effectiveRate', label: 'Effective rate' },
+  { id: 'oasClawback', label: 'OAS clawback' },
+  { id: 'rrsp', label: 'RRSP/RRIF balance' },
+  { id: 'tfsa', label: 'TFSA balance' },
+  { id: 'lif', label: 'LIF balance' },
+  { id: 'nonRegistered', label: 'Non-registered balance' },
+  { id: 'cash', label: 'Cash balance' },
+  { id: 'total', label: 'Total balance' },
+  { id: 'reconciliationGap', label: 'Reconciliation gap' },
+  { id: 'cashFlowDelta', label: 'Unexplained gap' },
+  { id: 'reconciliationStatus', label: 'Money-flow check' }
+];
+
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? '' : String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function annualDetailRowsToCsv(rows: ReturnType<typeof selectAnnualDetailRows>): string {
+  const header = annualDetailCsvColumns.map((column) => csvCell(column.label)).join(',');
+  const body = rows.map((row) =>
+    annualDetailCsvColumns.map((column) => csvCell(row[column.id])).join(',')
+  );
+  return [header, ...body].join('\n');
+}
+
 function AnnualDetailPanel({
   loading,
+  onDownloadCsv,
   portfolioSeries,
   rows,
   spendingTaxSeries,
   summary
 }: {
   loading: boolean;
+  onDownloadCsv: () => void;
   portfolioSeries: ReturnType<typeof selectPortfolioChartSeries>;
   rows: ReturnType<typeof selectAnnualDetailRows>;
   spendingTaxSeries: ReturnType<typeof selectSpendingTaxChartSeries>;
@@ -7267,6 +7361,9 @@ function AnnualDetailPanel({
             </button>
           ))}
         </div>
+        <button className="ghost" type="button" onClick={onDownloadCsv} disabled={!rows.length}>
+          Download year-by-year CSV
+        </button>
       </div>
 
       <div className="result-table-wrap annual-detail-table-wrap">
