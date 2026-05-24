@@ -4,31 +4,31 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 300: V1 Engine Optimizer Checkpoint
+## Latest Sprint — Sprint 307: Optimizer Checkpoint Decision
 
 **Status:** Complete 2026-05-24.
 
-Goal: close the v1 feedback readiness run before deciding whether to proceed to the engine/optimizer checkpoint.
+Goal: stop the cleanup batch and decide whether the product is ready to proceed into optimizer prep.
 
 Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 300 checkpoint doc: [`docs/sprint_300_v1_engine_optimizer_checkpoint.md`](docs/sprint_300_v1_engine_optimizer_checkpoint.md).
+Sprint 307 checkpoint doc: [`docs/sprint_307_optimizer_checkpoint_decision.md`](docs/sprint_307_optimizer_checkpoint_decision.md).
 
-### Sprint 296-300 Candidate Implementation Tickets
+### Sprint 302-307 Candidate Implementation Tickets
 
-- [x] **S296-01 — V1 feedback readiness review.** Review Overview, Details, Save & print, CSV, and review-label posture.
-- [x] **S297-01 — Research gate checkpoint.** Add coverage that normal consumer research gates stay disabled.
-- [x] **S298-01 — Feedback fix list.** Record the current fix-first trust cleanup posture.
-- [x] **S299-01 — Verification package.** Define the final checkpoint verification package and known route-probe caveat.
-- [x] **S300-01 — V1 checkpoint closeout.** Document readiness for the next engine/optimizer decision.
+- [x] **S302-01 — Intake review item closeout.** Keep blockers separate from non-blocking review items.
+- [x] **S303-01 — Results copy consistency.** Tighten review-first wording around plan options and guardrails.
+- [x] **S304-01 — Output boundary guard.** Reconfirm local editable backup, printable report, and CSV boundaries.
+- [x] **S305-01 — Details density final audit.** Protect the compact normal Details evidence set.
+- [x] **S306-01 — Feedback readiness package.** Record what is ready for feedback and what remains deferred.
+- [x] **S307-01 — Optimizer checkpoint decision.** Decide to proceed to optimizer prep next without starting optimizer implementation.
 
-### Sprint 300 Definition Of Done
+### Sprint 307 Definition Of Done
 
-- Overview, Details, Save & print, CSV export, and plan-review copy are ready for the next feedback pass.
-- Research diagnostics remain preserved but disabled by default.
-- UI structure tests protect disabled research gates for the normal consumer path.
-- The known route-probe sandbox caveat is documented as non-blocking when it is the only full-probe failure.
-- Ontario 2026 tax scope, save/backup behavior, and benefit-timing boundary copy remain visible.
+- S302-S307 cleanup plan is documented.
+- Guided-intake review items, Results review labels, local output boundaries, and Details density are guarded.
+- Feedback readiness and deferred scope are documented.
+- The checkpoint decision is explicit: proceed to optimizer prep next, not optimizer implementation.
 - No engine math, optimizer behavior, drawdown behavior, saved plan schema, or engine output schema changed.
 - Verification passes and no private `.plan.json` files are created.
 
@@ -118,6 +118,48 @@ Sprint 300 checkpoint doc: [`docs/sprint_300_v1_engine_optimizer_checkpoint.md`]
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 307: Optimizer Checkpoint Decision
+
+**Complete 2026-05-24.** Decided to proceed to optimizer prep next without starting optimizer implementation.
+
+Sprint 307 checkpoint doc: [`docs/sprint_307_optimizer_checkpoint_decision.md`](docs/sprint_307_optimizer_checkpoint_decision.md).
+
+### Sprint 306: Feedback Readiness Package
+
+**Complete 2026-05-24.** Recorded feedback-ready surfaces and deferred scope after the cleanup run.
+
+Sprint 306 checkpoint doc: [`docs/sprint_306_feedback_readiness_package.md`](docs/sprint_306_feedback_readiness_package.md).
+
+### Sprint 305: Details Density Final Audit
+
+**Complete 2026-05-24.** Protected the compact normal Details evidence set before optimizer prep.
+
+Sprint 305 checkpoint doc: [`docs/sprint_305_details_density_final_audit.md`](docs/sprint_305_details_density_final_audit.md).
+
+### Sprint 304: Output Boundary Guard
+
+**Complete 2026-05-24.** Reconfirmed editable backup, printable report, and CSV export boundaries.
+
+Sprint 304 checkpoint doc: [`docs/sprint_304_output_boundary_guard.md`](docs/sprint_304_output_boundary_guard.md).
+
+### Sprint 303: Results Copy Consistency Pass
+
+**Complete 2026-05-24.** Tightened visible Results copy around review-first plan options and guardrails.
+
+Sprint 303 checkpoint doc: [`docs/sprint_303_results_copy_consistency.md`](docs/sprint_303_results_copy_consistency.md).
+
+### Sprint 302: Intake Review Item Closeout
+
+**Complete 2026-05-24.** Closed the guided-intake review-item wording pass.
+
+Sprint 302 checkpoint doc: [`docs/sprint_302_intake_review_item_closeout.md`](docs/sprint_302_intake_review_item_closeout.md).
+
+### Sprint 301: Validation Review Copy
+
+**Complete 2026-05-24.** Reframed non-blocking guided-intake validation items as review items instead of warnings.
+
+Sprint 301 checkpoint doc: [`docs/sprint_301_validation_review_copy.md`](docs/sprint_301_validation_review_copy.md).
 
 ### Sprint 300: V1 Engine Optimizer Checkpoint
 

@@ -1420,7 +1420,11 @@ function IntakePanel({
           const issueCount = validationIssueCountForStep(validation, step.id);
           const hasBlockers = issueCount.blockers > 0;
           const hasWarnings = issueCount.warnings > 0;
-          const statusLabel = hasBlockers ? `${issueCount.blockers} blocker${issueCount.blockers === 1 ? '' : 's'}` : hasWarnings ? `${issueCount.warnings} warning${issueCount.warnings === 1 ? '' : 's'}` : '';
+          const statusLabel = hasBlockers
+            ? `${issueCount.blockers} blocker${issueCount.blockers === 1 ? '' : 's'}`
+            : hasWarnings
+              ? `${issueCount.warnings} review item${issueCount.warnings === 1 ? '' : 's'}`
+              : '';
           return (
             <button
               className={`step-button ${step.id === currentStep.id ? 'active' : ''} ${hasBlockers ? 'has-blockers' : hasWarnings ? 'has-warnings' : ''}`}
@@ -4304,7 +4308,7 @@ function RecommendedPathPanel({
 
       <div className="result-overview-grid">
         <section className="result-card">
-          <h3>Why this path</h3>
+          <h3>Why this plan is first to review</h3>
           <ul className="compact-list">
             {summary.reasons.map((reason) => (
               <li key={reason}>{reason}</li>
@@ -4507,7 +4511,7 @@ function BoundedOptimizerPanel({
         <section className="optimizer-guardrail-panel">
           <div>
             <p className="eyebrow">Why options were tested</p>
-            <h3>Guardrails before recommendations</h3>
+            <h3>Guardrails before a plan leads</h3>
             <p>These checks keep the review inside the timing and tax rules the model can support today.</p>
           </div>
           <div className="optimizer-guardrail-grid">
@@ -4525,7 +4529,7 @@ function BoundedOptimizerPanel({
       {!isCompact && summary?.recommendationNotes.length ? (
         <section className="optimizer-recommendation-panel">
           <div>
-            <p className="eyebrow">Suggestion discipline</p>
+            <p className="eyebrow">Review discipline</p>
             <h3>Why some options stay review-only</h3>
             <p>First option to review means it cleared the highlight checks. Review-only means the result is useful evidence, but it should not lead the plan.</p>
           </div>
@@ -7175,7 +7179,10 @@ function ExportSavePanel({
             <dd>Use Download year-by-year CSV when you want projection rows for spreadsheet review.</dd>
           </div>
         </dl>
-        <p className="table-note">Only the editable plan backup is meant to be reopened by this planner.</p>
+        <p className="table-note">
+          Only the editable plan backup is meant to be reopened by this planner. These local downloads do not create an
+          account or upload your plan.
+        </p>
       </section>
 
       <div className="result-overview-grid">
@@ -7850,8 +7857,8 @@ function ValidationPanel({ validation }: { validation: PlanValidationResult }) {
   if (validation.blockers.length === 0 && validation.warnings.length === 0) {
     return (
       <div className="validation-panel ok">
-        <strong>Validation clear</strong>
-        <span>No blocking issues or warnings found in the current plan.</span>
+        <strong>Ready to run</strong>
+        <span>No blockers or review items found in the current plan.</span>
       </div>
     );
   }
@@ -7873,7 +7880,7 @@ function ValidationPanel({ validation }: { validation: PlanValidationResult }) {
       ) : null}
       {validation.warnings.length > 0 ? (
         <div>
-          <strong>Warnings</strong>
+          <strong>Review items</strong>
           <ul>
             {validation.warnings.map((issue) => (
               <li key={issue.code}>
@@ -7934,7 +7941,7 @@ function SectionValidationSummary({ issues }: { issues: IntakeValidationIssue[] 
       <ul>
         {issues.map((issue) => (
           <li key={issue.code}>
-            <span>{issue.severity}</span>
+            <span>{issue.severity === 'blocker' ? 'blocker' : 'review item'}</span>
             {issue.message}
           </li>
         ))}

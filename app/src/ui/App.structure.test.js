@@ -66,6 +66,8 @@ describe('Results overview structure', () => {
     const detailsStart = appSource.indexOf('function DetailsResultsPanel');
     const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
     const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const checkpointGateIndex = detailsPanel.indexOf('SHOW_CHECKPOINT_REVIEW_PANELS');
+    const normalBeforeCheckpointGate = detailsPanel.slice(0, checkpointGateIndex);
     const compactTaxIndex = detailsPanel.indexOf('<CompactTaxPressurePanel');
     const taxGateIndex = detailsPanel.indexOf('SHOW_TAX_RESEARCH_PANELS');
     const taxResearchBranch = detailsPanel.slice(taxGateIndex);
@@ -149,9 +151,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Why the option moved');
     expect(appSource).toContain('They explain direction, not a final recommendation');
     expect(appSource).toContain('Why options were tested');
-    expect(appSource).toContain('Guardrails before recommendations');
+    expect(appSource).toContain('Guardrails before a plan leads');
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');
-    expect(appSource).toContain('Suggestion discipline');
+    expect(appSource).toContain('Review discipline');
     expect(appSource).toContain('Why some options stay review-only');
     expect(appSource).toContain('Option map');
     expect(appSource).toContain('What kind of choices were checked');
@@ -159,6 +161,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('First option to review means it cleared the highlight checks');
     expect(appSource).toContain('first option to review under the current trust checks');
     expect(appSource).toContain('Treat it as a plan-review label, not advice');
+    expect(appSource).toContain('Why this plan is first to review');
     expect(appSource).toContain('Review-only means the result is useful evidence');
     expect(appSource).toContain('save optimizer results');
     expect(appSource).toContain('SHOW_OPTION_RESEARCH_PANELS = false');
@@ -167,6 +170,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Guaranteed');
     expect(appSource).not.toContain('Suggested plan to review');
     expect(appSource).not.toContain('Recommended path');
+    expect(appSource).not.toContain('Guardrails before recommendations');
+    expect(appSource).not.toContain('Suggestion discipline');
     expect(appSource).not.toContain('strongest preview candidate');
     expect(appSource).not.toContain('No suggested plan');
   });
@@ -339,6 +344,32 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, researchGateIndex)).not.toContain('<HiddenDrawdownComparisonPanel');
   });
 
+  it('keeps the normal Details evidence bands compact before optimizer work', () => {
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const checkpointGateIndex = detailsPanel.indexOf('SHOW_CHECKPOINT_REVIEW_PANELS');
+    const normalBeforeCheckpointGate = detailsPanel.slice(0, checkpointGateIndex);
+
+    expect(detailsPanel).toContain('Planning evidence');
+    expect(detailsPanel).toContain('Money Flow');
+    expect(detailsPanel).toContain('Decision Checks');
+    expect(detailsPanel).toContain('Scenario evidence');
+    expect(detailsPanel).toContain('<PlanHealthPanel');
+    expect(detailsPanel).toContain('<EstateIntentPanel');
+    expect(detailsPanel).toContain('<SourceStoryPanel');
+    expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+    expect(detailsPanel).toContain('<DecisionChecklistPanel');
+    expect(detailsPanel).toContain('<CompactTaxPressurePanel');
+    expect(detailsPanel).toContain('<BenefitTimingReadinessPanel');
+    expect(detailsPanel).toContain('<SpendingStressPanel');
+    expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />');
+    expect(checkpointGateIndex).toBeGreaterThan(0);
+    expect(normalBeforeCheckpointGate).not.toContain('<ReleaseReadinessCheckpointPanel');
+    expect(normalBeforeCheckpointGate).not.toContain('<FeedbackReviewPackagePanel');
+    expect(normalBeforeCheckpointGate).not.toContain('<CheckpointReviewBoardPanel');
+  });
+
   it('keeps save and report actions distinct in the consumer UI', () => {
     expect(appSource).toContain('Save editable plan');
     expect(appSource).toContain('Open printable report');
@@ -348,6 +379,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Printable report');
     expect(appSource).toContain('CSV results export');
     expect(appSource).toContain('Only the editable plan backup is meant to be reopened by this planner.');
+    expect(appSource).toContain('These local downloads do not create an');
+    expect(appSource).toContain('account or upload your plan.');
     expect(appSource).toContain('This is a local results');
     expect(appSource).toContain('Plan file');
     expect(appSource).toContain('Unchanged');
@@ -422,5 +455,17 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Example: ${action.label}');
     expect(appSource).not.toContain('CPP 65 monthly');
     expect(appSource).not.toContain('OAS monthly</span>');
+  });
+
+  it('keeps guided-intake validation copy framed as review items instead of technical warnings', () => {
+    expect(appSource).toContain('Ready to run');
+    expect(appSource).toContain('No blockers or review items found in the current plan.');
+    expect(appSource).toContain('Review items');
+    expect(appSource).toContain('review item');
+    expect(appSource).toContain('Fix this section before results');
+    expect(appSource).toContain('Review this section');
+    expect(appSource).not.toContain('Validation clear');
+    expect(appSource).not.toContain('No blocking issues or warnings found in the current plan.');
+    expect(appSource).not.toContain('<strong>Warnings</strong>');
   });
 });
