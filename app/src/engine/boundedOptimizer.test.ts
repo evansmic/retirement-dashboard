@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../data/defaultPlan';
+import { createExamplePlan, examplePlanCards } from '../data/examplePlans';
 import { createPlanFile } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import { buildBoundedOptimizerCandidates, runBoundedOptimizer, type BoundedOptimizerCandidateId } from './boundedOptimizer';
@@ -308,6 +309,11 @@ describe('bounded optimizer runner', () => {
       detail: expect.stringContaining('before annual sequencing is planned')
     });
     expect(summary.withdrawalFeedbackReview.outcome.nextSteps.join(' ')).toContain('Hold annual sequencing if any confusion signal appears');
+    expect(summary.withdrawalFeedbackReview.closeoutSummary).toMatchObject({
+      status: 'readyToClose',
+      label: 'Feedback loop ready to close',
+      boundarySummary: expect.stringContaining('does not create annual account instructions or saved output')
+    });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -624,9 +630,48 @@ describe('bounded optimizer runner', () => {
       label: 'Repair inputs first'
     });
     expect(summary.withdrawalFeedbackReview.outcome.nextSteps.join(' ')).toContain('Do not plan annual sequencing from a blocked comparison');
+    expect(summary.withdrawalFeedbackReview.closeoutSummary).toMatchObject({
+      status: 'inputCleanupFirst',
+      label: 'Closeout blocked by inputs',
+      boundarySummary: expect.stringContaining('not a plan change or account instruction')
+    });
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('covers feedback outcome states with example-plan based review cases', () => {
+    const readyExample = createExamplePlan('public-comparator-single');
+    const holdExample = createExamplePlan('retired-traditional');
+    holdExample.assumptions.p1DiesInSurvivor = 0;
+    const blockedExample = createExamplePlan('public-comparator-single');
+    blockedExample.p1.rrsp = 0;
+    blockedExample.p1.tfsa = 0;
+    blockedExample.p1.nonreg = 0;
+    const broadFamilyLeads = (_candidatePlan: V2PlanPayload, config: SimulationConfig) =>
+      config.withdrawalOrder === 'registered-first' ? result(180000, 70000) : result(120000, 80000);
+
+    const cases = [
+      runBoundedOptimizer(readyExample, broadFamilyLeads),
+      runBoundedOptimizer(holdExample, broadFamilyLeads),
+      runBoundedOptimizer(blockedExample, broadFamilyLeads)
+    ];
+
+    expect(cases.map((summary) => summary.withdrawalFeedbackReview.outcome.status)).toEqual([
+      'readyToReview',
+      'deferSequencing',
+      'repairInputs'
+    ]);
+    expect(cases.map((summary) => summary.withdrawalFeedbackReview.closeoutSummary.status)).toEqual([
+      'readyToClose',
+      'holdAndSimplify',
+      'inputCleanupFirst'
+    ]);
+    cases.forEach((summary) => {
+      expect(summary.withdrawalFeedbackReview.closeoutSummary.boundarySummary).not.toMatch(/advice|recommendation|do this/i);
+    });
+    expect(examplePlanCards.map((card) => card.id)).toContain('public-comparator-single');
+    expect(examplePlanCards.map((card) => card.id)).toContain('retired-traditional');
   });
 
   it('adds one home-sale reliance candidate only when downsize year and proceeds are entered', () => {

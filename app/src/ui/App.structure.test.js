@@ -176,6 +176,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Confusion signals');
     expect(appSource).toContain('Next decision gate');
     expect(appSource).toContain('Feedback outcome');
+    expect(appSource).toContain('Feedback closeout');
     expect(appSource).toContain('Feedback worksheet');
     expect(appSource).toContain('Pass signal');
     expect(boundedOptimizerSource).toContain('Broad withdrawal-family evidence is ready for feedback.');
@@ -190,6 +191,10 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('Ready to review with testers');
     expect(boundedOptimizerSource).toContain('Repair inputs first');
     expect(boundedOptimizerSource).toContain('Defer sequencing and simplify');
+    expect(boundedOptimizerSource).toContain('Feedback loop ready to close');
+    expect(boundedOptimizerSource).toContain('Closeout blocked by inputs');
+    expect(boundedOptimizerSource).toContain('Closeout should hold');
+    expect(boundedOptimizerSource).toContain('does not create annual account instructions or saved output');
     expect(appSource).toContain('Why options were tested');
     expect(appSource).toContain('Guardrails before a plan leads');
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');
@@ -223,6 +228,29 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).not.toContain('recommended OAS');
     expect(boundedOptimizerSource).not.toContain('start benefits at');
     expect(boundedOptimizerSource).not.toContain('withdraw from this account');
+  });
+
+  it('keeps feedback outcome and worksheet content in Details-only research boundaries', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function FirstYearMoneyFlowPanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const boundedPanelStart = appSource.indexOf('function BoundedOptimizerPanel');
+    const boundedPanelEnd = appSource.indexOf('function OptimizerBoundaryPanel');
+    const boundedPanel = appSource.slice(boundedPanelStart, boundedPanelEnd);
+
+    expect(overviewBranch).not.toContain('Feedback outcome');
+    expect(overviewBranch).not.toContain('Feedback closeout');
+    expect(overviewBranch).not.toContain('Feedback worksheet');
+    expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
+    expect(boundedPanel).toContain('!isCompact && summary?.withdrawalFeedbackReview');
+    expect(boundedPanel).toContain('Feedback outcome');
+    expect(boundedPanel).toContain('Feedback closeout');
+    expect(boundedPanel).toContain('Feedback worksheet');
+    expect(boundedPanel.indexOf('Feedback outcome')).toBeLessThan(boundedPanel.indexOf('Feedback worksheet'));
+    expect(boundedPanel.indexOf('Feedback closeout')).toBeLessThan(boundedPanel.indexOf('Feedback worksheet'));
   });
 
   it('keeps the normal Details option surface compact while preserving full option research behind a gate', () => {

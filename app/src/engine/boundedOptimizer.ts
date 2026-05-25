@@ -172,6 +172,14 @@ export type WithdrawalFeedbackReview = {
     detail: string;
     nextSteps: string[];
   };
+  closeoutSummary: {
+    status: 'readyToClose' | 'inputCleanupFirst' | 'holdAndSimplify';
+    label: string;
+    detail: string;
+    evidenceSummary: string;
+    boundarySummary: string;
+    nextReview: string;
+  };
   nextDecision: string;
 };
 
@@ -1883,6 +1891,33 @@ function buildWithdrawalFeedbackReview({
                 'Simplify broad-family explanation if users confuse it with instructions.',
                 'Keep annual sequencing deferred until the worksheet passes.'
               ]
+            },
+    closeoutSummary:
+      status === 'readyForFeedback'
+        ? {
+            status: 'readyToClose',
+            label: 'Feedback loop ready to close',
+            detail: 'The review is ready to close when the worksheet passes without confusion signals.',
+            evidenceSummary: 'Broad-family evidence is present for funded years, tax, OAS recovery, and money left.',
+            boundarySummary: 'The result stays review-only and does not create annual account instructions or saved output.',
+            nextReview: 'Feedback notes can support a later decision on whether annual sequencing architecture is ready to plan.'
+          }
+        : status === 'needsInputReview'
+          ? {
+              status: 'inputCleanupFirst',
+              label: 'Closeout blocked by inputs',
+              detail: 'The feedback loop stays open until missing account or benefit inputs are repaired.',
+              evidenceSummary: 'Broad-family evidence is incomplete because the comparison could not run cleanly.',
+              boundarySummary: 'The blocked state is a readiness signal, not a plan change or account instruction.',
+              nextReview: 'Input cleanup, a fresh Results run, and a repeated worksheet come before sequencing architecture is considered.'
+            }
+          : {
+              status: 'holdAndSimplify',
+              label: 'Closeout should hold',
+              detail: 'The feedback loop stays on hold while household assumptions or copy are clarified.',
+              evidenceSummary: 'Broad-family evidence can be reviewed, but assumptions need a clearer pass signal.',
+              boundarySummary: 'Annual sequencing remains deferred and no saved output is created.',
+              nextReview: 'A simpler evidence surface and another worksheet pass come before any architecture planning decision.'
             },
     nextDecision:
       status === 'readyForFeedback'
