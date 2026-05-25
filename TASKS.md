@@ -4,37 +4,30 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 321: Optimizer V1 Direction Closeout
+## Latest Sprint — Sprint 336: Legacy Scenario CSV Export Correction
 
-**Status:** Complete 2026-05-24.
+**Status:** Complete 2026-05-25.
 
-Goal: implement the first local-first Canadian plan-to-review optimizer direction without annual account instructions or saved optimizer output.
+Goal: add the year-by-year CSV download to the legacy dashboard table under the Sequence-of-Returns card so it exports the currently selected dashboard scenario.
 
-Non-scope: simulation math changes, optimizer expansion, drawdown behavior changes, account-by-account instructions, persisted recommended-plan output, new saved plan schema, cloud accounts, advisor tooling, broad visual redesign, or report migration.
+Non-scope: React results export changes, saved plan schema changes, engine output schema changes, persisted optimizer output, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 321 checkpoint doc: [`docs/sprint_308_321_optimizer_v1_direction.md`](docs/sprint_308_321_optimizer_v1_direction.md).
+Sprint 336 checkpoint doc: [`docs/sprint_336_legacy_scenario_csv_export.md`](docs/sprint_336_legacy_scenario_csv_export.md).
 
-### Sprint 308-321 Candidate Implementation Tickets
+### Sprint 336 Candidate Implementation Tickets
 
-- [x] **S308-01 — Optimizer input readiness review.** Add runtime-only readiness rows for optimizer inputs.
-- [x] **S309-01 — Candidate boundary map.** Define included and deferred candidate families.
-- [x] **S310-01 — Objective and guardrail contract.** Record max after-tax spend, conservative deterministic guardrails, and runtime-only output.
-- [x] **S311-01 — CPP/OAS grid shape.** Describe valid benefit age ranges for active people.
-- [x] **S312-01 — Broad withdrawal family shape.** Describe broad withdrawal families while deferring annual overrides.
-- [x] **S313-01 — Candidate runner harness.** Add engine-supported 65/70 benefit-timing seed candidates while preserving runtime-only candidate output.
-- [x] **S314-01 — Scoring and ranking.** Add sustainable annual/monthly spend evidence into candidate scoring and UI.
-- [x] **S315-01 — Explanation layer.** Surface why the plan moved, guardrails, and what to review first.
-- [x] **S316-01 — Details-first UI surface.** Show optimizer direction and candidate boundaries in Details.
-- [x] **S317-S321 — Example, harm, copy, verification, and closeout.** Guard copy and document optimizer v1 direction readiness.
+- [x] **S336-01 — Correct placement.** Put the CSV control on the legacy Year-by-Year Detail card below Sequence-of-Returns.
+- [x] **S336-02 — Scenario binding.** Export `RESULTS[activeScenario].years` so the CSV follows the selected dashboard scenario.
+- [x] **S336-03 — Display-dollar binding.** Export nominal or real rows consistently with the current display toggle.
+- [x] **S336-04 — Local-only download.** Use a browser Blob download only and avoid persistence.
 
-### Sprint 321 Definition Of Done
+### Sprint 336 Definition Of Done
 
-- Optimizer readiness, candidate-family boundaries, objective contract, and staged search shape are runtime-only.
-- Benefit timing execution is seeded only with the current engine-supported 65/70 configs; wider CPP age execution remains next work.
-- Details shows the optimizer direction as plan-to-review evidence.
-- Annual account-level overrides and Monte Carlo-in-loop search remain deferred.
-- No saved optimizer output, saved plan schema change, or engine output schema change is introduced.
-- Verification passes and no private `.plan.json` files are created.
+- The legacy detail CSV exports the selected scenario, not only the React results table.
+- Download does not toggle the collapsed detail card.
+- Print output hides the CSV button.
+- No `.plan.json` files are created.
+- Focused dashboard probes pass.
 
 ### Historical Definition Of Done Coverage
 
@@ -122,6 +115,96 @@ Sprint 321 checkpoint doc: [`docs/sprint_308_321_optimizer_v1_direction.md`](doc
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 336: Legacy Scenario CSV Export Correction
+
+**Complete 2026-05-25.** Added a local CSV download to the legacy dashboard Year-by-Year Detail card that follows the selected scenario and display-dollar mode.
+
+Sprint 336 checkpoint doc: [`docs/sprint_336_legacy_scenario_csv_export.md`](docs/sprint_336_legacy_scenario_csv_export.md).
+
+### Sprint 335: Withdrawal Sequencing Prep Checkpoint
+
+**Complete 2026-05-24.** Closed the withdrawal sequencing prep batch and kept annual override planning deferred.
+
+Sprint 335 checkpoint doc: [`docs/sprint_335_withdrawal_sequencing_prep_checkpoint.md`](docs/sprint_335_withdrawal_sequencing_prep_checkpoint.md).
+
+### Sprint 334: Withdrawal Copy And Example Guard
+
+**Complete 2026-05-24.** Added example-matrix guardrails for broad withdrawal-family evidence and instruction-free copy.
+
+Sprint 334 checkpoint doc: [`docs/sprint_334_withdrawal_copy_example_guard.md`](docs/sprint_334_withdrawal_copy_example_guard.md).
+
+### Sprint 333: Tax/OAS Recovery Evidence
+
+**Complete 2026-05-24.** Added first-year and peak-tax evidence for leading broad withdrawal-family comparisons.
+
+Sprint 333 checkpoint doc: [`docs/sprint_333_withdrawal_tax_oas_evidence.md`](docs/sprint_333_withdrawal_tax_oas_evidence.md).
+
+### Sprint 332: Account Bucket Guardrails
+
+**Complete 2026-05-24.** Tightened broad withdrawal-family eligibility to require meaningful registered and TFSA/non-registered balances.
+
+Sprint 332 checkpoint doc: [`docs/sprint_332_account_bucket_guardrails.md`](docs/sprint_332_account_bucket_guardrails.md).
+
+### Sprint 331: Withdrawal Family Evidence Prep
+
+**Complete 2026-05-24.** Added compact broad withdrawal-family evidence when a withdrawal-order family leads the review.
+
+Sprint 331 checkpoint doc: [`docs/sprint_331_withdrawal_family_evidence_prep.md`](docs/sprint_331_withdrawal_family_evidence_prep.md).
+
+### Sprint 330: Benefit Timing Hardening Checkpoint
+
+**Complete 2026-05-24.** Closed the benefit-timing hardening batch and set withdrawal sequencing prep as the recommended next optimizer batch.
+
+Sprint 330 checkpoint doc: [`docs/sprint_330_benefit_timing_hardening_checkpoint.md`](docs/sprint_330_benefit_timing_hardening_checkpoint.md).
+
+### Sprint 329: Benefit Timing Copy Readability Guard
+
+**Complete 2026-05-24.** Added structure guards for benefit-timing evidence wording and prohibited CPP/OAS advice-like copy.
+
+Sprint 329 checkpoint doc: [`docs/sprint_329_benefit_timing_copy_readability_guard.md`](docs/sprint_329_benefit_timing_copy_readability_guard.md).
+
+### Sprint 328: Bridge And Survivor Harm Checks
+
+**Complete 2026-05-24.** Kept benefit-timing candidates review-only when two-person plans need survivor setup first.
+
+Sprint 328 checkpoint doc: [`docs/sprint_328_bridge_survivor_harm_checks.md`](docs/sprint_328_bridge_survivor_harm_checks.md).
+
+### Sprint 327: Benefit Timing Example Matrix
+
+**Complete 2026-05-24.** Added example-matrix coverage for benefit-timing evidence and prohibited-copy posture.
+
+Sprint 327 checkpoint doc: [`docs/sprint_327_benefit_timing_example_matrix.md`](docs/sprint_327_benefit_timing_example_matrix.md).
+
+### Sprint 326: Benefit Timing Top-Three Evidence
+
+**Complete 2026-05-24.** Added a compact top-three CPP/OAS milestone-pair evidence row in the Details research path.
+
+Sprint 326 checkpoint doc: [`docs/sprint_326_benefit_timing_top_three_evidence.md`](docs/sprint_326_benefit_timing_top_three_evidence.md).
+
+### Sprint 325: Optimizer Candidate Limit Guard
+
+**Complete 2026-05-24.** Added an explicit bounded-candidate limit helper so future grid expansion preserves non-grid review families.
+
+Sprint 325 checkpoint doc: [`docs/sprint_325_optimizer_candidate_limit_guard.md`](docs/sprint_325_optimizer_candidate_limit_guard.md).
+
+### Sprint 324: Benefit Grid Copy Guard
+
+**Complete 2026-05-24.** Tightened Details evidence copy for benefit-grid output and added structure guards for review-first wording.
+
+Sprint 324 checkpoint doc: [`docs/sprint_324_benefit_grid_copy_guard.md`](docs/sprint_324_benefit_grid_copy_guard.md).
+
+### Sprint 323: Benefit Grid Evidence Summary
+
+**Complete 2026-05-24.** Added compact evidence rows for the best bounded CPP/OAS milestone pair while preserving the age-70 bridge check.
+
+Sprint 323 checkpoint doc: [`docs/sprint_323_benefit_grid_evidence_summary.md`](docs/sprint_323_benefit_grid_evidence_summary.md).
+
+### Sprint 322: Benefit Timing Milestone Grid
+
+**Complete 2026-05-24.** Expanded runtime benefit-timing candidates to a bounded milestone grid while preserving the saved-plan and engine-output boundaries.
+
+Sprint 322 checkpoint doc: [`docs/sprint_322_benefit_timing_milestone_grid.md`](docs/sprint_322_benefit_timing_milestone_grid.md).
 
 ### Sprint 321: Optimizer V1 Direction Closeout
 

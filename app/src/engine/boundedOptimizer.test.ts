@@ -110,8 +110,16 @@ describe('bounded optimizer runner', () => {
       'spendLess10',
       'retireLater1',
       'retireLater2',
+      'benefitGridCpp60Oas65',
+      'benefitGridCpp60Oas67',
+      'benefitGridCpp60Oas70',
+      'benefitGridCpp65Oas67',
       'benefitGridCpp65Oas70',
+      'benefitGridCpp67Oas65',
+      'benefitGridCpp67Oas67',
+      'benefitGridCpp67Oas70',
       'benefitGridCpp70Oas65',
+      'benefitGridCpp70Oas67',
       'delayBenefits',
       'withdrawalRegisteredFirst',
       'withdrawalNonRegisteredFirst'
@@ -129,6 +137,36 @@ describe('bounded optimizer runner', () => {
       oasAgeF: 65,
       oasAgeM: 65
     });
+  });
+
+  it('preserves non-grid review families when the bounded candidate limit is reached', () => {
+    const plan = readyPlan();
+    plan.p2 = {
+      ...plan.p2,
+      name: 'Morgan',
+      dob: 1969,
+      retireYear: 2033,
+      rrsp: 120000,
+      tfsa: 70000,
+      nonreg: 50000,
+      cpp65_monthly: 900,
+      cpp70_monthly: 1250,
+      oas_monthly: 742
+    };
+    plan.downsize = { year: 2040, netProceeds: 200000 };
+    plan.assumptions.cppSharing = false;
+    plan.assumptions.p1DiesInSurvivor = 2045;
+
+    const candidates = buildBoundedOptimizerCandidates(plan);
+    const ids = candidates.map((candidate) => candidate.id);
+
+    expect(candidates).toHaveLength(20);
+    expect(ids).toContain('delayBenefits');
+    expect(ids).toContain('pensionSplit');
+    expect(ids).toContain('cppSharing');
+    expect(ids).toContain('withoutDownsize');
+    expect(ids).toContain('withdrawalRegisteredFirst');
+    expect(ids).toContain('withdrawalNonRegisteredFirst');
   });
 
   it('runs candidates through the provided runner and does not persist optimizer output', () => {
@@ -153,13 +191,11 @@ describe('bounded optimizer runner', () => {
           ? 'withdrawalRegisteredFirst'
           : config.withdrawalOrder === 'nonreg-first'
             ? 'withdrawalNonRegisteredFirst'
-            : config.cppAgeF === 65 && config.oasAgeF === 70
-              ? 'benefitGridCpp65Oas70'
-              : config.cppAgeF === 70 && config.oasAgeF === 65
-                ? 'benefitGridCpp70Oas65'
-                : config.cppAgeF === 70
-                  ? 'delayBenefits'
-                  : candidatePlan.p1.retireYear === 2034
+            : config.cppAgeF === 70 && config.oasAgeF === 70
+              ? 'delayBenefits'
+              : config.cppAgeF && config.oasAgeF && (config.cppAgeF !== 65 || config.oasAgeF !== 65)
+                ? (`benefitGridCpp${config.cppAgeF}Oas${config.oasAgeF}` as BoundedOptimizerCandidateId)
+                : candidatePlan.p1.retireYear === 2034
                     ? 'retireLater2'
                     : candidatePlan.p1.retireYear === 2033
                       ? 'retireLater1'
@@ -168,7 +204,7 @@ describe('bounded optimizer runner', () => {
                         : candidatePlan.spending.gogo === 80750
                           ? 'spendLess5'
                           : 'baseline';
-      return byCandidate[id] || result(0, 0);
+      return byCandidate[id] || (String(id).startsWith('benefitGrid') ? result(90000, 91000, 2033) : result(0, 0));
     });
 
     expect(summary.status).toBe('ready');
@@ -181,7 +217,8 @@ describe('bounded optimizer runner', () => {
       savedOutput: 'none'
     });
     expect(summary.suggestedCandidateId).toBe('withdrawalRegisteredFirst');
-    expect(summary.candidates).toHaveLength(10);
+    expect(summary.candidates).toHaveLength(18);
+    expect(summary.candidates.filter((candidate) => candidate.changedLevers.includes('benefitTiming'))).toHaveLength(11);
     expect(summary.candidates.find((candidate) => candidate.id === 'withdrawalRegisteredFirst')?.sustainableAnnualSpend).toBe(85000);
     expect(summary.readinessRows.find((row) => row.id === 'spending')).toMatchObject({ status: 'ready' });
     expect(summary.readinessRows.find((row) => row.id === 'benefitEstimates')).toMatchObject({ status: 'ready' });
@@ -222,6 +259,22 @@ describe('bounded optimizer runner', () => {
     });
     expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
+    expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyFirst')).toMatchObject({
+      label: 'Withdrawal family to compare',
+      value: 'Registered first'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyLifetimeTax')).toMatchObject({
+      value: '-$10,000',
+      tone: 'ok'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyFirstYearTax')).toMatchObject({
+      value: '-$3,333',
+      tone: 'ok'
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyPeakTax')).toMatchObject({
+      value: '-$3,333',
+      tone: 'ok'
+    });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -234,7 +287,7 @@ describe('bounded optimizer runner', () => {
       status: 'canHighlight',
       reason: expect.stringContaining('without changing lifestyle or work timing')
     });
-    expect(calls).toHaveLength(10);
+    expect(calls).toHaveLength(18);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
   });
 
@@ -245,11 +298,24 @@ describe('bounded optimizer runner', () => {
     });
 
     expect(summary.evidenceRows.map((row) => row.id)).toEqual([
+      'benefitGridBestPair',
+      'benefitGridTopThree',
+      'benefitGridFundedYears',
+      'benefitGridLifetimeTax',
+      'benefitGridPortfolio',
       'benefitBridgeYears',
       'benefitFirstBridgeShortfall',
       'benefitLifetimeTax',
       'benefitPortfolio'
     ]);
+    expect(summary.evidenceRows.find((row) => row.id === 'benefitGridBestPair')).toMatchObject({
+      label: 'First milestone pair to review',
+      value: expect.stringContaining('CPP')
+    });
+    expect(summary.evidenceRows.find((row) => row.id === 'benefitGridTopThree')).toMatchObject({
+      label: 'Other milestone pairs to compare',
+      value: expect.stringContaining('CPP')
+    });
     expect(summary.evidenceRows.find((row) => row.id === 'benefitBridgeYears')).toMatchObject({
       label: 'Bridge years before age 70',
       value: '1 shortfall year',
@@ -381,6 +447,26 @@ describe('bounded optimizer runner', () => {
       meltdown: false,
       withdrawalOrder: 'default'
     });
+  });
+
+  it('requires registered and TFSA/non-registered buckets for withdrawal-family checks', () => {
+    const plan = readyPlan();
+    plan.p1.tfsa = 0;
+    plan.p1.nonreg = 0;
+    plan.cashWedge = { balance: 100000 };
+
+    const summary = runBoundedOptimizer(plan, () => result(100000, 90000));
+
+    expect(summary.readinessRows.find((row) => row.id === 'accountBuckets')).toMatchObject({
+      status: 'review',
+      detail: expect.stringContaining('TFSA/non-registered')
+    });
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'withdrawalOrder')).toMatchObject({
+      status: 'skipped',
+      reason: expect.stringContaining('TFSA/non-registered')
+    });
+    expect(summary.candidates.map((candidate) => candidate.id)).not.toContain('withdrawalRegisteredFirst');
+    expect(summary.candidates.map((candidate) => candidate.id)).not.toContain('withdrawalNonRegisteredFirst');
   });
 
   it('adds one bounded CPP sharing candidate for eligible couples without mutating the source plan', () => {
@@ -696,5 +782,35 @@ describe('bounded optimizer runner', () => {
       reason: expect.stringContaining('survivor scenario year')
     });
     expect(summary.status).toBe('ready');
+  });
+
+  it('keeps benefit timing review-only for two-person plans without a survivor year', () => {
+    const plan = readyPlan();
+    plan.p2 = {
+      ...plan.p2,
+      name: 'Morgan',
+      dob: 1969,
+      retireYear: 2033,
+      rrsp: 120000,
+      tfsa: 70000,
+      nonreg: 50000,
+      cpp65_monthly: 900,
+      cpp70_monthly: 1250,
+      oas_monthly: 742
+    };
+    plan.assumptions.p1DiesInSurvivor = 0;
+
+    const summary = runBoundedOptimizer(plan, (_candidatePlan, config) => {
+      if (config.cppAgeF === 70 || config.oasAgeF === 70) return result(500000, 70000, null);
+      return result(100000, 90000, 2033);
+    });
+
+    expect(summary.eligibilityNotes.find((note) => note.lever === 'survivor')).toMatchObject({
+      status: 'needsReview'
+    });
+    expect(summary.recommendationNotes.find((note) => note.candidateId === 'delayBenefits')).toMatchObject({
+      status: 'reviewOnly',
+      reason: expect.stringContaining('survivor scenario year')
+    });
   });
 });

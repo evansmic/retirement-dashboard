@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
+const boundedOptimizerSource = readFileSync(new URL('../engine/boundedOptimizer.ts', import.meta.url), 'utf8');
 
 describe('Results overview structure', () => {
   it('keeps audit-style evidence reachable from Details instead of the Overview flow', () => {
@@ -154,8 +155,19 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('CPP sharing');
     expect(appSource).toContain('Option evidence');
     expect(appSource).toContain('What changed in this test');
-    expect(appSource).toContain('income-sharing or home-sale reliance checks');
+    expect(appSource).toContain('benefit timing, income-sharing, or home-sale reliance checks');
     expect(appSource).toContain('Confirm eligibility before relying on them');
+    expect(boundedOptimizerSource).toContain('First milestone pair to review');
+    expect(boundedOptimizerSource).toContain('Other milestone pairs to compare');
+    expect(boundedOptimizerSource).toContain('Milestone funded years');
+    expect(boundedOptimizerSource).toContain('Milestone lifetime tax change');
+    expect(boundedOptimizerSource).toContain('Milestone money-left change');
+    expect(boundedOptimizerSource).toContain('Benefit timing stays review-only until a survivor scenario year is set');
+    expect(boundedOptimizerSource).toContain('Highest-ranked result inside the bounded benefit-timing milestone grid');
+    expect(boundedOptimizerSource).toContain('Withdrawal family to compare');
+    expect(boundedOptimizerSource).toContain('Withdrawal family first-year tax change');
+    expect(boundedOptimizerSource).toContain('Withdrawal family peak tax change');
+    expect(boundedOptimizerSource).toContain('not an annual account instruction');
     expect(appSource).toContain('Tax and funding drivers');
     expect(appSource).toContain('Why the option moved');
     expect(appSource).toContain('They explain direction, not a final recommendation');
@@ -184,6 +196,14 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Suggestion discipline');
     expect(appSource).not.toContain('strongest preview candidate');
     expect(appSource).not.toContain('No suggested plan');
+    expect(boundedOptimizerSource).not.toContain('Best milestone pair');
+    expect(appSource).not.toContain('do this');
+    expect(boundedOptimizerSource).not.toContain('optimal CPP');
+    expect(boundedOptimizerSource).not.toContain('optimal OAS');
+    expect(boundedOptimizerSource).not.toContain('recommended CPP');
+    expect(boundedOptimizerSource).not.toContain('recommended OAS');
+    expect(boundedOptimizerSource).not.toContain('start benefits at');
+    expect(boundedOptimizerSource).not.toContain('withdraw from this account');
   });
 
   it('keeps the normal Details option surface compact while preserving full option research behind a gate', () => {

@@ -40,7 +40,7 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
-Sprint 321 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, the first human-tester intake friction items have been addressed without broad UI redesign, the normal consumer Details path now shows one compact drawdown review summary instead of the full internal research stack, the older drawdown readiness diagnostic is gated with the hidden research panels, normal Details uses compact plan-options review while full option research and optimizer-prep diagnostics are gated, normal Details keeps benefit timing and spending stress while raw scenario tables are gated, normal Details keeps Money Flow story and first-year ledger while reconciliation diagnostics are gated, normal Details keeps the decision checklist while decision detail and projection path are gated, normal Details keeps a compact tax-pressure summary while the full tax table is gated, visible plan-selection copy is now framed as plan-review evidence rather than advice, Save & print now explains editable backup, printable report, and CSV results export boundaries, the latest tester-feedback slice adds a local year-by-year CSV export for annual projection detail, research gates are protected as disabled for the normal consumer path, guided-intake validation now describes non-blocking completeness issues as review items rather than warnings, results option copy now uses review-first labels instead of suggestion/recommendation-adjacent wording, local downloads are explicitly described as accountless and not uploaded, the normal Details evidence set is guarded as compact, the feedback-ready/deferred boundary is documented, CPP/OAS timing is explained as an age-65 current baseline with an age-70 review test rather than a saved editable input, the optimizer now records runtime-only readiness rows, v1 candidate-family boundaries, a max-after-tax-spend objective contract, staged CPP/OAS search shape, engine-supported 65/70 benefit-timing seed candidates, broad withdrawal-family shape, and sustainable monthly spend evidence, and the Results Overview has been reduced to the answer, spending capacity, top review actions, and compact estate/tax/survivor highlights. The next step is to widen benefit-timing execution beyond the current 65/70 seed candidates while preserving Details-first, runtime-only, non-advisory output.
+Sprint 336 is complete. Tax-aware drawdown work has a conservative v1 bounded execution path, baseline plus nearby spending stress live behind the engine-owned stress helper module, detailed Monte Carlo/historical stress has an explicit v1 deferral decision, checkpoint feedback produced a narrow trust-cleanup batch, DB pension splitting is now included in the current-plan baseline for eligible two-person plans, the broken legacy Canadian-rule probes have been repaired and promoted into the canonical runner, the bounded drawdown check now has a final checkpoint review, the first human-tester intake friction items have been addressed without broad UI redesign, the normal consumer Details path now shows one compact drawdown review summary instead of the full internal research stack, the older drawdown readiness diagnostic is gated with the hidden research panels, normal Details uses compact plan-options review while full option research and optimizer-prep diagnostics are gated, normal Details keeps benefit timing and spending stress while raw scenario tables are gated, normal Details keeps Money Flow story and first-year ledger while reconciliation diagnostics are gated, normal Details keeps the decision checklist while decision detail and projection path are gated, normal Details keeps a compact tax-pressure summary while the full tax table is gated, visible plan-selection copy is now framed as plan-review evidence rather than advice, Save & print now explains editable backup, printable report, and CSV results export boundaries, the tester-feedback slice now adds local year-by-year CSV export coverage for both React annual projection detail and the legacy dashboard Year-by-Year Detail scenario table, research gates are protected as disabled for the normal consumer path, guided-intake validation now describes non-blocking completeness issues as review items rather than warnings, results option copy now uses review-first labels instead of suggestion/recommendation-adjacent wording, local downloads are explicitly described as accountless and not uploaded, the normal Details evidence set is guarded as compact, the feedback-ready/deferred boundary is documented, CPP/OAS timing is explained as an age-65 current baseline with an age-70 review test rather than a saved editable input, the optimizer now records runtime-only readiness rows, v1 candidate-family boundaries, a max-after-tax-spend objective contract, staged CPP/OAS search shape, a bounded CPP/OAS milestone execution grid with compact first-to-review and top-three evidence, example-matrix coverage for benefit evidence, survivor and bridge-year guards for benefit timing, benefit-timing copy guards, broad withdrawal-family shape, withdrawal-family evidence including first-year tax, peak tax, lifetime tax, and OAS recovery when a broad family leads, example guardrails for withdrawal-family copy, account-bucket guardrails requiring registered plus TFSA/non-registered balances, a candidate-limit guard that preserves non-grid review families, and sustainable monthly spend evidence, and the Results Overview has been reduced to the answer, spending capacity, top review actions, and compact estate/tax/survivor highlights. The broad withdrawal-family surface is ready for feedback as high-level comparison evidence; annual withdrawal sequencing remains deferred.
 
 Completed Sprint 296-300 slices:
 
@@ -70,6 +70,112 @@ Completed Sprint 308-321 slices:
 - Added staged CPP/OAS search-shape metadata, engine-supported 65/70 timing seed candidates, and broad withdrawal-family metadata.
 - Added sustainable monthly spend evidence to the Details optimizer surface.
 - Kept annual overrides, Monte Carlo-in-loop search, saved optimizer output, and schema changes deferred.
+
+Completed Sprint 322 slice:
+
+- Expanded benefit timing execution from 65/70 seed candidates to a bounded CPP 60/65/67/70 and OAS 65/67/70 milestone grid.
+- Preserved the age-65 current-plan baseline and explicit age-70 delay candidate.
+- Kept optimizer candidates runtime-only and under the existing 20-candidate cap.
+
+Completed Sprint 323 slice:
+
+- Added compact Details evidence for the best bounded benefit-grid milestone pair.
+- Added funded-year, lifetime-tax, and projected money-left deltas for that pair.
+- Preserved the age-70 delay bridge-year evidence.
+
+Completed Sprint 324 slice:
+
+- Updated Details evidence copy to include benefit timing as part of option evidence.
+- Reframed benefit-grid labels around the first milestone pair to review.
+- Added UI structure guards for benefit-grid evidence and prohibited copy.
+
+Completed Sprint 325 slice:
+
+- Replaced silent candidate slicing with an explicit bounded-candidate limit helper.
+- Preserved non-grid review families and age-70 delay when the cap is reached.
+- Added an overflow test for two-person plans with benefit timing, income sharing, home-sale reliance, and withdrawal-family checks.
+
+Planned Sprint 326-330 benefit-timing hardening path:
+
+- S326: Add top-three benefit timing evidence in Details research output.
+- S327: Run and document a benefit timing example matrix.
+- S328: Tighten bridge-year and survivor harm checks.
+- S329: Guard benefit timing copy and readability.
+- S330: Stop for a checkpoint before widening another optimizer lever.
+
+Completed Sprint 326 slice:
+
+- Added compact top-three CPP/OAS milestone-pair evidence.
+- Preserved first-pair, funded-year, tax, money-left, and bridge-year evidence.
+- Kept the change runtime-only and Details-research oriented.
+
+Completed Sprint 327 slice:
+
+- Added example-matrix coverage for benefit-timing candidates and top-three evidence.
+- Guarded example benefit evidence against optimal, guaranteed, and do-this wording.
+- Kept evidence assertions eligibility-aware.
+
+Completed Sprint 328 slice:
+
+- Kept benefit timing review-only when a two-person plan lacks a survivor scenario year.
+- Preserved existing bridge-year shortfall review-only behavior.
+- Added focused coverage for the survivor guard.
+
+Completed Sprint 329 slice:
+
+- Added structure guards for benefit-timing evidence labels and survivor-review language.
+- Blocked optimal/recommended/start-benefits-at wording for CPP/OAS evidence.
+- Kept the guard aligned with engine evidence rendered in Details.
+
+Completed Sprint 330 slice:
+
+- Closed the benefit-timing hardening batch.
+- Documented bounded milestone-grid benefit timing as feedback-ready.
+- Recommended withdrawal sequencing prep as the next optimizer batch while deferring full exhaustive CPP/OAS search and Monte Carlo validation.
+
+Planned Sprint 331-335 withdrawal sequencing prep path:
+
+- S331: Add compact broad-family evidence when withdrawal order leads.
+- S332: Tighten account-bucket guardrails for broad withdrawal family comparison.
+- S333: Deepen tax and OAS recovery evidence for broad families.
+- S334: Guard examples and copy against annual account instructions.
+- S335: Stop for a withdrawal sequencing prep checkpoint.
+
+Completed Sprint 331 slice:
+
+- Added compact evidence rows for the leading broad withdrawal family.
+- Compared funded years, lifetime tax, OAS recovery, and projected money left against the current plan.
+- Kept evidence runtime-only and explicitly not an annual account instruction.
+
+Completed Sprint 332 slice:
+
+- Centralized account-bucket readiness for broad withdrawal-family checks.
+- Required meaningful registered and TFSA/non-registered balances.
+- Kept cash wedge from making withdrawal-family comparison eligible by itself.
+
+Completed Sprint 333 slice:
+
+- Added first-year and peak-tax evidence for leading broad withdrawal-family comparisons.
+- Kept lifetime tax, OAS recovery, and money-left evidence in the same broad-family group.
+- Preserved the no-instructions boundary.
+
+Completed Sprint 334 slice:
+
+- Added example-matrix guardrails for withdrawal-family evidence.
+- Required broad-family and current-plan framing when withdrawal order leads.
+- Blocked account-instruction and tax-bracket-optimization wording.
+
+Completed Sprint 335 slice:
+
+- Closed the withdrawal sequencing prep batch.
+- Documented broad withdrawal-family evidence as feedback-ready high-level comparison.
+- Kept annual override planning, exact sequencing, and tax-bracket optimization deferred.
+
+Completed Sprint 336 slice:
+
+- Added the year-by-year CSV download to the legacy dashboard table under Sequence-of-Returns.
+- Bound the export to the selected dashboard scenario and display-dollar mode.
+- Kept the export local-only and out of saved plan data.
 
 ## Consumer Roadmap Sequence
 

@@ -4,6 +4,8 @@ import { buildOptimizerContract, type OptimizerContract, type OptimizerLeverId }
 import { hasTwoPersonDbPensionIncome, shouldIncludeBaselinePensionSplitting } from './pensionSplitting';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 
+export type BenefitGridCandidateId = `benefitGridCpp${number}Oas${number}`;
+
 export type BoundedOptimizerCandidateId =
   | 'baseline'
   | 'spendLess5'
@@ -11,8 +13,7 @@ export type BoundedOptimizerCandidateId =
   | 'retireLater1'
   | 'retireLater2'
   | 'delayBenefits'
-  | 'benefitGridCpp65Oas70'
-  | 'benefitGridCpp70Oas65'
+  | BenefitGridCandidateId
   | 'pensionSplit'
   | 'cppSharing'
   | 'withoutDownsize'
@@ -108,11 +109,23 @@ export type BoundedOptimizerEvidenceRow = {
     | 'benefitFirstBridgeShortfall'
     | 'benefitLifetimeTax'
     | 'benefitPortfolio'
+    | 'benefitGridBestPair'
+    | 'benefitGridTopThree'
+    | 'benefitGridFundedYears'
+    | 'benefitGridLifetimeTax'
+    | 'benefitGridPortfolio'
     | 'homeRelianceFundedYears'
     | 'homeRelianceFirstShortfall'
     | 'homeReliancePortfolio'
     | 'homeRelianceLifetimeTax'
-    | 'homeRelianceEstateGap';
+    | 'homeRelianceEstateGap'
+    | 'withdrawalFamilyFirst'
+    | 'withdrawalFamilyFundedYears'
+    | 'withdrawalFamilyLifetimeTax'
+    | 'withdrawalFamilyFirstYearTax'
+    | 'withdrawalFamilyPeakTax'
+    | 'withdrawalFamilyOasRecovery'
+    | 'withdrawalFamilyPortfolio';
   label: string;
   value: string;
   detail: string;
@@ -214,6 +227,11 @@ const WITHDRAWAL_ORDERS: Array<{ id: BoundedOptimizerCandidateId; value: string;
   { id: 'withdrawalRegisteredFirst', value: 'registered-first', label: 'Registered accounts first' },
   { id: 'withdrawalNonRegisteredFirst', value: 'nonreg-first', label: 'Non-registered accounts first' }
 ];
+
+const BOUNDED_OPTIMIZER_CANDIDATE_LIMIT = 20;
+const WITHDRAWAL_BUCKET_MINIMUM = 25_000;
+const BENEFIT_GRID_CPP_AGES = [60, 65, 67, 70] as const;
+const BENEFIT_GRID_OAS_AGES = [65, 67, 70] as const;
 
 function n(value: unknown): number {
   const parsed = Number(value);
@@ -328,15 +346,13 @@ function buildReadinessRows(plan: V2PlanPayload, contract: OptimizerContract, el
   const endYear = projectionEndYear(plan);
   const people = activePeople(plan);
   const benefitSpaces = people.map(({ key, person }) => personBenefitSearchSpace(key, person, startYear, endYear));
-  const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
-  const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
   const estateTarget = n(plan.inheritance);
   const downsizeYear = n(plan.downsize?.year);
   const downsizeProceeds = n(plan.downsize?.netProceeds);
   const hasPartialHomeSale = (downsizeYear > 0 || downsizeProceeds > 0) && !(downsizeYear > 0 && downsizeProceeds > 0);
   const survivorNote = eligibilityNotes.find((note) => note.lever === 'survivor');
   const spendingReady = canExplore(contract, 'spending') && n(plan.spending.gogo) >= 30_000;
-  const accountsReady = registered > 10_000 && flexible > 10_000;
+  const accountsReady = hasMeaningfulWithdrawalBuckets(plan);
   const benefitEstimateReady = people.every(({ person }) => hasCppAndOasEstimate(person));
   const benefitGridReady = benefitSpaces.every((space) => space.status === 'ready');
 
@@ -370,8 +386,8 @@ function buildReadinessRows(plan: V2PlanPayload, contract: OptimizerContract, el
       label: 'Account buckets',
       status: accountsReady ? 'ready' : 'review',
       detail: accountsReady
-        ? 'Registered and flexible account buckets are meaningful enough for broad withdrawal-family checks.'
-        : 'Broad withdrawal-family checks need meaningful balances in registered and flexible buckets.'
+        ? 'Registered and TFSA/non-registered buckets are meaningful enough for broad withdrawal-family checks.'
+        : 'Broad withdrawal-family checks need meaningful balances in registered and TFSA/non-registered buckets.'
     },
     {
       id: 'estateTarget',
@@ -535,6 +551,12 @@ function totalAccountBalance(plan: V2PlanPayload, fields: Array<'rrsp' | 'lira' 
   return fields.reduce((total, field) => total + n(plan.p1[field]) + n(plan.p2[field]), 0);
 }
 
+function hasMeaningfulWithdrawalBuckets(plan: V2PlanPayload): boolean {
+  const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
+  const flexibleInvested = totalAccountBalance(plan, ['tfsa', 'nonreg']);
+  return registered >= WITHDRAWAL_BUCKET_MINIMUM && flexibleInvested >= WITHDRAWAL_BUCKET_MINIMUM;
+}
+
 function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract): BoundedOptimizerEligibilityNote[] {
   const spending = n(plan.spending.gogo);
   const retireYear = n(plan.assumptions.retireYear) || n(plan.p1.retireYear);
@@ -545,8 +567,7 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
   const activeBenefitPeople = activePeople(plan);
   const benefitPeopleReady = activeBenefitPeople.every(({ person }) => personCanStillDelayBenefits(person, startYear, endYear));
   const registered = totalAccountBalance(plan, ['rrsp', 'lira', 'lif']);
-  const flexible = totalAccountBalance(plan, ['tfsa', 'nonreg']) + n(plan.cashWedge?.balance);
-  const hasTwoAccountBuckets = registered > 10_000 && flexible > 10_000;
+  const hasTwoAccountBuckets = hasMeaningfulWithdrawalBuckets(plan);
   const pensionEligibleIncome = n(plan.p1.db_after65) + n(plan.p1.db_before65) + n(plan.p2.db_after65) + n(plan.p2.db_before65) + registered;
   const reachesPensionSplitAge = activePeople(plan).some(({ person }) => {
     const ageAtEnd = personAgeInYear(person, endYear);
@@ -593,8 +614,8 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
     lever: 'withdrawalOrder',
     status: !canExplore(contract, 'withdrawalOrder') || !hasTwoAccountBuckets ? 'skipped' : 'eligible',
     reason: hasTwoAccountBuckets
-      ? 'Withdrawal-order checks can be reviewed because there are meaningful balances in registered and flexible accounts.'
-      : 'Withdrawal-order checks are skipped until there are meaningful balances in more than one account bucket.'
+      ? 'Withdrawal-order checks can be reviewed because there are meaningful balances in registered and TFSA/non-registered accounts.'
+      : 'Withdrawal-order checks are skipped until there are meaningful balances in registered and TFSA/non-registered buckets.'
   });
   notes.push({
     lever: 'pensionSplitting',
@@ -703,16 +724,14 @@ function withCppSharing(plan: V2PlanPayload): V2PlanPayload {
 }
 
 function benefitGridCandidate(
-  id: BoundedOptimizerCandidateId,
-  label: string,
   plan: V2PlanPayload,
   config: SimulationConfig,
-  cppAge: 65 | 70,
-  oasAge: 65 | 70
+  cppAge: number,
+  oasAge: number
 ): BoundedOptimizerCandidateDefinition {
   return {
-    id,
-    label,
+    id: benefitGridCandidateId(cppAge, oasAge),
+    label: `Test CPP at ${cppAge} / OAS at ${oasAge}`,
     plan: extractPlanPayload(plan),
     config: { ...config, cppAgeF: cppAge, cppAgeM: cppAge, oasAgeF: oasAge, oasAgeM: oasAge },
     changedLevers: ['benefitTiming'],
@@ -720,6 +739,29 @@ function benefitGridCandidate(
     reviewNote: 'Review health, bridge funding, and benefit estimates before choosing timing.',
     disruptionPenalty: Math.abs(cppAge - 65) * 1_500 + Math.abs(oasAge - 65) * 1_500
   };
+}
+
+function benefitGridCandidateId(cppAge: number, oasAge: number): BenefitGridCandidateId {
+  return `benefitGridCpp${cppAge}Oas${oasAge}` as BenefitGridCandidateId;
+}
+
+function buildBenefitGridCandidates(plan: V2PlanPayload, config: SimulationConfig): BoundedOptimizerCandidateDefinition[] {
+  return BENEFIT_GRID_CPP_AGES.flatMap((cppAge) =>
+    BENEFIT_GRID_OAS_AGES.map((oasAge) => ({ cppAge, oasAge }))
+  )
+    .filter(({ cppAge, oasAge }) => !(cppAge === 65 && oasAge === 65))
+    .filter(({ cppAge, oasAge }) => !(cppAge === 70 && oasAge === 70))
+    .map(({ cppAge, oasAge }) => benefitGridCandidate(plan, config, cppAge, oasAge));
+}
+
+function limitBoundedOptimizerCandidates(candidates: BoundedOptimizerCandidateDefinition[]): BoundedOptimizerCandidateDefinition[] {
+  if (candidates.length <= BOUNDED_OPTIMIZER_CANDIDATE_LIMIT) return candidates;
+  const baseline = candidates[0];
+  const rest = candidates.slice(1);
+  const gridCandidates = rest.filter((candidate) => String(candidate.id).startsWith('benefitGrid'));
+  const preservedCandidates = rest.filter((candidate) => !String(candidate.id).startsWith('benefitGrid'));
+  const gridRoom = Math.max(0, BOUNDED_OPTIMIZER_CANDIDATE_LIMIT - 1 - preservedCandidates.length);
+  return [baseline, ...gridCandidates.slice(0, gridRoom), ...preservedCandidates].slice(0, BOUNDED_OPTIMIZER_CANDIDATE_LIMIT);
 }
 
 function withoutDownsize(plan: V2PlanPayload): V2PlanPayload {
@@ -803,8 +845,7 @@ export function buildBoundedOptimizerCandidates(
 
   if (eligible(eligibilityNotes, 'benefitTiming')) {
     candidates.push(
-      benefitGridCandidate('benefitGridCpp65Oas70', 'Test CPP at 65 / OAS at 70', plan, config, 65, 70),
-      benefitGridCandidate('benefitGridCpp70Oas65', 'Test CPP at 70 / OAS at 65', plan, config, 70, 65),
+      ...buildBenefitGridCandidates(plan, config),
       {
         id: 'delayBenefits',
         label: 'Test CPP/OAS at 70',
@@ -873,7 +914,7 @@ export function buildBoundedOptimizerCandidates(
     });
   }
 
-  return candidates.slice(0, 20);
+  return limitBoundedOptimizerCandidates(candidates);
 }
 
 function summarizeResult(result: SimulationResult | null | undefined) {
@@ -957,7 +998,8 @@ function recommendationPermission(
   row: Pick<BoundedOptimizerCandidateRow, 'id' | 'label' | 'changedLevers'>,
   summary: ReturnType<typeof summarizeResult>,
   baseline: ReturnType<typeof summarizeResult>,
-  estateTarget: number
+  estateTarget: number,
+  survivorNeedsReview = false
 ): { eligible: boolean; reason: string } {
   if (row.id === 'baseline') {
     return { eligible: true, reason: 'The current plan can stay first when other options do not clear the suggestion bar.' };
@@ -988,6 +1030,13 @@ function recommendationPermission(
     return {
       eligible: false,
       reason: `Benefit delay remains review-only because ${bridge.count} bridge year${bridge.count === 1 ? '' : 's'} before age 70 ${bridge.count === 1 ? 'shows' : 'show'} a spending shortfall${bridge.firstYear ? `, starting in ${bridge.firstYear}` : ''}.`
+    };
+  }
+
+  if (row.changedLevers.includes('benefitTiming') && survivorNeedsReview) {
+    return {
+      eligible: false,
+      reason: 'Benefit timing stays review-only until a survivor scenario year is set for this two-person plan.'
     };
   }
 
@@ -1274,11 +1323,13 @@ function buildBenefitTimingEvidence(
   const delay = summaries.delayBenefits;
   if (!baseline || !delay || delay.totalYears === 0) return [];
 
+  const gridEvidence = buildBenefitGridEvidence(summaries, baseline);
   const bridge = benefitBridgeShortfall(delay);
   const lifetimeTaxDelta = delay.lifetimeTax - baseline.lifetimeTax;
   const portfolioDelta = delay.endPortfolio - baseline.endPortfolio;
 
   return [
+    ...gridEvidence,
     {
       id: 'benefitBridgeYears',
       label: 'Bridge years before age 70',
@@ -1308,6 +1359,89 @@ function buildBenefitTimingEvidence(
       tone: evidenceTone(portfolioDelta, false)
     }
   ];
+}
+
+function parseBenefitGridId(id: string): { cppAge: number; oasAge: number } | null {
+  const match = /^benefitGridCpp(\d+)Oas(\d+)$/.exec(id);
+  if (!match) return null;
+  return { cppAge: Number(match[1]), oasAge: Number(match[2]) };
+}
+
+function compareBenefitGridSummaries(
+  a: { id: BoundedOptimizerCandidateId; summary: ReturnType<typeof summarizeResult> },
+  b: { id: BoundedOptimizerCandidateId; summary: ReturnType<typeof summarizeResult> }
+): number {
+  if (a.summary.totalYears === 0 && b.summary.totalYears > 0) return 1;
+  if (a.summary.totalYears > 0 && b.summary.totalYears === 0) return -1;
+  if (a.summary.firstShortfallYear && !b.summary.firstShortfallYear) return 1;
+  if (!a.summary.firstShortfallYear && b.summary.firstShortfallYear) return -1;
+  if (a.summary.fundedYears !== b.summary.fundedYears) return b.summary.fundedYears - a.summary.fundedYears;
+  if (a.summary.endPortfolio !== b.summary.endPortfolio) return b.summary.endPortfolio - a.summary.endPortfolio;
+  if (a.summary.lifetimeTax !== b.summary.lifetimeTax) return a.summary.lifetimeTax - b.summary.lifetimeTax;
+  return String(a.id).localeCompare(String(b.id));
+}
+
+function buildBenefitGridEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>,
+  baseline: ReturnType<typeof summarizeResult>
+): BoundedOptimizerEvidenceRow[] {
+  const gridRows = Object.entries(summaries)
+    .filter(([id, summary]) => id.startsWith('benefitGrid') && summary && summary.totalYears > 0)
+    .map(([id, summary]) => ({ id: id as BoundedOptimizerCandidateId, summary: summary as ReturnType<typeof summarizeResult> }))
+    .sort(compareBenefitGridSummaries);
+  const best = gridRows[0];
+  const ages = best ? parseBenefitGridId(best.id) : null;
+  if (!best || !ages) return [];
+
+  const fundedYearsDelta = best.summary.fundedYears - baseline.fundedYears;
+  const lifetimeTaxDelta = best.summary.lifetimeTax - baseline.lifetimeTax;
+  const portfolioDelta = best.summary.endPortfolio - baseline.endPortfolio;
+
+  return [
+    {
+      id: 'benefitGridBestPair',
+      label: 'First milestone pair to review',
+      value: `CPP ${ages.cppAge} / OAS ${ages.oasAge}`,
+      detail: 'Highest-ranked result inside the bounded benefit-timing milestone grid, before full exhaustive search.',
+      tone: best.summary.firstShortfallYear ? 'watch' : 'neutral'
+    },
+    {
+      id: 'benefitGridTopThree',
+      label: 'Other milestone pairs to compare',
+      value: topBenefitGridPairText(gridRows.slice(0, 3)),
+      detail: 'Shows the leading milestone pairs from the same bounded grid so the first pair is not read in isolation.',
+      tone: 'neutral'
+    },
+    {
+      id: 'benefitGridFundedYears',
+      label: 'Milestone funded years',
+      value: fundedYearsDelta === 0 ? 'No change' : `${fundedYearsDelta > 0 ? '+' : ''}${fundedYearsDelta} year${Math.abs(fundedYearsDelta) === 1 ? '' : 's'}`,
+      detail: 'Compares funded projection years for the best milestone pair against the current plan.',
+      tone: fundedYearsDelta === 0 ? 'neutral' : fundedYearsDelta > 0 ? 'ok' : 'watch'
+    },
+    {
+      id: 'benefitGridLifetimeTax',
+      label: 'Milestone lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax for the best milestone pair against the current plan.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'benefitGridPortfolio',
+      label: 'Milestone money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left for the best milestone pair against the current plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
+}
+
+function topBenefitGridPairText(rows: Array<{ id: BoundedOptimizerCandidateId; summary: ReturnType<typeof summarizeResult> }>): string {
+  return rows
+    .map((row) => parseBenefitGridId(row.id))
+    .filter((ages): ages is { cppAge: number; oasAge: number } => Boolean(ages))
+    .map((ages) => `CPP ${ages.cppAge} / OAS ${ages.oasAge}`)
+    .join('; ');
 }
 
 function buildHomeSaleRelianceEvidence(
@@ -1368,6 +1502,81 @@ function buildHomeSaleRelianceEvidence(
   }
 
   return rows;
+}
+
+function withdrawalFamilyLabel(id: BoundedOptimizerCandidateId): string {
+  if (id === 'withdrawalRegisteredFirst') return 'Registered first';
+  if (id === 'withdrawalNonRegisteredFirst') return 'Non-registered first';
+  if (id === 'withdrawalDefault') return 'Default order';
+  return 'Withdrawal family';
+}
+
+function buildWithdrawalFamilyEvidence(
+  summaries: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>,
+  suggested: BoundedOptimizerCandidateRow | null
+): BoundedOptimizerEvidenceRow[] {
+  const baseline = summaries.baseline;
+  const candidate = suggested ? summaries[suggested.id] : null;
+  if (!baseline || !candidate || !suggested?.changedLevers.includes('withdrawalOrder') || candidate.totalYears === 0) return [];
+
+  const fundedYearsDelta = candidate.fundedYears - baseline.fundedYears;
+  const lifetimeTaxDelta = candidate.lifetimeTax - baseline.lifetimeTax;
+  const firstYearTaxDelta = candidate.firstYearTax - baseline.firstYearTax;
+  const peakTaxDelta = candidate.peakTax - baseline.peakTax;
+  const oasDelta = candidate.lifetimeOasRecovery - baseline.lifetimeOasRecovery;
+  const portfolioDelta = candidate.endPortfolio - baseline.endPortfolio;
+
+  return [
+    {
+      id: 'withdrawalFamilyFirst',
+      label: 'Withdrawal family to compare',
+      value: withdrawalFamilyLabel(suggested.id),
+      detail: 'Compares the leading broad withdrawal-order family with the current plan. This is not an annual account instruction.',
+      tone: 'neutral'
+    },
+    {
+      id: 'withdrawalFamilyFundedYears',
+      label: 'Withdrawal family funded years',
+      value: fundedYearsDelta === 0 ? 'No change' : `${fundedYearsDelta > 0 ? '+' : ''}${fundedYearsDelta} year${Math.abs(fundedYearsDelta) === 1 ? '' : 's'}`,
+      detail: 'Compares funded projection years for the leading withdrawal family against the current plan.',
+      tone: fundedYearsDelta === 0 ? 'neutral' : fundedYearsDelta > 0 ? 'ok' : 'watch'
+    },
+    {
+      id: 'withdrawalFamilyLifetimeTax',
+      label: 'Withdrawal family lifetime tax change',
+      value: signedMoneyText(lifetimeTaxDelta),
+      detail: 'Compares total tax for the leading broad withdrawal family against the current plan.',
+      tone: evidenceTone(lifetimeTaxDelta)
+    },
+    {
+      id: 'withdrawalFamilyFirstYearTax',
+      label: 'Withdrawal family first-year tax change',
+      value: signedMoneyText(firstYearTaxDelta),
+      detail: 'Compares first projection-year tax for the leading broad withdrawal family against the current plan.',
+      tone: evidenceTone(firstYearTaxDelta)
+    },
+    {
+      id: 'withdrawalFamilyPeakTax',
+      label: 'Withdrawal family peak tax change',
+      value: signedMoneyText(peakTaxDelta),
+      detail: 'Compares the highest annual tax year for the leading broad withdrawal family against the current plan.',
+      tone: evidenceTone(peakTaxDelta)
+    },
+    {
+      id: 'withdrawalFamilyOasRecovery',
+      label: 'Withdrawal family OAS recovery change',
+      value: signedMoneyText(oasDelta),
+      detail: 'Compares OAS recovery tax for the leading broad withdrawal family against the current plan.',
+      tone: evidenceTone(oasDelta)
+    },
+    {
+      id: 'withdrawalFamilyPortfolio',
+      label: 'Withdrawal family money-left change',
+      value: signedMoneyText(portfolioDelta),
+      detail: 'Compares projected money left for the leading broad withdrawal family against the current plan.',
+      tone: evidenceTone(portfolioDelta, false)
+    }
+  ];
 }
 
 function buildDriverRows(
@@ -1442,8 +1651,9 @@ export function runBoundedOptimizer(
     summary: summarizeResult(result)
   }));
   const baselineSummary = summarizedResults[0]?.summary;
+  const survivorNeedsReview = eligibilityNotes.some((note) => note.lever === 'survivor' && note.status === 'needsReview');
   const rows = summarizedResults.map(({ definition, summary }) => {
-    const recommendation = recommendationPermission(definition, summary, baselineSummary, estateTarget);
+    const recommendation = recommendationPermission(definition, summary, baselineSummary, estateTarget, survivorNeedsReview);
     return {
       id: definition.id,
       label: definition.label,
@@ -1486,7 +1696,8 @@ export function runBoundedOptimizer(
     ...buildBenefitTimingEvidence(summaryById),
     ...buildPensionSplittingEvidence(summaryById),
     ...buildCppSharingEvidence(summaryById),
-    ...buildHomeSaleRelianceEvidence(summaryById, plan)
+    ...buildHomeSaleRelianceEvidence(summaryById, plan),
+    ...buildWithdrawalFamilyEvidence(summaryById, suggestedRow)
   ];
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);

@@ -4640,7 +4640,7 @@ function BoundedOptimizerPanel({
           <div>
             <p className="eyebrow">Option evidence</p>
             <h3>What changed in this test</h3>
-            <p>These rows compare income-sharing or home-sale reliance checks with the current plan. Confirm eligibility before relying on them.</p>
+            <p>These rows compare benefit timing, income-sharing, or home-sale reliance checks with the current plan. Confirm eligibility before relying on them.</p>
           </div>
           <div className="optimizer-evidence-grid">
             {summary.evidenceRows.map((row) => (

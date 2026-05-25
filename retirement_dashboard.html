@@ -163,7 +163,7 @@ body.blank-mode .body { display:none !important }
   .hdr, .body, .disclaimer { max-width: 100% !important; padding: 8mm !important; }
   .disclaimer { break-inside: avoid; page-break-inside: avoid; color: #333 !important; }
   .tabs, #unitToggle, #printBtn,
-  #mcRunBtn, #seqRunBtn, #cmpPosBtn,
+  #mcRunBtn, #seqRunBtn, #cmpPosBtn, #detCsvBtn,
   .mc-banner .mc-actions { display: none !important; }
   /* The MC banner itself prints when complete (it carries the headline
      funded-path rate the print reader most wants); the progress controls don't. */
@@ -471,7 +471,13 @@ body.blank-mode .body { display:none !important }
   <div class="detail-card">
     <div class="detail-hdr" onclick="toggleDetail()">
       <h3>📅 Year-by-Year Detail — <span id="detScenLabel">Recommended Plan</span></h3>
-      <span class="toggle" id="detToggle">▼ Show</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button type="button" id="detCsvBtn" onclick="downloadActiveScenarioDetailCsv(event)"
+          style="background:#fff;border:1px solid #ccd;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:#234">
+          Download CSV
+        </button>
+        <span class="toggle" id="detToggle">▼ Show</span>
+      </div>
     </div>
     <div class="detail-body hidden" id="detBody">
       <table class="det-table">
@@ -3332,6 +3338,102 @@ function updateDetailTable(){
       <td>${fmtM(y.bal_nonreg)}</td>
     </tr>`;
   }).join('');
+}
+
+function csvCell(value){
+  const text = value == null ? '' : String(value);
+  return /[",\n\r]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+function scenarioDetailCsvRows(){
+  const scn = SCENARIOS[activeScenario];
+  const rawYears = RESULTS[activeScenario].years || [];
+  const years = displayUnit === 'real' ? rawYears.map(inflateRow) : rawYears;
+  const headers = [
+    'Scenario',
+    'Display dollars',
+    'Year',
+    'Age F',
+    'Age M',
+    'Person 1 alive',
+    'Salary',
+    'DB pension',
+    'CPP F',
+    'CPP M',
+    'OAS F',
+    'OAS M',
+    'RRIF/RRSP draw F',
+    'RRIF/RRSP draw M',
+    'LIF draw',
+    'TFSA draw',
+    'Non-registered draw',
+    'Cash wedge draw',
+    'Total sources',
+    'Total tax',
+    'OAS recovery tax',
+    'Actual after-tax spend',
+    'Monthly after-tax spend',
+    'Target spending',
+    'Mortgage',
+    'Shortfall',
+    'RRSP/RRIF balance',
+    'TFSA balance',
+    'LIF balance',
+    'Non-registered balance'
+  ];
+  const body = years.map((y) => {
+    const salary = (y.salary_f || 0) + (y.salary_m || 0);
+    const dbPension = (y.dbPension || 0) + (y.dbPension_m || 0) + (y.dbSurvivor || 0);
+    const totalSources = (y.grossIncome || 0) + (y.tfsa_draw || 0) + (y.nonreg_draw || 0) + (y.cash_draw || 0);
+    return [
+      scn.label,
+      displayUnit,
+      y.year,
+      y.ageF,
+      y.ageM,
+      y.p1Alive === false ? 'No' : 'Yes',
+      Math.round(salary || 0),
+      Math.round(dbPension || 0),
+      Math.round(y.cpp_f || 0),
+      Math.round(y.cpp_m || 0),
+      Math.round(y.oas_f || 0),
+      Math.round(y.oas_m || 0),
+      Math.round(y.rrif_draw_f || 0),
+      Math.round(y.rrif_draw_m || 0),
+      Math.round(y.lif_draw || 0),
+      Math.round(y.tfsa_draw || 0),
+      Math.round(y.nonreg_draw || 0),
+      Math.round(y.cash_draw || 0),
+      Math.round(totalSources || 0),
+      Math.round(y.totalTaxYear || 0),
+      Math.round(y.totalOasClawY || 0),
+      Math.round(y.totalAftaxYear || 0),
+      Math.round((y.totalAftaxYear || 0) / 12),
+      Math.round(y.spending || 0),
+      Math.round(y.mortgage || 0),
+      Math.round(y.shortfall || 0),
+      Math.round(y.bal_rrsp || 0),
+      Math.round(y.bal_tfsa || 0),
+      Math.round(y.bal_lif || 0),
+      Math.round(y.bal_nonreg || 0)
+    ];
+  });
+  return [headers, ...body];
+}
+
+function downloadActiveScenarioDetailCsv(event){
+  if(event) event.stopPropagation();
+  const rows = scenarioDetailCsvRows();
+  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeFilenamePart(D.title || 'retirement-plan')}-${activeScenario}-${displayUnit}-year-by-year.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ════════════════════════════════════════════════════════

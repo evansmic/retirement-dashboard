@@ -177,6 +177,40 @@ describe('example-plan optimizer readiness matrix', () => {
         expect(row.changeSummary).not.toContain('annual override');
         expect(row.changeSummary).not.toContain('year-by-year');
       }
+
+      const withdrawalEvidence = summary.evidenceRows.filter((row) => row.id.startsWith('withdrawalFamily'));
+      const evidenceCopy = JSON.stringify(withdrawalEvidence).toLowerCase();
+      if (summary.candidates.find((row) => row.id === summary.suggestedCandidateId)?.changedLevers.includes('withdrawalOrder')) {
+        expect(withdrawalEvidence.length, `${card.id} withdrawal evidence`).toBeGreaterThan(0);
+        expect(evidenceCopy, `${card.id} withdrawal evidence`).toContain('broad withdrawal');
+        expect(evidenceCopy, `${card.id} withdrawal evidence`).toContain('current plan');
+      }
+      expect(evidenceCopy, `${card.id} withdrawal evidence`).not.toContain('withdraw from this account');
+      expect(evidenceCopy, `${card.id} withdrawal evidence`).not.toContain('withdraw $');
+      expect(evidenceCopy, `${card.id} withdrawal evidence`).not.toContain('tax-bracket optimization');
+    }
+  });
+
+  it('keeps benefit-timing evidence review-oriented across the example matrix', () => {
+    for (const card of examplePlanCards) {
+      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+      const benefitRows = summary.candidates.filter((row) => row.changedLevers.includes('benefitTiming'));
+      const evidenceCopy = summary.evidenceRows
+        .filter((row) => row.id.startsWith('benefit'))
+        .map((row) => `${row.label} ${row.value} ${row.detail}`)
+        .join(' ')
+        .toLowerCase();
+
+      if (summary.eligibilityNotes.find((note) => note.lever === 'benefitTiming')?.status === 'eligible') {
+        expect(benefitRows.length, `${card.id} benefit timing candidates`).toBeGreaterThan(0);
+        expect(summary.evidenceRows.find((row) => row.id === 'benefitGridTopThree'), `${card.id} top-three evidence`).toBeTruthy();
+        expect(evidenceCopy, `${card.id} benefit evidence`).toContain('review');
+        expect(evidenceCopy, `${card.id} benefit evidence`).toContain('compare');
+      }
+
+      expect(evidenceCopy, `${card.id} benefit evidence`).not.toContain('optimal');
+      expect(evidenceCopy, `${card.id} benefit evidence`).not.toContain('guaranteed');
+      expect(evidenceCopy, `${card.id} benefit evidence`).not.toContain('do this');
     }
   });
 

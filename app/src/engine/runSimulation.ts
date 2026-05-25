@@ -3,10 +3,10 @@ import { validatePlanForGuidedIntake } from '../data/planValidation';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
 
 export type SimulationConfig = {
-  cppAgeF?: 65 | 70;
-  cppAgeM?: 65 | 70;
-  oasAgeF?: 65 | 70;
-  oasAgeM?: 65 | 70;
+  cppAgeF?: number;
+  cppAgeM?: number;
+  oasAgeF?: number;
+  oasAgeM?: number;
   meltdown?: boolean;
   meltdownDraw60_64?: number;
   meltdownDraw65plus?: number;
