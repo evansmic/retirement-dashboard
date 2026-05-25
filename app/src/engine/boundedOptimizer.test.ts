@@ -287,6 +287,10 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'guardrails', status: 'ready' }),
       expect.objectContaining({ id: 'savedOutputBoundary', status: 'ready' })
     ]);
+    expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('current plan versus broad withdrawal-family comparison');
+    expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('annual account-level sequencing is still deferred');
+    expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('year-by-year withdrawal instruction');
+    expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('advice instead of plan-review evidence');
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -589,6 +593,7 @@ describe('bounded optimizer runner', () => {
       status: 'blocked',
       detail: expect.stringContaining('meaningful registered and flexible account balances')
     });
+    expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('Which missing input');
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });

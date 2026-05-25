@@ -152,6 +152,8 @@ export type WithdrawalFeedbackReview = {
   headline: string;
   detail: string;
   rows: WithdrawalFeedbackReviewRow[];
+  questions: string[];
+  confusionSignals: string[];
   nextDecision: string;
 };
 
@@ -1727,6 +1729,23 @@ function buildWithdrawalFeedbackReview({
     detail:
       'This checkpoint decides whether users understand the high-level drawdown comparison before annual withdrawal sequencing is planned.',
     rows,
+    questions:
+      status === 'needsInputReview'
+        ? [
+            'Which missing input made the broad withdrawal-family check unavailable?',
+            'Does the user understand what account balances are needed before comparing drawdown families?',
+            'Is it clear that annual sequencing has not started?'
+          ]
+        : [
+            'Can the user explain current plan versus broad withdrawal-family comparison in their own words?',
+            'Can the user identify that funded years, tax, OAS recovery, and money left are evidence, not instructions?',
+            'Does the user understand why annual account-level sequencing is still deferred?'
+          ],
+    confusionSignals: [
+      'User reads a broad family as a year-by-year withdrawal instruction.',
+      'User looks for exact account amounts before reviewing the high-level trade-off.',
+      'User treats lower tax or higher money left as advice instead of plan-review evidence.'
+    ],
     nextDecision:
       status === 'readyForFeedback'
         ? 'Collect feedback on whether broad families are understandable before planning annual account-level sequencing.'

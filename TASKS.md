@@ -4,37 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 341: Withdrawal Feedback Checkpoint
+## Latest Sprint — Sprint 346: Withdrawal Feedback Hardening Closeout
 
 **Status:** Complete 2026-05-25.
 
-Goal: prepare broad withdrawal-family optimizer evidence for feedback before deciding whether to plan annual account-level sequencing.
+Goal: harden the broad withdrawal-family feedback pass before deciding whether annual account-level sequencing should be planned.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 341 checkpoint doc: [`docs/sprint_341_withdrawal_feedback_checkpoint.md`](docs/sprint_341_withdrawal_feedback_checkpoint.md).
+Sprint 346 checkpoint doc: [`docs/sprint_346_withdrawal_feedback_hardening_closeout.md`](docs/sprint_346_withdrawal_feedback_hardening_closeout.md).
 
-### Sprint 337-341 Planned Path
+### Sprint 342-346 Planned Path
 
-- **S337 — Withdrawal Feedback Readiness Contract.** Add runtime-only rows that decide whether broad withdrawal-family evidence is ready for feedback.
-- **S338 — Annual Instruction Boundary.** Keep the checkpoint explicit that annual account-level instructions remain deferred.
-- **S339 — Feedback Evidence Clarity.** Surface whether tax, OAS recovery, funded-year, and money-left evidence appears when a broad family leads.
-- **S340 — Details Research Surface.** Show the checkpoint in the Details research path without changing Overview or saved data.
-- **S341 — Withdrawal Feedback Checkpoint.** Close the batch and decide whether annual sequencing should remain deferred.
+- **S342 — Feedback Question Set.** Add specific tester questions for broad withdrawal-family evidence.
+- **S343 — Confusion Signal Guard.** Name the misunderstandings that should block annual sequencing.
+- **S344 — Input-Cleanup Question Path.** Show different questions when broad-family feedback is blocked by missing inputs.
+- **S345 — Details Research Copy Guard.** Render questions and confusion signals only in the Details research surface.
+- **S346 — Withdrawal Feedback Hardening Closeout.** Keep annual sequencing deferred until feedback is reviewed.
 
-### Sprint 337-341 Candidate Implementation Tickets
+### Sprint 342-346 Candidate Implementation Tickets
 
-- [x] **S337-01 — Feedback readiness rows.** Add broad-family presence, evidence clarity, household guardrail, and saved-output boundary checks.
-- [x] **S338-01 — Annual boundary row.** Show that annual account-level sequencing remains deferred.
-- [x] **S339-01 — Evidence clarity status.** Mark evidence ready only when the leading broad family has comparison evidence.
-- [x] **S340-01 — Details research rendering.** Render the checkpoint inside the full optimizer research panel.
-- [x] **S341-01 — Checkpoint docs.** Document that broad-family feedback can proceed, but annual sequencing remains a later decision.
+- [x] **S342-01 — Tester questions.** Add questions that check whether users understand broad families as comparison evidence.
+- [x] **S343-01 — Confusion signals.** Add signals for instruction confusion, premature account amounts, and advice-like interpretation.
+- [x] **S344-01 — Blocked-input questions.** Ask input-cleanup questions when broad-family checks cannot run.
+- [x] **S345-01 — Details rendering.** Render feedback questions and confusion signals in the full Details research panel only.
+- [x] **S346-01 — Closeout docs.** Document that feedback should be reviewed before annual sequencing planning.
 
-### Sprint 337-341 Definition Of Done
+### Sprint 342-346 Definition Of Done
 
-- Broad withdrawal-family feedback readiness is runtime-only.
-- The checkpoint keeps annual instructions and annual overrides deferred.
-- Details research can show what must be reviewed before relying on broad-family evidence.
+- Feedback questions and confusion signals are runtime-only.
+- Annual instructions and annual overrides remain deferred.
+- Blocked-input states ask cleanup questions instead of implying optimizer failure.
 - Overview remains unchanged.
 - No `.plan.json` files are created.
 - Focused optimizer and UI structure tests pass.
@@ -125,6 +125,36 @@ Sprint 341 checkpoint doc: [`docs/sprint_341_withdrawal_feedback_checkpoint.md`]
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 346: Withdrawal Feedback Hardening Closeout
+
+**Complete 2026-05-25.** Closed the feedback-hardening batch and kept annual sequencing deferred until feedback is reviewed.
+
+Sprint 346 checkpoint doc: [`docs/sprint_346_withdrawal_feedback_hardening_closeout.md`](docs/sprint_346_withdrawal_feedback_hardening_closeout.md).
+
+### Sprint 345: Details Research Copy Guard
+
+**Complete 2026-05-25.** Rendered feedback questions and confusion signals in the full Details optimizer research surface only.
+
+Sprint 345 checkpoint doc: [`docs/sprint_345_withdrawal_feedback_details_copy_guard.md`](docs/sprint_345_withdrawal_feedback_details_copy_guard.md).
+
+### Sprint 344: Input-Cleanup Question Path
+
+**Complete 2026-05-25.** Added cleanup-oriented questions when broad withdrawal-family feedback is blocked by missing inputs.
+
+Sprint 344 checkpoint doc: [`docs/sprint_344_withdrawal_feedback_input_cleanup.md`](docs/sprint_344_withdrawal_feedback_input_cleanup.md).
+
+### Sprint 343: Confusion Signal Guard
+
+**Complete 2026-05-25.** Added confusion signals that should block annual sequencing planning if users read broad families as instructions.
+
+Sprint 343 checkpoint doc: [`docs/sprint_343_withdrawal_feedback_confusion_signals.md`](docs/sprint_343_withdrawal_feedback_confusion_signals.md).
+
+### Sprint 342: Feedback Question Set
+
+**Complete 2026-05-25.** Added tester questions for broad withdrawal-family evidence.
+
+Sprint 342 checkpoint doc: [`docs/sprint_342_withdrawal_feedback_questions.md`](docs/sprint_342_withdrawal_feedback_questions.md).
 
 ### Sprint 341: Withdrawal Feedback Checkpoint
 

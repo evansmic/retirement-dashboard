@@ -4651,6 +4651,24 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+          <div className="result-overview-grid">
+            <section className="optimizer-explanation-card">
+              <h3>Feedback questions</h3>
+              <ul className="compact-list">
+                {summary.withdrawalFeedbackReview.questions.map((question) => (
+                  <li key={question}>{question}</li>
+                ))}
+              </ul>
+            </section>
+            <section className="optimizer-explanation-card">
+              <h3>Confusion signals</h3>
+              <ul className="compact-list">
+                {summary.withdrawalFeedbackReview.confusionSignals.map((signal) => (
+                  <li key={signal}>{signal}</li>
+                ))}
+              </ul>
+            </section>
+          </div>
           <p className="table-note">{summary.withdrawalFeedbackReview.nextDecision}</p>
         </section>
       ) : null}
