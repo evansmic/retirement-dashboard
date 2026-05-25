@@ -4,37 +4,38 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 346: Withdrawal Feedback Hardening Closeout
+## Latest Sprint — Sprint 356: Withdrawal Feedback Worksheet Closeout
 
 **Status:** Complete 2026-05-25.
 
-Goal: harden the broad withdrawal-family feedback pass before deciding whether annual account-level sequencing should be planned.
+Goal: add a runtime-only tester worksheet for broad withdrawal-family evidence before annual sequencing planning.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 346 checkpoint doc: [`docs/sprint_346_withdrawal_feedback_hardening_closeout.md`](docs/sprint_346_withdrawal_feedback_hardening_closeout.md).
+Sprint 356 checkpoint doc: [`docs/sprint_356_withdrawal_feedback_worksheet_closeout.md`](docs/sprint_356_withdrawal_feedback_worksheet_closeout.md).
 
-### Sprint 342-346 Planned Path
+### Sprint 352-356 Planned Path
 
-- **S342 — Feedback Question Set.** Add specific tester questions for broad withdrawal-family evidence.
-- **S343 — Confusion Signal Guard.** Name the misunderstandings that should block annual sequencing.
-- **S344 — Input-Cleanup Question Path.** Show different questions when broad-family feedback is blocked by missing inputs.
-- **S345 — Details Research Copy Guard.** Render questions and confusion signals only in the Details research surface.
-- **S346 — Withdrawal Feedback Hardening Closeout.** Keep annual sequencing deferred until feedback is reviewed.
+- **S352 — Worksheet Sections.** Add understanding, evidence, boundary, and decision worksheet sections.
+- **S353 — Pass Signals.** Add pass signals for each worksheet section.
+- **S354 — Blocked-State Worksheet.** Provide cleanup-oriented worksheet prompts when broad-family checks are blocked.
+- **S355 — Details Worksheet Surface.** Render the worksheet in Details research only.
+- **S356 — Withdrawal Feedback Worksheet Closeout.** Keep annual sequencing deferred until worksheet feedback is reviewed.
 
-### Sprint 342-346 Candidate Implementation Tickets
+### Sprint 352-356 Candidate Implementation Tickets
 
-- [x] **S342-01 — Tester questions.** Add questions that check whether users understand broad families as comparison evidence.
-- [x] **S343-01 — Confusion signals.** Add signals for instruction confusion, premature account amounts, and advice-like interpretation.
-- [x] **S344-01 — Blocked-input questions.** Ask input-cleanup questions when broad-family checks cannot run.
-- [x] **S345-01 — Details rendering.** Render feedback questions and confusion signals in the full Details research panel only.
-- [x] **S346-01 — Closeout docs.** Document that feedback should be reviewed before annual sequencing planning.
+- [x] **S352-01 — Worksheet sections.** Add four feedback worksheet sections to the runtime checkpoint.
+- [x] **S353-01 — Pass signals.** Add pass/fail interpretation signals for each section.
+- [x] **S354-01 — Blocked-state prompts.** Use input-cleanup prompts when broad-family checks cannot run.
+- [x] **S355-01 — Details rendering.** Render the worksheet inside the full Details research panel.
+- [x] **S356-01 — Closeout docs.** Document that worksheet feedback should precede annual sequencing planning.
 
-### Sprint 342-346 Definition Of Done
+### Sprint 352-356 Definition Of Done
 
-- Feedback questions and confusion signals are runtime-only.
+- The feedback worksheet is runtime-only.
 - Annual instructions and annual overrides remain deferred.
-- Blocked-input states ask cleanup questions instead of implying optimizer failure.
+- Blocked-input states use cleanup prompts.
+- Worksheet pass signals avoid advice and account instructions.
 - Overview remains unchanged.
 - No `.plan.json` files are created.
 - Focused optimizer and UI structure tests pass.
@@ -125,6 +126,66 @@ Sprint 346 checkpoint doc: [`docs/sprint_346_withdrawal_feedback_hardening_close
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 356: Withdrawal Feedback Worksheet Closeout
+
+**Complete 2026-05-25.** Closed the worksheet batch and kept annual sequencing deferred until feedback is reviewed.
+
+Sprint 356 checkpoint doc: [`docs/sprint_356_withdrawal_feedback_worksheet_closeout.md`](docs/sprint_356_withdrawal_feedback_worksheet_closeout.md).
+
+### Sprint 355: Details Worksheet Surface
+
+**Complete 2026-05-25.** Rendered the worksheet in the full Details optimizer research surface only.
+
+Sprint 355 checkpoint doc: [`docs/sprint_355_details_worksheet_surface.md`](docs/sprint_355_details_worksheet_surface.md).
+
+### Sprint 354: Blocked-State Worksheet
+
+**Complete 2026-05-25.** Added input-cleanup worksheet prompts for blocked broad-family feedback states.
+
+Sprint 354 checkpoint doc: [`docs/sprint_354_blocked_state_worksheet.md`](docs/sprint_354_blocked_state_worksheet.md).
+
+### Sprint 353: Pass Signals
+
+**Complete 2026-05-25.** Added pass signals for each withdrawal feedback worksheet section.
+
+Sprint 353 checkpoint doc: [`docs/sprint_353_feedback_worksheet_pass_signals.md`](docs/sprint_353_feedback_worksheet_pass_signals.md).
+
+### Sprint 352: Worksheet Sections
+
+**Complete 2026-05-25.** Added understanding, evidence, boundary, and decision worksheet sections.
+
+Sprint 352 checkpoint doc: [`docs/sprint_352_feedback_worksheet_sections.md`](docs/sprint_352_feedback_worksheet_sections.md).
+
+### Sprint 351: Annual Sequencing Decision Gate Closeout
+
+**Complete 2026-05-25.** Closed the decision-gate batch and kept annual sequencing architecture deferred.
+
+Sprint 351 checkpoint doc: [`docs/sprint_351_annual_sequencing_decision_gate_closeout.md`](docs/sprint_351_annual_sequencing_decision_gate_closeout.md).
+
+### Sprint 350: Details Decision Surface
+
+**Complete 2026-05-25.** Rendered the annual sequencing decision gate in Details research only.
+
+Sprint 350 checkpoint doc: [`docs/sprint_350_details_decision_surface.md`](docs/sprint_350_details_decision_surface.md).
+
+### Sprint 349: Blocked Input Decision
+
+**Complete 2026-05-25.** Routed blocked broad-family states to input cleanup before feedback or sequencing planning.
+
+Sprint 349 checkpoint doc: [`docs/sprint_349_blocked_input_decision.md`](docs/sprint_349_blocked_input_decision.md).
+
+### Sprint 348: Required Evidence List
+
+**Complete 2026-05-25.** Added required evidence before any annual sequencing architecture decision.
+
+Sprint 348 checkpoint doc: [`docs/sprint_348_required_evidence_list.md`](docs/sprint_348_required_evidence_list.md).
+
+### Sprint 347: Feedback-To-Decision Contract
+
+**Complete 2026-05-25.** Converted withdrawal feedback readiness into a runtime-only decision gate.
+
+Sprint 347 checkpoint doc: [`docs/sprint_347_feedback_to_decision_contract.md`](docs/sprint_347_feedback_to_decision_contract.md).
 
 ### Sprint 346: Withdrawal Feedback Hardening Closeout
 

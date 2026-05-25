@@ -4661,6 +4661,25 @@ function BoundedOptimizerPanel({
               </ul>
             </section>
             <section className="optimizer-explanation-card">
+              <h3>Next decision gate</h3>
+              <p>{summary.withdrawalFeedbackReview.decision.label}</p>
+              <ul className="compact-list">
+                {summary.withdrawalFeedbackReview.decision.requiredEvidence.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+            <section className="optimizer-explanation-card">
+              <h3>Feedback worksheet</h3>
+              <ul className="compact-list">
+                {summary.withdrawalFeedbackReview.worksheet.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.label}:</strong> {item.prompt} Pass signal: {item.passSignal}
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section className="optimizer-explanation-card">
               <h3>Confusion signals</h3>
               <ul className="compact-list">
                 {summary.withdrawalFeedbackReview.confusionSignals.map((signal) => (

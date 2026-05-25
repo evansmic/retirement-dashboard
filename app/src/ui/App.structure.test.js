@@ -174,10 +174,18 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Withdrawal feedback checkpoint');
     expect(appSource).toContain('Feedback questions');
     expect(appSource).toContain('Confusion signals');
+    expect(appSource).toContain('Next decision gate');
+    expect(appSource).toContain('Feedback worksheet');
+    expect(appSource).toContain('Pass signal');
     expect(boundedOptimizerSource).toContain('Broad withdrawal-family evidence is ready for feedback.');
     expect(boundedOptimizerSource).toContain('before planning annual account-level sequencing');
     expect(boundedOptimizerSource).toContain('current plan versus broad withdrawal-family comparison');
     expect(boundedOptimizerSource).toContain('year-by-year withdrawal instruction');
+    expect(boundedOptimizerSource).toContain('Collect feedback before annual sequencing');
+    expect(boundedOptimizerSource).toContain('Clean up inputs before feedback');
+    expect(boundedOptimizerSource).toContain('Hold annual sequencing');
+    expect(boundedOptimizerSource).toContain('Comparison understanding');
+    expect(boundedOptimizerSource).toContain('Input understanding');
     expect(appSource).toContain('Why options were tested');
     expect(appSource).toContain('Guardrails before a plan leads');
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');

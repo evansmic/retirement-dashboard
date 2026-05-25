@@ -154,6 +154,18 @@ export type WithdrawalFeedbackReview = {
   rows: WithdrawalFeedbackReviewRow[];
   questions: string[];
   confusionSignals: string[];
+  worksheet: Array<{
+    id: 'understanding' | 'evidence' | 'boundary' | 'decision';
+    label: string;
+    prompt: string;
+    passSignal: string;
+  }>;
+  decision: {
+    status: 'collectFeedback' | 'cleanUpInputs' | 'holdAnnualSequencing';
+    label: string;
+    detail: string;
+    requiredEvidence: string[];
+  };
   nextDecision: string;
 };
 
@@ -1746,6 +1758,93 @@ function buildWithdrawalFeedbackReview({
       'User looks for exact account amounts before reviewing the high-level trade-off.',
       'User treats lower tax or higher money left as advice instead of plan-review evidence.'
     ],
+    worksheet:
+      status === 'needsInputReview'
+        ? [
+            {
+              id: 'understanding',
+              label: 'Input understanding',
+              prompt: 'Ask which missing input stopped the broad withdrawal-family comparison.',
+              passSignal: 'User can identify the missing account-bucket or benefit input without reading it as an app error.'
+            },
+            {
+              id: 'evidence',
+              label: 'Evidence expectation',
+              prompt: 'Ask what evidence they expected to see once inputs are ready.',
+              passSignal: 'User expects high-level comparison evidence, not account-by-account instructions.'
+            },
+            {
+              id: 'boundary',
+              label: 'Boundary clarity',
+              prompt: 'Ask whether it is clear that annual sequencing has not started.',
+              passSignal: 'User understands blocked broad-family checks do not create a withdrawal plan.'
+            },
+            {
+              id: 'decision',
+              label: 'Next decision',
+              prompt: 'Ask what should happen next before annual sequencing is considered.',
+              passSignal: 'User points to input cleanup or clearer evidence, not immediate annual account actions.'
+            }
+          ]
+        : [
+            {
+              id: 'understanding',
+              label: 'Comparison understanding',
+              prompt: 'Ask the user to explain the current plan versus broad withdrawal-family comparison.',
+              passSignal: 'User describes it as a high-level comparison, not a command to change accounts.'
+            },
+            {
+              id: 'evidence',
+              label: 'Evidence interpretation',
+              prompt: 'Ask which evidence rows changed and why those rows matter.',
+              passSignal: 'User names funded years, tax, OAS recovery, or money left as review evidence.'
+            },
+            {
+              id: 'boundary',
+              label: 'Instruction boundary',
+              prompt: 'Ask whether the screen tells them exactly what to withdraw each year.',
+              passSignal: 'User answers no and recognizes annual account-level sequencing is deferred.'
+            },
+            {
+              id: 'decision',
+              label: 'Next decision',
+              prompt: 'Ask whether the evidence is clear enough to plan annual sequencing later.',
+              passSignal: 'User can say proceed, hold, or simplify with a specific reason.'
+            }
+          ],
+    decision:
+      status === 'readyForFeedback'
+        ? {
+            status: 'collectFeedback',
+            label: 'Collect feedback before annual sequencing',
+            detail: 'The next step is user feedback on broad-family evidence, not annual account-level architecture.',
+            requiredEvidence: [
+              'Users can explain broad families as comparisons.',
+              'Users understand tax and money-left rows as evidence.',
+              'Users do not read the output as account instructions.'
+            ]
+          }
+        : status === 'needsInputReview'
+          ? {
+              status: 'cleanUpInputs',
+              label: 'Clean up inputs before feedback',
+              detail: 'The broad-family check is not ready for feedback until blocked inputs are repaired.',
+              requiredEvidence: [
+                'Meaningful registered and flexible account balances are present.',
+                'The comparison can produce broad withdrawal-family candidates.',
+                'The user understands why the check was unavailable.'
+              ]
+            }
+          : {
+              status: 'holdAnnualSequencing',
+              label: 'Hold annual sequencing',
+              detail: 'Review assumptions and copy before planning annual account-level sequencing.',
+              requiredEvidence: [
+                'Survivor or household guardrails are clear.',
+                'Broad-family evidence is understandable without account instructions.',
+                'No confusion signals appear in feedback.'
+              ]
+            },
     nextDecision:
       status === 'readyForFeedback'
         ? 'Collect feedback on whether broad families are understandable before planning annual account-level sequencing.'

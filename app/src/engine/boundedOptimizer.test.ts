@@ -291,6 +291,17 @@ describe('bounded optimizer runner', () => {
     expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('annual account-level sequencing is still deferred');
     expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('year-by-year withdrawal instruction');
     expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('advice instead of plan-review evidence');
+    expect(summary.withdrawalFeedbackReview.worksheet.map((item) => item.id)).toEqual(['understanding', 'evidence', 'boundary', 'decision']);
+    expect(summary.withdrawalFeedbackReview.worksheet.find((item) => item.id === 'boundary')).toMatchObject({
+      label: 'Instruction boundary',
+      passSignal: expect.stringContaining('annual account-level sequencing is deferred')
+    });
+    expect(summary.withdrawalFeedbackReview.decision).toMatchObject({
+      status: 'collectFeedback',
+      label: 'Collect feedback before annual sequencing',
+      detail: expect.stringContaining('not annual account-level architecture')
+    });
+    expect(summary.withdrawalFeedbackReview.decision.requiredEvidence.join(' ')).toContain('do not read the output as account instructions');
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -594,6 +605,14 @@ describe('bounded optimizer runner', () => {
       detail: expect.stringContaining('meaningful registered and flexible account balances')
     });
     expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('Which missing input');
+    expect(summary.withdrawalFeedbackReview.worksheet.find((item) => item.id === 'understanding')).toMatchObject({
+      label: 'Input understanding',
+      prompt: expect.stringContaining('missing input')
+    });
+    expect(summary.withdrawalFeedbackReview.decision).toMatchObject({
+      status: 'cleanUpInputs',
+      label: 'Clean up inputs before feedback'
+    });
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });
