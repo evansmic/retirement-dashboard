@@ -4635,6 +4635,26 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.withdrawalFeedbackReview ? (
+        <section className={`optimizer-guardrail-panel withdrawal-feedback-${summary.withdrawalFeedbackReview.status}`}>
+          <div>
+            <p className="eyebrow">Withdrawal feedback checkpoint</p>
+            <h3>{summary.withdrawalFeedbackReview.headline}</h3>
+            <p>{summary.withdrawalFeedbackReview.detail}</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.withdrawalFeedbackReview.rows.map((row) => (
+              <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'review' ? 'Review' : 'Blocked'}</span>
+                <strong>{row.label}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.withdrawalFeedbackReview.nextDecision}</p>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.evidenceRows.length ? (
         <section className="optimizer-evidence-panel">
           <div>

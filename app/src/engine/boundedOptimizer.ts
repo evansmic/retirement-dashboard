@@ -140,6 +140,21 @@ export type BoundedOptimizerDriverRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type WithdrawalFeedbackReviewRow = {
+  id: 'familyPresence' | 'evidenceClarity' | 'annualInstructionBoundary' | 'guardrails' | 'savedOutputBoundary';
+  label: string;
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type WithdrawalFeedbackReview = {
+  status: 'readyForFeedback' | 'needsInputReview' | 'holdForCleanup';
+  headline: string;
+  detail: string;
+  rows: WithdrawalFeedbackReviewRow[];
+  nextDecision: string;
+};
+
 export type OptimizerReadinessRow = {
   id:
     | 'spending'
@@ -216,6 +231,7 @@ export type BoundedOptimizerSummary = {
   optionGroups: BoundedOptimizerOptionGroup[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
+  withdrawalFeedbackReview: WithdrawalFeedbackReview;
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
 };
@@ -1634,6 +1650,90 @@ function buildDriverRows(
   ];
 }
 
+function buildWithdrawalFeedbackReview({
+  candidateFamilies,
+  candidates,
+  evidenceRows,
+  readinessRows,
+  searchPlan
+}: {
+  candidateFamilies: OptimizerCandidateFamily[];
+  candidates: BoundedOptimizerCandidateRow[];
+  evidenceRows: BoundedOptimizerEvidenceRow[];
+  readinessRows: OptimizerReadinessRow[];
+  searchPlan: OptimizerSearchPlan;
+}): WithdrawalFeedbackReview {
+  const familyStatus = candidateFamilies.find((family) => family.id === 'broadWithdrawalFamilies')?.status || 'blocked';
+  const withdrawalCandidateCount = candidates.filter((candidate) => candidate.changedLevers.includes('withdrawalOrder')).length;
+  const withdrawalEvidenceRows = evidenceRows.filter((row) => row.id.startsWith('withdrawalFamily'));
+  const survivorNeedsReview = readinessRows.find((row) => row.id === 'survivor')?.status === 'review';
+
+  const rows: WithdrawalFeedbackReviewRow[] = [
+    {
+      id: 'familyPresence',
+      label: 'Broad families present',
+      status: familyStatus === 'included' && withdrawalCandidateCount > 0 ? 'ready' : 'blocked',
+      detail:
+        familyStatus === 'included' && withdrawalCandidateCount > 0
+          ? `${withdrawalCandidateCount} broad withdrawal-family checks are available for feedback.`
+          : 'Broad withdrawal-family feedback waits for meaningful registered and flexible account balances.'
+    },
+    {
+      id: 'evidenceClarity',
+      label: 'Comparison evidence',
+      status: withdrawalEvidenceRows.length >= 4 ? 'ready' : familyStatus === 'included' ? 'review' : 'blocked',
+      detail:
+        withdrawalEvidenceRows.length >= 4
+          ? 'When a withdrawal family leads, Details shows funded years, tax, OAS recovery, and money-left evidence.'
+          : familyStatus === 'included'
+            ? 'Broad families can be reviewed in the option table even when one does not lead the current run.'
+            : 'Withdrawal evidence is held until broad families can be compared.'
+    },
+    {
+      id: 'annualInstructionBoundary',
+      label: 'Annual actions deferred',
+      status: searchPlan.annualOverrides === 'deferred' ? 'ready' : 'blocked',
+      detail: 'The review compares broad families only; it does not create year-by-year account instructions.'
+    },
+    {
+      id: 'guardrails',
+      label: 'Household guardrails',
+      status: survivorNeedsReview ? 'review' : 'ready',
+      detail:
+        survivorNeedsReview
+          ? 'Feedback should check whether survivor setup is clear before widening drawdown sequencing.'
+          : 'Survivor and estate guardrails do not block broad-family feedback for this plan.'
+    },
+    {
+      id: 'savedOutputBoundary',
+      label: 'Saved output boundary',
+      status: 'ready',
+      detail: 'No withdrawal-family result or feedback checkpoint is saved into the plan file.'
+    }
+  ];
+
+  const hasBlocked = rows.some((row) => row.status === 'blocked');
+  const hasReview = rows.some((row) => row.status === 'review');
+  const status: WithdrawalFeedbackReview['status'] = hasBlocked ? 'needsInputReview' : hasReview ? 'holdForCleanup' : 'readyForFeedback';
+
+  return {
+    status,
+    headline:
+      status === 'readyForFeedback'
+        ? 'Broad withdrawal-family evidence is ready for feedback.'
+        : status === 'holdForCleanup'
+          ? 'Broad withdrawal-family evidence can be reviewed, with a few assumptions to check first.'
+          : 'Broad withdrawal-family feedback needs input cleanup first.',
+    detail:
+      'This checkpoint decides whether users understand the high-level drawdown comparison before annual withdrawal sequencing is planned.',
+    rows,
+    nextDecision:
+      status === 'readyForFeedback'
+        ? 'Collect feedback on whether broad families are understandable before planning annual account-level sequencing.'
+        : 'Clean up blocked inputs or unclear household assumptions before planning annual account-level sequencing.'
+  };
+}
+
 export function runBoundedOptimizer(
   plan: V2PlanPayload,
   runner: BoundedOptimizerRunner = runSimulationSafely
@@ -1710,15 +1810,25 @@ export function runBoundedOptimizer(
       reason: row.suggestionReason
     }));
   const optionGroups = buildOptionGroups(candidates);
+  const readinessRows = buildReadinessRows(plan, contract, eligibilityNotes);
+  const candidateFamilies = buildCandidateFamilies(readinessRows);
+  const searchPlan = buildSearchPlan(plan);
+  const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
+    candidateFamilies,
+    candidates,
+    evidenceRows,
+    readinessRows,
+    searchPlan
+  });
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
     execution: 'boundedSearch',
     contract,
     objective: buildObjectiveContract(),
-    readinessRows: buildReadinessRows(plan, contract, eligibilityNotes),
-    candidateFamilies: buildCandidateFamilies(buildReadinessRows(plan, contract, eligibilityNotes)),
-    searchPlan: buildSearchPlan(plan),
+    readinessRows,
+    candidateFamilies,
+    searchPlan,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',
@@ -1734,6 +1844,7 @@ export function runBoundedOptimizer(
     optionGroups,
     evidenceRows,
     driverRows,
+    withdrawalFeedbackReview,
     explanation,
     reviewNotes: suggested
       ? [

@@ -171,6 +171,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Tax and funding drivers');
     expect(appSource).toContain('Why the option moved');
     expect(appSource).toContain('They explain direction, not a final recommendation');
+    expect(appSource).toContain('Withdrawal feedback checkpoint');
+    expect(boundedOptimizerSource).toContain('Broad withdrawal-family evidence is ready for feedback.');
+    expect(boundedOptimizerSource).toContain('before planning annual account-level sequencing');
     expect(appSource).toContain('Why options were tested');
     expect(appSource).toContain('Guardrails before a plan leads');
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');

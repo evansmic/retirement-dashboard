@@ -275,6 +275,18 @@ describe('bounded optimizer runner', () => {
       value: '-$3,333',
       tone: 'ok'
     });
+    expect(summary.withdrawalFeedbackReview).toMatchObject({
+      status: 'readyForFeedback',
+      headline: 'Broad withdrawal-family evidence is ready for feedback.',
+      nextDecision: expect.stringContaining('before planning annual account-level sequencing')
+    });
+    expect(summary.withdrawalFeedbackReview.rows).toEqual([
+      expect.objectContaining({ id: 'familyPresence', status: 'ready' }),
+      expect.objectContaining({ id: 'evidenceClarity', status: 'ready' }),
+      expect.objectContaining({ id: 'annualInstructionBoundary', status: 'ready' }),
+      expect.objectContaining({ id: 'guardrails', status: 'ready' }),
+      expect.objectContaining({ id: 'savedOutputBoundary', status: 'ready' })
+    ]);
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -569,6 +581,14 @@ describe('bounded optimizer runner', () => {
     expect(summary.readinessRows.find((row) => row.id === 'survivor')).toMatchObject({ status: 'review' });
     expect(summary.candidateFamilies.find((family) => family.id === 'benefitTimingGrid')).toMatchObject({ status: 'blocked' });
     expect(summary.candidateFamilies.find((family) => family.id === 'broadWithdrawalFamilies')).toMatchObject({ status: 'blocked' });
+    expect(summary.withdrawalFeedbackReview).toMatchObject({
+      status: 'needsInputReview',
+      headline: 'Broad withdrawal-family feedback needs input cleanup first.'
+    });
+    expect(summary.withdrawalFeedbackReview.rows.find((row) => row.id === 'familyPresence')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('meaningful registered and flexible account balances')
+    });
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });

@@ -4,30 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 336: Legacy Scenario CSV Export Correction
+## Latest Sprint — Sprint 341: Withdrawal Feedback Checkpoint
 
 **Status:** Complete 2026-05-25.
 
-Goal: add the year-by-year CSV download to the legacy dashboard table under the Sequence-of-Returns card so it exports the currently selected dashboard scenario.
+Goal: prepare broad withdrawal-family optimizer evidence for feedback before deciding whether to plan annual account-level sequencing.
 
-Non-scope: React results export changes, saved plan schema changes, engine output schema changes, persisted optimizer output, cloud accounts, advisor tooling, broad visual redesign, or report migration.
+Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 336 checkpoint doc: [`docs/sprint_336_legacy_scenario_csv_export.md`](docs/sprint_336_legacy_scenario_csv_export.md).
+Sprint 341 checkpoint doc: [`docs/sprint_341_withdrawal_feedback_checkpoint.md`](docs/sprint_341_withdrawal_feedback_checkpoint.md).
 
-### Sprint 336 Candidate Implementation Tickets
+### Sprint 337-341 Planned Path
 
-- [x] **S336-01 — Correct placement.** Put the CSV control on the legacy Year-by-Year Detail card below Sequence-of-Returns.
-- [x] **S336-02 — Scenario binding.** Export `RESULTS[activeScenario].years` so the CSV follows the selected dashboard scenario.
-- [x] **S336-03 — Display-dollar binding.** Export nominal or real rows consistently with the current display toggle.
-- [x] **S336-04 — Local-only download.** Use a browser Blob download only and avoid persistence.
+- **S337 — Withdrawal Feedback Readiness Contract.** Add runtime-only rows that decide whether broad withdrawal-family evidence is ready for feedback.
+- **S338 — Annual Instruction Boundary.** Keep the checkpoint explicit that annual account-level instructions remain deferred.
+- **S339 — Feedback Evidence Clarity.** Surface whether tax, OAS recovery, funded-year, and money-left evidence appears when a broad family leads.
+- **S340 — Details Research Surface.** Show the checkpoint in the Details research path without changing Overview or saved data.
+- **S341 — Withdrawal Feedback Checkpoint.** Close the batch and decide whether annual sequencing should remain deferred.
 
-### Sprint 336 Definition Of Done
+### Sprint 337-341 Candidate Implementation Tickets
 
-- The legacy detail CSV exports the selected scenario, not only the React results table.
-- Download does not toggle the collapsed detail card.
-- Print output hides the CSV button.
+- [x] **S337-01 — Feedback readiness rows.** Add broad-family presence, evidence clarity, household guardrail, and saved-output boundary checks.
+- [x] **S338-01 — Annual boundary row.** Show that annual account-level sequencing remains deferred.
+- [x] **S339-01 — Evidence clarity status.** Mark evidence ready only when the leading broad family has comparison evidence.
+- [x] **S340-01 — Details research rendering.** Render the checkpoint inside the full optimizer research panel.
+- [x] **S341-01 — Checkpoint docs.** Document that broad-family feedback can proceed, but annual sequencing remains a later decision.
+
+### Sprint 337-341 Definition Of Done
+
+- Broad withdrawal-family feedback readiness is runtime-only.
+- The checkpoint keeps annual instructions and annual overrides deferred.
+- Details research can show what must be reviewed before relying on broad-family evidence.
+- Overview remains unchanged.
 - No `.plan.json` files are created.
-- Focused dashboard probes pass.
+- Focused optimizer and UI structure tests pass.
 
 ### Historical Definition Of Done Coverage
 
@@ -115,6 +125,36 @@ Sprint 336 checkpoint doc: [`docs/sprint_336_legacy_scenario_csv_export.md`](doc
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 341: Withdrawal Feedback Checkpoint
+
+**Complete 2026-05-25.** Closed the feedback-readiness batch and kept annual account-level sequencing deferred.
+
+Sprint 341 checkpoint doc: [`docs/sprint_341_withdrawal_feedback_checkpoint.md`](docs/sprint_341_withdrawal_feedback_checkpoint.md).
+
+### Sprint 340: Details Research Surface
+
+**Complete 2026-05-25.** Added the withdrawal feedback checkpoint to the full Details optimizer research surface without changing Overview.
+
+Sprint 340 checkpoint doc: [`docs/sprint_340_withdrawal_feedback_details_surface.md`](docs/sprint_340_withdrawal_feedback_details_surface.md).
+
+### Sprint 339: Feedback Evidence Clarity
+
+**Complete 2026-05-25.** Added evidence-readiness status for broad withdrawal families when a family leads the review.
+
+Sprint 339 checkpoint doc: [`docs/sprint_339_withdrawal_feedback_evidence_clarity.md`](docs/sprint_339_withdrawal_feedback_evidence_clarity.md).
+
+### Sprint 338: Annual Instruction Boundary
+
+**Complete 2026-05-25.** Added a checkpoint row that keeps year-by-year withdrawal actions deferred.
+
+Sprint 338 checkpoint doc: [`docs/sprint_338_annual_instruction_boundary.md`](docs/sprint_338_annual_instruction_boundary.md).
+
+### Sprint 337: Withdrawal Feedback Readiness Contract
+
+**Complete 2026-05-25.** Added runtime-only feedback-readiness rows for broad withdrawal-family evidence.
+
+Sprint 337 checkpoint doc: [`docs/sprint_337_withdrawal_feedback_readiness_contract.md`](docs/sprint_337_withdrawal_feedback_readiness_contract.md).
 
 ### Sprint 336: Legacy Scenario CSV Export Correction
 
