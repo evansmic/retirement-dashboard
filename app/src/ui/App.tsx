@@ -4670,6 +4670,15 @@ function BoundedOptimizerPanel({
               </ul>
             </section>
             <section className="optimizer-explanation-card">
+              <h3>Feedback outcome</h3>
+              <p>{summary.withdrawalFeedbackReview.outcome.label}</p>
+              <ul className="compact-list">
+                {summary.withdrawalFeedbackReview.outcome.nextSteps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+            </section>
+            <section className="optimizer-explanation-card">
               <h3>Feedback worksheet</h3>
               <ul className="compact-list">
                 {summary.withdrawalFeedbackReview.worksheet.map((item) => (

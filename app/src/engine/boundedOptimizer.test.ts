@@ -302,6 +302,12 @@ describe('bounded optimizer runner', () => {
       detail: expect.stringContaining('not annual account-level architecture')
     });
     expect(summary.withdrawalFeedbackReview.decision.requiredEvidence.join(' ')).toContain('do not read the output as account instructions');
+    expect(summary.withdrawalFeedbackReview.outcome).toMatchObject({
+      status: 'readyToReview',
+      label: 'Ready to review with testers',
+      detail: expect.stringContaining('before annual sequencing is planned')
+    });
+    expect(summary.withdrawalFeedbackReview.outcome.nextSteps.join(' ')).toContain('Hold annual sequencing if any confusion signal appears');
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({
       status: 'tested',
       reason: expect.stringContaining('can be reviewed')
@@ -613,6 +619,11 @@ describe('bounded optimizer runner', () => {
       status: 'cleanUpInputs',
       label: 'Clean up inputs before feedback'
     });
+    expect(summary.withdrawalFeedbackReview.outcome).toMatchObject({
+      status: 'repairInputs',
+      label: 'Repair inputs first'
+    });
+    expect(summary.withdrawalFeedbackReview.outcome.nextSteps.join(' ')).toContain('Do not plan annual sequencing from a blocked comparison');
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });

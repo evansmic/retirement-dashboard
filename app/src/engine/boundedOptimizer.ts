@@ -166,6 +166,12 @@ export type WithdrawalFeedbackReview = {
     detail: string;
     requiredEvidence: string[];
   };
+  outcome: {
+    status: 'readyToReview' | 'simplifyEvidence' | 'repairInputs' | 'deferSequencing';
+    label: string;
+    detail: string;
+    nextSteps: string[];
+  };
   nextDecision: string;
 };
 
@@ -1843,6 +1849,39 @@ function buildWithdrawalFeedbackReview({
                 'Survivor or household guardrails are clear.',
                 'Broad-family evidence is understandable without account instructions.',
                 'No confusion signals appear in feedback.'
+              ]
+            },
+    outcome:
+      status === 'readyForFeedback'
+        ? {
+            status: 'readyToReview',
+            label: 'Ready to review with testers',
+            detail: 'Use the worksheet to decide whether broad-family evidence is understood before annual sequencing is planned.',
+            nextSteps: [
+              'Run the worksheet against at least one plan where a broad family leads.',
+              'Record whether users understand the evidence without account instructions.',
+              'Hold annual sequencing if any confusion signal appears.'
+            ]
+          }
+        : status === 'needsInputReview'
+          ? {
+              status: 'repairInputs',
+              label: 'Repair inputs first',
+              detail: 'The broad-family review is blocked until input cleanup makes the comparison meaningful.',
+              nextSteps: [
+                'Repair missing account-bucket readiness.',
+                'Run Results again after inputs are corrected.',
+                'Do not plan annual sequencing from a blocked comparison.'
+              ]
+            }
+          : {
+              status: 'deferSequencing',
+              label: 'Defer sequencing and simplify',
+              detail: 'Broad-family evidence needs clearer assumptions or copy before annual sequencing planning.',
+              nextSteps: [
+                'Review survivor or household guardrails.',
+                'Simplify broad-family explanation if users confuse it with instructions.',
+                'Keep annual sequencing deferred until the worksheet passes.'
               ]
             },
     nextDecision:

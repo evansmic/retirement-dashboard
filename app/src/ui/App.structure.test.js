@@ -175,6 +175,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Feedback questions');
     expect(appSource).toContain('Confusion signals');
     expect(appSource).toContain('Next decision gate');
+    expect(appSource).toContain('Feedback outcome');
     expect(appSource).toContain('Feedback worksheet');
     expect(appSource).toContain('Pass signal');
     expect(boundedOptimizerSource).toContain('Broad withdrawal-family evidence is ready for feedback.');
@@ -186,6 +187,9 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('Hold annual sequencing');
     expect(boundedOptimizerSource).toContain('Comparison understanding');
     expect(boundedOptimizerSource).toContain('Input understanding');
+    expect(boundedOptimizerSource).toContain('Ready to review with testers');
+    expect(boundedOptimizerSource).toContain('Repair inputs first');
+    expect(boundedOptimizerSource).toContain('Defer sequencing and simplify');
     expect(appSource).toContain('Why options were tested');
     expect(appSource).toContain('Guardrails before a plan leads');
     expect(appSource).toContain('These checks keep the review inside the timing and tax rules');

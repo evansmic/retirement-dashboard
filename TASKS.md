@@ -4,38 +4,38 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 356: Withdrawal Feedback Worksheet Closeout
+## Latest Sprint — Sprint 361: Feedback Outcome Closeout
 
 **Status:** Complete 2026-05-25.
 
-Goal: add a runtime-only tester worksheet for broad withdrawal-family evidence before annual sequencing planning.
+Goal: summarize worksheet review outcomes without starting annual sequencing.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 356 checkpoint doc: [`docs/sprint_356_withdrawal_feedback_worksheet_closeout.md`](docs/sprint_356_withdrawal_feedback_worksheet_closeout.md).
+Sprint 361 checkpoint doc: [`docs/sprint_361_feedback_outcome_closeout.md`](docs/sprint_361_feedback_outcome_closeout.md).
 
-### Sprint 352-356 Planned Path
+### Sprint 357-361 Planned Path
 
-- **S352 — Worksheet Sections.** Add understanding, evidence, boundary, and decision worksheet sections.
-- **S353 — Pass Signals.** Add pass signals for each worksheet section.
-- **S354 — Blocked-State Worksheet.** Provide cleanup-oriented worksheet prompts when broad-family checks are blocked.
-- **S355 — Details Worksheet Surface.** Render the worksheet in Details research only.
-- **S356 — Withdrawal Feedback Worksheet Closeout.** Keep annual sequencing deferred until worksheet feedback is reviewed.
+- **S357 — Outcome Contract.** Add ready-to-review, repair-inputs, and defer-sequencing outcome states.
+- **S358 — Outcome Next Steps.** Add next-step lists for each outcome.
+- **S359 — Blocked Outcome Guard.** Keep blocked broad-family states from implying annual sequencing readiness.
+- **S360 — Details Outcome Surface.** Render outcome guidance in Details research only.
+- **S361 — Feedback Outcome Closeout.** Stop with annual sequencing still deferred.
 
-### Sprint 352-356 Candidate Implementation Tickets
+### Sprint 357-361 Candidate Implementation Tickets
 
-- [x] **S352-01 — Worksheet sections.** Add four feedback worksheet sections to the runtime checkpoint.
-- [x] **S353-01 — Pass signals.** Add pass/fail interpretation signals for each section.
-- [x] **S354-01 — Blocked-state prompts.** Use input-cleanup prompts when broad-family checks cannot run.
-- [x] **S355-01 — Details rendering.** Render the worksheet inside the full Details research panel.
-- [x] **S356-01 — Closeout docs.** Document that worksheet feedback should precede annual sequencing planning.
+- [x] **S357-01 — Outcome states.** Add runtime-only outcome states to the withdrawal feedback checkpoint.
+- [x] **S358-01 — Next steps.** Add outcome-specific next steps.
+- [x] **S359-01 — Blocked guard.** Route blocked comparisons to input repair.
+- [x] **S360-01 — Details rendering.** Render feedback outcome guidance in the full Details research panel.
+- [x] **S361-01 — Closeout docs.** Document annual sequencing remains deferred.
 
-### Sprint 352-356 Definition Of Done
+### Sprint 357-361 Definition Of Done
 
-- The feedback worksheet is runtime-only.
+- Feedback outcomes are runtime-only.
 - Annual instructions and annual overrides remain deferred.
-- Blocked-input states use cleanup prompts.
-- Worksheet pass signals avoid advice and account instructions.
+- Blocked-input states route to input repair.
+- Ready states route to feedback review, not sequencing architecture.
 - Overview remains unchanged.
 - No `.plan.json` files are created.
 - Focused optimizer and UI structure tests pass.
@@ -126,6 +126,36 @@ Sprint 356 checkpoint doc: [`docs/sprint_356_withdrawal_feedback_worksheet_close
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 361: Feedback Outcome Closeout
+
+**Complete 2026-05-25.** Closed the feedback outcome batch and kept annual sequencing deferred.
+
+Sprint 361 checkpoint doc: [`docs/sprint_361_feedback_outcome_closeout.md`](docs/sprint_361_feedback_outcome_closeout.md).
+
+### Sprint 360: Details Outcome Surface
+
+**Complete 2026-05-25.** Rendered feedback outcome guidance in the full Details optimizer research surface only.
+
+Sprint 360 checkpoint doc: [`docs/sprint_360_details_outcome_surface.md`](docs/sprint_360_details_outcome_surface.md).
+
+### Sprint 359: Blocked Outcome Guard
+
+**Complete 2026-05-25.** Kept blocked broad-family feedback states routed to input repair.
+
+Sprint 359 checkpoint doc: [`docs/sprint_359_blocked_outcome_guard.md`](docs/sprint_359_blocked_outcome_guard.md).
+
+### Sprint 358: Outcome Next Steps
+
+**Complete 2026-05-25.** Added next-step lists for each withdrawal feedback outcome.
+
+Sprint 358 checkpoint doc: [`docs/sprint_358_outcome_next_steps.md`](docs/sprint_358_outcome_next_steps.md).
+
+### Sprint 357: Outcome Contract
+
+**Complete 2026-05-25.** Added runtime-only outcome states to the withdrawal feedback checkpoint.
+
+Sprint 357 checkpoint doc: [`docs/sprint_357_outcome_contract.md`](docs/sprint_357_outcome_contract.md).
 
 ### Sprint 356: Withdrawal Feedback Worksheet Closeout
 
