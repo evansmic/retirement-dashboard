@@ -237,6 +237,13 @@ export type OptimizerFeedbackPackageIndex = {
       status: 'ready' | 'review' | 'blocked';
       detail: string;
     }>;
+    architectureQuestions: Array<{
+      id: 'funding' | 'estate' | 'taxOas' | 'cashFlexibility';
+      label: string;
+      question: string;
+      evidenceSource: string;
+      boundary: string;
+    }>;
     nextStep: string;
     boundary: string;
   };
@@ -2379,6 +2386,36 @@ function buildFeedbackPackageIndex({
       detail: 'One successful example-plan review is not enough to mark annual sequencing ready.'
     }
   ];
+  const annualSequencingQuestions: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['architectureQuestions'] = [
+    {
+      id: 'funding',
+      label: 'Funding question',
+      question: 'Would annual sequencing improve funded years without hiding a projected shortfall?',
+      evidenceSource: 'Funded years and first-shortfall evidence from broad-family review.',
+      boundary: 'Question only; no annual withdrawal path is generated.'
+    },
+    {
+      id: 'estate',
+      label: 'Estate question',
+      question: 'Would annual sequencing improve projected money left without weakening the spending answer?',
+      evidenceSource: 'Projected money-left evidence and estate guardrails.',
+      boundary: 'Question only; no estate-maximizing instruction is created.'
+    },
+    {
+      id: 'taxOas',
+      label: 'Tax and OAS question',
+      question: 'Can tax and OAS recovery changes be explained before showing account-level annual detail?',
+      evidenceSource: 'Lifetime tax and OAS recovery diagnostics.',
+      boundary: 'Question only; no tax-minimizing account order is applied.'
+    },
+    {
+      id: 'cashFlexibility',
+      label: 'Cash and flexibility question',
+      question: 'Can cash-wedge and flexibility language stay descriptive if annual account detail is later added?',
+      evidenceSource: 'Cash-wedge boundary and flexibility outcome feedback.',
+      boundary: 'Question only; no refill rule, spending rule, or account instruction is created.'
+    }
+  ];
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2415,6 +2452,7 @@ function buildFeedbackPackageIndex({
           : 'Annual sequencing is not ready to plan.',
       status: annualSequencingStatus,
       rows: annualSequencingRows,
+      architectureQuestions: annualSequencingQuestions,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

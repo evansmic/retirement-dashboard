@@ -397,6 +397,20 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows.find((row) => row.id === 'feedbackDepth')?.detail).toContain(
       'One successful example-plan review is not enough'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureQuestions.map((row) => row.id)).toEqual([
+      'funding',
+      'estate',
+      'taxOas',
+      'cashFlexibility'
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureQuestions.find((row) => row.id === 'funding')).toMatchObject({
+      question: expect.stringContaining('improve funded years'),
+      boundary: expect.stringContaining('no annual withdrawal path is generated')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureQuestions.find((row) => row.id === 'cashFlexibility')).toMatchObject({
+      evidenceSource: expect.stringContaining('Cash-wedge boundary'),
+      boundary: expect.stringContaining('no refill rule')
+    });
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

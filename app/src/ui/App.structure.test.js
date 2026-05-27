@@ -183,6 +183,9 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');
     expect(boundedOptimizerSource).toContain('Annual sequencing may be planned later, but is not ready now.');
     expect(boundedOptimizerSource).toContain('One successful example-plan review is not enough to mark annual sequencing ready.');
+    expect(boundedOptimizerSource).toContain('Would annual sequencing improve funded years without hiding a projected shortfall?');
+    expect(boundedOptimizerSource).toContain('Question only; no annual withdrawal path is generated.');
+    expect(boundedOptimizerSource).toContain('Question only; no refill rule, spending rule, or account instruction is created.');
     expect(boundedOptimizerSource).toContain('does not implement annual account-level sequencing, account instructions, saved output, or a new optimizer search');
     expect(boundedOptimizerSource).toContain('Goal-mode architecture stays inside the bounded candidate set.');
     expect(boundedOptimizerSource).toContain('Goal-mode preview re-ranks existing candidates only');
@@ -336,6 +339,8 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('Feedback package index');
     expect(boundedPanel).toContain('annualSequencingReadiness');
     expect(boundedPanel).toContain('sequencing-readiness-');
+    expect(boundedPanel).toContain('Architecture questions');
+    expect(boundedPanel).toContain('architectureQuestions');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -346,6 +351,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Cash wedge is a buffer explanation');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Feedback package index');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('annualSequencingReadiness');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Architecture questions');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');

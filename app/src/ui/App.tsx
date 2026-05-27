@@ -4672,6 +4672,14 @@ function BoundedOptimizerPanel({
                 </article>
               ))}
             </div>
+            <h4>Architecture questions</h4>
+            <ul className="compact-list">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.architectureQuestions.map((row) => (
+                <li key={row.id}>
+                  <strong>{row.label}:</strong> {row.question} Source: {row.evidenceSource} Boundary: {row.boundary}
+                </li>
+              ))}
+            </ul>
             <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.boundary}</p>
           </section>
           <p className="table-note">{summary.feedbackPackageIndex.boundary}</p>
