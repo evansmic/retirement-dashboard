@@ -170,6 +170,19 @@ describe('bounded optimizer runner', () => {
     expect(ids).toContain('withdrawalNonRegisteredFirst');
   });
 
+  it('keeps all example-plan candidate sets bounded before annual sequencing exists', () => {
+    examplePlanCards.forEach((card) => {
+      const plan = createExamplePlan(card.id);
+      const candidates = buildBoundedOptimizerCandidates(plan);
+      const ids = candidates.map((candidate) => candidate.id);
+
+      expect(candidates.length).toBeLessThanOrEqual(20);
+      expect(ids).toContain('baseline');
+      expect(ids).not.toContain('annualOverrides' as BoundedOptimizerCandidateId);
+      expect(ids.some((id) => String(id).toLowerCase().includes('annual'))).toBe(false);
+    });
+  });
+
   it('runs candidates through the provided runner and does not persist optimizer output', () => {
     const calls: Array<{ title: string | undefined; order: string | undefined; config: SimulationConfig }> = [];
     const byCandidate: Partial<Record<BoundedOptimizerCandidateId, SimulationResult>> = {
