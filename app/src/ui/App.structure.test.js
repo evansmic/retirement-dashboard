@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
 const boundedOptimizerSource = readFileSync(new URL('../engine/boundedOptimizer.ts', import.meta.url), 'utf8');
+const stylesSource = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
 describe('Results overview structure', () => {
   it('keeps audit-style evidence reachable from Details instead of the Overview flow', () => {
@@ -134,6 +135,21 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('diagnostic');
     expect(appSource).toContain('first five-minute read');
     expect(appSource).toContain('In the first five minutes, use this list after the answer and spending number.');
+  });
+
+  it('keeps first-results mobile layout guarded without adding Overview density', () => {
+    expect(stylesSource).toContain('@media (max-width: 920px)');
+    expect(stylesSource).toContain('@media (max-width: 640px)');
+    expect(stylesSource).toContain('.retirement-answer-panel');
+    expect(stylesSource).toContain('.spending-capacity-panel');
+    expect(stylesSource).toContain('.review-first-panel');
+    expect(stylesSource).toContain('.overview-highlights-panel');
+    expect(stylesSource).toContain('.bounded-optimizer-panel');
+    expect(stylesSource).toContain('overflow-wrap: anywhere');
+    expect(stylesSource).toContain('.optimizer-driver-grid');
+    expect(stylesSource).toContain('grid-template-columns: 1fr');
+    expect(appSource).not.toContain('<MobileOptimizerPanel');
+    expect(appSource).not.toContain('Mobile-only optimizer');
   });
 
   it('explains bounded optimizer output without advice or saved-output language', () => {
