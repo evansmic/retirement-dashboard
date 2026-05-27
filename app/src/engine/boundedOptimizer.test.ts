@@ -411,6 +411,19 @@ describe('bounded optimizer runner', () => {
       evidenceSource: expect.stringContaining('Cash-wedge boundary'),
       boundary: expect.stringContaining('no refill rule')
     });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performanceBudget).toMatchObject({
+      headline: 'Performance budget needs a separate architecture pass.',
+      boundary: expect.stringContaining('do not run annual sequencing')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performanceBudget.rows).toEqual([
+      expect.objectContaining({ id: 'candidateLimit', status: 'ready' }),
+      expect.objectContaining({ id: 'fullSuiteCost', status: 'review' }),
+      expect.objectContaining({ id: 'routeProbeCaveat', status: 'review' }),
+      expect.objectContaining({ id: 'deviceRisk', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performanceBudget.rows.find((row) => row.id === 'fullSuiteCost')?.detail).toContain(
+      'long pole'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

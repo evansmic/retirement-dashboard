@@ -244,6 +244,16 @@ export type OptimizerFeedbackPackageIndex = {
       evidenceSource: string;
       boundary: string;
     }>;
+    performanceBudget: {
+      headline: string;
+      rows: Array<{
+        id: 'candidateLimit' | 'fullSuiteCost' | 'routeProbeCaveat' | 'deviceRisk';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2416,6 +2426,36 @@ function buildFeedbackPackageIndex({
       boundary: 'Question only; no refill rule, spending rule, or account instruction is created.'
     }
   ];
+  const annualSequencingPerformanceBudget: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['performanceBudget'] = {
+    headline: 'Performance budget needs a separate architecture pass.',
+    rows: [
+      {
+        id: 'candidateLimit',
+        label: 'Candidate limit',
+        status: 'ready',
+        detail: 'The current bounded optimizer keeps the runtime candidate set capped before any annual sequencing exists.'
+      },
+      {
+        id: 'fullSuiteCost',
+        label: 'Full-suite cost',
+        status: 'review',
+        detail: 'The existing example-plan optimizer readiness test is the long pole, so deeper sequencing needs measured budgets before implementation.'
+      },
+      {
+        id: 'routeProbeCaveat',
+        label: 'Route-probe caveat',
+        status: 'review',
+        detail: 'The known sandbox route-probe EPERM failure is non-blocking, but future sequencing work should not add new server assumptions.'
+      },
+      {
+        id: 'deviceRisk',
+        label: 'Device risk',
+        status: 'review',
+        detail: 'Lower-end local devices need responsive re-optimization before annual sequencing becomes a normal feature.'
+      }
+    ],
+    boundary: 'Performance budget rows are planning evidence only; they do not run annual sequencing, add workers, add servers, or change optimizer search.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2453,6 +2493,7 @@ function buildFeedbackPackageIndex({
       status: annualSequencingStatus,
       rows: annualSequencingRows,
       architectureQuestions: annualSequencingQuestions,
+      performanceBudget: annualSequencingPerformanceBudget,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
