@@ -4660,6 +4660,20 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+          <section className={`optimizer-explanation-card sequencing-readiness-${summary.feedbackPackageIndex.annualSequencingReadiness.status}`}>
+            <h3>{summary.feedbackPackageIndex.annualSequencingReadiness.headline}</h3>
+            <p>{summary.feedbackPackageIndex.annualSequencingReadiness.nextStep}</p>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'ready' ? 'Ready' : row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.boundary}</p>
+          </section>
           <p className="table-note">{summary.feedbackPackageIndex.boundary}</p>
         </section>
       ) : null}

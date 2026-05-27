@@ -382,6 +382,21 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'spendingFlexibility', status: 'review' }),
       expect.objectContaining({ id: 'annualSequencing', status: 'deferred' })
     ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness).toMatchObject({
+      status: 'maybeLater',
+      headline: 'Annual sequencing may be planned later, but is not ready now.',
+      boundary: expect.stringContaining('does not implement annual account-level sequencing')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
+      expect.objectContaining({ id: 'userClarity', status: 'review' }),
+      expect.objectContaining({ id: 'performance', status: 'review' }),
+      expect.objectContaining({ id: 'explainability', status: 'review' }),
+      expect.objectContaining({ id: 'provinceEdgeCases', status: 'review' }),
+      expect.objectContaining({ id: 'feedbackDepth', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows.find((row) => row.id === 'feedbackDepth')?.detail).toContain(
+      'One successful example-plan review is not enough'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');
@@ -766,6 +781,13 @@ describe('bounded optimizer runner', () => {
       boundarySummary: expect.stringContaining('not a plan change or account instruction')
     });
     expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'withdrawalFamilyFeedback')).toMatchObject({
+      status: 'blocked'
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness).toMatchObject({
+      status: 'notReady',
+      headline: 'Annual sequencing is not ready to plan.'
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows.find((row) => row.id === 'userClarity')).toMatchObject({
       status: 'blocked'
     });
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Resolve blocked or unclear feedback evidence');

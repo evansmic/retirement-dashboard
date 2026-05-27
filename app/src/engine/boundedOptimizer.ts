@@ -228,6 +228,18 @@ export type OptimizerFeedbackPackageIndex = {
     status: 'ready' | 'review' | 'deferred' | 'blocked';
     detail: string;
   }>;
+  annualSequencingReadiness: {
+    headline: string;
+    status: 'notReady' | 'maybeLater';
+    rows: Array<{
+      id: 'userClarity' | 'performance' | 'explainability' | 'provinceEdgeCases' | 'feedbackDepth';
+      label: string;
+      status: 'ready' | 'review' | 'blocked';
+      detail: string;
+    }>;
+    nextStep: string;
+    boundary: string;
+  };
   nextCheckpoint: string;
   boundary: string;
 };
@@ -2330,6 +2342,44 @@ function buildFeedbackPackageIndex({
         ? 'review'
         : 'blocked';
 
+  const annualSequencingStatus: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['status'] =
+    withdrawalFeedbackReview.status === 'readyForFeedback' ? 'maybeLater' : 'notReady';
+  const annualSequencingRows: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['rows'] = [
+    {
+      id: 'userClarity',
+      label: 'User clarity',
+      status: withdrawalFeedbackReview.status === 'readyForFeedback' ? 'review' : 'blocked',
+      detail:
+        withdrawalFeedbackReview.status === 'readyForFeedback'
+          ? 'Broad-family evidence can be tested for clarity, but annual sequencing still needs repeated feedback.'
+          : 'Blocked or unclear broad-family feedback cannot support annual sequencing planning.'
+    },
+    {
+      id: 'performance',
+      label: 'Performance budget',
+      status: 'review',
+      detail: 'Annual sequencing would add heavier search work and needs a separate performance budget before architecture.'
+    },
+    {
+      id: 'explainability',
+      label: 'Explainability',
+      status: 'review',
+      detail: 'Users must understand why a broad family was selected before seeing annual account-level detail.'
+    },
+    {
+      id: 'provinceEdgeCases',
+      label: 'Province and edge cases',
+      status: 'review',
+      detail: 'Ontario 2026 assumptions, locked-in accounts, survivor setup, and low-income benefit cases need explicit scope decisions.'
+    },
+    {
+      id: 'feedbackDepth',
+      label: 'Feedback depth',
+      status: 'blocked',
+      detail: 'One successful example-plan review is not enough to mark annual sequencing ready.'
+    }
+  ];
+
   return {
     headline: 'Optimizer feedback package is indexed for review.',
     rows: [
@@ -2358,6 +2408,19 @@ function buildFeedbackPackageIndex({
         detail: 'Sequencing architecture waits until feedback evidence is strong enough to plan it.'
       }
     ],
+    annualSequencingReadiness: {
+      headline:
+        annualSequencingStatus === 'maybeLater'
+          ? 'Annual sequencing may be planned later, but is not ready now.'
+          : 'Annual sequencing is not ready to plan.',
+      status: annualSequencingStatus,
+      rows: annualSequencingRows,
+      nextStep:
+        annualSequencingStatus === 'maybeLater'
+          ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
+          : 'Resolve broad-family feedback blockers before annual sequencing is reconsidered.',
+      boundary: 'This readiness gate does not implement annual account-level sequencing, account instructions, saved output, or a new optimizer search.'
+    },
     nextCheckpoint:
       withdrawalFeedbackReview.status === 'readyForFeedback'
         ? 'Close broad withdrawal-family feedback before planning wider optimizer architecture.'

@@ -181,6 +181,9 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');
+    expect(boundedOptimizerSource).toContain('Annual sequencing may be planned later, but is not ready now.');
+    expect(boundedOptimizerSource).toContain('One successful example-plan review is not enough to mark annual sequencing ready.');
+    expect(boundedOptimizerSource).toContain('does not implement annual account-level sequencing, account instructions, saved output, or a new optimizer search');
     expect(boundedOptimizerSource).toContain('Goal-mode architecture stays inside the bounded candidate set.');
     expect(boundedOptimizerSource).toContain('Goal-mode preview re-ranks existing candidates only');
     expect(boundedOptimizerSource).toContain('do not add toggles, advice, saved output, or annual account instructions');
@@ -331,6 +334,8 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('Flexibility boundary');
     expect(boundedPanel).toContain('!isCompact && summary?.feedbackPackageIndex');
     expect(boundedPanel).toContain('Feedback package index');
+    expect(boundedPanel).toContain('annualSequencingReadiness');
+    expect(boundedPanel).toContain('sequencing-readiness-');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -340,6 +345,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Spending flexibility needs feedback language first.');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Cash wedge is a buffer explanation');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Feedback package index');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('annualSequencingReadiness');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
@@ -347,6 +353,9 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Spend this range');
     expect(appSource).not.toContain('Use this range');
     expect(appSource).not.toContain('Follow this guardrail');
+    expect(appSource).not.toContain('Annual sequencing ready');
+    expect(appSource).not.toContain('Start annual sequencing');
+    expect(appSource).not.toContain('Run annual account sequencing');
     expect(appSource).not.toContain('Refill cash wedge');
     expect(appSource).not.toContain('Use cash wedge first');
     expect(appSource).not.toContain('Refill when markets recover');
