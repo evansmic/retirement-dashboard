@@ -189,6 +189,9 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('Performance budget needs a separate architecture pass.');
     expect(boundedOptimizerSource).toContain('The existing example-plan optimizer readiness test is the long pole');
     expect(boundedOptimizerSource).toContain('do not run annual sequencing, add workers, add servers, or change optimizer search');
+    expect(boundedOptimizerSource).toContain('Explainability must pass before annual account detail.');
+    expect(boundedOptimizerSource).toContain('User describes the family as a comparison based on funded years, money left, tax, and OAS evidence.');
+    expect(boundedOptimizerSource).toContain('do not create advice, account instructions, saved output, or annual sequencing');
     expect(boundedOptimizerSource).toContain('does not implement annual account-level sequencing, account instructions, saved output, or a new optimizer search');
     expect(boundedOptimizerSource).toContain('Goal-mode architecture stays inside the bounded candidate set.');
     expect(boundedOptimizerSource).toContain('Goal-mode preview re-ranks existing candidates only');
@@ -345,6 +348,7 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('Architecture questions');
     expect(boundedPanel).toContain('architectureQuestions');
     expect(boundedPanel).toContain('performanceBudget');
+    expect(boundedPanel).toContain('explainabilityGuide');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -366,6 +370,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Annual sequencing ready');
     expect(appSource).not.toContain('Start annual sequencing');
     expect(appSource).not.toContain('Run annual account sequencing');
+    expect(appSource).not.toContain('Use this withdrawal family');
+    expect(appSource).not.toContain('Follow this account detail');
     expect(appSource).not.toContain('Start worker');
     expect(appSource).not.toContain('Use server sequencing');
     expect(appSource).not.toContain('Refill cash wedge');

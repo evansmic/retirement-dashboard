@@ -424,6 +424,22 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.performanceBudget.rows.find((row) => row.id === 'fullSuiteCost')?.detail).toContain(
       'long pole'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.explainabilityGuide).toMatchObject({
+      headline: 'Explainability must pass before annual account detail.',
+      boundary: expect.stringContaining('do not create advice')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.explainabilityGuide.rows).toEqual([
+      expect.objectContaining({ id: 'familyReason', status: 'review' }),
+      expect.objectContaining({ id: 'evidencePriority', status: 'review' }),
+      expect.objectContaining({ id: 'tradeoffLanguage', status: 'review' }),
+      expect.objectContaining({ id: 'instructionBoundary', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.explainabilityGuide.rows.find((row) => row.id === 'familyReason')?.passSignal).toContain(
+      'funded years, money left, tax, and OAS evidence'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.explainabilityGuide.rows.find((row) => row.id === 'instructionBoundary')?.detail).toContain(
+      'exact withdrawal instructions'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

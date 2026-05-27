@@ -254,6 +254,17 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    explainabilityGuide: {
+      headline: string;
+      rows: Array<{
+        id: 'familyReason' | 'evidencePriority' | 'tradeoffLanguage' | 'instructionBoundary';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+        passSignal: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2456,6 +2467,40 @@ function buildFeedbackPackageIndex({
     ],
     boundary: 'Performance budget rows are planning evidence only; they do not run annual sequencing, add workers, add servers, or change optimizer search.'
   };
+  const annualSequencingExplainabilityGuide: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['explainabilityGuide'] = {
+    headline: 'Explainability must pass before annual account detail.',
+    rows: [
+      {
+        id: 'familyReason',
+        label: 'Why this family',
+        status: 'review',
+        detail: 'Users should be able to say why the broad withdrawal family appeared without treating it as an instruction.',
+        passSignal: 'User describes the family as a comparison based on funded years, money left, tax, and OAS evidence.'
+      },
+      {
+        id: 'evidencePriority',
+        label: 'Evidence priority',
+        status: 'review',
+        detail: 'Users should start with spending, funded years, and projected money left before tax and OAS diagnostics.',
+        passSignal: 'User names viability and estate trade-offs before tax optimization.'
+      },
+      {
+        id: 'tradeoffLanguage',
+        label: 'Trade-off language',
+        status: 'review',
+        detail: 'The explanation should make benefits and drawbacks visible without calling one path the right action.',
+        passSignal: 'User can name at least one trade-off and still says the result is for review.'
+      },
+      {
+        id: 'instructionBoundary',
+        label: 'Instruction boundary',
+        status: 'blocked',
+        detail: 'Annual account detail cannot be designed until users stop expecting exact withdrawal instructions from broad-family evidence.',
+        passSignal: 'User understands annual account-level sequencing is deferred and no account action is being provided.'
+      }
+    ],
+    boundary: 'Explainability rows are review criteria only; they do not create advice, account instructions, saved output, or annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2494,6 +2539,7 @@ function buildFeedbackPackageIndex({
       rows: annualSequencingRows,
       architectureQuestions: annualSequencingQuestions,
       performanceBudget: annualSequencingPerformanceBudget,
+      explainabilityGuide: annualSequencingExplainabilityGuide,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
