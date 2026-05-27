@@ -282,7 +282,8 @@ describe('bounded optimizer runner', () => {
     ]);
     expect(summary.compactEvidenceRows.find((row) => row.id === 'monthlySpend')).toMatchObject({
       label: 'Monthly spend reviewed',
-      value: '$7,083'
+      value: '$7,083',
+      detail: expect.stringContaining("today's dollars")
     });
     expect(summary.compactEvidenceRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({
       value: '-$10,000',
@@ -384,6 +385,9 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'savedOutputBoundary', status: 'ready' })
     ]);
     expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('current plan versus broad withdrawal-family comparison');
+    expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain(
+      'funded years, money left, tax, and OAS recovery are evidence, not instructions'
+    );
     expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain('annual account-level sequencing is still deferred');
     expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('year-by-year withdrawal instruction');
     expect(summary.withdrawalFeedbackReview.confusionSignals.join(' ')).toContain('advice instead of plan-review evidence');
@@ -397,6 +401,7 @@ describe('bounded optimizer runner', () => {
       label: 'Collect feedback before annual sequencing',
       detail: expect.stringContaining('not annual account-level architecture')
     });
+    expect(summary.withdrawalFeedbackReview.decision.requiredEvidence.join(' ')).toContain('money-left and tax rows as evidence');
     expect(summary.withdrawalFeedbackReview.decision.requiredEvidence.join(' ')).toContain('do not read the output as account instructions');
     expect(summary.withdrawalFeedbackReview.outcome).toMatchObject({
       status: 'readyToReview',
@@ -407,6 +412,7 @@ describe('bounded optimizer runner', () => {
     expect(summary.withdrawalFeedbackReview.closeoutSummary).toMatchObject({
       status: 'readyToClose',
       label: 'Feedback loop ready to close',
+      evidenceSummary: expect.stringContaining('funded years, money left, tax, and OAS recovery'),
       boundarySummary: expect.stringContaining('does not create annual account instructions or saved output')
     });
     expect(summary.guardrailNotes.find((note) => note.id === 'benefitTiming')).toMatchObject({

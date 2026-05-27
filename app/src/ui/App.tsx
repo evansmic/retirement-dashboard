@@ -4440,7 +4440,10 @@ function BoundedOptimizerPanel({
           <div>
             <p className="eyebrow">First review evidence</p>
             <h3>What to check first</h3>
-            <p>These rows keep the compact plan review focused on spending, funding, tax, OAS recovery, and money left.</p>
+            <p>
+              These rows keep the compact plan review focused on today&apos;s-dollar spending, funded years, projected money
+              left, then tax and OAS recovery diagnostics.
+            </p>
           </div>
           <div className="optimizer-driver-grid">
             {summary.compactEvidenceRows.map((row) => (

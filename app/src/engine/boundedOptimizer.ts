@@ -1917,7 +1917,7 @@ function buildCompactEvidenceRows(
       id: 'monthlySpend',
       label: 'Monthly spend reviewed',
       value: moneyText(suggested.sustainableAnnualSpend / 12),
-      detail: 'The first option is ranked by sustainable after-tax spending.',
+      detail: "The first option is ranked by sustainable after-tax spending in today's dollars.",
       tone: 'neutral'
     },
     {
@@ -1987,7 +1987,7 @@ function buildWithdrawalFeedbackReview({
       status: withdrawalEvidenceRows.length >= 4 ? 'ready' : familyStatus === 'included' ? 'review' : 'blocked',
       detail:
         withdrawalEvidenceRows.length >= 4
-          ? 'When a withdrawal family leads, Details shows funded years, tax, OAS recovery, and money-left evidence.'
+          ? 'When a withdrawal family leads, Details shows funded years, money-left, tax, and OAS recovery evidence.'
           : familyStatus === 'included'
             ? 'Broad families can be reviewed in the option table even when one does not lead the current run.'
             : 'Withdrawal evidence is held until broad families can be compared.'
@@ -2039,7 +2039,7 @@ function buildWithdrawalFeedbackReview({
           ]
         : [
             'Can the user explain current plan versus broad withdrawal-family comparison in their own words?',
-            'Can the user identify that funded years, tax, OAS recovery, and money left are evidence, not instructions?',
+            'Can the user identify that funded years, money left, tax, and OAS recovery are evidence, not instructions?',
             'Does the user understand why annual account-level sequencing is still deferred?'
           ],
     confusionSignals: [
@@ -2086,7 +2086,7 @@ function buildWithdrawalFeedbackReview({
               id: 'evidence',
               label: 'Evidence interpretation',
               prompt: 'Ask which evidence rows changed and why those rows matter.',
-              passSignal: 'User names funded years, tax, OAS recovery, or money left as review evidence.'
+              passSignal: 'User names funded years, money left, tax, or OAS recovery as review evidence.'
             },
             {
               id: 'boundary',
@@ -2109,7 +2109,7 @@ function buildWithdrawalFeedbackReview({
             detail: 'The next step is user feedback on broad-family evidence, not annual account-level architecture.',
             requiredEvidence: [
               'Users can explain broad families as comparisons.',
-              'Users understand tax and money-left rows as evidence.',
+              'Users understand money-left and tax rows as evidence.',
               'Users do not read the output as account instructions.'
             ]
           }
@@ -2173,7 +2173,7 @@ function buildWithdrawalFeedbackReview({
             status: 'readyToClose',
             label: 'Feedback loop ready to close',
             detail: 'The review is ready to close when the worksheet passes without confusion signals.',
-            evidenceSummary: 'Broad-family evidence is present for funded years, tax, OAS recovery, and money left.',
+            evidenceSummary: 'Broad-family evidence is present for funded years, money left, tax, and OAS recovery.',
             boundarySummary: 'The result stays review-only and does not create annual account instructions or saved output.',
             nextReview: 'Feedback notes can support a later decision on whether annual sequencing architecture is ready to plan.'
           }

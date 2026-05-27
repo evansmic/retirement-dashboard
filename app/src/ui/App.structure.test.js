@@ -159,9 +159,14 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Max after-tax spend');
     expect(appSource).toContain('Monthly spend reviewed');
     expect(appSource).toContain('First review evidence');
+    expect(boundedOptimizerSource).toContain("sustainable after-tax spending in today's dollars");
     expect(boundedOptimizerSource).toContain('Projected money left is a trade-off to review with spending comfort.');
+    expect(boundedOptimizerSource).toContain('funded years, money-left, tax, and OAS recovery evidence');
+    expect(boundedOptimizerSource).toContain('funded years, money left, tax, and OAS recovery are evidence, not instructions');
     expect(appSource).toContain('What to check first');
-    expect(appSource).toContain('spending, funding, tax, OAS recovery, and money left');
+    expect(appSource).toContain("today&apos;s-dollar spending, funded years, projected money");
+    expect(appSource).toContain('left, then tax and OAS recovery diagnostics');
+    expect(appSource).not.toContain('spending, funding, tax, OAS recovery, and money left');
     expect(appSource).toContain('Optimizer direction');
     expect(appSource).toContain('Input readiness');
     expect(appSource).toContain('What must be ready before optimizer prep');
