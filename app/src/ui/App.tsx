@@ -4663,6 +4663,49 @@ function BoundedOptimizerPanel({
           <section className={`optimizer-explanation-card sequencing-readiness-${summary.feedbackPackageIndex.annualSequencingReadiness.status}`}>
             <h3>{summary.feedbackPackageIndex.annualSequencingReadiness.headline}</h3>
             <p>{summary.feedbackPackageIndex.annualSequencingReadiness.nextStep}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.readinessSectionIndex.headline}</h4>
+            <ul className="compact-list">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.readinessSectionIndex.rows.map((row) => (
+                <li key={row.id}>
+                  <strong>{row.label}:</strong> {row.group}. {row.detail}
+                </li>
+              ))}
+            </ul>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.readinessSectionIndex.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.copyTighteningGuard.headline}</h4>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.copyTighteningGuard.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.copyTighteningGuard.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackExamplePointers.headline}</h4>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackExamplePointers.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackExamplePointers.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.deferralReassessment.headline}</h4>
+            <p>{summary.feedbackPackageIndex.annualSequencingReadiness.deferralReassessment.recommendation}</p>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.deferralReassessment.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.deferralReassessment.boundary}</p>
             <div className="optimizer-guardrail-grid">
               {summary.feedbackPackageIndex.annualSequencingReadiness.rows.map((row) => (
                 <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>

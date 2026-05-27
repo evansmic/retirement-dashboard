@@ -428,6 +428,48 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    readinessSectionIndex: {
+      headline: string;
+      rows: Array<{
+        id: 'baseReadiness' | 'feedbackEvidence' | 'evidenceQuality' | 'decisionBoundary' | 'prototypeGate';
+        label: string;
+        group: 'evidence' | 'quality' | 'decision' | 'prototypeGate';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    copyTighteningGuard: {
+      headline: string;
+      rows: Array<{
+        id: 'preferredTerms' | 'blockedTerms' | 'deferFirst' | 'consumerTone';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    feedbackExamplePointers: {
+      headline: string;
+      rows: Array<{
+        id: 'dbPensionExample' | 'bridgeYearExample' | 'alreadyRetiredExample' | 'staticOnly' | 'noPersistence';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    deferralReassessment: {
+      headline: string;
+      status: 'stillDeferred' | 'considerDecisionPacketLater';
+      rows: Array<{
+        id: 'coverage' | 'quality' | 'scope' | 'performance' | 'schemaUiRollback';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3276,6 +3318,151 @@ function buildFeedbackPackageIndex({
     boundary:
       'Readiness runway is a checkpoint only; it does not request a decision, start a prototype, change schemas, save results, or expose annual sequencing.'
   };
+  const annualSequencingReadinessSectionIndex: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessSectionIndex'] = {
+    headline: 'Readiness sections are indexed for review.',
+    rows: [
+      {
+        id: 'baseReadiness',
+        label: 'Base readiness and architecture gates',
+        group: 'prototypeGate',
+        detail: 'Covers the existing readiness rows, architecture questions, performance, explainability, scope, and hard non-goals.'
+      },
+      {
+        id: 'feedbackEvidence',
+        label: 'Feedback evidence package',
+        group: 'evidence',
+        detail: 'Covers blocker clearance evidence, feedback artifact prompts, closeout rubric, decision ledger, and household coverage.'
+      },
+      {
+        id: 'evidenceQuality',
+        label: 'Evidence quality checks',
+        group: 'quality',
+        detail: 'Covers reviewer wording, scenario context, evidence order, confusion signals, and non-persistence.'
+      },
+      {
+        id: 'decisionBoundary',
+        label: 'Decision boundary',
+        group: 'decision',
+        detail: 'Covers cleanup paths, hold/defer outcomes, and the future decision-packet checklist.'
+      },
+      {
+        id: 'prototypeGate',
+        label: 'Prototype gate',
+        group: 'prototypeGate',
+        detail: 'Covers the blocked prototype register, rollback containment, test-only shape notes, reassessment, and runway.'
+      }
+    ],
+    boundary:
+      'Readiness section index is a Details-only map; it does not change results, save output, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingCopyTighteningGuard: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['copyTighteningGuard'] = {
+    headline: 'Readiness copy should stay short and defer-first.',
+    rows: [
+      {
+        id: 'preferredTerms',
+        label: 'Preferred terms',
+        status: 'review',
+        detail: 'Use review evidence, future decision, blocked, deferred, planning-only, and Details-only.'
+      },
+      {
+        id: 'blockedTerms',
+        label: 'Blocked terms',
+        status: 'blocked',
+        detail: 'Avoid approval, start, apply, save, instruction, command, exact account order, and guaranteed spend.'
+      },
+      {
+        id: 'deferFirst',
+        label: 'Defer-first framing',
+        status: 'blocked',
+        detail: 'Decision-packet and runway copy must keep annual sequencing deferred while blockers remain.'
+      },
+      {
+        id: 'consumerTone',
+        label: 'Consumer tone',
+        status: 'review',
+        detail: 'Keep language plain, calm, and non-advisory even inside the research panel.'
+      }
+    ],
+    boundary:
+      'Copy tightening guard is wording guidance only; it does not change calculations, save output, clear blockers, request approval, or start annual sequencing.'
+  };
+  const annualSequencingFeedbackExamplePointers: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackExamplePointers'] = {
+    headline: 'Example feedback snippets are static review aids.',
+    rows: [
+      {
+        id: 'dbPensionExample',
+        label: 'DB pension example',
+        status: 'review',
+        detail: 'Static example should show a reviewer remembering the spending answer and treating survivor-sensitive evidence as review context.'
+      },
+      {
+        id: 'bridgeYearExample',
+        label: 'Bridge-year example',
+        status: 'review',
+        detail: 'Static example should show a reviewer understanding bridge funding without asking for annual account draw orders.'
+      },
+      {
+        id: 'alreadyRetiredExample',
+        label: 'Already-retired example',
+        status: 'review',
+        detail: 'Static example should show a reviewer starting with funded years and money left before tax and OAS diagnostics.'
+      },
+      {
+        id: 'staticOnly',
+        label: 'Static docs only',
+        status: 'blocked',
+        detail: 'Examples are documentation fixtures only and cannot count as collected user feedback.'
+      },
+      {
+        id: 'noPersistence',
+        label: 'No persistence',
+        status: 'blocked',
+        detail: 'Examples must not add saved feedback fields, .plan.json files, engine output, or normal UI actions.'
+      }
+    ],
+    boundary:
+      'Feedback example pointers are static documentation aids only; they do not collect user data, save feedback, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingDeferralReassessment: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['deferralReassessment'] = {
+    headline: 'Annual sequencing is still not ready for a prototype decision.',
+    status: 'stillDeferred',
+    rows: [
+      {
+        id: 'coverage',
+        label: 'Coverage',
+        status: 'review',
+        detail: 'Coverage is better organized, but static examples and one-off reviews are not enough to clear feedback depth.'
+      },
+      {
+        id: 'quality',
+        label: 'Quality',
+        status: 'review',
+        detail: 'Evidence quality criteria now exist, but future real feedback still needs to meet them.'
+      },
+      {
+        id: 'scope',
+        label: 'Scope',
+        status: 'blocked',
+        detail: 'Locked-in accounts, survivor cases, low-income benefits, and Ontario-only boundaries still need decisions.'
+      },
+      {
+        id: 'performance',
+        label: 'Performance',
+        status: 'blocked',
+        detail: 'No local-device performance budget or cutoff rule exists for heavier annual sequencing work.'
+      },
+      {
+        id: 'schemaUiRollback',
+        label: 'Schema, UI, and rollback',
+        status: 'blocked',
+        detail: 'Saved schema, engine output, normal UI containment, and one-commit rollback evidence remain blockers.'
+      }
+    ],
+    recommendation:
+      'Continue feedback evidence and cleanup work; consider a prototype decision packet later only if real feedback and blocker evidence become strong enough.',
+    boundary:
+      'Deferral reassessment is a checkpoint only; it does not move to candidate status, request approval, start a prototype, change schemas, or expose annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3330,6 +3517,10 @@ function buildFeedbackPackageIndex({
       evidenceQualityChecklist: annualSequencingEvidenceQualityChecklist,
       prototypeDecisionPacket: annualSequencingPrototypeDecisionPacket,
       readinessRunway: annualSequencingReadinessRunway,
+      readinessSectionIndex: annualSequencingReadinessSectionIndex,
+      copyTighteningGuard: annualSequencingCopyTighteningGuard,
+      feedbackExamplePointers: annualSequencingFeedbackExamplePointers,
+      deferralReassessment: annualSequencingDeferralReassessment,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
