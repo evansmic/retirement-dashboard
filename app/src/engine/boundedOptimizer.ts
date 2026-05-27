@@ -512,6 +512,48 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    readinessConsolidationSummary: {
+      headline: string;
+      rows: Array<{
+        id: 'summaryFirst' | 'groupBeforeAdding' | 'supersedeDocs' | 'detailsOnly' | 'noPrototype';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    uiRedesignReadinessBridge: {
+      headline: string;
+      rows: Array<{
+        id: 'briefReference' | 'answerFirst' | 'localFirstTrust' | 'progressiveDisclosure' | 'notYet';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    checkpointArchivePolicy: {
+      headline: string;
+      rows: Array<{
+        id: 'currentPosture' | 'supersededDocs' | 'decisionDocs' | 'verificationNotes' | 'noDeletion';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    consolidationCheckpoint: {
+      headline: string;
+      status: 'continueConsolidation' | 'readyForUiOverhaul';
+      rows: Array<{
+        id: 'panelHygiene' | 'feedbackReadiness' | 'performanceBoundary' | 'uiRedesignTiming' | 'nextPackage';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3656,6 +3698,157 @@ function buildFeedbackPackageIndex({
     boundary:
       'Conservative posture checkpoint is a review checkpoint only; it does not request approval, start a prototype, change schemas, save output, or expose annual sequencing.'
   };
+  const annualSequencingReadinessConsolidationSummary: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessConsolidationSummary'] = {
+    headline: 'Readiness review should be summary-first.',
+    rows: [
+      {
+        id: 'summaryFirst',
+        label: 'Summary first',
+        status: 'review',
+        detail: 'Lead with the deferral state, top blockers, and next conservative action before showing deeper evidence.'
+      },
+      {
+        id: 'groupBeforeAdding',
+        label: 'Group before adding',
+        status: 'review',
+        detail: 'Attach future rows to existing evidence, quality, decision, performance, or prototype-gate groups before adding sections.'
+      },
+      {
+        id: 'supersedeDocs',
+        label: 'Supersede old docs',
+        status: 'review',
+        detail: 'When future evidence changes posture, mark older checkpoint docs as superseded rather than leaving conflicting guidance.'
+      },
+      {
+        id: 'detailsOnly',
+        label: 'Details only',
+        status: 'blocked',
+        detail: 'Consolidation must stay inside the research panel and never become Overview or compact Details content.'
+      },
+      {
+        id: 'noPrototype',
+        label: 'No prototype',
+        status: 'blocked',
+        detail: 'Consolidation cannot authorize annual sequencing, clear blockers, change schemas, or save output.'
+      }
+    ],
+    boundary:
+      'Readiness consolidation summary is organization guidance only; it does not change calculations, save output, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingUiRedesignReadinessBridge: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['uiRedesignReadinessBridge'] = {
+    headline: 'UI redesign context is noted for later.',
+    rows: [
+      {
+        id: 'briefReference',
+        label: 'Brief reference',
+        status: 'review',
+        detail: 'Use docs/ui-redesign-brief.md and docs/assets as future design context after development is secure enough.'
+      },
+      {
+        id: 'answerFirst',
+        label: 'Answer first',
+        status: 'review',
+        detail: 'Future UI work should preserve the first answer: am I okay, spending capacity, confidence, and top review actions.'
+      },
+      {
+        id: 'localFirstTrust',
+        label: 'Local-first trust',
+        status: 'review',
+        detail: 'Future UI work should keep local save status, privacy, backup, and exportability visible.'
+      },
+      {
+        id: 'progressiveDisclosure',
+        label: 'Progressive disclosure',
+        status: 'review',
+        detail: 'Future UI work should reduce density and keep advanced readiness evidence behind explicit Details/research boundaries.'
+      },
+      {
+        id: 'notYet',
+        label: 'Not yet',
+        status: 'blocked',
+        detail: 'Do not start UI overhaul while annual sequencing readiness, feedback evidence, and performance boundaries are still unsettled.'
+      }
+    ],
+    boundary:
+      'UI redesign readiness bridge is future context only; it does not redesign UI, change calculations, save output, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingCheckpointArchivePolicy: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['checkpointArchivePolicy'] = {
+    headline: 'Checkpoint docs need a supersession policy.',
+    rows: [
+      {
+        id: 'currentPosture',
+        label: 'Current posture',
+        status: 'review',
+        detail: 'Keep the latest checkpoint as the source of truth for whether sequencing is deferred, blocked, or ready for a future decision.'
+      },
+      {
+        id: 'supersededDocs',
+        label: 'Superseded docs',
+        status: 'review',
+        detail: 'When posture changes, mark older docs as superseded instead of editing history into ambiguity.'
+      },
+      {
+        id: 'decisionDocs',
+        label: 'Decision docs',
+        status: 'blocked',
+        detail: 'Do not create a decision doc that implies approval before every blocker has evidence.'
+      },
+      {
+        id: 'verificationNotes',
+        label: 'Verification notes',
+        status: 'review',
+        detail: 'Keep known probe caveats explicit so future failures are compared against the right baseline.'
+      },
+      {
+        id: 'noDeletion',
+        label: 'No deletion',
+        status: 'blocked',
+        detail: 'Do not delete old checkpoint docs as part of readiness cleanup unless a separate doc-retention decision is made.'
+      }
+    ],
+    boundary:
+      'Checkpoint archive policy is documentation guidance only; it does not delete docs, clear blockers, request approval, change schemas, or start annual sequencing.'
+  };
+  const annualSequencingConsolidationCheckpoint: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['consolidationCheckpoint'] = {
+    headline: 'Consolidation is useful, but readiness is still deferred.',
+    status: 'continueConsolidation',
+    rows: [
+      {
+        id: 'panelHygiene',
+        label: 'Panel hygiene',
+        status: 'review',
+        detail: 'The readiness surface now has summary, grouping, maintenance, and archive guidance, but future work should avoid adding more sections unless needed.'
+      },
+      {
+        id: 'feedbackReadiness',
+        label: 'Feedback readiness',
+        status: 'review',
+        detail: 'Manual feedback review is better prepared, but real feedback evidence still needs to be gathered outside the app.'
+      },
+      {
+        id: 'performanceBoundary',
+        label: 'Performance boundary',
+        status: 'blocked',
+        detail: 'Performance targets, candidate caps, and timeout rules remain questions, not measured budgets.'
+      },
+      {
+        id: 'uiRedesignTiming',
+        label: 'UI redesign timing',
+        status: 'blocked',
+        detail: 'The redesign brief is recorded for later, but overhaul work should wait until development and readiness are secure enough.'
+      },
+      {
+        id: 'nextPackage',
+        label: 'Next package',
+        status: 'review',
+        detail: 'Next work should either simplify existing readiness sections or prepare manual feedback sessions, not start sequencing or redesign.'
+      }
+    ],
+    recommendation:
+      'Continue consolidation or manual feedback prep next; do not start annual sequencing or the UI overhaul yet.',
+    boundary:
+      'Consolidation checkpoint is review guidance only; it does not request approval, redesign UI, start a prototype, change schemas, or save output.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3718,6 +3911,10 @@ function buildFeedbackPackageIndex({
       feedbackReviewScript: annualSequencingFeedbackReviewScript,
       performancePlanningQuestions: annualSequencingPerformancePlanningQuestions,
       conservativePostureCheckpoint: annualSequencingConservativePostureCheckpoint,
+      readinessConsolidationSummary: annualSequencingReadinessConsolidationSummary,
+      uiRedesignReadinessBridge: annualSequencingUiRedesignReadinessBridge,
+      checkpointArchivePolicy: annualSequencingCheckpointArchivePolicy,
+      consolidationCheckpoint: annualSequencingConsolidationCheckpoint,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

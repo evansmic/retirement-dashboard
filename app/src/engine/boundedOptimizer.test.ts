@@ -509,6 +509,62 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.conservativePostureCheckpoint.rows.find((row) => row.id === 'doNotDo')?.detail).toContain(
       'background workers'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessConsolidationSummary).toMatchObject({
+      headline: 'Readiness review should be summary-first.',
+      boundary: expect.stringContaining('organization guidance only')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessConsolidationSummary.rows).toEqual([
+      expect.objectContaining({ id: 'summaryFirst', status: 'review' }),
+      expect.objectContaining({ id: 'groupBeforeAdding', status: 'review' }),
+      expect.objectContaining({ id: 'supersedeDocs', status: 'review' }),
+      expect.objectContaining({ id: 'detailsOnly', status: 'blocked' }),
+      expect.objectContaining({ id: 'noPrototype', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessConsolidationSummary.rows.find((row) => row.id === 'noPrototype')?.detail).toContain(
+      'cannot authorize annual sequencing'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.uiRedesignReadinessBridge).toMatchObject({
+      headline: 'UI redesign context is noted for later.',
+      boundary: expect.stringContaining('does not redesign UI')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.uiRedesignReadinessBridge.rows).toEqual([
+      expect.objectContaining({ id: 'briefReference', status: 'review' }),
+      expect.objectContaining({ id: 'answerFirst', status: 'review' }),
+      expect.objectContaining({ id: 'localFirstTrust', status: 'review' }),
+      expect.objectContaining({ id: 'progressiveDisclosure', status: 'review' }),
+      expect.objectContaining({ id: 'notYet', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.uiRedesignReadinessBridge.rows.find((row) => row.id === 'notYet')?.detail).toContain(
+      'Do not start UI overhaul'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.checkpointArchivePolicy).toMatchObject({
+      headline: 'Checkpoint docs need a supersession policy.',
+      boundary: expect.stringContaining('does not delete docs')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.checkpointArchivePolicy.rows).toEqual([
+      expect.objectContaining({ id: 'currentPosture', status: 'review' }),
+      expect.objectContaining({ id: 'supersededDocs', status: 'review' }),
+      expect.objectContaining({ id: 'decisionDocs', status: 'blocked' }),
+      expect.objectContaining({ id: 'verificationNotes', status: 'review' }),
+      expect.objectContaining({ id: 'noDeletion', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.checkpointArchivePolicy.rows.find((row) => row.id === 'decisionDocs')?.detail).toContain(
+      'implies approval'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.consolidationCheckpoint).toMatchObject({
+      headline: 'Consolidation is useful, but readiness is still deferred.',
+      status: 'continueConsolidation',
+      recommendation: expect.stringContaining('do not start annual sequencing or the UI overhaul yet'),
+      boundary: expect.stringContaining('does not request approval')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.consolidationCheckpoint.rows).toEqual([
+      expect.objectContaining({ id: 'panelHygiene', status: 'review' }),
+      expect.objectContaining({ id: 'feedbackReadiness', status: 'review' }),
+      expect.objectContaining({ id: 'performanceBoundary', status: 'blocked' }),
+      expect.objectContaining({ id: 'uiRedesignTiming', status: 'blocked' }),
+      expect.objectContaining({ id: 'nextPackage', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.consolidationCheckpoint.status).not.toBe('readyForUiOverhaul');
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
       expect.objectContaining({ id: 'userClarity', status: 'review' }),
       expect.objectContaining({ id: 'performance', status: 'review' }),
