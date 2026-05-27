@@ -389,6 +389,10 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('feedbackCloseoutRubric.headline');
     expect(boundedPanel).toContain('feedbackCloseoutRubric.boundary');
     expect(boundedPanel).toContain('row.nextStep');
+    expect(boundedPanel).toContain('feedbackDecisionLedger');
+    expect(boundedPanel).toContain('feedbackDecisionLedger.headline');
+    expect(boundedPanel).toContain('feedbackDecisionLedger.boundary');
+    expect(boundedPanel).toContain('row.evidenceNeeded');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -407,6 +411,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('blockerClearanceEvidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackArtifactTemplate');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackCloseoutRubric');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackDecisionLedger');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
@@ -430,6 +435,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Submit sequencing feedback');
     expect(appSource).not.toContain('Approve annual sequencing prototype');
     expect(appSource).not.toContain('Score feedback response');
+    expect(appSource).not.toContain('Store feedback decision');
+    expect(appSource).not.toContain('Clear blocker from feedback');
     expect(appSource).not.toContain('Run annual account sequencing');
     expect(appSource).not.toContain('Use this withdrawal family');
     expect(appSource).not.toContain('Follow this account detail');

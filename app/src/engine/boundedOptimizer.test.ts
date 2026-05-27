@@ -605,6 +605,23 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCloseoutRubric.rows.find((row) => row.id === 'pass')?.nextStep).toContain(
       'not as prototype approval'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger).toMatchObject({
+      headline: 'Feedback decisions need a lightweight ledger.',
+      boundary: expect.stringContaining('does not store feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.rows).toEqual([
+      expect.objectContaining({ id: 'collectMore', status: 'review' }),
+      expect.objectContaining({ id: 'cleanCopy', status: 'review' }),
+      expect.objectContaining({ id: 'cleanInputs', status: 'review' }),
+      expect.objectContaining({ id: 'holdSequencing', status: 'blocked' }),
+      expect.objectContaining({ id: 'reassessLater', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.rows.find((row) => row.id === 'holdSequencing')?.detail).toContain(
+      'exact account withdrawals'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.rows.find((row) => row.id === 'reassessLater')?.evidenceNeeded).toContain(
+      'every blocker has evidence'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

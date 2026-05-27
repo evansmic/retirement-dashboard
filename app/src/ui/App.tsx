@@ -4815,6 +4815,18 @@ function BoundedOptimizerPanel({
               ))}
             </div>
             <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCloseoutRubric.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.headline}</h4>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                  <p>{row.evidenceNeeded}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.boundary}</p>
             <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.boundary}</p>
           </section>
           <p className="table-note">{summary.feedbackPackageIndex.boundary}</p>

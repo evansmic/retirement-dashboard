@@ -372,6 +372,17 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    feedbackDecisionLedger: {
+      headline: string;
+      rows: Array<{
+        id: 'collectMore' | 'cleanCopy' | 'cleanInputs' | 'holdSequencing' | 'reassessLater';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+        evidenceNeeded: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3013,6 +3024,48 @@ function buildFeedbackPackageIndex({
     boundary:
       'Feedback closeout rubric is review guidance only; it does not score users, save responses, clear blockers, approve a prototype, or add annual sequencing.'
   };
+  const annualSequencingFeedbackDecisionLedger: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackDecisionLedger'] = {
+    headline: 'Feedback decisions need a lightweight ledger.',
+    rows: [
+      {
+        id: 'collectMore',
+        label: 'Collect more feedback',
+        status: 'review',
+        detail: 'Use when feedback is understandable but coverage is too narrow across household stories.',
+        evidenceNeeded: 'More household reviews using the same prompts and closeout rubric.'
+      },
+      {
+        id: 'cleanCopy',
+        label: 'Clean up copy',
+        status: 'review',
+        detail: 'Use when reviewers understand the plan but stumble over cash wedge, flexibility, tax, or OAS wording.',
+        evidenceNeeded: 'Specific copy confusion notes and a follow-up readability pass.'
+      },
+      {
+        id: 'cleanInputs',
+        label: 'Clean up inputs',
+        status: 'review',
+        detail: 'Use when blocked or missing inputs make feedback unreliable before sequencing is reconsidered.',
+        evidenceNeeded: 'Input readiness notes showing the household story can be reviewed without blocked data.'
+      },
+      {
+        id: 'holdSequencing',
+        label: 'Hold annual sequencing',
+        status: 'blocked',
+        detail: 'Use when reviewers expect advice, exact account withdrawals, saved sequencing output, or a command.',
+        evidenceNeeded: 'Instruction-boundary cleanup and repeated feedback without account-order expectations.'
+      },
+      {
+        id: 'reassessLater',
+        label: 'Reassess later',
+        status: 'blocked',
+        detail: 'Use when feedback is promising but still lacks scope, performance, schema, UI, or rollback evidence.',
+        evidenceNeeded: 'A future checkpoint showing every blocker has evidence, not just favorable feedback.'
+      }
+    ],
+    boundary:
+      'Feedback decision ledger is a review summary only; it is not saved, does not store feedback, does not clear blockers, and does not authorize annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3062,6 +3115,7 @@ function buildFeedbackPackageIndex({
       blockerClearanceEvidence: annualSequencingBlockerClearanceEvidence,
       feedbackArtifactTemplate: annualSequencingFeedbackArtifactTemplate,
       feedbackCloseoutRubric: annualSequencingFeedbackCloseoutRubric,
+      feedbackDecisionLedger: annualSequencingFeedbackDecisionLedger,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
