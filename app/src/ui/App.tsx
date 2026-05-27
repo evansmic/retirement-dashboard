@@ -4573,6 +4573,21 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+          <section className="optimizer-explanation-card">
+            <h3>{summary.goalReview.goalModePreview.headline}</h3>
+            <div className="optimizer-option-group-grid">
+              {summary.goalReview.goalModePreview.rows.map((row) => (
+                <article className="optimizer-option-group-row" key={row.id}>
+                  <span>{row.status === 'current' ? 'Current' : 'Deferred'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.topCandidateLabel}</p>
+                  <p>{row.basis}</p>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.goalReview.goalModePreview.boundary}</p>
+          </section>
           <div className="result-overview-grid">
             <section className="optimizer-explanation-card">
               <h3>{summary.goalReview.spendingFlexibilityReview.headline}</h3>

@@ -166,6 +166,19 @@ export type OptimizerGoalReview = {
     status: 'current' | 'deferred';
     detail: string;
   }>;
+  goalModePreview: {
+    headline: string;
+    rows: Array<{
+      id: 'maxSpend' | 'maxEstate' | 'minTax';
+      label: string;
+      status: 'current' | 'deferred';
+      topCandidateId: BoundedOptimizerCandidateId | null;
+      topCandidateLabel: string;
+      basis: string;
+      detail: string;
+    }>;
+    boundary: string;
+  };
   spendingFlexibilityReview: {
     headline: string;
     detail: string;
@@ -624,7 +637,70 @@ function buildSearchPlan(plan: V2PlanPayload): OptimizerSearchPlan {
   };
 }
 
-function buildOptimizerGoalReview(): OptimizerGoalReview {
+function buildGoalModePreview(candidates: BoundedOptimizerCandidateRow[]): OptimizerGoalReview['goalModePreview'] {
+  const eligible = candidates.filter((candidate) => candidate.status !== 'blocked');
+  const bySpend = eligible.slice().sort((a, b) => {
+    if (a.sustainableAnnualSpend !== b.sustainableAnnualSpend) return b.sustainableAnnualSpend - a.sustainableAnnualSpend;
+    return compareRows(a, b);
+  })[0];
+  const byEstate = eligible.slice().sort((a, b) => {
+    if (a.endPortfolio !== b.endPortfolio) return b.endPortfolio - a.endPortfolio;
+    return compareRows(a, b);
+  })[0];
+  const byTax = eligible.slice().sort((a, b) => {
+    if (a.lifetimeTax !== b.lifetimeTax) return a.lifetimeTax - b.lifetimeTax;
+    return compareRows(a, b);
+  })[0];
+  const row = (
+    id: 'maxSpend' | 'maxEstate' | 'minTax',
+    label: string,
+    status: 'current' | 'deferred',
+    candidate: BoundedOptimizerCandidateRow | undefined,
+    basis: string,
+    detail: string
+  ) => ({
+    id,
+    label,
+    status,
+    topCandidateId: candidate?.id || null,
+    topCandidateLabel: candidate?.label || 'No eligible candidate',
+    basis,
+    detail
+  });
+
+  return {
+    headline: 'Same candidates, different review lens.',
+    rows: [
+      row(
+        'maxSpend',
+        'Max sustainable spend',
+        'current',
+        bySpend,
+        'Ranks by sustainable after-tax spending in today\'s dollars.',
+        'This is the current objective and does not add a new control.'
+      ),
+      row(
+        'maxEstate',
+        'Max estate',
+        'deferred',
+        byEstate,
+        'Would rank the same candidates by projected money left.',
+        'This is a future review lens, not a recommendation or saved preference.'
+      ),
+      row(
+        'minTax',
+        'Lower lifetime tax',
+        'deferred',
+        byTax,
+        'Would rank the same candidates by lower lifetime tax.',
+        'This is supporting evidence only, not an account instruction.'
+      )
+    ],
+    boundary: 'Goal-mode preview re-ranks existing candidates only; it does not add search paths, toggles, advice, saved output, or annual account sequencing.'
+  };
+}
+
+function buildOptimizerGoalReview(candidates: BoundedOptimizerCandidateRow[]): OptimizerGoalReview {
   return {
     summary:
       'Future goal modes should re-rank the same bounded candidate set before any wider optimizer search is considered.',
@@ -684,6 +760,7 @@ function buildOptimizerGoalReview(): OptimizerGoalReview {
         detail: 'Variable spending and cash-wedge rules need user feedback before becoming optimizer goals.'
       }
     ],
+    goalModePreview: buildGoalModePreview(candidates),
     spendingFlexibilityReview: {
       headline: 'Spending flexibility needs feedback language first.',
       detail:
@@ -2331,7 +2408,7 @@ export function runBoundedOptimizer(
   const readinessRows = buildReadinessRows(plan, contract, eligibilityNotes);
   const candidateFamilies = buildCandidateFamilies(readinessRows);
   const searchPlan = buildSearchPlan(plan);
-  const goalReview = buildOptimizerGoalReview();
+  const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
     candidates,

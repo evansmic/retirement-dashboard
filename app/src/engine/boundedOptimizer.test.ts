@@ -310,6 +310,26 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'spendingFlexibility', status: 'deferred' })
     ]);
     expect(summary.goalReview.rows.find((row) => row.id === 'spendingFlexibility')?.detail).toContain('cash-wedge rules');
+    expect(summary.goalReview.goalModePreview).toMatchObject({
+      headline: 'Same candidates, different review lens.',
+      boundary: expect.stringContaining('re-ranks existing candidates only')
+    });
+    expect(summary.goalReview.goalModePreview.rows.map((row) => row.id)).toEqual(['maxSpend', 'maxEstate', 'minTax']);
+    expect(summary.goalReview.goalModePreview.rows.find((row) => row.id === 'maxSpend')).toMatchObject({
+      status: 'current',
+      topCandidateId: 'withdrawalRegisteredFirst',
+      basis: expect.stringContaining("today's dollars")
+    });
+    expect(summary.goalReview.goalModePreview.rows.find((row) => row.id === 'maxEstate')).toMatchObject({
+      status: 'deferred',
+      topCandidateId: 'withdrawalRegisteredFirst',
+      detail: expect.stringContaining('not a recommendation')
+    });
+    expect(summary.goalReview.goalModePreview.rows.find((row) => row.id === 'minTax')).toMatchObject({
+      status: 'deferred',
+      topCandidateId: 'withdrawalRegisteredFirst',
+      detail: expect.stringContaining('not an account instruction')
+    });
     expect(summary.goalReview.spendingFlexibilityReview).toMatchObject({
       headline: 'Spending flexibility needs feedback language first.',
       boundary: expect.stringContaining('not a saved setting or optimizer instruction')
@@ -791,6 +811,7 @@ describe('bounded optimizer runner', () => {
       expect(summary.searchPlan.annualOverrides).toBe('deferred');
       expect(summary.goalReview.architecture.rows.find((row) => row.id === 'sameCandidateSet')).toMatchObject({ status: 'ready' });
       expect(summary.goalReview.architecture.rows.find((row) => row.id === 'sequencingDeferred')).toMatchObject({ status: 'deferred' });
+      expect(summary.goalReview.goalModePreview.rows.map((row) => row.topCandidateId).every((id) => !id || summary.candidates.some((candidate) => candidate.id === id))).toBe(true);
       expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'annualSequencing')).toMatchObject({ status: 'deferred' });
       expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
         'monthlySpend',

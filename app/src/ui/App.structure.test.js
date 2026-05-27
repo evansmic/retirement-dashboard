@@ -175,11 +175,14 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('No annual account instructions in this version.');
     expect(appSource).toContain('Future objective modes');
     expect(appSource).toContain('Goal switching stays a review boundary');
+    expect(appSource).toContain('summary.goalReview.goalModePreview');
+    expect(boundedOptimizerSource).toContain('Same candidates, different review lens.');
     expect(appSource).toContain('Feedback package index');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');
     expect(boundedOptimizerSource).toContain('Goal-mode architecture stays inside the bounded candidate set.');
+    expect(boundedOptimizerSource).toContain('Goal-mode preview re-ranks existing candidates only');
     expect(boundedOptimizerSource).toContain('do not add toggles, advice, saved output, or annual account instructions');
     expect(boundedOptimizerSource).toContain('re-rank the same bounded candidate set');
     expect(boundedOptimizerSource).toContain('Variable spending and cash-wedge rules need user feedback');
