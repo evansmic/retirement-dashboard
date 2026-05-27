@@ -189,6 +189,17 @@ export type OptimizerGoalReview = {
       prompt: string;
       passSignal: string;
     }>;
+    outcomeReview: {
+      headline: string;
+      rows: Array<{
+        id: 'rangeHelpful' | 'rangeDistracting' | 'rangeUnclear';
+        label: string;
+        status: 'canTest' | 'hold' | 'simplify';
+        detail: string;
+        nextStep: string;
+      }>;
+      boundary: string;
+    };
     cashWedgeBoundary: {
       headline: string;
       rows: Array<{
@@ -796,6 +807,33 @@ function buildOptimizerGoalReview(candidates: BoundedOptimizerCandidateRow[]): O
           passSignal: 'Decision is tied to user clarity, not to implementing rules immediately.'
         }
       ],
+      outcomeReview: {
+        headline: 'Flexibility feedback has three review outcomes.',
+        rows: [
+          {
+            id: 'rangeHelpful',
+            label: 'Range helps',
+            status: 'canTest',
+            detail: 'User still remembers the main spending answer and says the range helps explain uncertainty.',
+            nextStep: 'Keep testing range language in Details research before adding any rule.'
+          },
+          {
+            id: 'rangeDistracting',
+            label: 'Range distracts',
+            status: 'hold',
+            detail: 'User loses the main spending answer or treats the range as the new recommendation.',
+            nextStep: 'Hold flexibility work and keep the first screen focused on one reviewed spending number.'
+          },
+          {
+            id: 'rangeUnclear',
+            label: 'Range unclear',
+            status: 'simplify',
+            detail: 'User cannot explain whether the range is evidence, stress context, or a rule.',
+            nextStep: 'Simplify copy before testing cash-wedge or variable-spending rules.'
+          }
+        ],
+        boundary: 'Flexibility outcomes are feedback notes only; they do not create spending permission, cash-refill actions, saved settings, or annual account sequencing.'
+      },
       cashWedgeBoundary: {
         headline: 'Cash wedge is a buffer explanation, not a refill rule.',
         rows: [

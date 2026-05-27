@@ -4607,6 +4607,17 @@ function BoundedOptimizerPanel({
               </ul>
             </section>
             <section className="optimizer-explanation-card">
+              <h3>{summary.goalReview.spendingFlexibilityReview.outcomeReview.headline}</h3>
+              <ul className="compact-list">
+                {summary.goalReview.spendingFlexibilityReview.outcomeReview.rows.map((row) => (
+                  <li key={row.id}>
+                    <strong>{row.label}:</strong> {row.detail} Next: {row.nextStep}
+                  </li>
+                ))}
+              </ul>
+              <p>{summary.goalReview.spendingFlexibilityReview.outcomeReview.boundary}</p>
+            </section>
+            <section className="optimizer-explanation-card">
               <h3>Flexibility boundary</h3>
               <ul className="compact-list">
                 {summary.goalReview.spendingFlexibilityReview.rows.map((row) => (

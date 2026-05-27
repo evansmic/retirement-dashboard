@@ -344,6 +344,15 @@ describe('bounded optimizer runner', () => {
     expect(summary.goalReview.spendingFlexibilityReview.worksheet.find((item) => item.id === 'bufferClarity')).toMatchObject({
       passSignal: expect.stringContaining('not a refill rule or withdrawal order')
     });
+    expect(summary.goalReview.spendingFlexibilityReview.outcomeReview).toMatchObject({
+      headline: 'Flexibility feedback has three review outcomes.',
+      boundary: expect.stringContaining('do not create spending permission')
+    });
+    expect(summary.goalReview.spendingFlexibilityReview.outcomeReview.rows).toEqual([
+      expect.objectContaining({ id: 'rangeHelpful', status: 'canTest', nextStep: expect.stringContaining('before adding any rule') }),
+      expect.objectContaining({ id: 'rangeDistracting', status: 'hold', detail: expect.stringContaining('new recommendation') }),
+      expect.objectContaining({ id: 'rangeUnclear', status: 'simplify', nextStep: expect.stringContaining('Simplify copy') })
+    ]);
     expect(summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary).toMatchObject({
       headline: 'Cash wedge is a buffer explanation, not a refill rule.',
       boundary: expect.stringContaining('must not create refill instructions')

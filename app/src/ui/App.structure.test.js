@@ -187,8 +187,11 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('re-rank the same bounded candidate set');
     expect(boundedOptimizerSource).toContain('Variable spending and cash-wedge rules need user feedback');
     expect(boundedOptimizerSource).toContain('Spending flexibility needs feedback language first.');
+    expect(boundedOptimizerSource).toContain('Flexibility feedback has three review outcomes.');
+    expect(boundedOptimizerSource).toContain('do not create spending permission, cash-refill actions, saved settings, or annual account sequencing');
     expect(boundedOptimizerSource).toContain('cash-wedge explanation');
     expect(appSource).toContain('Flexibility worksheet');
+    expect(appSource).toContain('summary.goalReview.spendingFlexibilityReview.outcomeReview');
     expect(boundedOptimizerSource).toContain('User describes it as a buffer or cushion, not a refill rule or withdrawal order.');
     expect(boundedOptimizerSource).toContain('Cash wedge is a buffer explanation, not a refill rule.');
     expect(boundedOptimizerSource).toContain('Do not tell users when to refill cash or how much cash to refill.');
@@ -323,6 +326,7 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('summary.goalReview.architecture');
     expect(boundedPanel).toContain('spendingFlexibilityReview');
     expect(boundedPanel).toContain('Flexibility worksheet');
+    expect(boundedPanel).toContain('outcomeReview');
     expect(boundedPanel).toContain('cashWedgeBoundary');
     expect(boundedPanel).toContain('Flexibility boundary');
     expect(boundedPanel).toContain('!isCompact && summary?.feedbackPackageIndex');
@@ -340,6 +344,9 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
     expect(appSource).not.toContain('Apply flexibility rule');
+    expect(appSource).not.toContain('Spend this range');
+    expect(appSource).not.toContain('Use this range');
+    expect(appSource).not.toContain('Follow this guardrail');
     expect(appSource).not.toContain('Refill cash wedge');
     expect(appSource).not.toContain('Use cash wedge first');
     expect(appSource).not.toContain('Refill when markets recover');
