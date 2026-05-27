@@ -4548,6 +4548,19 @@ function BoundedOptimizerPanel({
             <h3>Goal switching stays a review boundary</h3>
             <p>{summary.goalReview.summary}</p>
           </div>
+          <section className="optimizer-explanation-card">
+            <h3>{summary.goalReview.architecture.headline}</h3>
+            <div className="optimizer-eligibility-list">
+              {summary.goalReview.architecture.rows.map((row) => (
+                <article className={`optimizer-eligibility-note eligibility-${row.status === 'ready' ? 'ok' : 'review'}`} key={row.id}>
+                  <strong>{row.label}</strong>
+                  <span>{row.status === 'ready' ? 'Ready' : 'Deferred'}</span>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.goalReview.architecture.boundary}</p>
+          </section>
           <div className="optimizer-option-group-grid">
             {summary.goalReview.rows.map((row) => (
               <article className="optimizer-option-group-row" key={row.id}>
@@ -4566,6 +4579,14 @@ function BoundedOptimizerPanel({
                   <li key={question}>{question}</li>
                 ))}
               </ul>
+              <h4>Flexibility worksheet</h4>
+              <ul className="compact-list">
+                {summary.goalReview.spendingFlexibilityReview.worksheet.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.label}:</strong> {item.prompt} Pass signal: {item.passSignal}
+                  </li>
+                ))}
+              </ul>
             </section>
             <section className="optimizer-explanation-card">
               <h3>Flexibility boundary</h3>
@@ -4576,6 +4597,17 @@ function BoundedOptimizerPanel({
                   </li>
                 ))}
               </ul>
+            </section>
+            <section className="optimizer-explanation-card">
+              <h3>{summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary.headline}</h3>
+              <ul className="compact-list">
+                {summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary.rows.map((row) => (
+                  <li key={row.id}>
+                    <strong>{row.label}:</strong> {row.detail}
+                  </li>
+                ))}
+              </ul>
+              <p>{summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary.boundary}</p>
             </section>
           </div>
           <p className="table-note">{summary.goalReview.spendingFlexibilityReview.boundary}</p>

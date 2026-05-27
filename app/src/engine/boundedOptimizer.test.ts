@@ -279,6 +279,16 @@ describe('bounded optimizer runner', () => {
       summary: expect.stringContaining('re-rank the same bounded candidate set'),
       boundary: expect.stringContaining('No goal toggle is shown in the normal UI')
     });
+    expect(summary.goalReview.architecture).toMatchObject({
+      headline: 'Goal-mode architecture stays inside the bounded candidate set.',
+      boundary: expect.stringContaining('do not add toggles, advice, saved output, or annual account instructions')
+    });
+    expect(summary.goalReview.architecture.rows).toEqual([
+      expect.objectContaining({ id: 'sameCandidateSet', status: 'ready' }),
+      expect.objectContaining({ id: 'rerankOnly', status: 'ready' }),
+      expect.objectContaining({ id: 'normalUiHidden', status: 'deferred' }),
+      expect.objectContaining({ id: 'sequencingDeferred', status: 'deferred' })
+    ]);
     expect(summary.goalReview.rows).toEqual([
       expect.objectContaining({ id: 'maxSpend', status: 'current' }),
       expect.objectContaining({ id: 'maxEstate', status: 'deferred' }),
@@ -291,6 +301,25 @@ describe('bounded optimizer runner', () => {
       boundary: expect.stringContaining('not a saved setting or optimizer instruction')
     });
     expect(summary.goalReview.spendingFlexibilityReview.questions.join(' ')).toContain('cash-wedge explanation');
+    expect(summary.goalReview.spendingFlexibilityReview.worksheet.map((item) => item.id)).toEqual([
+      'rangeClarity',
+      'bufferClarity',
+      'screenFocus',
+      'decision'
+    ]);
+    expect(summary.goalReview.spendingFlexibilityReview.worksheet.find((item) => item.id === 'bufferClarity')).toMatchObject({
+      passSignal: expect.stringContaining('not a refill rule or withdrawal order')
+    });
+    expect(summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary).toMatchObject({
+      headline: 'Cash wedge is a buffer explanation, not a refill rule.',
+      boundary: expect.stringContaining('must not create refill instructions')
+    });
+    expect(summary.goalReview.spendingFlexibilityReview.cashWedgeBoundary.rows).toEqual([
+      expect.objectContaining({ id: 'buffer' }),
+      expect.objectContaining({ id: 'notRefillRule' }),
+      expect.objectContaining({ id: 'notWithdrawalOrder' }),
+      expect.objectContaining({ id: 'taxEvidence' })
+    ]);
     expect(summary.goalReview.spendingFlexibilityReview.rows).toEqual([
       expect.objectContaining({ id: 'variableSpending', status: 'review' }),
       expect.objectContaining({ id: 'cashWedge', status: 'review' }),
@@ -311,6 +340,8 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'annualSequencing', status: 'deferred' })
     ]);
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
+    expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
+    expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');
     expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyFirst')).toMatchObject({
       label: 'Withdrawal family to compare',
       value: 'Registered first'
@@ -727,6 +758,35 @@ describe('bounded optimizer runner', () => {
     });
     expect(examplePlanCards.map((card) => card.id)).toContain('public-comparator-single');
     expect(examplePlanCards.map((card) => card.id)).toContain('retired-traditional');
+  });
+
+  it('keeps example-plan optimizer outcome matrix within current runtime boundaries', () => {
+    const exampleIds = examplePlanCards.map((card) => card.id);
+    const broadFamilyLeads = (_candidatePlan: V2PlanPayload, config: SimulationConfig) =>
+      config.withdrawalOrder === 'registered-first' ? result(180000, 70000) : result(120000, 80000);
+    const summaries = exampleIds.map((id) => runBoundedOptimizer(createExamplePlan(id), broadFamilyLeads));
+
+    expect(summaries).toHaveLength(exampleIds.length);
+    summaries.forEach((summary) => {
+      expect(summary.candidateCount).toBeLessThanOrEqual(20);
+      expect(summary.searchPlan.annualOverrides).toBe('deferred');
+      expect(summary.goalReview.architecture.rows.find((row) => row.id === 'sameCandidateSet')).toMatchObject({ status: 'ready' });
+      expect(summary.goalReview.architecture.rows.find((row) => row.id === 'sequencingDeferred')).toMatchObject({ status: 'deferred' });
+      expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'annualSequencing')).toMatchObject({ status: 'deferred' });
+      expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
+        'monthlySpend',
+        'fundedYears',
+        'lifetimeTax',
+        'oasRecovery',
+        'moneyLeft'
+      ]);
+    });
+    expect(summaries.map((summary) => summary.withdrawalFeedbackReview.status)).toEqual(
+      summaries.map(() => 'readyForFeedback')
+    );
+    expect(new Set(summaries.flatMap((summary) => summary.feedbackPackageIndex.rows.map((row) => row.status)))).toEqual(
+      new Set(['ready', 'review', 'deferred'])
+    );
   });
 
   it('adds one home-sale reliance candidate only when downsize year and proceeds are entered', () => {

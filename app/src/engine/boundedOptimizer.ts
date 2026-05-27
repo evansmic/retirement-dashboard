@@ -150,6 +150,16 @@ export type BoundedOptimizerCompactEvidenceRow = {
 
 export type OptimizerGoalReview = {
   summary: string;
+  architecture: {
+    headline: string;
+    rows: Array<{
+      id: 'sameCandidateSet' | 'rerankOnly' | 'normalUiHidden' | 'sequencingDeferred';
+      label: string;
+      status: 'ready' | 'deferred';
+      detail: string;
+    }>;
+    boundary: string;
+  };
   rows: Array<{
     id: 'maxSpend' | 'maxEstate' | 'minTax' | 'spendingFlexibility';
     label: string;
@@ -160,6 +170,21 @@ export type OptimizerGoalReview = {
     headline: string;
     detail: string;
     questions: string[];
+    worksheet: Array<{
+      id: 'rangeClarity' | 'bufferClarity' | 'screenFocus' | 'decision';
+      label: string;
+      prompt: string;
+      passSignal: string;
+    }>;
+    cashWedgeBoundary: {
+      headline: string;
+      rows: Array<{
+        id: 'buffer' | 'notRefillRule' | 'notWithdrawalOrder' | 'taxEvidence';
+        label: string;
+        detail: string;
+      }>;
+      boundary: string;
+    };
     rows: Array<{
       id: 'variableSpending' | 'cashWedge' | 'taxImpact' | 'implementationBoundary';
       label: string;
@@ -603,6 +628,36 @@ function buildOptimizerGoalReview(): OptimizerGoalReview {
   return {
     summary:
       'Future goal modes should re-rank the same bounded candidate set before any wider optimizer search is considered.',
+    architecture: {
+      headline: 'Goal-mode architecture stays inside the bounded candidate set.',
+      rows: [
+        {
+          id: 'sameCandidateSet',
+          label: 'Same candidate set',
+          status: 'ready',
+          detail: 'Max estate, min tax, and flexibility modes should first reuse the current bounded candidates.'
+        },
+        {
+          id: 'rerankOnly',
+          label: 'Re-rank only',
+          status: 'ready',
+          detail: 'Future modes should change ranking and explanation before adding new calculations.'
+        },
+        {
+          id: 'normalUiHidden',
+          label: 'Normal UI hidden',
+          status: 'deferred',
+          detail: 'Goal switching stays out of the normal UI until feedback shows the current plan-to-review flow is clear.'
+        },
+        {
+          id: 'sequencingDeferred',
+          label: 'Sequencing deferred',
+          status: 'deferred',
+          detail: 'Annual account-level sequencing remains outside this architecture note.'
+        }
+      ],
+      boundary: 'Goal modes are architecture notes only; they do not add toggles, advice, saved output, or annual account instructions.'
+    },
     rows: [
       {
         id: 'maxSpend',
@@ -638,6 +693,58 @@ function buildOptimizerGoalReview(): OptimizerGoalReview {
         'Does the cash-wedge explanation feel like a safety buffer rather than a withdrawal rule?',
         'Would a flexibility goal make the first-results screen clearer or more distracting?'
       ],
+      worksheet: [
+        {
+          id: 'rangeClarity',
+          label: 'Range clarity',
+          prompt: 'Ask whether a spending range is easier to understand than a single revised number.',
+          passSignal: 'User describes the range as a review aid, not permission to spend a specific amount.'
+        },
+        {
+          id: 'bufferClarity',
+          label: 'Buffer clarity',
+          prompt: 'Ask what the cash wedge is doing in plain language.',
+          passSignal: 'User describes it as a buffer or cushion, not a refill rule or withdrawal order.'
+        },
+        {
+          id: 'screenFocus',
+          label: 'First-screen focus',
+          prompt: 'Ask whether flexibility language helps or distracts from the first retirement answer.',
+          passSignal: 'User can still name the answer, spending estimate, and top review item.'
+        },
+        {
+          id: 'decision',
+          label: 'Next decision',
+          prompt: 'Ask whether flexibility should be tested with users now or parked for goal-mode architecture.',
+          passSignal: 'Decision is tied to user clarity, not to implementing rules immediately.'
+        }
+      ],
+      cashWedgeBoundary: {
+        headline: 'Cash wedge is a buffer explanation, not a refill rule.',
+        rows: [
+          {
+            id: 'buffer',
+            label: 'Buffer language',
+            detail: 'Describe cash as a cushion that may reduce stress around spending changes.'
+          },
+          {
+            id: 'notRefillRule',
+            label: 'No refill rule',
+            detail: 'Do not tell users when to refill cash or how much cash to refill.'
+          },
+          {
+            id: 'notWithdrawalOrder',
+            label: 'No withdrawal order',
+            detail: 'Do not turn cash-wedge language into account-level sequencing.'
+          },
+          {
+            id: 'taxEvidence',
+            label: 'Tax evidence later',
+            detail: 'Keep tax effects as review evidence until a specific flexibility rule is planned.'
+          }
+        ],
+        boundary: 'Cash-wedge review copy must not create refill instructions, withdrawal instructions, or saved settings.'
+      },
       rows: [
         {
           id: 'variableSpending',
