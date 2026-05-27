@@ -482,6 +482,77 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureConstraints.rows.find((row) => row.id === 'schemaBoundary')?.detail).toContain(
       'Do not change saved plan schema or engine output schema'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionRegister).toMatchObject({
+      headline: 'Prototype decision remains blocked.',
+      status: 'blocked',
+      nextStep: expect.stringContaining('Keep deferring until every blocker is cleared'),
+      boundary: expect.stringContaining('does not create an internal prototype')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionRegister.rows).toEqual([
+      expect.objectContaining({ id: 'feedbackDepth', status: 'blocked' }),
+      expect.objectContaining({ id: 'explainability', status: 'blocked' }),
+      expect.objectContaining({ id: 'performance', status: 'review' }),
+      expect.objectContaining({ id: 'scope', status: 'blocked' }),
+      expect.objectContaining({ id: 'schema', status: 'blocked' }),
+      expect.objectContaining({ id: 'ui', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollback', status: 'ready' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionRegister.rows.some((row) => row.status === 'blocked')).toBe(true);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionRegister.status).not.toBe('internal-test-only-candidate');
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionRegister.rows.find((row) => row.id === 'schema')?.detail).toContain(
+      'Saved plan schema and engine output schema'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rollbackContainmentPlan).toMatchObject({
+      headline: 'Rollback containment must be proven before any prototype.',
+      boundary: expect.stringContaining('does not add a sequencing module')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rollbackContainmentPlan.rows).toEqual([
+      expect.objectContaining({ id: 'oneCommitRemoval', status: 'ready' }),
+      expect.objectContaining({ id: 'internalBoundaryName', status: 'review' }),
+      expect.objectContaining({ id: 'persistenceAudit', status: 'blocked' }),
+      expect.objectContaining({ id: 'uiContainment', status: 'blocked' }),
+      expect.objectContaining({ id: 'verificationBeforeMerge', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rollbackContainmentPlan.rows.find((row) => row.id === 'persistenceAudit')?.detail).toContain(
+      'No .plan.json files'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.rollbackContainmentPlan.rows.find((row) => row.id === 'uiContainment')?.detail).toContain(
+      'Overview, compact Details, apply actions, save actions'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.testOnlyShapePlan).toMatchObject({
+      headline: 'Test-only prototype shape remains planning-only.',
+      boundary: expect.stringContaining('do not implement sequencing')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.testOnlyShapePlan.rows).toEqual([
+      expect.objectContaining({ id: 'existingAnnualRows', status: 'review' }),
+      expect.objectContaining({ id: 'accountBuckets', status: 'review' }),
+      expect.objectContaining({ id: 'allowedDiagnostics', status: 'review' }),
+      expect.objectContaining({ id: 'disallowedOutputs', status: 'blocked' }),
+      expect.objectContaining({ id: 'planningOnly', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.testOnlyShapePlan.rows.find((row) => row.id === 'allowedDiagnostics')?.detail).toContain(
+      'funded years, money left, tax and OAS changes'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.testOnlyShapePlan.rows.find((row) => row.id === 'disallowedOutputs')?.detail).toContain(
+      'Disallow account instructions'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeReadinessSummary).toMatchObject({
+      headline: 'Annual sequencing prototype is still blocked.',
+      status: 'stillBlocked',
+      decision: expect.stringContaining('Keep deferring'),
+      boundary: expect.stringContaining('does not start a prototype')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeReadinessSummary.rows).toEqual([
+      expect.objectContaining({ id: 'feedback', status: 'blocked' }),
+      expect.objectContaining({ id: 'scope', status: 'blocked' }),
+      expect.objectContaining({ id: 'performance', status: 'review' }),
+      expect.objectContaining({ id: 'schemaUi', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollback', status: 'ready' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeReadinessSummary.status).not.toBe('maybeInternalLater');
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeReadinessSummary.rows.find((row) => row.id === 'schemaUi')?.detail).toContain(
+      'Overview, compact Details, apply actions, and save actions remain out of scope'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

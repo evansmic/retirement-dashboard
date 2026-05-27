@@ -295,6 +295,50 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    prototypeDecisionRegister: {
+      headline: string;
+      status: 'defer' | 'internal-test-only-candidate' | 'blocked';
+      rows: Array<{
+        id: 'feedbackDepth' | 'explainability' | 'performance' | 'scope' | 'schema' | 'ui' | 'rollback';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+      }>;
+      nextStep: string;
+      boundary: string;
+    };
+    rollbackContainmentPlan: {
+      headline: string;
+      rows: Array<{
+        id: 'oneCommitRemoval' | 'internalBoundaryName' | 'persistenceAudit' | 'uiContainment' | 'verificationBeforeMerge';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    testOnlyShapePlan: {
+      headline: string;
+      rows: Array<{
+        id: 'existingAnnualRows' | 'accountBuckets' | 'allowedDiagnostics' | 'disallowedOutputs' | 'planningOnly';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    prototypeReadinessSummary: {
+      headline: string;
+      status: 'stillBlocked' | 'maybeInternalLater';
+      rows: Array<{
+        id: 'feedback' | 'scope' | 'performance' | 'schemaUi' | 'rollback';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+      }>;
+      decision: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2639,6 +2683,170 @@ function buildFeedbackPackageIndex({
     ],
     boundary: 'Architecture constraints are guardrails only; they do not create a prototype, schema migration, UI action, or annual sequencing result.'
   };
+  const annualSequencingPrototypeDecisionRegister: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['prototypeDecisionRegister'] = {
+    headline: 'Prototype decision remains blocked.',
+    status: 'blocked',
+    rows: [
+      {
+        id: 'feedbackDepth',
+        label: 'Feedback depth',
+        status: 'blocked',
+        detail: 'Feedback depth remains blocked until at least three household stories pass without confusion signals.'
+      },
+      {
+        id: 'explainability',
+        label: 'Explainability',
+        status: 'blocked',
+        detail: 'Instruction-boundary feedback remains blocked until users stop expecting exact withdrawal instructions.'
+      },
+      {
+        id: 'performance',
+        label: 'Performance',
+        status: 'review',
+        detail: 'Performance budget needs measured targets before any internal-test-only prototype candidacy.'
+      },
+      {
+        id: 'scope',
+        label: 'Scope',
+        status: 'blocked',
+        detail: 'Locked-in accounts, survivor setup, and edge-case decisions still block prototype candidacy.'
+      },
+      {
+        id: 'schema',
+        label: 'Schema',
+        status: 'blocked',
+        detail: 'Saved plan schema and engine output schema cannot change without a separate planned decision.'
+      },
+      {
+        id: 'ui',
+        label: 'UI boundary',
+        status: 'blocked',
+        detail: 'Normal Overview and compact Details cannot expose annual sequencing prototype content.'
+      },
+      {
+        id: 'rollback',
+        label: 'Rollback',
+        status: 'ready',
+        detail: 'A future internal prototype must be removable in one commit before it can be considered.'
+      }
+    ],
+    nextStep: 'Keep deferring until every blocker is cleared; then ask for an explicit internal-test-only prototype decision.',
+    boundary:
+      'Prototype decision register is readiness evidence only; it does not create an internal prototype, annual sequencing result, schema change, UI action, or saved output.'
+  };
+  const annualSequencingRollbackContainmentPlan: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['rollbackContainmentPlan'] = {
+    headline: 'Rollback containment must be proven before any prototype.',
+    rows: [
+      {
+        id: 'oneCommitRemoval',
+        label: 'One-commit removal',
+        status: 'ready',
+        detail: 'A future prototype must be isolated enough to remove in one commit without touching saved plans or normal results.'
+      },
+      {
+        id: 'internalBoundaryName',
+        label: 'Internal boundary name',
+        status: 'review',
+        detail: 'Any future module should use internal-test-only naming so it cannot be mistaken for a user-facing feature.'
+      },
+      {
+        id: 'persistenceAudit',
+        label: 'Persistence audit',
+        status: 'blocked',
+        detail: 'No .plan.json files, saved plan schema changes, or engine output schema changes are allowed in prototype planning.'
+      },
+      {
+        id: 'uiContainment',
+        label: 'UI containment',
+        status: 'blocked',
+        detail: 'Do not expose annual sequencing in Overview, compact Details, apply actions, save actions, or normal plan controls.'
+      },
+      {
+        id: 'verificationBeforeMerge',
+        label: 'Verification before merge',
+        status: 'review',
+        detail: 'Focused optimizer/UI tests and the full probe suite must stay clean except for the known route-probe sandbox caveat.'
+      }
+    ],
+    boundary:
+      'Rollback containment is planning evidence only; it does not add a sequencing module, prototype path, saved field, engine output, or user action.'
+  };
+  const annualSequencingTestOnlyShapePlan: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['testOnlyShapePlan'] = {
+    headline: 'Test-only prototype shape remains planning-only.',
+    rows: [
+      {
+        id: 'existingAnnualRows',
+        label: 'Existing annual rows',
+        status: 'review',
+        detail: 'Any future test-only shape should reuse existing annual projection rows instead of creating a new saved result.'
+      },
+      {
+        id: 'accountBuckets',
+        label: 'Account buckets',
+        status: 'review',
+        detail: 'Account-bucket labels may describe broad registered, TFSA, non-registered, and cash evidence without ordering exact withdrawals.'
+      },
+      {
+        id: 'allowedDiagnostics',
+        label: 'Allowed diagnostics',
+        status: 'review',
+        detail: 'Allowed runtime diagnostics are funded years, money left, tax and OAS changes, and instruction-boundary checks.'
+      },
+      {
+        id: 'disallowedOutputs',
+        label: 'Disallowed outputs',
+        status: 'blocked',
+        detail: 'Disallow account instructions, saved sequencing results, normal UI actions, apply controls, and save controls.'
+      },
+      {
+        id: 'planningOnly',
+        label: 'Planning only',
+        status: 'blocked',
+        detail: 'Shape planning does not imply implementation, prototype start, schema change, or user-facing annual sequencing.'
+      }
+    ],
+    boundary:
+      'Test-only shape notes are planning evidence only; they do not implement sequencing, produce account instructions, save sequencing results, or expose normal UI actions.'
+  };
+  const annualSequencingPrototypeReadinessSummary: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['prototypeReadinessSummary'] = {
+    headline: 'Annual sequencing prototype is still blocked.',
+    status: 'stillBlocked',
+    rows: [
+      {
+        id: 'feedback',
+        label: 'Feedback',
+        status: 'blocked',
+        detail: 'Feedback depth and instruction-boundary signals are not strong enough for prototype candidacy.'
+      },
+      {
+        id: 'scope',
+        label: 'Scope',
+        status: 'blocked',
+        detail: 'Locked-in accounts, survivor setup, and edge cases still need explicit include, block, or defer decisions.'
+      },
+      {
+        id: 'performance',
+        label: 'Performance',
+        status: 'review',
+        detail: 'Performance budgets need measured local-device targets before any internal test can be considered.'
+      },
+      {
+        id: 'schemaUi',
+        label: 'Schema and UI',
+        status: 'blocked',
+        detail: 'Saved schemas, engine output schemas, Overview, compact Details, apply actions, and save actions remain out of scope.'
+      },
+      {
+        id: 'rollback',
+        label: 'Rollback',
+        status: 'ready',
+        detail: 'Rollback expectations are clear: any future prototype must be removable in one commit.'
+      }
+    ],
+    decision: 'Keep deferring and ask for an explicit prototype decision only after blocked rows clear.',
+    boundary:
+      'Readiness reassessment is a checkpoint only; it does not start a prototype, clear blockers, change schemas, expose UI actions, or produce annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2681,6 +2889,10 @@ function buildFeedbackPackageIndex({
       scopeRegister: annualSequencingScopeRegister,
       feedbackDepthPlan: annualSequencingFeedbackDepthPlan,
       architectureConstraints: annualSequencingArchitectureConstraints,
+      prototypeDecisionRegister: annualSequencingPrototypeDecisionRegister,
+      rollbackContainmentPlan: annualSequencingRollbackContainmentPlan,
+      testOnlyShapePlan: annualSequencingTestOnlyShapePlan,
+      prototypeReadinessSummary: annualSequencingPrototypeReadinessSummary,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
