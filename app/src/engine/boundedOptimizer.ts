@@ -361,6 +361,17 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    feedbackCloseoutRubric: {
+      headline: string;
+      rows: Array<{
+        id: 'pass' | 'watch' | 'blocked' | 'defer' | 'repeat';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+        nextStep: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2960,6 +2971,48 @@ function buildFeedbackPackageIndex({
     boundary:
       'Feedback artifact prompts are review scaffolding only; they do not collect feedback, save feedback, clear blockers, create advice, or start annual sequencing.'
   };
+  const annualSequencingFeedbackCloseoutRubric: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackCloseoutRubric'] = {
+    headline: 'Feedback closeout needs a conservative rubric.',
+    rows: [
+      {
+        id: 'pass',
+        label: 'Pass signal',
+        status: 'review',
+        detail: 'Reviewer remembers the spending answer, understands the evidence order, and describes the result as something to review.',
+        nextStep: 'Record as evidence for continued readiness review, not as prototype approval.'
+      },
+      {
+        id: 'watch',
+        label: 'Watch signal',
+        status: 'review',
+        detail: 'Reviewer understands the plan but needs help with cash wedge, flexibility, tax, or OAS wording.',
+        nextStep: 'Simplify copy or evidence labels before collecting more readiness evidence.'
+      },
+      {
+        id: 'blocked',
+        label: 'Blocked signal',
+        status: 'blocked',
+        detail: 'Reviewer expects advice, a command, exact annual account withdrawals, or saved sequencing output.',
+        nextStep: 'Keep annual sequencing blocked and improve instruction-boundary language.'
+      },
+      {
+        id: 'defer',
+        label: 'Defer signal',
+        status: 'blocked',
+        detail: 'Reviewer cannot explain the broad withdrawal family or the evidence trade-off.',
+        nextStep: 'Do not widen optimizer scope; improve broad-family explainability first.'
+      },
+      {
+        id: 'repeat',
+        label: 'Repeat signal',
+        status: 'review',
+        detail: 'Evidence is promising but comes from too few household stories or one narrow persona.',
+        nextStep: 'Repeat with more household types before revisiting prototype readiness.'
+      }
+    ],
+    boundary:
+      'Feedback closeout rubric is review guidance only; it does not score users, save responses, clear blockers, approve a prototype, or add annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3008,6 +3061,7 @@ function buildFeedbackPackageIndex({
       prototypeReadinessSummary: annualSequencingPrototypeReadinessSummary,
       blockerClearanceEvidence: annualSequencingBlockerClearanceEvidence,
       feedbackArtifactTemplate: annualSequencingFeedbackArtifactTemplate,
+      feedbackCloseoutRubric: annualSequencingFeedbackCloseoutRubric,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
