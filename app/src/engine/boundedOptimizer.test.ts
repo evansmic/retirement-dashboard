@@ -622,6 +622,76 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDecisionLedger.rows.find((row) => row.id === 'reassessLater')?.evidenceNeeded).toContain(
       'every blocker has evidence'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCoverageMatrix).toMatchObject({
+      headline: 'Feedback coverage must span several household stories.',
+      boundary: expect.stringContaining('does not collect feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCoverageMatrix.rows).toEqual([
+      expect.objectContaining({ id: 'dbPensionCouple', status: 'review' }),
+      expect.objectContaining({ id: 'bridgeYears', status: 'review' }),
+      expect.objectContaining({ id: 'alreadyRetired', status: 'review' }),
+      expect.objectContaining({ id: 'survivorCase', status: 'blocked' }),
+      expect.objectContaining({ id: 'lowIncomeBoundary', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCoverageMatrix.rows.find((row) => row.id === 'survivorCase')?.missingEvidence).toContain(
+      'does not turn pension or account detail into advice'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCoverageMatrix.rows.find((row) => row.id === 'lowIncomeBoundary')?.detail).toContain(
+      'out of scope unless explicitly planned'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.evidenceQualityChecklist).toMatchObject({
+      headline: 'Feedback evidence needs quality checks before it counts.',
+      boundary: expect.stringContaining('does not save feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.evidenceQualityChecklist.rows).toEqual([
+      expect.objectContaining({ id: 'specificQuote', status: 'review' }),
+      expect.objectContaining({ id: 'scenarioContext', status: 'review' }),
+      expect.objectContaining({ id: 'evidenceOrder', status: 'review' }),
+      expect.objectContaining({ id: 'confusionSignal', status: 'blocked' }),
+      expect.objectContaining({ id: 'nonPersistence', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.evidenceQualityChecklist.rows.find((row) => row.id === 'confusionSignal')?.detail).toContain(
+      'account-order'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.evidenceQualityChecklist.rows.find((row) => row.id === 'nonPersistence')?.guardrail).toContain(
+      'No .plan.json files'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionPacket).toMatchObject({
+      headline: 'A prototype decision packet is not ready.',
+      boundary: expect.stringContaining('does not ask for approval')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionPacket.rows).toEqual([
+      expect.objectContaining({ id: 'feedbackSummary', status: 'review' }),
+      expect.objectContaining({ id: 'scopeSummary', status: 'blocked' }),
+      expect.objectContaining({ id: 'performanceSummary', status: 'blocked' }),
+      expect.objectContaining({ id: 'schemaUiSummary', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollbackSummary', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionPacket.rows.find((row) => row.id === 'schemaUiSummary')?.requiredBeforeAsk).toContain(
+      'no saved fields'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeDecisionPacket.rows.find((row) => row.id === 'performanceSummary')?.requiredBeforeAsk).toContain(
+      'without server assumptions'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessRunway).toMatchObject({
+      headline: 'Readiness runway still points to deferral.',
+      status: 'defer',
+      recommendation: expect.stringContaining('Keep annual sequencing deferred'),
+      boundary: expect.stringContaining('does not request a decision')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessRunway.rows).toEqual([
+      expect.objectContaining({ id: 'keepDeferring', status: 'blocked' }),
+      expect.objectContaining({ id: 'nextEvidence', status: 'review' }),
+      expect.objectContaining({ id: 'nextCleanup', status: 'review' }),
+      expect.objectContaining({ id: 'nextPerformance', status: 'blocked' }),
+      expect.objectContaining({ id: 'explicitDecisionLater', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessRunway.rows.find((row) => row.id === 'explicitDecisionLater')?.detail).toContain(
+      'only after the future decision packet is complete'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessRunway.rows.find((row) => row.id === 'nextPerformance')?.detail).toContain(
+      'local-device performance budget'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

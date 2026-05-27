@@ -383,6 +383,51 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    feedbackCoverageMatrix: {
+      headline: string;
+      rows: Array<{
+        id: 'dbPensionCouple' | 'bridgeYears' | 'alreadyRetired' | 'survivorCase' | 'lowIncomeBoundary';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+        missingEvidence: string;
+      }>;
+      boundary: string;
+    };
+    evidenceQualityChecklist: {
+      headline: string;
+      rows: Array<{
+        id: 'specificQuote' | 'scenarioContext' | 'evidenceOrder' | 'confusionSignal' | 'nonPersistence';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+        guardrail: string;
+      }>;
+      boundary: string;
+    };
+    prototypeDecisionPacket: {
+      headline: string;
+      rows: Array<{
+        id: 'feedbackSummary' | 'scopeSummary' | 'performanceSummary' | 'schemaUiSummary' | 'rollbackSummary';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+        requiredBeforeAsk: string;
+      }>;
+      boundary: string;
+    };
+    readinessRunway: {
+      headline: string;
+      status: 'defer' | 'askLater';
+      rows: Array<{
+        id: 'keepDeferring' | 'nextEvidence' | 'nextCleanup' | 'nextPerformance' | 'explicitDecisionLater';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3066,6 +3111,171 @@ function buildFeedbackPackageIndex({
     boundary:
       'Feedback decision ledger is a review summary only; it is not saved, does not store feedback, does not clear blockers, and does not authorize annual sequencing.'
   };
+  const annualSequencingFeedbackCoverageMatrix: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackCoverageMatrix'] = {
+    headline: 'Feedback coverage must span several household stories.',
+    rows: [
+      {
+        id: 'dbPensionCouple',
+        label: 'DB pension couple',
+        status: 'review',
+        detail: 'Pension-heavy couples should understand the recommended spending answer and survivor-sensitive evidence.',
+        missingEvidence: 'Need repeated feedback beyond the first DB pension example before any blocker can move.'
+      },
+      {
+        id: 'bridgeYears',
+        label: 'Bridge-year household',
+        status: 'review',
+        detail: 'Early-retirement households should understand taxable, registered, TFSA, and cash bridge evidence without account-order instructions.',
+        missingEvidence: 'Need a review where bridge-year funding is clear without annual sequencing detail.'
+      },
+      {
+        id: 'alreadyRetired',
+        label: 'Already-retired household',
+        status: 'review',
+        detail: 'Drawdown households should understand funded years, money left, tax, and OAS diagnostics as review evidence.',
+        missingEvidence: 'Need feedback from a household already taking withdrawals.'
+      },
+      {
+        id: 'survivorCase',
+        label: 'Survivor case',
+        status: 'blocked',
+        detail: 'Two-person plans with survivor-sensitive pensions or benefits need clearer review before account-level sequencing is reconsidered.',
+        missingEvidence: 'Need survivor-case feedback that does not turn pension or account detail into advice.'
+      },
+      {
+        id: 'lowIncomeBoundary',
+        label: 'Low-income boundary',
+        status: 'blocked',
+        detail: 'GIS and low-income benefit interactions remain out of scope unless explicitly planned.',
+        missingEvidence: 'Need a scope decision before low-income benefit cases can count toward sequencing readiness.'
+      }
+    ],
+    boundary:
+      'Feedback coverage matrix is review planning only; it does not collect feedback, save feedback, expand scope, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingEvidenceQualityChecklist: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['evidenceQualityChecklist'] = {
+    headline: 'Feedback evidence needs quality checks before it counts.',
+    rows: [
+      {
+        id: 'specificQuote',
+        label: 'Specific reviewer wording',
+        status: 'review',
+        detail: 'Future review notes should capture the reviewer’s own wording about the spending answer and evidence order.',
+        guardrail: 'Do not store personal identifiers or raw personal financial details.'
+      },
+      {
+        id: 'scenarioContext',
+        label: 'Scenario context',
+        status: 'review',
+        detail: 'Each note should identify the household story type, such as DB pension, bridge-year, drawdown, survivor, or boundary case.',
+        guardrail: 'Use example-plan context only; do not persist user-submitted plan data.'
+      },
+      {
+        id: 'evidenceOrder',
+        label: 'Evidence order',
+        status: 'review',
+        detail: 'Count feedback only when the reviewer starts from spending, funded years, and money left before tax and OAS.',
+        guardrail: 'Do not treat tax savings alone as readiness evidence.'
+      },
+      {
+        id: 'confusionSignal',
+        label: 'Confusion signal',
+        status: 'blocked',
+        detail: 'Advice, command, guaranteed-spend, account-order, or saved-output expectations keep the evidence blocked.',
+        guardrail: 'Do not reclassify confusion as a pass signal without another review.'
+      },
+      {
+        id: 'nonPersistence',
+        label: 'Non-persistence',
+        status: 'blocked',
+        detail: 'Feedback evidence must remain outside saved plan files and engine output.',
+        guardrail: 'No .plan.json files, saved feedback fields, or engine output fields are allowed.'
+      }
+    ],
+    boundary:
+      'Evidence quality checklist is review guidance only; it does not save feedback, score reviewers, clear blockers, change schemas, or add annual sequencing.'
+  };
+  const annualSequencingPrototypeDecisionPacket: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['prototypeDecisionPacket'] = {
+    headline: 'A prototype decision packet is not ready.',
+    rows: [
+      {
+        id: 'feedbackSummary',
+        label: 'Feedback summary',
+        status: 'review',
+        detail: 'Summarize repeated household feedback using the artifact template, closeout rubric, decision ledger, coverage matrix, and quality checklist.',
+        requiredBeforeAsk: 'At least three clean household stories with no advice, command, account-order, or saved-output confusion.'
+      },
+      {
+        id: 'scopeSummary',
+        label: 'Scope summary',
+        status: 'blocked',
+        detail: 'Name included, blocked, and deferred cases before asking whether an internal prototype is appropriate.',
+        requiredBeforeAsk: 'Explicit decisions for locked-in accounts, survivor cases, low-income benefits, and Ontario-only boundaries.'
+      },
+      {
+        id: 'performanceSummary',
+        label: 'Performance summary',
+        status: 'blocked',
+        detail: 'Document a local-device performance budget before any heavier annual sequencing test path is discussed.',
+        requiredBeforeAsk: 'Measured timing target and cutoff rule for lower-end devices without server assumptions.'
+      },
+      {
+        id: 'schemaUiSummary',
+        label: 'Schema and UI summary',
+        status: 'blocked',
+        detail: 'Prove saved schemas, engine output schemas, Overview, compact Details, apply actions, and save actions stay unchanged.',
+        requiredBeforeAsk: 'Diff review showing no saved fields, no engine output fields, and no normal UI sequencing action.'
+      },
+      {
+        id: 'rollbackSummary',
+        label: 'Rollback summary',
+        status: 'review',
+        detail: 'Summarize how a future internal-only prototype would be removed if it misbehaved.',
+        requiredBeforeAsk: 'One-commit removal plan and verification list before prototype code exists.'
+      }
+    ],
+    boundary:
+      'Prototype decision packet is a future ask checklist only; it does not ask for approval, clear blockers, add prototype code, change schemas, or expose annual sequencing.'
+  };
+  const annualSequencingReadinessRunway: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessRunway'] = {
+    headline: 'Readiness runway still points to deferral.',
+    status: 'defer',
+    rows: [
+      {
+        id: 'keepDeferring',
+        label: 'Keep deferring',
+        status: 'blocked',
+        detail: 'Annual account-level sequencing should remain deferred because feedback, scope, performance, schema/UI, and rollback evidence are not complete.'
+      },
+      {
+        id: 'nextEvidence',
+        label: 'Next evidence',
+        status: 'review',
+        detail: 'Continue collecting comparable household feedback using the artifact template, closeout rubric, decision ledger, coverage matrix, and quality checklist.'
+      },
+      {
+        id: 'nextCleanup',
+        label: 'Next cleanup',
+        status: 'review',
+        detail: 'Clean up any copy or input friction before interpreting feedback as readiness evidence.'
+      },
+      {
+        id: 'nextPerformance',
+        label: 'Next performance',
+        status: 'blocked',
+        detail: 'Do not start prototype work until a local-device performance budget and cutoff rule are documented.'
+      },
+      {
+        id: 'explicitDecisionLater',
+        label: 'Explicit decision later',
+        status: 'blocked',
+        detail: 'Ask for a prototype decision only after the future decision packet is complete and every blocker has evidence.'
+      }
+    ],
+    recommendation: 'Keep annual sequencing deferred; continue feedback readiness and cleanup work before any prototype decision is requested.',
+    boundary:
+      'Readiness runway is a checkpoint only; it does not request a decision, start a prototype, change schemas, save results, or expose annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3116,6 +3326,10 @@ function buildFeedbackPackageIndex({
       feedbackArtifactTemplate: annualSequencingFeedbackArtifactTemplate,
       feedbackCloseoutRubric: annualSequencingFeedbackCloseoutRubric,
       feedbackDecisionLedger: annualSequencingFeedbackDecisionLedger,
+      feedbackCoverageMatrix: annualSequencingFeedbackCoverageMatrix,
+      evidenceQualityChecklist: annualSequencingEvidenceQualityChecklist,
+      prototypeDecisionPacket: annualSequencingPrototypeDecisionPacket,
+      readinessRunway: annualSequencingReadinessRunway,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
