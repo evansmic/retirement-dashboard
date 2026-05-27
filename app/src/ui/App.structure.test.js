@@ -377,6 +377,10 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('prototypeReadinessSummary.headline');
     expect(boundedPanel).toContain('prototypeReadinessSummary.decision');
     expect(boundedPanel).toContain('prototypeReadinessSummary.boundary');
+    expect(boundedPanel).toContain('blockerClearanceEvidence');
+    expect(boundedPanel).toContain('blockerClearanceEvidence.headline');
+    expect(boundedPanel).toContain('blockerClearanceEvidence.boundary');
+    expect(boundedPanel).toContain('row.clearanceSignal');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -392,6 +396,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('rollbackContainmentPlan');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('testOnlyShapePlan');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('prototypeReadinessSummary');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('blockerClearanceEvidence');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
@@ -409,6 +414,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Run sequencing prototype');
     expect(appSource).not.toContain('Prototype ready');
     expect(appSource).not.toContain('Prototype started');
+    expect(appSource).not.toContain('Clear annual sequencing blockers');
+    expect(appSource).not.toContain('Authorize annual sequencing prototype');
     expect(appSource).not.toContain('Run annual account sequencing');
     expect(appSource).not.toContain('Use this withdrawal family');
     expect(appSource).not.toContain('Follow this account detail');

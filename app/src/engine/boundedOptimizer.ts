@@ -339,6 +339,17 @@ export type OptimizerFeedbackPackageIndex = {
       decision: string;
       boundary: string;
     };
+    blockerClearanceEvidence: {
+      headline: string;
+      rows: Array<{
+        id: 'feedbackArtifacts' | 'explainabilityPlayback' | 'performanceMeasurement' | 'scopeDecisionLog' | 'schemaUiDiff' | 'rollbackRehearsal';
+        label: string;
+        status: 'needed' | 'blocked';
+        detail: string;
+        clearanceSignal: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2847,6 +2858,55 @@ function buildFeedbackPackageIndex({
     boundary:
       'Readiness reassessment is a checkpoint only; it does not start a prototype, clear blockers, change schemas, expose UI actions, or produce annual sequencing.'
   };
+  const annualSequencingBlockerClearanceEvidence: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['blockerClearanceEvidence'] = {
+    headline: 'Blockers need evidence before they can move.',
+    rows: [
+      {
+        id: 'feedbackArtifacts',
+        label: 'Feedback artifacts',
+        status: 'needed',
+        detail: 'Collect at least three household reviews that describe broad withdrawal-family evidence as something to review.',
+        clearanceSignal: 'Each review names the spending answer, funded years, money left, and the no-instruction boundary without confusion.'
+      },
+      {
+        id: 'explainabilityPlayback',
+        label: 'Explainability playback',
+        status: 'needed',
+        detail: 'Users should be able to explain why the recommended family appeared before any account-level detail is considered.',
+        clearanceSignal: 'Users repeat the rationale in their own words without asking for exact account draw orders.'
+      },
+      {
+        id: 'performanceMeasurement',
+        label: 'Performance measurement',
+        status: 'needed',
+        detail: 'Measure local-device optimizer timing before considering any heavier annual sequencing test path.',
+        clearanceSignal: 'A documented budget shows responsive re-optimization on lower-end devices without server assumptions.'
+      },
+      {
+        id: 'scopeDecisionLog',
+        label: 'Scope decision log',
+        status: 'blocked',
+        detail: 'Locked-in accounts, survivor setup, and edge cases still need explicit include, block, or defer decisions.',
+        clearanceSignal: 'Every edge case has a documented decision and no hidden expansion beyond Ontario 2026 scope.'
+      },
+      {
+        id: 'schemaUiDiff',
+        label: 'Schema and UI diff',
+        status: 'blocked',
+        detail: 'A future clearance review must prove saved schema, engine output schema, Overview, compact Details, and normal actions stay unchanged.',
+        clearanceSignal: 'Diff review shows no saved output, no engine output widening, and no normal UI sequencing action.'
+      },
+      {
+        id: 'rollbackRehearsal',
+        label: 'Rollback rehearsal',
+        status: 'needed',
+        detail: 'Before any internal candidate, rehearse removal boundaries using docs and tests rather than prototype code.',
+        clearanceSignal: 'A rollback note explains the files that would be removed and the verification that would prove removal.'
+      }
+    ],
+    boundary:
+      'Clearance evidence is a future checklist only; it does not clear blockers, authorize a prototype, add annual sequencing, change schemas, save results, or expose UI actions.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2893,6 +2953,7 @@ function buildFeedbackPackageIndex({
       rollbackContainmentPlan: annualSequencingRollbackContainmentPlan,
       testOnlyShapePlan: annualSequencingTestOnlyShapePlan,
       prototypeReadinessSummary: annualSequencingPrototypeReadinessSummary,
+      blockerClearanceEvidence: annualSequencingBlockerClearanceEvidence,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

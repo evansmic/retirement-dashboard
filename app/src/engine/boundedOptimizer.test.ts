@@ -553,6 +553,24 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.prototypeReadinessSummary.rows.find((row) => row.id === 'schemaUi')?.detail).toContain(
       'Overview, compact Details, apply actions, and save actions remain out of scope'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.blockerClearanceEvidence).toMatchObject({
+      headline: 'Blockers need evidence before they can move.',
+      boundary: expect.stringContaining('does not clear blockers')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.blockerClearanceEvidence.rows).toEqual([
+      expect.objectContaining({ id: 'feedbackArtifacts', status: 'needed' }),
+      expect.objectContaining({ id: 'explainabilityPlayback', status: 'needed' }),
+      expect.objectContaining({ id: 'performanceMeasurement', status: 'needed' }),
+      expect.objectContaining({ id: 'scopeDecisionLog', status: 'blocked' }),
+      expect.objectContaining({ id: 'schemaUiDiff', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollbackRehearsal', status: 'needed' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.blockerClearanceEvidence.rows.find((row) => row.id === 'schemaUiDiff')?.clearanceSignal).toContain(
+      'no saved output, no engine output widening'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.blockerClearanceEvidence.rows.find((row) => row.id === 'explainabilityPlayback')?.clearanceSignal).toContain(
+      'without asking for exact account draw orders'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');
