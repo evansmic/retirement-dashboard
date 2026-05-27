@@ -641,6 +641,28 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    readinessSlimmingPlan: {
+      headline: string;
+      rows: Array<{
+        id: 'summaryFirst' | 'mergeOverlaps' | 'docSupersession' | 'detailsOnly' | 'stopCondition';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    readinessHandoffCheckpoint: {
+      headline: string;
+      status: 'pauseExpansion' | 'readyForNextDecision';
+      rows: Array<{
+        id: 'outsideFeedback' | 'panelSlimming' | 'performanceBudget' | 'prototypeDecision' | 'uiOverhaul';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -4242,6 +4264,82 @@ function buildFeedbackPackageIndex({
     boundary:
       'Feedback results checkpoint is a planning checkpoint only; it does not create feedback, save responses, clear blockers, redesign UI, or start annual sequencing.'
   };
+  const annualSequencingReadinessSlimmingPlan: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessSlimmingPlan'] = {
+    headline: 'Readiness surface should slim before more expansion.',
+    rows: [
+      {
+        id: 'summaryFirst',
+        label: 'Summary first',
+        status: 'review',
+        detail: 'Keep the deferral answer, top blockers, and next action above detailed evidence.'
+      },
+      {
+        id: 'mergeOverlaps',
+        label: 'Merge overlaps',
+        status: 'review',
+        detail: 'Future cleanup should merge repeated feedback, copy, and decision rows before adding new sections.'
+      },
+      {
+        id: 'docSupersession',
+        label: 'Doc supersession',
+        status: 'review',
+        detail: 'Use supersession notes when checkpoint docs are replaced by newer guidance.'
+      },
+      {
+        id: 'detailsOnly',
+        label: 'Details only',
+        status: 'blocked',
+        detail: 'Slimming work must remain inside the research panel and not appear in Overview or compact Details.'
+      },
+      {
+        id: 'stopCondition',
+        label: 'Stop condition',
+        status: 'blocked',
+        detail: 'Stop adding readiness surface if it does not reduce confusion or prepare real feedback.'
+      }
+    ],
+    boundary:
+      'Readiness slimming plan is organization guidance only; it does not delete docs, change calculations, save output, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingReadinessHandoffCheckpoint: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessHandoffCheckpoint'] = {
+    headline: 'Readiness work should pause for feedback or slimming.',
+    status: 'pauseExpansion',
+    rows: [
+      {
+        id: 'outsideFeedback',
+        label: 'Outside feedback',
+        status: 'review',
+        detail: 'The strongest next move is three to five anonymized outside-app household reviews.'
+      },
+      {
+        id: 'panelSlimming',
+        label: 'Panel slimming',
+        status: 'review',
+        detail: 'If reviews cannot run yet, reduce overlap in the Details readiness surface.'
+      },
+      {
+        id: 'performanceBudget',
+        label: 'Performance budget',
+        status: 'blocked',
+        detail: 'Performance remains unmeasured and cannot support a prototype decision yet.'
+      },
+      {
+        id: 'prototypeDecision',
+        label: 'Prototype decision',
+        status: 'blocked',
+        detail: 'Do not request a prototype decision without real feedback, scope, performance, schema/UI, and rollback evidence.'
+      },
+      {
+        id: 'uiOverhaul',
+        label: 'UI overhaul',
+        status: 'blocked',
+        detail: 'Do not start UI overhaul until development/readiness are secure enough and the redesign can preserve product boundaries.'
+      }
+    ],
+    recommendation: 'Pause readiness expansion; either run outside-app reviews or slim the readiness panel next.',
+    boundary:
+      'Readiness handoff checkpoint is review guidance only; it does not request approval, redesign UI, start a prototype, change schemas, or save output.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -4316,6 +4414,8 @@ function buildFeedbackPackageIndex({
       feedbackCopyCleanupTargets: annualSequencingFeedbackCopyCleanupTargets,
       feedbackEvidencePosture: annualSequencingFeedbackEvidencePosture,
       feedbackResultsCheckpoint: annualSequencingFeedbackResultsCheckpoint,
+      readinessSlimmingPlan: annualSequencingReadinessSlimmingPlan,
+      readinessHandoffCheckpoint: annualSequencingReadinessHandoffCheckpoint,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

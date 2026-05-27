@@ -423,6 +423,13 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('feedbackResultsCheckpoint.headline');
     expect(boundedPanel).toContain('feedbackResultsCheckpoint.recommendation');
     expect(boundedPanel).toContain('feedbackResultsCheckpoint.boundary');
+    expect(boundedPanel).toContain('readinessSlimmingPlan');
+    expect(boundedPanel).toContain('readinessSlimmingPlan.headline');
+    expect(boundedPanel).toContain('readinessSlimmingPlan.boundary');
+    expect(boundedPanel).toContain('readinessHandoffCheckpoint');
+    expect(boundedPanel).toContain('readinessHandoffCheckpoint.headline');
+    expect(boundedPanel).toContain('readinessHandoffCheckpoint.recommendation');
+    expect(boundedPanel).toContain('readinessHandoffCheckpoint.boundary');
     expect(boundedPanel).toContain('Architecture questions');
     expect(boundedPanel).toContain('architectureQuestions');
     expect(boundedPanel).toContain('performanceBudget');
@@ -506,6 +513,8 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackCopyCleanupTargets');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackEvidencePosture');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackResultsCheckpoint');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('readinessSlimmingPlan');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('readinessHandoffCheckpoint');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Architecture questions');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Prototype decision remains blocked.');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('rollbackContainmentPlan');
@@ -590,6 +599,10 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Move decision from feedback posture');
     expect(appSource).not.toContain('Review feedback results now');
     expect(appSource).not.toContain('Unlock sequencing from feedback');
+    expect(appSource).not.toContain('Delete readiness docs automatically');
+    expect(appSource).not.toContain('Request prototype from handoff');
+    expect(appSource).not.toContain('Start UI overhaul from handoff');
+    expect(appSource).not.toContain('Save readiness slimming');
     expect(appSource).not.toContain('Run annual account sequencing');
     expect(appSource).not.toContain('Use this withdrawal family');
     expect(appSource).not.toContain('Follow this account detail');

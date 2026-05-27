@@ -682,6 +682,37 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'nextPackage', status: 'review' })
     ]);
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.status).not.toBe('readyToReviewResults');
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessSlimmingPlan).toMatchObject({
+      headline: 'Readiness surface should slim before more expansion.',
+      boundary: expect.stringContaining('does not delete docs')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessSlimmingPlan.rows).toEqual([
+      expect.objectContaining({ id: 'summaryFirst', status: 'review' }),
+      expect.objectContaining({ id: 'mergeOverlaps', status: 'review' }),
+      expect.objectContaining({ id: 'docSupersession', status: 'review' }),
+      expect.objectContaining({ id: 'detailsOnly', status: 'blocked' }),
+      expect.objectContaining({ id: 'stopCondition', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessSlimmingPlan.rows.find((row) => row.id === 'stopCondition')?.detail).toContain(
+      'does not reduce confusion'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessHandoffCheckpoint).toMatchObject({
+      headline: 'Readiness work should pause for feedback or slimming.',
+      status: 'pauseExpansion',
+      recommendation: expect.stringContaining('Pause readiness expansion'),
+      boundary: expect.stringContaining('does not request approval')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessHandoffCheckpoint.rows).toEqual([
+      expect.objectContaining({ id: 'outsideFeedback', status: 'review' }),
+      expect.objectContaining({ id: 'panelSlimming', status: 'review' }),
+      expect.objectContaining({ id: 'performanceBudget', status: 'blocked' }),
+      expect.objectContaining({ id: 'prototypeDecision', status: 'blocked' }),
+      expect.objectContaining({ id: 'uiOverhaul', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessHandoffCheckpoint.status).not.toBe('readyForNextDecision');
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessHandoffCheckpoint.rows.find((row) => row.id === 'uiOverhaul')?.detail).toContain(
+      'Do not start UI overhaul'
+    );
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
       expect.objectContaining({ id: 'userClarity', status: 'review' }),
       expect.objectContaining({ id: 'performance', status: 'review' }),
