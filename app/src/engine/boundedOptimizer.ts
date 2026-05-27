@@ -596,6 +596,51 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    feedbackResultsPlaceholder: {
+      headline: string;
+      status: 'noRealFeedbackYet' | 'readyToSummarize';
+      rows: Array<{
+        id: 'noRealResults' | 'acceptedSources' | 'summaryShape' | 'doNotInfer' | 'holdDecisions';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    feedbackCopyCleanupTargets: {
+      headline: string;
+      rows: Array<{
+        id: 'cashWedge' | 'taxOas' | 'recommendedPlan' | 'accountOrder' | 'noCleanupWithoutFeedback';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    feedbackEvidencePosture: {
+      headline: string;
+      status: 'waitingForRealFeedback' | 'readyForCleanup';
+      rows: Array<{
+        id: 'prepared' | 'missing' | 'blockedDecision' | 'cleanupPosture' | 'nextAction';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
+    feedbackResultsCheckpoint: {
+      headline: string;
+      status: 'stillWaiting' | 'readyToReviewResults';
+      rows: Array<{
+        id: 'results' | 'cleanup' | 'sequencing' | 'uiOverhaul' | 'nextPackage';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -4042,6 +4087,161 @@ function buildFeedbackPackageIndex({
     boundary:
       'Manual feedback prep checkpoint does not collect feedback, save responses, clear blockers, request approval, or start annual sequencing.'
   };
+  const annualSequencingFeedbackResultsPlaceholder: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackResultsPlaceholder'] = {
+    headline: 'No real feedback results are summarized yet.',
+    status: 'noRealFeedbackYet',
+    rows: [
+      {
+        id: 'noRealResults',
+        label: 'No real results yet',
+        status: 'blocked',
+        detail: 'Manual worksheets and static examples are ready, but no outside-app household feedback has been provided for summary.'
+      },
+      {
+        id: 'acceptedSources',
+        label: 'Accepted sources',
+        status: 'review',
+        detail: 'Only anonymized outside-app review notes should be summarized as feedback results.'
+      },
+      {
+        id: 'summaryShape',
+        label: 'Summary shape',
+        status: 'review',
+        detail: 'Future summaries should report household type, remembered answer, evidence order, confusion signals, and closeout choice.'
+      },
+      {
+        id: 'doNotInfer',
+        label: 'Do not infer',
+        status: 'blocked',
+        detail: 'Do not treat static examples, assumptions, or internal expectations as real feedback results.'
+      },
+      {
+        id: 'holdDecisions',
+        label: 'Hold decisions',
+        status: 'blocked',
+        detail: 'Do not move prototype, UI overhaul, or sequencing decisions until real feedback exists and is reviewed.'
+      }
+    ],
+    boundary:
+      'Feedback results placeholder is a review marker only; it does not create feedback, save responses, summarize real users, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingFeedbackCopyCleanupTargets: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackCopyCleanupTargets'] = {
+    headline: 'Copy cleanup targets wait for real feedback.',
+    rows: [
+      {
+        id: 'cashWedge',
+        label: 'Cash wedge wording',
+        status: 'review',
+        detail: 'Watch for feedback that reads buffer or refill language as a required action.'
+      },
+      {
+        id: 'taxOas',
+        label: 'Tax and OAS emphasis',
+        status: 'review',
+        detail: 'Watch for feedback that over-weights tax or OAS diagnostics ahead of funded years and money left.'
+      },
+      {
+        id: 'recommendedPlan',
+        label: 'Recommended plan framing',
+        status: 'review',
+        detail: 'Watch for feedback that treats the recommended plan as advice, a command, or a guarantee.'
+      },
+      {
+        id: 'accountOrder',
+        label: 'Account order confusion',
+        status: 'blocked',
+        detail: 'Any expectation of exact annual account withdrawals keeps sequencing readiness blocked.'
+      },
+      {
+        id: 'noCleanupWithoutFeedback',
+        label: 'No cleanup without feedback',
+        status: 'blocked',
+        detail: 'Do not rewrite consumer copy based on imagined feedback when no real notes exist.'
+      }
+    ],
+    boundary:
+      'Feedback copy cleanup targets are watch areas only; they do not rewrite copy, summarize feedback, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingFeedbackEvidencePosture: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackEvidencePosture'] = {
+    headline: 'Feedback evidence posture is still waiting.',
+    status: 'waitingForRealFeedback',
+    rows: [
+      {
+        id: 'prepared',
+        label: 'Prepared',
+        status: 'review',
+        detail: 'Manual worksheets, examples, scoring rubric, result shape, and cleanup targets are ready.'
+      },
+      {
+        id: 'missing',
+        label: 'Missing',
+        status: 'blocked',
+        detail: 'No anonymized outside-app household review notes have been provided for summary.'
+      },
+      {
+        id: 'blockedDecision',
+        label: 'Blocked decision',
+        status: 'blocked',
+        detail: 'Prototype, UI overhaul, and sequencing decisions stay blocked without real feedback evidence.'
+      },
+      {
+        id: 'cleanupPosture',
+        label: 'Cleanup posture',
+        status: 'review',
+        detail: 'Copy cleanup can be planned, but should not be applied until real notes identify actual confusion.'
+      },
+      {
+        id: 'nextAction',
+        label: 'Next action',
+        status: 'review',
+        detail: 'Run outside-app reviews or continue reducing readiness-panel sprawl.'
+      }
+    ],
+    recommendation:
+      'Wait for real outside-app feedback before applying copy cleanup or moving any readiness decision.',
+    boundary:
+      'Feedback evidence posture is a checkpoint only; it does not create feedback, apply cleanup, clear blockers, request approval, or start annual sequencing.'
+  };
+  const annualSequencingFeedbackResultsCheckpoint: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackResultsCheckpoint'] = {
+    headline: 'Feedback results review is still waiting for real notes.',
+    status: 'stillWaiting',
+    rows: [
+      {
+        id: 'results',
+        label: 'Results',
+        status: 'blocked',
+        detail: 'No real feedback results are available to summarize.'
+      },
+      {
+        id: 'cleanup',
+        label: 'Cleanup',
+        status: 'blocked',
+        detail: 'Do not apply copy cleanup until real feedback identifies actual confusion.'
+      },
+      {
+        id: 'sequencing',
+        label: 'Sequencing',
+        status: 'blocked',
+        detail: 'Annual account-level sequencing remains deferred.'
+      },
+      {
+        id: 'uiOverhaul',
+        label: 'UI overhaul',
+        status: 'blocked',
+        detail: 'UI overhaul remains a later phase after development and readiness are secure enough.'
+      },
+      {
+        id: 'nextPackage',
+        label: 'Next package',
+        status: 'review',
+        detail: 'Next work should either run outside-app reviews or continue reducing readiness surface complexity.'
+      }
+    ],
+    recommendation:
+      'Run three to five outside-app household reviews before more readiness expansion.',
+    boundary:
+      'Feedback results checkpoint is a planning checkpoint only; it does not create feedback, save responses, clear blockers, redesign UI, or start annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -4112,6 +4312,10 @@ function buildFeedbackPackageIndex({
       staticWorksheetExamples: annualSequencingStaticWorksheetExamples,
       manualScoringRubric: annualSequencingManualScoringRubric,
       manualFeedbackPrepCheckpoint: annualSequencingManualFeedbackPrepCheckpoint,
+      feedbackResultsPlaceholder: annualSequencingFeedbackResultsPlaceholder,
+      feedbackCopyCleanupTargets: annualSequencingFeedbackCopyCleanupTargets,
+      feedbackEvidencePosture: annualSequencingFeedbackEvidencePosture,
+      feedbackResultsCheckpoint: annualSequencingFeedbackResultsCheckpoint,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

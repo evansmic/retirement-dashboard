@@ -623,6 +623,65 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualFeedbackPrepCheckpoint.rows.find((row) => row.id === 'appBoundary')?.detail).toContain(
       'must not collect, save, score'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder).toMatchObject({
+      headline: 'No real feedback results are summarized yet.',
+      status: 'noRealFeedbackYet',
+      boundary: expect.stringContaining('does not create feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder.rows).toEqual([
+      expect.objectContaining({ id: 'noRealResults', status: 'blocked' }),
+      expect.objectContaining({ id: 'acceptedSources', status: 'review' }),
+      expect.objectContaining({ id: 'summaryShape', status: 'review' }),
+      expect.objectContaining({ id: 'doNotInfer', status: 'blocked' }),
+      expect.objectContaining({ id: 'holdDecisions', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder.rows.find((row) => row.id === 'doNotInfer')?.detail).toContain(
+      'static examples'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets).toMatchObject({
+      headline: 'Copy cleanup targets wait for real feedback.',
+      boundary: expect.stringContaining('do not rewrite copy')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets.rows).toEqual([
+      expect.objectContaining({ id: 'cashWedge', status: 'review' }),
+      expect.objectContaining({ id: 'taxOas', status: 'review' }),
+      expect.objectContaining({ id: 'recommendedPlan', status: 'review' }),
+      expect.objectContaining({ id: 'accountOrder', status: 'blocked' }),
+      expect.objectContaining({ id: 'noCleanupWithoutFeedback', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets.rows.find((row) => row.id === 'noCleanupWithoutFeedback')?.detail).toContain(
+      'imagined feedback'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture).toMatchObject({
+      headline: 'Feedback evidence posture is still waiting.',
+      status: 'waitingForRealFeedback',
+      recommendation: expect.stringContaining('Wait for real outside-app feedback'),
+      boundary: expect.stringContaining('does not create feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.rows).toEqual([
+      expect.objectContaining({ id: 'prepared', status: 'review' }),
+      expect.objectContaining({ id: 'missing', status: 'blocked' }),
+      expect.objectContaining({ id: 'blockedDecision', status: 'blocked' }),
+      expect.objectContaining({ id: 'cleanupPosture', status: 'review' }),
+      expect.objectContaining({ id: 'nextAction', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.rows.find((row) => row.id === 'missing')?.detail).toContain(
+      'No anonymized outside-app household review notes'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint).toMatchObject({
+      headline: 'Feedback results review is still waiting for real notes.',
+      status: 'stillWaiting',
+      recommendation: expect.stringContaining('Run three to five outside-app household reviews'),
+      boundary: expect.stringContaining('does not create feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.rows).toEqual([
+      expect.objectContaining({ id: 'results', status: 'blocked' }),
+      expect.objectContaining({ id: 'cleanup', status: 'blocked' }),
+      expect.objectContaining({ id: 'sequencing', status: 'blocked' }),
+      expect.objectContaining({ id: 'uiOverhaul', status: 'blocked' }),
+      expect.objectContaining({ id: 'nextPackage', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.status).not.toBe('readyToReviewResults');
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
       expect.objectContaining({ id: 'userClarity', status: 'review' }),
       expect.objectContaining({ id: 'performance', status: 'review' }),

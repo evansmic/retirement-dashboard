@@ -4837,6 +4837,52 @@ function BoundedOptimizerPanel({
               ))}
             </div>
             <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.manualFeedbackPrepCheckpoint.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder.headline}</h4>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsPlaceholder.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets.headline}</h4>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackCopyCleanupTargets.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.headline}</h4>
+            <p>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.recommendation}</p>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackEvidencePosture.boundary}</p>
+            <h4>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.headline}</h4>
+            <p>{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.recommendation}</p>
+            <div className="optimizer-guardrail-grid">
+              {summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.rows.map((row) => (
+                <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                  <span>{row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                  <strong>{row.label}</strong>
+                  <p>{row.detail}</p>
+                </article>
+              ))}
+            </div>
+            <p className="table-note">{summary.feedbackPackageIndex.annualSequencingReadiness.feedbackResultsCheckpoint.boundary}</p>
             <div className="optimizer-guardrail-grid">
               {summary.feedbackPackageIndex.annualSequencingReadiness.rows.map((row) => (
                 <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
