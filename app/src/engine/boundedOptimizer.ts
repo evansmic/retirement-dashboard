@@ -554,6 +554,48 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    manualWorksheetPacket: {
+      headline: string;
+      rows: Array<{
+        id: 'printablePrompts' | 'anonymizeOutsideApp' | 'noInAppCapture' | 'reviewStorage' | 'closeoutSummary';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    staticWorksheetExamples: {
+      headline: string;
+      rows: Array<{
+        id: 'dbCompleted' | 'bridgeCompleted' | 'retiredCompleted' | 'notEvidence' | 'notSaved';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    manualScoringRubric: {
+      headline: string;
+      rows: Array<{
+        id: 'clear' | 'watch' | 'blocked' | 'repeat' | 'noScoreInApp';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    manualFeedbackPrepCheckpoint: {
+      headline: string;
+      status: 'readyToRunOutsideApp' | 'notReady';
+      rows: Array<{
+        id: 'worksheetReady' | 'examplesReady' | 'scoringReady' | 'appBoundary' | 'nextDecision';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3849,6 +3891,157 @@ function buildFeedbackPackageIndex({
     boundary:
       'Consolidation checkpoint is review guidance only; it does not request approval, redesign UI, start a prototype, change schemas, or save output.'
   };
+  const annualSequencingManualWorksheetPacket: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['manualWorksheetPacket'] = {
+    headline: 'Manual feedback worksheets stay outside the app.',
+    rows: [
+      {
+        id: 'printablePrompts',
+        label: 'Printable prompts',
+        status: 'review',
+        detail: 'Use static worksheet docs for Overview, Details, evidence ranking, boundary checks, and closeout choice.'
+      },
+      {
+        id: 'anonymizeOutsideApp',
+        label: 'Anonymize outside app',
+        status: 'review',
+        detail: 'Remove names, account numbers, addresses, and personally identifying notes before feedback is summarized.'
+      },
+      {
+        id: 'noInAppCapture',
+        label: 'No in-app capture',
+        status: 'blocked',
+        detail: 'Do not add forms, submit buttons, local feedback records, or saved feedback fields.'
+      },
+      {
+        id: 'reviewStorage',
+        label: 'Review storage',
+        status: 'blocked',
+        detail: 'Any feedback notes stay outside saved plan files and outside engine output.'
+      },
+      {
+        id: 'closeoutSummary',
+        label: 'Closeout summary',
+        status: 'review',
+        detail: 'Summaries should choose collect more feedback, clean up copy, clean up inputs, hold sequencing, or reassess later.'
+      }
+    ],
+    boundary:
+      'Manual worksheet packet is documentation guidance only; it does not collect feedback, save feedback, change schemas, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingStaticWorksheetExamples: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['staticWorksheetExamples'] = {
+    headline: 'Completed worksheet examples are static only.',
+    rows: [
+      {
+        id: 'dbCompleted',
+        label: 'DB pension worksheet',
+        status: 'review',
+        detail: 'Static example shows a reviewer remembering the spending answer and treating pension/survivor evidence as review context.'
+      },
+      {
+        id: 'bridgeCompleted',
+        label: 'Bridge-year worksheet',
+        status: 'review',
+        detail: 'Static example shows broad bridge-year evidence understood without exact account-order expectations.'
+      },
+      {
+        id: 'retiredCompleted',
+        label: 'Already-retired worksheet',
+        status: 'review',
+        detail: 'Static example shows funded years and money left reviewed before tax and OAS diagnostics.'
+      },
+      {
+        id: 'notEvidence',
+        label: 'Not evidence',
+        status: 'blocked',
+        detail: 'Static examples cannot count as real household feedback or clear feedback-depth blockers.'
+      },
+      {
+        id: 'notSaved',
+        label: 'Not saved',
+        status: 'blocked',
+        detail: 'Static examples must not create saved responses, saved schema fields, or engine output.'
+      }
+    ],
+    boundary:
+      'Static worksheet examples are documentation fixtures only; they do not collect feedback, save responses, count as evidence, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingManualScoringRubric: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['manualScoringRubric'] = {
+    headline: 'Manual scoring rubric stays outside the app.',
+    rows: [
+      {
+        id: 'clear',
+        label: 'Clear',
+        status: 'review',
+        detail: 'Reviewer remembers the answer, orders evidence sensibly, and describes the result as something to review.'
+      },
+      {
+        id: 'watch',
+        label: 'Watch',
+        status: 'review',
+        detail: 'Reviewer mostly understands the plan but wording or evidence order needs cleanup.'
+      },
+      {
+        id: 'blocked',
+        label: 'Blocked',
+        status: 'blocked',
+        detail: 'Reviewer expects advice, exact account order, guaranteed spend, saved sequencing output, or a command.'
+      },
+      {
+        id: 'repeat',
+        label: 'Repeat',
+        status: 'review',
+        detail: 'Feedback is promising but too narrow to support readiness conclusions.'
+      },
+      {
+        id: 'noScoreInApp',
+        label: 'No in-app score',
+        status: 'blocked',
+        detail: 'Do not add scoring controls, saved score fields, analytics, or feedback state.'
+      }
+    ],
+    boundary:
+      'Manual scoring rubric is outside-app guidance only; it does not score users, save responses, collect analytics, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingManualFeedbackPrepCheckpoint: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['manualFeedbackPrepCheckpoint'] = {
+    headline: 'Manual feedback prep is ready to run outside the app.',
+    status: 'readyToRunOutsideApp',
+    rows: [
+      {
+        id: 'worksheetReady',
+        label: 'Worksheet ready',
+        status: 'review',
+        detail: 'Manual prompts now cover Overview, Details, evidence ranking, boundary checks, and closeout choice.'
+      },
+      {
+        id: 'examplesReady',
+        label: 'Examples ready',
+        status: 'review',
+        detail: 'Static completed examples exist for DB pension, bridge-year, and already-retired household reviews.'
+      },
+      {
+        id: 'scoringReady',
+        label: 'Rubric ready',
+        status: 'review',
+        detail: 'Manual clear, watch, blocked, and repeat rubric guidance exists outside the app.'
+      },
+      {
+        id: 'appBoundary',
+        label: 'App boundary',
+        status: 'blocked',
+        detail: 'The app still must not collect, save, score, analyze, or persist feedback.'
+      },
+      {
+        id: 'nextDecision',
+        label: 'Next decision',
+        status: 'review',
+        detail: 'Next package can either run manual outside-app reviews or continue panel consolidation.'
+      }
+    ],
+    recommendation:
+      'Consider running three to five manual outside-app household reviews before adding more readiness surface.',
+    boundary:
+      'Manual feedback prep checkpoint does not collect feedback, save responses, clear blockers, request approval, or start annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3915,6 +4108,10 @@ function buildFeedbackPackageIndex({
       uiRedesignReadinessBridge: annualSequencingUiRedesignReadinessBridge,
       checkpointArchivePolicy: annualSequencingCheckpointArchivePolicy,
       consolidationCheckpoint: annualSequencingConsolidationCheckpoint,
+      manualWorksheetPacket: annualSequencingManualWorksheetPacket,
+      staticWorksheetExamples: annualSequencingStaticWorksheetExamples,
+      manualScoringRubric: annualSequencingManualScoringRubric,
+      manualFeedbackPrepCheckpoint: annualSequencingManualFeedbackPrepCheckpoint,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'

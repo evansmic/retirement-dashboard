@@ -565,6 +565,64 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'nextPackage', status: 'review' })
     ]);
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.consolidationCheckpoint.status).not.toBe('readyForUiOverhaul');
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualWorksheetPacket).toMatchObject({
+      headline: 'Manual feedback worksheets stay outside the app.',
+      boundary: expect.stringContaining('does not collect feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualWorksheetPacket.rows).toEqual([
+      expect.objectContaining({ id: 'printablePrompts', status: 'review' }),
+      expect.objectContaining({ id: 'anonymizeOutsideApp', status: 'review' }),
+      expect.objectContaining({ id: 'noInAppCapture', status: 'blocked' }),
+      expect.objectContaining({ id: 'reviewStorage', status: 'blocked' }),
+      expect.objectContaining({ id: 'closeoutSummary', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualWorksheetPacket.rows.find((row) => row.id === 'noInAppCapture')?.detail).toContain(
+      'submit buttons'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.staticWorksheetExamples).toMatchObject({
+      headline: 'Completed worksheet examples are static only.',
+      boundary: expect.stringContaining('documentation fixtures only')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.staticWorksheetExamples.rows).toEqual([
+      expect.objectContaining({ id: 'dbCompleted', status: 'review' }),
+      expect.objectContaining({ id: 'bridgeCompleted', status: 'review' }),
+      expect.objectContaining({ id: 'retiredCompleted', status: 'review' }),
+      expect.objectContaining({ id: 'notEvidence', status: 'blocked' }),
+      expect.objectContaining({ id: 'notSaved', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.staticWorksheetExamples.rows.find((row) => row.id === 'notEvidence')?.detail).toContain(
+      'cannot count as real household feedback'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualScoringRubric).toMatchObject({
+      headline: 'Manual scoring rubric stays outside the app.',
+      boundary: expect.stringContaining('does not score users')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualScoringRubric.rows).toEqual([
+      expect.objectContaining({ id: 'clear', status: 'review' }),
+      expect.objectContaining({ id: 'watch', status: 'review' }),
+      expect.objectContaining({ id: 'blocked', status: 'blocked' }),
+      expect.objectContaining({ id: 'repeat', status: 'review' }),
+      expect.objectContaining({ id: 'noScoreInApp', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualScoringRubric.rows.find((row) => row.id === 'noScoreInApp')?.detail).toContain(
+      'scoring controls'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualFeedbackPrepCheckpoint).toMatchObject({
+      headline: 'Manual feedback prep is ready to run outside the app.',
+      status: 'readyToRunOutsideApp',
+      recommendation: expect.stringContaining('three to five manual outside-app household reviews'),
+      boundary: expect.stringContaining('does not collect feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualFeedbackPrepCheckpoint.rows).toEqual([
+      expect.objectContaining({ id: 'worksheetReady', status: 'review' }),
+      expect.objectContaining({ id: 'examplesReady', status: 'review' }),
+      expect.objectContaining({ id: 'scoringReady', status: 'review' }),
+      expect.objectContaining({ id: 'appBoundary', status: 'blocked' }),
+      expect.objectContaining({ id: 'nextDecision', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.manualFeedbackPrepCheckpoint.rows.find((row) => row.id === 'appBoundary')?.detail).toContain(
+      'must not collect, save, score'
+    );
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
       expect.objectContaining({ id: 'userClarity', status: 'review' }),
       expect.objectContaining({ id: 'performance', status: 'review' }),
