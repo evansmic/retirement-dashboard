@@ -440,6 +440,48 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.explainabilityGuide.rows.find((row) => row.id === 'instructionBoundary')?.detail).toContain(
       'exact withdrawal instructions'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.scopeRegister).toMatchObject({
+      headline: 'Province and edge-case scope must stay narrow.',
+      boundary: expect.stringContaining('do not add province support')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.scopeRegister.rows).toEqual([
+      expect.objectContaining({ id: 'ontarioOnly', status: 'ready' }),
+      expect.objectContaining({ id: 'lockedInAccounts', status: 'blocked' }),
+      expect.objectContaining({ id: 'survivorSetup', status: 'review' }),
+      expect.objectContaining({ id: 'lowIncomeBenefits', status: 'review' }),
+      expect.objectContaining({ id: 'edgeCaseDecision', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.scopeRegister.rows.find((row) => row.id === 'lockedInAccounts')?.detail).toContain(
+      'block annual sequencing architecture'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDepthPlan).toMatchObject({
+      headline: 'Feedback depth needs several household stories.',
+      boundary: expect.stringContaining('do not collect personal feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDepthPlan.rows).toEqual([
+      expect.objectContaining({ id: 'dbPensionCouple', status: 'review' }),
+      expect.objectContaining({ id: 'earlyRetiredCouple', status: 'review' }),
+      expect.objectContaining({ id: 'alreadyRetiredCouple', status: 'review' }),
+      expect.objectContaining({ id: 'confusionSignals', status: 'blocked' }),
+      expect.objectContaining({ id: 'decisionThreshold', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackDepthPlan.rows.find((row) => row.id === 'decisionThreshold')?.detail).toContain(
+      'at least three household stories'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureConstraints).toMatchObject({
+      headline: 'Future sequencing architecture has hard non-goals.',
+      boundary: expect.stringContaining('do not create a prototype')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureConstraints.rows).toEqual([
+      expect.objectContaining({ id: 'nonGoals', status: 'ready' }),
+      expect.objectContaining({ id: 'candidateExplosion', status: 'blocked' }),
+      expect.objectContaining({ id: 'schemaBoundary', status: 'blocked' }),
+      expect.objectContaining({ id: 'uiBoundary', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollbackBoundary', status: 'ready' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.architectureConstraints.rows.find((row) => row.id === 'schemaBoundary')?.detail).toContain(
+      'Do not change saved plan schema or engine output schema'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

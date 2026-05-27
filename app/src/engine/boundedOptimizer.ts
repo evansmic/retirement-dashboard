@@ -265,6 +265,36 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    scopeRegister: {
+      headline: string;
+      rows: Array<{
+        id: 'ontarioOnly' | 'lockedInAccounts' | 'survivorSetup' | 'lowIncomeBenefits' | 'edgeCaseDecision';
+        label: string;
+        status: 'ready' | 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    feedbackDepthPlan: {
+      headline: string;
+      rows: Array<{
+        id: 'dbPensionCouple' | 'earlyRetiredCouple' | 'alreadyRetiredCouple' | 'confusionSignals' | 'decisionThreshold';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    architectureConstraints: {
+      headline: string;
+      rows: Array<{
+        id: 'nonGoals' | 'candidateExplosion' | 'schemaBoundary' | 'uiBoundary' | 'rollbackBoundary';
+        label: string;
+        status: 'ready' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2501,6 +2531,114 @@ function buildFeedbackPackageIndex({
     ],
     boundary: 'Explainability rows are review criteria only; they do not create advice, account instructions, saved output, or annual sequencing.'
   };
+  const annualSequencingScopeRegister: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['scopeRegister'] = {
+    headline: 'Province and edge-case scope must stay narrow.',
+    rows: [
+      {
+        id: 'ontarioOnly',
+        label: 'Ontario 2026 scope',
+        status: 'ready',
+        detail: 'Any future internal prototype should keep Ontario 2026 tax assumptions and avoid province expansion.'
+      },
+      {
+        id: 'lockedInAccounts',
+        label: 'Locked-in accounts',
+        status: 'blocked',
+        detail: 'LIRA/LIF cases should block annual sequencing architecture until locked-in rules are explicitly scoped.'
+      },
+      {
+        id: 'survivorSetup',
+        label: 'Survivor setup',
+        status: 'review',
+        detail: 'Two-person plans need survivor setup review before account-level annual detail can be trusted.'
+      },
+      {
+        id: 'lowIncomeBenefits',
+        label: 'Low-income benefits',
+        status: 'review',
+        detail: 'GIS and low-income benefit interactions remain out of scope unless explicitly planned.'
+      },
+      {
+        id: 'edgeCaseDecision',
+        label: 'Edge-case decision',
+        status: 'blocked',
+        detail: 'Annual sequencing cannot move to prototype until edge cases are named as included, blocked, or deferred.'
+      }
+    ],
+    boundary: 'Scope rows constrain future architecture only; they do not add province support, locked-in account rules, GIS modelling, saved output, or annual sequencing.'
+  };
+  const annualSequencingFeedbackDepthPlan: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackDepthPlan'] = {
+    headline: 'Feedback depth needs several household stories.',
+    rows: [
+      {
+        id: 'dbPensionCouple',
+        label: 'DB pension couple',
+        status: 'review',
+        detail: 'Feedback should confirm pension-heavy households understand broad-family evidence as review context.'
+      },
+      {
+        id: 'earlyRetiredCouple',
+        label: 'Early-retired couple',
+        status: 'review',
+        detail: 'Feedback should confirm taxable-heavy bridge-year households understand the spending and funding trade-off.'
+      },
+      {
+        id: 'alreadyRetiredCouple',
+        label: 'Already-retired couple',
+        status: 'review',
+        detail: 'Feedback should confirm drawdown households understand tax and OAS diagnostics without expecting account instructions.'
+      },
+      {
+        id: 'confusionSignals',
+        label: 'Confusion signals',
+        status: 'blocked',
+        detail: 'Any advice, instruction, or exact-account expectation keeps annual sequencing readiness blocked.'
+      },
+      {
+        id: 'decisionThreshold',
+        label: 'Decision threshold',
+        status: 'blocked',
+        detail: 'Do not move toward prototype until at least three household stories pass without confusion signals.'
+      }
+    ],
+    boundary: 'Feedback-depth rows are readiness criteria only; they do not collect personal feedback, save feedback, or start annual sequencing.'
+  };
+  const annualSequencingArchitectureConstraints: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['architectureConstraints'] = {
+    headline: 'Future sequencing architecture has hard non-goals.',
+    rows: [
+      {
+        id: 'nonGoals',
+        label: 'Non-goals',
+        status: 'ready',
+        detail: 'Do not add advice, cloud accounts, advisor tooling, broad UI redesign, or normal UI execution.'
+      },
+      {
+        id: 'candidateExplosion',
+        label: 'Candidate explosion',
+        status: 'blocked',
+        detail: 'Do not create year-by-year path explosions until a bounded search shape and cutoff rules are documented.'
+      },
+      {
+        id: 'schemaBoundary',
+        label: 'Schema boundary',
+        status: 'blocked',
+        detail: 'Do not change saved plan schema or engine output schema without a separate planned decision.'
+      },
+      {
+        id: 'uiBoundary',
+        label: 'UI boundary',
+        status: 'blocked',
+        detail: 'Do not expose annual sequencing in normal Overview or compact Details before an internal prototype passes.'
+      },
+      {
+        id: 'rollbackBoundary',
+        label: 'Rollback boundary',
+        status: 'ready',
+        detail: 'Future prototype work should land behind a clear internal boundary and be removable in one commit if it misbehaves.'
+      }
+    ],
+    boundary: 'Architecture constraints are guardrails only; they do not create a prototype, schema migration, UI action, or annual sequencing result.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2540,6 +2678,9 @@ function buildFeedbackPackageIndex({
       architectureQuestions: annualSequencingQuestions,
       performanceBudget: annualSequencingPerformanceBudget,
       explainabilityGuide: annualSequencingExplainabilityGuide,
+      scopeRegister: annualSequencingScopeRegister,
+      feedbackDepthPlan: annualSequencingFeedbackDepthPlan,
+      architectureConstraints: annualSequencingArchitectureConstraints,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
