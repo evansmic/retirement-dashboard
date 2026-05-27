@@ -260,6 +260,17 @@ describe('bounded optimizer runner', () => {
     });
     expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
+    expect(summary.goalReview).toMatchObject({
+      summary: expect.stringContaining('re-rank the same bounded candidate set'),
+      boundary: expect.stringContaining('No goal toggle is shown in the normal UI')
+    });
+    expect(summary.goalReview.rows).toEqual([
+      expect.objectContaining({ id: 'maxSpend', status: 'current' }),
+      expect.objectContaining({ id: 'maxEstate', status: 'deferred' }),
+      expect.objectContaining({ id: 'minTax', status: 'deferred' }),
+      expect.objectContaining({ id: 'spendingFlexibility', status: 'deferred' })
+    ]);
+    expect(summary.goalReview.rows.find((row) => row.id === 'spendingFlexibility')?.detail).toContain('cash-wedge rules');
     expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyFirst')).toMatchObject({
       label: 'Withdrawal family to compare',
       value: 'Registered first'

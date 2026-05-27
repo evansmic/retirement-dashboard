@@ -140,6 +140,17 @@ export type BoundedOptimizerDriverRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type OptimizerGoalReview = {
+  summary: string;
+  rows: Array<{
+    id: 'maxSpend' | 'maxEstate' | 'minTax' | 'spendingFlexibility';
+    label: string;
+    status: 'current' | 'deferred';
+    detail: string;
+  }>;
+  boundary: string;
+};
+
 export type WithdrawalFeedbackReviewRow = {
   id: 'familyPresence' | 'evidenceClarity' | 'annualInstructionBoundary' | 'guardrails' | 'savedOutputBoundary';
   label: string;
@@ -259,6 +270,7 @@ export type BoundedOptimizerSummary = {
   optionGroups: BoundedOptimizerOptionGroup[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
+  goalReview: OptimizerGoalReview;
   withdrawalFeedbackReview: WithdrawalFeedbackReview;
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
@@ -550,6 +562,40 @@ function buildSearchPlan(plan: V2PlanPayload): OptimizerSearchPlan {
     withdrawalFamilies,
     annualOverrides: 'deferred',
     detail: 'The first optimizer path uses a staged grid: benefit timing and broad withdrawal families before any annual override execution.'
+  };
+}
+
+function buildOptimizerGoalReview(): OptimizerGoalReview {
+  return {
+    summary:
+      'Future goal modes should re-rank the same bounded candidate set before any wider optimizer search is considered.',
+    rows: [
+      {
+        id: 'maxSpend',
+        label: 'Max sustainable spend',
+        status: 'current',
+        detail: 'Current objective ranks candidates by sustainable after-tax spending while preserving trust guardrails.'
+      },
+      {
+        id: 'maxEstate',
+        label: 'Max estate',
+        status: 'deferred',
+        detail: 'Later review can rank the same candidates by projected money left before adding new search paths.'
+      },
+      {
+        id: 'minTax',
+        label: 'Min lifetime tax',
+        status: 'deferred',
+        detail: 'Later review can compare tax outcomes as evidence, not as account instructions.'
+      },
+      {
+        id: 'spendingFlexibility',
+        label: 'Spending flexibility',
+        status: 'deferred',
+        detail: 'Variable spending and cash-wedge rules need user feedback before becoming optimizer goals.'
+      }
+    ],
+    boundary: 'No goal toggle is shown in the normal UI, and annual account-level sequencing remains deferred.'
   };
 }
 
@@ -2005,6 +2051,7 @@ export function runBoundedOptimizer(
   const readinessRows = buildReadinessRows(plan, contract, eligibilityNotes);
   const candidateFamilies = buildCandidateFamilies(readinessRows);
   const searchPlan = buildSearchPlan(plan);
+  const goalReview = buildOptimizerGoalReview();
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
     candidates,
@@ -2036,6 +2083,7 @@ export function runBoundedOptimizer(
     optionGroups,
     evidenceRows,
     driverRows,
+    goalReview,
     withdrawalFeedbackReview,
     explanation,
     reviewNotes: suggested

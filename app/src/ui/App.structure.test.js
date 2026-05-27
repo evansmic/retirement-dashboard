@@ -132,6 +132,8 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('estate-intent-panel');
     expect(overviewBranch).not.toContain('tax-pressure');
     expect(overviewBranch).not.toContain('diagnostic');
+    expect(appSource).toContain('first five-minute read');
+    expect(appSource).toContain('In the first five minutes, use this list after the answer and spending number.');
   });
 
   it('explains bounded optimizer output without advice or saved-output language', () => {
@@ -146,6 +148,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Staged grid shape');
     expect(appSource).toContain('Benefit timing and broad withdrawal families first');
     expect(appSource).toContain('No annual account instructions in this version.');
+    expect(appSource).toContain('Future objective modes');
+    expect(appSource).toContain('Goal switching stays a review boundary');
+    expect(boundedOptimizerSource).toContain('re-rank the same bounded candidate set');
+    expect(boundedOptimizerSource).toContain('Variable spending and cash-wedge rules need user feedback');
+    expect(boundedOptimizerSource).toContain('No goal toggle is shown in the normal UI');
     expect(appSource).toContain('Why this option');
     expect(appSource).toContain('Trade-offs');
     expect(appSource).toContain('Check before using');
@@ -260,15 +267,24 @@ describe('Results overview structure', () => {
     const compactOptionIndex = detailsPanel.indexOf('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
     const optionGateIndex = detailsPanel.indexOf('SHOW_OPTION_RESEARCH_PANELS');
     const optionResearchBranch = detailsPanel.slice(optionGateIndex);
+    const boundedPanelStart = appSource.indexOf('function BoundedOptimizerPanel');
+    const boundedPanelEnd = appSource.indexOf('function OptimizerBoundaryPanel');
+    const boundedPanel = appSource.slice(boundedPanelStart, boundedPanelEnd);
 
     expect(compactOptionIndex).toBeGreaterThan(0);
     expect(optionGateIndex).toBeGreaterThan(compactOptionIndex);
     expect(optionResearchBranch).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
     expect(optionResearchBranch).toContain('<OptimizerBoundaryPanel');
     expect(optionResearchBranch).toContain('<OptimizerInputReviewPanel');
+    expect(boundedPanel).toContain('!isCompact && summary?.goalReview');
+    expect(boundedPanel).toContain('Future objective modes');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerInputReviewPanel');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Future objective modes');
+    expect(appSource).not.toContain('Max estate toggle');
+    expect(appSource).not.toContain('Min tax toggle');
+    expect(appSource).not.toContain('Goal switcher');
   });
 
   it('shows spending stress as review evidence without advice language', () => {

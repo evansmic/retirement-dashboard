@@ -3358,7 +3358,7 @@ function resultsSectionIntro(section: ResultsWorkspaceSection): { summary: strin
     case 'overview':
       return {
         summary:
-          'Overview starts with the retirement answer: whether the plan appears supportable, how spending fits, and what to review next.',
+          'Overview starts with the first five-minute read: the retirement answer, spending capacity, and the few checks to review next.',
         handoff: stableHandoff
       };
     case 'annualDetail':
@@ -3596,7 +3596,7 @@ function ReviewTheseFirstPanel({
       <div>
         <p className="eyebrow">Review these first</p>
         <h3>{loading ? 'Finding the first review items' : 'Start with the few checks that matter most.'}</h3>
-        <p>Detailed diagnostics stay in Details and Risks; this list keeps the first review focused.</p>
+        <p>In the first five minutes, use this list after the answer and spending number. Detailed diagnostics stay in Details and Risks.</p>
       </div>
       <div className="review-first-list">
         {topRows.slice(0, 5).map((row, index) => (
@@ -4519,6 +4519,26 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {!isCompact && summary?.goalReview ? (
+        <section className="optimizer-option-group-panel">
+          <div>
+            <p className="eyebrow">Future objective modes</p>
+            <h3>Goal switching stays a review boundary</h3>
+            <p>{summary.goalReview.summary}</p>
+          </div>
+          <div className="optimizer-option-group-grid">
+            {summary.goalReview.rows.map((row) => (
+              <article className="optimizer-option-group-row" key={row.id}>
+                <span>{row.status === 'current' ? 'Current' : 'Deferred'}</span>
+                <strong>{row.label}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.goalReview.boundary}</p>
         </section>
       ) : null}
 
