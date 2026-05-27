@@ -4,41 +4,40 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 361: Feedback Outcome Closeout
+## Latest Sprint — Sprint 661: Outside Feedback Package Closeout
 
-**Status:** Complete 2026-05-25.
+**Status:** Complete 2026-05-27.
 
-Goal: summarize worksheet review outcomes without starting annual sequencing.
+Goal: prepare outside-app feedback collection materials without adding in-app capture or expanding annual sequencing readiness.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 361 checkpoint doc: [`docs/sprint_361_feedback_outcome_closeout.md`](docs/sprint_361_feedback_outcome_closeout.md).
+Sprint 661 checkpoint doc: [`docs/sprint_661_outside_feedback_package_closeout.md`](docs/sprint_661_outside_feedback_package_closeout.md).
 
-### Sprint 357-361 Planned Path
+### Sprint 642-661 Planned Path
 
-- **S357 — Outcome Contract.** Add ready-to-review, repair-inputs, and defer-sequencing outcome states.
-- **S358 — Outcome Next Steps.** Add next-step lists for each outcome.
-- **S359 — Blocked Outcome Guard.** Keep blocked broad-family states from implying annual sequencing readiness.
-- **S360 — Details Outcome Surface.** Render outcome guidance in Details research only.
-- **S361 — Feedback Outcome Closeout.** Stop with annual sequencing still deferred.
+- **S642-S646 — Review setup.** Plan the manual feedback package, reviewer boundaries, anonymization checklist, session script, and first checkpoint.
+- **S647-S651 — Evidence capture.** Add a manual worksheet, triage categories, Results checklist, non-advisory moderator guard, and second checkpoint.
+- **S652-S656 — Synthesis and stop rules.** Add synthesis rubric, annual sequencing criteria, no-capture guard, prototype deferral guard, and third checkpoint.
+- **S657-S661 — Fallback and closeout.** Add readiness slimming fallback, scheduling packet, evidence storage boundary, next-package recommendation, and closeout.
 
-### Sprint 357-361 Candidate Implementation Tickets
+### Sprint 642-661 Candidate Implementation Tickets
 
-- [x] **S357-01 — Outcome states.** Add runtime-only outcome states to the withdrawal feedback checkpoint.
-- [x] **S358-01 — Next steps.** Add outcome-specific next steps.
-- [x] **S359-01 — Blocked guard.** Route blocked comparisons to input repair.
-- [x] **S360-01 — Details rendering.** Render feedback outcome guidance in the full Details research panel.
-- [x] **S361-01 — Closeout docs.** Document annual sequencing remains deferred.
+- [x] **S642-01 — Package plan.** Define outside-app feedback as manual, anonymized, and outside saved plans.
+- [x] **S644-01 — Privacy checklist.** Document anonymization and no-plan-file collection boundaries.
+- [x] **S647-01 — Evidence worksheet.** Add fields for clarity, trust, confusion, and follow-up category.
+- [x] **S652-01 — Synthesis rubric.** Separate wording cleanup, organization cleanup, evidence cleanup, and not-ready signals.
+- [x] **S661-01 — Closeout docs.** Confirm no feedback was collected and annual sequencing remains deferred.
 
-### Sprint 357-361 Definition Of Done
+### Sprint 642-661 Definition Of Done
 
-- Feedback outcomes are runtime-only.
-- Annual instructions and annual overrides remain deferred.
-- Blocked-input states route to input repair.
-- Ready states route to feedback review, not sequencing architecture.
-- Overview remains unchanged.
-- No `.plan.json` files are created.
-- Focused optimizer and UI structure tests pass.
+- Feedback collection remains outside the app.
+- Reviewer notes remain anonymized and manual.
+- No `.plan.json` files are created or persisted.
+- Annual account-level sequencing remains deferred.
+- UI overhaul remains deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- Existing tests and probes are preserved.
 
 ### Historical Definition Of Done Coverage
 
@@ -126,6 +125,30 @@ Sprint 361 checkpoint doc: [`docs/sprint_361_feedback_outcome_closeout.md`](docs
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 661: Outside Feedback Package Closeout
+
+**Complete 2026-05-27.** Closed the outside-app feedback prep package with manual review materials, privacy boundaries, synthesis criteria, fallback slimming guidance, and annual sequencing still deferred.
+
+Sprint 661 checkpoint doc: [`docs/sprint_661_outside_feedback_package_closeout.md`](docs/sprint_661_outside_feedback_package_closeout.md).
+
+### Sprint 656: Third Feedback Batch Checkpoint
+
+**Complete 2026-05-27.** Closed the synthesis and stop-rule batch before any feedback capture or annual sequencing work.
+
+Sprint 656 checkpoint doc: [`docs/sprint_656_third_feedback_batch_checkpoint.md`](docs/sprint_656_third_feedback_batch_checkpoint.md).
+
+### Sprint 651: Second Feedback Batch Checkpoint
+
+**Complete 2026-05-27.** Closed the evidence-capture batch with worksheet, triage, Results checklist, and moderator guard materials.
+
+Sprint 651 checkpoint doc: [`docs/sprint_651_second_feedback_batch_checkpoint.md`](docs/sprint_651_second_feedback_batch_checkpoint.md).
+
+### Sprint 646: First Feedback Batch Checkpoint
+
+**Complete 2026-05-27.** Closed the first outside-feedback setup batch with package plan, cohort boundaries, anonymization checklist, and session script.
+
+Sprint 646 checkpoint doc: [`docs/sprint_646_first_feedback_batch_checkpoint.md`](docs/sprint_646_first_feedback_batch_checkpoint.md).
 
 ### Sprint 361: Feedback Outcome Closeout
 
