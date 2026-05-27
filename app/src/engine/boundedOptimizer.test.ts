@@ -808,6 +808,43 @@ describe('bounded optimizer runner', () => {
     );
   });
 
+  it('keeps richer example-plan feedback slices focused on first-review evidence', () => {
+    const feedbackExampleIds = ['db-pension-couple', 'fire-couple', 'retired-traditional'] as const;
+    const broadFamilyLeads = (_candidatePlan: V2PlanPayload, config: SimulationConfig) =>
+      config.withdrawalOrder === 'registered-first'
+        ? result(220000, 72000, null, { oasRecovery: 2000 })
+        : result(140000, 84000, null, { oasRecovery: 5000 });
+
+    const summaries = feedbackExampleIds.map((id) => runBoundedOptimizer(createExamplePlan(id), broadFamilyLeads));
+    const cardCopy = feedbackExampleIds.map((id) => examplePlanCards.find((card) => card.id === id));
+
+    expect(cardCopy.map((card) => card?.focus)).toEqual([
+      'Pensions, survivor impact, estate intent',
+      'Long horizon, non-registered assets, tax timing',
+      'Withdrawal order, taxes, survivor impact'
+    ]);
+    summaries.forEach((summary) => {
+      expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
+        'monthlySpend',
+        'fundedYears',
+        'moneyLeft',
+        'lifetimeTax',
+        'oasRecovery'
+      ]);
+      expect(summary.compactEvidenceRows.find((row) => row.id === 'monthlySpend')?.detail).toContain("today's dollars");
+      expect(summary.withdrawalFeedbackReview.questions.join(' ')).toContain(
+        'funded years, money left, tax, and OAS recovery are evidence, not instructions'
+      );
+      expect(summary.withdrawalFeedbackReview.closeoutSummary.boundarySummary).toContain('review-only');
+      expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'goalModes')).toMatchObject({ status: 'deferred' });
+      expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'annualSequencing')).toMatchObject({ status: 'deferred' });
+    });
+    feedbackExampleIds.forEach((id) => {
+      expect(createPlanFile(createExamplePlan(id)).plan).not.toHaveProperty('withdrawalFeedbackReview');
+      expect(createPlanFile(createExamplePlan(id)).plan).not.toHaveProperty('feedbackPackageIndex');
+    });
+  });
+
   it('adds one home-sale reliance candidate only when downsize year and proceeds are entered', () => {
     const plan = downsizePlan();
     const missingYear = downsizePlan();
