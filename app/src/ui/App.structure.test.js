@@ -159,6 +159,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Max after-tax spend');
     expect(appSource).toContain('Monthly spend reviewed');
     expect(appSource).toContain('First review evidence');
+    expect(boundedOptimizerSource).toContain('Projected money left is a trade-off to review with spending comfort.');
     expect(appSource).toContain('What to check first');
     expect(appSource).toContain('spending, funding, tax, OAS recovery, and money left');
     expect(appSource).toContain('Optimizer direction');
@@ -334,6 +335,9 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Refill cash wedge');
     expect(appSource).not.toContain('Use cash wedge first');
     expect(appSource).not.toContain('Refill when markets recover');
+    expect(appSource).not.toContain('should be refilled');
+    expect(appSource).not.toContain('automatically refilled');
+    expect(appSource).not.toContain('refill from bonds');
   });
 
   it('shows spending stress as review evidence without advice language', () => {

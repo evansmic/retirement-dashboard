@@ -276,9 +276,9 @@ describe('bounded optimizer runner', () => {
     expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
       'monthlySpend',
       'fundedYears',
+      'moneyLeft',
       'lifetimeTax',
-      'oasRecovery',
-      'moneyLeft'
+      'oasRecovery'
     ]);
     expect(summary.compactEvidenceRows.find((row) => row.id === 'monthlySpend')).toMatchObject({
       label: 'Monthly spend reviewed',
@@ -789,9 +789,9 @@ describe('bounded optimizer runner', () => {
       expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
         'monthlySpend',
         'fundedYears',
+        'moneyLeft',
         'lifetimeTax',
-        'oasRecovery',
-        'moneyLeft'
+        'oasRecovery'
       ]);
     });
     expect(summaries.map((summary) => summary.withdrawalFeedbackReview.status)).toEqual(

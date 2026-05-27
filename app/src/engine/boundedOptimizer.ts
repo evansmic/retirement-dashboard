@@ -1930,6 +1930,13 @@ function buildCompactEvidenceRows(
       tone: suggested.firstShortfallYear ? 'watch' : 'ok'
     },
     {
+      id: 'moneyLeft',
+      label: 'Money left change',
+      value: portfolio?.value || '$0',
+      detail: 'Projected money left is a trade-off to review with spending comfort.',
+      tone: portfolio?.tone || 'neutral'
+    },
+    {
       id: 'lifetimeTax',
       label: 'Lifetime tax change',
       value: lifetimeTax?.value || '$0',
@@ -1942,13 +1949,6 @@ function buildCompactEvidenceRows(
       value: oasRecovery?.value || '$0',
       detail: 'OAS recovery helps explain tax pressure in the comparison.',
       tone: oasRecovery?.tone || 'neutral'
-    },
-    {
-      id: 'moneyLeft',
-      label: 'Money left change',
-      value: portfolio?.value || '$0',
-      detail: 'Projected money left is a trade-off to review with spending comfort.',
-      tone: portfolio?.tone || 'neutral'
     }
   ];
 }
