@@ -571,6 +571,23 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.blockerClearanceEvidence.rows.find((row) => row.id === 'explainabilityPlayback')?.clearanceSignal).toContain(
       'without asking for exact account draw orders'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackArtifactTemplate).toMatchObject({
+      headline: 'Feedback artifacts need consistent review prompts.',
+      boundary: expect.stringContaining('do not collect feedback')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackArtifactTemplate.rows).toEqual([
+      expect.objectContaining({ id: 'rememberedAnswer' }),
+      expect.objectContaining({ id: 'evidenceRanking' }),
+      expect.objectContaining({ id: 'instructionBoundary' }),
+      expect.objectContaining({ id: 'cashFlexibilityLanguage' }),
+      expect.objectContaining({ id: 'decisionOutcome' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackArtifactTemplate.rows.find((row) => row.id === 'rememberedAnswer')?.passSignal).toContain(
+      'after-tax monthly spending range'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackArtifactTemplate.rows.find((row) => row.id === 'instructionBoundary')?.blockedSignal).toContain(
+      'which account to withdraw from each year'
+    );
     expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('goalReview');
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('feedbackPackageIndex');

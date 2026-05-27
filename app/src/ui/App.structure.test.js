@@ -381,6 +381,10 @@ describe('Results overview structure', () => {
     expect(boundedPanel).toContain('blockerClearanceEvidence.headline');
     expect(boundedPanel).toContain('blockerClearanceEvidence.boundary');
     expect(boundedPanel).toContain('row.clearanceSignal');
+    expect(boundedPanel).toContain('feedbackArtifactTemplate');
+    expect(boundedPanel).toContain('feedbackArtifactTemplate.headline');
+    expect(boundedPanel).toContain('feedbackArtifactTemplate.boundary');
+    expect(boundedPanel).toContain('row.blockedSignal');
     expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
     expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
@@ -397,6 +401,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('testOnlyShapePlan');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('prototypeReadinessSummary');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('blockerClearanceEvidence');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('feedbackArtifactTemplate');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
@@ -416,6 +421,8 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Prototype started');
     expect(appSource).not.toContain('Clear annual sequencing blockers');
     expect(appSource).not.toContain('Authorize annual sequencing prototype');
+    expect(appSource).not.toContain('Save feedback artifact');
+    expect(appSource).not.toContain('Submit sequencing feedback');
     expect(appSource).not.toContain('Run annual account sequencing');
     expect(appSource).not.toContain('Use this withdrawal family');
     expect(appSource).not.toContain('Follow this account detail');

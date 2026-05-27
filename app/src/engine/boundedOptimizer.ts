@@ -350,6 +350,17 @@ export type OptimizerFeedbackPackageIndex = {
       }>;
       boundary: string;
     };
+    feedbackArtifactTemplate: {
+      headline: string;
+      rows: Array<{
+        id: 'rememberedAnswer' | 'evidenceRanking' | 'instructionBoundary' | 'cashFlexibilityLanguage' | 'decisionOutcome';
+        label: string;
+        prompt: string;
+        passSignal: string;
+        blockedSignal: string;
+      }>;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -2907,6 +2918,48 @@ function buildFeedbackPackageIndex({
     boundary:
       'Clearance evidence is a future checklist only; it does not clear blockers, authorize a prototype, add annual sequencing, change schemas, save results, or expose UI actions.'
   };
+  const annualSequencingFeedbackArtifactTemplate: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackArtifactTemplate'] = {
+    headline: 'Feedback artifacts need consistent review prompts.',
+    rows: [
+      {
+        id: 'rememberedAnswer',
+        label: 'Remembered answer',
+        prompt: 'What retirement answer and monthly spending number did the reviewer remember after leaving Overview?',
+        passSignal: 'Reviewer names the after-tax monthly spending range and understands it is in today’s dollars.',
+        blockedSignal: 'Reviewer cannot find the answer or treats it as a guaranteed amount.'
+      },
+      {
+        id: 'evidenceRanking',
+        label: 'Evidence ranking',
+        prompt: 'Which evidence mattered most: funded years, money left, tax, OAS, cash wedge, or flexibility?',
+        passSignal: 'Reviewer starts with funded years or money left before tax and OAS diagnostics.',
+        blockedSignal: 'Reviewer treats tax or OAS savings as the main reason to follow a path.'
+      },
+      {
+        id: 'instructionBoundary',
+        label: 'Instruction boundary',
+        prompt: 'Did the reviewer describe the plan as advice, a command, or something to review?',
+        passSignal: 'Reviewer says the plan is something to review and does not expect exact account instructions.',
+        blockedSignal: 'Reviewer expects the tool to tell them which account to withdraw from each year.'
+      },
+      {
+        id: 'cashFlexibilityLanguage',
+        label: 'Cash and flexibility language',
+        prompt: 'Did cash-wedge or flexibility language help, distract, or sound like an instruction?',
+        passSignal: 'Reviewer describes the language as a buffer explanation, not a required action.',
+        blockedSignal: 'Reviewer reads cash-wedge refill language as an instruction.'
+      },
+      {
+        id: 'decisionOutcome',
+        label: 'Decision outcome',
+        prompt: 'Should the next step be collect more feedback, clean up inputs, defer sequencing, or simplify evidence?',
+        passSignal: 'Reviewer can choose a review outcome without asking for annual sequencing to be added.',
+        blockedSignal: 'Reviewer asks to move straight to annual account-level sequencing.'
+      }
+    ],
+    boundary:
+      'Feedback artifact prompts are review scaffolding only; they do not collect feedback, save feedback, clear blockers, create advice, or start annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -2954,6 +3007,7 @@ function buildFeedbackPackageIndex({
       testOnlyShapePlan: annualSequencingTestOnlyShapePlan,
       prototypeReadinessSummary: annualSequencingPrototypeReadinessSummary,
       blockerClearanceEvidence: annualSequencingBlockerClearanceEvidence,
+      feedbackArtifactTemplate: annualSequencingFeedbackArtifactTemplate,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
