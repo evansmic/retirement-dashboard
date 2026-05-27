@@ -451,6 +451,64 @@ describe('bounded optimizer runner', () => {
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.deferralReassessment.rows.find((row) => row.id === 'performance')?.detail).toContain(
       'No local-device performance budget'
     );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessMaintenancePlan).toMatchObject({
+      headline: 'Readiness surface needs maintenance before more widening.',
+      boundary: expect.stringContaining('organization guidance only')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessMaintenancePlan.rows).toEqual([
+      expect.objectContaining({ id: 'sectionLimit', status: 'review' }),
+      expect.objectContaining({ id: 'mergeCandidates', status: 'review' }),
+      expect.objectContaining({ id: 'staleDocs', status: 'review' }),
+      expect.objectContaining({ id: 'testCoverage', status: 'review' }),
+      expect.objectContaining({ id: 'checkpointOnly', status: 'blocked' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.readinessMaintenancePlan.rows.find((row) => row.id === 'checkpointOnly')?.detail).toContain(
+      'cannot clear blockers'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackReviewScript).toMatchObject({
+      headline: 'Feedback review script stays manual and unsaved.',
+      boundary: expect.stringContaining('does not collect responses')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackReviewScript.rows).toEqual([
+      expect.objectContaining({ id: 'overviewRead', status: 'review' }),
+      expect.objectContaining({ id: 'detailsOpen', status: 'review' }),
+      expect.objectContaining({ id: 'evidencePlayback', status: 'review' }),
+      expect.objectContaining({ id: 'boundaryCheck', status: 'blocked' }),
+      expect.objectContaining({ id: 'closeoutChoice', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.feedbackReviewScript.rows.find((row) => row.id === 'boundaryCheck')?.prompt).toContain(
+      'saved instruction'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performancePlanningQuestions).toMatchObject({
+      headline: 'Performance planning needs questions before benchmarks.',
+      boundary: expect.stringContaining('do not add benchmarks')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performancePlanningQuestions.rows).toEqual([
+      expect.objectContaining({ id: 'deviceTarget', status: 'blocked' }),
+      expect.objectContaining({ id: 'candidateCap', status: 'blocked' }),
+      expect.objectContaining({ id: 'timeoutRule', status: 'blocked' }),
+      expect.objectContaining({ id: 'noWorkerYet', status: 'review' }),
+      expect.objectContaining({ id: 'probeImpact', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.performancePlanningQuestions.rows.find((row) => row.id === 'timeoutRule')?.question).toContain(
+      'local app feel stuck'
+    );
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.conservativePostureCheckpoint).toMatchObject({
+      headline: 'Conservative posture remains the right path.',
+      status: 'continueDeferral',
+      recommendation: expect.stringContaining('do not request a prototype decision yet'),
+      boundary: expect.stringContaining('does not request approval')
+    });
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.conservativePostureCheckpoint.rows).toEqual([
+      expect.objectContaining({ id: 'doNext', status: 'review' }),
+      expect.objectContaining({ id: 'doNotDo', status: 'blocked' }),
+      expect.objectContaining({ id: 'decisionTrigger', status: 'blocked' }),
+      expect.objectContaining({ id: 'rollbackPosture', status: 'review' }),
+      expect.objectContaining({ id: 'chatContinuity', status: 'review' })
+    ]);
+    expect(summary.feedbackPackageIndex.annualSequencingReadiness.conservativePostureCheckpoint.rows.find((row) => row.id === 'doNotDo')?.detail).toContain(
+      'background workers'
+    );
     expect(summary.feedbackPackageIndex.annualSequencingReadiness.rows).toEqual([
       expect.objectContaining({ id: 'userClarity', status: 'review' }),
       expect.objectContaining({ id: 'performance', status: 'review' }),

@@ -470,6 +470,48 @@ export type OptimizerFeedbackPackageIndex = {
       recommendation: string;
       boundary: string;
     };
+    readinessMaintenancePlan: {
+      headline: string;
+      rows: Array<{
+        id: 'sectionLimit' | 'mergeCandidates' | 'staleDocs' | 'testCoverage' | 'checkpointOnly';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      boundary: string;
+    };
+    feedbackReviewScript: {
+      headline: string;
+      rows: Array<{
+        id: 'overviewRead' | 'detailsOpen' | 'evidencePlayback' | 'boundaryCheck' | 'closeoutChoice';
+        label: string;
+        status: 'review' | 'blocked';
+        prompt: string;
+      }>;
+      boundary: string;
+    };
+    performancePlanningQuestions: {
+      headline: string;
+      rows: Array<{
+        id: 'deviceTarget' | 'candidateCap' | 'timeoutRule' | 'noWorkerYet' | 'probeImpact';
+        label: string;
+        status: 'review' | 'blocked';
+        question: string;
+      }>;
+      boundary: string;
+    };
+    conservativePostureCheckpoint: {
+      headline: string;
+      status: 'continueDeferral' | 'pauseForDecision';
+      rows: Array<{
+        id: 'doNext' | 'doNotDo' | 'decisionTrigger' | 'rollbackPosture' | 'chatContinuity';
+        label: string;
+        status: 'review' | 'blocked';
+        detail: string;
+      }>;
+      recommendation: string;
+      boundary: string;
+    };
     nextStep: string;
     boundary: string;
   };
@@ -3463,6 +3505,157 @@ function buildFeedbackPackageIndex({
     boundary:
       'Deferral reassessment is a checkpoint only; it does not move to candidate status, request approval, start a prototype, change schemas, or expose annual sequencing.'
   };
+  const annualSequencingReadinessMaintenancePlan: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['readinessMaintenancePlan'] = {
+    headline: 'Readiness surface needs maintenance before more widening.',
+    rows: [
+      {
+        id: 'sectionLimit',
+        label: 'Section limit',
+        status: 'review',
+        detail: 'Keep new readiness material grouped under existing evidence, quality, decision, and prototype-gate headings where possible.'
+      },
+      {
+        id: 'mergeCandidates',
+        label: 'Merge candidates',
+        status: 'review',
+        detail: 'Future cleanup may merge overlapping feedback, copy, and decision rows if they repeat the same blocker.'
+      },
+      {
+        id: 'staleDocs',
+        label: 'Stale docs',
+        status: 'review',
+        detail: 'Checkpoint docs should be updated or superseded when future evidence changes the review posture.'
+      },
+      {
+        id: 'testCoverage',
+        label: 'Structure coverage',
+        status: 'review',
+        detail: 'Keep Details-only and no-action guards close to every new readiness section.'
+      },
+      {
+        id: 'checkpointOnly',
+        label: 'Checkpoint only',
+        status: 'blocked',
+        detail: 'Maintenance planning cannot clear blockers, request a prototype decision, or add annual sequencing.'
+      }
+    ],
+    boundary:
+      'Readiness maintenance plan is organization guidance only; it does not change calculations, save output, clear blockers, request approval, or start annual sequencing.'
+  };
+  const annualSequencingFeedbackReviewScript: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['feedbackReviewScript'] = {
+    headline: 'Feedback review script stays manual and unsaved.',
+    rows: [
+      {
+        id: 'overviewRead',
+        label: 'Overview read',
+        status: 'review',
+        prompt: 'Ask what retirement answer and spending number the reviewer remembers from Overview.'
+      },
+      {
+        id: 'detailsOpen',
+        label: 'Details open',
+        status: 'review',
+        prompt: 'Ask what the first plan option means and whether it feels like review evidence.'
+      },
+      {
+        id: 'evidencePlayback',
+        label: 'Evidence playback',
+        status: 'review',
+        prompt: 'Ask the reviewer to rank funded years, money left, tax, OAS, cash wedge, and flexibility evidence.'
+      },
+      {
+        id: 'boundaryCheck',
+        label: 'Boundary check',
+        status: 'blocked',
+        prompt: 'Ask whether any wording sounded like advice, a command, exact account order, or saved instruction.'
+      },
+      {
+        id: 'closeoutChoice',
+        label: 'Closeout choice',
+        status: 'review',
+        prompt: 'Choose collect more feedback, clean up copy, clean up inputs, hold sequencing, or reassess later.'
+      }
+    ],
+    boundary:
+      'Feedback review script is a manual checklist only; it does not collect responses, save feedback, score reviewers, clear blockers, or start annual sequencing.'
+  };
+  const annualSequencingPerformancePlanningQuestions: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['performancePlanningQuestions'] = {
+    headline: 'Performance planning needs questions before benchmarks.',
+    rows: [
+      {
+        id: 'deviceTarget',
+        label: 'Device target',
+        status: 'blocked',
+        question: 'What lower-end local device target must remain responsive before any annual sequencing candidate exists?'
+      },
+      {
+        id: 'candidateCap',
+        label: 'Candidate cap',
+        status: 'blocked',
+        question: 'What candidate limit would keep future annual sequencing bounded and explainable?'
+      },
+      {
+        id: 'timeoutRule',
+        label: 'Timeout rule',
+        status: 'blocked',
+        question: 'What cutoff should stop future test-only sequencing work before it makes the local app feel stuck?'
+      },
+      {
+        id: 'noWorkerYet',
+        label: 'No worker yet',
+        status: 'review',
+        question: 'Can planning continue without adding workers, servers, or background execution?'
+      },
+      {
+        id: 'probeImpact',
+        label: 'Probe impact',
+        status: 'review',
+        question: 'How would future performance checks preserve the existing probe suite and known sandbox caveat?'
+      }
+    ],
+    boundary:
+      'Performance planning questions are planning-only; they do not add benchmarks, workers, servers, prototype code, or annual sequencing.'
+  };
+  const annualSequencingConservativePostureCheckpoint: OptimizerFeedbackPackageIndex['annualSequencingReadiness']['conservativePostureCheckpoint'] = {
+    headline: 'Conservative posture remains the right path.',
+    status: 'continueDeferral',
+    rows: [
+      {
+        id: 'doNext',
+        label: 'Do next',
+        status: 'review',
+        detail: 'Continue feedback readiness, cleanup, organization, and performance planning without adding annual sequencing logic.'
+      },
+      {
+        id: 'doNotDo',
+        label: 'Do not do yet',
+        status: 'blocked',
+        detail: 'Do not add annual account-level sequencing, schema fields, saved feedback, background workers, cloud services, or normal UI actions.'
+      },
+      {
+        id: 'decisionTrigger',
+        label: 'Decision trigger',
+        status: 'blocked',
+        detail: 'Only ask for a prototype decision after real feedback, scope, performance, schema/UI, and rollback evidence are complete.'
+      },
+      {
+        id: 'rollbackPosture',
+        label: 'Rollback posture',
+        status: 'review',
+        detail: 'Keep future changes narrow enough to remove in one commit if readiness work starts to create confusion.'
+      },
+      {
+        id: 'chatContinuity',
+        label: 'Chat continuity',
+        status: 'review',
+        detail: 'Continue in this chat for now, but start a new chat if project state begins to compress or lose continuity.'
+      }
+    ],
+    recommendation:
+      'Continue conservative readiness work and do not request a prototype decision yet.',
+    boundary:
+      'Conservative posture checkpoint is a review checkpoint only; it does not request approval, start a prototype, change schemas, save output, or expose annual sequencing.'
+  };
 
   return {
     headline: 'Optimizer feedback package is indexed for review.',
@@ -3521,6 +3714,10 @@ function buildFeedbackPackageIndex({
       copyTighteningGuard: annualSequencingCopyTighteningGuard,
       feedbackExamplePointers: annualSequencingFeedbackExamplePointers,
       deferralReassessment: annualSequencingDeferralReassessment,
+      readinessMaintenancePlan: annualSequencingReadinessMaintenancePlan,
+      feedbackReviewScript: annualSequencingFeedbackReviewScript,
+      performancePlanningQuestions: annualSequencingPerformancePlanningQuestions,
+      conservativePostureCheckpoint: annualSequencingConservativePostureCheckpoint,
       nextStep:
         annualSequencingStatus === 'maybeLater'
           ? 'Collect repeated feedback and define performance, explainability, province, and edge-case scope before architecture.'
