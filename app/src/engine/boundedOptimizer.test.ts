@@ -260,6 +260,21 @@ describe('bounded optimizer runner', () => {
     });
     expect(summary.driverRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({ value: '-$10,000', tone: 'ok' });
     expect(summary.driverRows.find((row) => row.id === 'portfolio')).toMatchObject({ value: '+$70,000', tone: 'ok' });
+    expect(summary.compactEvidenceRows.map((row) => row.id)).toEqual([
+      'monthlySpend',
+      'fundedYears',
+      'lifetimeTax',
+      'oasRecovery',
+      'moneyLeft'
+    ]);
+    expect(summary.compactEvidenceRows.find((row) => row.id === 'monthlySpend')).toMatchObject({
+      label: 'Monthly spend reviewed',
+      value: '$7,083'
+    });
+    expect(summary.compactEvidenceRows.find((row) => row.id === 'lifetimeTax')).toMatchObject({
+      value: '-$10,000',
+      detail: expect.stringContaining('not a command to change accounts')
+    });
     expect(summary.goalReview).toMatchObject({
       summary: expect.stringContaining('re-rank the same bounded candidate set'),
       boundary: expect.stringContaining('No goal toggle is shown in the normal UI')
@@ -271,6 +286,31 @@ describe('bounded optimizer runner', () => {
       expect.objectContaining({ id: 'spendingFlexibility', status: 'deferred' })
     ]);
     expect(summary.goalReview.rows.find((row) => row.id === 'spendingFlexibility')?.detail).toContain('cash-wedge rules');
+    expect(summary.goalReview.spendingFlexibilityReview).toMatchObject({
+      headline: 'Spending flexibility needs feedback language first.',
+      boundary: expect.stringContaining('not a saved setting or optimizer instruction')
+    });
+    expect(summary.goalReview.spendingFlexibilityReview.questions.join(' ')).toContain('cash-wedge explanation');
+    expect(summary.goalReview.spendingFlexibilityReview.rows).toEqual([
+      expect.objectContaining({ id: 'variableSpending', status: 'review' }),
+      expect.objectContaining({ id: 'cashWedge', status: 'review' }),
+      expect.objectContaining({ id: 'taxImpact', status: 'deferred' }),
+      expect.objectContaining({ id: 'implementationBoundary', status: 'deferred' })
+    ]);
+    expect(summary.goalReview.spendingFlexibilityReview.rows.find((row) => row.id === 'implementationBoundary')?.detail).toContain(
+      'No variable-spending rule'
+    );
+    expect(summary.feedbackPackageIndex).toMatchObject({
+      headline: 'Optimizer feedback package is indexed for review.',
+      boundary: expect.stringContaining('runtime review support only')
+    });
+    expect(summary.feedbackPackageIndex.rows).toEqual([
+      expect.objectContaining({ id: 'withdrawalFamilyFeedback', status: 'ready' }),
+      expect.objectContaining({ id: 'goalModes', status: 'deferred' }),
+      expect.objectContaining({ id: 'spendingFlexibility', status: 'review' }),
+      expect.objectContaining({ id: 'annualSequencing', status: 'deferred' })
+    ]);
+    expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Close broad withdrawal-family feedback');
     expect(summary.evidenceRows.find((row) => row.id === 'withdrawalFamilyFirst')).toMatchObject({
       label: 'Withdrawal family to compare',
       value: 'Registered first'
@@ -646,6 +686,10 @@ describe('bounded optimizer runner', () => {
       label: 'Closeout blocked by inputs',
       boundarySummary: expect.stringContaining('not a plan change or account instruction')
     });
+    expect(summary.feedbackPackageIndex.rows.find((row) => row.id === 'withdrawalFamilyFeedback')).toMatchObject({
+      status: 'blocked'
+    });
+    expect(summary.feedbackPackageIndex.nextCheckpoint).toContain('Resolve blocked or unclear feedback evidence');
     expect(summary.searchPlan.jointCoupleSearch).toBe(true);
     expect(summary.searchPlan.benefitSearch).toHaveLength(2);
     expect(summary.searchPlan.benefitSearch.find((space) => space.person === 'p1')).toMatchObject({ status: 'blocked' });

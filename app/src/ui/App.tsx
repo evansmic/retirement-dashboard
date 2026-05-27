@@ -4435,6 +4435,25 @@ function BoundedOptimizerPanel({
         <Metric label="Projected money left" value={suggested ? formatMoney(suggested.endPortfolio) : '-'} />
       </div>
 
+      {isCompact && summary?.compactEvidenceRows.length ? (
+        <section className="optimizer-driver-panel">
+          <div>
+            <p className="eyebrow">First review evidence</p>
+            <h3>What to check first</h3>
+            <p>These rows keep the compact plan review focused on spending, funding, tax, OAS recovery, and money left.</p>
+          </div>
+          <div className="optimizer-driver-grid">
+            {summary.compactEvidenceRows.map((row) => (
+              <article className={`optimizer-driver-row driver-${row.tone}`} key={row.id}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {summary ? (
         <section className="optimizer-guardrail-panel">
           <div>
@@ -4538,7 +4557,49 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+          <div className="result-overview-grid">
+            <section className="optimizer-explanation-card">
+              <h3>{summary.goalReview.spendingFlexibilityReview.headline}</h3>
+              <p>{summary.goalReview.spendingFlexibilityReview.detail}</p>
+              <ul className="compact-list">
+                {summary.goalReview.spendingFlexibilityReview.questions.map((question) => (
+                  <li key={question}>{question}</li>
+                ))}
+              </ul>
+            </section>
+            <section className="optimizer-explanation-card">
+              <h3>Flexibility boundary</h3>
+              <ul className="compact-list">
+                {summary.goalReview.spendingFlexibilityReview.rows.map((row) => (
+                  <li key={row.id}>
+                    <strong>{row.label}:</strong> {row.detail}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+          <p className="table-note">{summary.goalReview.spendingFlexibilityReview.boundary}</p>
           <p className="table-note">{summary.goalReview.boundary}</p>
+        </section>
+      ) : null}
+
+      {!isCompact && summary?.feedbackPackageIndex ? (
+        <section className="optimizer-guardrail-panel">
+          <div>
+            <p className="eyebrow">Feedback package index</p>
+            <h3>{summary.feedbackPackageIndex.headline}</h3>
+            <p>{summary.feedbackPackageIndex.nextCheckpoint}</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.feedbackPackageIndex.rows.map((row) => (
+              <article className={`optimizer-guardrail-row guardrail-${row.status === 'ready' ? 'ready' : row.status === 'blocked' ? 'blocked' : 'review'}`} key={row.id}>
+                <span>{row.status === 'ready' ? 'Ready' : row.status === 'blocked' ? 'Blocked' : row.status === 'deferred' ? 'Deferred' : 'Review'}</span>
+                <strong>{row.label}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.feedbackPackageIndex.boundary}</p>
         </section>
       ) : null}
 

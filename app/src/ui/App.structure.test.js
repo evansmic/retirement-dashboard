@@ -142,6 +142,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Local-first plan-to-review optimizer');
     expect(appSource).toContain('Max after-tax spend');
     expect(appSource).toContain('Monthly spend reviewed');
+    expect(appSource).toContain('First review evidence');
+    expect(appSource).toContain('What to check first');
+    expect(appSource).toContain('spending, funding, tax, OAS recovery, and money left');
     expect(appSource).toContain('Optimizer direction');
     expect(appSource).toContain('Input readiness');
     expect(appSource).toContain('What must be ready before optimizer prep');
@@ -150,8 +153,16 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('No annual account instructions in this version.');
     expect(appSource).toContain('Future objective modes');
     expect(appSource).toContain('Goal switching stays a review boundary');
+    expect(appSource).toContain('Feedback package index');
+    expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
+    expect(boundedOptimizerSource).toContain('runtime review support only');
+    expect(boundedOptimizerSource).toContain('annual sequencing architecture');
     expect(boundedOptimizerSource).toContain('re-rank the same bounded candidate set');
     expect(boundedOptimizerSource).toContain('Variable spending and cash-wedge rules need user feedback');
+    expect(boundedOptimizerSource).toContain('Spending flexibility needs feedback language first.');
+    expect(boundedOptimizerSource).toContain('cash-wedge explanation');
+    expect(boundedOptimizerSource).toContain('No variable-spending rule, cash refill rule, or annual account sequencing is implemented');
+    expect(boundedOptimizerSource).toContain('not a saved setting or optimizer instruction');
     expect(boundedOptimizerSource).toContain('No goal toggle is shown in the normal UI');
     expect(appSource).toContain('Why this option');
     expect(appSource).toContain('Trade-offs');
@@ -278,13 +289,23 @@ describe('Results overview structure', () => {
     expect(optionResearchBranch).toContain('<OptimizerInputReviewPanel');
     expect(boundedPanel).toContain('!isCompact && summary?.goalReview');
     expect(boundedPanel).toContain('Future objective modes');
+    expect(boundedPanel).toContain('spendingFlexibilityReview');
+    expect(boundedPanel).toContain('Flexibility boundary');
+    expect(boundedPanel).toContain('!isCompact && summary?.feedbackPackageIndex');
+    expect(boundedPanel).toContain('Feedback package index');
+    expect(boundedPanel).toContain('isCompact && summary?.compactEvidenceRows.length');
+    expect(boundedPanel).toContain('First review evidence');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} />');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerBoundaryPanel');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('<OptimizerInputReviewPanel');
     expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Future objective modes');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Spending flexibility needs feedback language first.');
+    expect(detailsPanel.slice(0, optionGateIndex)).not.toContain('Feedback package index');
     expect(appSource).not.toContain('Max estate toggle');
     expect(appSource).not.toContain('Min tax toggle');
     expect(appSource).not.toContain('Goal switcher');
+    expect(appSource).not.toContain('Apply flexibility rule');
+    expect(appSource).not.toContain('Refill cash wedge');
   });
 
   it('shows spending stress as review evidence without advice language', () => {

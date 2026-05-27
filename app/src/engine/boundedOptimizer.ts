@@ -140,6 +140,14 @@ export type BoundedOptimizerDriverRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type BoundedOptimizerCompactEvidenceRow = {
+  id: 'monthlySpend' | 'fundedYears' | 'lifetimeTax' | 'oasRecovery' | 'moneyLeft';
+  label: string;
+  value: string;
+  detail: string;
+  tone: 'neutral' | 'ok' | 'watch';
+};
+
 export type OptimizerGoalReview = {
   summary: string;
   rows: Array<{
@@ -148,6 +156,30 @@ export type OptimizerGoalReview = {
     status: 'current' | 'deferred';
     detail: string;
   }>;
+  spendingFlexibilityReview: {
+    headline: string;
+    detail: string;
+    questions: string[];
+    rows: Array<{
+      id: 'variableSpending' | 'cashWedge' | 'taxImpact' | 'implementationBoundary';
+      label: string;
+      status: 'review' | 'deferred';
+      detail: string;
+    }>;
+    boundary: string;
+  };
+  boundary: string;
+};
+
+export type OptimizerFeedbackPackageIndex = {
+  headline: string;
+  rows: Array<{
+    id: 'withdrawalFamilyFeedback' | 'goalModes' | 'spendingFlexibility' | 'annualSequencing';
+    label: string;
+    status: 'ready' | 'review' | 'deferred' | 'blocked';
+    detail: string;
+  }>;
+  nextCheckpoint: string;
   boundary: string;
 };
 
@@ -270,7 +302,9 @@ export type BoundedOptimizerSummary = {
   optionGroups: BoundedOptimizerOptionGroup[];
   evidenceRows: BoundedOptimizerEvidenceRow[];
   driverRows: BoundedOptimizerDriverRow[];
+  compactEvidenceRows: BoundedOptimizerCompactEvidenceRow[];
   goalReview: OptimizerGoalReview;
+  feedbackPackageIndex: OptimizerFeedbackPackageIndex;
   withdrawalFeedbackReview: WithdrawalFeedbackReview;
   explanation: BoundedOptimizerExplanation;
   reviewNotes: string[];
@@ -595,6 +629,43 @@ function buildOptimizerGoalReview(): OptimizerGoalReview {
         detail: 'Variable spending and cash-wedge rules need user feedback before becoming optimizer goals.'
       }
     ],
+    spendingFlexibilityReview: {
+      headline: 'Spending flexibility needs feedback language first.',
+      detail:
+        'Before adding variable spending or cash-wedge rules, review whether households understand the trade-off between steadier spending, lower stress, and money left.',
+      questions: [
+        'Is variable spending clearer as a range, a guardrail, or a review note?',
+        'Does the cash-wedge explanation feel like a safety buffer rather than a withdrawal rule?',
+        'Would a flexibility goal make the first-results screen clearer or more distracting?'
+      ],
+      rows: [
+        {
+          id: 'variableSpending',
+          label: 'Variable spending language',
+          status: 'review',
+          detail: 'Test wording for spending ranges before adding rules that change projected spending.'
+        },
+        {
+          id: 'cashWedge',
+          label: 'Cash-wedge buffer language',
+          status: 'review',
+          detail: 'Test whether users understand cash as a buffer without reading it as an account instruction.'
+        },
+        {
+          id: 'taxImpact',
+          label: 'Tax impact evidence',
+          status: 'deferred',
+          detail: 'Tax effects should stay evidence-only until a specific flexibility rule is planned.'
+        },
+        {
+          id: 'implementationBoundary',
+          label: 'Implementation boundary',
+          status: 'deferred',
+          detail: 'No variable-spending rule, cash refill rule, or annual account sequencing is implemented in this checkpoint.'
+        }
+      ],
+      boundary: 'Spending flexibility remains feedback language, not a saved setting or optimizer instruction.'
+    },
     boundary: 'No goal toggle is shown in the normal UI, and annual account-level sequencing remains deferred.'
   };
 }
@@ -1724,6 +1795,57 @@ function buildDriverRows(
   ];
 }
 
+function buildCompactEvidenceRows(
+  suggested: BoundedOptimizerCandidateRow | null,
+  driverRows: BoundedOptimizerDriverRow[]
+): BoundedOptimizerCompactEvidenceRow[] {
+  if (!suggested) return [];
+  const driver = (id: BoundedOptimizerDriverRow['id']) => driverRows.find((row) => row.id === id);
+  const lifetimeTax = driver('lifetimeTax');
+  const oasRecovery = driver('oasRecovery');
+  const portfolio = driver('portfolio');
+
+  return [
+    {
+      id: 'monthlySpend',
+      label: 'Monthly spend reviewed',
+      value: moneyText(suggested.sustainableAnnualSpend / 12),
+      detail: 'The first option is ranked by sustainable after-tax spending.',
+      tone: 'neutral'
+    },
+    {
+      id: 'fundedYears',
+      label: 'Funded years',
+      value: `${suggested.fundedYears}/${suggested.totalYears}`,
+      detail: suggested.firstShortfallYear
+        ? `First projected shortfall appears in ${suggested.firstShortfallYear}.`
+        : 'No projected shortfall appears in this option.',
+      tone: suggested.firstShortfallYear ? 'watch' : 'ok'
+    },
+    {
+      id: 'lifetimeTax',
+      label: 'Lifetime tax change',
+      value: lifetimeTax?.value || '$0',
+      detail: 'Tax is evidence for review, not a command to change accounts.',
+      tone: lifetimeTax?.tone || 'neutral'
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery change',
+      value: oasRecovery?.value || '$0',
+      detail: 'OAS recovery helps explain tax pressure in the comparison.',
+      tone: oasRecovery?.tone || 'neutral'
+    },
+    {
+      id: 'moneyLeft',
+      label: 'Money left change',
+      value: portfolio?.value || '$0',
+      detail: 'Projected money left is a trade-off to review with spending comfort.',
+      tone: portfolio?.tone || 'neutral'
+    }
+  ];
+}
+
 function buildWithdrawalFeedbackReview({
   candidateFamilies,
   candidates,
@@ -1972,6 +2094,56 @@ function buildWithdrawalFeedbackReview({
   };
 }
 
+function buildFeedbackPackageIndex({
+  goalReview,
+  withdrawalFeedbackReview
+}: {
+  goalReview: OptimizerGoalReview;
+  withdrawalFeedbackReview: WithdrawalFeedbackReview;
+}): OptimizerFeedbackPackageIndex {
+  const withdrawalStatus =
+    withdrawalFeedbackReview.status === 'readyForFeedback'
+      ? 'ready'
+      : withdrawalFeedbackReview.status === 'holdForCleanup'
+        ? 'review'
+        : 'blocked';
+
+  return {
+    headline: 'Optimizer feedback package is indexed for review.',
+    rows: [
+      {
+        id: 'withdrawalFamilyFeedback',
+        label: 'Broad withdrawal-family feedback',
+        status: withdrawalStatus,
+        detail: withdrawalFeedbackReview.outcome.detail
+      },
+      {
+        id: 'goalModes',
+        label: 'Future goal modes',
+        status: 'deferred',
+        detail: goalReview.summary
+      },
+      {
+        id: 'spendingFlexibility',
+        label: 'Spending flexibility language',
+        status: 'review',
+        detail: goalReview.spendingFlexibilityReview.detail
+      },
+      {
+        id: 'annualSequencing',
+        label: 'Annual account-level sequencing',
+        status: 'deferred',
+        detail: 'Sequencing architecture waits until feedback evidence is strong enough to plan it.'
+      }
+    ],
+    nextCheckpoint:
+      withdrawalFeedbackReview.status === 'readyForFeedback'
+        ? 'Close broad withdrawal-family feedback before planning wider optimizer architecture.'
+        : 'Resolve blocked or unclear feedback evidence before planning annual sequencing architecture.',
+    boundary: 'This package index is runtime review support only; it is not saved output and does not widen the optimizer.'
+  };
+}
+
 export function runBoundedOptimizer(
   plan: V2PlanPayload,
   runner: BoundedOptimizerRunner = runSimulationSafely
@@ -2038,6 +2210,7 @@ export function runBoundedOptimizer(
     ...buildWithdrawalFamilyEvidence(summaryById, suggestedRow)
   ];
   const driverRows = buildDriverRows(suggestedRow, baselineRow, summaryById);
+  const compactEvidenceRows = buildCompactEvidenceRows(suggestedRow, driverRows);
   const guardrailNotes = buildGuardrailNotes(eligibilityNotes);
   const recommendationNotes: BoundedOptimizerRecommendationNote[] = rows
     .filter((row) => row.id !== 'baseline')
@@ -2059,6 +2232,7 @@ export function runBoundedOptimizer(
     readinessRows,
     searchPlan
   });
+  const feedbackPackageIndex = buildFeedbackPackageIndex({ goalReview, withdrawalFeedbackReview });
 
   return {
     status: contract.status === 'readyForExtraction' && Boolean(suggested) ? 'ready' : 'blocked',
@@ -2083,7 +2257,9 @@ export function runBoundedOptimizer(
     optionGroups,
     evidenceRows,
     driverRows,
+    compactEvidenceRows,
     goalReview,
+    feedbackPackageIndex,
     withdrawalFeedbackReview,
     explanation,
     reviewNotes: suggested
