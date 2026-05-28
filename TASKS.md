@@ -4,39 +4,41 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 661: Outside Feedback Package Closeout
+## Latest Sprint — Sprint 681: Readiness Slimming Closeout
 
-**Status:** Complete 2026-05-27.
+**Status:** Complete 2026-05-28.
 
-Goal: prepare outside-app feedback collection materials without adding in-app capture or expanding annual sequencing readiness.
+Goal: slim the hidden annual sequencing readiness research panel while outside-app feedback is pending, and improve stale deploy chunk recovery.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 661 checkpoint doc: [`docs/sprint_661_outside_feedback_package_closeout.md`](docs/sprint_661_outside_feedback_package_closeout.md).
+Sprint 681 checkpoint doc: [`docs/sprint_681_readiness_slimming_closeout.md`](docs/sprint_681_readiness_slimming_closeout.md).
 
-### Sprint 642-661 Planned Path
+### Sprint 662-681 Planned Path
 
-- **S642-S646 — Review setup.** Plan the manual feedback package, reviewer boundaries, anonymization checklist, session script, and first checkpoint.
-- **S647-S651 — Evidence capture.** Add a manual worksheet, triage categories, Results checklist, non-advisory moderator guard, and second checkpoint.
-- **S652-S656 — Synthesis and stop rules.** Add synthesis rubric, annual sequencing criteria, no-capture guard, prototype deferral guard, and third checkpoint.
-- **S657-S661 — Fallback and closeout.** Add readiness slimming fallback, scheduling packet, evidence storage boundary, next-package recommendation, and closeout.
+- **S662-S666 — First slimming batch.** Slim the hidden research panel to summary-first rendering while preserving runtime packet data.
+- **S667-S671 — Inventory and holds.** Document visible sections, held subsections, blocker policy, and feedback-waiting state.
+- **S672-S676 — Deploy resilience.** Add stale dynamic chunk reload copy and structure guard coverage.
+- **S677-S681 — Closeout.** Review boundaries, set verification, keep feedback path active, recommend next package, and close.
 
-### Sprint 642-661 Candidate Implementation Tickets
+### Sprint 662-681 Candidate Implementation Tickets
 
-- [x] **S642-01 — Package plan.** Define outside-app feedback as manual, anonymized, and outside saved plans.
-- [x] **S644-01 — Privacy checklist.** Document anonymization and no-plan-file collection boundaries.
-- [x] **S647-01 — Evidence worksheet.** Add fields for clarity, trust, confusion, and follow-up category.
-- [x] **S652-01 — Synthesis rubric.** Separate wording cleanup, organization cleanup, evidence cleanup, and not-ready signals.
-- [x] **S661-01 — Closeout docs.** Confirm no feedback was collected and annual sequencing remains deferred.
+- [x] **S663-01 — Summary-first rendering.** Render only current summary, feedback posture, top blockers, slimming plan, and handoff.
+- [x] **S665-01 — Structure guard.** Update UI structure guards for the slimmer panel.
+- [x] **S672-01 — Stale chunk copy.** Convert dynamic import chunk failures into a plain reload message.
+- [x] **S673-01 — Chunk guard.** Add structure coverage for stale chunk copy.
+- [x] **S681-01 — Closeout docs.** Confirm annual sequencing, feedback capture, and UI overhaul remain deferred.
 
-### Sprint 642-661 Definition Of Done
+### Sprint 662-681 Definition Of Done
 
-- Feedback collection remains outside the app.
-- Reviewer notes remain anonymized and manual.
-- No `.plan.json` files are created or persisted.
+- Normal Overview and compact Details remain unchanged.
+- The hidden research panel is slimmer and summary-first.
+- Deeper readiness packet data remains runtime-only and covered by tests/docs.
+- Stale chunk errors use calm reload copy.
 - Annual account-level sequencing remains deferred.
-- UI overhaul remains deferred.
+- In-app feedback capture and UI overhaul remain deferred.
 - Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
 - Existing tests and probes are preserved.
 
 ### Historical Definition Of Done Coverage
@@ -125,6 +127,30 @@ Sprint 661 checkpoint doc: [`docs/sprint_661_outside_feedback_package_closeout.m
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 681: Readiness Slimming Closeout
+
+**Complete 2026-05-28.** Closed the readiness-slimming package with summary-first hidden research rendering, stale chunk reload copy, preserved runtime packet data, and deferred annual sequencing.
+
+Sprint 681 checkpoint doc: [`docs/sprint_681_readiness_slimming_closeout.md`](docs/sprint_681_readiness_slimming_closeout.md).
+
+### Sprint 676: Third Batch Checkpoint
+
+**Complete 2026-05-28.** Added stale dynamic chunk reload copy and kept deploy resilience small.
+
+Sprint 676 checkpoint doc: [`docs/sprint_676_third_batch_checkpoint.md`](docs/sprint_676_third_batch_checkpoint.md).
+
+### Sprint 671: Second Slimming Batch Checkpoint
+
+**Complete 2026-05-28.** Documented visible readiness inventory, held duplicated subsections, blocker policy, and feedback-waiting state.
+
+Sprint 671 checkpoint doc: [`docs/sprint_671_second_slimming_batch_checkpoint.md`](docs/sprint_671_second_slimming_batch_checkpoint.md).
+
+### Sprint 666: First Slimming Batch Checkpoint
+
+**Complete 2026-05-28.** Slimmed the hidden annual sequencing readiness research panel while preserving runtime readiness data.
+
+Sprint 666 checkpoint doc: [`docs/sprint_666_first_slimming_batch_checkpoint.md`](docs/sprint_666_first_slimming_batch_checkpoint.md).
 
 ### Sprint 661: Outside Feedback Package Closeout
 
