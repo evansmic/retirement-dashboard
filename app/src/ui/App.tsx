@@ -233,13 +233,18 @@ const SHOW_OPTION_RESEARCH_PANELS = false;
 const SHOW_SCENARIO_RESEARCH_PANELS = false;
 const SHOW_TAX_RESEARCH_PANELS = false;
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
+const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
 function previewErrorMessage(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err || '');
   if (/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(message)) {
-    return 'A new version of the planner is available. Refresh this page, then open Results again.';
+    return STALE_PREVIEW_ERROR_MESSAGE;
   }
   return message || 'Could not run preview calculation.';
+}
+
+function isStalePreviewError(message: string): boolean {
+  return message === STALE_PREVIEW_ERROR_MESSAGE;
 }
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
@@ -1389,6 +1394,22 @@ function StartPanel({
         </div>
       </div>
     </section>
+  );
+}
+
+function BridgeErrorNotice({ message }: { message: string }) {
+  if (!message) return null;
+  const canRefresh = isStalePreviewError(message);
+  return (
+    <div className="validation-panel error-panel" role="alert">
+      <strong>{canRefresh ? 'Refresh needed' : 'Results could not update'}</strong>
+      <span>{message}</span>
+      {canRefresh ? (
+        <button className="ghost" type="button" onClick={() => window.location.reload()}>
+          Refresh page
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -2792,7 +2813,7 @@ function ReviewPanel({
       </div>
       <ReviewSummary plan={plan} />
       {validation ? <ValidationPanel validation={validation} /> : null}
-      {bridgeError ? <p className="error">{bridgeError}</p> : null}
+      <BridgeErrorNotice message={bridgeError} />
       <div className="review-links">
         {intakeSteps.slice(0, -1).map((step) => (
           <button className="text-button" key={step.id} type="button" onClick={() => onStep(step.id)}>
@@ -3342,7 +3363,7 @@ function ResultsHandoffPanel({
           </div>
         ) : null}
         {validation ? <ValidationPanel validation={validation} /> : null}
-        {bridgeError ? <p className="error">{bridgeError}</p> : null}
+        <BridgeErrorNotice message={bridgeError} />
         <div className="actions">
           <a
             className={`button ${hasBlockers ? 'disabled-link' : ''}`}

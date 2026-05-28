@@ -66,7 +66,10 @@ describe('Results overview structure', () => {
 
   it('shows a plain reload message for stale deployed chunks', () => {
     expect(appSource).toContain('previewErrorMessage');
+    expect(appSource).toContain('BridgeErrorNotice');
+    expect(appSource).toContain('role="alert"');
     expect(appSource).toContain('A new version of the planner is available. Refresh this page, then open Results again.');
+    expect(appSource).toContain('Refresh page');
     expect(appSource).toContain('Failed to fetch dynamically imported module');
   });
 

@@ -2810,6 +2810,11 @@ button.secondary,
   background: #f1f7f3;
 }
 
+.validation-panel.error-panel {
+  border-color: #e9a7a7;
+  background: #fff5f5;
+}
+
 .validation-panel strong {
   display: block;
   margin-bottom: 8px;

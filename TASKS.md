@@ -4,37 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 681: Readiness Slimming Closeout
+## Latest Sprint — Sprint 701: Reload Recovery Closeout
 
 **Status:** Complete 2026-05-28.
 
-Goal: slim the hidden annual sequencing readiness research panel while outside-app feedback is pending, and improve stale deploy chunk recovery.
+Goal: make stale deploy chunk recovery clearer and easier to use while outside-app feedback is pending.
 
 Non-scope: annual withdrawal overrides, account-by-account instructions, exact tax-bracket optimization, Monte Carlo-in-loop search, saved optimizer output, saved plan schema changes, engine output schema changes, cloud accounts, advisor tooling, broad visual redesign, or report migration.
 
-Sprint 681 checkpoint doc: [`docs/sprint_681_readiness_slimming_closeout.md`](docs/sprint_681_readiness_slimming_closeout.md).
+Sprint 701 checkpoint doc: [`docs/sprint_701_reload_recovery_closeout.md`](docs/sprint_701_reload_recovery_closeout.md).
 
-### Sprint 662-681 Planned Path
+### Sprint 682-701 Planned Path
 
-- **S662-S666 — First slimming batch.** Slim the hidden research panel to summary-first rendering while preserving runtime packet data.
-- **S667-S671 — Inventory and holds.** Document visible sections, held subsections, blocker policy, and feedback-waiting state.
-- **S672-S676 — Deploy resilience.** Add stale dynamic chunk reload copy and structure guard coverage.
-- **S677-S681 — Closeout.** Review boundaries, set verification, keep feedback path active, recommend next package, and close.
+- **S682-S686 — Refresh action.** Add stale-version refresh affordance, notice styling, guard coverage, and first checkpoint.
+- **S687-S691 — Alert and boundaries.** Add alert semantics, keep generic errors separate, reconfirm no infrastructure expansion, and second checkpoint.
+- **S692-S696 — Reviewer guidance.** Add reviewer refresh guidance, manual QA, copy boundaries, no-persistence posture, and third checkpoint.
+- **S697-S701 — Closeout.** Review boundaries, set verification, keep feedback handoff clear, recommend next package, and close.
 
-### Sprint 662-681 Candidate Implementation Tickets
+### Sprint 682-701 Candidate Implementation Tickets
 
-- [x] **S663-01 — Summary-first rendering.** Render only current summary, feedback posture, top blockers, slimming plan, and handoff.
-- [x] **S665-01 — Structure guard.** Update UI structure guards for the slimmer panel.
-- [x] **S672-01 — Stale chunk copy.** Convert dynamic import chunk failures into a plain reload message.
-- [x] **S673-01 — Chunk guard.** Add structure coverage for stale chunk copy.
-- [x] **S681-01 — Closeout docs.** Confirm annual sequencing, feedback capture, and UI overhaul remain deferred.
+- [x] **S683-01 — Refresh action.** Add a Refresh page button for stale deployed chunks.
+- [x] **S684-01 — Notice style.** Use existing validation-panel styling with a restrained error variant.
+- [x] **S687-01 — Alert notice.** Add alert semantics to the bridge error notice.
+- [x] **S688-01 — Guard coverage.** Update structure coverage for reload notice behavior.
+- [x] **S701-01 — Closeout docs.** Confirm recovery remains local, small, and non-persistent.
 
-### Sprint 662-681 Definition Of Done
+### Sprint 682-701 Definition Of Done
 
-- Normal Overview and compact Details remain unchanged.
-- The hidden research panel is slimmer and summary-first.
-- Deeper readiness packet data remains runtime-only and covered by tests/docs.
-- Stale chunk errors use calm reload copy.
+- Stale chunk errors use calm reload copy and a refresh button.
+- Generic preview errors do not show the refresh action.
+- Bridge error notice uses alert semantics.
+- Recovery does not add persistence, telemetry, service workers, accounts, or cloud services.
 - Annual account-level sequencing remains deferred.
 - In-app feedback capture and UI overhaul remain deferred.
 - Saved plan schema and engine output schema remain unchanged.
@@ -127,6 +127,30 @@ Sprint 681 checkpoint doc: [`docs/sprint_681_readiness_slimming_closeout.md`](do
 - Verification passes and no private `.plan.json` files are created.
 
 ## Completed Sprints
+
+### Sprint 701: Reload Recovery Closeout
+
+**Complete 2026-05-28.** Closed the deploy-recovery package with a stale-version refresh button, alert notice semantics, focused structure coverage, and no persistence or infrastructure expansion.
+
+Sprint 701 checkpoint doc: [`docs/sprint_701_reload_recovery_closeout.md`](docs/sprint_701_reload_recovery_closeout.md).
+
+### Sprint 696: Third Recovery Batch Checkpoint
+
+**Complete 2026-05-28.** Added reviewer refresh guidance, manual QA notes, recovery copy boundaries, and no-persistence posture.
+
+Sprint 696 checkpoint doc: [`docs/sprint_696_third_recovery_batch_checkpoint.md`](docs/sprint_696_third_recovery_batch_checkpoint.md).
+
+### Sprint 691: Second Recovery Batch Checkpoint
+
+**Complete 2026-05-28.** Added alert semantics to the bridge error notice and preserved the stale-version-only refresh path.
+
+Sprint 691 checkpoint doc: [`docs/sprint_691_second_recovery_batch_checkpoint.md`](docs/sprint_691_second_recovery_batch_checkpoint.md).
+
+### Sprint 686: First Recovery Batch Checkpoint
+
+**Complete 2026-05-28.** Added the stale-version refresh affordance, restrained notice styling, and focused structure coverage.
+
+Sprint 686 checkpoint doc: [`docs/sprint_686_first_recovery_batch_checkpoint.md`](docs/sprint_686_first_recovery_batch_checkpoint.md).
 
 ### Sprint 681: Readiness Slimming Closeout
 
