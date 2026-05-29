@@ -6,6 +6,9 @@ import {
   futureFixtureSpecificationIds,
   futureImplementationStepIds,
   futureOptimizerReadinessIds,
+  futureOptimizerContractItemIds,
+  futureRollbackReleaseStopItems,
+  futureTestOnlyFixtureShapeIds,
   futurePlanFormatDraft
 } from './futurePlanFormat';
 
@@ -107,6 +110,54 @@ describe('future plan format draft', () => {
     );
     expect(futurePlanFormatDraft.accountOptimizerReadiness.find((item) => item.id === 'annualAccountSequencing')?.status).toBe(
       'deferred-until-sequencing'
+    );
+  });
+
+  it('requires rollback and release evidence before the reset ships', () => {
+    expect(futurePlanFormatDraft.rollbackReleaseChecklist.map((item) => item.id)).toEqual([
+      'rollbackBuild',
+      'testerFreshStartNotice',
+      'importBlockSmoke',
+      'newFormatSmoke',
+      'postReleaseWatch'
+    ]);
+    expect(futureRollbackReleaseStopItems().map((item) => item.id)).toEqual([
+      'rollbackBuild',
+      'testerFreshStartNotice',
+      'importBlockSmoke',
+      'newFormatSmoke'
+    ]);
+    expect(futurePlanFormatDraft.rollbackReleaseChecklist.find((item) => item.id === 'testerFreshStartNotice')?.requiredEvidence).toContain(
+      'No request to send private plan files'
+    );
+  });
+
+  it('defines test-only fixture shapes without saving calculated answers', () => {
+    expect(futureTestOnlyFixtureShapeIds()).toEqual([
+      'futureMinimumFloorPlan',
+      'legacyPreviewDesiredSpendPayload',
+      'unsupportedFuturePlanFile'
+    ]);
+    expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'futureMinimumFloorPlan')?.forbiddenKeys).toContain(
+      'confidentMonthlyAfterTaxSpend'
+    );
+    expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'legacyPreviewDesiredSpendPayload')?.expectedImportResult).toBe(
+      'block'
+    );
+  });
+
+  it('defines optimizer contract readiness without account instructions or saved outputs', () => {
+    expect(futureOptimizerContractItemIds()).toEqual([
+      'floorInputs',
+      'capacityRuntimeOutput',
+      'fundingTraceRuntimeOutput',
+      'reviewBoundary'
+    ]);
+    expect(futurePlanFormatDraft.optimizerContractReadiness.find((item) => item.id === 'capacityRuntimeOutput')?.mustExclude).toContain(
+      'saved output field'
+    );
+    expect(futurePlanFormatDraft.optimizerContractReadiness.find((item) => item.id === 'fundingTraceRuntimeOutput')?.mustExclude).toContain(
+      'annual account-by-account instructions'
     );
   });
 });

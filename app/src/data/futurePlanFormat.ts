@@ -17,6 +17,9 @@ export type FuturePlanFormatDraft = {
   oldPreviewImportBehavior: 'block';
   oldPreviewImportMessage: string;
   implementationChecklist: FutureImplementationStep[];
+  rollbackReleaseChecklist: FutureRollbackReleaseItem[];
+  testOnlyFixtureShapes: FutureTestOnlyFixtureShape[];
+  optimizerContractReadiness: FutureOptimizerContractItem[];
   fixtureSpecifications: FutureFixtureSpecification[];
   accountOptimizerReadiness: FutureAccountOptimizerReadinessItem[];
   importAcceptanceRules: FutureImportAcceptanceRule[];
@@ -31,6 +34,31 @@ export type FutureImplementationStep = {
   label: string;
   requiredBeforeNext: string[];
   rollback: string;
+};
+
+export type FutureRollbackReleaseItem = {
+  id: string;
+  stage: 'before-release' | 'during-release' | 'after-release';
+  label: string;
+  requiredEvidence: string[];
+  stopIfMissing: boolean;
+};
+
+export type FutureTestOnlyFixtureShape = {
+  id: string;
+  intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format';
+  wrapper: 'future-plan-file' | 'legacy-preview-payload' | 'unsupported-future-file';
+  requiredKeys: string[];
+  forbiddenKeys: string[];
+  expectedImportResult: 'accept' | 'block';
+};
+
+export type FutureOptimizerContractItem = {
+  id: string;
+  contractPart: 'input' | 'runtime-output' | 'review-boundary';
+  label: string;
+  mustInclude: string[];
+  mustExclude: string[];
 };
 
 export type FutureFixtureSpecification = {
@@ -111,6 +139,99 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       label: 'Release the reset only after tester fresh-start instructions are ready',
       requiredBeforeNext: ['Tester instructions updated', 'Old-file block copy visible', 'Rollback build identified'],
       rollback: 'Deploy the prior v2-compatible build.'
+    }
+  ],
+  rollbackReleaseChecklist: [
+    {
+      id: 'rollbackBuild',
+      stage: 'before-release',
+      label: 'Identify the prior v2-compatible build',
+      requiredEvidence: ['Known commit or deployment before reset wiring', 'Verification record for prior build', 'Clear instruction for returning to prior build'],
+      stopIfMissing: true
+    },
+    {
+      id: 'testerFreshStartNotice',
+      stage: 'before-release',
+      label: 'Prepare tester fresh-start notice',
+      requiredEvidence: ['Tester instructions say old preview files are disposable', 'Block message is included', 'No request to send private plan files'],
+      stopIfMissing: true
+    },
+    {
+      id: 'importBlockSmoke',
+      stage: 'during-release',
+      label: 'Smoke test old-preview import blocking',
+      requiredEvidence: ['Old-preview fixture is blocked', 'No partial plan state loads', 'Current plan remains usable after failed import'],
+      stopIfMissing: true
+    },
+    {
+      id: 'newFormatSmoke',
+      stage: 'during-release',
+      label: 'Smoke test new-format import acceptance',
+      requiredEvidence: ['New-format fixture opens', 'Minimum expense field is retained', 'Capacity answer is calculated at runtime'],
+      stopIfMissing: true
+    },
+    {
+      id: 'postReleaseWatch',
+      stage: 'after-release',
+      label: 'Watch tester confusion after release',
+      requiredEvidence: ['Feedback channel ready', 'Old-file confusion notes captured outside app', 'Rollback decision owner identified'],
+      stopIfMissing: false
+    }
+  ],
+  testOnlyFixtureShapes: [
+    {
+      id: 'futureMinimumFloorPlan',
+      intent: 'accepted-new-format',
+      wrapper: 'future-plan-file',
+      requiredKeys: ['schemaVersion', 'minimumMonthlyExpensesExMortgage', 'earlySpendingChangeAge', 'laterSpendingChangeAge'],
+      forbiddenKeys: ['gogo', 'slowgo', 'nogo', 'confidentMonthlyAfterTaxSpend'],
+      expectedImportResult: 'accept'
+    },
+    {
+      id: 'legacyPreviewDesiredSpendPayload',
+      intent: 'blocked-old-preview',
+      wrapper: 'legacy-preview-payload',
+      requiredKeys: ['schemaVersion', 'spending.gogo', 'spending.slowgo', 'spending.nogo'],
+      forbiddenKeys: ['minimumMonthlyExpensesExMortgage'],
+      expectedImportResult: 'block'
+    },
+    {
+      id: 'unsupportedFuturePlanFile',
+      intent: 'blocked-future-format',
+      wrapper: 'unsupported-future-file',
+      requiredKeys: ['schemaVersion', 'futureOnlyField'],
+      forbiddenKeys: ['silentlyDroppedFieldsAccepted'],
+      expectedImportResult: 'block'
+    }
+  ],
+  optimizerContractReadiness: [
+    {
+      id: 'floorInputs',
+      contractPart: 'input',
+      label: 'Minimum expense floor inputs',
+      mustInclude: ['minimum monthly expenses excluding mortgage', 'mortgage payment from Debts', 'household tax assumptions'],
+      mustExclude: ['old desired-spending fields as floor', 'calculated capacity as input']
+    },
+    {
+      id: 'capacityRuntimeOutput',
+      contractPart: 'runtime-output',
+      label: 'Confident monthly after-tax capacity output',
+      mustInclude: ['monthly after-tax amount', 'today-dollar framing', 'confidence or review status'],
+      mustExclude: ['guaranteed safe-spend language', 'saved output field']
+    },
+    {
+      id: 'fundingTraceRuntimeOutput',
+      contractPart: 'runtime-output',
+      label: 'Funding trace output',
+      mustInclude: ['income sources', 'account groups', 'tax', 'cash wedge or other inflows when present'],
+      mustExclude: ['annual account-by-account instructions', 'personalized withdrawal advice']
+    },
+    {
+      id: 'reviewBoundary',
+      contractPart: 'review-boundary',
+      label: 'Review-oriented optimizer boundary',
+      mustInclude: ['plain review actions', 'estate and survivor caveats', 'tax caveats'],
+      mustExclude: ['automatic saved changes', 'advisor workflow', 'cloud account requirement']
     }
   ],
   fixtureSpecifications: [
@@ -317,6 +438,18 @@ export function futureBlockedImportRules(draft = futurePlanFormatDraft): FutureI
 
 export function futureImplementationStepIds(draft = futurePlanFormatDraft): string[] {
   return draft.implementationChecklist.map((step) => step.id);
+}
+
+export function futureRollbackReleaseStopItems(draft = futurePlanFormatDraft): FutureRollbackReleaseItem[] {
+  return draft.rollbackReleaseChecklist.filter((item) => item.stopIfMissing);
+}
+
+export function futureTestOnlyFixtureShapeIds(draft = futurePlanFormatDraft): string[] {
+  return draft.testOnlyFixtureShapes.map((shape) => shape.id);
+}
+
+export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {
+  return draft.optimizerContractReadiness.map((item) => item.id);
 }
 
 export function futureFixtureSpecificationIds(draft = futurePlanFormatDraft): string[] {
