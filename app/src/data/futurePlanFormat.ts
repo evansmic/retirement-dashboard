@@ -23,6 +23,9 @@ export type FuturePlanFormatDraft = {
   fixtureSpecifications: FutureFixtureSpecification[];
   accountOptimizerReadiness: FutureAccountOptimizerReadinessItem[];
   importAcceptanceRules: FutureImportAcceptanceRule[];
+  rawPayloadPolicy: FutureRawPayloadPolicy;
+  fixtureValidationHelpers: FutureFixtureValidationHelper[];
+  capacityStatusReadiness: FutureCapacityStatusReadiness[];
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
   boundaries: string[];
@@ -82,6 +85,30 @@ export type FutureImportAcceptanceRule = {
   appliesTo: string;
   message?: string;
   reason: string;
+};
+
+export type FutureRawPayloadPolicy = {
+  decision: 'block-raw-payloads-after-reset';
+  message: string;
+  rationale: string[];
+  allowed: string[];
+  blocked: string[];
+};
+
+export type FutureFixtureValidationHelper = {
+  id: string;
+  validates: string;
+  mode: 'test-only';
+  checks: string[];
+  mustNotDo: string[];
+};
+
+export type FutureCapacityStatusReadiness = {
+  id: string;
+  label: string;
+  meaning: string;
+  showWhen: string[];
+  mustAvoid: string[];
 };
 
 export type FutureExampleRequirement = {
@@ -313,9 +340,74 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
     },
     {
       id: 'rawPayload',
-      decision: 'defer',
+      decision: 'block',
       appliesTo: 'Raw unwrapped JSON payloads',
-      reason: 'The reset should decide whether only wrapped local plan files are accepted.'
+      message: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.',
+      reason: 'After the reset, only wrapped local plan files should be accepted so ambiguous raw payloads do not partially load.'
+    }
+  ],
+  rawPayloadPolicy: {
+    decision: 'block-raw-payloads-after-reset',
+    message: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.',
+    rationale: [
+      'Raw JSON files can be mistaken for older preview payloads.',
+      'Wrapped plan files give the loader a clear file type and version boundary.',
+      'Blocking raw payloads reduces the risk of partially loading unsupported fields.'
+    ],
+    allowed: ['Wrapped future clean-format plan files'],
+    blocked: ['Raw unwrapped JSON payloads', 'Old phased-spending preview payloads', 'Unknown future raw payloads']
+  },
+  fixtureValidationHelpers: [
+    {
+      id: 'assertRequiredKeys',
+      validates: 'required fixture keys',
+      mode: 'test-only',
+      checks: ['all required keys are present', 'nested keys can be checked by path'],
+      mustNotDo: ['normalize missing fields', 'load the fixture into app state']
+    },
+    {
+      id: 'assertForbiddenKeys',
+      validates: 'forbidden fixture keys',
+      mode: 'test-only',
+      checks: ['calculated answers are absent', 'old phased-spending keys are absent from new-format fixtures'],
+      mustNotDo: ['delete forbidden keys automatically', 'treat forbidden keys as warnings only']
+    },
+    {
+      id: 'assertExpectedImportResult',
+      validates: 'planned accept or block result',
+      mode: 'test-only',
+      checks: ['accepted fixtures map to accept', 'blocked fixtures map to block', 'block messages remain plain'],
+      mustNotDo: ['wire the production loader', 'change current import behavior']
+    }
+  ],
+  capacityStatusReadiness: [
+    {
+      id: 'covered',
+      label: 'Floor appears covered',
+      meaning: 'The plan appears able to cover minimum expenses under the modelled assumptions.',
+      showWhen: ['minimum floor is covered', 'capacity estimate is available', 'no immediate shortfall is visible'],
+      mustAvoid: ['guaranteed language', 'safe-to-spend framing']
+    },
+    {
+      id: 'tight',
+      label: 'Floor looks tight',
+      meaning: 'The plan may cover minimum expenses, but small changes could matter.',
+      showWhen: ['room above floor is limited', 'tax or survivor caveats matter', 'spending path assumptions are sensitive'],
+      mustAvoid: ['alarmist language', 'single-option pressure']
+    },
+    {
+      id: 'gap',
+      label: 'Minimum expenses need review',
+      meaning: 'The plan does not appear to cover the minimum expense floor through the projection.',
+      showWhen: ['minimum floor has a gap', 'capacity is below floor', 'shortfall appears before plan end'],
+      mustAvoid: ['failure language', 'automatic recommendation to cut spending']
+    },
+    {
+      id: 'cannotTell',
+      label: 'Needs more inputs',
+      meaning: 'The app does not have enough information to estimate confident monthly capacity.',
+      showWhen: ['missing minimum expense floor', 'missing core asset or income data', 'projection cannot be trusted'],
+      mustAvoid: ['invented capacity', 'false precision']
     }
   ],
   sections: [
@@ -436,6 +528,10 @@ export function futureBlockedImportRules(draft = futurePlanFormatDraft): FutureI
   return draft.importAcceptanceRules.filter((rule) => rule.decision === 'block');
 }
 
+export function futureAcceptedImportRuleIds(draft = futurePlanFormatDraft): string[] {
+  return draft.importAcceptanceRules.filter((rule) => rule.decision === 'accept').map((rule) => rule.id);
+}
+
 export function futureImplementationStepIds(draft = futurePlanFormatDraft): string[] {
   return draft.implementationChecklist.map((step) => step.id);
 }
@@ -446,6 +542,14 @@ export function futureRollbackReleaseStopItems(draft = futurePlanFormatDraft): F
 
 export function futureTestOnlyFixtureShapeIds(draft = futurePlanFormatDraft): string[] {
   return draft.testOnlyFixtureShapes.map((shape) => shape.id);
+}
+
+export function futureFixtureValidationHelperIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fixtureValidationHelpers.map((helper) => helper.id);
+}
+
+export function futureCapacityStatusIds(draft = futurePlanFormatDraft): string[] {
+  return draft.capacityStatusReadiness.map((status) => status.id);
 }
 
 export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {

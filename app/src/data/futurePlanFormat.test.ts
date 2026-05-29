@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   flattenFuturePlanFormatFields,
+  futureAcceptedImportRuleIds,
   futureBlockedImportRules,
+  futureCapacityStatusIds,
   futureExampleRequirementIds,
+  futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureImplementationStepIds,
   futureOptimizerReadinessIds,
@@ -59,11 +62,12 @@ describe('future plan format draft', () => {
 
   it('sets future import acceptance to block old preview and unknown future formats', () => {
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'newFormat')?.decision).toBe('accept');
-    expect(futureBlockedImportRules().map((rule) => rule.id)).toEqual(['oldPreview', 'futureUnknown']);
+    expect(futureBlockedImportRules().map((rule) => rule.id)).toEqual(['oldPreview', 'futureUnknown', 'rawPayload']);
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'oldPreview')?.message).toBe(
       'This plan was created with an earlier preview format. Please start a new plan.'
     );
-    expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload')?.decision).toBe('defer');
+    expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload')?.decision).toBe('block');
+    expect(futureAcceptedImportRuleIds()).toEqual(['newFormat']);
   });
 
   it('requires a staged implementation checklist before the schema reset is wired', () => {
@@ -159,5 +163,31 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.optimizerContractReadiness.find((item) => item.id === 'fundingTraceRuntimeOutput')?.mustExclude).toContain(
       'annual account-by-account instructions'
     );
+  });
+
+  it('decides future raw payload policy as wrapped-file only', () => {
+    expect(futurePlanFormatDraft.rawPayloadPolicy.decision).toBe('block-raw-payloads-after-reset');
+    expect(futurePlanFormatDraft.rawPayloadPolicy.allowed).toEqual(['Wrapped future clean-format plan files']);
+    expect(futurePlanFormatDraft.rawPayloadPolicy.blocked).toContain('Raw unwrapped JSON payloads');
+    expect(futurePlanFormatDraft.rawPayloadPolicy.message).toBe(
+      'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.'
+    );
+  });
+
+  it('plans test-only fixture validation helpers without wiring imports', () => {
+    expect(futureFixtureValidationHelperIds()).toEqual(['assertRequiredKeys', 'assertForbiddenKeys', 'assertExpectedImportResult']);
+    expect(futurePlanFormatDraft.fixtureValidationHelpers.every((helper) => helper.mode === 'test-only')).toBe(true);
+    expect(futurePlanFormatDraft.fixtureValidationHelpers.find((helper) => helper.id === 'assertExpectedImportResult')?.mustNotDo).toContain(
+      'wire the production loader'
+    );
+  });
+
+  it('defines capacity statuses without guarantees or pressure language', () => {
+    expect(futureCapacityStatusIds()).toEqual(['covered', 'tight', 'gap', 'cannotTell']);
+    expect(futurePlanFormatDraft.capacityStatusReadiness.find((status) => status.id === 'covered')?.mustAvoid).toContain('guaranteed language');
+    expect(futurePlanFormatDraft.capacityStatusReadiness.find((status) => status.id === 'gap')?.mustAvoid).toContain(
+      'automatic recommendation to cut spending'
+    );
+    expect(futurePlanFormatDraft.capacityStatusReadiness.find((status) => status.id === 'cannotTell')?.mustAvoid).toContain('false precision');
   });
 });
