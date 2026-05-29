@@ -38,6 +38,7 @@ import {
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingCapacitySummary,
+  selectSpendingPathBridgeSummary,
   selectSpendingStressSummary,
   selectSpendingTaxChartSeries,
   selectStressIndicatorRows,
@@ -523,6 +524,42 @@ describe('result selectors', () => {
     expect(coverage.detail).toContain('working longer');
     expect(coverage.detail).toContain('downsizing');
     expect(coverage.detail).toContain('saving more');
+  });
+
+  it('summarizes the current spending path as runtime-only bridge evidence', () => {
+    const path = selectSpendingPathBridgeSummary(planFixture);
+
+    expect(path).toMatchObject({
+      status: 'ready',
+      breakpointAges: {
+        earlyToLater: 75,
+        laterToLateLife: 85
+      }
+    });
+    expect(path.phases.map((phase) => phase.id)).toEqual(['early', 'later', 'lateLife']);
+    expect(path.phases.find((phase) => phase.id === 'early')).toMatchObject({
+      annualSpending: 70000,
+      monthlySpending: 70000 / 12,
+      endsAtAge: 75
+    });
+    expect(path.phases.find((phase) => phase.id === 'later')).toMatchObject({
+      startsAtAge: 75,
+      endsAtAge: 85
+    });
+    expect(path.boundary).toContain('No saved field');
+    expect(path.boundary).toContain('default reduction rate');
+    expect(Object.keys(planFixture)).not.toContain('spendingPathBridge');
+  });
+
+  it('holds the spending path bridge when breakpoint ages are missing or out of order', () => {
+    const path = selectSpendingPathBridgeSummary({
+      ...planFixture,
+      spending: { ...planFixture.spending, gogoEnd: 85, slowgoEnd: 75 }
+    });
+
+    expect(path.status).toBe('cannotTell');
+    expect(path.headline).toContain('breakpoint ages');
+    expect(path.detail).toContain('provide defaults');
   });
 
   it('summarizes fragile spending stress when lower spending repairs a shortfall', () => {

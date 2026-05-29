@@ -749,6 +749,29 @@ export type MinimumExpenseCoverageSummary = {
   boundary: string;
 };
 
+export type SpendingPathBridgePhase = {
+  id: 'early' | 'later' | 'lateLife';
+  label: string;
+  annualSpending: number;
+  monthlySpending: number;
+  startsAtAge: number | null;
+  endsAtAge: number | null;
+  note: string;
+};
+
+export type SpendingPathBridgeSummary = {
+  status: 'cannotTell' | 'ready';
+  label: string;
+  headline: string;
+  detail: string;
+  phases: SpendingPathBridgePhase[];
+  breakpointAges: {
+    earlyToLater: number | null;
+    laterToLateLife: number | null;
+  };
+  boundary: string;
+};
+
 export type EstateIntentStatus = 'cannotTell' | 'needsIntent' | 'taxReview' | 'survivorReview' | 'aligned';
 
 export type EstateIntentSummary = {
@@ -1394,6 +1417,68 @@ export function selectMinimumExpenseCoverageSummary(
     reviewOptions,
     boundary:
       'Bridge-only summary: current phased spending is used as a temporary minimum-expense fixture. No saved field or engine output is added.'
+  };
+}
+
+export function selectSpendingPathBridgeSummary(plan: V2PlanPayload | null | undefined): SpendingPathBridgeSummary {
+  const earlyAnnual = n(plan?.spending?.gogo);
+  const laterAnnual = n(plan?.spending?.slowgo);
+  const lateLifeAnnual = n(plan?.spending?.nogo);
+  const earlyToLater = n(plan?.spending?.gogoEnd) || null;
+  const laterToLateLife = n(plan?.spending?.slowgoEnd) || null;
+  const hasAnySpending = earlyAnnual > 0 || laterAnnual > 0 || lateLifeAnnual > 0;
+  const hasBreakpoints = Boolean(earlyToLater && laterToLateLife && laterToLateLife > earlyToLater);
+
+  const phases: SpendingPathBridgePhase[] = [
+    {
+      id: 'early',
+      label: 'Early retirement',
+      annualSpending: earlyAnnual,
+      monthlySpending: earlyAnnual / 12,
+      startsAtAge: null,
+      endsAtAge: earlyToLater,
+      note: 'Current bridge uses this as the first spending level and temporary floor fixture.'
+    },
+    {
+      id: 'later',
+      label: 'Later retirement',
+      annualSpending: laterAnnual,
+      monthlySpending: laterAnnual / 12,
+      startsAtAge: earlyToLater,
+      endsAtAge: laterToLateLife,
+      note: 'This lets the model reflect regular spending changing with age.'
+    },
+    {
+      id: 'lateLife',
+      label: 'Late-life',
+      annualSpending: lateLifeAnnual,
+      monthlySpending: lateLifeAnnual / 12,
+      startsAtAge: laterToLateLife,
+      endsAtAge: null,
+      note: 'Large care costs should stay separate from the normal spending path until explicitly modelled.'
+    }
+  ];
+
+  const status = hasAnySpending && hasBreakpoints ? 'ready' : 'cannotTell';
+
+  return {
+    status,
+    label: status === 'ready' ? 'Spending path bridge is ready' : 'Spending path bridge needs assumptions',
+    headline:
+      status === 'ready'
+        ? 'The current plan can explain the monthly answer with spending changing by age.'
+        : 'Add spending assumptions and realistic breakpoint ages before relying on the spending path.',
+    detail:
+      status === 'ready'
+        ? 'This is a bridge summary of the current phased spending assumptions. Future defaults should make this mostly automatic for users.'
+        : 'The future product should provide defaults, then let users adjust breakpoint ages and rerun.',
+    phases,
+    breakpointAges: {
+      earlyToLater,
+      laterToLateLife
+    },
+    boundary:
+      'Bridge-only summary: current phased spending fields are interpreted as a spending path for review. No saved field, default reduction rate, or engine output is added.'
   };
 }
 

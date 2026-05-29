@@ -26,7 +26,7 @@ Use at least one built-in example plan. If you have time, try three:
    - what the first thing to review should be.
 6. Open Details.
 7. Look for checkpoint, drawdown, tax, and optimizer-review sections.
-8. In Details, look for the minimum-expense bridge and write down whether it helps or confuses the spending answer.
+8. In Details, look for the minimum-expense bridge and spending-path bridge, then write down whether either helps or confuses the spending answer.
 9. Open Taxes and Household Resilience if the example includes a couple.
 10. Open Save / Export.
 11. Save an editable plan and open the printable report if available.
@@ -46,6 +46,8 @@ Use at least one built-in example plan. If you have time, try three:
 - If minimum expenses were not covered, which options would you expect to compare first?
 - Did the Details minimum-expense bridge help explain the relationship between a spending floor and monthly capacity?
 - Did the bridge wording make clear that this is temporary review evidence, not a saved input or instruction?
+- Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?
+- Did the spending-path bridge feel secondary enough, or did it add too much detail?
 
 ### Trust
 

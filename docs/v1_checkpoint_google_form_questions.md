@@ -100,52 +100,65 @@ Recommended description:
       - No
       - Not sure
 
-16. **Were the top review actions useful?**
+16. **Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?**
+    - Linear scale 1-5
+    - 1 = Confusing
+    - 5 = Helpful
+
+17. **Did the spending-path bridge feel secondary enough, or did it add too much detail?**
+    - Multiple choice
+    - Options:
+      - Secondary enough
+      - A little too much
+      - Too much detail
+      - Not sure
+
+18. **Were the top review actions useful?**
    - Linear scale 1-5
    - 1 = Not useful
    - 5 = Very useful
 
-17. **What, if anything, made the first screen feel too dense or too light?**
+19. **What, if anything, made the first screen feel too dense or too light?**
     - Paragraph
 
 ## Section 3: Trust And Safety
 
-18. **Overall trust after using the planner**
+20. **Overall trust after using the planner**
     - Linear scale 1-5
     - 1 = Low trust
     - 5 = High trust
 
-19. **Did anything sound like personalized financial advice?**
+21. **Did anything sound like personalized financial advice?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-20. **If yes or maybe, what wording or screen caused that reaction?**
+22. **If yes or maybe, what wording or screen caused that reaction?**
     - Paragraph
 
-21. **Did any number feel too precise for a long-term projection?**
+23. **Did any number feel too precise for a long-term projection?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-22. **What increased your trust most?**
+24. **What increased your trust most?**
     - Paragraph
 
-23. **What reduced your trust most?**
+25. **What reduced your trust most?**
     - Paragraph
 
 ## Section 4: Drawdown, Taxes, Benefits, And Couples
 
-24. **How understandable were the tax and benefit timing sections?**
+26. **How understandable were the tax and benefit timing sections?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
-25. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
+27. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
     - Multiple choice
     - Options:
       - Yes
@@ -153,14 +166,14 @@ Recommended description:
       - No
       - Not sure
 
-26. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
+28. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-27. **If you tested a couple plan, was survivor or pension-continuation information clear?**
+29. **If you tested a couple plan, was survivor or pension-continuation information clear?**
     - Multiple choice
     - Options:
       - Yes
@@ -168,55 +181,55 @@ Recommended description:
       - No
       - Not tested
 
-28. **Any Canadian planning concerns you noticed?**
+30. **Any Canadian planning concerns you noticed?**
     - Paragraph
     - Helper text: “CPP, OAS, RRIF/LIF, DB pensions, survivor assumptions, estate goals, home equity, tax timing, or eligibility.”
 
 ## Section 5: Save, Export, And Local-First Trust
 
-29. **Was the difference between saving an editable plan and opening a printable report clear?**
+31. **Was the difference between saving an editable plan and opening a printable report clear?**
     - Linear scale 1-5
     - 1 = Not clear
     - 5 = Very clear
 
-30. **Did local-first behavior feel trustworthy?**
+32. **Did local-first behavior feel trustworthy?**
     - Linear scale 1-5
     - 1 = Not trustworthy
     - 5 = Very trustworthy
 
-31. **What, if anything, would make saving/exporting feel safer?**
+33. **What, if anything, would make saving/exporting feel safer?**
     - Paragraph
 
 ## Section 6: Visual And UX Checkpoint
 
-32. **Visual polish today**
+34. **Visual polish today**
     - Linear scale 1-5
     - 1 = Very rough
     - 5 = Very polished
 
-33. **What visual or layout issues should be fixed before v1?**
+35. **What visual or layout issues should be fixed before v1?**
     - Paragraph
 
-34. **What visual or layout issues can wait for the later UX pass?**
+36. **What visual or layout issues can wait for the later UX pass?**
     - Paragraph
 
-35. **Were charts and tables easy to understand?**
+37. **Were charts and tables easy to understand?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
 ## Section 7: Priority Feedback
 
-36. **Top 3 things that increased trust**
+38. **Top 3 things that increased trust**
     - Paragraph
 
-37. **Top 3 things that reduced trust**
+39. **Top 3 things that reduced trust**
     - Paragraph
 
-38. **One thing you would fix before showing this to more people**
+40. **One thing you would fix before showing this to more people**
     - Paragraph
 
-39. **How should this feedback be classified overall?**
+41. **How should this feedback be classified overall?**
     - Multiple choice
     - Options:
       - Fix before v1

@@ -21,6 +21,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).toContain('<OverviewHighlightsPanel');
     expect(overviewBranch).not.toContain('<EstateIntentPanel');
     expect(overviewBranch).not.toContain('<MinimumExpenseCoveragePanel');
+    expect(overviewBranch).not.toContain('<SpendingPathBridgePanel');
     expect(overviewBranch).not.toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).not.toContain('<ResultsReadinessPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
@@ -33,6 +34,7 @@ describe('Results overview structure', () => {
 
     expect(detailsPanel).toContain('<EstateIntentPanel');
     expect(detailsPanel).toContain('<MinimumExpenseCoveragePanel');
+    expect(detailsPanel).toContain('<SpendingPathBridgePanel');
     expect(detailsPanel).toContain('<SourceStoryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
     expect(detailsPanel).toContain('<DecisionChecklistPanel');
@@ -866,5 +868,18 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('Minimum expense bridge');
     expect(appSource).toContain('minimumExpenseCoverage={minimumExpenseCoverage}');
     expect(resultSelectorsSource).toContain('No saved field or engine output is added');
+  });
+
+  it('keeps the spending-path bridge in Details without adding saved output', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+
+    expect(appSource).toContain('Spending path bridge');
+    expect(appSource).toContain('Checking spending path');
+    expect(appSource).toContain('spendingPathAgeRange');
+    expect(resultSelectorsSource).toContain('No saved field, default reduction rate, or engine output is added');
+    expect(overviewBranch).not.toContain('Spending path bridge');
+    expect(appSource).toContain('spendingPathBridge={spendingPathBridge}');
   });
 });

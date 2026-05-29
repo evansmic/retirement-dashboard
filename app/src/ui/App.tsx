@@ -56,6 +56,7 @@ import {
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
   selectSpendingCapacitySummary,
+  selectSpendingPathBridgeSummary,
   selectSpendingStressSummary,
   selectStressIndicatorRows,
   selectStressTestRows,
@@ -3086,6 +3087,7 @@ function ResultsHandoffPanel({
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
+  const spendingPathBridge = selectSpendingPathBridgeSummary(plan);
   const spendingStressSummary = selectSpendingStressSummary(result, spendingStress, plan);
   const drawdownReadiness = selectDrawdownReadinessSummary(result, plan);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
@@ -3257,6 +3259,7 @@ function ResultsHandoffPanel({
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             minimumExpenseCoverage={minimumExpenseCoverage}
+            spendingPathBridge={spendingPathBridge}
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
             scenarioComparisonRows={scenarioComparisonRows}
@@ -3791,6 +3794,56 @@ function MinimumExpenseCoveragePanel({
   );
 }
 
+function SpendingPathBridgePanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectSpendingPathBridgeSummary>;
+}) {
+  return (
+    <section className={`result-card spending-path-bridge-panel spending-path-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Spending path bridge</p>
+        <h3>{loading ? 'Checking spending path' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+
+      <div className="result-table-wrap">
+        <table className="result-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Monthly</th>
+              <th>Annual</th>
+              <th>Age range</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.phases.map((phase) => (
+              <tr key={phase.id}>
+                <td>{phase.label}</td>
+                <td>{formatMoney(phase.monthlySpending)}</td>
+                <td>{formatMoney(phase.annualSpending)}</td>
+                <td>{spendingPathAgeRange(phase.startsAtAge, phase.endsAtAge)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="table-note">{summary.boundary}</p>
+    </section>
+  );
+}
+
+function spendingPathAgeRange(startsAtAge: number | null, endsAtAge: number | null): string {
+  if (startsAtAge && endsAtAge) return `${startsAtAge}-${endsAtAge}`;
+  if (endsAtAge) return `Until ${endsAtAge}`;
+  if (startsAtAge) return `${startsAtAge}+`;
+  return 'Current start';
+}
+
 function DetailsResultsPanel({
   decisionChecklist,
   decisionDetailRows,
@@ -3861,6 +3914,7 @@ function DetailsResultsPanel({
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
   minimumExpenseCoverage,
+  spendingPathBridge,
   readinessSummary,
   scenarioAssumptionRows,
   scenarioComparisonRows,
@@ -3939,6 +3993,7 @@ function DetailsResultsPanel({
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
+  spendingPathBridge: ReturnType<typeof selectSpendingPathBridgeSummary>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
   scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
@@ -4032,6 +4087,7 @@ function DetailsResultsPanel({
       <PlanHealthPanel health={planHealth} loading={loading} />
       <EstateIntentPanel loading={loading} summary={estateIntent} />
       <MinimumExpenseCoveragePanel loading={loading} summary={minimumExpenseCoverage} />
+      <SpendingPathBridgePanel loading={loading} summary={spendingPathBridge} />
       <div className="result-section-label">Money Flow</div>
       <SourceStoryPanel story={sourceStory} />
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />

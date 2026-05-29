@@ -73,6 +73,13 @@ function createV1CheckpointFeedbackForm() {
     'No',
     'Not sure'
   ]);
+  addScale('Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?', 'Confusing', 'Helpful');
+  addChoice('Did the spending-path bridge feel secondary enough, or did it add too much detail?', [
+    'Secondary enough',
+    'A little too much',
+    'Too much detail',
+    'Not sure'
+  ]);
   addScale('Were the top review actions useful?', 'Not useful', 'Very useful');
   form.addParagraphTextItem().setTitle('What, if anything, made the first screen feel too dense or too light?');
 

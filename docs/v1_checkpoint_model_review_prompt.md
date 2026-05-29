@@ -16,6 +16,7 @@ Important boundaries:
 - Review whether the Details minimum-expense bridge helps explain floor coverage without feeling like a saved input, instruction, or new schema commitment.
 - Review whether the spending-path explainer makes it clear that normal age-based spending changes are modelled underneath one monthly answer.
 - Review whether spending breakpoint ages feel like optional assumptions to adjust and rerun, not required user expertise.
+- Review whether the Details spending-path bridge helps clarify the model, or whether it adds density before the final UI redesign.
 - Do not reward options that reduce lifestyle, delay retirement, or delay benefits unless the plan has a visible funding issue and the option materially helps.
 - Actual tax-aware drawdown execution is intended for v1, but it must remain conservative, explainable, review-oriented, and never presented as personalized financial advice.
 - Saved `.plan.json` files must not include optimizer output, checkpoint output, stress output, drawdown drafts, comparison output, or feedback output.
@@ -70,6 +71,7 @@ Answer:
 - Do breakpoint controls feel understandable and secondary?
 - Does the flow feel like the app estimates capacity from assets, or like the user must guess a desired spend?
 - Does the Details minimum-expense bridge help, or does it add confusion before the real minimum-expense input exists?
+- Does the Details spending-path bridge help explain spending changes with age while staying secondary to the monthly answer?
 - Are the top review actions useful and limited enough?
 - Is Overview too dense?
 
