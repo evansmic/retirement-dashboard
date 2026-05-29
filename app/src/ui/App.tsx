@@ -6430,9 +6430,9 @@ function PlanHealthPanel({
 function SourceStoryPanel({ story }: { story: ReturnType<typeof selectSourceReconciliationStory> }) {
   return (
     <section className="decision-panel">
-      <h3>Money-in / money-out check story{story.year ? ` (${story.year})` : ''}</h3>
+      <h3>Where the first-year spending comes from{story.year ? ` (${story.year})` : ''}</h3>
       <p>{story.headline}</p>
-      <div className="source-story-flow" aria-label="First-year money-in / money-out check flow">
+      <div className="source-story-flow" aria-label="First-year spending funding trace">
         {story.steps.map((step) => (
           <div className={`source-story-step source-story-${step.tone}`} key={step.id}>
             <span>{step.label}</span>
@@ -6440,6 +6440,7 @@ function SourceStoryPanel({ story }: { story: ReturnType<typeof selectSourceReco
           </div>
         ))}
       </div>
+      <p className="table-note">This is a first-year funding trace for review, not annual account-by-account withdrawal instructions.</p>
     </section>
   );
 }

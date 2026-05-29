@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
 const boundedOptimizerSource = readFileSync(new URL('../engine/boundedOptimizer.ts', import.meta.url), 'utf8');
+const resultSelectorsSource = readFileSync(new URL('../engine/resultSelectors.ts', import.meta.url), 'utf8');
 const stylesSource = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 
 describe('Results overview structure', () => {
@@ -812,5 +813,35 @@ describe('Results overview structure', () => {
     expect(appSource).not.toContain('Validation clear');
     expect(appSource).not.toContain('No blocking issues or warnings found in the current plan.');
     expect(appSource).not.toContain('<strong>Warnings</strong>');
+  });
+
+  it('keeps active spending copy oriented around assumptions and monthly capacity', () => {
+    const activeCopySources = [appSource, boundedOptimizerSource, resultSelectorsSource].join('\n');
+    const retiredPhrases = [
+      'spending target',
+      'spending targets',
+      'desired spending',
+      'desired spend',
+      'Go / slow / no-go',
+      'Retirement lifestyle spending',
+      'Go phase spending',
+      'Slow phase spending',
+      'No-go phase spending'
+    ];
+
+    expect(appSource).toContain('Estimated after-tax monthly spending');
+    expect(appSource).toContain('Regular spending assumptions');
+    expect(appSource).toContain('Early spending assumption');
+    expect(resultSelectorsSource).toContain('Minimum spending needs review');
+    retiredPhrases.forEach((phrase) => {
+      expect(activeCopySources).not.toContain(phrase);
+    });
+  });
+
+  it('frames funding sources as a trace instead of account instructions', () => {
+    expect(appSource).toContain('Where the first-year spending comes from');
+    expect(appSource).toContain('First-year spending funding trace');
+    expect(appSource).toContain('This is a first-year funding trace for review, not annual account-by-account withdrawal instructions.');
+    expect(appSource).toContain('It does not tell you which account to withdraw from');
   });
 });

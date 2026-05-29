@@ -48,7 +48,17 @@ function createV1CheckpointFeedbackForm() {
   addScale('Could you answer “Can I retire?” within 60 to 90 seconds?', 'No, not at all', 'Yes, clearly');
   form.addParagraphTextItem().setTitle('What did the first Results screen tell you in your own words?');
   addScale('How clear was the spending estimate?', 'Confusing', 'Clear and appropriately cautious');
+  addScale('Was the after-tax monthly spending number prominent enough?', 'Hard to find', 'Clearly visible');
   addChoice('Did spending language feel like a planning estimate rather than a guarantee?', ['Yes', 'Mostly', 'No', 'Not sure']);
+  addChoice('Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?', [
+    'Yes',
+    'Maybe',
+    'No',
+    'Not sure'
+  ]);
+  form.addParagraphTextItem()
+    .setTitle('If minimum expenses were not covered, which options would you expect to compare first?')
+    .setHelpText('Examples: lower expenses, work longer, downsize, save more, adjust benefit timing, review tax, revisit estate intent.');
   addScale('Were the top review actions useful?', 'Not useful', 'Very useful');
   form.addParagraphTextItem().setTitle('What, if anything, made the first screen feel too dense or too light?');
 

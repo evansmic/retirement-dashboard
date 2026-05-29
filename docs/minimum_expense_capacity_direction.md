@@ -18,6 +18,12 @@ Users should not need to guess a sustainable retirement lifestyle number before 
 - If the floor does not appear covered, show practical options to compare: lower expenses, work longer, downsize, save more, adjust benefit timing, revisit debt timing, or revisit estate intent.
 - Once account-level sequencing is ready, explain where the money appears to come from by account and year.
 
+## Funding Trace Direction
+
+The current app can show a first-year funding trace from income, withdrawals, cash funding, other inflows, and tax. That trace should answer "where does this year's spending appear to come from?" without presenting annual account-by-account instructions.
+
+The future account optimizer should extend this into a clearer year-by-year funding answer only after sequencing readiness is complete.
+
 ## Current Bridge
 
 The saved plan schema and engine output schema still use phased annual spending fields. Until a planned migration changes that contract, these fields should be framed as spending assumptions for modelling, not as a desired lifestyle target that the user is expected to know.
@@ -27,6 +33,7 @@ Near-term UI copy should:
 - Prefer after-tax monthly spending capacity over annual desired spend.
 - Avoid repeating "desired spend" or "spending target" as the primary answer.
 - Make shortfall states point to options to compare, not a single spending cut.
+- Describe current funding views as traces or review evidence, not instructions.
 - Keep all wording consumer-facing, calm, and non-advisory.
 
 ## Deferred Work

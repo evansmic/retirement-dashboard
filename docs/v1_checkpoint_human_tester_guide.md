@@ -21,7 +21,8 @@ Use at least one built-in example plan. If you have time, try three:
 5. Without opening detailed pages yet, write down:
    - whether you think the household can retire,
    - how confident the plan seems,
-   - what spending number you noticed,
+   - what monthly spending number you noticed,
+   - whether the spending number felt like something the app estimated or something the user had to guess,
    - what the first thing to review should be.
 6. Open Details.
 7. Look for checkpoint, drawdown, tax, and optimizer-review sections.
@@ -37,6 +38,9 @@ Use at least one built-in example plan. If you have time, try three:
 - Could you answer “Can I retire?” within 60 to 90 seconds?
 - Did anything feel too technical, too dense, or too confident?
 - Did the page make clear that spending numbers are planning estimates, not guarantees?
+- Did the monthly after-tax spending number feel prominent enough?
+- Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?
+- If minimum expenses were not covered, which options would you expect to compare first?
 
 ### Trust
 
@@ -52,6 +56,7 @@ Use at least one built-in example plan. If you have time, try three:
 - Were there too many items?
 - Did any important next step feel missing?
 - Did anything feel like the tool was pushing the user toward a choice too strongly?
+- If the plan showed a gap, would lower expenses, working longer, downsizing, saving more, benefit timing, or tax review feel like the right option set?
 
 ### Taxes, Benefits, And Drawdown
 

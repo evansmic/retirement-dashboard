@@ -11,6 +11,8 @@ Important boundaries:
 - Do not suggest cloud accounts, advisor workflows, province expansion, paid features, or broad redesign unless you clearly mark them as later.
 - Do not assume the optimizer should apply saved changes automatically.
 - Do not ask for guaranteed/safe-spend language.
+- Treat after-tax monthly spending capacity as the primary consumer answer. Flag places where the product still feels like it asks users to guess desired spending before the app estimates capacity.
+- Review whether a future minimum-monthly-expense input, excluding mortgage payments already entered in Debts, would make the flow clearer.
 - Do not reward options that reduce lifestyle, delay retirement, or delay benefits unless the plan has a visible funding issue and the option materially helps.
 - Actual tax-aware drawdown execution is intended for v1, but it must remain conservative, explainable, review-oriented, and never presented as personalized financial advice.
 - Saved `.plan.json` files must not include optimizer output, checkpoint output, stress output, drawdown drafts, comparison output, or feedback output.
@@ -59,7 +61,9 @@ Answer:
 
 - Can a non-expert quickly understand “Can I retire?”
 - Is the confidence/readiness language calm and non-advisory?
+- Is the after-tax monthly spending number prominent enough?
 - Is “today’s dollars” visible where spending is discussed?
+- Does the flow feel like the app estimates capacity from assets, or like the user must guess a desired spend?
 - Are the top review actions useful and limited enough?
 - Is Overview too dense?
 
@@ -69,7 +73,7 @@ Answer:
 
 - Does bounded drawdown execution/review remain conservative?
 - Does anything sound like account-by-account advice?
-- Are disruptive options held back unless they materially repair a visible issue?
+- Are disruptive options held back unless minimum expenses or visible funding appear strained?
 - Are estate goals and survivor implications respected?
 - Is any optimizer or drawdown output persisted?
 
