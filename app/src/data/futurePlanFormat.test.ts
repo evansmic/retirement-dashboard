@@ -10,6 +10,7 @@ import {
   futureCapacityStatusIds,
   futureExampleRequirementIds,
   futureExampleDataDraftIds,
+  futureFreshExampleRebuildPlanIds,
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureFundingTraceAccountGroupIds,
@@ -24,6 +25,7 @@ import {
   futureOptimizerReadinessIds,
   futureOptimizerContractItemIds,
   futureRollbackReleaseStopItems,
+  futureSchemaResetDecisionReadinessIds,
   futureTestOnlyFixtureShapeIds,
   futurePlanFormatDraft
 } from './futurePlanFormat';
@@ -146,6 +148,22 @@ describe('future plan format draft', () => {
     ]);
     expect(futurePlanFormatDraft.rollbackReleaseChecklist.find((item) => item.id === 'testerFreshStartNotice')?.requiredEvidence).toContain(
       'No request to send private plan files'
+    );
+  });
+
+  it('keeps the clean schema reset behind explicit decision evidence', () => {
+    expect(futureSchemaResetDecisionReadinessIds()).toEqual([
+      'fieldListFrozen',
+      'oldFileBlockAccepted',
+      'newExamplesReady',
+      'rollbackReleaseReady'
+    ]);
+    expect(futurePlanFormatDraft.schemaResetDecisionReadiness.every((item) => item.stopIfMissing)).toBe(true);
+    expect(futurePlanFormatDraft.schemaResetDecisionReadiness.find((item) => item.id === 'fieldListFrozen')?.requiredEvidence).toContain(
+      'Runtime answers remain outside saved plan inputs.'
+    );
+    expect(futurePlanFormatDraft.schemaResetDecisionReadiness.find((item) => item.id === 'oldFileBlockAccepted')?.mustAvoid).toContain(
+      'silent partial import'
     );
   });
 
@@ -301,6 +319,23 @@ describe('future plan format draft', () => {
     expect(estate?.reviewFocus).toContain('estate trade-off is visible');
     expect(estate?.mustAvoid).toContain('permission to spend more');
     expect(estate?.mustAvoid).toContain('guaranteed-room language');
+  });
+
+  it('plans fresh example rebuild steps before fixture or smoke wiring', () => {
+    expect(futureFreshExampleRebuildPlanIds()).toEqual([
+      'singleMinimumFloorDraftValues',
+      'coupleTightFloorDraftValues',
+      'pensionCoupleSurvivorDraftValues',
+      'estateHeavyRoomDraftValues',
+      'acceptedFixtureLater',
+      'newFormatSmokeLater'
+    ]);
+    expect(
+      futurePlanFormatDraft.freshExampleRebuildPlan.find((item) => item.id === 'acceptedFixtureLater')?.mustAvoid
+    ).toContain('production loader wiring in planning package');
+    expect(
+      futurePlanFormatDraft.freshExampleRebuildPlan.find((item) => item.id === 'newFormatSmokeLater')?.mustAvoid
+    ).toContain('account optimizer implementation');
   });
 
   it('plans funding trace account groups without withdrawal instructions', () => {

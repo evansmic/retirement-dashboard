@@ -18,6 +18,7 @@ export type FuturePlanFormatDraft = {
   oldPreviewImportMessage: string;
   implementationChecklist: FutureImplementationStep[];
   rollbackReleaseChecklist: FutureRollbackReleaseItem[];
+  schemaResetDecisionReadiness: FutureSchemaResetDecisionReadiness[];
   testOnlyFixtureShapes: FutureTestOnlyFixtureShape[];
   optimizerContractReadiness: FutureOptimizerContractItem[];
   fixtureSpecifications: FutureFixtureSpecification[];
@@ -28,6 +29,7 @@ export type FuturePlanFormatDraft = {
   capacityStatusReadiness: FutureCapacityStatusReadiness[];
   capacitySelectorReadiness: FutureCapacitySelectorReadiness;
   futureExampleDataDrafts: FutureExampleDataDraft[];
+  freshExampleRebuildPlan: FutureFreshExampleRebuildPlan[];
   fundingTraceReadiness: FutureFundingTraceReadiness;
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
@@ -47,6 +49,15 @@ export type FutureRollbackReleaseItem = {
   stage: 'before-release' | 'during-release' | 'after-release';
   label: string;
   requiredEvidence: string[];
+  stopIfMissing: boolean;
+};
+
+export type FutureSchemaResetDecisionReadiness = {
+  id: string;
+  decision: 'ready-to-wire' | 'keep-planning' | 'defer';
+  label: string;
+  requiredEvidence: string[];
+  mustAvoid: string[];
   stopIfMissing: boolean;
 };
 
@@ -170,6 +181,15 @@ export type FutureExampleDataDraft = {
   laterSpendingChangeAge: number;
   expectedCapacityStatus: 'covered' | 'tight' | 'gap' | 'cannotTell';
   reviewFocus: string[];
+  mustAvoid: string[];
+};
+
+export type FutureFreshExampleRebuildPlan = {
+  id: string;
+  exampleId: FutureExampleDataDraft['id'];
+  stage: 'draft-values' | 'fixture-later' | 'smoke-later';
+  label: string;
+  mustProve: string[];
   mustAvoid: string[];
 };
 
@@ -323,6 +343,58 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       label: 'Watch tester confusion after release',
       requiredEvidence: ['Feedback channel ready', 'Old-file confusion notes captured outside app', 'Rollback decision owner identified'],
       stopIfMissing: false
+    }
+  ],
+  schemaResetDecisionReadiness: [
+    {
+      id: 'fieldListFrozen',
+      decision: 'keep-planning',
+      label: 'Freeze the clean-reset field list before wiring import behavior',
+      requiredEvidence: [
+        'Minimum monthly expenses replaces old desired spending as an input.',
+        'Spending breakpoint ages are named and optional.',
+        'Runtime answers remain outside saved plan inputs.'
+      ],
+      mustAvoid: ['partial migration of old desired-spending values', 'hidden calculated fields in saved plans'],
+      stopIfMissing: true
+    },
+    {
+      id: 'oldFileBlockAccepted',
+      decision: 'keep-planning',
+      label: 'Accept the old-preview block posture before release work',
+      requiredEvidence: [
+        'Tester fresh-start instruction is ready.',
+        'Old preview files are blocked with plain copy.',
+        'No private tester plan files are requested for migration.'
+      ],
+      mustAvoid: ['best-effort old file migration', 'silent partial import'],
+      stopIfMissing: true
+    },
+    {
+      id: 'newExamplesReady',
+      decision: 'keep-planning',
+      label: 'Rebuild examples in the new format before runtime wiring',
+      requiredEvidence: [
+        'Single covered-floor example drafted.',
+        'Tight couple gap-review example drafted.',
+        'DB survivor example drafted.',
+        'Estate-room example drafted.'
+      ],
+      mustAvoid: ['reusing old desired-spending examples', 'creating persisted .plan.json files during planning'],
+      stopIfMissing: true
+    },
+    {
+      id: 'rollbackReleaseReady',
+      decision: 'defer',
+      label: 'Hold release until rollback evidence is complete',
+      requiredEvidence: [
+        'Prior compatible build is identified.',
+        'Import block smoke test is defined.',
+        'New-format smoke test is defined.',
+        'Post-release watch owner is identified.'
+      ],
+      mustAvoid: ['release without rollback path', 'release before import-block smoke'],
+      stopIfMissing: true
     }
   ],
   testOnlyFixtureShapes: [
@@ -704,6 +776,56 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       mustAvoid: ['permission to spend more', 'guaranteed-room language', 'estate recommendation']
     }
   ],
+  freshExampleRebuildPlan: [
+    {
+      id: 'singleMinimumFloorDraftValues',
+      exampleId: 'singleMinimumFloor',
+      stage: 'draft-values',
+      label: 'Draft single covered-floor example values',
+      mustProve: ['minimum monthly expenses are entered directly', 'monthly capacity is runtime-derived', 'funding trace is not instructional'],
+      mustAvoid: ['desired-spend migration', 'safe-spend guarantee']
+    },
+    {
+      id: 'coupleTightFloorDraftValues',
+      exampleId: 'coupleTightFloor',
+      stage: 'draft-values',
+      label: 'Draft tight couple gap-review example values',
+      mustProve: ['gap is visible', 'work-longer and downsize options are neutral', 'tax review remains visible'],
+      mustAvoid: ['automatic recommendation to cut spending', 'single-option pressure']
+    },
+    {
+      id: 'pensionCoupleSurvivorDraftValues',
+      exampleId: 'pensionCoupleSurvivor',
+      stage: 'draft-values',
+      label: 'Draft DB pension survivor example values',
+      mustProve: ['survivor resilience is visible', 'DB pension continuation is reviewable', 'monthly answer does not hide survivor risk'],
+      mustAvoid: ['pension advice', 'survivor recommendation']
+    },
+    {
+      id: 'estateHeavyRoomDraftValues',
+      exampleId: 'estateHeavyRoom',
+      stage: 'draft-values',
+      label: 'Draft estate-room example values',
+      mustProve: ['estate trade-off is visible', 'room above floor is caveated', 'tax and spending-path caveats remain visible'],
+      mustAvoid: ['permission to spend more', 'guaranteed-room language']
+    },
+    {
+      id: 'acceptedFixtureLater',
+      exampleId: 'singleMinimumFloor',
+      stage: 'fixture-later',
+      label: 'Create accepted new-format fixture only after reset wiring is approved',
+      mustProve: ['wrapped future plan file is accepted', 'capacity answer is not saved', 'minimum expense field survives import'],
+      mustAvoid: ['production loader wiring in planning package', 'persisted .plan.json files']
+    },
+    {
+      id: 'newFormatSmokeLater',
+      exampleId: 'coupleTightFloor',
+      stage: 'smoke-later',
+      label: 'Define new-format smoke after example fixtures exist',
+      mustProve: ['new-format example opens', 'gap review remains calm', 'old desired-spending fields are absent'],
+      mustAvoid: ['broad UI redesign', 'account optimizer implementation']
+    }
+  ],
   fundingTraceReadiness: {
     status: 'planning-only',
     accountGroups: [
@@ -1054,6 +1176,10 @@ export function futureRollbackReleaseStopItems(draft = futurePlanFormatDraft): F
   return draft.rollbackReleaseChecklist.filter((item) => item.stopIfMissing);
 }
 
+export function futureSchemaResetDecisionReadinessIds(draft = futurePlanFormatDraft): string[] {
+  return draft.schemaResetDecisionReadiness.map((item) => item.id);
+}
+
 export function futureTestOnlyFixtureShapeIds(draft = futurePlanFormatDraft): string[] {
   return draft.testOnlyFixtureShapes.map((shape) => shape.id);
 }
@@ -1084,6 +1210,10 @@ export function futureCapacityReviewFactorIds(draft = futurePlanFormatDraft): st
 
 export function futureExampleDataDraftIds(draft = futurePlanFormatDraft): string[] {
   return draft.futureExampleDataDrafts.map((example) => example.id);
+}
+
+export function futureFreshExampleRebuildPlanIds(draft = futurePlanFormatDraft): string[] {
+  return draft.freshExampleRebuildPlan.map((item) => item.id);
 }
 
 export function futureFundingTraceAccountGroupIds(draft = futurePlanFormatDraft): string[] {
