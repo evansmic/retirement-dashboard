@@ -12,6 +12,10 @@ import {
   futureExampleDataDraftIds,
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
+  futureFundingTraceAccountGroupIds,
+  futureFundingTraceCopyBoundaryIds,
+  futureFundingTraceReconciliationRuleIds,
+  futureFundingTraceTaxCaveatIds,
   futureImplementationStepIds,
   futureOptimizerReadinessIds,
   futureOptimizerContractItemIds,
@@ -293,5 +297,45 @@ describe('future plan format draft', () => {
     expect(estate?.reviewFocus).toContain('estate trade-off is visible');
     expect(estate?.mustAvoid).toContain('permission to spend more');
     expect(estate?.mustAvoid).toContain('guaranteed-room language');
+  });
+
+  it('plans funding trace account groups without withdrawal instructions', () => {
+    expect(futurePlanFormatDraft.fundingTraceReadiness.status).toBe('planning-only');
+    expect(futureFundingTraceAccountGroupIds()).toEqual([
+      'income',
+      'registered',
+      'tfsa',
+      'nonRegistered',
+      'cash',
+      'otherInflows',
+      'tax'
+    ]);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.accountGroups.find((group) => group.id === 'registered')?.mustAvoid).toContain(
+      'account-by-account withdrawal instruction'
+    );
+    expect(futurePlanFormatDraft.fundingTraceReadiness.guardrails).toContain(
+      'Funding trace must not become annual account-level sequencing.'
+    );
+  });
+
+  it('plans funding trace tax caveats and reconciliation without tax advice', () => {
+    expect(futureFundingTraceTaxCaveatIds()).toEqual(['oasRecoveryTax', 'registeredTaxable', 'nonRegisteredGains', 'ontarioHealthPremium']);
+    expect(futureFundingTraceReconciliationRuleIds()).toEqual(['sourcesMinusTax', 'todayDollars', 'shortfallVisible']);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.taxCaveats.find((caveat) => caveat.id === 'registeredTaxable')?.mustAvoid).toContain(
+      'tax advice'
+    );
+    expect(
+      futurePlanFormatDraft.fundingTraceReadiness.reconciliationRules.find((rule) => rule.id === 'sourcesMinusTax')?.mustAvoid
+    ).toContain('treating reconciliation as a withdrawal instruction');
+  });
+
+  it('plans first-year trace copy as review-oriented rather than instructional', () => {
+    expect(futureFundingTraceCopyBoundaryIds()).toEqual(['traceIntro', 'reviewQualifier', 'taxQualifier', 'gapQualifier']);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.copyBoundaries.find((boundary) => boundary.id === 'traceIntro')?.phrase).toBe(
+      'Where the first-year spending appears to come from'
+    );
+    expect(futurePlanFormatDraft.fundingTraceReadiness.copyBoundaries.find((boundary) => boundary.id === 'reviewQualifier')?.mustAvoid).toContain(
+      'annual account-level sequence'
+    );
   });
 });

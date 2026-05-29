@@ -28,6 +28,7 @@ export type FuturePlanFormatDraft = {
   capacityStatusReadiness: FutureCapacityStatusReadiness[];
   capacitySelectorReadiness: FutureCapacitySelectorReadiness;
   futureExampleDataDrafts: FutureExampleDataDraft[];
+  fundingTraceReadiness: FutureFundingTraceReadiness;
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
   boundaries: string[];
@@ -169,6 +170,41 @@ export type FutureExampleDataDraft = {
   laterSpendingChangeAge: number;
   expectedCapacityStatus: 'covered' | 'tight' | 'gap' | 'cannotTell';
   reviewFocus: string[];
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceReadiness = {
+  status: 'planning-only';
+  accountGroups: FutureFundingTraceAccountGroup[];
+  taxCaveats: FutureFundingTraceTaxCaveat[];
+  reconciliationRules: FutureFundingTraceReconciliationRule[];
+  copyBoundaries: FutureFundingTraceCopyBoundary[];
+  guardrails: string[];
+};
+
+export type FutureFundingTraceAccountGroup = {
+  id: string;
+  label: string;
+  includes: string[];
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceTaxCaveat = {
+  id: string;
+  label: string;
+  reason: string;
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceReconciliationRule = {
+  id: string;
+  rule: string;
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceCopyBoundary = {
+  id: string;
+  phrase: string;
   mustAvoid: string[];
 };
 
@@ -637,6 +673,124 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       mustAvoid: ['permission to spend more', 'guaranteed-room language', 'estate recommendation']
     }
   ],
+  fundingTraceReadiness: {
+    status: 'planning-only',
+    accountGroups: [
+      {
+        id: 'income',
+        label: 'Income sources',
+        includes: ['CPP', 'OAS', 'DB pension', 'salary or work income'],
+        mustAvoid: ['benefit timing recommendation', 'pension advice']
+      },
+      {
+        id: 'registered',
+        label: 'Registered withdrawals',
+        includes: ['RRSP', 'RRIF', 'LIRA', 'LIF'],
+        mustAvoid: ['account-by-account withdrawal instruction', 'RRIF/LIF advice']
+      },
+      {
+        id: 'tfsa',
+        label: 'TFSA withdrawals',
+        includes: ['TFSA principal and growth'],
+        mustAvoid: ['tax-free means always best language', 'withdraw-this-first instruction']
+      },
+      {
+        id: 'nonRegistered',
+        label: 'Non-registered withdrawals',
+        includes: ['non-registered assets', 'capital gains context'],
+        mustAvoid: ['capital-gains advice', 'tax-loss instruction']
+      },
+      {
+        id: 'cash',
+        label: 'Cash and reserve draw',
+        includes: ['cash wedge', 'cash savings'],
+        mustAvoid: ['emergency fund advice', 'cash target instruction']
+      },
+      {
+        id: 'otherInflows',
+        label: 'Other inflows',
+        includes: ['downsizing proceeds', 'inheritance', 'one-time inflows'],
+        mustAvoid: ['guaranteed sale proceeds', 'inheritance certainty']
+      },
+      {
+        id: 'tax',
+        label: 'Estimated tax',
+        includes: ['income tax', 'OAS recovery tax', 'Ontario Health Premium when applicable'],
+        mustAvoid: ['tax advice', 'precision beyond the model']
+      }
+    ],
+    taxCaveats: [
+      {
+        id: 'oasRecoveryTax',
+        label: 'OAS recovery tax can change after-tax capacity',
+        reason: 'Income changes and registered withdrawals can affect OAS recovery tax.',
+        mustAvoid: ['OAS optimization advice', 'guaranteed recovery estimate']
+      },
+      {
+        id: 'registeredTaxable',
+        label: 'Registered withdrawals are taxable',
+        reason: 'RRSP/RRIF/LIRA/LIF withdrawals can change taxable income and credits.',
+        mustAvoid: ['withdrawal order instruction', 'tax advice']
+      },
+      {
+        id: 'nonRegisteredGains',
+        label: 'Non-registered withdrawals can include capital gains',
+        reason: 'ACB and sale timing can affect taxable gains.',
+        mustAvoid: ['capital gains strategy', 'tax-loss instruction']
+      },
+      {
+        id: 'ontarioHealthPremium',
+        label: 'Ontario Health Premium may apply',
+        reason: 'Ontario tax assumptions can include Health Premium at certain income levels.',
+        mustAvoid: ['province expansion', 'false precision']
+      }
+    ],
+    reconciliationRules: [
+      {
+        id: 'sourcesMinusTax',
+        rule: 'Income sources plus withdrawals plus other inflows minus estimated tax should reconcile to after-tax spending and surplus or shortfall.',
+        mustAvoid: ['hiding tax from the trace', 'treating reconciliation as a withdrawal instruction']
+      },
+      {
+        id: 'todayDollars',
+        rule: 'Funding trace labels should clarify when amounts are shown in today dollars.',
+        mustAvoid: ['mixing nominal and today-dollar labels', 'false precision']
+      },
+      {
+        id: 'shortfallVisible',
+        rule: 'If sources minus tax do not cover the minimum floor, the gap should remain visible.',
+        mustAvoid: ['masking gaps with discretionary room', 'failure language']
+      }
+    ],
+    copyBoundaries: [
+      {
+        id: 'traceIntro',
+        phrase: 'Where the first-year spending appears to come from',
+        mustAvoid: ['where to withdraw from', 'account instructions']
+      },
+      {
+        id: 'reviewQualifier',
+        phrase: 'This is a first-year trace for review, not a withdrawal plan.',
+        mustAvoid: ['personalized advice', 'annual account-level sequence']
+      },
+      {
+        id: 'taxQualifier',
+        phrase: 'Tax can change as income sources and withdrawals change.',
+        mustAvoid: ['tax strategy', 'guaranteed tax result']
+      },
+      {
+        id: 'gapQualifier',
+        phrase: 'If the trace does not cover the minimum floor, compare practical options before treating the plan as ready.',
+        mustAvoid: ['failure language', 'single-option pressure']
+      }
+    ],
+    guardrails: [
+      'Funding trace must explain where money appears to come from, not what to withdraw.',
+      'Funding trace must not become annual account-level sequencing.',
+      'Funding trace must stay runtime-only in this planning package.',
+      'Funding trace must keep tax caveats visible.'
+    ]
+  },
   sections: [
     {
       id: 'minimumExpenses',
@@ -797,6 +951,22 @@ export function futureCapacityReviewFactorIds(draft = futurePlanFormatDraft): st
 
 export function futureExampleDataDraftIds(draft = futurePlanFormatDraft): string[] {
   return draft.futureExampleDataDrafts.map((example) => example.id);
+}
+
+export function futureFundingTraceAccountGroupIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.accountGroups.map((group) => group.id);
+}
+
+export function futureFundingTraceTaxCaveatIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.taxCaveats.map((caveat) => caveat.id);
+}
+
+export function futureFundingTraceReconciliationRuleIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.reconciliationRules.map((rule) => rule.id);
+}
+
+export function futureFundingTraceCopyBoundaryIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.copyBoundaries.map((boundary) => boundary.id);
 }
 
 export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {
