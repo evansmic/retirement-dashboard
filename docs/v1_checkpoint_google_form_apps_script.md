@@ -73,6 +73,14 @@ function createV1CheckpointFeedbackForm() {
     'No',
     'Not sure'
   ]);
+  addScale('Did the discretionary-room bridge help explain possible room above the floor?', 'Confusing', 'Helpful');
+  addChoice('Did the discretionary-room bridge sound like permission to spend more?', ['No', 'Maybe', 'Yes', 'Not sure']);
+  addChoice('Did the discretionary-room bridge make clear that tax, estate intent, survivor needs, and spending path can change the answer?', [
+    'Yes',
+    'Mostly',
+    'No',
+    'Not sure'
+  ]);
   addScale('Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?', 'Confusing', 'Helpful');
   addChoice('Did the spending-path bridge feel secondary enough, or did it add too much detail?', [
     'Secondary enough',

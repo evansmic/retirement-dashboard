@@ -772,6 +772,26 @@ export type SpendingPathBridgeSummary = {
   boundary: string;
 };
 
+export type DiscretionaryRoomBridgeStatus = 'cannotTell' | 'none' | 'limited' | 'review';
+
+export type DiscretionaryRoomBridgeSummary = {
+  status: DiscretionaryRoomBridgeStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  annualRoom: number;
+  monthlyRoom: number;
+  floorMonthly: number;
+  capacityMonthly: number;
+  reviewRows: Array<{
+    id: 'floor' | 'tax' | 'estate' | 'survivor' | 'spendingPath';
+    label: string;
+    detail: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+  boundary: string;
+};
+
 export type EstateIntentStatus = 'cannotTell' | 'needsIntent' | 'taxReview' | 'survivorReview' | 'aligned';
 
 export type EstateIntentSummary = {
@@ -1479,6 +1499,78 @@ export function selectSpendingPathBridgeSummary(plan: V2PlanPayload | null | und
     },
     boundary:
       'Bridge-only summary: current phased spending fields are interpreted as a spending path for review. No saved field, default reduction rate, or engine output is added.'
+  };
+}
+
+export function selectDiscretionaryRoomBridgeSummary(
+  coverage: MinimumExpenseCoverageSummary,
+  spendingCapacity: SpendingCapacitySummary
+): DiscretionaryRoomBridgeSummary {
+  const annualRoom = Math.max(0, n(coverage.annualGapOrRoom));
+  const monthlyRoom = annualRoom / 12;
+  const hasRoom = annualRoom > Math.max(1200, n(coverage.minimumAnnualExpense) * 0.05);
+
+  let status: DiscretionaryRoomBridgeStatus = 'review';
+  if (coverage.status === 'cannotTell' || spendingCapacity.status === 'cannotTell') status = 'cannotTell';
+  else if (coverage.status === 'gap' || annualRoom <= 0) status = 'none';
+  else if (!hasRoom || coverage.status === 'tight' || spendingCapacity.status === 'tight') status = 'limited';
+
+  const labelByStatus: Record<DiscretionaryRoomBridgeStatus, string> = {
+    cannotTell: 'Discretionary room needs more inputs',
+    none: 'No discretionary room appears available',
+    limited: 'Discretionary room appears limited',
+    review: 'Discretionary room may be available'
+  };
+  const headlineByStatus: Record<DiscretionaryRoomBridgeStatus, string> = {
+    cannotTell: 'Complete required inputs before estimating room above the spending floor.',
+    none: 'The current bridge does not show spending room above the temporary floor.',
+    limited: 'The current bridge shows only modest room above the temporary floor.',
+    review: 'The current bridge shows room above the temporary floor for review.'
+  };
+  const detailByStatus: Record<DiscretionaryRoomBridgeStatus, string> = {
+    cannotTell: 'The future model should estimate discretionary room after minimum expenses are covered.',
+    none: 'Review the floor and gap options before treating discretionary spending as available.',
+    limited: 'Review tax, benefit timing, spending path, and market sensitivity before relying on the room.',
+    review: 'Treat this as review evidence only; taxes, survivor needs, estate intent, and the spending path can change the final answer.'
+  };
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail: detailByStatus[status],
+    annualRoom,
+    monthlyRoom,
+    floorMonthly: coverage.minimumMonthlyExpense,
+    capacityMonthly: coverage.estimatedMonthlyCapacity,
+    reviewRows: [
+      {
+        id: 'floor',
+        label: 'Confirm the floor',
+        detail: 'The temporary floor still comes from current early spending until a real minimum-expense field exists.',
+        detailArea: 'details'
+      },
+      {
+        id: 'tax',
+        label: 'Review tax impact',
+        detail: 'Extra spending can change registered withdrawals, OAS recovery tax, and taxable income.',
+        detailArea: 'taxes'
+      },
+      {
+        id: 'estate',
+        label: 'Review estate intent',
+        detail: 'Extra room may reduce projected money left, which may or may not match household goals.',
+        detailArea: 'details'
+      },
+      {
+        id: 'spendingPath',
+        label: 'Review spending path',
+        detail: 'Age-based spending assumptions can change how much room appears early or later.',
+        detailArea: 'details'
+      }
+    ],
+    boundary:
+      'Bridge-only summary: discretionary room is derived from temporary floor coverage and spending capacity. No saved field, optimizer action, or engine output is added.'
   };
 }
 

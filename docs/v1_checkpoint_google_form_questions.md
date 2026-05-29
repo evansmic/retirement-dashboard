@@ -100,12 +100,33 @@ Recommended description:
       - No
       - Not sure
 
-16. **Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?**
+16. **Did the discretionary-room bridge help explain possible room above the floor?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Helpful
 
-17. **Did the spending-path bridge feel secondary enough, or did it add too much detail?**
+17. **Did the discretionary-room bridge sound like permission to spend more?**
+    - Multiple choice
+    - Options:
+      - No
+      - Maybe
+      - Yes
+      - Not sure
+
+18. **Did the discretionary-room bridge make clear that tax, estate intent, survivor needs, and spending path can change the answer?**
+    - Multiple choice
+    - Options:
+      - Yes
+      - Mostly
+      - No
+      - Not sure
+
+19. **Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?**
+    - Linear scale 1-5
+    - 1 = Confusing
+    - 5 = Helpful
+
+20. **Did the spending-path bridge feel secondary enough, or did it add too much detail?**
     - Multiple choice
     - Options:
       - Secondary enough
@@ -113,52 +134,52 @@ Recommended description:
       - Too much detail
       - Not sure
 
-18. **Were the top review actions useful?**
+21. **Were the top review actions useful?**
    - Linear scale 1-5
    - 1 = Not useful
    - 5 = Very useful
 
-19. **What, if anything, made the first screen feel too dense or too light?**
+22. **What, if anything, made the first screen feel too dense or too light?**
     - Paragraph
 
 ## Section 3: Trust And Safety
 
-20. **Overall trust after using the planner**
+23. **Overall trust after using the planner**
     - Linear scale 1-5
     - 1 = Low trust
     - 5 = High trust
 
-21. **Did anything sound like personalized financial advice?**
+24. **Did anything sound like personalized financial advice?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-22. **If yes or maybe, what wording or screen caused that reaction?**
+25. **If yes or maybe, what wording or screen caused that reaction?**
     - Paragraph
 
-23. **Did any number feel too precise for a long-term projection?**
+26. **Did any number feel too precise for a long-term projection?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-24. **What increased your trust most?**
+27. **What increased your trust most?**
     - Paragraph
 
-25. **What reduced your trust most?**
+28. **What reduced your trust most?**
     - Paragraph
 
 ## Section 4: Drawdown, Taxes, Benefits, And Couples
 
-26. **How understandable were the tax and benefit timing sections?**
+29. **How understandable were the tax and benefit timing sections?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
-27. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
+30. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
     - Multiple choice
     - Options:
       - Yes
@@ -166,14 +187,14 @@ Recommended description:
       - No
       - Not sure
 
-28. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
+31. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-29. **If you tested a couple plan, was survivor or pension-continuation information clear?**
+32. **If you tested a couple plan, was survivor or pension-continuation information clear?**
     - Multiple choice
     - Options:
       - Yes
@@ -181,55 +202,55 @@ Recommended description:
       - No
       - Not tested
 
-30. **Any Canadian planning concerns you noticed?**
+33. **Any Canadian planning concerns you noticed?**
     - Paragraph
     - Helper text: “CPP, OAS, RRIF/LIF, DB pensions, survivor assumptions, estate goals, home equity, tax timing, or eligibility.”
 
 ## Section 5: Save, Export, And Local-First Trust
 
-31. **Was the difference between saving an editable plan and opening a printable report clear?**
+34. **Was the difference between saving an editable plan and opening a printable report clear?**
     - Linear scale 1-5
     - 1 = Not clear
     - 5 = Very clear
 
-32. **Did local-first behavior feel trustworthy?**
+35. **Did local-first behavior feel trustworthy?**
     - Linear scale 1-5
     - 1 = Not trustworthy
     - 5 = Very trustworthy
 
-33. **What, if anything, would make saving/exporting feel safer?**
+36. **What, if anything, would make saving/exporting feel safer?**
     - Paragraph
 
 ## Section 6: Visual And UX Checkpoint
 
-34. **Visual polish today**
+37. **Visual polish today**
     - Linear scale 1-5
     - 1 = Very rough
     - 5 = Very polished
 
-35. **What visual or layout issues should be fixed before v1?**
+38. **What visual or layout issues should be fixed before v1?**
     - Paragraph
 
-36. **What visual or layout issues can wait for the later UX pass?**
+39. **What visual or layout issues can wait for the later UX pass?**
     - Paragraph
 
-37. **Were charts and tables easy to understand?**
+40. **Were charts and tables easy to understand?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
 ## Section 7: Priority Feedback
 
-38. **Top 3 things that increased trust**
+41. **Top 3 things that increased trust**
     - Paragraph
 
-39. **Top 3 things that reduced trust**
+42. **Top 3 things that reduced trust**
     - Paragraph
 
-40. **One thing you would fix before showing this to more people**
+43. **One thing you would fix before showing this to more people**
     - Paragraph
 
-41. **How should this feedback be classified overall?**
+44. **How should this feedback be classified overall?**
     - Multiple choice
     - Options:
       - Fix before v1

@@ -32,6 +32,7 @@ import {
   selectCheckpointReviewBoard,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectDiscretionaryRoomBridgeSummary,
   selectDrawdownReadinessSummary,
   selectEstateIntentSummary,
   selectFundingSourceRows,
@@ -3088,6 +3089,7 @@ function ResultsHandoffPanel({
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
   const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
   const spendingPathBridge = selectSpendingPathBridgeSummary(plan);
+  const discretionaryRoomBridge = selectDiscretionaryRoomBridgeSummary(minimumExpenseCoverage, spendingCapacity);
   const spendingStressSummary = selectSpendingStressSummary(result, spendingStress, plan);
   const drawdownReadiness = selectDrawdownReadinessSummary(result, plan);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
@@ -3258,6 +3260,7 @@ function ResultsHandoffPanel({
             checkpointReviewBoard={checkpointReviewBoard}
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
+            discretionaryRoomBridge={discretionaryRoomBridge}
             minimumExpenseCoverage={minimumExpenseCoverage}
             spendingPathBridge={spendingPathBridge}
             readinessSummary={readinessSummary}
@@ -3794,6 +3797,43 @@ function MinimumExpenseCoveragePanel({
   );
 }
 
+function DiscretionaryRoomBridgePanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectDiscretionaryRoomBridgeSummary>;
+}) {
+  return (
+    <section className={`result-card discretionary-room-panel discretionary-room-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Discretionary room bridge</p>
+        <h3>{loading ? 'Checking room above the floor' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Monthly room for review" value={formatMoney(summary.monthlyRoom)} />
+        <Metric label="Annual room for review" value={formatMoney(summary.annualRoom)} />
+        <Metric label="Temporary floor" value={formatMoney(summary.floorMonthly)} />
+        <Metric label="Monthly capacity" value={formatMoney(summary.capacityMonthly)} />
+      </div>
+
+      <div className="optimizer-eligibility-list">
+        {summary.reviewRows.map((row) => (
+          <article className="optimizer-eligibility-note eligibility-review" key={row.id}>
+            <strong>{row.label}</strong>
+            <span>Review</span>
+            <p>{row.detail}</p>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{summary.boundary}</p>
+    </section>
+  );
+}
+
 function SpendingPathBridgePanel({
   loading,
   summary
@@ -3913,6 +3953,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard,
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
+  discretionaryRoomBridge,
   minimumExpenseCoverage,
   spendingPathBridge,
   readinessSummary,
@@ -3992,6 +4033,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard: ReturnType<typeof selectCheckpointReviewBoard>;
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
+  discretionaryRoomBridge: ReturnType<typeof selectDiscretionaryRoomBridgeSummary>;
   minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
   spendingPathBridge: ReturnType<typeof selectSpendingPathBridgeSummary>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
@@ -4087,6 +4129,7 @@ function DetailsResultsPanel({
       <PlanHealthPanel health={planHealth} loading={loading} />
       <EstateIntentPanel loading={loading} summary={estateIntent} />
       <MinimumExpenseCoveragePanel loading={loading} summary={minimumExpenseCoverage} />
+      <DiscretionaryRoomBridgePanel loading={loading} summary={discretionaryRoomBridge} />
       <SpendingPathBridgePanel loading={loading} summary={spendingPathBridge} />
       <div className="result-section-label">Money Flow</div>
       <SourceStoryPanel story={sourceStory} />

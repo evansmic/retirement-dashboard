@@ -14,6 +14,7 @@ import {
   selectCheckpointReviewBoard,
   selectDecisionDetailRows,
   selectDecisionChecklist,
+  selectDiscretionaryRoomBridgeSummary,
   selectDrawdownReadinessSummary,
   selectEstateIntentSummary,
   selectFundingSourceRows,
@@ -467,6 +468,44 @@ describe('result selectors', () => {
     expect(spending.planningEstimateDetail).toContain("today's dollars");
     expect(spending.planningEstimateDetail).toContain('not a guarantee');
     expect(spending.reviewActions.find((action) => action.id === 'spendMore')).toBeTruthy();
+  });
+
+  it('summarizes discretionary room above the temporary floor for review', () => {
+    const estateHeavyResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 6000000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 71470, bal_total: 7000000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(estateHeavyResult, { ...planFixture, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(estateHeavyResult, {}, { ...planFixture, inheritance: 0 }, answer);
+    const coverage = selectMinimumExpenseCoverageSummary(estateHeavyResult, planFixture, spending);
+    const room = selectDiscretionaryRoomBridgeSummary(coverage, spending);
+
+    expect(room.status).toBe('review');
+    expect(room.annualRoom).toBeGreaterThan(0);
+    expect(room.monthlyRoom).toBe(room.annualRoom / 12);
+    expect(room.reviewRows.map((row) => row.id)).toEqual(['floor', 'tax', 'estate', 'spendingPath']);
+    expect(room.boundary).toContain('No saved field');
+    expect(room.boundary).toContain('optimizer action');
+    expect(Object.keys(planFixture)).not.toContain('discretionaryRoomBridge');
+  });
+
+  it('holds discretionary room when minimum expenses have a gap', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const coverage = selectMinimumExpenseCoverageSummary(shortfallResult, planFixture, spending);
+    const room = selectDiscretionaryRoomBridgeSummary(coverage, spending);
+
+    expect(room.status).toBe('none');
+    expect(room.annualRoom).toBe(0);
+    expect(room.headline).toContain('does not show spending room');
   });
 
   it('summarizes a spending repair amount when the lower-spending scenario fixes a shortfall', () => {

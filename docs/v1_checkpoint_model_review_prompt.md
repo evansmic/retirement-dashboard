@@ -14,6 +14,7 @@ Important boundaries:
 - Treat after-tax monthly spending capacity as the primary consumer answer. Flag places where the product still feels like it asks users to guess desired spending before the app estimates capacity.
 - Review whether a future minimum-monthly-expense input, excluding mortgage payments already entered in Debts, would make the flow clearer.
 - Review whether the Details minimum-expense bridge helps explain floor coverage without feeling like a saved input, instruction, or new schema commitment.
+- Review whether the Details discretionary-room bridge explains possible room above the floor without sounding like permission to spend more.
 - Review whether the spending-path explainer makes it clear that normal age-based spending changes are modelled underneath one monthly answer.
 - Review whether spending breakpoint ages feel like optional assumptions to adjust and rerun, not required user expertise.
 - Review whether the Details spending-path bridge helps clarify the model, or whether it adds density before the final UI redesign.
@@ -71,6 +72,7 @@ Answer:
 - Do breakpoint controls feel understandable and secondary?
 - Does the flow feel like the app estimates capacity from assets, or like the user must guess a desired spend?
 - Does the Details minimum-expense bridge help, or does it add confusion before the real minimum-expense input exists?
+- Does the discretionary-room bridge keep tax, estate, survivor, and spending-path caveats visible enough?
 - Does the Details spending-path bridge help explain spending changes with age while staying secondary to the monthly answer?
 - Are the top review actions useful and limited enough?
 - Is Overview too dense?
