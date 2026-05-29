@@ -3,6 +3,9 @@ import {
   flattenFuturePlanFormatFields,
   futureBlockedImportRules,
   futureExampleRequirementIds,
+  futureFixtureSpecificationIds,
+  futureImplementationStepIds,
+  futureOptimizerReadinessIds,
   futurePlanFormatDraft
 } from './futurePlanFormat';
 
@@ -58,5 +61,52 @@ describe('future plan format draft', () => {
       'This plan was created with an earlier preview format. Please start a new plan.'
     );
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload')?.decision).toBe('defer');
+  });
+
+  it('requires a staged implementation checklist before the schema reset is wired', () => {
+    expect(futureImplementationStepIds()).toEqual([
+      'fieldReview',
+      'fixturePlan',
+      'loaderWire',
+      'exampleRebuild',
+      'verificationGate',
+      'previewRelease'
+    ]);
+    expect(futurePlanFormatDraft.implementationChecklist.find((step) => step.id === 'loaderWire')?.requiredBeforeNext).toContain(
+      'Raw payload policy decided'
+    );
+    expect(futurePlanFormatDraft.implementationChecklist.find((step) => step.id === 'verificationGate')?.rollback).toContain(
+      'keep current v2 behavior'
+    );
+  });
+
+  it('defines fixture specs for accepted new-format and blocked import cases', () => {
+    expect(futureFixtureSpecificationIds()).toEqual([
+      'acceptNewFormatMinimumFloor',
+      'blockOldPreviewDesiredSpend',
+      'blockUnsupportedFutureFormat',
+      'rejectAmbiguousRawPayload'
+    ]);
+    expect(futurePlanFormatDraft.fixtureSpecifications.find((fixture) => fixture.id === 'blockOldPreviewDesiredSpend')?.mustProve).toContain(
+      'old desired-spending fields are not mapped'
+    );
+    expect(futurePlanFormatDraft.fixtureSpecifications.find((fixture) => fixture.id === 'acceptNewFormatMinimumFloor')?.mustProve).toContain(
+      'capacity answer is not saved as an input'
+    );
+  });
+
+  it('keeps account optimizer readiness separate from annual account sequencing', () => {
+    expect(futureOptimizerReadinessIds()).toEqual([
+      'floorFirstObjective',
+      'capacityObjective',
+      'fundingTraceContract',
+      'annualAccountSequencing'
+    ]);
+    expect(futurePlanFormatDraft.accountOptimizerReadiness.find((item) => item.id === 'floorFirstObjective')?.status).toBe(
+      'needed-before-optimizer'
+    );
+    expect(futurePlanFormatDraft.accountOptimizerReadiness.find((item) => item.id === 'annualAccountSequencing')?.status).toBe(
+      'deferred-until-sequencing'
+    );
   });
 });

@@ -16,10 +16,36 @@ export type FuturePlanFormatDraft = {
   schemaReset: 'clean-reset';
   oldPreviewImportBehavior: 'block';
   oldPreviewImportMessage: string;
+  implementationChecklist: FutureImplementationStep[];
+  fixtureSpecifications: FutureFixtureSpecification[];
+  accountOptimizerReadiness: FutureAccountOptimizerReadinessItem[];
   importAcceptanceRules: FutureImportAcceptanceRule[];
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
   boundaries: string[];
+};
+
+export type FutureImplementationStep = {
+  id: string;
+  phase: 'prepare' | 'fixture' | 'wire' | 'verify' | 'release';
+  label: string;
+  requiredBeforeNext: string[];
+  rollback: string;
+};
+
+export type FutureFixtureSpecification = {
+  id: string;
+  kind: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format';
+  purpose: string;
+  expectedOutcome: string;
+  mustProve: string[];
+};
+
+export type FutureAccountOptimizerReadinessItem = {
+  id: string;
+  label: string;
+  status: 'needed-before-optimizer' | 'deferred-until-sequencing';
+  reason: string;
 };
 
 export type FutureImportAcceptanceRule = {
@@ -43,6 +69,106 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
   schemaReset: 'clean-reset',
   oldPreviewImportBehavior: 'block',
   oldPreviewImportMessage: 'This plan was created with an earlier preview format. Please start a new plan.',
+  implementationChecklist: [
+    {
+      id: 'fieldReview',
+      phase: 'prepare',
+      label: 'Review and freeze the future field list',
+      requiredBeforeNext: ['Minimum expense field name approved', 'Spending-path breakpoint names approved', 'Derived answers stay out of saved inputs'],
+      rollback: 'Keep schema v2 active and leave the future draft unused.'
+    },
+    {
+      id: 'fixturePlan',
+      phase: 'fixture',
+      label: 'Create new-format fixture files and blocked old-preview fixtures',
+      requiredBeforeNext: ['Accepted new-format fixture defined', 'Old preview fixture defined', 'Unsupported future fixture defined'],
+      rollback: 'Delete fixture-only files before wiring import behavior.'
+    },
+    {
+      id: 'loaderWire',
+      phase: 'wire',
+      label: 'Wire new-format import acceptance and old-preview blocking',
+      requiredBeforeNext: ['Current v2 compatibility decision confirmed', 'Block copy verified', 'Raw payload policy decided'],
+      rollback: 'Restore the current v2 loader and keep reset fixtures for planning.'
+    },
+    {
+      id: 'exampleRebuild',
+      phase: 'wire',
+      label: 'Rebuild examples directly in the new format',
+      requiredBeforeNext: ['Single floor example rebuilt', 'Tight couple example rebuilt', 'Pension survivor example rebuilt', 'Estate-room example rebuilt'],
+      rollback: 'Revert to existing examples until reset wiring is stable.'
+    },
+    {
+      id: 'verificationGate',
+      phase: 'verify',
+      label: 'Run full verification and import-block checks',
+      requiredBeforeNext: ['Full tests pass', 'Full probes pass or known route bind is isolated', 'No .plan.json files created'],
+      rollback: 'Do not release the reset; keep current v2 behavior.'
+    },
+    {
+      id: 'previewRelease',
+      phase: 'release',
+      label: 'Release the reset only after tester fresh-start instructions are ready',
+      requiredBeforeNext: ['Tester instructions updated', 'Old-file block copy visible', 'Rollback build identified'],
+      rollback: 'Deploy the prior v2-compatible build.'
+    }
+  ],
+  fixtureSpecifications: [
+    {
+      id: 'acceptNewFormatMinimumFloor',
+      kind: 'accepted-new-format',
+      purpose: 'Prove the future loader accepts a clean-format plan with explicit minimum expenses.',
+      expectedOutcome: 'Plan opens and keeps minimum expenses separate from calculated capacity.',
+      mustProve: ['minimum monthly expenses are present', 'capacity answer is not saved as an input', 'spending path breakpoints are explicit']
+    },
+    {
+      id: 'blockOldPreviewDesiredSpend',
+      kind: 'blocked-old-preview',
+      purpose: 'Prove old phased-spending preview files are blocked instead of migrated.',
+      expectedOutcome: 'Import stops with the old-preview block message.',
+      mustProve: ['old desired-spending fields are not mapped', 'block copy is calm', 'no partial plan state is loaded']
+    },
+    {
+      id: 'blockUnsupportedFutureFormat',
+      kind: 'blocked-future-format',
+      purpose: 'Prove unsupported future files are blocked to avoid silent field loss.',
+      expectedOutcome: 'Import stops with the newer-format message.',
+      mustProve: ['future fields are not dropped', 'user sees newer-version copy', 'current plan state is preserved']
+    },
+    {
+      id: 'rejectAmbiguousRawPayload',
+      kind: 'blocked-old-preview',
+      purpose: 'Prove raw payload policy is deliberate after the reset decision.',
+      expectedOutcome: 'Raw payload behavior follows the final accepted policy.',
+      mustProve: ['raw payload support is either explicitly accepted or explicitly blocked', 'unsupported raw files do not load partially']
+    }
+  ],
+  accountOptimizerReadiness: [
+    {
+      id: 'floorFirstObjective',
+      label: 'Test minimum expense floor before discretionary room',
+      status: 'needed-before-optimizer',
+      reason: 'The optimizer should answer whether the household floor is covered before comparing optional room.'
+    },
+    {
+      id: 'capacityObjective',
+      label: 'Estimate confident monthly after-tax capacity',
+      status: 'needed-before-optimizer',
+      reason: 'The primary result should be calculated from assets, income, tax, and assumptions.'
+    },
+    {
+      id: 'fundingTraceContract',
+      label: 'Define funding trace contract',
+      status: 'needed-before-optimizer',
+      reason: 'The future answer should explain where money appears to come from without becoming account instructions too early.'
+    },
+    {
+      id: 'annualAccountSequencing',
+      label: 'Annual account-level sequencing',
+      status: 'deferred-until-sequencing',
+      reason: 'Annual account-level instructions remain deferred until sequencing readiness is complete.'
+    }
+  ],
   importAcceptanceRules: [
     {
       id: 'newFormat',
@@ -187,4 +313,16 @@ export function futureExampleRequirementIds(draft = futurePlanFormatDraft): stri
 
 export function futureBlockedImportRules(draft = futurePlanFormatDraft): FutureImportAcceptanceRule[] {
   return draft.importAcceptanceRules.filter((rule) => rule.decision === 'block');
+}
+
+export function futureImplementationStepIds(draft = futurePlanFormatDraft): string[] {
+  return draft.implementationChecklist.map((step) => step.id);
+}
+
+export function futureFixtureSpecificationIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fixtureSpecifications.map((fixture) => fixture.id);
+}
+
+export function futureOptimizerReadinessIds(draft = futurePlanFormatDraft): string[] {
+  return draft.accountOptimizerReadiness.map((item) => item.id);
 }
