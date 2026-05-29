@@ -29,7 +29,12 @@ import {
   futureRollbackReleaseStopItems,
   futureSchemaResetDecisionReadinessIds,
   futureTestOnlyFixtureShapeIds,
-  futurePlanFormatDraft
+  futurePlanFormatDraft,
+  findFutureTestOnlyFixtureShape,
+  futureFixtureExpectationCoverageRows,
+  futureImportBlockExpectationCoverageRows,
+  validateFutureFixtureShapeBatch,
+  validateFutureFixtureShape
 } from './futurePlanFormat';
 
 describe('future plan format draft', () => {
@@ -242,6 +247,284 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.fixtureValidationHelpers.find((helper) => helper.id === 'assertExpectedImportResult')?.mustNotDo).toContain(
       'wire the production loader'
     );
+  });
+
+  it('validates accepted fixture shapes in memory without calculated answers', () => {
+    const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'futureMinimumFloorPlan');
+
+    expect(shape).toBeDefined();
+    expect(
+      validateFutureFixtureShape(shape!, {
+        schemaVersion: 3,
+        minimumMonthlyExpensesExMortgage: 3600,
+        earlySpendingChangeAge: 75,
+        laterSpendingChangeAge: 85
+      })
+    ).toEqual({
+      fixtureId: 'futureMinimumFloorPlan',
+      expectedImportResult: 'accept',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true,
+      mode: 'test-only'
+    });
+  });
+
+  it('flags forbidden calculated answers and old spending keys in accepted fixture shapes', () => {
+    const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'futureMinimumFloorPlan');
+
+    expect(
+      validateFutureFixtureShape(shape!, {
+        schemaVersion: 3,
+        minimumMonthlyExpensesExMortgage: 3600,
+        earlySpendingChangeAge: 75,
+        laterSpendingChangeAge: 85,
+        gogo: 85000,
+        confidentMonthlyAfterTaxSpend: 7200
+      })
+    ).toMatchObject({
+      status: 'fail',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: ['gogo', 'confidentMonthlyAfterTaxSpend'],
+      importResultMatches: true,
+      mode: 'test-only'
+    });
+  });
+
+  it('validates blocked legacy-preview fixture paths without mapping old spending to the floor', () => {
+    const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'legacyPreviewDesiredSpendPayload');
+
+    expect(
+      validateFutureFixtureShape(shape!, {
+        schemaVersion: 2,
+        spending: {
+          gogo: 85000,
+          slowgo: 72000,
+          nogo: 62000
+        }
+      })
+    ).toMatchObject({
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      expectedImportResult: 'block',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true
+    });
+  });
+
+  it('fails fixture validation when the planned import result drifts', () => {
+    const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'unsupportedFuturePlanFile');
+
+    expect(
+      validateFutureFixtureShape(
+        shape!,
+        {
+          schemaVersion: 99,
+          futureOnlyField: true
+        },
+        'accept'
+      )
+    ).toMatchObject({
+      fixtureId: 'unsupportedFuturePlanFile',
+      expectedImportResult: 'block',
+      status: 'fail',
+      importResultMatches: false,
+      mode: 'test-only'
+    });
+  });
+
+  it('finds future test-only fixture shapes by stable id', () => {
+    expect(findFutureTestOnlyFixtureShape('futureMinimumFloorPlan')).toMatchObject({
+      id: 'futureMinimumFloorPlan',
+      intent: 'accepted-new-format',
+      expectedImportResult: 'accept'
+    });
+    expect(findFutureTestOnlyFixtureShape('missingFixtureShape')).toBeUndefined();
+  });
+
+  it('summarizes all future fixture shapes from an in-memory fixture map', () => {
+    const summary = validateFutureFixtureShapeBatch({
+      futureMinimumFloorPlan: {
+        schemaVersion: 3,
+        minimumMonthlyExpensesExMortgage: 3600,
+        earlySpendingChangeAge: 75,
+        laterSpendingChangeAge: 85
+      },
+      legacyPreviewDesiredSpendPayload: {
+        schemaVersion: 2,
+        spending: {
+          gogo: 85000,
+          slowgo: 72000,
+          nogo: 62000
+        }
+      },
+      unsupportedFuturePlanFile: {
+        schemaVersion: 99,
+        futureOnlyField: true
+      }
+    });
+
+    expect(summary).toMatchObject({
+      status: 'pass',
+      total: 3,
+      passed: 3,
+      failed: 0,
+      mode: 'test-only'
+    });
+    expect(summary.results.map((result) => result.fixtureId)).toEqual([
+      'futureMinimumFloorPlan',
+      'legacyPreviewDesiredSpendPayload',
+      'unsupportedFuturePlanFile'
+    ]);
+  });
+
+  it('summarizes missing batch fixtures as failures without reading files', () => {
+    const summary = validateFutureFixtureShapeBatch({
+      futureMinimumFloorPlan: {
+        schemaVersion: 3,
+        minimumMonthlyExpensesExMortgage: 3600,
+        earlySpendingChangeAge: 75,
+        laterSpendingChangeAge: 85
+      }
+    });
+
+    expect(summary).toMatchObject({
+      status: 'fail',
+      total: 3,
+      passed: 1,
+      failed: 2,
+      mode: 'test-only'
+    });
+    expect(summary.results.find((result) => result.fixtureId === 'legacyPreviewDesiredSpendPayload')?.missingRequiredKeys).toEqual([
+      'schemaVersion',
+      'spending.gogo',
+      'spending.slowgo',
+      'spending.nogo'
+    ]);
+  });
+
+  it('keeps hardening expectations attached to known fixture shapes', () => {
+    const coverage = futureFixtureExpectationCoverageRows();
+
+    expect(coverage).toHaveLength(5);
+    expect(coverage.every((row) => row.status === 'pass')).toBe(true);
+    expect(coverage.find((row) => row.expectationId === 'acceptedFixtureNoCalculatedAnswers')).toMatchObject({
+      fixtureId: 'futureMinimumFloorPlan',
+      hasKnownFixtureShape: true,
+      hasProofRequirements: true,
+      hasAvoidanceRequirements: true
+    });
+    expect(coverage.find((row) => row.expectationId === 'rawPayloadFixtureBlockedDeliberately')).toMatchObject({
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      status: 'pass'
+    });
+  });
+
+  it('marks hardening expectations incomplete when fixture links or requirements are missing', () => {
+    const coverage = futureFixtureExpectationCoverageRows({
+      ...futurePlanFormatDraft,
+      fixtureExpectationHardening: [
+        {
+          id: 'brokenExpectation',
+          fixtureId: 'unsupportedFuturePlanFile',
+          expectation: 'Broken expectation for test coverage.',
+          mustProve: [],
+          mustAvoid: ['silent import']
+        },
+        {
+          id: 'unknownFixtureExpectation',
+          fixtureId: 'missingShape' as never,
+          expectation: 'Unknown fixture for test coverage.',
+          mustProve: ['the link is checked'],
+          mustAvoid: ['unchecked fixture ids']
+        }
+      ]
+    });
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        expectationId: 'brokenExpectation',
+        status: 'fail',
+        hasKnownFixtureShape: true,
+        hasProofRequirements: false,
+        hasAvoidanceRequirements: true
+      }),
+      expect.objectContaining({
+        expectationId: 'unknownFixtureExpectation',
+        status: 'fail',
+        hasKnownFixtureShape: false,
+        hasProofRequirements: true,
+        hasAvoidanceRequirements: true
+      })
+    ]);
+  });
+
+  it('keeps pinned block messages aligned with planned blocked import rules', () => {
+    const coverage = futureImportBlockExpectationCoverageRows();
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        checkId: 'oldPreviewBlockMessage',
+        blockedRuleId: 'oldPreview',
+        status: 'pass',
+        hasMatchingRule: true,
+        messageMatchesRule: true,
+        hasStatePreservation: true
+      }),
+      expect.objectContaining({
+        checkId: 'futureUnknownBlockMessage',
+        blockedRuleId: 'futureUnknown',
+        status: 'pass',
+        hasMatchingRule: true,
+        messageMatchesRule: true,
+        hasStatePreservation: true
+      }),
+      expect.objectContaining({
+        checkId: 'rawPayloadBlockMessage',
+        blockedRuleId: 'rawPayload',
+        status: 'pass',
+        hasMatchingRule: true,
+        messageMatchesRule: true,
+        hasStatePreservation: true
+      })
+    ]);
+  });
+
+  it('marks import-block expectations incomplete when rule messages drift', () => {
+    const coverage = futureImportBlockExpectationCoverageRows({
+      ...futurePlanFormatDraft,
+      importAcceptanceRules: futurePlanFormatDraft.importAcceptanceRules.map((rule) =>
+        rule.id === 'oldPreview' ? { ...rule, message: 'Different message.' } : rule
+      )
+    });
+
+    expect(coverage.find((row) => row.checkId === 'oldPreviewBlockMessage')).toMatchObject({
+      status: 'fail',
+      hasMatchingRule: true,
+      messageMatchesRule: false,
+      hasStatePreservation: true,
+      hasAvoidanceRequirements: true
+    });
+    expect(coverage.find((row) => row.checkId === 'futureUnknownBlockMessage')?.status).toBe('pass');
+  });
+
+  it('marks import-block expectations incomplete without state-preservation requirements', () => {
+    const coverage = futureImportBlockExpectationCoverageRows({
+      ...futurePlanFormatDraft,
+      importBlockExpectationChecks: futurePlanFormatDraft.importBlockExpectationChecks.map((check) =>
+        check.id === 'rawPayloadBlockMessage' ? { ...check, mustPreserve: ['wrapped-file requirement'] } : check
+      )
+    });
+
+    expect(coverage.find((row) => row.checkId === 'rawPayloadBlockMessage')).toMatchObject({
+      status: 'fail',
+      hasMatchingRule: true,
+      messageMatchesRule: true,
+      hasStatePreservation: false,
+      hasAvoidanceRequirements: true
+    });
   });
 
   it('defines capacity statuses without guarantees or pressure language', () => {

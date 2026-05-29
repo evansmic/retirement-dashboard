@@ -135,6 +135,44 @@ export type FutureFixtureValidationHelper = {
   mustNotDo: string[];
 };
 
+export type FutureFixtureValidationResult = {
+  fixtureId: string;
+  expectedImportResult: FutureTestOnlyFixtureShape['expectedImportResult'];
+  status: 'pass' | 'fail';
+  missingRequiredKeys: string[];
+  presentForbiddenKeys: string[];
+  importResultMatches: boolean;
+  mode: 'test-only';
+};
+
+export type FutureFixtureValidationSummary = {
+  status: 'pass' | 'fail';
+  total: number;
+  passed: number;
+  failed: number;
+  results: FutureFixtureValidationResult[];
+  mode: 'test-only';
+};
+
+export type FutureFixtureExpectationCoverageRow = {
+  expectationId: string;
+  fixtureId: FutureFixtureExpectationHardening['fixtureId'];
+  status: 'pass' | 'fail';
+  hasKnownFixtureShape: boolean;
+  hasProofRequirements: boolean;
+  hasAvoidanceRequirements: boolean;
+};
+
+export type FutureImportBlockExpectationCoverageRow = {
+  checkId: string;
+  blockedRuleId: FutureImportBlockExpectationCheck['blockedRuleId'];
+  status: 'pass' | 'fail';
+  hasMatchingRule: boolean;
+  messageMatchesRule: boolean;
+  hasStatePreservation: boolean;
+  hasAvoidanceRequirements: boolean;
+};
+
 export type FutureCapacityStatusReadiness = {
   id: string;
   label: string;
@@ -1232,6 +1270,123 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
 
 export function flattenFuturePlanFormatFields(draft = futurePlanFormatDraft): FuturePlanFormatField[] {
   return draft.sections.flatMap((section) => section.fields);
+}
+
+function hasFixturePath(value: unknown, path: string): boolean {
+  return path.split('.').every((segment, index, parts) => {
+    if (index === 0) {
+      return value !== null && typeof value === 'object' && segment in value;
+    }
+
+    const parent = parts.slice(0, index).reduce<unknown>((current, part) => {
+      if (current === null || typeof current !== 'object' || !(part in current)) {
+        return undefined;
+      }
+      return (current as Record<string, unknown>)[part];
+    }, value);
+
+    return parent !== null && typeof parent === 'object' && segment in parent;
+  });
+}
+
+export function findMissingFutureFixtureRequiredKeys(
+  shape: FutureTestOnlyFixtureShape,
+  fixture: Record<string, unknown>
+): string[] {
+  return shape.requiredKeys.filter((key) => !hasFixturePath(fixture, key));
+}
+
+export function findPresentFutureFixtureForbiddenKeys(
+  shape: FutureTestOnlyFixtureShape,
+  fixture: Record<string, unknown>
+): string[] {
+  return shape.forbiddenKeys.filter((key) => hasFixturePath(fixture, key));
+}
+
+export function validateFutureFixtureShape(
+  shape: FutureTestOnlyFixtureShape,
+  fixture: Record<string, unknown>,
+  plannedImportResult = shape.expectedImportResult
+): FutureFixtureValidationResult {
+  const missingRequiredKeys = findMissingFutureFixtureRequiredKeys(shape, fixture);
+  const presentForbiddenKeys = findPresentFutureFixtureForbiddenKeys(shape, fixture);
+  const importResultMatches = plannedImportResult === shape.expectedImportResult;
+
+  return {
+    fixtureId: shape.id,
+    expectedImportResult: shape.expectedImportResult,
+    status: missingRequiredKeys.length === 0 && presentForbiddenKeys.length === 0 && importResultMatches ? 'pass' : 'fail',
+    missingRequiredKeys,
+    presentForbiddenKeys,
+    importResultMatches,
+    mode: 'test-only'
+  };
+}
+
+export function findFutureTestOnlyFixtureShape(
+  fixtureId: string,
+  draft = futurePlanFormatDraft
+): FutureTestOnlyFixtureShape | undefined {
+  return draft.testOnlyFixtureShapes.find((shape) => shape.id === fixtureId);
+}
+
+export function validateFutureFixtureShapeBatch(
+  fixturesById: Partial<Record<FutureTestOnlyFixtureShape['id'], Record<string, unknown>>>,
+  plannedImportResultsById: Partial<Record<FutureTestOnlyFixtureShape['id'], FutureTestOnlyFixtureShape['expectedImportResult']>> = {},
+  draft = futurePlanFormatDraft
+): FutureFixtureValidationSummary {
+  const results = draft.testOnlyFixtureShapes.map((shape) =>
+    validateFutureFixtureShape(shape, fixturesById[shape.id] || {}, plannedImportResultsById[shape.id] || shape.expectedImportResult)
+  );
+  const passed = results.filter((result) => result.status === 'pass').length;
+
+  return {
+    status: passed === results.length ? 'pass' : 'fail',
+    total: results.length,
+    passed,
+    failed: results.length - passed,
+    results,
+    mode: 'test-only'
+  };
+}
+
+export function futureFixtureExpectationCoverageRows(draft = futurePlanFormatDraft): FutureFixtureExpectationCoverageRow[] {
+  const fixtureIds = new Set(draft.testOnlyFixtureShapes.map((shape) => shape.id));
+
+  return draft.fixtureExpectationHardening.map((expectation) => {
+    const hasKnownFixtureShape = fixtureIds.has(expectation.fixtureId);
+    const hasProofRequirements = expectation.mustProve.length > 0;
+    const hasAvoidanceRequirements = expectation.mustAvoid.length > 0;
+
+    return {
+      expectationId: expectation.id,
+      fixtureId: expectation.fixtureId,
+      status: hasKnownFixtureShape && hasProofRequirements && hasAvoidanceRequirements ? 'pass' : 'fail',
+      hasKnownFixtureShape,
+      hasProofRequirements,
+      hasAvoidanceRequirements
+    };
+  });
+}
+
+export function futureImportBlockExpectationCoverageRows(draft = futurePlanFormatDraft): FutureImportBlockExpectationCoverageRow[] {
+  return draft.importBlockExpectationChecks.map((check) => {
+    const rule = draft.importAcceptanceRules.find((item) => item.id === check.blockedRuleId && item.decision === 'block');
+    const hasMatchingRule = Boolean(rule);
+    const messageMatchesRule = rule?.message === check.expectedMessage;
+    const hasStatePreservation = check.mustPreserve.includes('current plan state');
+    const hasAvoidanceRequirements = check.mustAvoid.length > 0;
+
+    return {
+      checkId: check.id,
+      blockedRuleId: check.blockedRuleId,
+      status: hasMatchingRule && messageMatchesRule && hasStatePreservation && hasAvoidanceRequirements ? 'pass' : 'fail',
+      hasMatchingRule,
+      messageMatchesRule,
+      hasStatePreservation,
+      hasAvoidanceRequirements
+    };
+  });
 }
 
 export function futureExampleRequirementIds(draft = futurePlanFormatDraft): string[] {
