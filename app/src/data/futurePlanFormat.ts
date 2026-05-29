@@ -65,8 +65,8 @@ export type FutureSchemaResetDecisionReadiness = {
 
 export type FutureTestOnlyFixtureShape = {
   id: string;
-  intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format';
-  wrapper: 'future-plan-file' | 'legacy-preview-payload' | 'unsupported-future-file';
+  intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format' | 'blocked-raw-payload';
+  wrapper: 'future-plan-file' | 'legacy-preview-payload' | 'unsupported-future-file' | 'raw-unwrapped-payload';
   requiredKeys: string[];
   forbiddenKeys: string[];
   expectedImportResult: 'accept' | 'block';
@@ -181,6 +181,26 @@ export type FutureImportBlockExpectationCoverageRow = {
   messageMatchesRule: boolean;
   hasStatePreservation: boolean;
   hasAvoidanceRequirements: boolean;
+};
+
+export type FutureFixtureSampleCoverageRow = {
+  sampleId: string;
+  fixtureId: FutureTestOnlyFixtureShape['id'];
+  status: 'pass' | 'fail';
+  hasKnownShape: boolean;
+  importResultMatchesShape: boolean;
+  isTestOnly: boolean;
+  hasGuardrails: boolean;
+};
+
+export type FutureRawPayloadSampleBlockExpectation = {
+  sampleId: string;
+  status: 'pass' | 'fail';
+  expectedMessage: string;
+  messageMatchesRule: boolean;
+  messageMatchesPolicy: boolean;
+  preservesCurrentState: boolean;
+  rejectsRawPlanFileTreatment: boolean;
 };
 
 export type FutureCapacityStatusReadiness = {
@@ -487,6 +507,14 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       requiredKeys: ['schemaVersion', 'futureOnlyField'],
       forbiddenKeys: ['silentlyDroppedFieldsAccepted'],
       expectedImportResult: 'block'
+    },
+    {
+      id: 'rawUnwrappedPayload',
+      intent: 'blocked-raw-payload',
+      wrapper: 'raw-unwrapped-payload',
+      requiredKeys: ['payloadKind', 'rawPlanPayload'],
+      forbiddenKeys: ['plan', 'metadata', 'minimumMonthlyExpensesExMortgage'],
+      expectedImportResult: 'block'
     }
   ],
   fixtureExpectationHardening: [
@@ -520,7 +548,7 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
     },
     {
       id: 'rawPayloadFixtureBlockedDeliberately',
-      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      fixtureId: 'rawUnwrappedPayload',
       expectation: 'Raw unwrapped payload behavior must remain explicit and blocked after the reset.',
       mustProve: ['raw payloads are not treated as plan files', 'raw payload block copy is distinct', 'blocked raw payloads do not change current state'],
       mustAvoid: ['ambiguous raw import support', 'partial raw payload load']
@@ -1351,10 +1379,32 @@ export const futureUnsupportedFormatFixtureSample: FutureTestOnlyFixtureSample =
   ]
 };
 
+export const futureRawPayloadFixtureSample: FutureTestOnlyFixtureSample = {
+  id: 'rawUnwrappedPayloadInMemory',
+  fixtureId: 'rawUnwrappedPayload',
+  label: 'Raw unwrapped payload fixture sample',
+  fixture: {
+    payloadKind: 'raw-unwrapped-json',
+    rawPlanPayload: {
+      schemaVersion: 'future-clean-reset-draft',
+      minimumMonthlyExpensesExMortgage: 3600
+    }
+  },
+  plannedImportResult: 'block',
+  mode: 'test-only',
+  mustNotDo: [
+    'treat raw payloads as plan files',
+    'partially import raw payload data',
+    'create wrapped-file metadata',
+    'change current plan state'
+  ]
+};
+
 export const futureTestOnlyFixtureSamples: FutureTestOnlyFixtureSample[] = [
   futureMinimumFloorFixtureSample,
   futureOldPreviewFixtureSample,
-  futureUnsupportedFormatFixtureSample
+  futureUnsupportedFormatFixtureSample,
+  futureRawPayloadFixtureSample
 ];
 
 export function flattenFuturePlanFormatFields(draft = futurePlanFormatDraft): FuturePlanFormatField[] {
@@ -1447,6 +1497,53 @@ export function validateFutureFixtureSamples(
   const plannedImportResultsById = Object.fromEntries(samples.map((sample) => [sample.fixtureId, sample.plannedImportResult]));
 
   return validateFutureFixtureShapeBatch(fixturesById, plannedImportResultsById, draft);
+}
+
+export function futureFixtureSampleCoverageRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureFixtureSampleCoverageRow[] {
+  return samples.map((sample) => {
+    const shape = findFutureTestOnlyFixtureShape(sample.fixtureId, draft);
+    const hasKnownShape = Boolean(shape);
+    const importResultMatchesShape = shape?.expectedImportResult === sample.plannedImportResult;
+    const isTestOnly = sample.mode === 'test-only';
+    const hasGuardrails = sample.mustNotDo.length > 0;
+
+    return {
+      sampleId: sample.id,
+      fixtureId: sample.fixtureId,
+      status: hasKnownShape && importResultMatchesShape && isTestOnly && hasGuardrails ? 'pass' : 'fail',
+      hasKnownShape,
+      importResultMatchesShape,
+      isTestOnly,
+      hasGuardrails
+    };
+  });
+}
+
+export function futureRawPayloadSampleBlockExpectation(
+  sample = futureRawPayloadFixtureSample,
+  draft = futurePlanFormatDraft
+): FutureRawPayloadSampleBlockExpectation {
+  const rawRule = draft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload' && rule.decision === 'block');
+  const expectedMessage = draft.rawPayloadPolicy.message;
+  const messageMatchesRule = rawRule?.message === expectedMessage;
+  const messageMatchesPolicy = draft.importBlockExpectationChecks.some(
+    (check) => check.blockedRuleId === 'rawPayload' && check.expectedMessage === expectedMessage
+  );
+  const preservesCurrentState = sample.mustNotDo.includes('change current plan state');
+  const rejectsRawPlanFileTreatment = sample.mustNotDo.includes('treat raw payloads as plan files');
+
+  return {
+    sampleId: sample.id,
+    status: messageMatchesRule && messageMatchesPolicy && preservesCurrentState && rejectsRawPlanFileTreatment ? 'pass' : 'fail',
+    expectedMessage,
+    messageMatchesRule,
+    messageMatchesPolicy,
+    preservesCurrentState,
+    rejectsRawPlanFileTreatment
+  };
 }
 
 export function futureFixtureExpectationCoverageRows(draft = futurePlanFormatDraft): FutureFixtureExpectationCoverageRow[] {

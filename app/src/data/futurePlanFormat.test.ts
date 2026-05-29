@@ -12,6 +12,7 @@ import {
   futureExampleDataDraftIds,
   futureFreshExampleRebuildPlanIds,
   futureFixtureExpectationHardeningIds,
+  futureFixtureSampleCoverageRows,
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureFundingTraceAccountGroupIds,
@@ -28,6 +29,8 @@ import {
   futureOldPreviewFixtureSample,
   futureOptimizerReadinessIds,
   futureOptimizerContractItemIds,
+  futureRawPayloadFixtureSample,
+  futureRawPayloadSampleBlockExpectation,
   futureRollbackReleaseStopItems,
   futureSchemaResetDecisionReadinessIds,
   futureTestOnlyFixtureSamples,
@@ -183,7 +186,8 @@ describe('future plan format draft', () => {
     expect(futureTestOnlyFixtureShapeIds()).toEqual([
       'futureMinimumFloorPlan',
       'legacyPreviewDesiredSpendPayload',
-      'unsupportedFuturePlanFile'
+      'unsupportedFuturePlanFile',
+      'rawUnwrappedPayload'
     ]);
     expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'futureMinimumFloorPlan')?.forbiddenKeys).toContain(
       'confidentMonthlyAfterTaxSpend'
@@ -191,6 +195,11 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'legacyPreviewDesiredSpendPayload')?.expectedImportResult).toBe(
       'block'
     );
+    expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'rawUnwrappedPayload')).toMatchObject({
+      intent: 'blocked-raw-payload',
+      wrapper: 'raw-unwrapped-payload',
+      expectedImportResult: 'block'
+    });
   });
 
   it('hardens fixture expectations before production import wiring', () => {
@@ -407,6 +416,29 @@ describe('future plan format draft', () => {
     });
   });
 
+  it('keeps the raw-payload sample blocked as an unwrapped payload', () => {
+    const shape = findFutureTestOnlyFixtureShape(futureRawPayloadFixtureSample.fixtureId);
+
+    expect(futureRawPayloadFixtureSample).toMatchObject({
+      id: 'rawUnwrappedPayloadInMemory',
+      fixtureId: 'rawUnwrappedPayload',
+      plannedImportResult: 'block',
+      mode: 'test-only'
+    });
+    expect(futureRawPayloadFixtureSample.fixture).not.toHaveProperty('plan');
+    expect(futureRawPayloadFixtureSample.fixture).not.toHaveProperty('metadata');
+    expect(futureRawPayloadFixtureSample.mustNotDo).toContain('treat raw payloads as plan files');
+    expect(futureRawPayloadFixtureSample.mustNotDo).toContain('change current plan state');
+    expect(validateFutureFixtureShape(shape!, futureRawPayloadFixtureSample.fixture, futureRawPayloadFixtureSample.plannedImportResult)).toMatchObject({
+      fixtureId: 'rawUnwrappedPayload',
+      expectedImportResult: 'block',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true
+    });
+  });
+
   it('finds future test-only fixture shapes by stable id', () => {
     expect(findFutureTestOnlyFixtureShape('futureMinimumFloorPlan')).toMatchObject({
       id: 'futureMinimumFloorPlan',
@@ -435,20 +467,27 @@ describe('future plan format draft', () => {
       unsupportedFuturePlanFile: {
         schemaVersion: 99,
         futureOnlyField: true
+      },
+      rawUnwrappedPayload: {
+        payloadKind: 'raw-unwrapped-json',
+        rawPlanPayload: {
+          schemaVersion: 3
+        }
       }
     });
 
     expect(summary).toMatchObject({
       status: 'pass',
-      total: 3,
-      passed: 3,
+      total: 4,
+      passed: 4,
       failed: 0,
       mode: 'test-only'
     });
     expect(summary.results.map((result) => result.fixtureId)).toEqual([
       'futureMinimumFloorPlan',
       'legacyPreviewDesiredSpendPayload',
-      'unsupportedFuturePlanFile'
+      'unsupportedFuturePlanFile',
+      'rawUnwrappedPayload'
     ]);
   });
 
@@ -458,21 +497,111 @@ describe('future plan format draft', () => {
     expect(futureTestOnlyFixtureSamples.map((sample) => sample.id)).toEqual([
       'singleCoveredMinimumFloorInMemory',
       'legacyDesiredSpendInMemory',
-      'unsupportedFutureFieldInMemory'
+      'unsupportedFutureFieldInMemory',
+      'rawUnwrappedPayloadInMemory'
     ]);
     expect(futureTestOnlyFixtureSamples.every((sample) => sample.mode === 'test-only')).toBe(true);
     expect(summary).toMatchObject({
       status: 'pass',
-      total: 3,
-      passed: 3,
+      total: 4,
+      passed: 4,
       failed: 0,
       mode: 'test-only'
     });
     expect(summary.results.map((result) => [result.fixtureId, result.expectedImportResult])).toEqual([
       ['futureMinimumFloorPlan', 'accept'],
       ['legacyPreviewDesiredSpendPayload', 'block'],
-      ['unsupportedFuturePlanFile', 'block']
+      ['unsupportedFuturePlanFile', 'block'],
+      ['rawUnwrappedPayload', 'block']
     ]);
+  });
+
+  it('keeps every in-memory sample covered by a known test-only shape and guardrails', () => {
+    const coverage = futureFixtureSampleCoverageRows();
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        sampleId: 'singleCoveredMinimumFloorInMemory',
+        fixtureId: 'futureMinimumFloorPlan',
+        status: 'pass',
+        hasKnownShape: true,
+        importResultMatchesShape: true,
+        isTestOnly: true,
+        hasGuardrails: true
+      }),
+      expect.objectContaining({
+        sampleId: 'legacyDesiredSpendInMemory',
+        fixtureId: 'legacyPreviewDesiredSpendPayload',
+        status: 'pass'
+      }),
+      expect.objectContaining({
+        sampleId: 'unsupportedFutureFieldInMemory',
+        fixtureId: 'unsupportedFuturePlanFile',
+        status: 'pass'
+      }),
+      expect.objectContaining({
+        sampleId: 'rawUnwrappedPayloadInMemory',
+        fixtureId: 'rawUnwrappedPayload',
+        status: 'pass'
+      })
+    ]);
+  });
+
+  it('marks sample coverage incomplete when a sample drifts from its shape', () => {
+    const coverage = futureFixtureSampleCoverageRows([
+      {
+        ...futureRawPayloadFixtureSample,
+        plannedImportResult: 'accept',
+        mustNotDo: []
+      }
+    ]);
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        sampleId: 'rawUnwrappedPayloadInMemory',
+        status: 'fail',
+        hasKnownShape: true,
+        importResultMatchesShape: false,
+        isTestOnly: true,
+        hasGuardrails: false
+      })
+    ]);
+  });
+
+  it('ties the raw-payload sample to the planned raw block message and state boundary', () => {
+    expect(futureRawPayloadSampleBlockExpectation()).toEqual({
+      sampleId: 'rawUnwrappedPayloadInMemory',
+      status: 'pass',
+      expectedMessage: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.',
+      messageMatchesRule: true,
+      messageMatchesPolicy: true,
+      preservesCurrentState: true,
+      rejectsRawPlanFileTreatment: true
+    });
+  });
+
+  it('marks the raw-payload sample block expectation incomplete if copy or guardrails drift', () => {
+    expect(
+      futureRawPayloadSampleBlockExpectation(
+        {
+          ...futureRawPayloadFixtureSample,
+          mustNotDo: ['partially import raw payload data']
+        },
+        {
+          ...futurePlanFormatDraft,
+          rawPayloadPolicy: {
+            ...futurePlanFormatDraft.rawPayloadPolicy,
+            message: 'Different raw block message.'
+          }
+        }
+      )
+    ).toMatchObject({
+      status: 'fail',
+      messageMatchesRule: false,
+      messageMatchesPolicy: false,
+      preservesCurrentState: false,
+      rejectsRawPlanFileTreatment: false
+    });
   });
 
   it('summarizes missing batch fixtures as failures without reading files', () => {
@@ -487,9 +616,9 @@ describe('future plan format draft', () => {
 
     expect(summary).toMatchObject({
       status: 'fail',
-      total: 3,
+      total: 4,
       passed: 1,
-      failed: 2,
+      failed: 3,
       mode: 'test-only'
     });
     expect(summary.results.find((result) => result.fixtureId === 'legacyPreviewDesiredSpendPayload')?.missingRequiredKeys).toEqual([
@@ -512,7 +641,7 @@ describe('future plan format draft', () => {
       hasAvoidanceRequirements: true
     });
     expect(coverage.find((row) => row.expectationId === 'rawPayloadFixtureBlockedDeliberately')).toMatchObject({
-      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      fixtureId: 'rawUnwrappedPayload',
       status: 'pass'
     });
   });
