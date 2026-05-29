@@ -779,6 +779,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Use the statement value. If unsure, 2%');
     expect(appSource).toContain('Regular spending assumptions');
     expect(appSource).toContain('Exclude mortgage payments already entered in Debts');
+    expect(appSource).toContain('The planner can model spending changing with age.');
+    expect(appSource).toContain('Early spending changes at age');
+    expect(appSource).toContain('Later spending changes at age');
     expect(appSource).toContain('Inputs stay here until you save an editable plan file');
     expect(appSource).toContain('Changes update this plan as soon as you type');
     expect(appSource).toContain('Start with:');
@@ -825,7 +828,9 @@ describe('Results overview structure', () => {
       'Go / slow / no-go',
       'Retirement lifestyle spending',
       'Go phase spending',
+      'Go phase ends at age',
       'Slow phase spending',
+      'Slow phase ends at age',
       'No-go phase spending'
     ];
 
@@ -833,6 +838,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Regular spending assumptions');
     expect(appSource).toContain('Early spending assumption');
     expect(resultSelectorsSource).toContain('Minimum spending needs review');
+    expect(appSource).toContain('The monthly answer can still reflect spending changing with age.');
+    expect(appSource).toContain('Adjust the spending breakpoints in Guided Intake and');
     retiredPhrases.forEach((phrase) => {
       expect(activeCopySources).not.toContain(phrase);
     });

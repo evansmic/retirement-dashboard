@@ -13,6 +13,8 @@ Important boundaries:
 - Do not ask for guaranteed/safe-spend language.
 - Treat after-tax monthly spending capacity as the primary consumer answer. Flag places where the product still feels like it asks users to guess desired spending before the app estimates capacity.
 - Review whether a future minimum-monthly-expense input, excluding mortgage payments already entered in Debts, would make the flow clearer.
+- Review whether the spending-path explainer makes it clear that normal age-based spending changes are modelled underneath one monthly answer.
+- Review whether spending breakpoint ages feel like optional assumptions to adjust and rerun, not required user expertise.
 - Do not reward options that reduce lifestyle, delay retirement, or delay benefits unless the plan has a visible funding issue and the option materially helps.
 - Actual tax-aware drawdown execution is intended for v1, but it must remain conservative, explainable, review-oriented, and never presented as personalized financial advice.
 - Saved `.plan.json` files must not include optimizer output, checkpoint output, stress output, drawdown drafts, comparison output, or feedback output.
@@ -63,6 +65,8 @@ Answer:
 - Is the confidence/readiness language calm and non-advisory?
 - Is the after-tax monthly spending number prominent enough?
 - Is “today’s dollars” visible where spending is discussed?
+- Is it clear that the monthly answer can still reflect spending changing with age?
+- Do breakpoint controls feel understandable and secondary?
 - Does the flow feel like the app estimates capacity from assets, or like the user must guess a desired spend?
 - Are the top review actions useful and limited enough?
 - Is Overview too dense?

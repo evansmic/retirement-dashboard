@@ -1991,6 +1991,10 @@ function SpendingEventsStep({
           Start with regular after-tax expenses in today's dollars. Exclude mortgage payments already entered in Debts. Use the
           later fields only if spending is expected to change materially over time.
         </p>
+        <p className="field-hint">
+          The planner can model spending changing with age. These breakpoints are adjustable assumptions, not something you need
+          to know perfectly before seeing Results.
+        </p>
         <div className="field-row three spending-phase-row">
           <label className={`field ${fieldIssueClass(attention, ['gogo_spending'])}`}>
             <span>Early retirement spending</span>
@@ -2004,7 +2008,7 @@ function SpendingEventsStep({
             />
           </label>
           <label className={`field ${fieldIssueClass(attention, ['spending_phase_ages'])}`}>
-            <span>Go phase ends at age</span>
+            <span>Early spending changes at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -2027,7 +2031,7 @@ function SpendingEventsStep({
         </div>
         <div className="field-row spending-phase-row">
           <label className={`field ${fieldIssueClass(attention, ['spending_phase_ages', 'spending_phase_order'])}`}>
-            <span>Slow phase ends at age</span>
+            <span>Later spending changes at age</span>
             <input
               inputMode="numeric"
               type="number"
@@ -3565,6 +3569,10 @@ function SpendingCapacityPanel({
         <Metric label="Estate target" value={summary.estateTarget ? formatMoney(summary.estateTarget) : 'Not set'} />
       </div>
       <p className="table-note">{summary.planningEstimateDetail}</p>
+      <p className="table-note">
+        The monthly answer can still reflect spending changing with age. Adjust the spending breakpoints in Guided Intake and
+        rerun Results if the default timing does not fit the household.
+      </p>
 
       <div className="spending-capacity-grid">
         <section>

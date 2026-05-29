@@ -39,6 +39,8 @@ Use at least one built-in example plan. If you have time, try three:
 - Did anything feel too technical, too dense, or too confident?
 - Did the page make clear that spending numbers are planning estimates, not guarantees?
 - Did the monthly after-tax spending number feel prominent enough?
+- Did the short explanation about spending changing with age make sense?
+- Did the breakpoint ages feel like optional assumptions you could adjust and rerun, rather than something you had to know perfectly?
 - Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?
 - If minimum expenses were not covered, which options would you expect to compare first?
 

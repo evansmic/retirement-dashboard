@@ -50,6 +50,13 @@ function createV1CheckpointFeedbackForm() {
   addScale('How clear was the spending estimate?', 'Confusing', 'Clear and appropriately cautious');
   addScale('Was the after-tax monthly spending number prominent enough?', 'Hard to find', 'Clearly visible');
   addChoice('Did spending language feel like a planning estimate rather than a guarantee?', ['Yes', 'Mostly', 'No', 'Not sure']);
+  addScale('Did the explanation that spending can change with age make sense?', 'Confusing', 'Clear');
+  addChoice('Did the spending breakpoint ages feel like optional assumptions you could adjust and rerun?', [
+    'Yes',
+    'Mostly',
+    'No',
+    'Not sure'
+  ]);
   addChoice('Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?', [
     'Yes',
     'Maybe',

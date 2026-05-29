@@ -8,11 +8,18 @@ The app should answer the household question first:
 
 Users should not need to guess a sustainable retirement lifestyle number before seeing the result.
 
+## Spending Path Direction
+
+The app can still model retirement spending as a path over time. Many retirees spend more in early retirement and less later as travel, projects, and discretionary activity naturally slow. That normal progression should be handled by defaults and engine assumptions, not by asking users to understand go-go, slow-go, or no-go terminology.
+
+The main answer should remain a single after-tax monthly amount in today's dollars. Results can include a short explainer that says the projection models spending changing with age. Advanced or secondary controls can let users adjust the breakpoint ages and rerun, but those controls should feel like calibration, not required expertise.
+
 ## Product Direction
 
 - Ask for assets, income, pensions, debts, mortgage payments, retirement timing, survivor setup, and tax-relevant assumptions.
 - Ask for the household's minimum monthly expenses, excluding mortgage payments already entered in Debts.
 - Use the engine to estimate after-tax monthly spending capacity in today's dollars.
+- Model normal spending changes with age behind the scenes, using clear defaults and adjustable breakpoints.
 - Compare that capacity with the minimum expense floor.
 - If the floor appears covered, show estimated discretionary room and the funding trace.
 - If the floor does not appear covered, show practical options to compare: lower expenses, work longer, downsize, save more, adjust benefit timing, revisit debt timing, or revisit estate intent.
@@ -32,6 +39,7 @@ Near-term UI copy should:
 
 - Prefer after-tax monthly spending capacity over annual desired spend.
 - Avoid repeating "desired spend" or "spending target" as the primary answer.
+- Explain that age-based spending changes are modelled as assumptions and can be adjusted before rerunning.
 - Make shortfall states point to options to compare, not a single spending cut.
 - Describe current funding views as traces or review evidence, not instructions.
 - Keep all wording consumer-facing, calm, and non-advisory.

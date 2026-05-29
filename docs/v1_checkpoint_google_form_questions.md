@@ -62,64 +62,12 @@ Recommended description:
      - No
      - Not sure
 
-10. **Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?**
-    - Multiple choice
-    - Options:
-      - Yes
-      - Maybe
-      - No
-      - Not sure
-
-11. **If minimum expenses were not covered, which options would you expect to compare first?**
-    - Paragraph
-    - Helper text: “Examples: lower expenses, work longer, downsize, save more, adjust benefit timing, review tax, revisit estate intent.”
-
-12. **Were the top review actions useful?**
-   - Linear scale 1-5
-   - 1 = Not useful
-   - 5 = Very useful
-
-13. **What, if anything, made the first screen feel too dense or too light?**
-    - Paragraph
-
-## Section 3: Trust And Safety
-
-14. **Overall trust after using the planner**
-    - Linear scale 1-5
-    - 1 = Low trust
-    - 5 = High trust
-
-15. **Did anything sound like personalized financial advice?**
-    - Multiple choice
-    - Options:
-      - No
-      - Maybe
-      - Yes
-
-16. **If yes or maybe, what wording or screen caused that reaction?**
-    - Paragraph
-
-17. **Did any number feel too precise for a long-term projection?**
-    - Multiple choice
-    - Options:
-      - No
-      - Maybe
-      - Yes
-
-18. **What increased your trust most?**
-    - Paragraph
-
-19. **What reduced your trust most?**
-    - Paragraph
-
-## Section 4: Drawdown, Taxes, Benefits, And Couples
-
-20. **How understandable were the tax and benefit timing sections?**
+10. **Did the explanation that spending can change with age make sense?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
-21. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
+11. **Did the spending breakpoint ages feel like optional assumptions you could adjust and rerun?**
     - Multiple choice
     - Options:
       - Yes
@@ -127,14 +75,79 @@ Recommended description:
       - No
       - Not sure
 
-22. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
+12. **Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?**
+    - Multiple choice
+    - Options:
+      - Yes
+      - Maybe
+      - No
+      - Not sure
+
+13. **If minimum expenses were not covered, which options would you expect to compare first?**
+    - Paragraph
+    - Helper text: “Examples: lower expenses, work longer, downsize, save more, adjust benefit timing, review tax, revisit estate intent.”
+
+14. **Were the top review actions useful?**
+   - Linear scale 1-5
+   - 1 = Not useful
+   - 5 = Very useful
+
+15. **What, if anything, made the first screen feel too dense or too light?**
+    - Paragraph
+
+## Section 3: Trust And Safety
+
+16. **Overall trust after using the planner**
+    - Linear scale 1-5
+    - 1 = Low trust
+    - 5 = High trust
+
+17. **Did anything sound like personalized financial advice?**
     - Multiple choice
     - Options:
       - No
       - Maybe
       - Yes
 
-23. **If you tested a couple plan, was survivor or pension-continuation information clear?**
+18. **If yes or maybe, what wording or screen caused that reaction?**
+    - Paragraph
+
+19. **Did any number feel too precise for a long-term projection?**
+    - Multiple choice
+    - Options:
+      - No
+      - Maybe
+      - Yes
+
+20. **What increased your trust most?**
+    - Paragraph
+
+21. **What reduced your trust most?**
+    - Paragraph
+
+## Section 4: Drawdown, Taxes, Benefits, And Couples
+
+22. **How understandable were the tax and benefit timing sections?**
+    - Linear scale 1-5
+    - 1 = Confusing
+    - 5 = Clear
+
+23. **Did drawdown or optimizer language feel review-oriented rather than instructional?**
+    - Multiple choice
+    - Options:
+      - Yes
+      - Mostly
+      - No
+      - Not sure
+
+24. **Did any option feel like it pushed lifestyle cuts, working longer, or delayed benefits too strongly?**
+    - Multiple choice
+    - Options:
+      - No
+      - Maybe
+      - Yes
+
+25. **If you tested a couple plan, was survivor or pension-continuation information clear?**
     - Multiple choice
     - Options:
       - Yes
@@ -142,55 +155,55 @@ Recommended description:
       - No
       - Not tested
 
-24. **Any Canadian planning concerns you noticed?**
+26. **Any Canadian planning concerns you noticed?**
     - Paragraph
     - Helper text: “CPP, OAS, RRIF/LIF, DB pensions, survivor assumptions, estate goals, home equity, tax timing, or eligibility.”
 
 ## Section 5: Save, Export, And Local-First Trust
 
-25. **Was the difference between saving an editable plan and opening a printable report clear?**
+27. **Was the difference between saving an editable plan and opening a printable report clear?**
     - Linear scale 1-5
     - 1 = Not clear
     - 5 = Very clear
 
-26. **Did local-first behavior feel trustworthy?**
+28. **Did local-first behavior feel trustworthy?**
     - Linear scale 1-5
     - 1 = Not trustworthy
     - 5 = Very trustworthy
 
-27. **What, if anything, would make saving/exporting feel safer?**
+29. **What, if anything, would make saving/exporting feel safer?**
     - Paragraph
 
 ## Section 6: Visual And UX Checkpoint
 
-28. **Visual polish today**
+30. **Visual polish today**
     - Linear scale 1-5
     - 1 = Very rough
     - 5 = Very polished
 
-29. **What visual or layout issues should be fixed before v1?**
+31. **What visual or layout issues should be fixed before v1?**
     - Paragraph
 
-30. **What visual or layout issues can wait for the later UX pass?**
+32. **What visual or layout issues can wait for the later UX pass?**
     - Paragraph
 
-31. **Were charts and tables easy to understand?**
+33. **Were charts and tables easy to understand?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
 
 ## Section 7: Priority Feedback
 
-32. **Top 3 things that increased trust**
+34. **Top 3 things that increased trust**
     - Paragraph
 
-33. **Top 3 things that reduced trust**
+35. **Top 3 things that reduced trust**
     - Paragraph
 
-34. **One thing you would fix before showing this to more people**
+36. **One thing you would fix before showing this to more people**
     - Paragraph
 
-35. **How should this feedback be classified overall?**
+37. **How should this feedback be classified overall?**
     - Multiple choice
     - Options:
       - Fix before v1
