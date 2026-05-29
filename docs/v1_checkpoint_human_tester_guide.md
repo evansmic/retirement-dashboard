@@ -26,9 +26,10 @@ Use at least one built-in example plan. If you have time, try three:
    - what the first thing to review should be.
 6. Open Details.
 7. Look for checkpoint, drawdown, tax, and optimizer-review sections.
-8. Open Taxes and Household Resilience if the example includes a couple.
-9. Open Save / Export.
-10. Save an editable plan and open the printable report if available.
+8. In Details, look for the minimum-expense bridge and write down whether it helps or confuses the spending answer.
+9. Open Taxes and Household Resilience if the example includes a couple.
+10. Open Save / Export.
+11. Save an editable plan and open the printable report if available.
 
 ## Questions We Care About Most
 
@@ -43,6 +44,8 @@ Use at least one built-in example plan. If you have time, try three:
 - Did the breakpoint ages feel like optional assumptions you could adjust and rerun, rather than something you had to know perfectly?
 - Would it be clearer if intake asked for minimum monthly expenses, excluding mortgage, instead of desired retirement spending?
 - If minimum expenses were not covered, which options would you expect to compare first?
+- Did the Details minimum-expense bridge help explain the relationship between a spending floor and monthly capacity?
+- Did the bridge wording make clear that this is temporary review evidence, not a saved input or instruction?
 
 ### Trust
 

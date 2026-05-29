@@ -18,6 +18,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectMinimumExpenseCoverageSummary,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -483,6 +484,45 @@ describe('result selectors', () => {
     expect(spending.repairEarlySpending).toBe(Math.round((planFixture.spending.gogo || 0) * 0.9));
     expect(spending.detail).toContain('lower-spending test');
     expect(spending.reviewActions.find((action) => action.id === 'spendLess')).toBeTruthy();
+  });
+
+  it('checks minimum-expense coverage as a runtime-only bridge summary', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const coverage = selectMinimumExpenseCoverageSummary(fixture, planFixture, spending);
+
+    expect(coverage).toMatchObject({
+      status: 'tight',
+      minimumAnnualExpense: 70000,
+      minimumMonthlyExpense: 70000 / 12,
+      estimatedAnnualCapacity: 70000,
+      estimatedMonthlyCapacity: 70000 / 12,
+      annualGapOrRoom: 0
+    });
+    expect(coverage.boundary).toContain('Bridge-only summary');
+    expect(coverage.boundary).toContain('No saved field or engine output is added');
+    expect(Object.keys(planFixture)).not.toContain('minimumExpenseCoverage');
+  });
+
+  it('shows gap-review options when the temporary minimum floor is not covered', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const coverage = selectMinimumExpenseCoverageSummary(shortfallResult, planFixture, spending);
+
+    expect(coverage.status).toBe('gap');
+    expect(coverage.annualGapOrRoom).toBeLessThan(0);
+    expect(coverage.reviewOptions.map((option) => option.id)).toEqual(['expenses', 'workLonger', 'downsize', 'saveMore']);
+    expect(coverage.detail).toContain('working longer');
+    expect(coverage.detail).toContain('downsizing');
+    expect(coverage.detail).toContain('saving more');
   });
 
   it('summarizes fragile spending stress when lower spending repairs a shortfall', () => {

@@ -20,6 +20,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).toContain('<ReviewTheseFirstPanel');
     expect(overviewBranch).toContain('<OverviewHighlightsPanel');
     expect(overviewBranch).not.toContain('<EstateIntentPanel');
+    expect(overviewBranch).not.toContain('<MinimumExpenseCoveragePanel');
     expect(overviewBranch).not.toContain('<BoundedOptimizerPanel');
     expect(overviewBranch).not.toContain('<ResultsReadinessPanel');
     expect(overviewBranch).not.toContain('<ScenarioCardsPanel');
@@ -31,6 +32,7 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('<OptimizerBoundaryPanel');
 
     expect(detailsPanel).toContain('<EstateIntentPanel');
+    expect(detailsPanel).toContain('<MinimumExpenseCoveragePanel');
     expect(detailsPanel).toContain('<SourceStoryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
     expect(detailsPanel).toContain('<DecisionChecklistPanel');
@@ -850,5 +852,19 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('First-year spending funding trace');
     expect(appSource).toContain('This is a first-year funding trace for review, not annual account-by-account withdrawal instructions.');
     expect(appSource).toContain('It does not tell you which account to withdraw from');
+  });
+
+  it('keeps the minimum-expense bridge in Details without adding saved output', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+
+    expect(appSource).toContain('Minimum expense bridge');
+    expect(appSource).toContain('Temporary monthly floor');
+    expect(appSource).toContain('Estimated monthly capacity');
+    expect(resultSelectorsSource).toContain('Bridge-only summary: current phased spending is used as a temporary minimum-expense fixture.');
+    expect(overviewBranch).not.toContain('Minimum expense bridge');
+    expect(appSource).toContain('minimumExpenseCoverage={minimumExpenseCoverage}');
+    expect(resultSelectorsSource).toContain('No saved field or engine output is added');
   });
 });

@@ -728,6 +728,27 @@ export type SpendingCapacitySummary = {
   }>;
 };
 
+export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
+
+export type MinimumExpenseCoverageSummary = {
+  status: MinimumExpenseCoverageStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  minimumAnnualExpense: number;
+  minimumMonthlyExpense: number;
+  estimatedAnnualCapacity: number;
+  estimatedMonthlyCapacity: number;
+  annualGapOrRoom: number;
+  reviewOptions: Array<{
+    id: 'expenses' | 'workLonger' | 'downsize' | 'saveMore' | 'benefits' | 'tax' | 'estate';
+    label: string;
+    detail: string;
+    detailArea: ResultsWorkspaceSection;
+  }>;
+  boundary: string;
+};
+
 export type EstateIntentStatus = 'cannotTell' | 'needsIntent' | 'taxReview' | 'survivorReview' | 'aligned';
 
 export type EstateIntentSummary = {
@@ -1274,6 +1295,107 @@ export function selectSpendingCapacitySummary(
 }
 
 export const selectSpendingStressSummary = selectSpendingStressSummaryFromStressModule;
+
+export function selectMinimumExpenseCoverageSummary(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  spendingCapacity: SpendingCapacitySummary = selectSpendingCapacitySummary(baseline, {}, plan)
+): MinimumExpenseCoverageSummary {
+  const overview = selectOverviewMetrics(baseline);
+  const rows = rowsFrom(baseline);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const minimumAnnualExpense = n(plan?.spending?.gogo) || overview.firstYearSpending;
+  const estimatedAnnualCapacity = n(spendingCapacity.estimatedSustainableAnnualSpending);
+  const annualGapOrRoom = estimatedAnnualCapacity - minimumAnnualExpense;
+
+  let status: MinimumExpenseCoverageStatus = 'covered';
+  if (!rows.length || !minimumAnnualExpense || !estimatedAnnualCapacity || spendingCapacity.status === 'cannotTell') status = 'cannotTell';
+  else if (firstShortfall || annualGapOrRoom < 0) status = 'gap';
+  else if (annualGapOrRoom <= Math.max(1200, minimumAnnualExpense * 0.05) || spendingCapacity.status === 'tight') status = 'tight';
+
+  const labelByStatus: Record<MinimumExpenseCoverageStatus, string> = {
+    cannotTell: 'Minimum-expense coverage needs more inputs',
+    gap: 'Minimum expenses need review',
+    tight: 'Minimum expenses appear covered, with limited room',
+    covered: 'Minimum expenses appear covered'
+  };
+  const headlineByStatus: Record<MinimumExpenseCoverageStatus, string> = {
+    cannotTell: 'The minimum-expense check will be useful after required inputs are complete.',
+    gap: 'The current bridge estimate does not fully cover the spending floor in the visible projection.',
+    tight: 'The current bridge estimate covers the spending floor, but there is not much extra room.',
+    covered: 'The current bridge estimate covers the spending floor under the base assumptions.'
+  };
+  const detailByStatus: Record<MinimumExpenseCoverageStatus, string> = {
+    cannotTell: 'Complete required inputs, then compare minimum expenses with estimated monthly after-tax capacity.',
+    gap: 'Compare lower expenses, working longer, downsizing, saving more, benefit timing, tax, and estate intent together.',
+    tight: 'Keep the floor visible while reviewing tax, timing, and market sensitivity.',
+    covered: 'The next review is whether the floor reflects regular expenses and whether any extra room matches the household goal.'
+  };
+
+  const reviewOptions: MinimumExpenseCoverageSummary['reviewOptions'] =
+    status === 'gap'
+      ? [
+          {
+            id: 'expenses',
+            label: 'Review regular expenses',
+            detail: 'Check whether the minimum floor is complete and whether any expenses can reasonably change.',
+            detailArea: 'stressTests'
+          },
+          {
+            id: 'workLonger',
+            label: 'Compare working longer',
+            detail: 'Working longer can add savings and reduce the number of funded years needed.',
+            detailArea: 'stressTests'
+          },
+          {
+            id: 'downsize',
+            label: 'Review home equity only if realistic',
+            detail: 'Downsizing should stay out of the plan unless the household would truly consider it.',
+            detailArea: 'details'
+          },
+          {
+            id: 'saveMore',
+            label: 'Compare saving more before retirement',
+            detail: 'Additional savings may improve the floor coverage check before retirement starts.',
+            detailArea: 'details'
+          }
+        ]
+      : [
+          {
+            id: 'tax',
+            label: 'Review tax pressure',
+            detail: 'Tax and OAS recovery can affect how much after-tax spending is available.',
+            detailArea: 'taxes'
+          },
+          {
+            id: 'benefits',
+            label: 'Review benefit timing',
+            detail: 'Benefit timing changes income, withdrawals, and survivor resilience.',
+            detailArea: 'stressTests'
+          },
+          {
+            id: 'estate',
+            label: 'Review estate intent',
+            detail: 'Estate intent helps explain whether extra room should be preserved, spent, or tested.',
+            detailArea: 'details'
+          }
+        ];
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail: detailByStatus[status],
+    minimumAnnualExpense,
+    minimumMonthlyExpense: minimumAnnualExpense / 12,
+    estimatedAnnualCapacity,
+    estimatedMonthlyCapacity: estimatedAnnualCapacity / 12,
+    annualGapOrRoom,
+    reviewOptions,
+    boundary:
+      'Bridge-only summary: current phased spending is used as a temporary minimum-expense fixture. No saved field or engine output is added.'
+  };
+}
 
 export function selectDrawdownReadinessSummary(
   result: SimulationResult | null | undefined,

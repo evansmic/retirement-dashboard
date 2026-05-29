@@ -66,6 +66,13 @@ function createV1CheckpointFeedbackForm() {
   form.addParagraphTextItem()
     .setTitle('If minimum expenses were not covered, which options would you expect to compare first?')
     .setHelpText('Examples: lower expenses, work longer, downsize, save more, adjust benefit timing, review tax, revisit estate intent.');
+  addScale('Did the Details minimum-expense bridge help explain the relationship between a spending floor and monthly capacity?', 'Confusing', 'Helpful');
+  addChoice('Did the bridge wording make clear that this is temporary review evidence, not a saved input or instruction?', [
+    'Yes',
+    'Mostly',
+    'No',
+    'Not sure'
+  ]);
   addScale('Were the top review actions useful?', 'Not useful', 'Very useful');
   form.addParagraphTextItem().setTitle('What, if anything, made the first screen feel too dense or too light?');
 

@@ -36,6 +36,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectMinimumExpenseCoverageSummary,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -3084,6 +3085,7 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
   const spendingStressSummary = selectSpendingStressSummary(result, spendingStress, plan);
   const drawdownReadiness = selectDrawdownReadinessSummary(result, plan);
   const estateIntent = selectEstateIntentSummary(result, plan, survivor, retirementAnswer);
@@ -3254,6 +3256,7 @@ function ResultsHandoffPanel({
             checkpointReviewBoard={checkpointReviewBoard}
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
+            minimumExpenseCoverage={minimumExpenseCoverage}
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
             scenarioComparisonRows={scenarioComparisonRows}
@@ -3752,6 +3755,42 @@ function EstateIntentPanel({
   );
 }
 
+function MinimumExpenseCoveragePanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
+}) {
+  return (
+    <section className={`result-card minimum-expense-panel minimum-expense-${summary.status}`}>
+      <div>
+        <p className="eyebrow">Minimum expense bridge</p>
+        <h3>{loading ? 'Checking minimum-expense coverage' : summary.label}</h3>
+        <p>{summary.headline}</p>
+        <p>{summary.detail}</p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Temporary monthly floor" value={formatMoney(summary.minimumMonthlyExpense)} />
+        <Metric label="Estimated monthly capacity" value={formatMoney(summary.estimatedMonthlyCapacity)} />
+        <Metric label="Annual gap or room" value={formatSignedMoney(summary.annualGapOrRoom)} />
+      </div>
+
+      <div className="optimizer-eligibility-list">
+        {summary.reviewOptions.map((option) => (
+          <article className="optimizer-eligibility-note eligibility-review" key={option.id}>
+            <strong>{option.label}</strong>
+            <span>Review</span>
+            <p>{option.detail}</p>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{summary.boundary}</p>
+    </section>
+  );
+}
+
 function DetailsResultsPanel({
   decisionChecklist,
   decisionDetailRows,
@@ -3821,6 +3860,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard,
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
+  minimumExpenseCoverage,
   readinessSummary,
   scenarioAssumptionRows,
   scenarioComparisonRows,
@@ -3898,6 +3938,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard: ReturnType<typeof selectCheckpointReviewBoard>;
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
+  minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
   scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
@@ -3990,6 +4031,7 @@ function DetailsResultsPanel({
       <div className="result-section-label">Planning evidence</div>
       <PlanHealthPanel health={planHealth} loading={loading} />
       <EstateIntentPanel loading={loading} summary={estateIntent} />
+      <MinimumExpenseCoveragePanel loading={loading} summary={minimumExpenseCoverage} />
       <div className="result-section-label">Money Flow</div>
       <SourceStoryPanel story={sourceStory} />
       <FirstYearMoneyFlowPanel fundingRows={fundingRows} loading={loading} reconciliation={reconciliation} />
