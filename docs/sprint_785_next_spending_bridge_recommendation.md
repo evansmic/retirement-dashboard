@@ -8,8 +8,8 @@ Recommend the next conservative package.
 
 Good next directions:
 
-1. Draft schema migration rules for minimum monthly expenses and spending-path metadata.
-2. Add import/export planning for old phased-spending files into the future model.
+1. Draft clean saved-format reset rules for minimum monthly expenses and spending-path metadata.
+2. Add old-preview-file blocking planning instead of mapping old phased-spending files into the future model.
 3. Continue account-optimizer readiness so funding-source explanations can become year-by-year later.
 
 Avoid:

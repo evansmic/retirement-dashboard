@@ -18,6 +18,8 @@ Important boundaries:
 - Review whether the spending-path explainer makes it clear that normal age-based spending changes are modelled underneath one monthly answer.
 - Review whether spending breakpoint ages feel like optional assumptions to adjust and rerun, not required user expertise.
 - Review whether the Details spending-path bridge helps clarify the model, or whether it adds density before the final UI redesign.
+- Treat old saved tester files as disposable for the future schema reset. Flag any concern with blocking older preview files and asking testers to start fresh.
+- Review whether this future block message is clear and calm enough: "This plan was created with an earlier preview format. Please start a new plan."
 - Do not reward options that reduce lifestyle, delay retirement, or delay benefits unless the plan has a visible funding issue and the option materially helps.
 - Actual tax-aware drawdown execution is intended for v1, but it must remain conservative, explainable, review-oriented, and never presented as personalized financial advice.
 - Saved `.plan.json` files must not include optimizer output, checkpoint output, stress output, drawdown drafts, comparison output, or feedback output.
@@ -102,6 +104,7 @@ Answer:
 - Is the difference between “Save editable plan” and “Open printable report” clear?
 - Does local-first behavior feel trustworthy?
 - Is there enough warning that data is saved locally and should be backed up?
+- For a future schema reset, is it acceptable to block older preview files instead of migrating them?
 
 ## Verification Notes
 

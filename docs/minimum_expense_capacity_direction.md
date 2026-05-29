@@ -47,7 +47,9 @@ Near-term UI copy should:
 ## Deferred Work
 
 - Add a first-class minimum monthly expense input.
-- Define whether minimum expenses are stored as a new schema field or derived from existing spending assumptions during migration.
+- Define the clean saved-format reset that stores minimum monthly expenses without migrating old desired-spending fields.
+- Block older preview files after the reset with plain copy and ask testers to start a new plan.
+- Rebuild example plans directly in the new format.
 - Update optimizer contracts so the floor is tested before discretionary capacity.
 - Add account-level withdrawal sourcing only after annual sequencing readiness is complete.
 - Save broad UI redesign until this planning model and optimizer path are stable.

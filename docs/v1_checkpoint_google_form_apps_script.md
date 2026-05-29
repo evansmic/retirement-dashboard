@@ -15,7 +15,7 @@ I cannot directly create a hosted Google Form from this workspace without access
 function createV1CheckpointFeedbackForm() {
   const form = FormApp.create('Canadian Retirement Planner V1 Checkpoint Feedback');
   form.setDescription(
-    'Please use example or fictional data only. This review is about product clarity, trust, and usability. It is not financial advice.'
+    'Please use example or fictional data only. Start from built-in examples or fresh fictional plans, not older saved tester files. This review is about product clarity, trust, and usability. It is not financial advice.'
   );
   form.setCollectEmail(false);
   form.setConfirmationMessage('Thank you. Your feedback has been recorded.');
@@ -112,6 +112,19 @@ function createV1CheckpointFeedbackForm() {
   addScale('Was the difference between saving an editable plan and opening a printable report clear?', 'Not clear', 'Very clear');
   addScale('Did local-first behavior feel trustworthy?', 'Not trustworthy', 'Very trustworthy');
   form.addParagraphTextItem().setTitle('What, if anything, would make saving/exporting feel safer?');
+  addChoice('During preview testing, is it acceptable to block older saved plan files and ask testers to start fresh?', [
+    'Yes',
+    'Mostly',
+    'No',
+    'Not sure'
+  ]);
+  addChoice('Does this future old-file message feel clear and calm enough?', [
+    'Yes',
+    'Mostly',
+    'No',
+    'Not sure'
+  ]).setHelpText('This plan was created with an earlier preview format. Please start a new plan.');
+  form.addParagraphTextItem().setTitle('Any concerns about asking preview testers to start fresh instead of importing old plans?');
 
   form.addSectionHeaderItem().setTitle('Visual And UX Checkpoint');
   addScale('Visual polish today', 'Very rough', 'Very polished');

@@ -4,6 +4,8 @@ Thank you for testing this retirement planner. This is not a financial advice re
 
 Please use fictional or example data only. Do not enter private financial information.
 
+For this preview round, start from built-in examples or fresh fictional plans. Do not reuse older saved tester files.
+
 ## What To Test
 
 Use at least one built-in example plan. If you have time, try three:
@@ -30,6 +32,7 @@ Use at least one built-in example plan. If you have time, try three:
 9. Open Taxes and Household Resilience if the example includes a couple.
 10. Open Save / Export.
 11. Save an editable plan and open the printable report if available.
+12. If you think about old saved tester files, note whether this future message would feel clear enough: "This plan was created with an earlier preview format. Please start a new plan."
 
 ## Questions We Care About Most
 
@@ -50,6 +53,8 @@ Use at least one built-in example plan. If you have time, try three:
 - Did the discretionary-room bridge make clear that tax, estate intent, survivor needs, and spending path can change the answer?
 - Did the Details spending-path bridge help explain how one monthly answer can still reflect spending changing with age?
 - Did the spending-path bridge feel secondary enough, or did it add too much detail?
+- Is it acceptable during preview testing to block older saved plan files and ask testers to start fresh?
+- Does the old-file block message feel clear and calm enough?
 
 ### Trust
 
@@ -58,6 +63,7 @@ Use at least one built-in example plan. If you have time, try three:
 - Did any number look too precise for a long-term projection?
 - Did you understand what was saved locally?
 - Did you understand the difference between saving the editable plan and opening a printable report?
+- Would blocking old preview files reduce trust, or is it fine while the product is still tester-only?
 
 ### Review Actions
 

@@ -1,8 +1,8 @@
-# Spending Path Model Migration Plan
+# Spending Path Model Reset Plan
 
 ## Purpose
 
-This plan describes a future migration from user-entered phased spending targets to a simpler consumer model:
+This plan describes a future clean saved-format reset from user-entered phased spending targets to a simpler consumer model:
 
 1. User enters minimum monthly expenses, excluding mortgage payments already entered in Debts.
 2. App estimates a confident after-tax monthly spending capacity.
@@ -39,14 +39,15 @@ Avoid:
 
 ## Schema Boundary
 
-Do not change saved plan schema until the migration is explicitly planned.
+Do not change saved plan schema until the reset is explicitly planned.
 
-Open migration questions:
+Reset decisions:
 
-- Should minimum monthly expenses become a first-class saved field?
-- Should spending-path defaults be saved or derived at runtime?
-- How should old `gogo`, `slowgo`, and `nogo` values import into the new model?
-- How should exports explain old files versus new files?
+- Minimum monthly expenses should become a first-class saved field only in the new format.
+- Spending-path defaults should be designed for the new format, then tested before becoming user-facing.
+- Old preview files should not be migrated into the new model.
+- If an old preview file is opened after the reset, block the import with calm copy and ask the tester to start a new plan.
+- New example plans should be created fresh in the new format.
 
 ## Engine Boundary
 

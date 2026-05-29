@@ -6,7 +6,7 @@ Use this as the Google Form structure. Recommended form title:
 
 Recommended description:
 
-> Please use example or fictional data only. This review is about product clarity, trust, and usability. It is not financial advice.
+> Please use example or fictional data only. Start from built-in examples or fresh fictional plans, not older saved tester files. This review is about product clarity, trust, and usability. It is not financial advice.
 
 ## Section 1: Tester Info
 
@@ -221,20 +221,40 @@ Recommended description:
 36. **What, if anything, would make saving/exporting feel safer?**
     - Paragraph
 
+37. **During preview testing, is it acceptable to block older saved plan files and ask testers to start fresh?**
+    - Multiple choice
+    - Options:
+      - Yes
+      - Mostly
+      - No
+      - Not sure
+
+38. **Does this future old-file message feel clear and calm enough?**
+    - Multiple choice
+    - Prompt: “This plan was created with an earlier preview format. Please start a new plan.”
+    - Options:
+      - Yes
+      - Mostly
+      - No
+      - Not sure
+
+39. **Any concerns about asking preview testers to start fresh instead of importing old plans?**
+    - Paragraph
+
 ## Section 6: Visual And UX Checkpoint
 
-37. **Visual polish today**
+40. **Visual polish today**
     - Linear scale 1-5
     - 1 = Very rough
     - 5 = Very polished
 
-38. **What visual or layout issues should be fixed before v1?**
+41. **What visual or layout issues should be fixed before v1?**
     - Paragraph
 
-39. **What visual or layout issues can wait for the later UX pass?**
+42. **What visual or layout issues can wait for the later UX pass?**
     - Paragraph
 
-40. **Were charts and tables easy to understand?**
+43. **Were charts and tables easy to understand?**
     - Linear scale 1-5
     - 1 = Confusing
     - 5 = Clear
