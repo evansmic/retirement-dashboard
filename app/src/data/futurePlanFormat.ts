@@ -211,12 +211,15 @@ export type FutureCapacityStatusReadiness = {
   mustAvoid: string[];
 };
 
+export type FutureCapacityStatusId = FutureCapacityStatusReadiness['id'];
+
 export type FutureCapacitySelectorReadiness = {
   status: 'planning-only';
   inputs: FutureCapacitySelectorInput[];
   outputs: FutureCapacitySelectorOutput[];
   statusMappings: FutureCapacityStatusMapping[];
   reviewFactors: FutureCapacityReviewFactor[];
+  gapOptions: FutureCapacityGapOption[];
   guardrails: string[];
 };
 
@@ -235,7 +238,7 @@ export type FutureCapacitySelectorOutput = {
 };
 
 export type FutureCapacityStatusMapping = {
-  statusId: 'covered' | 'tight' | 'gap' | 'cannotTell';
+  statusId: FutureCapacityStatusId;
   conditions: string[];
   reviewPrompt: string;
 };
@@ -246,6 +249,48 @@ export type FutureCapacityReviewFactor = {
   reason: string;
   mustStay: 'review-factor';
   mustNotBecome: string[];
+};
+
+export type FutureCapacityGapOption = {
+  id: 'reduceSpending' | 'workLonger' | 'downsize' | 'saveMore';
+  label: string;
+  reviewPrompt: string;
+  mustStay: 'option-to-compare';
+  mustNotBecome: string[];
+};
+
+export type FutureCapacitySelectorPreviewInput = {
+  minimumMonthlyExpensesExMortgage?: number | null;
+  mortgageMonthlyPayment?: number | null;
+  projectedMonthlyAfterTaxCapacity?: number | null;
+  firstShortfallYear?: number | null;
+  roomAboveFloorTightThreshold?: number;
+  sensitivityFlags?: string[];
+};
+
+export type FutureCapacitySelectorPreviewResult = {
+  statusId: FutureCapacityStatusId;
+  monthlyFloor: number | null;
+  monthlyCapacity: number | null;
+  monthlyRoom: number | null;
+  reviewPrompt: string;
+  gapOptionIds: FutureCapacityGapOption['id'][];
+  missingInputs: string[];
+  mode: 'planning-only';
+};
+
+export type FutureCapacitySelectorScenario = {
+  id: string;
+  label: string;
+  input: FutureCapacitySelectorPreviewInput;
+  expectedStatusId: FutureCapacityStatusId;
+  mustAvoid: string[];
+};
+
+export type FutureCapacitySelectorBoundaryRow = {
+  id: 'runtimeOnly' | 'noSavedOutput' | 'gapOptionsNeutral' | 'noAccountInstructions';
+  status: 'pass' | 'fail';
+  detail: string;
 };
 
 export type FutureExampleRequirement = {
@@ -869,6 +914,36 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
         mustNotBecome: ['required user expertise', 'go-go slow-go jargon']
       }
     ],
+    gapOptions: [
+      {
+        id: 'reduceSpending',
+        label: 'Reduce regular spending',
+        reviewPrompt: 'Compare whether a lower minimum expense level would close the gap.',
+        mustStay: 'option-to-compare',
+        mustNotBecome: ['automatic recommendation to cut spending', 'failure language']
+      },
+      {
+        id: 'workLonger',
+        label: 'Work longer',
+        reviewPrompt: 'Compare whether retiring later gives the plan more room.',
+        mustStay: 'option-to-compare',
+        mustNotBecome: ['instruction to delay retirement', 'employment advice']
+      },
+      {
+        id: 'downsize',
+        label: 'Downsize if realistic',
+        reviewPrompt: 'Compare whether home equity could help if downsizing is a real option.',
+        mustStay: 'option-to-compare',
+        mustNotBecome: ['instruction to sell a home', 'real estate advice']
+      },
+      {
+        id: 'saveMore',
+        label: 'Save more before retirement',
+        reviewPrompt: 'Compare whether adding savings before retirement changes the floor coverage picture.',
+        mustStay: 'option-to-compare',
+        mustNotBecome: ['savings command', 'guarantee that extra savings fixes the plan']
+      }
+    ],
     guardrails: [
       'The selector must not write to saved plans.',
       'The selector must not add engine output fields in this package.',
@@ -1407,6 +1482,53 @@ export const futureTestOnlyFixtureSamples: FutureTestOnlyFixtureSample[] = [
   futureRawPayloadFixtureSample
 ];
 
+export const futureCapacitySelectorScenarios: FutureCapacitySelectorScenario[] = [
+  {
+    id: 'coveredFloor',
+    label: 'Covered minimum floor',
+    input: {
+      minimumMonthlyExpensesExMortgage: 3600,
+      mortgageMonthlyPayment: 0,
+      projectedMonthlyAfterTaxCapacity: 4800
+    },
+    expectedStatusId: 'covered',
+    mustAvoid: ['guaranteed language', 'safe-spend framing']
+  },
+  {
+    id: 'tightFloor',
+    label: 'Tight minimum floor',
+    input: {
+      minimumMonthlyExpensesExMortgage: 3600,
+      mortgageMonthlyPayment: 400,
+      projectedMonthlyAfterTaxCapacity: 4350
+    },
+    expectedStatusId: 'tight',
+    mustAvoid: ['alarmist language', 'single-option pressure']
+  },
+  {
+    id: 'gapReview',
+    label: 'Minimum expense gap review',
+    input: {
+      minimumMonthlyExpensesExMortgage: 6200,
+      mortgageMonthlyPayment: 1800,
+      projectedMonthlyAfterTaxCapacity: 7200
+    },
+    expectedStatusId: 'gap',
+    mustAvoid: ['failure language', 'automatic recommendation to cut spending']
+  },
+  {
+    id: 'missingFloor',
+    label: 'Missing minimum floor',
+    input: {
+      minimumMonthlyExpensesExMortgage: null,
+      mortgageMonthlyPayment: 0,
+      projectedMonthlyAfterTaxCapacity: 4500
+    },
+    expectedStatusId: 'cannotTell',
+    mustAvoid: ['invented capacity', 'false precision']
+  }
+];
+
 export function flattenFuturePlanFormatFields(draft = futurePlanFormatDraft): FuturePlanFormatField[] {
   return draft.sections.flatMap((section) => section.fields);
 }
@@ -1643,6 +1765,116 @@ export function futureCapacitySelectorStatusMappingIds(draft = futurePlanFormatD
 
 export function futureCapacityReviewFactorIds(draft = futurePlanFormatDraft): string[] {
   return draft.capacitySelectorReadiness.reviewFactors.map((factor) => factor.id);
+}
+
+export function futureCapacityGapOptionIds(draft = futurePlanFormatDraft): FutureCapacityGapOption['id'][] {
+  return draft.capacitySelectorReadiness.gapOptions.map((option) => option.id);
+}
+
+export function selectFutureCapacityStatusPreview(
+  input: FutureCapacitySelectorPreviewInput,
+  draft = futurePlanFormatDraft
+): FutureCapacitySelectorPreviewResult {
+  const missingInputs: string[] = [];
+  const minimum = input.minimumMonthlyExpensesExMortgage;
+  const mortgage = input.mortgageMonthlyPayment;
+  const capacity = input.projectedMonthlyAfterTaxCapacity;
+
+  if (minimum === null || minimum === undefined || minimum <= 0) {
+    missingInputs.push('minimumMonthlyExpensesExMortgage');
+  }
+  if (mortgage === null || mortgage === undefined || mortgage < 0) {
+    missingInputs.push('mortgageMonthlyPayment');
+  }
+  if (capacity === null || capacity === undefined || capacity < 0) {
+    missingInputs.push('projectedMonthlyAfterTaxCapacity');
+  }
+
+  const monthlyFloor = missingInputs.includes('minimumMonthlyExpensesExMortgage')
+    ? null
+    : Number(minimum) + (missingInputs.includes('mortgageMonthlyPayment') ? 0 : Number(mortgage));
+  const monthlyCapacity = missingInputs.includes('projectedMonthlyAfterTaxCapacity') ? null : Number(capacity);
+  const monthlyRoom = monthlyFloor === null || monthlyCapacity === null ? null : monthlyCapacity - monthlyFloor;
+  const tightThreshold = input.roomAboveFloorTightThreshold ?? 500;
+
+  let statusId: FutureCapacityStatusId = 'covered';
+  if (missingInputs.length > 0) {
+    statusId = 'cannotTell';
+  } else if ((monthlyRoom ?? 0) < 0 || input.firstShortfallYear) {
+    statusId = 'gap';
+  } else if ((monthlyRoom ?? 0) <= tightThreshold || (input.sensitivityFlags || []).length > 0) {
+    statusId = 'tight';
+  }
+
+  const reviewPrompt =
+    draft.capacitySelectorReadiness.statusMappings.find((mapping) => mapping.statusId === statusId)?.reviewPrompt || '';
+
+  return {
+    statusId,
+    monthlyFloor,
+    monthlyCapacity,
+    monthlyRoom,
+    reviewPrompt,
+    gapOptionIds: statusId === 'gap' ? futureCapacityGapOptionIds(draft) : [],
+    missingInputs,
+    mode: 'planning-only'
+  };
+}
+
+export function futureCapacitySelectorBoundaryRows(draft = futurePlanFormatDraft): FutureCapacitySelectorBoundaryRow[] {
+  const outputsRuntimeOnly = draft.capacitySelectorReadiness.outputs.every((output) => output.status === 'derived-runtime');
+  const noSavedOutput =
+    draft.capacitySelectorReadiness.guardrails.includes('The selector must not write to saved plans.') &&
+    draft.capacitySelectorReadiness.outputs.every((output) => output.mustAvoid.includes('saved output field') || output.id !== 'confidentMonthlyAfterTaxSpend');
+  const gapOptionsNeutral = draft.capacitySelectorReadiness.gapOptions.every(
+    (option) => option.mustStay === 'option-to-compare' && option.mustNotBecome.length > 0
+  );
+  const noAccountInstructions = draft.capacitySelectorReadiness.reviewFactors
+    .find((factor) => factor.id === 'fundingTrace')
+    ?.mustNotBecome.includes('annual account instruction');
+
+  return [
+    {
+      id: 'runtimeOnly',
+      status: outputsRuntimeOnly ? 'pass' : 'fail',
+      detail: 'Capacity selector outputs remain runtime-derived.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: noSavedOutput ? 'pass' : 'fail',
+      detail: 'Capacity selector planning does not add saved output fields.'
+    },
+    {
+      id: 'gapOptionsNeutral',
+      status: gapOptionsNeutral ? 'pass' : 'fail',
+      detail: 'Gap options stay as neutral options to compare.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: noAccountInstructions ? 'pass' : 'fail',
+      detail: 'Funding trace remains a review factor, not annual account instructions.'
+    }
+  ];
+}
+
+export function futureCapacitySelectorScenarioIds(scenarios = futureCapacitySelectorScenarios): string[] {
+  return scenarios.map((scenario) => scenario.id);
+}
+
+export function validateFutureCapacitySelectorScenarios(
+  scenarios = futureCapacitySelectorScenarios,
+  draft = futurePlanFormatDraft
+): Array<{ id: string; status: 'pass' | 'fail'; expectedStatusId: FutureCapacityStatusId; actualStatusId: FutureCapacityStatusId }> {
+  return scenarios.map((scenario) => {
+    const actualStatusId = selectFutureCapacityStatusPreview(scenario.input, draft).statusId;
+
+    return {
+      id: scenario.id,
+      status: actualStatusId === scenario.expectedStatusId ? 'pass' : 'fail',
+      expectedStatusId: scenario.expectedStatusId,
+      actualStatusId
+    };
+  });
 }
 
 export function futureExampleDataDraftIds(draft = futurePlanFormatDraft): string[] {

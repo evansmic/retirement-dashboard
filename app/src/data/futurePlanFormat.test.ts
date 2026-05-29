@@ -5,6 +5,9 @@ import {
   futureCapacitySelectorInputIds,
   futureCapacitySelectorOutputIds,
   futureCapacitySelectorStatusMappingIds,
+  futureCapacitySelectorBoundaryRows,
+  futureCapacitySelectorScenarioIds,
+  futureCapacityGapOptionIds,
   futureCapacityReviewFactorIds,
   futureBlockedImportRules,
   futureCapacityStatusIds,
@@ -40,6 +43,8 @@ import {
   findFutureTestOnlyFixtureShape,
   futureFixtureExpectationCoverageRows,
   futureImportBlockExpectationCoverageRows,
+  selectFutureCapacityStatusPreview,
+  validateFutureCapacitySelectorScenarios,
   validateFutureFixtureSamples,
   validateFutureFixtureShapeBatch,
   validateFutureFixtureShape
@@ -795,6 +800,156 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.capacitySelectorReadiness.reviewFactors.find((factor) => factor.id === 'estate')?.mustNotBecome).toContain(
       'permission to spend more'
     );
+  });
+
+  it('keeps gap options neutral and review-oriented', () => {
+    expect(futureCapacityGapOptionIds()).toEqual(['reduceSpending', 'workLonger', 'downsize', 'saveMore']);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.every((option) => option.mustStay === 'option-to-compare')).toBe(true);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.find((option) => option.id === 'reduceSpending')?.mustNotBecome).toContain(
+      'automatic recommendation to cut spending'
+    );
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.find((option) => option.id === 'workLonger')?.mustNotBecome).toContain(
+      'instruction to delay retirement'
+    );
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.find((option) => option.id === 'downsize')?.mustNotBecome).toContain(
+      'instruction to sell a home'
+    );
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.find((option) => option.id === 'saveMore')?.mustNotBecome).toContain(
+      'savings command'
+    );
+  });
+
+  it('previews covered capacity status without writing saved output', () => {
+    expect(
+      selectFutureCapacityStatusPreview({
+        minimumMonthlyExpensesExMortgage: 3600,
+        mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 4800
+      })
+    ).toMatchObject({
+      statusId: 'covered',
+      monthlyFloor: 3600,
+      monthlyCapacity: 4800,
+      monthlyRoom: 1200,
+      gapOptionIds: [],
+      missingInputs: [],
+      mode: 'planning-only'
+    });
+  });
+
+  it('previews tight capacity status when room is narrow or assumptions are sensitive', () => {
+    expect(
+      selectFutureCapacityStatusPreview({
+        minimumMonthlyExpensesExMortgage: 3600,
+        mortgageMonthlyPayment: 400,
+        projectedMonthlyAfterTaxCapacity: 4350
+      })
+    ).toMatchObject({
+      statusId: 'tight',
+      monthlyFloor: 4000,
+      monthlyRoom: 350,
+      gapOptionIds: []
+    });
+    expect(
+      selectFutureCapacityStatusPreview({
+        minimumMonthlyExpensesExMortgage: 3600,
+        mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 5000,
+        sensitivityFlags: ['survivor']
+      }).statusId
+    ).toBe('tight');
+  });
+
+  it('previews gap status with practical options and no pushy recommendation', () => {
+    const result = selectFutureCapacityStatusPreview({
+      minimumMonthlyExpensesExMortgage: 6200,
+      mortgageMonthlyPayment: 1800,
+      projectedMonthlyAfterTaxCapacity: 7200
+    });
+
+    expect(result).toMatchObject({
+      statusId: 'gap',
+      monthlyFloor: 8000,
+      monthlyCapacity: 7200,
+      monthlyRoom: -800,
+      gapOptionIds: ['reduceSpending', 'workLonger', 'downsize', 'saveMore'],
+      missingInputs: [],
+      mode: 'planning-only'
+    });
+    expect(result.reviewPrompt).toContain('Compare practical options');
+  });
+
+  it('previews cannot-tell status when core selector inputs are missing', () => {
+    expect(
+      selectFutureCapacityStatusPreview({
+        minimumMonthlyExpensesExMortgage: null,
+        mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 4500
+      })
+    ).toMatchObject({
+      statusId: 'cannotTell',
+      monthlyFloor: null,
+      monthlyCapacity: 4500,
+      monthlyRoom: null,
+      gapOptionIds: [],
+      missingInputs: ['minimumMonthlyExpensesExMortgage'],
+      mode: 'planning-only'
+    });
+  });
+
+  it('keeps capacity selector boundaries runtime-only and non-instructional', () => {
+    expect(futureCapacitySelectorBoundaryRows()).toEqual([
+      expect.objectContaining({ id: 'runtimeOnly', status: 'pass' }),
+      expect.objectContaining({ id: 'noSavedOutput', status: 'pass' }),
+      expect.objectContaining({ id: 'gapOptionsNeutral', status: 'pass' }),
+      expect.objectContaining({ id: 'noAccountInstructions', status: 'pass' })
+    ]);
+  });
+
+  it('marks capacity selector boundaries incomplete if outputs or options drift', () => {
+    const rows = futureCapacitySelectorBoundaryRows({
+      ...futurePlanFormatDraft,
+      capacitySelectorReadiness: {
+        ...futurePlanFormatDraft.capacitySelectorReadiness,
+        outputs: futurePlanFormatDraft.capacitySelectorReadiness.outputs.map((output) =>
+          output.id === 'confidentMonthlyAfterTaxSpend' ? { ...output, mustAvoid: ['guaranteed safe-spend language'] } : output
+        ),
+        gapOptions: futurePlanFormatDraft.capacitySelectorReadiness.gapOptions.map((option) =>
+          option.id === 'reduceSpending' ? { ...option, mustStay: 'option-to-compare', mustNotBecome: [] } : option
+        )
+      }
+    });
+
+    expect(rows.find((row) => row.id === 'noSavedOutput')?.status).toBe('fail');
+    expect(rows.find((row) => row.id === 'gapOptionsNeutral')?.status).toBe('fail');
+  });
+
+  it('keeps capacity selector planning scenarios aligned to expected statuses', () => {
+    expect(futureCapacitySelectorScenarioIds()).toEqual(['coveredFloor', 'tightFloor', 'gapReview', 'missingFloor']);
+    expect(validateFutureCapacitySelectorScenarios()).toEqual([
+      { id: 'coveredFloor', status: 'pass', expectedStatusId: 'covered', actualStatusId: 'covered' },
+      { id: 'tightFloor', status: 'pass', expectedStatusId: 'tight', actualStatusId: 'tight' },
+      { id: 'gapReview', status: 'pass', expectedStatusId: 'gap', actualStatusId: 'gap' },
+      { id: 'missingFloor', status: 'pass', expectedStatusId: 'cannotTell', actualStatusId: 'cannotTell' }
+    ]);
+  });
+
+  it('marks capacity selector scenario validation incomplete when expected status drifts', () => {
+    expect(
+      validateFutureCapacitySelectorScenarios([
+        {
+          id: 'driftedGap',
+          label: 'Drifted gap expectation',
+          input: {
+            minimumMonthlyExpensesExMortgage: 6200,
+            mortgageMonthlyPayment: 1800,
+            projectedMonthlyAfterTaxCapacity: 7200
+          },
+          expectedStatusId: 'covered',
+          mustAvoid: ['automatic recommendation to cut spending']
+        }
+      ])
+    ).toEqual([{ id: 'driftedGap', status: 'fail', expectedStatusId: 'covered', actualStatusId: 'gap' }]);
   });
 
   it('drafts future example values without changing current examples', () => {
