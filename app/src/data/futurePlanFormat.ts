@@ -179,6 +179,10 @@ export type FutureFundingTraceReadiness = {
   taxCaveats: FutureFundingTraceTaxCaveat[];
   reconciliationRules: FutureFundingTraceReconciliationRule[];
   copyBoundaries: FutureFundingTraceCopyBoundary[];
+  survivorEstateCaveats: FutureFundingTraceSurvivorEstateCaveat[];
+  cashAndOneOffHandling: FutureFundingTraceCashAndOneOffHandling[];
+  instructionGuardrails: FutureFundingTraceInstructionGuardrail[];
+  decisionGate: FutureFundingTraceDecisionGate[];
   guardrails: string[];
 };
 
@@ -206,6 +210,33 @@ export type FutureFundingTraceCopyBoundary = {
   id: string;
   phrase: string;
   mustAvoid: string[];
+};
+
+export type FutureFundingTraceSurvivorEstateCaveat = {
+  id: string;
+  label: string;
+  reason: string;
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceCashAndOneOffHandling = {
+  id: string;
+  label: string;
+  handling: string;
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceInstructionGuardrail = {
+  id: string;
+  rule: string;
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceDecisionGate = {
+  id: string;
+  decision: 'ready-to-prototype' | 'keep-planning' | 'defer';
+  requiredEvidence: string[];
+  stopIfMissing: boolean;
 };
 
 export const futurePlanFormatDraft: FuturePlanFormatDraft = {
@@ -784,6 +815,108 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
         mustAvoid: ['failure language', 'single-option pressure']
       }
     ],
+    survivorEstateCaveats: [
+      {
+        id: 'survivorIncomeChange',
+        label: 'Survivor income can change monthly capacity',
+        reason: 'CPP, OAS, pension income, and household tax context can change after the first death.',
+        mustAvoid: ['survivor recommendation', 'hiding survivor impact behind one number']
+      },
+      {
+        id: 'dbPensionContinuation',
+        label: 'DB pension continuation needs visible review',
+        reason: 'A DB pension may continue at a different amount for the survivor.',
+        mustAvoid: ['pension election advice', 'assuming full continuation']
+      },
+      {
+        id: 'estateIntentTradeoff',
+        label: 'Estate intent changes how room above the floor is interpreted',
+        reason: 'Room above minimum expenses should be shown with estate intent, not as permission to spend more.',
+        mustAvoid: ['permission to spend more', 'estate recommendation']
+      },
+      {
+        id: 'jointToSingleTaxContext',
+        label: 'Tax context can change from couple to survivor',
+        reason: 'A survivor may have different credits, income sources, account ownership, and taxable income.',
+        mustAvoid: ['tax advice', 'false precision in survivor tax']
+      }
+    ],
+    cashAndOneOffHandling: [
+      {
+        id: 'cashWedgeDraw',
+        label: 'Cash wedge can appear as a source, not a target',
+        handling: 'Show cash used in the trace when the engine uses cash-like balances, but do not tell the user how much cash to hold.',
+        mustAvoid: ['cash target instruction', 'emergency fund advice']
+      },
+      {
+        id: 'downsizingProceeds',
+        label: 'Downsizing proceeds remain scenario assumptions',
+        handling: 'Show proceeds only when entered as an assumption and keep sale timing and net proceeds reviewable.',
+        mustAvoid: ['guaranteed sale proceeds', 'real estate advice']
+      },
+      {
+        id: 'inheritance',
+        label: 'Inheritance stays uncertain unless already received',
+        handling: 'Treat future inheritance as a scenario inflow and make uncertainty visible.',
+        mustAvoid: ['inheritance certainty', 'counting uncertain inheritance as base capacity']
+      },
+      {
+        id: 'oneOffOutflowOrInflow',
+        label: 'One-off events should not look recurring',
+        handling: 'Keep one-time inflows and outflows separate from recurring monthly capacity.',
+        mustAvoid: ['turning one-time money into a permanent spending promise', 'hiding one-time shortfalls']
+      }
+    ],
+    instructionGuardrails: [
+      {
+        id: 'noAccountOrder',
+        rule: 'Do not rank accounts or imply a preferred withdrawal order.',
+        mustAvoid: ['withdraw from X first', 'take this account before that account']
+      },
+      {
+        id: 'noAnnualRows',
+        rule: 'Do not produce annual account-by-account rows in the funding trace.',
+        mustAvoid: ['annual account-by-account sequencing', 'year-by-year withdrawal table']
+      },
+      {
+        id: 'noPersonalizedWithdrawal',
+        rule: 'Keep trace copy review-oriented and avoid personalized withdrawal instructions.',
+        mustAvoid: ['you should withdraw', 'recommended withdrawal']
+      },
+      {
+        id: 'noSavedTrace',
+        rule: 'Do not save funding trace outputs into plan files.',
+        mustAvoid: ['saved output field', 'persisted account trace']
+      },
+      {
+        id: 'reviewOnlyLanguage',
+        rule: 'Use review language that helps users understand inputs, tax caveats, and gaps.',
+        mustAvoid: ['advice-like certainty', 'pressure language']
+      }
+    ],
+    decisionGate: [
+      {
+        id: 'prototypeOnlyAfterContractReview',
+        decision: 'keep-planning',
+        requiredEvidence: [
+          'Survivor and estate caveats are visible in the trace contract.',
+          'Cash and one-off inflows cannot be mistaken for recurring spending capacity.',
+          'Instruction guardrails block annual account sequencing and personalized withdrawal language.',
+          'Runtime-only boundary is still explicit.'
+        ],
+        stopIfMissing: true
+      },
+      {
+        id: 'schemaResetBeforeRuntimeTrace',
+        decision: 'defer',
+        requiredEvidence: [
+          'Clean-reset import behavior is approved.',
+          'Fresh example plans are rebuilt in the new format.',
+          'No calculated funding trace outputs are added to saved plan files.'
+        ],
+        stopIfMissing: true
+      }
+    ],
     guardrails: [
       'Funding trace must explain where money appears to come from, not what to withdraw.',
       'Funding trace must not become annual account-level sequencing.',
@@ -967,6 +1100,22 @@ export function futureFundingTraceReconciliationRuleIds(draft = futurePlanFormat
 
 export function futureFundingTraceCopyBoundaryIds(draft = futurePlanFormatDraft): string[] {
   return draft.fundingTraceReadiness.copyBoundaries.map((boundary) => boundary.id);
+}
+
+export function futureFundingTraceSurvivorEstateCaveatIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.survivorEstateCaveats.map((caveat) => caveat.id);
+}
+
+export function futureFundingTraceCashAndOneOffHandlingIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.cashAndOneOffHandling.map((item) => item.id);
+}
+
+export function futureFundingTraceInstructionGuardrailIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.instructionGuardrails.map((guardrail) => guardrail.id);
+}
+
+export function futureFundingTraceDecisionGateIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.decisionGate.map((gate) => gate.id);
 }
 
 export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {

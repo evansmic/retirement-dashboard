@@ -13,8 +13,12 @@ import {
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureFundingTraceAccountGroupIds,
+  futureFundingTraceCashAndOneOffHandlingIds,
   futureFundingTraceCopyBoundaryIds,
+  futureFundingTraceDecisionGateIds,
+  futureFundingTraceInstructionGuardrailIds,
   futureFundingTraceReconciliationRuleIds,
+  futureFundingTraceSurvivorEstateCaveatIds,
   futureFundingTraceTaxCaveatIds,
   futureImplementationStepIds,
   futureOptimizerReadinessIds,
@@ -337,5 +341,59 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.fundingTraceReadiness.copyBoundaries.find((boundary) => boundary.id === 'reviewQualifier')?.mustAvoid).toContain(
       'annual account-level sequence'
     );
+  });
+
+  it('plans survivor and estate funding trace caveats without advice language', () => {
+    expect(futureFundingTraceSurvivorEstateCaveatIds()).toEqual([
+      'survivorIncomeChange',
+      'dbPensionContinuation',
+      'estateIntentTradeoff',
+      'jointToSingleTaxContext'
+    ]);
+    expect(
+      futurePlanFormatDraft.fundingTraceReadiness.survivorEstateCaveats.find((caveat) => caveat.id === 'survivorIncomeChange')?.mustAvoid
+    ).toContain('survivor recommendation');
+    expect(
+      futurePlanFormatDraft.fundingTraceReadiness.survivorEstateCaveats.find((caveat) => caveat.id === 'estateIntentTradeoff')?.mustAvoid
+    ).toContain('permission to spend more');
+  });
+
+  it('plans cash and one-off inflow handling without turning assumptions into capacity promises', () => {
+    expect(futureFundingTraceCashAndOneOffHandlingIds()).toEqual([
+      'cashWedgeDraw',
+      'downsizingProceeds',
+      'inheritance',
+      'oneOffOutflowOrInflow'
+    ]);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.cashAndOneOffHandling.find((item) => item.id === 'cashWedgeDraw')?.mustAvoid).toContain(
+      'cash target instruction'
+    );
+    expect(futurePlanFormatDraft.fundingTraceReadiness.cashAndOneOffHandling.find((item) => item.id === 'inheritance')?.mustAvoid).toContain(
+      'counting uncertain inheritance as base capacity'
+    );
+  });
+
+  it('blocks funding trace from becoming account sequencing or saved output', () => {
+    expect(futureFundingTraceInstructionGuardrailIds()).toEqual([
+      'noAccountOrder',
+      'noAnnualRows',
+      'noPersonalizedWithdrawal',
+      'noSavedTrace',
+      'reviewOnlyLanguage'
+    ]);
+    expect(
+      futurePlanFormatDraft.fundingTraceReadiness.instructionGuardrails.find((guardrail) => guardrail.id === 'noAnnualRows')?.mustAvoid
+    ).toContain('annual account-by-account sequencing');
+    expect(futurePlanFormatDraft.fundingTraceReadiness.instructionGuardrails.find((guardrail) => guardrail.id === 'noSavedTrace')?.mustAvoid).toContain(
+      'saved output field'
+    );
+  });
+
+  it('adds a funding trace decision gate before runtime work begins', () => {
+    expect(futureFundingTraceDecisionGateIds()).toEqual(['prototypeOnlyAfterContractReview', 'schemaResetBeforeRuntimeTrace']);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.decisionGate.every((gate) => gate.stopIfMissing)).toBe(true);
+    expect(
+      futurePlanFormatDraft.fundingTraceReadiness.decisionGate.find((gate) => gate.id === 'prototypeOnlyAfterContractReview')?.requiredEvidence
+    ).toContain('Runtime-only boundary is still explicit.');
   });
 });
