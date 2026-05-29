@@ -11,6 +11,7 @@ import {
   futureExampleRequirementIds,
   futureExampleDataDraftIds,
   futureFreshExampleRebuildPlanIds,
+  futureFixtureExpectationHardeningIds,
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureFundingTraceAccountGroupIds,
@@ -22,6 +23,7 @@ import {
   futureFundingTraceSurvivorEstateCaveatIds,
   futureFundingTraceTaxCaveatIds,
   futureImplementationStepIds,
+  futureImportBlockExpectationCheckIds,
   futureOptimizerReadinessIds,
   futureOptimizerContractItemIds,
   futureRollbackReleaseStopItems,
@@ -178,6 +180,35 @@ describe('future plan format draft', () => {
     );
     expect(futurePlanFormatDraft.testOnlyFixtureShapes.find((shape) => shape.id === 'legacyPreviewDesiredSpendPayload')?.expectedImportResult).toBe(
       'block'
+    );
+  });
+
+  it('hardens fixture expectations before production import wiring', () => {
+    expect(futureFixtureExpectationHardeningIds()).toEqual([
+      'acceptedFixtureNoCalculatedAnswers',
+      'acceptedFixtureMinimumFloorExplicit',
+      'oldPreviewFixtureBlockedPlainly',
+      'unsupportedFutureFixtureBlockedSafely',
+      'rawPayloadFixtureBlockedDeliberately'
+    ]);
+    expect(
+      futurePlanFormatDraft.fixtureExpectationHardening.find((item) => item.id === 'acceptedFixtureNoCalculatedAnswers')?.mustProve
+    ).toContain('funding trace output is absent');
+    expect(
+      futurePlanFormatDraft.fixtureExpectationHardening.find((item) => item.id === 'oldPreviewFixtureBlockedPlainly')?.mustAvoid
+    ).toContain('asking testers to send private files');
+  });
+
+  it('pins import-block expectations to plain messages and state preservation', () => {
+    expect(futureImportBlockExpectationCheckIds()).toEqual(['oldPreviewBlockMessage', 'futureUnknownBlockMessage', 'rawPayloadBlockMessage']);
+    expect(futurePlanFormatDraft.importBlockExpectationChecks.find((check) => check.id === 'oldPreviewBlockMessage')?.expectedMessage).toBe(
+      'This plan was created with an earlier preview format. Please start a new plan.'
+    );
+    expect(futurePlanFormatDraft.importBlockExpectationChecks.find((check) => check.id === 'futureUnknownBlockMessage')?.mustAvoid).toContain(
+      'silent downgrade'
+    );
+    expect(futurePlanFormatDraft.importBlockExpectationChecks.find((check) => check.id === 'rawPayloadBlockMessage')?.mustPreserve).toContain(
+      'wrapped-file requirement'
     );
   });
 

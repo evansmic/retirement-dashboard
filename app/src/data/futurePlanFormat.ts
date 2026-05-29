@@ -20,6 +20,8 @@ export type FuturePlanFormatDraft = {
   rollbackReleaseChecklist: FutureRollbackReleaseItem[];
   schemaResetDecisionReadiness: FutureSchemaResetDecisionReadiness[];
   testOnlyFixtureShapes: FutureTestOnlyFixtureShape[];
+  fixtureExpectationHardening: FutureFixtureExpectationHardening[];
+  importBlockExpectationChecks: FutureImportBlockExpectationCheck[];
   optimizerContractReadiness: FutureOptimizerContractItem[];
   fixtureSpecifications: FutureFixtureSpecification[];
   accountOptimizerReadiness: FutureAccountOptimizerReadinessItem[];
@@ -68,6 +70,22 @@ export type FutureTestOnlyFixtureShape = {
   requiredKeys: string[];
   forbiddenKeys: string[];
   expectedImportResult: 'accept' | 'block';
+};
+
+export type FutureFixtureExpectationHardening = {
+  id: string;
+  fixtureId: FutureTestOnlyFixtureShape['id'];
+  expectation: string;
+  mustProve: string[];
+  mustAvoid: string[];
+};
+
+export type FutureImportBlockExpectationCheck = {
+  id: string;
+  blockedRuleId: 'oldPreview' | 'futureUnknown' | 'rawPayload';
+  expectedMessage: string;
+  mustPreserve: string[];
+  mustAvoid: string[];
 };
 
 export type FutureOptimizerContractItem = {
@@ -421,6 +439,66 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       requiredKeys: ['schemaVersion', 'futureOnlyField'],
       forbiddenKeys: ['silentlyDroppedFieldsAccepted'],
       expectedImportResult: 'block'
+    }
+  ],
+  fixtureExpectationHardening: [
+    {
+      id: 'acceptedFixtureNoCalculatedAnswers',
+      fixtureId: 'futureMinimumFloorPlan',
+      expectation: 'Accepted future fixtures must not contain calculated answers.',
+      mustProve: ['confident monthly capacity is absent', 'funding trace output is absent', 'capacity is derived at runtime later'],
+      mustAvoid: ['saved calculated answer', 'test fixture that looks like a production export']
+    },
+    {
+      id: 'acceptedFixtureMinimumFloorExplicit',
+      fixtureId: 'futureMinimumFloorPlan',
+      expectation: 'Accepted future fixtures must carry explicit minimum-expense inputs.',
+      mustProve: ['minimum monthly expenses are present', 'mortgage payment remains separate', 'spending breakpoint ages are explicit'],
+      mustAvoid: ['mapping old desired spending into the floor', 'go-go slow-go no-go keys']
+    },
+    {
+      id: 'oldPreviewFixtureBlockedPlainly',
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      expectation: 'Old preview fixtures must block with fresh-start copy.',
+      mustProve: ['old desired-spending keys are detected', 'block message is plain', 'no partial plan state loads'],
+      mustAvoid: ['migration fallback', 'asking testers to send private files']
+    },
+    {
+      id: 'unsupportedFutureFixtureBlockedSafely',
+      fixtureId: 'unsupportedFuturePlanFile',
+      expectation: 'Unsupported future fixtures must block before unknown fields can be dropped.',
+      mustProve: ['future-only fields are detected', 'newer-format message is used', 'current plan state is preserved'],
+      mustAvoid: ['silent field loss', 'best-effort import']
+    },
+    {
+      id: 'rawPayloadFixtureBlockedDeliberately',
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      expectation: 'Raw unwrapped payload behavior must remain explicit and blocked after the reset.',
+      mustProve: ['raw payloads are not treated as plan files', 'raw payload block copy is distinct', 'blocked raw payloads do not change current state'],
+      mustAvoid: ['ambiguous raw import support', 'partial raw payload load']
+    }
+  ],
+  importBlockExpectationChecks: [
+    {
+      id: 'oldPreviewBlockMessage',
+      blockedRuleId: 'oldPreview',
+      expectedMessage: 'This plan was created with an earlier preview format. Please start a new plan.',
+      mustPreserve: ['current plan state', 'local-first posture', 'plain fresh-start instruction'],
+      mustAvoid: ['migration promise', 'technical schema explanation']
+    },
+    {
+      id: 'futureUnknownBlockMessage',
+      blockedRuleId: 'futureUnknown',
+      expectedMessage: 'This plan was created with a newer format this preview cannot open. Please use the newer planner version.',
+      mustPreserve: ['current plan state', 'unsupported fields', 'clear newer-version boundary'],
+      mustAvoid: ['silent downgrade', 'dropping unknown fields']
+    },
+    {
+      id: 'rawPayloadBlockMessage',
+      blockedRuleId: 'rawPayload',
+      expectedMessage: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.',
+      mustPreserve: ['current plan state', 'wrapped-file requirement', 'local-only file handling'],
+      mustAvoid: ['raw payload fallback', 'partial import']
     }
   ],
   optimizerContractReadiness: [
@@ -1182,6 +1260,14 @@ export function futureSchemaResetDecisionReadinessIds(draft = futurePlanFormatDr
 
 export function futureTestOnlyFixtureShapeIds(draft = futurePlanFormatDraft): string[] {
   return draft.testOnlyFixtureShapes.map((shape) => shape.id);
+}
+
+export function futureFixtureExpectationHardeningIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fixtureExpectationHardening.map((item) => item.id);
+}
+
+export function futureImportBlockExpectationCheckIds(draft = futurePlanFormatDraft): string[] {
+  return draft.importBlockExpectationChecks.map((check) => check.id);
 }
 
 export function futureFixtureValidationHelperIds(draft = futurePlanFormatDraft): string[] {
