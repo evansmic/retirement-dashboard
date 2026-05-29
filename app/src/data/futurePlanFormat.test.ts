@@ -24,15 +24,20 @@ import {
   futureFundingTraceTaxCaveatIds,
   futureImplementationStepIds,
   futureImportBlockExpectationCheckIds,
+  futureMinimumFloorFixtureSample,
+  futureOldPreviewFixtureSample,
   futureOptimizerReadinessIds,
   futureOptimizerContractItemIds,
   futureRollbackReleaseStopItems,
   futureSchemaResetDecisionReadinessIds,
+  futureTestOnlyFixtureSamples,
   futureTestOnlyFixtureShapeIds,
+  futureUnsupportedFormatFixtureSample,
   futurePlanFormatDraft,
   findFutureTestOnlyFixtureShape,
   futureFixtureExpectationCoverageRows,
   futureImportBlockExpectationCoverageRows,
+  validateFutureFixtureSamples,
   validateFutureFixtureShapeBatch,
   validateFutureFixtureShape
 } from './futurePlanFormat';
@@ -271,6 +276,30 @@ describe('future plan format draft', () => {
     });
   });
 
+  it('keeps the accepted clean-format sample in memory and test-only', () => {
+    const shape = findFutureTestOnlyFixtureShape(futureMinimumFloorFixtureSample.fixtureId);
+
+    expect(futureMinimumFloorFixtureSample).toMatchObject({
+      id: 'singleCoveredMinimumFloorInMemory',
+      fixtureId: 'futureMinimumFloorPlan',
+      plannedImportResult: 'accept',
+      mode: 'test-only'
+    });
+    expect(futureMinimumFloorFixtureSample.mustNotDo).toEqual([
+      'write a .plan.json file',
+      'wire production import behavior',
+      'save calculated capacity',
+      'include annual account sequencing'
+    ]);
+    expect(validateFutureFixtureShape(shape!, futureMinimumFloorFixtureSample.fixture, futureMinimumFloorFixtureSample.plannedImportResult)).toMatchObject({
+      fixtureId: 'futureMinimumFloorPlan',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true
+    });
+  });
+
   it('flags forbidden calculated answers and old spending keys in accepted fixture shapes', () => {
     const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'futureMinimumFloorPlan');
 
@@ -314,6 +343,28 @@ describe('future plan format draft', () => {
     });
   });
 
+  it('keeps the old-preview sample blocked and unmapped in memory', () => {
+    const shape = findFutureTestOnlyFixtureShape(futureOldPreviewFixtureSample.fixtureId);
+
+    expect(futureOldPreviewFixtureSample).toMatchObject({
+      id: 'legacyDesiredSpendInMemory',
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      plannedImportResult: 'block',
+      mode: 'test-only'
+    });
+    expect(futureOldPreviewFixtureSample.fixture).not.toHaveProperty('minimumMonthlyExpensesExMortgage');
+    expect(futureOldPreviewFixtureSample.mustNotDo).toContain('map desired spending into minimum expenses');
+    expect(futureOldPreviewFixtureSample.mustNotDo).toContain('ask for private tester files');
+    expect(validateFutureFixtureShape(shape!, futureOldPreviewFixtureSample.fixture, futureOldPreviewFixtureSample.plannedImportResult)).toMatchObject({
+      fixtureId: 'legacyPreviewDesiredSpendPayload',
+      expectedImportResult: 'block',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true
+    });
+  });
+
   it('fails fixture validation when the planned import result drifts', () => {
     const shape = futurePlanFormatDraft.testOnlyFixtureShapes.find((item) => item.id === 'unsupportedFuturePlanFile');
 
@@ -332,6 +383,27 @@ describe('future plan format draft', () => {
       status: 'fail',
       importResultMatches: false,
       mode: 'test-only'
+    });
+  });
+
+  it('keeps the unsupported-future sample blocked before unknown fields can be dropped', () => {
+    const shape = findFutureTestOnlyFixtureShape(futureUnsupportedFormatFixtureSample.fixtureId);
+
+    expect(futureUnsupportedFormatFixtureSample).toMatchObject({
+      id: 'unsupportedFutureFieldInMemory',
+      fixtureId: 'unsupportedFuturePlanFile',
+      plannedImportResult: 'block',
+      mode: 'test-only'
+    });
+    expect(futureUnsupportedFormatFixtureSample.mustNotDo).toContain('drop unknown future fields');
+    expect(futureUnsupportedFormatFixtureSample.mustNotDo).toContain('change current plan state');
+    expect(validateFutureFixtureShape(shape!, futureUnsupportedFormatFixtureSample.fixture, futureUnsupportedFormatFixtureSample.plannedImportResult)).toMatchObject({
+      fixtureId: 'unsupportedFuturePlanFile',
+      expectedImportResult: 'block',
+      status: 'pass',
+      missingRequiredKeys: [],
+      presentForbiddenKeys: [],
+      importResultMatches: true
     });
   });
 
@@ -377,6 +449,29 @@ describe('future plan format draft', () => {
       'futureMinimumFloorPlan',
       'legacyPreviewDesiredSpendPayload',
       'unsupportedFuturePlanFile'
+    ]);
+  });
+
+  it('validates the complete in-memory sample registry against planned fixture shapes', () => {
+    const summary = validateFutureFixtureSamples();
+
+    expect(futureTestOnlyFixtureSamples.map((sample) => sample.id)).toEqual([
+      'singleCoveredMinimumFloorInMemory',
+      'legacyDesiredSpendInMemory',
+      'unsupportedFutureFieldInMemory'
+    ]);
+    expect(futureTestOnlyFixtureSamples.every((sample) => sample.mode === 'test-only')).toBe(true);
+    expect(summary).toMatchObject({
+      status: 'pass',
+      total: 3,
+      passed: 3,
+      failed: 0,
+      mode: 'test-only'
+    });
+    expect(summary.results.map((result) => [result.fixtureId, result.expectedImportResult])).toEqual([
+      ['futureMinimumFloorPlan', 'accept'],
+      ['legacyPreviewDesiredSpendPayload', 'block'],
+      ['unsupportedFuturePlanFile', 'block']
     ]);
   });
 

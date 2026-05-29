@@ -154,6 +154,16 @@ export type FutureFixtureValidationSummary = {
   mode: 'test-only';
 };
 
+export type FutureTestOnlyFixtureSample = {
+  id: string;
+  fixtureId: FutureTestOnlyFixtureShape['id'];
+  label: string;
+  fixture: Record<string, unknown>;
+  plannedImportResult: FutureTestOnlyFixtureShape['expectedImportResult'];
+  mode: 'test-only';
+  mustNotDo: string[];
+};
+
 export type FutureFixtureExpectationCoverageRow = {
   expectationId: string;
   fixtureId: FutureFixtureExpectationHardening['fixtureId'];
@@ -1268,6 +1278,85 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
   ]
 };
 
+export const futureMinimumFloorFixtureSample: FutureTestOnlyFixtureSample = {
+  id: 'singleCoveredMinimumFloorInMemory',
+  fixtureId: 'futureMinimumFloorPlan',
+  label: 'Single covered minimum-floor fixture sample',
+  fixture: {
+    schemaVersion: 'future-clean-reset-draft',
+    minimumMonthlyExpensesExMortgage: 3600,
+    mortgageMonthlyPayment: 0,
+    earlySpendingChangeAge: 75,
+    laterSpendingChangeAge: 85,
+    province: 'ON',
+    taxYear: 2026,
+    household: {
+      p1BirthYear: 1966,
+      p2BirthYear: null
+    }
+  },
+  plannedImportResult: 'accept',
+  mode: 'test-only',
+  mustNotDo: [
+    'write a .plan.json file',
+    'wire production import behavior',
+    'save calculated capacity',
+    'include annual account sequencing'
+  ]
+};
+
+export const futureOldPreviewFixtureSample: FutureTestOnlyFixtureSample = {
+  id: 'legacyDesiredSpendInMemory',
+  fixtureId: 'legacyPreviewDesiredSpendPayload',
+  label: 'Legacy desired-spending fixture sample',
+  fixture: {
+    schemaVersion: 2,
+    spending: {
+      gogo: 85000,
+      slowgo: 72000,
+      nogo: 62000
+    },
+    assumptions: {
+      retireYear: 2032
+    }
+  },
+  plannedImportResult: 'block',
+  mode: 'test-only',
+  mustNotDo: [
+    'map desired spending into minimum expenses',
+    'partially load current plan state',
+    'promise migration',
+    'ask for private tester files'
+  ]
+};
+
+export const futureUnsupportedFormatFixtureSample: FutureTestOnlyFixtureSample = {
+  id: 'unsupportedFutureFieldInMemory',
+  fixtureId: 'unsupportedFuturePlanFile',
+  label: 'Unsupported future-format fixture sample',
+  fixture: {
+    schemaVersion: 'future-clean-reset-draft-plus-one',
+    futureOnlyField: {
+      name: 'futureFundingTraceVersion',
+      value: 2
+    }
+  },
+  plannedImportResult: 'block',
+  mode: 'test-only',
+  mustNotDo: [
+    'drop unknown future fields',
+    'silently downgrade the file',
+    'best-effort import unsupported content',
+    'change current plan state'
+  ]
+};
+
+export const futureTestOnlyFixtureSamples: FutureTestOnlyFixtureSample[] = [
+  futureMinimumFloorFixtureSample,
+  futureOldPreviewFixtureSample,
+  futureUnsupportedFormatFixtureSample
+];
+
 export function flattenFuturePlanFormatFields(draft = futurePlanFormatDraft): FuturePlanFormatField[] {
   return draft.sections.flatMap((section) => section.fields);
 }
@@ -1348,6 +1437,16 @@ export function validateFutureFixtureShapeBatch(
     results,
     mode: 'test-only'
   };
+}
+
+export function validateFutureFixtureSamples(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureFixtureValidationSummary {
+  const fixturesById = Object.fromEntries(samples.map((sample) => [sample.fixtureId, sample.fixture]));
+  const plannedImportResultsById = Object.fromEntries(samples.map((sample) => [sample.fixtureId, sample.plannedImportResult]));
+
+  return validateFutureFixtureShapeBatch(fixturesById, plannedImportResultsById, draft);
 }
 
 export function futureFixtureExpectationCoverageRows(draft = futurePlanFormatDraft): FutureFixtureExpectationCoverageRow[] {
