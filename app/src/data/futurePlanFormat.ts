@@ -27,6 +27,7 @@ export type FuturePlanFormatDraft = {
   fixtureValidationHelpers: FutureFixtureValidationHelper[];
   capacityStatusReadiness: FutureCapacityStatusReadiness[];
   capacitySelectorReadiness: FutureCapacitySelectorReadiness;
+  futureExampleDataDrafts: FutureExampleDataDraft[];
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
   boundaries: string[];
@@ -154,6 +155,20 @@ export type FutureExampleRequirement = {
   label: string;
   purpose: string;
   mustInclude: string[];
+  mustAvoid: string[];
+};
+
+export type FutureExampleDataDraft = {
+  id: 'singleMinimumFloor' | 'coupleTightFloor' | 'pensionCoupleSurvivor' | 'estateHeavyRoom';
+  label: string;
+  status: 'planning-only';
+  household: string;
+  minimumMonthlyExpensesExMortgage: number;
+  mortgageMonthlyPayment: number;
+  earlySpendingChangeAge: number;
+  laterSpendingChangeAge: number;
+  expectedCapacityStatus: 'covered' | 'tight' | 'gap' | 'cannotTell';
+  reviewFocus: string[];
   mustAvoid: string[];
 };
 
@@ -568,6 +583,60 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       'The selector must keep funding trace language review-oriented.'
     ]
   },
+  futureExampleDataDrafts: [
+    {
+      id: 'singleMinimumFloor',
+      label: 'Single person with a covered floor',
+      status: 'planning-only',
+      household: 'Single renter or mortgage-free owner with moderate registered savings and CPP/OAS income.',
+      minimumMonthlyExpensesExMortgage: 3600,
+      mortgageMonthlyPayment: 0,
+      earlySpendingChangeAge: 75,
+      laterSpendingChangeAge: 85,
+      expectedCapacityStatus: 'covered',
+      reviewFocus: ['monthly capacity is visible', 'floor coverage is easy to understand', 'funding trace stays non-instructional'],
+      mustAvoid: ['migrated desired-spending values', 'safe-spend language', 'account withdrawal instructions']
+    },
+    {
+      id: 'coupleTightFloor',
+      label: 'Couple with a tight or uncovered floor',
+      status: 'planning-only',
+      household: 'Retiring couple with moderate savings, a remaining mortgage, and a minimum expense floor that may not be fully covered.',
+      minimumMonthlyExpensesExMortgage: 6200,
+      mortgageMonthlyPayment: 1800,
+      earlySpendingChangeAge: 74,
+      laterSpendingChangeAge: 84,
+      expectedCapacityStatus: 'gap',
+      reviewFocus: ['gap options are practical', 'work-longer and downsize comparisons are not pushy', 'tax review is visible without advice'],
+      mustAvoid: ['single-option pressure', 'automatic recommendation to cut spending', 'false certainty that one option fixes the plan']
+    },
+    {
+      id: 'pensionCoupleSurvivor',
+      label: 'DB pension couple with survivor sensitivity',
+      status: 'planning-only',
+      household: 'Couple with one DB pension, survivor continuation risk, CPP/OAS income, and enough assets to make the first monthly answer look comfortable.',
+      minimumMonthlyExpensesExMortgage: 5400,
+      mortgageMonthlyPayment: 0,
+      earlySpendingChangeAge: 76,
+      laterSpendingChangeAge: 86,
+      expectedCapacityStatus: 'tight',
+      reviewFocus: ['survivor resilience is visible', 'DB pension continuation is easy to review', 'monthly capacity does not hide couple risk'],
+      mustAvoid: ['hiding survivor impact behind one number', 'survivor recommendation', 'pension advice']
+    },
+    {
+      id: 'estateHeavyRoom',
+      label: 'Estate-heavy plan with room above the floor',
+      status: 'planning-only',
+      household: 'Mortgage-free couple with significant non-registered and TFSA assets, an explicit estate intent, and apparent room above the minimum floor.',
+      minimumMonthlyExpensesExMortgage: 7000,
+      mortgageMonthlyPayment: 0,
+      earlySpendingChangeAge: 77,
+      laterSpendingChangeAge: 87,
+      expectedCapacityStatus: 'covered',
+      reviewFocus: ['estate trade-off is visible', 'room above floor is caveated', 'tax and spending path caveats remain prominent'],
+      mustAvoid: ['permission to spend more', 'guaranteed-room language', 'estate recommendation']
+    }
+  ],
   sections: [
     {
       id: 'minimumExpenses',
@@ -724,6 +793,10 @@ export function futureCapacitySelectorStatusMappingIds(draft = futurePlanFormatD
 
 export function futureCapacityReviewFactorIds(draft = futurePlanFormatDraft): string[] {
   return draft.capacitySelectorReadiness.reviewFactors.map((factor) => factor.id);
+}
+
+export function futureExampleDataDraftIds(draft = futurePlanFormatDraft): string[] {
+  return draft.futureExampleDataDrafts.map((example) => example.id);
 }
 
 export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {

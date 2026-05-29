@@ -9,6 +9,7 @@ import {
   futureBlockedImportRules,
   futureCapacityStatusIds,
   futureExampleRequirementIds,
+  futureExampleDataDraftIds,
   futureFixtureValidationHelperIds,
   futureFixtureSpecificationIds,
   futureImplementationStepIds,
@@ -230,5 +231,67 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.capacitySelectorReadiness.reviewFactors.find((factor) => factor.id === 'estate')?.mustNotBecome).toContain(
       'permission to spend more'
     );
+  });
+
+  it('drafts future example values without changing current examples', () => {
+    expect(futureExampleDataDraftIds()).toEqual(['singleMinimumFloor', 'coupleTightFloor', 'pensionCoupleSurvivor', 'estateHeavyRoom']);
+    const single = futurePlanFormatDraft.futureExampleDataDrafts.find((example) => example.id === 'singleMinimumFloor');
+
+    expect(single).toEqual(
+      expect.objectContaining({
+        status: 'planning-only',
+        minimumMonthlyExpensesExMortgage: 3600,
+        mortgageMonthlyPayment: 0,
+        expectedCapacityStatus: 'covered'
+      })
+    );
+    expect(single?.mustAvoid).toContain('migrated desired-spending values');
+    expect(single?.mustAvoid).toContain('account withdrawal instructions');
+  });
+
+  it('drafts the tight couple example as a practical gap-review case', () => {
+    const couple = futurePlanFormatDraft.futureExampleDataDrafts.find((example) => example.id === 'coupleTightFloor');
+
+    expect(couple).toEqual(
+      expect.objectContaining({
+        status: 'planning-only',
+        minimumMonthlyExpensesExMortgage: 6200,
+        mortgageMonthlyPayment: 1800,
+        expectedCapacityStatus: 'gap'
+      })
+    );
+    expect(couple?.reviewFocus).toContain('work-longer and downsize comparisons are not pushy');
+    expect(couple?.mustAvoid).toContain('automatic recommendation to cut spending');
+  });
+
+  it('drafts the DB pension survivor example as a tight survivor-review case', () => {
+    const survivor = futurePlanFormatDraft.futureExampleDataDrafts.find((example) => example.id === 'pensionCoupleSurvivor');
+
+    expect(survivor).toEqual(
+      expect.objectContaining({
+        status: 'planning-only',
+        minimumMonthlyExpensesExMortgage: 5400,
+        mortgageMonthlyPayment: 0,
+        expectedCapacityStatus: 'tight'
+      })
+    );
+    expect(survivor?.reviewFocus).toContain('survivor resilience is visible');
+    expect(survivor?.mustAvoid).toContain('hiding survivor impact behind one number');
+  });
+
+  it('drafts the estate-heavy example without permission-to-spend language', () => {
+    const estate = futurePlanFormatDraft.futureExampleDataDrafts.find((example) => example.id === 'estateHeavyRoom');
+
+    expect(estate).toEqual(
+      expect.objectContaining({
+        status: 'planning-only',
+        minimumMonthlyExpensesExMortgage: 7000,
+        mortgageMonthlyPayment: 0,
+        expectedCapacityStatus: 'covered'
+      })
+    );
+    expect(estate?.reviewFocus).toContain('estate trade-off is visible');
+    expect(estate?.mustAvoid).toContain('permission to spend more');
+    expect(estate?.mustAvoid).toContain('guaranteed-room language');
   });
 });
