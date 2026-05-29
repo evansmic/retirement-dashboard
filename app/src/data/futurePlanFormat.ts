@@ -26,6 +26,7 @@ export type FuturePlanFormatDraft = {
   rawPayloadPolicy: FutureRawPayloadPolicy;
   fixtureValidationHelpers: FutureFixtureValidationHelper[];
   capacityStatusReadiness: FutureCapacityStatusReadiness[];
+  capacitySelectorReadiness: FutureCapacitySelectorReadiness;
   sections: FuturePlanFormatSection[];
   freshExampleRequirements: FutureExampleRequirement[];
   boundaries: string[];
@@ -109,6 +110,43 @@ export type FutureCapacityStatusReadiness = {
   meaning: string;
   showWhen: string[];
   mustAvoid: string[];
+};
+
+export type FutureCapacitySelectorReadiness = {
+  status: 'planning-only';
+  inputs: FutureCapacitySelectorInput[];
+  outputs: FutureCapacitySelectorOutput[];
+  statusMappings: FutureCapacityStatusMapping[];
+  reviewFactors: FutureCapacityReviewFactor[];
+  guardrails: string[];
+};
+
+export type FutureCapacitySelectorInput = {
+  id: string;
+  source: 'saved-field' | 'runtime-derived' | 'engine-result';
+  label: string;
+  requiredFor: string[];
+};
+
+export type FutureCapacitySelectorOutput = {
+  id: string;
+  status: 'derived-runtime';
+  label: string;
+  mustAvoid: string[];
+};
+
+export type FutureCapacityStatusMapping = {
+  statusId: 'covered' | 'tight' | 'gap' | 'cannotTell';
+  conditions: string[];
+  reviewPrompt: string;
+};
+
+export type FutureCapacityReviewFactor = {
+  id: string;
+  label: string;
+  reason: string;
+  mustStay: 'review-factor';
+  mustNotBecome: string[];
 };
 
 export type FutureExampleRequirement = {
@@ -410,6 +448,126 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       mustAvoid: ['invented capacity', 'false precision']
     }
   ],
+  capacitySelectorReadiness: {
+    status: 'planning-only',
+    inputs: [
+      {
+        id: 'minimumMonthlyExpensesExMortgage',
+        source: 'saved-field',
+        label: 'Minimum monthly expenses excluding mortgage',
+        requiredFor: ['floor coverage', 'capacity status', 'gap review']
+      },
+      {
+        id: 'mortgageMonthlyPayment',
+        source: 'saved-field',
+        label: 'Mortgage payment already entered in Debts',
+        requiredFor: ['floor explanation', 'cash flow context']
+      },
+      {
+        id: 'spendingPathBreakpoints',
+        source: 'saved-field',
+        label: 'Spending path breakpoint ages',
+        requiredFor: ['age-based spending path', 'capacity caveats']
+      },
+      {
+        id: 'projectedAfterTaxCapacity',
+        source: 'engine-result',
+        label: 'Projected after-tax capacity',
+        requiredFor: ['monthly capacity answer', 'floor comparison']
+      },
+      {
+        id: 'fundingTracePreview',
+        source: 'runtime-derived',
+        label: 'First-year funding trace preview',
+        requiredFor: ['where money comes from', 'tax caveats']
+      }
+    ],
+    outputs: [
+      {
+        id: 'confidentMonthlyAfterTaxSpend',
+        status: 'derived-runtime',
+        label: 'Confident monthly after-tax spend',
+        mustAvoid: ['saved output field', 'guaranteed safe-spend language']
+      },
+      {
+        id: 'capacityStatus',
+        status: 'derived-runtime',
+        label: 'Capacity status',
+        mustAvoid: ['failure language', 'false precision']
+      },
+      {
+        id: 'reviewFactors',
+        status: 'derived-runtime',
+        label: 'Review factors',
+        mustAvoid: ['account instructions', 'advisor workflow']
+      }
+    ],
+    statusMappings: [
+      {
+        statusId: 'covered',
+        conditions: ['minimum expense floor is covered', 'capacity is above floor', 'no near-term shortfall is visible'],
+        reviewPrompt: 'Review tax, survivor needs, estate intent, and spending path before treating the plan as settled.'
+      },
+      {
+        statusId: 'tight',
+        conditions: ['floor is barely covered', 'room above floor is limited', 'small assumption changes can affect the answer'],
+        reviewPrompt: 'Compare timing, spending path, tax, and estate choices before increasing discretionary spending.'
+      },
+      {
+        statusId: 'gap',
+        conditions: ['floor is not covered', 'capacity is below minimum expenses', 'shortfall appears before plan end'],
+        reviewPrompt: 'Compare practical options such as work timing, spending, downsizing, savings, benefit timing, and tax review.'
+      },
+      {
+        statusId: 'cannotTell',
+        conditions: ['minimum expense floor is missing', 'core income or asset data is missing', 'projection cannot produce a reliable answer'],
+        reviewPrompt: 'Complete the missing inputs before relying on a monthly capacity estimate.'
+      }
+    ],
+    reviewFactors: [
+      {
+        id: 'tax',
+        label: 'Tax and benefit timing',
+        reason: 'Tax, OAS recovery tax, RRIF/LIF timing, and benefit timing can change after-tax capacity.',
+        mustStay: 'review-factor',
+        mustNotBecome: ['tax advice', 'automatic benefit timing instruction']
+      },
+      {
+        id: 'survivor',
+        label: 'Survivor resilience',
+        reason: 'A household monthly answer can hide what changes after the first death in a couple plan.',
+        mustStay: 'review-factor',
+        mustNotBecome: ['survivor recommendation', 'estate advice']
+      },
+      {
+        id: 'estate',
+        label: 'Estate intent',
+        reason: 'Preserving money can reduce room above the minimum floor.',
+        mustStay: 'review-factor',
+        mustNotBecome: ['permission to spend more', 'estate recommendation']
+      },
+      {
+        id: 'fundingTrace',
+        label: 'Funding trace',
+        reason: 'The first-year trace can explain where money appears to come from without telling the household what to withdraw.',
+        mustStay: 'review-factor',
+        mustNotBecome: ['annual account instruction', 'personalized withdrawal advice']
+      },
+      {
+        id: 'spendingPath',
+        label: 'Spending path',
+        reason: 'Capacity can depend on age-based spending assumptions and breakpoint ages.',
+        mustStay: 'review-factor',
+        mustNotBecome: ['required user expertise', 'go-go slow-go jargon']
+      }
+    ],
+    guardrails: [
+      'The selector must not write to saved plans.',
+      'The selector must not add engine output fields in this package.',
+      'The selector must not call capacity safe or guaranteed.',
+      'The selector must keep funding trace language review-oriented.'
+    ]
+  },
   sections: [
     {
       id: 'minimumExpenses',
@@ -550,6 +708,22 @@ export function futureFixtureValidationHelperIds(draft = futurePlanFormatDraft):
 
 export function futureCapacityStatusIds(draft = futurePlanFormatDraft): string[] {
   return draft.capacityStatusReadiness.map((status) => status.id);
+}
+
+export function futureCapacitySelectorInputIds(draft = futurePlanFormatDraft): string[] {
+  return draft.capacitySelectorReadiness.inputs.map((input) => input.id);
+}
+
+export function futureCapacitySelectorOutputIds(draft = futurePlanFormatDraft): string[] {
+  return draft.capacitySelectorReadiness.outputs.map((output) => output.id);
+}
+
+export function futureCapacitySelectorStatusMappingIds(draft = futurePlanFormatDraft): string[] {
+  return draft.capacitySelectorReadiness.statusMappings.map((mapping) => mapping.statusId);
+}
+
+export function futureCapacityReviewFactorIds(draft = futurePlanFormatDraft): string[] {
+  return draft.capacitySelectorReadiness.reviewFactors.map((factor) => factor.id);
 }
 
 export function futureOptimizerContractItemIds(draft = futurePlanFormatDraft): string[] {

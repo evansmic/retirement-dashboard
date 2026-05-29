@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   flattenFuturePlanFormatFields,
   futureAcceptedImportRuleIds,
+  futureCapacitySelectorInputIds,
+  futureCapacitySelectorOutputIds,
+  futureCapacitySelectorStatusMappingIds,
+  futureCapacityReviewFactorIds,
   futureBlockedImportRules,
   futureCapacityStatusIds,
   futureExampleRequirementIds,
@@ -189,5 +193,42 @@ describe('future plan format draft', () => {
       'automatic recommendation to cut spending'
     );
     expect(futurePlanFormatDraft.capacityStatusReadiness.find((status) => status.id === 'cannotTell')?.mustAvoid).toContain('false precision');
+  });
+
+  it('plans capacity selector inputs and runtime-only outputs', () => {
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.status).toBe('planning-only');
+    expect(futureCapacitySelectorInputIds()).toEqual([
+      'minimumMonthlyExpensesExMortgage',
+      'mortgageMonthlyPayment',
+      'spendingPathBreakpoints',
+      'projectedAfterTaxCapacity',
+      'fundingTracePreview'
+    ]);
+    expect(futureCapacitySelectorOutputIds()).toEqual(['confidentMonthlyAfterTaxSpend', 'capacityStatus', 'reviewFactors']);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.guardrails).toContain('The selector must not write to saved plans.');
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.outputs.find((output) => output.id === 'confidentMonthlyAfterTaxSpend')?.mustAvoid).toContain(
+      'guaranteed safe-spend language'
+    );
+  });
+
+  it('maps capacity statuses to review-oriented prompts', () => {
+    expect(futureCapacitySelectorStatusMappingIds()).toEqual(['covered', 'tight', 'gap', 'cannotTell']);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.statusMappings.find((mapping) => mapping.statusId === 'covered')?.reviewPrompt).toContain(
+      'Review tax, survivor needs, estate intent, and spending path'
+    );
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.statusMappings.find((mapping) => mapping.statusId === 'gap')?.reviewPrompt).toContain(
+      'Compare practical options'
+    );
+  });
+
+  it('keeps capacity review factors from becoming instructions or advice', () => {
+    expect(futureCapacityReviewFactorIds()).toEqual(['tax', 'survivor', 'estate', 'fundingTrace', 'spendingPath']);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.reviewFactors.every((factor) => factor.mustStay === 'review-factor')).toBe(true);
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.reviewFactors.find((factor) => factor.id === 'fundingTrace')?.mustNotBecome).toContain(
+      'annual account instruction'
+    );
+    expect(futurePlanFormatDraft.capacitySelectorReadiness.reviewFactors.find((factor) => factor.id === 'estate')?.mustNotBecome).toContain(
+      'permission to spend more'
+    );
   });
 });
