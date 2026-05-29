@@ -1986,15 +1986,15 @@ function SpendingEventsStep({
   return (
     <div className="spending-form">
       <fieldset className="field-group single-column">
-        <legend>Retirement lifestyle spending</legend>
+        <legend>Regular spending assumptions</legend>
         <p>
-          Enter annual after-tax lifestyle spending in today's dollars for each phase. These are the numbers the Results page uses to
-          judge comfort, flexibility, and whether the plan is preserving more estate than intended.
+          Start with regular after-tax expenses in today's dollars. Exclude mortgage payments already entered in Debts. Use the
+          later fields only if spending is expected to change materially over time.
         </p>
         <div className="field-row three spending-phase-row">
           <label className={`field ${fieldIssueClass(attention, ['gogo_spending'])}`}>
-            <span>Go phase spending</span>
-            <small>Travel, projects, hobbies, and active years after work stops.</small>
+            <span>Early retirement spending</span>
+            <small>Annual after-tax amount for the first retirement years.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -2014,8 +2014,8 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>Slow phase spending</span>
-            <small>A steadier phase when travel or large discretionary spending may slow.</small>
+            <span>Later retirement spending</span>
+            <small>Annual after-tax amount if regular expenses change after the early years.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -2037,8 +2037,8 @@ function SpendingEventsStep({
             />
           </label>
           <label className="field">
-            <span>No-go phase spending</span>
-            <small>Ongoing lifestyle spending in later years; care costs should be added as one-time or separate estimates if needed.</small>
+            <span>Late-life spending</span>
+            <small>Annual after-tax amount for later years; add large care costs as one-time expenses if needed.</small>
             <input
               inputMode="numeric"
               type="number"
@@ -2807,7 +2807,7 @@ function ReviewPanel({
       <div className="summary-grid">
         <Metric label="Household" value={p2LooksBlank(plan.p2) ? 'Single-person plan' : 'Couple plan'} />
         <Metric label="Retirement year" value={String(plan.assumptions.retireYear || plan.p1.retireYear || '-')} />
-        <Metric label="Spending target" value={formatMoney(plan.spending.gogo)} />
+        <Metric label="Early spending assumption" value={formatMoney(plan.spending.gogo)} />
         <Metric label="Preview years" value={firstYear && lastYear ? `${firstYear}-${lastYear}` : '-'} />
         <Metric label="End portfolio" value={formatMoney(endPortfolio)} />
       </div>
@@ -2875,7 +2875,7 @@ function ReviewSummary({ plan }: { plan: V2PlanPayload }) {
       <ReviewSummaryCard
         title="Spending & events"
         rows={[
-          ['Go / slow / no-go spending, today’s dollars', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
+          ['Early / later / late-life spending, today’s dollars', `${formatMoney(plan.spending.gogo)} / ${formatMoney(plan.spending.slowgo)} / ${formatMoney(plan.spending.nogo)}`],
           ['One-time expenses', String((plan.oneOffs || []).length)],
           ['Bequest target', formatMoney(plan.inheritance)]
         ]}
@@ -3472,14 +3472,25 @@ function RetirementAnswerPanel({
           : answer.status === 'cannotTell'
             ? 'Once the missing inputs are cleared, the answer will become much more useful.'
             : 'The plan looks workable under the current assumptions, with a few checks to keep it honest.';
+  const annualSpending = spendingCapacity.estimatedSustainableAnnualSpending;
+  const monthlySpending = annualSpending ? annualSpending / 12 : 0;
+  const annualSpendingText = annualSpending ? formatMoney(annualSpending) : loading ? 'Calculating' : '-';
+  const monthlySpendingText = monthlySpending ? formatMoney(monthlySpending) : loading ? 'Calculating' : '-';
 
   return (
     <section className={`retirement-answer-panel retirement-answer-${answer.status}`}>
-      <div className="retirement-answer-lede">
-        <p className="eyebrow">Can I retire?</p>
-        <h3>{loading ? 'Calculating retirement answer' : answer.label}</h3>
-        <p>{answer.headline}</p>
-        <p>{calmInsight}</p>
+      <div className="retirement-answer-hero">
+        <div className="retirement-answer-lede">
+          <p className="eyebrow">Can I retire?</p>
+          <h3>{loading ? 'Calculating retirement answer' : answer.label}</h3>
+          <p>{answer.headline}</p>
+          <p>{calmInsight}</p>
+        </div>
+        <div className="spending-hero-metric" aria-label="Estimated after-tax monthly spending">
+          <span>Estimated after-tax monthly spending</span>
+          <strong>{monthlySpendingText}</strong>
+          <p>{annualSpendingText} per year, today&apos;s dollars</p>
+        </div>
       </div>
 
       <div className="summary-grid">
@@ -3489,16 +3500,7 @@ function RetirementAnswerPanel({
           value={answer.fundedThroughYear ? String(answer.fundedThroughYear) : loading ? 'Calculating' : '-'}
         />
         <Metric label="Plan-through age" value={loading ? 'Calculating' : planThroughAge} />
-        <Metric
-          label="Annual spending estimate, today's dollars"
-          value={
-            spendingCapacity.estimatedSustainableAnnualSpending
-              ? formatMoney(spendingCapacity.estimatedSustainableAnnualSpending)
-              : loading
-                ? 'Calculating'
-                : '-'
-          }
-        />
+        <Metric label="Annual spending estimate, today's dollars" value={annualSpendingText} />
       </div>
 
       <div className="retirement-answer-grid">

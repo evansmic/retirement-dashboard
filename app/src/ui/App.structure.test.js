@@ -144,12 +144,17 @@ describe('Results overview structure', () => {
     expect(overviewBranch).not.toContain('diagnostic');
     expect(appSource).toContain('first five-minute read');
     expect(appSource).toContain('In the first five minutes, use this list after the answer and spending number.');
+    expect(appSource).toContain('spending-hero-metric');
+    expect(appSource).toContain('Estimated after-tax monthly spending');
+    expect(appSource).toContain('per year, today&apos;s dollars');
   });
 
   it('keeps first-results mobile layout guarded without adding Overview density', () => {
     expect(stylesSource).toContain('@media (max-width: 920px)');
     expect(stylesSource).toContain('@media (max-width: 640px)');
     expect(stylesSource).toContain('.retirement-answer-panel');
+    expect(stylesSource).toContain('.retirement-answer-hero');
+    expect(stylesSource).toContain('.spending-hero-metric');
     expect(stylesSource).toContain('.spending-capacity-panel');
     expect(stylesSource).toContain('.review-first-panel');
     expect(stylesSource).toContain('.overview-highlights-panel');
@@ -771,7 +776,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Pension plus bridge before 65, today');
     expect(appSource).toContain('Pension from 65 onward, today');
     expect(appSource).toContain('Use the statement value. If unsure, 2%');
-    expect(appSource).toContain('Go / slow / no-go spending, today');
+    expect(appSource).toContain('Regular spending assumptions');
+    expect(appSource).toContain('Exclude mortgage payments already entered in Debts');
     expect(appSource).toContain('Inputs stay here until you save an editable plan file');
     expect(appSource).toContain('Changes update this plan as soon as you type');
     expect(appSource).toContain('Start with:');

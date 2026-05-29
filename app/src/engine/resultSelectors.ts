@@ -1041,7 +1041,7 @@ export function selectRetirementAnswerSummary(
         ? 'Use the scenario cards to compare lower early spending, working longer, or timing changes before treating the plan as ready.'
         : status === 'tight'
           ? 'Small changes in spending, markets, or timing may matter. Review the risk section before relying on this plan.'
-          : 'Confirm the entered early, later, and late-life spending targets reflect the lifestyle the household actually wants.';
+          : 'Confirm the entered early, later, and late-life spending assumptions reflect regular expenses and the life the household wants.';
   const estateHeadline =
     estateTarget > 0
       ? 'An estate goal is part of this plan.'
@@ -1158,7 +1158,7 @@ export function selectSpendingCapacitySummary(
 
   const labelByStatus: Record<SpendingCapacityStatus, string> = {
     cannotTell: 'Cannot estimate yet',
-    needsReduction: 'Early spending may need adjustment',
+    needsReduction: 'Minimum spending needs review',
     tight: 'Spending looks tight',
     balanced: 'Spending looks supportable',
     flexible: 'Spending may have room'
@@ -1167,7 +1167,7 @@ export function selectSpendingCapacitySummary(
     cannotTell: 'Spending capacity needs the retirement answer to calculate first.',
     needsReduction: spendLessRows.length && !spendLessShortfall
       ? 'A lower early-retirement spending test removes the visible shortfall.'
-      : 'The current spending target is higher than the plan can comfortably support in the visible projection.',
+      : 'The current spending assumption is higher than the plan can comfortably support in the visible projection.',
     tight: 'Current spending appears possible, but the cushion is limited.',
     balanced: 'Current spending appears reasonable under the base assumptions.',
     flexible: 'This plan may support more lifestyle spending, especially if the large projected estate is not intentional.'
@@ -1178,7 +1178,7 @@ export function selectSpendingCapacitySummary(
       ? `The built-in lower-spending test uses about ${moneyText(stressTestedEarlySpending)} in early retirement and remains funded through ${spendLessOverview.lastYear ?? 'the projection end'}.`
       : 'Review spending, work timing, real estate choices, and benefit timing together rather than relying on one spending cut.',
     tight: 'Treat this as a planning estimate for review: small changes in spending, taxes, markets, or timing could matter.',
-    balanced: 'The next review is whether the entered lifestyle target reflects the life the household actually wants.',
+    balanced: 'The next review is whether the entered spending assumption reflects regular expenses and the life the household wants.',
     flexible: estimatedAnnualRoom > 0
       ? `A first-pass planning estimate suggests roughly ${moneyText(estimatedAnnualRoom)} of possible extra annual lifestyle room, subject to tax, market, estate, and survivor review.`
       : 'There may be flexibility, but the exact amount should be tested with a dedicated spending scenario.'
@@ -1203,7 +1203,7 @@ export function selectSpendingCapacitySummary(
         ? "This is the lower early-retirement spending test in today's dollars, not a guarantee or personal financial advice."
         : status === 'flexible' && estimatedAnnualRoom > 0
           ? "This is a first-pass annual lifestyle estimate in today's dollars for review, not a guarantee."
-          : "This keeps the current annual lifestyle target visible in today's dollars for review.";
+          : "This keeps the current annual spending assumption visible in today's dollars for review.";
   const estateTradeoff =
     status === 'flexible'
       ? estateTarget > 0
@@ -1225,11 +1225,11 @@ export function selectSpendingCapacitySummary(
   if (status === 'needsReduction' || status === 'tight') {
     reviewActions.push({
       id: 'spendLess',
-      label: status === 'needsReduction' ? 'Review lower early spending' : 'Protect the cushion',
+      label: status === 'needsReduction' ? 'Compare ways to cover the gap' : 'Protect the cushion',
       detail:
         repairEarlySpending > 0
           ? `The lower-spending test uses ${moneyText(repairEarlySpending)} in early retirement.`
-          : 'Review spending together with work timing, benefits, tax, and real estate choices.',
+          : 'Review lower expenses, working longer, downsizing, saving more, benefit timing, and tax together.',
       detailArea: 'stressTests'
     });
   }
@@ -2149,10 +2149,12 @@ export function selectOptimizerDecisionBoundaries(
         earlySpending || laterSpending || lateLifeSpending
           ? `${moneyText(earlySpending)} early / ${moneyText(laterSpending)} later / ${moneyText(lateLifeSpending)} late-life`
           : 'Not set',
-      futureSearchSpace: 'Test higher or lower early, later, and late-life spending while preserving safety and estate intent.',
+      futureSearchSpace: 'Test higher or lower early, later, and late-life spending assumptions while preserving safety and estate intent.',
       whyItMatters: 'Spending is the main way the household turns savings into retirement life.',
       beforeOptimizing:
-        earlySpending > 0 ? 'Confirm the spending targets reflect the lifestyle the household actually wants.' : 'Enter spending targets before searching for a better plan.',
+        earlySpending > 0
+          ? 'Confirm the spending assumptions reflect regular expenses and the life the household wants.'
+          : 'Enter spending assumptions before searching for a better plan.',
       detailArea: 'details'
     },
     {
@@ -3318,7 +3320,7 @@ export function selectScenarioChoiceCards(
       secondaryMetric: moneyText(overview.endPortfolio),
       detail: baselineFirstShortfall
         ? `First shortfall appears in ${baselineFirstShortfall.year}; compare the choices below before relying on the plan.`
-        : `Early spending target is ${moneyText(plannedSpending)} and the baseline reaches ${baselineFundedThrough || '-'}.`
+        : `Early spending assumption is ${moneyText(plannedSpending)} and the baseline reaches ${baselineFundedThrough || '-'}.`
     },
     choiceForScenario(
       'spendLessGogo',

@@ -1451,6 +1451,40 @@ button.secondary,
   max-width: 920px;
 }
 
+.retirement-answer-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.38fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.spending-hero-metric {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #b9d2c5;
+  border-radius: var(--radius);
+  background: #ffffff;
+  padding: 16px;
+}
+
+.spending-hero-metric span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.spending-hero-metric strong {
+  color: var(--green-dark);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.spending-hero-metric p {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .retirement-answer-lede h3 {
   color: var(--green-dark);
   font-size: 1.45rem;
@@ -2887,6 +2921,7 @@ button.secondary,
   .field-row.three,
   .review-summary,
   .result-overview-grid,
+  .retirement-answer-hero,
   .retirement-answer-grid,
   .retirement-actions > div,
   .spending-capacity-grid,

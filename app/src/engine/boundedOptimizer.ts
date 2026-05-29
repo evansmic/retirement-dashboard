@@ -936,11 +936,11 @@ function buildReadinessRows(plan: V2PlanPayload, contract: OptimizerContract, el
   return [
     {
       id: 'spending',
-      label: 'Spending target',
+      label: 'Spending assumption',
       status: spendingReady ? 'ready' : 'blocked',
       detail: spendingReady
         ? 'Early, later, and late-life spending can anchor a max after-tax spending review.'
-        : 'Add a realistic spending target before optimizing for sustainable spending.'
+        : 'Add a realistic spending assumption before optimizing for sustainable spending.'
     },
     {
       id: 'benefitEstimates',
@@ -1413,7 +1413,7 @@ function buildEligibilityNotes(plan: V2PlanPayload, contract: OptimizerContract)
     reason:
       spending < 30_000
         ? 'Spending cuts are skipped when planned annual spending is already very low.'
-        : 'Spending options can be reviewed because a household spending target is entered.'
+        : 'Spending options can be reviewed because a household spending assumption is entered.'
   });
   notes.push({
     lever: 'retirementTiming',
