@@ -780,6 +780,61 @@ export type MonthlyCapacityDecisionLayer = {
   boundary: string;
 };
 
+export type MonthlyCapacityFloorInputs = {
+  status: 'ready' | 'missing';
+  source: 'runtimePlan';
+  monthlyMinimumExpensesExMortgage: number;
+  monthlyMortgagePayment: number;
+  monthlyFloor: number;
+  detail: string;
+  boundary: string;
+};
+
+export type MonthlyCapacityCaveatSignal = {
+  id: 'tax' | 'survivor' | 'estate' | 'homeEquity' | 'spendingPath';
+  label: string;
+  status: 'clear' | 'review' | 'notApplicable';
+  detail: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type MonthlyCapacityOptimizerObjective = {
+  status: 'readyForFutureOptimizer' | 'needsInputs';
+  objective: 'coverMonthlyFloorFirst';
+  floorMonthly: number;
+  capacityMonthly: number;
+  gapOrRoomMonthly: number;
+  allowedLeverIds: Array<'reduceSpending' | 'workLonger' | 'downsize' | 'saveMore' | 'taxReview' | 'estateReview'>;
+  forbiddenOutputs: Array<'savedCapacity' | 'accountLevelSequencing' | 'accountInstructions' | 'fundingTrace'>;
+  detail: string;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimePacket = {
+  status: MonthlyCapacityStatus;
+  floorInputs: MonthlyCapacityFloorInputs;
+  foundation: MonthlyCapacityFoundationSummary;
+  reviewRows: MonthlyCapacityReviewRow[];
+  decisionLayer: MonthlyCapacityDecisionLayer;
+  caveatSignals: MonthlyCapacityCaveatSignal[];
+  optimizerObjective: MonthlyCapacityOptimizerObjective;
+  boundary: string;
+};
+
+export type MonthlyCapacityLeverGate = {
+  id: 'reduceSpending' | 'workLonger' | 'downsize' | 'saveMore' | 'taxReview' | 'estateReview';
+  status: 'allowed' | 'reviewOnly' | 'suppressed';
+  reason: string;
+};
+
+export type MonthlyCapacityReadinessCloseout = {
+  status: 'ready' | 'needsReview' | 'needsAction' | 'needsInputs';
+  headline: string;
+  nextStep: string;
+  openGateIds: MonthlyCapacityLeverGate['id'][];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -1623,6 +1678,201 @@ export function selectMonthlyCapacityDecisionLayer(
     caveats,
     boundary:
       'Runtime-only decision layer: this summarizes capacity decisions for later presentation. It does not save capacity output, prescribe actions, or change engine output schema.'
+  };
+}
+
+export function selectMonthlyCapacityFloorInputs(plan: V2PlanPayload | null | undefined): MonthlyCapacityFloorInputs {
+  const monthlyMortgagePayment = Math.max(0, n(plan?.mortgage?.monthly));
+  const monthlyFloor = Math.max(0, n(plan?.spending?.gogo) / 12);
+  const monthlyMinimumExpensesExMortgage = Math.max(0, monthlyFloor - monthlyMortgagePayment);
+  const status: MonthlyCapacityFloorInputs['status'] = monthlyFloor > 0 ? 'ready' : 'missing';
+
+  return {
+    status,
+    source: 'runtimePlan',
+    monthlyMinimumExpensesExMortgage,
+    monthlyMortgagePayment,
+    monthlyFloor,
+    detail:
+      status === 'ready'
+        ? 'Runtime floor inputs separate minimum monthly expenses from any mortgage payment already entered in debts.'
+        : 'Minimum monthly floor inputs are missing, so monthly capacity should not be estimated yet.',
+    boundary:
+      'Runtime-only floor inputs: these values are read from the current runtime plan and do not add saved calculated capacity, optimizer output, or engine output fields.'
+  };
+}
+
+export function selectMonthlyCapacityCaveatSignals(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  summary: MonthlyCapacityFoundationSummary
+): MonthlyCapacityCaveatSignal[] {
+  const tax = selectTaxSummaryMetrics(baseline);
+  const hasCouple = !personLooksBlank(plan?.p2);
+  const hasEstateTarget = n(plan?.inheritance) > 0;
+  const hasHomeEquityInput = n(plan?.downsize?.year) > 0 || n(plan?.downsize?.netProceeds) > 0 || n(plan?.mortgage?.monthly) > 0;
+  const path = selectSpendingPathBridgeSummary(plan);
+
+  return [
+    {
+      id: 'tax',
+      label: 'Tax and benefit timing',
+      status: tax.lifetimeTax > 0 || tax.lifetimeOasClawback > 0 ? 'review' : 'clear',
+      detail:
+        tax.lifetimeTax > 0 || tax.lifetimeOasClawback > 0
+          ? 'Tax, OAS recovery, and registered withdrawals can change modelled after-tax monthly capacity.'
+          : 'No visible tax pressure appears in the runtime rows used for this caveat check.',
+      detailArea: 'taxes'
+    },
+    {
+      id: 'survivor',
+      label: 'Survivor resilience',
+      status: hasCouple ? 'review' : 'notApplicable',
+      detail: hasCouple
+        ? 'Two-person plans should review survivor resilience before relying on room above the floor.'
+        : 'No active second person is present in this runtime plan.',
+      detailArea: 'householdResilience'
+    },
+    {
+      id: 'estate',
+      label: 'Estate intent',
+      status: hasEstateTarget || summary.monthlyRoom > 0 ? 'review' : 'clear',
+      detail:
+        hasEstateTarget || summary.monthlyRoom > 0
+          ? 'Room above the floor should stay visible against estate intent and money-left trade-offs.'
+          : 'No estate target or modelled room above the floor is visible in this runtime check.',
+      detailArea: 'details'
+    },
+    {
+      id: 'homeEquity',
+      label: 'Home equity and mortgage',
+      status: hasHomeEquityInput ? 'review' : 'notApplicable',
+      detail: hasHomeEquityInput
+        ? 'Mortgage payments and any downsizing assumption should be reviewed before comparing capacity options.'
+        : 'No mortgage payment or downsizing input is present in this runtime plan.',
+      detailArea: 'details'
+    },
+    {
+      id: 'spendingPath',
+      label: 'Spending path',
+      status: path.status === 'ready' ? 'review' : 'clear',
+      detail:
+        path.status === 'ready'
+          ? 'Age-based spending changes are modelled underneath the monthly answer and can change the room or gap.'
+          : 'Spending path breakpoints are not ready, so the monthly answer should stay conservative.',
+      detailArea: 'details'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityOptimizerObjective(summary: MonthlyCapacityFoundationSummary): MonthlyCapacityOptimizerObjective {
+  const needsInputs = summary.status === 'cannotTell';
+
+  return {
+    status: needsInputs ? 'needsInputs' : 'readyForFutureOptimizer',
+    objective: 'coverMonthlyFloorFirst',
+    floorMonthly: summary.monthlyFloor,
+    capacityMonthly: summary.monthlyAfterTaxCapacity,
+    gapOrRoomMonthly: summary.monthlyRoom,
+    allowedLeverIds: summary.optionIds,
+    forbiddenOutputs: ['savedCapacity', 'accountLevelSequencing', 'accountInstructions', 'fundingTrace'],
+    detail: needsInputs
+      ? 'Complete runtime floor and capacity inputs before a future optimizer compares options.'
+      : summary.status === 'gap'
+        ? 'A future optimizer should compare practical ways to cover the monthly floor before considering discretionary room.'
+        : 'A future optimizer should preserve floor coverage first, then compare review items such as tax and estate trade-offs.',
+    boundary:
+      'Runtime-only optimizer objective: floor coverage is the first future objective. This does not run an optimizer, save calculated capacity, create account instructions, or add a funding trace.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimePacket(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  spendingCapacity: SpendingCapacitySummary = selectSpendingCapacitySummary(baseline, {}, plan)
+): MonthlyCapacityRuntimePacket {
+  const floorInputs = selectMonthlyCapacityFloorInputs(plan);
+  const foundation = selectMonthlyCapacityFoundation(baseline, plan, spendingCapacity);
+  const reviewRows = selectMonthlyCapacityReviewRows(foundation);
+  const decisionLayer = selectMonthlyCapacityDecisionLayer(foundation, plan);
+  const caveatSignals = selectMonthlyCapacityCaveatSignals(baseline, plan, foundation);
+  const optimizerObjective = selectMonthlyCapacityOptimizerObjective(foundation);
+
+  return {
+    status: foundation.status,
+    floorInputs,
+    foundation,
+    reviewRows,
+    decisionLayer,
+    caveatSignals,
+    optimizerObjective,
+    boundary:
+      'Runtime-only capacity packet: bundles floor inputs, capacity decision evidence, caveats, and the future floor-first objective. It is not saved and does not change engine output schema.'
+  };
+}
+
+export function selectMonthlyCapacityLeverGates(packet: MonthlyCapacityRuntimePacket): MonthlyCapacityLeverGate[] {
+  const practicalLevers: MonthlyCapacityLeverGate['id'][] = ['reduceSpending', 'workLonger', 'downsize', 'saveMore'];
+  const reviewLevers: MonthlyCapacityLeverGate['id'][] = ['taxReview', 'estateReview'];
+  const hasGap = packet.status === 'gap';
+  const cannotTell = packet.status === 'cannotTell';
+  const practicalStatus: MonthlyCapacityLeverGate['status'] = cannotTell ? 'suppressed' : hasGap ? 'allowed' : 'suppressed';
+  const reviewStatus: MonthlyCapacityLeverGate['status'] = cannotTell ? 'suppressed' : 'reviewOnly';
+
+  return [
+    ...practicalLevers.map((id) => ({
+      id,
+      status: practicalStatus,
+      reason: cannotTell
+        ? 'Complete runtime inputs before comparing practical options.'
+        : hasGap
+          ? 'Allowed because the monthly floor is not covered under the runtime estimate.'
+          : 'Suppressed unless the runtime capacity status is gap.'
+    })),
+    ...reviewLevers.map((id) => ({
+      id,
+      status: reviewStatus,
+      reason: cannotTell
+        ? 'Complete runtime inputs before reviewing capacity caveats.'
+        : 'Review-only because tax, survivor, estate, and timing can change the monthly capacity estimate.'
+    }))
+  ];
+}
+
+export function selectMonthlyCapacityReadinessCloseout(
+  packet: MonthlyCapacityRuntimePacket,
+  leverGates: MonthlyCapacityLeverGate[] = selectMonthlyCapacityLeverGates(packet)
+): MonthlyCapacityReadinessCloseout {
+  const openGateIds = leverGates.filter((gate) => gate.status === 'allowed' || gate.status === 'reviewOnly').map((gate) => gate.id);
+  const status: MonthlyCapacityReadinessCloseout['status'] =
+    packet.status === 'cannotTell'
+      ? 'needsInputs'
+      : packet.status === 'gap'
+        ? 'needsAction'
+        : packet.decisionLayer.decision === 'needsReview'
+          ? 'needsReview'
+          : 'ready';
+
+  const headlineByStatus: Record<MonthlyCapacityReadinessCloseout['status'], string> = {
+    ready: 'Monthly capacity runtime evidence is ready for later presentation.',
+    needsReview: 'Monthly capacity runtime evidence is ready, with review caveats still visible.',
+    needsAction: 'Monthly capacity runtime evidence shows the floor is not covered.',
+    needsInputs: 'Monthly capacity runtime evidence needs complete inputs.'
+  };
+  const nextStepByStatus: Record<MonthlyCapacityReadinessCloseout['status'], string> = {
+    ready: 'Later work can connect this packet to presentation or bounded optimizer review.',
+    needsReview: 'Keep tax, survivor, estate, home-equity, and spending-path caveats attached to the capacity answer.',
+    needsAction: 'Compare only practical gap options before showing any discretionary room.',
+    needsInputs: 'Complete runtime floor and projection inputs before estimating monthly capacity.'
+  };
+
+  return {
+    status,
+    headline: headlineByStatus[status],
+    nextStep: nextStepByStatus[status],
+    openGateIds,
+    boundary:
+      'Runtime-only closeout: summarizes capacity readiness for future work. It does not change UI, saved schema, engine output schema, optimizer execution, or funding trace output.'
   };
 }
 

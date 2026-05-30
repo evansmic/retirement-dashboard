@@ -20,9 +20,15 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
+  selectMonthlyCapacityCaveatSignals,
   selectMonthlyCapacityFoundation,
   selectMonthlyCapacityDecisionLayer,
+  selectMonthlyCapacityFloorInputs,
+  selectMonthlyCapacityLeverGates,
+  selectMonthlyCapacityOptimizerObjective,
+  selectMonthlyCapacityReadinessCloseout,
   selectMonthlyCapacityReviewRows,
+  selectMonthlyCapacityRuntimePacket,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -680,6 +686,242 @@ describe('result selectors', () => {
 
       expect({ status: capacity.status, decision: decision.decision }, card.id).toEqual(expected[card.id]);
     }
+  });
+
+  it('separates runtime floor inputs from mortgage and saved capacity output', () => {
+    const plan = createCleanExampleRuntimePlan('coupleTightFloor');
+    const floorInputs = selectMonthlyCapacityFloorInputs(plan);
+    const saved = createPlanFile(plan);
+
+    expect(floorInputs).toMatchObject({
+      status: 'ready',
+      source: 'runtimePlan',
+      monthlyMinimumExpensesExMortgage: 6200,
+      monthlyMortgagePayment: 1800,
+      monthlyFloor: 8000
+    });
+    expect(floorInputs.detail).toContain('separate minimum monthly expenses');
+    expect(floorInputs.boundary).toContain('Runtime-only floor inputs');
+    expect(saved.plan).not.toHaveProperty('monthlyCapacityFloorInputs');
+    expect(saved.plan).not.toHaveProperty('monthlyAfterTaxCapacity');
+  });
+
+  it('keeps runtime caveat signals visible without account instructions', () => {
+    const plan = createCleanExampleRuntimePlan('estateHeavyRoom');
+    const result = withRows([
+      {
+        ...fixture.years[0],
+        shortfall: 0,
+        totalAftaxYear: 84000,
+        spending: 84000,
+        totalTaxYear: 18000,
+        taxableIncome: 120000,
+        totalOasClawY: 1200,
+        bal_total: 6000000
+      },
+      {
+        ...fixture.years[1],
+        shortfall: 0,
+        totalAftaxYear: 84000,
+        spending: 84000,
+        totalTaxYear: 21000,
+        taxableIncome: 130000,
+        totalOasClawY: 2000,
+        bal_total: 7000000
+      }
+    ]);
+    const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+    const capacity = selectMonthlyCapacityFoundation(result, { ...plan, inheritance: 0 }, spending);
+    const caveats = selectMonthlyCapacityCaveatSignals(result, { ...plan, inheritance: 0 }, capacity);
+
+    expect(caveats.map((row) => row.id)).toEqual(['tax', 'survivor', 'estate', 'homeEquity', 'spendingPath']);
+    expect(caveats.find((row) => row.id === 'tax')).toMatchObject({ status: 'review', detailArea: 'taxes' });
+    expect(caveats.find((row) => row.id === 'survivor')).toMatchObject({ status: 'review', detailArea: 'householdResilience' });
+    expect(caveats.find((row) => row.id === 'homeEquity')).toMatchObject({ status: 'review' });
+    expect(caveats.map((row) => row.detail).join(' ')).not.toContain('withdraw from');
+    expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityCaveatSignals');
+  });
+
+  it('defines a floor-first future optimizer objective without running or saving optimizer output', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(shortfallResult, planFixture, spending);
+    const objective = selectMonthlyCapacityOptimizerObjective(capacity);
+    const saved = createPlanFile(planFixture);
+
+    expect(objective).toMatchObject({
+      status: 'readyForFutureOptimizer',
+      objective: 'coverMonthlyFloorFirst',
+      floorMonthly: 70000 / 12,
+      capacityMonthly: 63000 / 12,
+      allowedLeverIds: ['reduceSpending', 'workLonger', 'downsize', 'saveMore'],
+      forbiddenOutputs: ['savedCapacity', 'accountLevelSequencing', 'accountInstructions', 'fundingTrace']
+    });
+    expect(objective.gapOrRoomMonthly).toBeCloseTo(-7000 / 12);
+    expect(objective.detail).toContain('cover the monthly floor');
+    expect(objective.boundary).toContain('does not run an optimizer');
+    expect(saved.plan).not.toHaveProperty('monthlyCapacityOptimizerObjective');
+    expect(saved.plan).not.toHaveProperty('optimizerOutput');
+  });
+
+  it('marks the future optimizer objective as needing inputs when capacity cannot be decided', () => {
+    const capacity = selectMonthlyCapacityFoundation({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const objective = selectMonthlyCapacityOptimizerObjective(capacity);
+
+    expect(objective.status).toBe('needsInputs');
+    expect(objective.objective).toBe('coverMonthlyFloorFirst');
+    expect(objective.allowedLeverIds).toEqual(['taxReview', 'estateReview']);
+    expect(objective.detail).toContain('Complete runtime floor');
+  });
+
+  it('builds a runtime capacity packet for future optimizer handoff without persisting it', () => {
+    const plan = createCleanExampleRuntimePlan('pensionCoupleSurvivor');
+    const result = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(result, { ...plan, inheritance: 0 }, spending);
+    const saved = createPlanFile(plan);
+
+    expect(packet.status).toBe(packet.foundation.status);
+    expect(packet.floorInputs.monthlyFloor).toBe(5400);
+    expect(packet.reviewRows.map((row) => row.id)).toEqual(['floor', 'capacity', 'room', 'options']);
+    expect(packet.decisionLayer.decision).toBe('needsReview');
+    expect(packet.caveatSignals.find((row) => row.id === 'survivor')).toMatchObject({ status: 'review' });
+    expect(packet.optimizerObjective.objective).toBe('coverMonthlyFloorFirst');
+    expect(packet.boundary).toContain('Runtime-only capacity packet');
+    expect(saved.plan).not.toHaveProperty('monthlyCapacityRuntimePacket');
+  });
+
+  it('runs fresh clean examples through the capacity runtime packet matrix', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+      const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, { ...plan, inheritance: 0 }, spending);
+
+      expect(packet.floorInputs.status, card.id).toBe('ready');
+      expect(packet.optimizerObjective.status, card.id).toBe('readyForFutureOptimizer');
+      expect(packet.optimizerObjective.forbiddenOutputs, card.id).toContain('accountLevelSequencing');
+      expect(packet.caveatSignals.length, card.id).toBe(5);
+    }
+  });
+
+  it('allows practical levers only when the runtime floor has a gap', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const gates = selectMonthlyCapacityLeverGates(packet);
+
+    expect(gates.filter((gate) => gate.status === 'allowed').map((gate) => gate.id)).toEqual([
+      'reduceSpending',
+      'workLonger',
+      'downsize',
+      'saveMore'
+    ]);
+    expect(gates.filter((gate) => gate.status === 'reviewOnly').map((gate) => gate.id)).toEqual(['taxReview', 'estateReview']);
+    expect(gates.map((gate) => gate.reason).join(' ')).not.toContain('recommend');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityLeverGates');
+  });
+
+  it('suppresses practical levers when floor coverage is tight or covered', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const gates = selectMonthlyCapacityLeverGates(packet);
+
+    expect(packet.status).toBe('tight');
+    expect(gates.filter((gate) => gate.id === 'reduceSpending' || gate.id === 'workLonger').map((gate) => gate.status)).toEqual([
+      'suppressed',
+      'suppressed'
+    ]);
+    expect(gates.find((gate) => gate.id === 'taxReview')).toMatchObject({ status: 'reviewOnly' });
+    expect(gates.find((gate) => gate.id === 'reduceSpending')?.reason).toContain('unless the runtime capacity status is gap');
+  });
+
+  it('closes out monthly capacity readiness with review caveats attached', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const closeout = selectMonthlyCapacityReadinessCloseout(packet);
+
+    expect(closeout).toMatchObject({
+      status: 'needsReview',
+      openGateIds: ['taxReview', 'estateReview']
+    });
+    expect(closeout.headline).toContain('review caveats');
+    expect(closeout.nextStep).toContain('survivor');
+    expect(closeout.boundary).toContain('does not change UI');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityReadinessCloseout');
+  });
+
+  it('closes out monthly capacity readiness as action-needed only for gaps', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const closeout = selectMonthlyCapacityReadinessCloseout(packet);
+
+    expect(closeout.status).toBe('needsAction');
+    expect(closeout.openGateIds).toEqual(['reduceSpending', 'workLonger', 'downsize', 'saveMore', 'taxReview', 'estateReview']);
+    expect(closeout.nextStep).toContain('practical gap options');
+    expect(closeout.nextStep).not.toContain('account');
+  });
+
+  it('closes out monthly capacity readiness as input-needed without inventing precision', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const closeout = selectMonthlyCapacityReadinessCloseout(packet);
+
+    expect(packet.status).toBe('cannotTell');
+    expect(closeout.status).toBe('needsInputs');
+    expect(closeout.openGateIds).toEqual([]);
+    expect(closeout.nextStep).toContain('Complete runtime floor');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
