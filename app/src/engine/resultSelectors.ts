@@ -7,6 +7,7 @@ import {
   selectStressTestSummary as selectStressTestSummaryFromStressModule
 } from './stressSelectors';
 import type { StressSeverity } from './stressSelectors';
+import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 export type {
   SpendingStressId,
   SpendingStressRow,
@@ -1222,6 +1223,79 @@ export type MonthlyCapacityRuntimeCandidateCloseout = {
   nextBroadStep: 'runtimeCandidateSimulation' | 'capacityInputsFirst';
   completedPieces: Array<'runtimeVariants' | 'variantSummary' | 'variantAudit' | 'exampleMatrix' | 'simulationHandoff'>;
   stillDeferred: MonthlyCapacityRuntimeCandidateSimulationHandoff['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationRunner = (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
+
+export type MonthlyCapacityRuntimeCandidateSimulationRow = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  label: string;
+  status: 'simulated' | 'blocked';
+  result: SimulationResult;
+  resultYears: number;
+  firstShortfallYear: number | null;
+  endPortfolio: number;
+  totalTax: number;
+  score: null;
+  runtimeOnly: true;
+  saved: false;
+  fundingTrace: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationSet = {
+  status: 'blocked' | 'ready';
+  rows: MonthlyCapacityRuntimeCandidateSimulationRow[];
+  simulatedVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  blockedVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationAudit = {
+  status: 'pass' | 'block';
+  simulatedCount: number;
+  scoredCount: number;
+  savedCount: number;
+  traceCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationSummaryRow = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  label: string;
+  status: 'covered' | 'gap' | 'cannotTell';
+  resultYears: number;
+  firstShortfallYear: number | null;
+  endPortfolio: number;
+  totalTax: number;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationSummary = {
+  status: MonthlyCapacityRuntimeCandidateSimulationSet['status'];
+  rows: MonthlyCapacityRuntimeCandidateSimulationSummaryRow[];
+  coveredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  gapVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  baselineStatus: 'covered' | 'gap' | 'cannotTell';
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityRuntimeCandidateSimulationSet['status'];
+  simulatedVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  coveredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  gapVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  baselineStatus: MonthlyCapacityRuntimeCandidateSimulationSummary['baselineStatus'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationCloseout = {
+  status: 'blocked' | 'readyForScoringPlanning';
+  headline: string;
+  nextBroadStep: 'candidateScoringExecutionPlanning' | 'capacityInputsFirst';
+  completedPieces: Array<'runtimeSimulations' | 'simulationSummary' | 'simulationAudit' | 'exampleMatrix' | 'noPersistenceBoundary'>;
+  stillDeferred: Array<'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
   boundary: string;
 };
 
@@ -3411,6 +3485,157 @@ export function selectMonthlyCapacityRuntimeCandidateCloseout(
     stillDeferred: handoff.notAllowedYet,
     boundary:
       'Runtime candidate builder closeout: no simulations, scoring, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulations(
+  variantSet: MonthlyCapacityRuntimeCandidateVariantSet,
+  handoff: MonthlyCapacityRuntimeCandidateSimulationHandoff,
+  runner: MonthlyCapacityRuntimeCandidateSimulationRunner = runSimulationSafely,
+  config: SimulationConfig = {}
+): MonthlyCapacityRuntimeCandidateSimulationSet {
+  const blocked = variantSet.status === 'blocked' || handoff.status === 'blocked';
+  const rows: MonthlyCapacityRuntimeCandidateSimulationRow[] = blocked
+    ? variantSet.variants.map((variant) => ({
+        id: variant.id,
+        label: variant.label,
+        status: 'blocked',
+        result: { years: [] },
+        resultYears: 0,
+        firstShortfallYear: null,
+        endPortfolio: 0,
+        totalTax: 0,
+        score: null,
+        runtimeOnly: true,
+        saved: false,
+        fundingTrace: null,
+        boundary:
+          'Runtime-only candidate simulation row: blocked before simulation and does not score, save, trace funding, add account instructions, sequence annually, or change UI.'
+      }))
+    : variantSet.variants.map((variant) => {
+        const result = runner(variant.plan, config);
+        const years = rowsFrom(result);
+        const firstShortfallYear = years.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE)?.year ?? null;
+        const finalRow = years[years.length - 1];
+        const totalTax = years.reduce((total, row) => total + n(row.totalTaxYear), 0);
+
+        return {
+          id: variant.id,
+          label: variant.label,
+          status: 'simulated',
+          result,
+          resultYears: years.length,
+          firstShortfallYear,
+          endPortfolio: n(finalRow?.bal_total),
+          totalTax,
+          score: null,
+          runtimeOnly: true,
+          saved: false,
+          fundingTrace: null,
+          boundary:
+            'Runtime-only candidate simulation row: simulation evidence only. It does not score, save output, trace funding, add account instructions, sequence annually, or change UI.'
+        };
+      });
+
+  return {
+    status: blocked ? 'blocked' : 'ready',
+    rows,
+    simulatedVariantIds: rows.filter((row) => row.status === 'simulated').map((row) => row.id),
+    blockedVariantIds: rows.filter((row) => row.status === 'blocked').map((row) => row.id),
+    boundary:
+      'Runtime-only candidate simulations: runs simulations for built in-memory variants without scoring candidates, running optimizer search, saving output, creating funding traces, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulationAudit(
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet
+): MonthlyCapacityRuntimeCandidateSimulationAudit {
+  const scoredCount = simulationSet.rows.filter((row) => row.score !== null).length;
+  const savedCount = simulationSet.rows.filter((row) => row.saved !== false).length;
+  const traceCount = simulationSet.rows.filter((row) => row.fundingTrace !== null).length;
+
+  return {
+    status: scoredCount > 0 || savedCount > 0 || traceCount > 0 ? 'block' : 'pass',
+    simulatedCount: simulationSet.rows.filter((row) => row.status === 'simulated').length,
+    scoredCount,
+    savedCount,
+    traceCount,
+    boundary:
+      'Runtime-only candidate simulation audit: verifies simulation rows are not scored, saved, traced, turned into account instructions, sequenced annually, or sent to UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulationSummary(
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet
+): MonthlyCapacityRuntimeCandidateSimulationSummary {
+  const rows = simulationSet.rows.map<MonthlyCapacityRuntimeCandidateSimulationSummaryRow>((row) => {
+    const status: MonthlyCapacityRuntimeCandidateSimulationSummaryRow['status'] =
+      row.status === 'blocked' || row.resultYears === 0 ? 'cannotTell' : row.firstShortfallYear ? 'gap' : 'covered';
+
+    return {
+      id: row.id,
+      label: row.label,
+      status,
+      resultYears: row.resultYears,
+      firstShortfallYear: row.firstShortfallYear,
+      endPortfolio: row.endPortfolio,
+      totalTax: row.totalTax
+    };
+  });
+  const baselineStatus = rows.find((row) => row.id === 'baseline')?.status ?? 'cannotTell';
+
+  return {
+    status: simulationSet.status,
+    rows,
+    coveredVariantIds: rows.filter((row) => row.status === 'covered').map((row) => row.id),
+    gapVariantIds: rows.filter((row) => row.status === 'gap').map((row) => row.id),
+    baselineStatus,
+    boundary:
+      'Runtime-only candidate simulation summary: summarizes floor coverage evidence without scoring candidates, choosing recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulationExampleReadiness(
+  id: string,
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet,
+  summary: MonthlyCapacityRuntimeCandidateSimulationSummary = selectMonthlyCapacityRuntimeCandidateSimulationSummary(simulationSet)
+): MonthlyCapacityRuntimeCandidateSimulationExampleReadiness {
+  return {
+    id,
+    status: simulationSet.status,
+    simulatedVariantIds: simulationSet.simulatedVariantIds,
+    coveredVariantIds: summary.coveredVariantIds,
+    gapVariantIds: summary.gapVariantIds,
+    baselineStatus: summary.baselineStatus,
+    boundary:
+      'Runtime-only candidate simulation example readiness: records simulation coverage for an example fixture without scoring, saving output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulationCloseout(
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet,
+  audit: MonthlyCapacityRuntimeCandidateSimulationAudit = selectMonthlyCapacityRuntimeCandidateSimulationAudit(simulationSet)
+): MonthlyCapacityRuntimeCandidateSimulationCloseout {
+  const blocked = simulationSet.status === 'blocked' || audit.status === 'block';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForScoringPlanning',
+    headline: blocked
+      ? 'Runtime candidate simulations need complete runtime evidence before scoring can be planned.'
+      : 'Runtime candidate simulations are ready for a future scoring-planning package.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateScoringExecutionPlanning',
+    completedPieces: ['runtimeSimulations', 'simulationSummary', 'simulationAudit', 'exampleMatrix', 'noPersistenceBoundary'],
+    stillDeferred: [
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only candidate simulation closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 
