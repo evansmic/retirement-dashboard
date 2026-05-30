@@ -728,6 +728,40 @@ export type SpendingCapacitySummary = {
   }>;
 };
 
+export type MonthlyCapacityStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
+
+export type MonthlyCapacityOption = {
+  id: 'reduceSpending' | 'workLonger' | 'downsize' | 'saveMore' | 'taxReview' | 'estateReview';
+  label: string;
+  detail: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type MonthlyCapacityFoundationSummary = {
+  status: MonthlyCapacityStatus;
+  label: string;
+  headline: string;
+  detail: string;
+  monthlyMinimumExpensesExMortgage: number;
+  monthlyMortgagePayment: number;
+  monthlyFloor: number;
+  monthlyAfterTaxCapacity: number;
+  monthlyRoom: number;
+  firstShortfallYear: number | null;
+  optionIds: MonthlyCapacityOption['id'][];
+  options: MonthlyCapacityOption[];
+  boundary: string;
+};
+
+export type MonthlyCapacityReviewRow = {
+  id: 'floor' | 'capacity' | 'room' | 'options';
+  label: string;
+  status: 'ok' | 'review' | 'gap' | 'unknown';
+  value: string;
+  detail: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -1335,6 +1369,157 @@ export function selectSpendingCapacitySummary(
     estateTradeoff,
     reviewActions: reviewActions.slice(0, 4)
   };
+}
+
+export function selectMonthlyCapacityFoundation(
+  baseline: SimulationResult | null | undefined,
+  plan: V2PlanPayload | null | undefined,
+  spendingCapacity: SpendingCapacitySummary = selectSpendingCapacitySummary(baseline, {}, plan)
+): MonthlyCapacityFoundationSummary {
+  const rows = rowsFrom(baseline);
+  const firstShortfall = rows.find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
+  const monthlyMortgagePayment = Math.max(0, n(plan?.mortgage?.monthly));
+  const monthlyFloor = Math.max(0, n(plan?.spending?.gogo) / 12);
+  const monthlyMinimumExpensesExMortgage = Math.max(0, monthlyFloor - monthlyMortgagePayment);
+  const monthlyAfterTaxCapacity = Math.max(0, n(spendingCapacity.estimatedSustainableAnnualSpending) / 12);
+  const monthlyRoom = monthlyAfterTaxCapacity - monthlyFloor;
+  const tightThreshold = Math.max(100, monthlyFloor * 0.05);
+
+  let status: MonthlyCapacityStatus = 'covered';
+  if (!rows.length || monthlyFloor <= 0 || monthlyAfterTaxCapacity <= 0 || spendingCapacity.status === 'cannotTell') {
+    status = 'cannotTell';
+  } else if (firstShortfall || monthlyRoom < 0 || spendingCapacity.status === 'needsReduction') {
+    status = 'gap';
+  } else if (monthlyRoom <= tightThreshold || spendingCapacity.status === 'tight') {
+    status = 'tight';
+  }
+
+  const labelByStatus: Record<MonthlyCapacityStatus, string> = {
+    cannotTell: 'Monthly capacity needs more inputs',
+    gap: 'Minimum monthly expenses need review',
+    tight: 'Minimum monthly expenses look tight',
+    covered: 'Minimum monthly expenses appear covered'
+  };
+  const headlineByStatus: Record<MonthlyCapacityStatus, string> = {
+    cannotTell: 'The model needs complete inputs before estimating monthly capacity.',
+    gap: 'The modelled monthly capacity does not cover the minimum floor under the current assumptions.',
+    tight: 'The modelled monthly capacity covers the minimum floor, but with limited room.',
+    covered: 'The modelled monthly capacity covers the minimum floor under the current assumptions.'
+  };
+  const detailByStatus: Record<MonthlyCapacityStatus, string> = {
+    cannotTell: 'Complete the required plan inputs, then compare minimum monthly expenses with modelled after-tax capacity.',
+    gap: 'Compare practical options neutrally: reduce spending, work longer, downsize if realistic, or save more before retirement.',
+    tight: 'Review taxes, benefit timing, survivor needs, estate intent, and the spending path before relying on the extra room.',
+    covered: 'Use this as a planning estimate in today’s dollars, not a guarantee or personal financial advice.'
+  };
+
+  const options: MonthlyCapacityOption[] =
+    status === 'gap'
+      ? [
+          {
+            id: 'reduceSpending',
+            label: 'Reduce spending',
+            detail: 'Review whether the minimum monthly floor is complete and whether any regular expenses can reasonably change.',
+            detailArea: 'stressTests'
+          },
+          {
+            id: 'workLonger',
+            label: 'Work longer',
+            detail: 'Compare whether working longer improves savings, benefits, and the number of years the plan must fund.',
+            detailArea: 'stressTests'
+          },
+          {
+            id: 'downsize',
+            label: 'Downsize if realistic',
+            detail: 'Treat home equity as an option to compare only if the household would truly consider it.',
+            detailArea: 'details'
+          },
+          {
+            id: 'saveMore',
+            label: 'Save more',
+            detail: 'Compare whether additional saving before retirement changes the floor coverage picture.',
+            detailArea: 'details'
+          }
+        ]
+      : [
+          {
+            id: 'taxReview',
+            label: 'Review tax impact',
+            detail: 'Taxes and OAS recovery can change how much after-tax spending is available each month.',
+            detailArea: 'taxes'
+          },
+          {
+            id: 'estateReview',
+            label: 'Review estate intent',
+            detail: 'Room above the floor should be reviewed against survivor needs and estate goals.',
+            detailArea: 'details'
+          }
+        ];
+
+  return {
+    status,
+    label: labelByStatus[status],
+    headline: headlineByStatus[status],
+    detail: detailByStatus[status],
+    monthlyMinimumExpensesExMortgage,
+    monthlyMortgagePayment,
+    monthlyFloor,
+    monthlyAfterTaxCapacity,
+    monthlyRoom,
+    firstShortfallYear: firstShortfall?.year ?? null,
+    optionIds: options.map((option) => option.id),
+    options,
+    boundary:
+      'Runtime-only capacity foundation: compares the minimum monthly floor with modelled after-tax monthly capacity. No saved field, optimizer output, funding trace, or engine output schema change is added.'
+  };
+}
+
+export function selectMonthlyCapacityReviewRows(summary: MonthlyCapacityFoundationSummary): MonthlyCapacityReviewRow[] {
+  const status =
+    summary.status === 'cannotTell'
+      ? 'unknown'
+      : summary.status === 'gap'
+        ? 'gap'
+        : summary.status === 'tight'
+          ? 'review'
+          : 'ok';
+  return [
+    {
+      id: 'floor',
+      label: 'Minimum monthly floor',
+      status: summary.monthlyFloor > 0 ? 'ok' : 'unknown',
+      value: moneyText(Math.round(summary.monthlyFloor)),
+      detail: 'Includes minimum monthly expenses and any mortgage payment already entered in debts.',
+      detailArea: 'details'
+    },
+    {
+      id: 'capacity',
+      label: 'Modelled monthly after-tax capacity',
+      status,
+      value: moneyText(Math.round(summary.monthlyAfterTaxCapacity)),
+      detail: 'Derived at runtime from the current projection. This is not saved in the plan file.',
+      detailArea: 'overview'
+    },
+    {
+      id: 'room',
+      label: summary.monthlyRoom >= 0 ? 'Modelled room above floor' : 'Modelled gap below floor',
+      status,
+      value: moneyText(Math.round(summary.monthlyRoom)),
+      detail:
+        summary.monthlyRoom >= 0
+          ? 'Shows modelled room above the minimum floor before tax, survivor, estate, and spending-path review.'
+          : 'Shows the modelled monthly gap to review before treating discretionary spending as available.',
+      detailArea: summary.monthlyRoom >= 0 ? 'details' : 'stressTests'
+    },
+    {
+      id: 'options',
+      label: summary.status === 'gap' ? 'Practical options to compare' : 'Review items',
+      status,
+      value: String(summary.options.length),
+      detail: summary.options.map((option) => option.label).join(', '),
+      detailArea: summary.status === 'gap' ? 'stressTests' : 'details'
+    }
+  ];
 }
 
 export const selectSpendingStressSummary = selectSpendingStressSummaryFromStressModule;

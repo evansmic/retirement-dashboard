@@ -20,6 +20,8 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
+  selectMonthlyCapacityFoundation,
+  selectMonthlyCapacityReviewRows,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -58,6 +60,7 @@ import {
 } from './resultSelectors';
 import { SimulationResult, V2PlanPayload } from '../types/plan';
 import { createPlanFile } from '../data/planFile';
+import { cleanExamplePlanCards, createCleanExampleRuntimePlan } from '../data/examplePlans';
 
 const fixture: SimulationResult = {
   years: [
@@ -468,6 +471,120 @@ describe('result selectors', () => {
     expect(spending.planningEstimateDetail).toContain("today's dollars");
     expect(spending.planningEstimateDetail).toContain('not a guarantee');
     expect(spending.reviewActions.find((action) => action.id === 'spendMore')).toBeTruthy();
+  });
+
+  it('derives covered monthly capacity from the runtime floor without saving the answer', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(fixture, planFixture, spending);
+    const saved = createPlanFile(planFixture);
+
+    expect(capacity).toMatchObject({
+      status: 'tight',
+      monthlyMinimumExpensesExMortgage: 70000 / 12,
+      monthlyMortgagePayment: 0,
+      monthlyFloor: 70000 / 12,
+      monthlyAfterTaxCapacity: 70000 / 12,
+      monthlyRoom: 0,
+      firstShortfallYear: null
+    });
+    expect(capacity.boundary).toContain('Runtime-only capacity foundation');
+    expect(saved.plan).not.toHaveProperty('monthlyAfterTaxCapacity');
+    expect(saved.plan).not.toHaveProperty('monthlyCapacityFoundation');
+  });
+
+  it('uses neutral practical options when monthly capacity does not cover the floor', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(shortfallResult, planFixture, spending);
+
+    expect(capacity.status).toBe('gap');
+    expect(capacity.monthlyAfterTaxCapacity).toBe(63000 / 12);
+    expect(capacity.monthlyRoom).toBeLessThan(0);
+    expect(capacity.firstShortfallYear).toBe(2029);
+    expect(capacity.optionIds).toEqual(['reduceSpending', 'workLonger', 'downsize', 'saveMore']);
+    expect(capacity.detail).toContain('reduce spending');
+    expect(capacity.options.find((option) => option.id === 'downsize')?.detail).toContain('only if');
+  });
+
+  it('marks monthly capacity covered when modelled room is clearly above the floor', () => {
+    const estateHeavyResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 6000000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 71470, bal_total: 7000000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(estateHeavyResult, { ...planFixture, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(estateHeavyResult, {}, { ...planFixture, inheritance: 0 }, answer);
+    const capacity = selectMonthlyCapacityFoundation(estateHeavyResult, { ...planFixture, inheritance: 0 }, spending);
+
+    expect(capacity.status).toBe('covered');
+    expect(capacity.monthlyAfterTaxCapacity).toBeGreaterThan(capacity.monthlyFloor);
+    expect(capacity.optionIds).toEqual(['taxReview', 'estateReview']);
+    expect(capacity.detail).toContain('today’s dollars');
+  });
+
+  it('returns cannot-tell monthly capacity when runtime rows or floor inputs are missing', () => {
+    const capacity = selectMonthlyCapacityFoundation({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+
+    expect(capacity.status).toBe('cannotTell');
+    expect(capacity.monthlyFloor).toBe(0);
+    expect(capacity.monthlyAfterTaxCapacity).toBe(0);
+    expect(capacity.options.map((option) => option.id)).toEqual(['taxReview', 'estateReview']);
+  });
+
+  it('runs fresh clean examples through the monthly capacity foundation at runtime only', () => {
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const result = withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 450000 }
+      ]);
+      const capacity = selectMonthlyCapacityFoundation(result, plan);
+      const saved = createPlanFile(plan);
+
+      expect(capacity.status, card.id).toBe('tight');
+      expect(capacity.monthlyFloor, card.id).toBe((plan.spending.gogo || 0) / 12);
+      expect(capacity.monthlyMinimumExpensesExMortgage, card.id).toBeGreaterThan(0);
+      expect(saved.plan).not.toHaveProperty('monthlyAfterTaxCapacity');
+      expect(saved.plan).not.toHaveProperty('monthlyCapacityFoundation');
+    }
+  });
+
+  it('marks estate-heavy clean example capacity as covered when runtime room is visible', () => {
+    const plan = createCleanExampleRuntimePlan('estateHeavyRoom');
+    const result = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 6000000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 7000000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+    const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+    const capacity = selectMonthlyCapacityFoundation(result, { ...plan, inheritance: 0 }, spending);
+
+    expect(capacity.status).toBe('covered');
+    expect(capacity.monthlyRoom).toBeGreaterThan(0);
+    expect(capacity.optionIds).toEqual(['taxReview', 'estateReview']);
+  });
+
+  it('builds monthly capacity review rows for later UI handoff without changing saved output', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(fixture, planFixture, spending);
+    const rows = selectMonthlyCapacityReviewRows(capacity);
+
+    expect(rows.map((row) => row.id)).toEqual(['floor', 'capacity', 'room', 'options']);
+    expect(rows.find((row) => row.id === 'capacity')).toMatchObject({
+      status: 'review',
+      detailArea: 'overview'
+    });
+    expect(rows.find((row) => row.id === 'capacity')?.detail).toContain('not saved');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityReviewRows');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
