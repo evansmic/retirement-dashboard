@@ -347,6 +347,8 @@ export type FutureFreshExampleRebuildPlan = {
 export type FutureFundingTraceReadiness = {
   status: 'planning-only';
   accountGroups: FutureFundingTraceAccountGroup[];
+  firstYearTraceRows: FutureFundingTraceFirstYearRow[];
+  exampleTraceSamples: FutureFundingTraceExampleSample[];
   taxCaveats: FutureFundingTraceTaxCaveat[];
   reconciliationRules: FutureFundingTraceReconciliationRule[];
   copyBoundaries: FutureFundingTraceCopyBoundary[];
@@ -362,6 +364,57 @@ export type FutureFundingTraceAccountGroup = {
   label: string;
   includes: string[];
   mustAvoid: string[];
+};
+
+export type FutureFundingTraceAccountGroupId = FutureFundingTraceAccountGroup['id'];
+
+export type FutureFundingTraceFirstYearRow = {
+  id: string;
+  groupId: string;
+  label: string;
+  role: 'source' | 'tax' | 'gap';
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceExampleSample = {
+  id: FutureExampleDataDraft['id'];
+  expectedStatusId: FutureCapacityStatusId;
+  rowIds: string[];
+  mustShow: string[];
+  mustAvoid: string[];
+};
+
+export type FutureFundingTraceSampleCoverageRow = {
+  id: FutureExampleDataDraft['id'];
+  status: 'pass' | 'fail';
+  hasExampleDraft: boolean;
+  statusMatchesExample: boolean;
+  hasKnownRows: boolean;
+  keepsTaxVisible: boolean;
+  avoidsInstructions: boolean;
+};
+
+export type FutureFundingTraceBoundaryRow = {
+  id: 'runtimeOnly' | 'noAnnualSequencing' | 'noSavedTrace' | 'reviewLanguage' | 'taxVisible';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureFundingTraceCaveatCoverageRow = {
+  id: FutureExampleDataDraft['id'];
+  status: 'pass' | 'fail';
+  needsSurvivorCaveat: boolean;
+  hasSurvivorCaveat: boolean;
+  needsEstateCaveat: boolean;
+  hasEstateCaveat: boolean;
+  needsGapCaveat: boolean;
+  hasGapCaveat: boolean;
+};
+
+export type FutureFundingTraceCloseoutRow = {
+  id: 'planningOnly' | 'runtimeOnly' | 'schemaUnchanged' | 'examplesDraftOnly' | 'decisionGateRequired';
+  status: 'pass' | 'fail';
+  detail: string;
 };
 
 export type FutureFundingTraceTaxCaveat = {
@@ -1134,6 +1187,94 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
         label: 'Estimated tax',
         includes: ['income tax', 'OAS recovery tax', 'Ontario Health Premium when applicable'],
         mustAvoid: ['tax advice', 'precision beyond the model']
+      }
+    ],
+    firstYearTraceRows: [
+      {
+        id: 'incomeSources',
+        groupId: 'income',
+        label: 'Income sources',
+        role: 'source',
+        mustAvoid: ['benefit timing recommendation', 'pension advice']
+      },
+      {
+        id: 'registeredWithdrawals',
+        groupId: 'registered',
+        label: 'Registered withdrawals',
+        role: 'source',
+        mustAvoid: ['account-by-account withdrawal instruction', 'withdraw-this-first instruction']
+      },
+      {
+        id: 'tfsaWithdrawals',
+        groupId: 'tfsa',
+        label: 'TFSA withdrawals',
+        role: 'source',
+        mustAvoid: ['tax-free means always best language', 'withdraw-this-first instruction']
+      },
+      {
+        id: 'nonRegisteredWithdrawals',
+        groupId: 'nonRegistered',
+        label: 'Non-registered withdrawals',
+        role: 'source',
+        mustAvoid: ['capital-gains advice', 'tax-loss instruction']
+      },
+      {
+        id: 'cashReserveDraw',
+        groupId: 'cash',
+        label: 'Cash and reserve draw',
+        role: 'source',
+        mustAvoid: ['cash target instruction', 'emergency fund advice']
+      },
+      {
+        id: 'otherInflows',
+        groupId: 'otherInflows',
+        label: 'Other inflows',
+        role: 'source',
+        mustAvoid: ['guaranteed sale proceeds', 'inheritance certainty']
+      },
+      {
+        id: 'estimatedTax',
+        groupId: 'tax',
+        label: 'Estimated tax',
+        role: 'tax',
+        mustAvoid: ['tax advice', 'guaranteed tax result']
+      },
+      {
+        id: 'minimumFloorGap',
+        groupId: 'tax',
+        label: 'Minimum floor gap',
+        role: 'gap',
+        mustAvoid: ['failure language', 'single-option pressure']
+      }
+    ],
+    exampleTraceSamples: [
+      {
+        id: 'singleMinimumFloor',
+        expectedStatusId: 'covered',
+        rowIds: ['incomeSources', 'registeredWithdrawals', 'tfsaWithdrawals', 'estimatedTax'],
+        mustShow: ['income sources', 'estimated tax', 'no gap row needed'],
+        mustAvoid: ['account withdrawal instructions', 'safe-spend language']
+      },
+      {
+        id: 'coupleTightFloor',
+        expectedStatusId: 'gap',
+        rowIds: ['incomeSources', 'registeredWithdrawals', 'cashReserveDraw', 'estimatedTax', 'minimumFloorGap'],
+        mustShow: ['minimum floor gap', 'estimated tax', 'practical options stay separate'],
+        mustAvoid: ['failure language', 'automatic recommendation to cut spending']
+      },
+      {
+        id: 'pensionCoupleSurvivor',
+        expectedStatusId: 'tight',
+        rowIds: ['incomeSources', 'registeredWithdrawals', 'estimatedTax'],
+        mustShow: ['DB pension context', 'survivor caveat', 'estimated tax'],
+        mustAvoid: ['survivor recommendation', 'pension advice']
+      },
+      {
+        id: 'estateHeavyRoom',
+        expectedStatusId: 'covered',
+        rowIds: ['incomeSources', 'nonRegisteredWithdrawals', 'tfsaWithdrawals', 'estimatedTax'],
+        mustShow: ['estate caveat', 'tax caveat', 'room above floor is caveated'],
+        mustAvoid: ['permission to spend more', 'estate recommendation']
       }
     ],
     taxCaveats: [
@@ -1987,6 +2128,112 @@ export function futureFreshExampleRebuildPlanIds(draft = futurePlanFormatDraft):
 
 export function futureFundingTraceAccountGroupIds(draft = futurePlanFormatDraft): string[] {
   return draft.fundingTraceReadiness.accountGroups.map((group) => group.id);
+}
+
+export function futureFundingTraceFirstYearRowIds(draft = futurePlanFormatDraft): string[] {
+  return draft.fundingTraceReadiness.firstYearTraceRows.map((row) => row.id);
+}
+
+export function futureFundingTraceExampleSampleIds(draft = futurePlanFormatDraft): FutureExampleDataDraft['id'][] {
+  return draft.fundingTraceReadiness.exampleTraceSamples.map((sample) => sample.id);
+}
+
+export function futureFundingTraceSampleCoverageRows(draft = futurePlanFormatDraft): FutureFundingTraceSampleCoverageRow[] {
+  const exampleById = new Map(draft.futureExampleDataDrafts.map((example) => [example.id, example]));
+  const knownRows = new Set(draft.fundingTraceReadiness.firstYearTraceRows.map((row) => row.id));
+
+  return draft.fundingTraceReadiness.exampleTraceSamples.map((sample) => {
+    const example = exampleById.get(sample.id);
+    const hasExampleDraft = Boolean(example);
+    const statusMatchesExample = example?.expectedCapacityStatus === sample.expectedStatusId;
+    const hasKnownRows = sample.rowIds.every((rowId) => knownRows.has(rowId));
+    const keepsTaxVisible = sample.rowIds.includes('estimatedTax') && sample.mustShow.some((item) => item.includes('tax'));
+    const avoidsInstructions = sample.mustAvoid.some((item) => item.includes('instruction') || item.includes('recommendation'));
+
+    return {
+      id: sample.id,
+      status: hasExampleDraft && statusMatchesExample && hasKnownRows && keepsTaxVisible && avoidsInstructions ? 'pass' : 'fail',
+      hasExampleDraft,
+      statusMatchesExample,
+      hasKnownRows,
+      keepsTaxVisible,
+      avoidsInstructions
+    };
+  });
+}
+
+export function futureFundingTraceBoundaryRows(draft = futurePlanFormatDraft): FutureFundingTraceBoundaryRow[] {
+  const guardrails = draft.fundingTraceReadiness.guardrails;
+  const instructionGuardrails = draft.fundingTraceReadiness.instructionGuardrails;
+  const runtimeOnly = draft.fundingTraceReadiness.status === 'planning-only' && guardrails.includes('Funding trace must stay runtime-only in this planning package.');
+  const noAnnualSequencing =
+    guardrails.includes('Funding trace must not become annual account-level sequencing.') &&
+    instructionGuardrails.some((guardrail) => guardrail.id === 'noAnnualRows');
+  const noSavedTrace = instructionGuardrails.some(
+    (guardrail) => guardrail.id === 'noSavedTrace' && guardrail.mustAvoid.includes('saved output field')
+  );
+  const reviewLanguage = instructionGuardrails.some(
+    (guardrail) => guardrail.id === 'reviewOnlyLanguage' && guardrail.mustAvoid.includes('advice-like certainty')
+  );
+  const taxVisible =
+    guardrails.includes('Funding trace must keep tax caveats visible.') &&
+    draft.fundingTraceReadiness.firstYearTraceRows.some((row) => row.id === 'estimatedTax');
+
+  return [
+    { id: 'runtimeOnly', status: runtimeOnly ? 'pass' : 'fail', detail: 'Funding trace remains planning-only and runtime-only.' },
+    { id: 'noAnnualSequencing', status: noAnnualSequencing ? 'pass' : 'fail', detail: 'Funding trace does not create annual account rows.' },
+    { id: 'noSavedTrace', status: noSavedTrace ? 'pass' : 'fail', detail: 'Funding trace output is not saved into plan files.' },
+    { id: 'reviewLanguage', status: reviewLanguage ? 'pass' : 'fail', detail: 'Funding trace language remains review-oriented.' },
+    { id: 'taxVisible', status: taxVisible ? 'pass' : 'fail', detail: 'Estimated tax stays visible in the first-year trace plan.' }
+  ];
+}
+
+export function futureFundingTraceCaveatCoverageRows(draft = futurePlanFormatDraft): FutureFundingTraceCaveatCoverageRow[] {
+  const hasSurvivorCaveat = draft.fundingTraceReadiness.survivorEstateCaveats.some((caveat) => caveat.id === 'survivorIncomeChange');
+  const hasEstateCaveat = draft.fundingTraceReadiness.survivorEstateCaveats.some((caveat) => caveat.id === 'estateIntentTradeoff');
+  const hasGapCaveat = draft.fundingTraceReadiness.copyBoundaries.some((boundary) => boundary.id === 'gapQualifier');
+
+  return draft.futureExampleDataDrafts.map((example) => {
+    const needsSurvivorCaveat = example.id === 'pensionCoupleSurvivor';
+    const needsEstateCaveat = example.id === 'estateHeavyRoom';
+    const needsGapCaveat = example.expectedCapacityStatus === 'gap';
+
+    return {
+      id: example.id,
+      status:
+        (!needsSurvivorCaveat || hasSurvivorCaveat) &&
+        (!needsEstateCaveat || hasEstateCaveat) &&
+        (!needsGapCaveat || hasGapCaveat)
+          ? 'pass'
+          : 'fail',
+      needsSurvivorCaveat,
+      hasSurvivorCaveat,
+      needsEstateCaveat,
+      hasEstateCaveat,
+      needsGapCaveat,
+      hasGapCaveat
+    };
+  });
+}
+
+export function futureFundingTraceCloseoutRows(draft = futurePlanFormatDraft): FutureFundingTraceCloseoutRow[] {
+  const planningOnly = draft.fundingTraceReadiness.status === 'planning-only';
+  const runtimeOnly = draft.fundingTraceReadiness.guardrails.includes('Funding trace must stay runtime-only in this planning package.');
+  const schemaUnchanged = draft.boundaries.includes('Do not add account optimizer outputs to saved plan files.');
+  const examplesDraftOnly =
+    draft.futureExampleDataDrafts.length === draft.fundingTraceReadiness.exampleTraceSamples.length &&
+    draft.futureExampleDataDrafts.every((example) =>
+      draft.freshExampleRebuildPlan.some((step) => step.exampleId === example.id && step.stage === 'draft-values')
+    );
+  const decisionGateRequired = draft.fundingTraceReadiness.decisionGate.every((gate) => gate.stopIfMissing);
+
+  return [
+    { id: 'planningOnly', status: planningOnly ? 'pass' : 'fail', detail: 'Funding trace readiness remains a planning artifact.' },
+    { id: 'runtimeOnly', status: runtimeOnly ? 'pass' : 'fail', detail: 'Funding trace remains a future runtime concept, not saved input.' },
+    { id: 'schemaUnchanged', status: schemaUnchanged ? 'pass' : 'fail', detail: 'Saved plan and engine output schemas remain unchanged.' },
+    { id: 'examplesDraftOnly', status: examplesDraftOnly ? 'pass' : 'fail', detail: 'Future examples are drafted for later rebuild, not replacing current examples.' },
+    { id: 'decisionGateRequired', status: decisionGateRequired ? 'pass' : 'fail', detail: 'Runtime trace work remains blocked behind explicit decision gates.' }
+  ];
 }
 
 export function futureFundingTraceTaxCaveatIds(draft = futurePlanFormatDraft): string[] {

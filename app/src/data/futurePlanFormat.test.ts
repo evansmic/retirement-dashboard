@@ -22,10 +22,16 @@ import {
   futureFixtureSpecificationIds,
   futureFundingTraceAccountGroupIds,
   futureFundingTraceCashAndOneOffHandlingIds,
+  futureFundingTraceCaveatCoverageRows,
+  futureFundingTraceCloseoutRows,
   futureFundingTraceCopyBoundaryIds,
   futureFundingTraceDecisionGateIds,
+  futureFundingTraceExampleSampleIds,
+  futureFundingTraceFirstYearRowIds,
   futureFundingTraceInstructionGuardrailIds,
   futureFundingTraceReconciliationRuleIds,
+  futureFundingTraceBoundaryRows,
+  futureFundingTraceSampleCoverageRows,
   futureFundingTraceSurvivorEstateCaveatIds,
   futureFundingTraceTaxCaveatIds,
   futureImplementationStepIds,
@@ -1139,6 +1145,118 @@ describe('future plan format draft', () => {
     );
   });
 
+  it('plans first-year trace rows across known account groups', () => {
+    expect(futureFundingTraceFirstYearRowIds()).toEqual([
+      'incomeSources',
+      'registeredWithdrawals',
+      'tfsaWithdrawals',
+      'nonRegisteredWithdrawals',
+      'cashReserveDraw',
+      'otherInflows',
+      'estimatedTax',
+      'minimumFloorGap'
+    ]);
+    expect(futurePlanFormatDraft.fundingTraceReadiness.firstYearTraceRows.find((row) => row.id === 'registeredWithdrawals')).toMatchObject({
+      groupId: 'registered',
+      role: 'source'
+    });
+    expect(futurePlanFormatDraft.fundingTraceReadiness.firstYearTraceRows.find((row) => row.id === 'estimatedTax')).toMatchObject({
+      groupId: 'tax',
+      role: 'tax'
+    });
+    expect(futurePlanFormatDraft.fundingTraceReadiness.firstYearTraceRows.find((row) => row.id === 'minimumFloorGap')?.mustAvoid).toContain(
+      'failure language'
+    );
+  });
+
+  it('plans funding trace samples for each future example draft', () => {
+    expect(futureFundingTraceExampleSampleIds()).toEqual([
+      'singleMinimumFloor',
+      'coupleTightFloor',
+      'pensionCoupleSurvivor',
+      'estateHeavyRoom'
+    ]);
+    expect(futureFundingTraceSampleCoverageRows()).toEqual([
+      expect.objectContaining({ id: 'singleMinimumFloor', status: 'pass' }),
+      expect.objectContaining({ id: 'coupleTightFloor', status: 'pass' }),
+      expect.objectContaining({ id: 'pensionCoupleSurvivor', status: 'pass' }),
+      expect.objectContaining({ id: 'estateHeavyRoom', status: 'pass' })
+    ]);
+  });
+
+  it('marks funding trace sample coverage incomplete when tax or row links drift', () => {
+    expect(
+      futureFundingTraceSampleCoverageRows({
+        ...futurePlanFormatDraft,
+        fundingTraceReadiness: {
+          ...futurePlanFormatDraft.fundingTraceReadiness,
+          exampleTraceSamples: futurePlanFormatDraft.fundingTraceReadiness.exampleTraceSamples.map((sample) =>
+            sample.id === 'singleMinimumFloor' ? { ...sample, rowIds: ['missingRow'], mustShow: ['income sources'] } : sample
+          )
+        }
+      }).find((row) => row.id === 'singleMinimumFloor')
+    ).toMatchObject({
+      status: 'fail',
+      hasExampleDraft: true,
+      statusMatchesExample: true,
+      hasKnownRows: false,
+      keepsTaxVisible: false
+    });
+  });
+
+  it('keeps funding trace boundaries runtime-only, tax-visible, and non-instructional', () => {
+    expect(futureFundingTraceBoundaryRows()).toEqual([
+      expect.objectContaining({ id: 'runtimeOnly', status: 'pass' }),
+      expect.objectContaining({ id: 'noAnnualSequencing', status: 'pass' }),
+      expect.objectContaining({ id: 'noSavedTrace', status: 'pass' }),
+      expect.objectContaining({ id: 'reviewLanguage', status: 'pass' }),
+      expect.objectContaining({ id: 'taxVisible', status: 'pass' })
+    ]);
+  });
+
+  it('marks funding trace boundaries incomplete if saved trace or tax visibility drifts', () => {
+    const rows = futureFundingTraceBoundaryRows({
+      ...futurePlanFormatDraft,
+      fundingTraceReadiness: {
+        ...futurePlanFormatDraft.fundingTraceReadiness,
+        firstYearTraceRows: futurePlanFormatDraft.fundingTraceReadiness.firstYearTraceRows.filter((row) => row.id !== 'estimatedTax'),
+        instructionGuardrails: futurePlanFormatDraft.fundingTraceReadiness.instructionGuardrails.map((guardrail) =>
+          guardrail.id === 'noSavedTrace' ? { ...guardrail, mustAvoid: ['persisted account trace'] } : guardrail
+        )
+      }
+    });
+
+    expect(rows.find((row) => row.id === 'noSavedTrace')?.status).toBe('fail');
+    expect(rows.find((row) => row.id === 'taxVisible')?.status).toBe('fail');
+  });
+
+  it('keeps survivor, estate, and gap caveats aligned with future examples', () => {
+    expect(futureFundingTraceCaveatCoverageRows()).toEqual([
+      expect.objectContaining({ id: 'singleMinimumFloor', status: 'pass', needsSurvivorCaveat: false, needsEstateCaveat: false, needsGapCaveat: false }),
+      expect.objectContaining({ id: 'coupleTightFloor', status: 'pass', needsGapCaveat: true, hasGapCaveat: true }),
+      expect.objectContaining({ id: 'pensionCoupleSurvivor', status: 'pass', needsSurvivorCaveat: true, hasSurvivorCaveat: true }),
+      expect.objectContaining({ id: 'estateHeavyRoom', status: 'pass', needsEstateCaveat: true, hasEstateCaveat: true })
+    ]);
+  });
+
+  it('marks caveat coverage incomplete when a needed funding trace caveat is missing', () => {
+    expect(
+      futureFundingTraceCaveatCoverageRows({
+        ...futurePlanFormatDraft,
+        fundingTraceReadiness: {
+          ...futurePlanFormatDraft.fundingTraceReadiness,
+          survivorEstateCaveats: futurePlanFormatDraft.fundingTraceReadiness.survivorEstateCaveats.filter(
+            (caveat) => caveat.id !== 'estateIntentTradeoff'
+          )
+        }
+      }).find((row) => row.id === 'estateHeavyRoom')
+    ).toMatchObject({
+      status: 'fail',
+      needsEstateCaveat: true,
+      hasEstateCaveat: false
+    });
+  });
+
   it('plans funding trace tax caveats and reconciliation without tax advice', () => {
     expect(futureFundingTraceTaxCaveatIds()).toEqual(['oasRecoveryTax', 'registeredTaxable', 'nonRegisteredGains', 'ontarioHealthPremium']);
     expect(futureFundingTraceReconciliationRuleIds()).toEqual(['sourcesMinusTax', 'todayDollars', 'shortfallVisible']);
@@ -1212,5 +1330,29 @@ describe('future plan format draft', () => {
     expect(
       futurePlanFormatDraft.fundingTraceReadiness.decisionGate.find((gate) => gate.id === 'prototypeOnlyAfterContractReview')?.requiredEvidence
     ).toContain('Runtime-only boundary is still explicit.');
+  });
+
+  it('keeps funding trace closeout blocked from saved schema and runtime implementation changes', () => {
+    expect(futureFundingTraceCloseoutRows()).toEqual([
+      { id: 'planningOnly', status: 'pass', detail: 'Funding trace readiness remains a planning artifact.' },
+      { id: 'runtimeOnly', status: 'pass', detail: 'Funding trace remains a future runtime concept, not saved input.' },
+      { id: 'schemaUnchanged', status: 'pass', detail: 'Saved plan and engine output schemas remain unchanged.' },
+      { id: 'examplesDraftOnly', status: 'pass', detail: 'Future examples are drafted for later rebuild, not replacing current examples.' },
+      { id: 'decisionGateRequired', status: 'pass', detail: 'Runtime trace work remains blocked behind explicit decision gates.' }
+    ]);
+  });
+
+  it('marks funding trace closeout incomplete if the runtime-only guardrail is removed', () => {
+    expect(
+      futureFundingTraceCloseoutRows({
+        ...futurePlanFormatDraft,
+        fundingTraceReadiness: {
+          ...futurePlanFormatDraft.fundingTraceReadiness,
+          guardrails: futurePlanFormatDraft.fundingTraceReadiness.guardrails.filter(
+            (guardrail) => guardrail !== 'Funding trace must stay runtime-only in this planning package.'
+          )
+        }
+      }).find((row) => row.id === 'runtimeOnly')
+    ).toMatchObject({ status: 'fail' });
   });
 });
