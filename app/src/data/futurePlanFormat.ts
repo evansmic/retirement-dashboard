@@ -63,6 +63,32 @@ export type FutureSchemaResetDecisionReadiness = {
   stopIfMissing: boolean;
 };
 
+export type FutureSchemaResetDecisionEvidenceRow = {
+  id: FutureSchemaResetDecisionReadiness['id'];
+  status: 'pass' | 'fail';
+  hasStopGate: boolean;
+  hasRequiredEvidence: boolean;
+  avoidsUnsafeImplementation: boolean;
+};
+
+export type FutureSchemaResetImplementationGateRow = {
+  id: 'noProductionImportYet' | 'noSavedOutputs' | 'freshExamplesRequired' | 'rollbackRequired' | 'noUiOverhaul';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureSchemaResetImportDecisionRow = {
+  id: 'acceptedFutureFixture' | 'oldPreviewBlock' | 'unsupportedFutureBlock' | 'rawPayloadBlock' | 'currentCompatibilityDecision';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureSchemaResetFinalGateRow = {
+  id: 'decisionEvidenceComplete' | 'implementationStillBlocked' | 'importDecisionsPinned' | 'notReadyToWireYet' | 'nextStepIsExplicitReview';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
 export type FutureTestOnlyFixtureShape = {
   id: string;
   intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format' | 'blocked-raw-payload';
@@ -1905,6 +1931,160 @@ export function futureRollbackReleaseStopItems(draft = futurePlanFormatDraft): F
 
 export function futureSchemaResetDecisionReadinessIds(draft = futurePlanFormatDraft): string[] {
   return draft.schemaResetDecisionReadiness.map((item) => item.id);
+}
+
+export function futureSchemaResetDecisionEvidenceRows(draft = futurePlanFormatDraft): FutureSchemaResetDecisionEvidenceRow[] {
+  const unsafePhrases = [
+    'partial migration of old desired-spending values',
+    'best-effort old file migration',
+    'silent partial import',
+    'reusing old desired-spending examples',
+    'release without rollback path'
+  ];
+
+  return draft.schemaResetDecisionReadiness.map((item) => {
+    const hasStopGate = item.stopIfMissing;
+    const hasRequiredEvidence = item.requiredEvidence.length >= 3;
+    const avoidsUnsafeImplementation = unsafePhrases.some((phrase) => item.mustAvoid.includes(phrase));
+
+    return {
+      id: item.id,
+      status: hasStopGate && hasRequiredEvidence && avoidsUnsafeImplementation ? 'pass' : 'fail',
+      hasStopGate,
+      hasRequiredEvidence,
+      avoidsUnsafeImplementation
+    };
+  });
+}
+
+export function futureSchemaResetImplementationGateRows(draft = futurePlanFormatDraft): FutureSchemaResetImplementationGateRow[] {
+  const importStep = draft.implementationChecklist.find((step) => step.id === 'loaderWire');
+  const fieldList = draft.schemaResetDecisionReadiness.find((item) => item.id === 'fieldListFrozen');
+  const examples = draft.schemaResetDecisionReadiness.find((item) => item.id === 'newExamplesReady');
+  const rollbackStopItems = futureRollbackReleaseStopItems(draft);
+  const noUiOverhaul = draft.boundaries.includes('Do not start the broad UI overhaul in this package.');
+  const noSavedOutputs =
+    draft.boundaries.includes('Do not add account optimizer outputs to saved plan files.') &&
+    Boolean(fieldList?.requiredEvidence.includes('Runtime answers remain outside saved plan inputs.'));
+
+  return [
+    {
+      id: 'noProductionImportYet',
+      status:
+        importStep?.requiredBeforeNext.includes('Block copy verified') &&
+        importStep.requiredBeforeNext.includes('Raw payload policy decided')
+          ? 'pass'
+          : 'fail',
+      detail: 'Production import wiring waits for blocked-import tests.'
+    },
+    {
+      id: 'noSavedOutputs',
+      status: noSavedOutputs ? 'pass' : 'fail',
+      detail: 'Calculated answers and optimizer outputs stay out of saved plan files.'
+    },
+    {
+      id: 'freshExamplesRequired',
+      status: examples?.requiredEvidence.length === 4 ? 'pass' : 'fail',
+      detail: 'Fresh examples are required before runtime wiring.'
+    },
+    {
+      id: 'rollbackRequired',
+      status: rollbackStopItems.length >= 4 ? 'pass' : 'fail',
+      detail: 'Rollback and smoke-test evidence remains required.'
+    },
+    {
+      id: 'noUiOverhaul',
+      status: noUiOverhaul ? 'pass' : 'fail',
+      detail: 'The broad UI overhaul remains out of this gate.'
+    }
+  ];
+}
+
+export function futureSchemaResetImportDecisionRows(draft = futurePlanFormatDraft): FutureSchemaResetImportDecisionRow[] {
+  const acceptedRule = draft.importAcceptanceRules.find((rule) => rule.id === 'newFormat');
+  const oldPreviewRule = draft.importAcceptanceRules.find((rule) => rule.id === 'oldPreview');
+  const unsupportedRule = draft.importAcceptanceRules.find((rule) => rule.id === 'futureUnknown');
+  const rawPayloadRule = draft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload');
+  const acceptedShape = draft.testOnlyFixtureShapes.find((shape) => shape.id === 'futureMinimumFloorPlan');
+  const currentDecision = draft.implementationChecklist
+    .find((step) => step.id === 'loaderWire')
+    ?.requiredBeforeNext.includes('Current v2 compatibility decision confirmed');
+
+  return [
+    {
+      id: 'acceptedFutureFixture',
+      status: acceptedRule?.decision === 'accept' && acceptedShape?.expectedImportResult === 'accept' ? 'pass' : 'fail',
+      detail: 'Accepted future format remains fixture-planned before production wiring.'
+    },
+    {
+      id: 'oldPreviewBlock',
+      status:
+        oldPreviewRule?.decision === 'block' &&
+        oldPreviewRule.message === draft.oldPreviewImportMessage &&
+        oldPreviewRule.reason.includes('minimum expenses')
+          ? 'pass'
+          : 'fail',
+      detail: 'Old preview files block with plain fresh-start copy.'
+    },
+    {
+      id: 'unsupportedFutureBlock',
+      status: unsupportedRule?.decision === 'block' && Boolean(unsupportedRule.reason.includes('silently drop fields')) ? 'pass' : 'fail',
+      detail: 'Unsupported future files block before unknown fields can be dropped.'
+    },
+    {
+      id: 'rawPayloadBlock',
+      status:
+        rawPayloadRule?.decision === 'block' &&
+        draft.rawPayloadPolicy.decision === 'block-raw-payloads-after-reset' &&
+        draft.rawPayloadPolicy.allowed.includes('Wrapped future clean-format plan files')
+          ? 'pass'
+          : 'fail',
+      detail: 'Raw payloads remain blocked unless wrapped as supported plan files.'
+    },
+    {
+      id: 'currentCompatibilityDecision',
+      status: currentDecision ? 'pass' : 'fail',
+      detail: 'Current v2 compatibility decision remains explicit before loader wiring.'
+    }
+  ];
+}
+
+export function futureSchemaResetFinalGateRows(draft = futurePlanFormatDraft): FutureSchemaResetFinalGateRow[] {
+  const decisionEvidenceComplete = futureSchemaResetDecisionEvidenceRows(draft).every((row) => row.status === 'pass');
+  const implementationStillBlocked = futureSchemaResetImplementationGateRows(draft).every((row) => row.status === 'pass');
+  const importDecisionsPinned = futureSchemaResetImportDecisionRows(draft).every((row) => row.status === 'pass');
+  const notReadyToWireYet = draft.schemaResetDecisionReadiness.every((item) => item.decision !== 'ready-to-wire');
+  const nextStepIsExplicitReview =
+    draft.schemaResetDecisionReadiness.some((item) => item.decision === 'defer') &&
+    draft.implementationChecklist.some((step) => step.id === 'verificationGate');
+
+  return [
+    {
+      id: 'decisionEvidenceComplete',
+      status: decisionEvidenceComplete ? 'pass' : 'fail',
+      detail: 'Decision evidence rows are complete enough for review.'
+    },
+    {
+      id: 'implementationStillBlocked',
+      status: implementationStillBlocked ? 'pass' : 'fail',
+      detail: 'Implementation remains blocked behind explicit gates.'
+    },
+    {
+      id: 'importDecisionsPinned',
+      status: importDecisionsPinned ? 'pass' : 'fail',
+      detail: 'Accepted and blocked import decisions are pinned for review.'
+    },
+    {
+      id: 'notReadyToWireYet',
+      status: notReadyToWireYet ? 'pass' : 'fail',
+      detail: 'No decision row marks the schema reset ready to wire yet.'
+    },
+    {
+      id: 'nextStepIsExplicitReview',
+      status: nextStepIsExplicitReview ? 'pass' : 'fail',
+      detail: 'The next step is an explicit review, not implementation by implication.'
+    }
+  ];
 }
 
 export function futureTestOnlyFixtureShapeIds(draft = futurePlanFormatDraft): string[] {

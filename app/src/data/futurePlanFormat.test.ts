@@ -43,6 +43,10 @@ import {
   futureRawPayloadFixtureSample,
   futureRawPayloadSampleBlockExpectation,
   futureRollbackReleaseStopItems,
+  futureSchemaResetDecisionEvidenceRows,
+  futureSchemaResetFinalGateRows,
+  futureSchemaResetImplementationGateRows,
+  futureSchemaResetImportDecisionRows,
   futureSchemaResetDecisionReadinessIds,
   futureTestOnlyFixtureSamples,
   futureTestOnlyFixtureShapeIds,
@@ -194,6 +198,87 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.schemaResetDecisionReadiness.find((item) => item.id === 'oldFileBlockAccepted')?.mustAvoid).toContain(
       'silent partial import'
     );
+  });
+
+  it('keeps schema reset decision evidence gated before implementation begins', () => {
+    expect(futureSchemaResetDecisionEvidenceRows()).toEqual([
+      expect.objectContaining({ id: 'fieldListFrozen', status: 'pass', hasStopGate: true }),
+      expect.objectContaining({ id: 'oldFileBlockAccepted', status: 'pass', avoidsUnsafeImplementation: true }),
+      expect.objectContaining({ id: 'newExamplesReady', status: 'pass', hasRequiredEvidence: true }),
+      expect.objectContaining({ id: 'rollbackReleaseReady', status: 'pass', hasStopGate: true })
+    ]);
+  });
+
+  it('marks schema reset decision evidence incomplete when a stop gate is removed', () => {
+    expect(
+      futureSchemaResetDecisionEvidenceRows({
+        ...futurePlanFormatDraft,
+        schemaResetDecisionReadiness: futurePlanFormatDraft.schemaResetDecisionReadiness.map((item) =>
+          item.id === 'rollbackReleaseReady' ? { ...item, stopIfMissing: false } : item
+        )
+      }).find((row) => row.id === 'rollbackReleaseReady')
+    ).toMatchObject({ status: 'fail', hasStopGate: false });
+  });
+
+  it('keeps schema reset implementation blocked behind import, example, rollback, and UI boundaries', () => {
+    expect(futureSchemaResetImplementationGateRows()).toEqual([
+      { id: 'noProductionImportYet', status: 'pass', detail: 'Production import wiring waits for blocked-import tests.' },
+      { id: 'noSavedOutputs', status: 'pass', detail: 'Calculated answers and optimizer outputs stay out of saved plan files.' },
+      { id: 'freshExamplesRequired', status: 'pass', detail: 'Fresh examples are required before runtime wiring.' },
+      { id: 'rollbackRequired', status: 'pass', detail: 'Rollback and smoke-test evidence remains required.' },
+      { id: 'noUiOverhaul', status: 'pass', detail: 'The broad UI overhaul remains out of this gate.' }
+    ]);
+  });
+
+  it('marks schema reset implementation gate incomplete if saved-output boundaries drift', () => {
+    expect(
+      futureSchemaResetImplementationGateRows({
+        ...futurePlanFormatDraft,
+        boundaries: futurePlanFormatDraft.boundaries.filter((boundary) => boundary !== 'Do not add account optimizer outputs to saved plan files.')
+      }).find((row) => row.id === 'noSavedOutputs')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('keeps schema reset import decisions explicit before loader wiring', () => {
+    expect(futureSchemaResetImportDecisionRows()).toEqual([
+      { id: 'acceptedFutureFixture', status: 'pass', detail: 'Accepted future format remains fixture-planned before production wiring.' },
+      { id: 'oldPreviewBlock', status: 'pass', detail: 'Old preview files block with plain fresh-start copy.' },
+      { id: 'unsupportedFutureBlock', status: 'pass', detail: 'Unsupported future files block before unknown fields can be dropped.' },
+      { id: 'rawPayloadBlock', status: 'pass', detail: 'Raw payloads remain blocked unless wrapped as supported plan files.' },
+      { id: 'currentCompatibilityDecision', status: 'pass', detail: 'Current v2 compatibility decision remains explicit before loader wiring.' }
+    ]);
+  });
+
+  it('marks schema reset import decisions incomplete if old-preview copy drifts', () => {
+    expect(
+      futureSchemaResetImportDecisionRows({
+        ...futurePlanFormatDraft,
+        importAcceptanceRules: futurePlanFormatDraft.importAcceptanceRules.map((rule) =>
+          rule.id === 'oldPreview' ? { ...rule, message: 'We tried to open part of this plan.' } : rule
+        )
+      }).find((row) => row.id === 'oldPreviewBlock')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('closes the schema reset decision gate without marking implementation ready', () => {
+    expect(futureSchemaResetFinalGateRows()).toEqual([
+      { id: 'decisionEvidenceComplete', status: 'pass', detail: 'Decision evidence rows are complete enough for review.' },
+      { id: 'implementationStillBlocked', status: 'pass', detail: 'Implementation remains blocked behind explicit gates.' },
+      { id: 'importDecisionsPinned', status: 'pass', detail: 'Accepted and blocked import decisions are pinned for review.' },
+      { id: 'notReadyToWireYet', status: 'pass', detail: 'No decision row marks the schema reset ready to wire yet.' },
+      { id: 'nextStepIsExplicitReview', status: 'pass', detail: 'The next step is an explicit review, not implementation by implication.' }
+    ]);
+  });
+
+  it('marks final schema reset gate incomplete if any row becomes ready to wire by implication', () => {
+    expect(
+      futureSchemaResetFinalGateRows({
+        ...futurePlanFormatDraft,
+        schemaResetDecisionReadiness: futurePlanFormatDraft.schemaResetDecisionReadiness.map((item) =>
+          item.id === 'fieldListFrozen' ? { ...item, decision: 'ready-to-wire' } : item
+        )
+      }).find((row) => row.id === 'notReadyToWireYet')
+    ).toMatchObject({ status: 'fail' });
   });
 
   it('defines test-only fixture shapes without saving calculated answers', () => {
