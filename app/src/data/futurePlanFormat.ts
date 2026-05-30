@@ -161,6 +161,31 @@ export type FutureCleanSchemaResetAdapterCloseoutRow = {
   detail: string;
 };
 
+export type FutureCleanSchemaResetProductionPreflightRow = {
+  id: 'currentSchemaV2' | 'wrappedPlanFileV1' | 'rawPayloadStillAcceptedNow' | 'futureAdapterTestOnly' | 'explicitSwitchRequired';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetRollbackPreflightRow = {
+  id: 'priorBehaviorIdentified' | 'v2CompatibilityPreserved' | 'oldFileBlockReady' | 'rollbackEvidenceRequired' | 'postReleaseWatchDeferred';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetGoNoGoRow = {
+  id: 'preflightComplete' | 'wiringScopeKnown' | 'v1TrustKnown' | 'schemaSwitchStillManual' | 'readyForGoNoGoDecision';
+  status: 'pass' | 'fail';
+  recommendation: 'approve-next-wiring-package' | 'hold';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetProductionPreflightCloseoutRow = {
+  id: 'productionUnchanged' | 'preflightPassed' | 'goNoGoReady' | 'nextPackageIsActualWiring' | 'stopIfNotApproved';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
 export type FutureTestOnlyFixtureShape = {
   id: string;
   intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format' | 'blocked-raw-payload';
@@ -2107,6 +2132,135 @@ export function futureCleanSchemaResetGracefulBlockRows(
     { id: 'noPrivateFileRequest', status: noPrivateFileRequest ? 'pass' : 'fail', detail: 'Old-file blocking does not ask testers to send private files.' },
     { id: 'noPartialState', status: noPartialState ? 'pass' : 'fail', detail: 'Blocked files preserve current state instead of partially loading.' },
     { id: 'localFirst', status: localFirst ? 'pass' : 'fail', detail: 'Blocked file handling preserves local-first expectations.' }
+  ];
+}
+
+export function futureCleanSchemaResetProductionPreflightRows(input: {
+  schemaVersion: number;
+  planFileVersion: number;
+  rawPayloadRoundTrips: boolean;
+  testAdapterSummary: FutureCleanSchemaResetTestAdapterSummary;
+  draft?: FuturePlanFormatDraft;
+}): FutureCleanSchemaResetProductionPreflightRow[] {
+  const draft = input.draft || futurePlanFormatDraft;
+  const currentSchemaV2 = input.schemaVersion === 2;
+  const wrappedPlanFileV1 = input.planFileVersion === 1;
+  const rawPayloadStillAcceptedNow = input.rawPayloadRoundTrips;
+  const futureAdapterTestOnly =
+    input.testAdapterSummary.mode === 'test-only' &&
+    input.testAdapterSummary.results.every((result) => result.mode === 'test-only' && !result.wiresProductionImport);
+  const explicitSwitchRequired =
+    draft.schemaResetDecisionReadiness.every((item) => item.decision !== 'ready-to-wire') &&
+    draft.boundaries.includes('Do not implement the schema reset until the field list is reviewed.');
+
+  return [
+    { id: 'currentSchemaV2', status: currentSchemaV2 ? 'pass' : 'fail', detail: 'Production saved plan schema is still v2.' },
+    { id: 'wrappedPlanFileV1', status: wrappedPlanFileV1 ? 'pass' : 'fail', detail: 'Production wrapper format is still plan-file v1.' },
+    { id: 'rawPayloadStillAcceptedNow', status: rawPayloadStillAcceptedNow ? 'pass' : 'fail', detail: 'Current raw payload round-trip behavior remains unchanged.' },
+    { id: 'futureAdapterTestOnly', status: futureAdapterTestOnly ? 'pass' : 'fail', detail: 'Future clean reset adapter remains test-only.' },
+    { id: 'explicitSwitchRequired', status: explicitSwitchRequired ? 'pass' : 'fail', detail: 'Production schema/import switch still requires explicit approval.' }
+  ];
+}
+
+export function futureCleanSchemaResetRollbackPreflightRows(draft = futurePlanFormatDraft): FutureCleanSchemaResetRollbackPreflightRow[] {
+  const rollbackBuild = draft.rollbackReleaseChecklist.find((item) => item.id === 'rollbackBuild');
+  const loaderWire = draft.implementationChecklist.find((step) => step.id === 'loaderWire');
+  const oldFileBlock = draft.schemaResetDecisionReadiness.find((item) => item.id === 'oldFileBlockAccepted');
+  const requiredStopItems = futureRollbackReleaseStopItems(draft);
+  const postReleaseWatch = draft.rollbackReleaseChecklist.find((item) => item.id === 'postReleaseWatch');
+
+  const priorBehaviorIdentified = Boolean(rollbackBuild?.requiredEvidence.includes('Known commit or deployment before reset wiring'));
+  const v2CompatibilityPreserved = Boolean(loaderWire?.requiredBeforeNext.includes('Current v2 compatibility decision confirmed'));
+  const oldFileBlockReady =
+    Boolean(oldFileBlock?.requiredEvidence.includes('Old preview files are blocked with plain copy.')) &&
+    Boolean(oldFileBlock?.mustAvoid.includes('silent partial import'));
+  const rollbackEvidenceRequired = requiredStopItems.some((item) => item.id === 'rollbackBuild') && requiredStopItems.length >= 4;
+  const postReleaseWatchDeferred = postReleaseWatch?.stopIfMissing === false;
+
+  return [
+    { id: 'priorBehaviorIdentified', status: priorBehaviorIdentified ? 'pass' : 'fail', detail: 'Prior v2-compatible behavior is identified before reset wiring.' },
+    { id: 'v2CompatibilityPreserved', status: v2CompatibilityPreserved ? 'pass' : 'fail', detail: 'Current v2 compatibility remains an explicit pre-wiring decision.' },
+    { id: 'oldFileBlockReady', status: oldFileBlockReady ? 'pass' : 'fail', detail: 'Old-file block behavior is ready for review but not wired.' },
+    { id: 'rollbackEvidenceRequired', status: rollbackEvidenceRequired ? 'pass' : 'fail', detail: 'Rollback and smoke-test evidence remain required stop items.' },
+    { id: 'postReleaseWatchDeferred', status: postReleaseWatchDeferred ? 'pass' : 'fail', detail: 'Post-release watch stays deferred until release work exists.' }
+  ];
+}
+
+export function futureCleanSchemaResetGoNoGoRows(input: {
+  productionPreflightRows: FutureCleanSchemaResetProductionPreflightRow[];
+  draft?: FuturePlanFormatDraft;
+}): FutureCleanSchemaResetGoNoGoRow[] {
+  const draft = input.draft || futurePlanFormatDraft;
+  const preflightComplete =
+    input.productionPreflightRows.every((row) => row.status === 'pass') &&
+    futureCleanSchemaResetRollbackPreflightRows(draft).every((row) => row.status === 'pass') &&
+    futureCleanSchemaResetAdapterCloseoutRows(futureTestOnlyFixtureSamples, draft).every((row) => row.status === 'pass');
+  const wiringScopeKnown =
+    draft.cleanSchemaResetImplementationPrep.importAdapterContracts.some((contract) => contract.id === 'acceptWrappedFuturePlan') &&
+    draft.cleanSchemaResetImplementationPrep.importAdapterContracts.some((contract) => contract.id === 'blockOlderPreviewPlan');
+  const v1TrustKnown = futureCleanSchemaResetV1TrustRows(draft).every((row) => row.status === 'pass');
+  const schemaSwitchStillManual = input.productionPreflightRows.some((row) => row.id === 'explicitSwitchRequired' && row.status === 'pass');
+  const readyForGoNoGoDecision = preflightComplete && wiringScopeKnown && v1TrustKnown && schemaSwitchStillManual;
+
+  return [
+    {
+      id: 'preflightComplete',
+      status: preflightComplete ? 'pass' : 'fail',
+      recommendation: preflightComplete ? 'approve-next-wiring-package' : 'hold',
+      detail: 'Production, rollback, and adapter preflight rows are complete.'
+    },
+    {
+      id: 'wiringScopeKnown',
+      status: wiringScopeKnown ? 'pass' : 'fail',
+      recommendation: wiringScopeKnown ? 'approve-next-wiring-package' : 'hold',
+      detail: 'Next wiring scope is limited to wrapped future accept and old-preview/raw block behavior.'
+    },
+    {
+      id: 'v1TrustKnown',
+      status: v1TrustKnown ? 'pass' : 'fail',
+      recommendation: v1TrustKnown ? 'approve-next-wiring-package' : 'hold',
+      detail: 'V1 trust gates are documented before schema/import wiring.'
+    },
+    {
+      id: 'schemaSwitchStillManual',
+      status: schemaSwitchStillManual ? 'pass' : 'fail',
+      recommendation: schemaSwitchStillManual ? 'approve-next-wiring-package' : 'hold',
+      detail: 'Schema/import switch remains manual and explicit.'
+    },
+    {
+      id: 'readyForGoNoGoDecision',
+      status: readyForGoNoGoDecision ? 'pass' : 'fail',
+      recommendation: readyForGoNoGoDecision ? 'approve-next-wiring-package' : 'hold',
+      detail: 'The next package can be a real go/no-go decision for production wiring.'
+    }
+  ];
+}
+
+export function futureCleanSchemaResetProductionPreflightCloseoutRows(input: {
+  productionPreflightRows: FutureCleanSchemaResetProductionPreflightRow[];
+  draft?: FuturePlanFormatDraft;
+}): FutureCleanSchemaResetProductionPreflightCloseoutRow[] {
+  const draft = input.draft || futurePlanFormatDraft;
+  const productionUnchanged =
+    input.productionPreflightRows.some((row) => row.id === 'currentSchemaV2' && row.status === 'pass') &&
+    input.productionPreflightRows.some((row) => row.id === 'rawPayloadStillAcceptedNow' && row.status === 'pass');
+  const preflightPassed =
+    input.productionPreflightRows.every((row) => row.status === 'pass') &&
+    futureCleanSchemaResetRollbackPreflightRows(draft).every((row) => row.status === 'pass');
+  const goNoGoReady = futureCleanSchemaResetGoNoGoRows({ productionPreflightRows: input.productionPreflightRows, draft }).every(
+    (row) => row.status === 'pass'
+  );
+  const nextPackageIsActualWiring = goNoGoReady && draft.cleanSchemaResetImplementationPrep.importAdapterContracts.length >= 3;
+  const stopIfNotApproved =
+    draft.boundaries.includes('Do not implement the schema reset until the field list is reviewed.') &&
+    draft.schemaResetDecisionReadiness.every((item) => item.decision !== 'ready-to-wire');
+
+  return [
+    { id: 'productionUnchanged', status: productionUnchanged ? 'pass' : 'fail', detail: 'Current production schema and loader behavior remain unchanged.' },
+    { id: 'preflightPassed', status: preflightPassed ? 'pass' : 'fail', detail: 'Production and rollback preflight rows pass.' },
+    { id: 'goNoGoReady', status: goNoGoReady ? 'pass' : 'fail', detail: 'The reset is ready for an explicit go/no-go wiring decision.' },
+    { id: 'nextPackageIsActualWiring', status: nextPackageIsActualWiring ? 'pass' : 'fail', detail: 'The next package would be actual schema/import wiring if approved.' },
+    { id: 'stopIfNotApproved', status: stopIfNotApproved ? 'pass' : 'fail', detail: 'Stop before production wiring unless the next package is explicitly approved.' }
   ];
 }
 

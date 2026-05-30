@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { fromV2Payload } from './domainAdapter';
 import { createPlanFile, extractPlanPayload, normalizePlanPayload, roundTripPlanFile } from './planFile';
 import { PLAN_FILE_TYPE, PLAN_FILE_VERSION, SCHEMA_VERSION, V2PlanPayload } from '../types/plan';
+import {
+  futureCleanSchemaResetGoNoGoRows,
+  futureCleanSchemaResetProductionPreflightCloseoutRows,
+  futureCleanSchemaResetProductionPreflightRows,
+  summarizeFutureCleanSchemaResetTestAdapter
+} from './futurePlanFormat';
 
 const larryPlan: V2PlanPayload = {
   schemaVersion: 2,
@@ -119,5 +125,83 @@ describe('plan file adapters', () => {
     expect(domain.household.people.filter((person) => person.active)).toHaveLength(1);
     expect(domain.realEstate.primaryResidence.downsizeYear).toBe(2036);
     expect(domain.realEstate.secondaryResidence).toBeNull();
+  });
+
+  it('preflights clean reset boundaries while keeping production plan-file behavior unchanged', () => {
+    const roundTripped = roundTripPlanFile(larryPlan);
+
+    expect(
+      futureCleanSchemaResetProductionPreflightRows({
+        schemaVersion: SCHEMA_VERSION,
+        planFileVersion: PLAN_FILE_VERSION,
+        rawPayloadRoundTrips: roundTripped.schemaVersion === SCHEMA_VERSION,
+        testAdapterSummary: summarizeFutureCleanSchemaResetTestAdapter()
+      })
+    ).toEqual([
+      { id: 'currentSchemaV2', status: 'pass', detail: 'Production saved plan schema is still v2.' },
+      { id: 'wrappedPlanFileV1', status: 'pass', detail: 'Production wrapper format is still plan-file v1.' },
+      { id: 'rawPayloadStillAcceptedNow', status: 'pass', detail: 'Current raw payload round-trip behavior remains unchanged.' },
+      { id: 'futureAdapterTestOnly', status: 'pass', detail: 'Future clean reset adapter remains test-only.' },
+      { id: 'explicitSwitchRequired', status: 'pass', detail: 'Production schema/import switch still requires explicit approval.' }
+    ]);
+  });
+
+  it('summarizes clean reset readiness as a go/no-go decision before production wiring', () => {
+    const preflightRows = futureCleanSchemaResetProductionPreflightRows({
+      schemaVersion: SCHEMA_VERSION,
+      planFileVersion: PLAN_FILE_VERSION,
+      rawPayloadRoundTrips: roundTripPlanFile(larryPlan).schemaVersion === SCHEMA_VERSION,
+      testAdapterSummary: summarizeFutureCleanSchemaResetTestAdapter()
+    });
+
+    expect(futureCleanSchemaResetGoNoGoRows({ productionPreflightRows: preflightRows })).toEqual([
+      {
+        id: 'preflightComplete',
+        status: 'pass',
+        recommendation: 'approve-next-wiring-package',
+        detail: 'Production, rollback, and adapter preflight rows are complete.'
+      },
+      {
+        id: 'wiringScopeKnown',
+        status: 'pass',
+        recommendation: 'approve-next-wiring-package',
+        detail: 'Next wiring scope is limited to wrapped future accept and old-preview/raw block behavior.'
+      },
+      {
+        id: 'v1TrustKnown',
+        status: 'pass',
+        recommendation: 'approve-next-wiring-package',
+        detail: 'V1 trust gates are documented before schema/import wiring.'
+      },
+      {
+        id: 'schemaSwitchStillManual',
+        status: 'pass',
+        recommendation: 'approve-next-wiring-package',
+        detail: 'Schema/import switch remains manual and explicit.'
+      },
+      {
+        id: 'readyForGoNoGoDecision',
+        status: 'pass',
+        recommendation: 'approve-next-wiring-package',
+        detail: 'The next package can be a real go/no-go decision for production wiring.'
+      }
+    ]);
+  });
+
+  it('closes clean reset production preflight at the actual wiring decision point', () => {
+    const preflightRows = futureCleanSchemaResetProductionPreflightRows({
+      schemaVersion: SCHEMA_VERSION,
+      planFileVersion: PLAN_FILE_VERSION,
+      rawPayloadRoundTrips: roundTripPlanFile(larryPlan).schemaVersion === SCHEMA_VERSION,
+      testAdapterSummary: summarizeFutureCleanSchemaResetTestAdapter()
+    });
+
+    expect(futureCleanSchemaResetProductionPreflightCloseoutRows({ productionPreflightRows: preflightRows })).toEqual([
+      { id: 'productionUnchanged', status: 'pass', detail: 'Current production schema and loader behavior remain unchanged.' },
+      { id: 'preflightPassed', status: 'pass', detail: 'Production and rollback preflight rows pass.' },
+      { id: 'goNoGoReady', status: 'pass', detail: 'The reset is ready for an explicit go/no-go wiring decision.' },
+      { id: 'nextPackageIsActualWiring', status: 'pass', detail: 'The next package would be actual schema/import wiring if approved.' },
+      { id: 'stopIfNotApproved', status: 'pass', detail: 'Stop before production wiring unless the next package is explicitly approved.' }
+    ]);
   });
 });

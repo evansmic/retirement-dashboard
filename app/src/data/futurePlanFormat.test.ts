@@ -9,9 +9,12 @@ import {
   futureCleanSchemaResetAdapterCloseoutRows,
   futureCleanSchemaResetFixturePrepRows,
   futureCleanSchemaResetGracefulBlockRows,
+  futureCleanSchemaResetGoNoGoRows,
   futureCleanSchemaResetImportAdapterContractIds,
   futureCleanSchemaResetImplementationCloseoutRows,
   futureCleanSchemaResetPrepRows,
+  futureCleanSchemaResetProductionPreflightRows,
+  futureCleanSchemaResetRollbackPreflightRows,
   futureCleanSchemaResetValidationWiringRows,
   futureCleanSchemaResetV1FeedbackGateIds,
   futureCleanSchemaResetV1TrustRows,
@@ -467,6 +470,48 @@ describe('future plan format draft', () => {
           item.id === 'fieldListFrozen' ? { ...item, decision: 'ready-to-wire' } : item
         )
       }).find((row) => row.id === 'nextDecisionRequired')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('marks production preflight incomplete if the future adapter stops being test-only', () => {
+    expect(
+      futureCleanSchemaResetProductionPreflightRows({
+        schemaVersion: 2,
+        planFileVersion: 1,
+        rawPayloadRoundTrips: true,
+        testAdapterSummary: {
+          ...summarizeFutureCleanSchemaResetTestAdapter(),
+          results: summarizeFutureCleanSchemaResetTestAdapter().results.map((result) =>
+            result.fixtureId === 'futureMinimumFloorPlan' ? { ...result, wiresProductionImport: true } : result
+          ) as ReturnType<typeof summarizeFutureCleanSchemaResetTestAdapter>['results']
+        }
+      }).find((row) => row.id === 'futureAdapterTestOnly')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('preflights rollback and current compatibility before clean reset wiring', () => {
+    expect(futureCleanSchemaResetRollbackPreflightRows()).toEqual([
+      { id: 'priorBehaviorIdentified', status: 'pass', detail: 'Prior v2-compatible behavior is identified before reset wiring.' },
+      { id: 'v2CompatibilityPreserved', status: 'pass', detail: 'Current v2 compatibility remains an explicit pre-wiring decision.' },
+      { id: 'oldFileBlockReady', status: 'pass', detail: 'Old-file block behavior is ready for review but not wired.' },
+      { id: 'rollbackEvidenceRequired', status: 'pass', detail: 'Rollback and smoke-test evidence remain required stop items.' },
+      { id: 'postReleaseWatchDeferred', status: 'pass', detail: 'Post-release watch stays deferred until release work exists.' }
+    ]);
+  });
+
+  it('marks rollback preflight incomplete if current v2 compatibility is not explicit', () => {
+    expect(
+      futureCleanSchemaResetRollbackPreflightRows({
+        ...futurePlanFormatDraft,
+        implementationChecklist: futurePlanFormatDraft.implementationChecklist.map((step) =>
+          step.id === 'loaderWire'
+            ? {
+                ...step,
+                requiredBeforeNext: step.requiredBeforeNext.filter((item) => item !== 'Current v2 compatibility decision confirmed')
+              }
+            : step
+        )
+      }).find((row) => row.id === 'v2CompatibilityPreserved')
     ).toMatchObject({ status: 'fail' });
   });
 
