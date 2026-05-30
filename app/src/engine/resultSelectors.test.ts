@@ -49,6 +49,12 @@ import {
   selectMonthlyCapacityOptimizerObjective,
   selectMonthlyCapacityReadinessCloseout,
   selectMonthlyCapacityReviewRows,
+  selectMonthlyCapacityRuntimeCandidateAudit,
+  selectMonthlyCapacityRuntimeCandidateCloseout,
+  selectMonthlyCapacityRuntimeCandidateExampleReadiness,
+  selectMonthlyCapacityRuntimeCandidateSimulationHandoff,
+  selectMonthlyCapacityRuntimeCandidateSummary,
+  selectMonthlyCapacityRuntimeCandidateVariants,
   selectMonthlyCapacityRuntimePacket,
   selectMonthlyCapacityCandidateScorePolicy,
   selectMonthlyCapacityScoringExampleReadiness,
@@ -189,6 +195,34 @@ function withRows(rows: Array<Partial<SimulationResult['years'][number]>>): Simu
       ...row
     }))
   };
+}
+
+function buildMonthlyCandidateRuntime(result: SimulationResult, plan: V2PlanPayload, comparisons: Record<string, SimulationResult> = {}) {
+  const answer = selectRetirementAnswerSummary(result, plan);
+  const spending = selectSpendingCapacitySummary(result, comparisons, plan, answer);
+  const packet = selectMonthlyCapacityRuntimePacket(result, plan, spending);
+  const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+  const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(result, plan, answer));
+  const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+    selectMonthlyCapacityOptimizerInputContract(handoff, review),
+    selectMonthlyCapacityOptimizerGuardrails(handoff)
+  );
+  const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+  const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+  const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+  const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+  const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+  const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+  const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+  const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+  const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+    contract,
+    order,
+    selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+  );
+  const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
+
+  return { packet, builderPlan, order, runtimeGate, variants };
 }
 
 describe('result selectors', () => {
@@ -2290,6 +2324,379 @@ describe('result selectors', () => {
     expect(closeout.packageSummary).toContain('dry-run audit');
     expect(closeout.boundary).toContain('no candidate scoring execution');
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateBuilderPackageCloseout');
+  });
+
+  it('builds only the baseline runtime candidate variant when the floor is covered', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+    const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+    const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+    const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+    const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+      contract,
+      order,
+      selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+    );
+    const variants = selectMonthlyCapacityRuntimeCandidateVariants(planFixture, builderPlan, order, runtimeGate);
+
+    expect(variants.status).toBe('ready');
+    expect(variants.builtVariantIds).toEqual(['baseline']);
+    expect(variants.variants[0]).toMatchObject({
+      id: 'baseline',
+      runtimeOnly: true,
+      output: 'notRun',
+      saved: false,
+      changedLevers: ['baseline']
+    });
+    expect(variants.variants[0].plan).not.toBe(planFixture);
+    expect(variants.variants[0].plan.spending.gogo).toBe(planFixture.spending.gogo);
+    expect(variants.skippedBlueprints.find((row) => row.id === 'spendingRepairSmall')).toMatchObject({ status: 'reviewOnly' });
+    expect(variants.boundary).toContain('does not run simulations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateVariants');
+  });
+
+  it('builds gap-repair spending and work-timing runtime variants in memory only', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const couplePlan: V2PlanPayload = {
+      ...planFixture,
+      p2: { ...planFixture.p2, name: 'Morgan', dob: 1964, retireYear: 2029 }
+    };
+    const answer = selectRetirementAnswerSummary(shortfallResult, couplePlan);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, couplePlan, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, couplePlan, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(shortfallResult, couplePlan, answer));
+    const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+    const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+    const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+    const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+    const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+      contract,
+      order,
+      selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+    );
+    const variants = selectMonthlyCapacityRuntimeCandidateVariants(couplePlan, builderPlan, order, runtimeGate);
+
+    expect(variants.builtVariantIds).toEqual([
+      'baseline',
+      'spendingRepairSmall',
+      'spendingRepairLarge',
+      'workLaterOneYear',
+      'workLaterTwoYears'
+    ]);
+    expect(variants.variants.find((row) => row.id === 'spendingRepairSmall')?.plan.spending).toMatchObject({
+      gogo: 66500,
+      slowgo: 42750,
+      nogo: 38000
+    });
+    expect(variants.variants.find((row) => row.id === 'spendingRepairLarge')?.plan.spending).toMatchObject({
+      gogo: 63000,
+      slowgo: 40500,
+      nogo: 36000
+    });
+    expect(variants.variants.find((row) => row.id === 'workLaterOneYear')?.plan.p1.retireYear).toBe(2029);
+    expect(variants.variants.find((row) => row.id === 'workLaterOneYear')?.plan.p2.retireYear).toBe(2030);
+    expect(variants.variants.find((row) => row.id === 'workLaterTwoYears')?.plan.assumptions.retireYear).toBe(2030);
+    expect(variants.variants.every((row) => row.runtimeOnly && row.output === 'notRun' && row.saved === false)).toBe(true);
+    expect(variants.skippedBlueprints.find((row) => row.id === 'homeEquityRelianceReview')).toMatchObject({ status: 'reviewOnly' });
+    expect(createPlanFile(couplePlan).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateVariants');
+  });
+
+  it('blocks runtime candidate variants when the implementation gate is blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+    const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+    const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+    const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+    const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+      contract,
+      order,
+      selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+    );
+    const variants = selectMonthlyCapacityRuntimeCandidateVariants(planFixture, builderPlan, order, runtimeGate);
+
+    expect(runtimeGate.status).toBe('blocked');
+    expect(variants.status).toBe('blocked');
+    expect(variants.variants).toEqual([]);
+    expect(variants.skippedBlueprints.find((row) => row.id === 'baseline')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('audits runtime candidate variants to confirm they are not scored, saved, or traced', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+    const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+    const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+    const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+    const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+      contract,
+      order,
+      selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+    );
+    const variants = selectMonthlyCapacityRuntimeCandidateVariants(planFixture, builderPlan, order, runtimeGate);
+    const audit = selectMonthlyCapacityRuntimeCandidateAudit(variants);
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      builtCount: 1,
+      scoredCount: 0,
+      savedCount: 0,
+      traceCount: 0
+    });
+    expect(audit.boundary).toContain('not been scored');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateAudit');
+  });
+
+  it('summarizes runtime candidate variants without ranking them', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const summary = selectMonthlyCapacityRuntimeCandidateSummary(runtime.variants);
+
+    expect(summary).toMatchObject({
+      status: 'ready',
+      builtVariantIds: ['baseline'],
+      practicalRepairVariantIds: [],
+      baselineIncluded: true
+    });
+    expect(summary.reviewOnlyBlueprintIds).toEqual([
+      'spendingRepairSmall',
+      'spendingRepairLarge',
+      'workLaterOneYear',
+      'workLaterTwoYears',
+      'benefitTimingReview',
+      'taxEstateReview',
+      'withdrawalFamilyReview'
+    ]);
+    expect(summary.deferredBlueprintIds).toEqual(['homeEquityRelianceReview', 'annualSequencingDeferred']);
+    expect(summary.boundary).toContain('without running simulations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateSummary');
+  });
+
+  it('summarizes practical repair variants only for visible floor gaps', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const runtime = buildMonthlyCandidateRuntime(shortfallResult, planFixture, { spendLessGogo: repairedResult });
+    const summary = selectMonthlyCapacityRuntimeCandidateSummary(runtime.variants);
+
+    expect(summary.builtVariantIds).toEqual([
+      'baseline',
+      'spendingRepairSmall',
+      'spendingRepairLarge',
+      'workLaterOneYear',
+      'workLaterTwoYears'
+    ]);
+    expect(summary.practicalRepairVariantIds).toEqual([
+      'spendingRepairSmall',
+      'spendingRepairLarge',
+      'workLaterOneYear',
+      'workLaterTwoYears'
+    ]);
+    expect(summary.reviewOnlyBlueprintIds).toEqual([
+      'benefitTimingReview',
+      'taxEstateReview',
+      'withdrawalFamilyReview',
+      'homeEquityRelianceReview'
+    ]);
+    expect(summary.deferredBlueprintIds).toEqual(['annualSequencingDeferred']);
+  });
+
+  it('runs fresh clean examples through runtime candidate variant readiness', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+    const expectedBuilt: Record<string, string[]> = {
+      singleMinimumFloor: ['baseline'],
+      coupleTightFloor: ['baseline', 'spendingRepairSmall', 'spendingRepairLarge', 'workLaterOneYear', 'workLaterTwoYears'],
+      pensionCoupleSurvivor: ['baseline'],
+      estateHeavyRoom: ['baseline']
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = { ...createCleanExampleRuntimePlan(card.id), inheritance: 0 };
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, plan);
+      const spending = selectSpendingCapacitySummary(result, {}, plan, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, plan, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example runtime candidate readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only runtime candidate readiness gate for example matrix coverage.'
+      };
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+      const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+      const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+      const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+      const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+      const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+      const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+      const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+        contract,
+        order,
+        selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+      );
+      const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
+      const readiness = selectMonthlyCapacityRuntimeCandidateExampleReadiness(card.id, variants);
+
+      expect(readiness.status, card.id).toBe('ready');
+      expect(readiness.builtVariantIds, card.id).toEqual(expectedBuilt[card.id]);
+      if (card.id === 'coupleTightFloor') expect(readiness.practicalRepairVariantIds, card.id).toHaveLength(4);
+      else expect(readiness.practicalRepairVariantIds, card.id).toEqual([]);
+      expect(readiness.skippedCount, card.id).toBe(10 - expectedBuilt[card.id].length);
+      expect(readiness.boundary, card.id).toContain('without running simulations');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateExampleReadiness');
+    }
+  });
+
+  it('hands runtime candidate variants to a future simulation package without scoring them', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+
+    expect(handoff).toMatchObject({
+      status: 'readyForSimulation',
+      variantIds: ['baseline'],
+      allowedNext: ['runRuntimeSimulations', 'tests', 'docs']
+    });
+    expect(handoff.notAllowedYet).toEqual([
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(handoff.boundary).toContain('later package');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateSimulationHandoff');
+  });
+
+  it('blocks the simulation handoff when runtime candidate variants are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const executionGate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(executionGate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+    const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+    const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+    const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+    const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+      contract,
+      order,
+      selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+    );
+    const variants = selectMonthlyCapacityRuntimeCandidateVariants(planFixture, builderPlan, order, runtimeGate);
+    const simulationHandoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(variants);
+
+    expect(simulationHandoff.status).toBe('blocked');
+    expect(simulationHandoff.variantIds).toEqual([]);
+    expect(simulationHandoff.allowedNext).toEqual(['tests', 'docs']);
+  });
+
+  it('closes out runtime candidate building for the next simulation package', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const closeout = selectMonthlyCapacityRuntimeCandidateCloseout(handoff);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForNextPackage',
+      nextBroadStep: 'runtimeCandidateSimulation',
+      completedPieces: ['runtimeVariants', 'variantSummary', 'variantAudit', 'exampleMatrix', 'simulationHandoff']
+    });
+    expect(closeout.stillDeferred).toEqual([
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(closeout.boundary).toContain('no simulations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {

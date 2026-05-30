@@ -1,4 +1,5 @@
 import { AnnualSimulationRow, SimulationResult, V2PlanPayload } from '../types/plan';
+import { extractPlanPayload, p2LooksBlank } from '../data/planFile';
 import {
   selectStressIndicatorRows as selectStressIndicatorRowsFromStressModule,
   selectSpendingStressSummary as selectSpendingStressSummaryFromStressModule,
@@ -1145,6 +1146,82 @@ export type MonthlyCapacityCandidateBuilderPackageCloseout = {
   packageSummary: string;
   nextBroadStep: 'runtimeCandidateBuilderImplementation' | 'capacityInputsFirst';
   preservedBoundaries: MonthlyCapacityCandidateBuilderRuntimeGate['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateLever = 'baseline' | 'spending' | 'workTiming';
+
+export type MonthlyCapacityRuntimeCandidateVariant = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  label: string;
+  sourceBlueprintId: MonthlyCapacityCandidateBlueprintId;
+  familyId: MonthlyCapacityCandidateFamilyId;
+  status: 'built';
+  plan: V2PlanPayload;
+  changedLevers: MonthlyCapacityRuntimeCandidateLever[];
+  changeSummary: string;
+  reviewNote: string;
+  runtimeOnly: true;
+  output: 'notRun';
+  saved: false;
+};
+
+export type MonthlyCapacityRuntimeCandidateSkippedBlueprint = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  status: 'reviewOnly' | 'blocked' | 'deferred';
+  reason: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateVariantSet = {
+  status: 'blocked' | 'ready';
+  variants: MonthlyCapacityRuntimeCandidateVariant[];
+  skippedBlueprints: MonthlyCapacityRuntimeCandidateSkippedBlueprint[];
+  builtVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateAudit = {
+  status: 'pass' | 'block';
+  builtCount: number;
+  scoredCount: number;
+  savedCount: number;
+  traceCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSummary = {
+  status: MonthlyCapacityRuntimeCandidateVariantSet['status'];
+  builtVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  practicalRepairVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  reviewOnlyBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  deferredBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  baselineIncluded: boolean;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityRuntimeCandidateVariantSet['status'];
+  builtVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  practicalRepairVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  skippedCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateSimulationHandoff = {
+  status: 'blocked' | 'readyForSimulation';
+  variantIds: MonthlyCapacityCandidateBlueprintId[];
+  allowedNext: Array<'runRuntimeSimulations' | 'tests' | 'docs'>;
+  notAllowedYet: Array<'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeCandidateCloseout = {
+  status: 'blocked' | 'readyForNextPackage';
+  headline: string;
+  nextBroadStep: 'runtimeCandidateSimulation' | 'capacityInputsFirst';
+  completedPieces: Array<'runtimeVariants' | 'variantSummary' | 'variantAudit' | 'exampleMatrix' | 'simulationHandoff'>;
+  stillDeferred: MonthlyCapacityRuntimeCandidateSimulationHandoff['notAllowedYet'];
   boundary: string;
 };
 
@@ -3121,6 +3198,219 @@ export function selectMonthlyCapacityCandidateBuilderPackageCloseout(
     preservedBoundaries: gate.notAllowedYet,
     boundary:
       'Runtime-only package closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+function monthlyCapacityScaleSpending(plan: V2PlanPayload, multiplier: number): V2PlanPayload {
+  const next = extractPlanPayload(plan);
+  next.spending.gogo = Math.round(n(next.spending.gogo) * multiplier);
+  if (n(next.spending.slowgo) > 0) next.spending.slowgo = Math.round(n(next.spending.slowgo) * multiplier);
+  if (n(next.spending.nogo) > 0) next.spending.nogo = Math.round(n(next.spending.nogo) * multiplier);
+  return next;
+}
+
+function monthlyCapacityWorkLater(plan: V2PlanPayload, years: number): V2PlanPayload {
+  const next = extractPlanPayload(plan);
+  if (n(next.assumptions.retireYear) > 0) next.assumptions.retireYear = n(next.assumptions.retireYear) + years;
+  if (n(next.p1.retireYear) > 0) next.p1.retireYear = n(next.p1.retireYear) + years;
+  if (!p2LooksBlank(next.p2) && n(next.p2.retireYear) > 0) next.p2.retireYear = n(next.p2.retireYear) + years;
+  return next;
+}
+
+function monthlyCapacityVariantForBlueprint(
+  plan: V2PlanPayload,
+  blueprint: MonthlyCapacityCandidateBlueprint
+): MonthlyCapacityRuntimeCandidateVariant | null {
+  const base = {
+    id: blueprint.id,
+    label: blueprint.label,
+    sourceBlueprintId: blueprint.id,
+    familyId: blueprint.familyId,
+    status: 'built' as const,
+    runtimeOnly: true as const,
+    output: 'notRun' as const,
+    saved: false as const
+  };
+
+  if (blueprint.id === 'baseline') {
+    return {
+      ...base,
+      plan: extractPlanPayload(plan),
+      changedLevers: ['baseline'],
+      changeSummary: 'Current runtime plan used as the comparison point.',
+      reviewNote: 'Baseline is included so later runtime comparisons have a steady reference.'
+    };
+  }
+
+  if (blueprint.id === 'spendingRepairSmall') {
+    return {
+      ...base,
+      plan: monthlyCapacityScaleSpending(plan, 0.95),
+      changedLevers: ['spending'],
+      changeSummary: 'Reduce modelled spending by 5% across spending phases for a floor-repair test.',
+      reviewNote: 'Treat this as a practical repair test only when the minimum monthly floor has a gap.'
+    };
+  }
+
+  if (blueprint.id === 'spendingRepairLarge') {
+    return {
+      ...base,
+      plan: monthlyCapacityScaleSpending(plan, 0.9),
+      changedLevers: ['spending'],
+      changeSummary: 'Reduce modelled spending by 10% across spending phases for a floor-repair test.',
+      reviewNote: 'Treat this as a larger repair test, not as a recommendation.'
+    };
+  }
+
+  if (blueprint.id === 'workLaterOneYear') {
+    return {
+      ...base,
+      plan: monthlyCapacityWorkLater(plan, 1),
+      changedLevers: ['workTiming'],
+      changeSummary: 'Move retirement timing one year later for a floor-repair test.',
+      reviewNote: 'Review whether work timing is realistic before relying on this test.'
+    };
+  }
+
+  if (blueprint.id === 'workLaterTwoYears') {
+    return {
+      ...base,
+      plan: monthlyCapacityWorkLater(plan, 2),
+      changedLevers: ['workTiming'],
+      changeSummary: 'Move retirement timing two years later for a floor-repair test.',
+      reviewNote: 'This changes a major life assumption and should stay a practical comparison, not advice.'
+    };
+  }
+
+  return null;
+}
+
+export function selectMonthlyCapacityRuntimeCandidateVariants(
+  plan: V2PlanPayload,
+  builderPlan: MonthlyCapacityCandidateBuilderPlan,
+  order: MonthlyCapacityCandidateBuilderOrder,
+  gate: MonthlyCapacityCandidateBuilderRuntimeGate
+): MonthlyCapacityRuntimeCandidateVariantSet {
+  const orderedBlueprints = order.orderedBlueprintIds
+    .map((id) => builderPlan.blueprints.find((blueprint) => blueprint.id === id))
+    .filter((blueprint): blueprint is MonthlyCapacityCandidateBlueprint => Boolean(blueprint));
+  const blocked = gate.status === 'blocked' || order.status === 'blocked';
+  const variants = blocked
+    ? []
+    : orderedBlueprints
+        .filter((blueprint) => blueprint.status === 'readyToBuild')
+        .map((blueprint) => monthlyCapacityVariantForBlueprint(plan, blueprint))
+        .filter((variant): variant is MonthlyCapacityRuntimeCandidateVariant => Boolean(variant));
+  const builtIds = new Set(variants.map((variant) => variant.id));
+  const skippedBlueprints = builderPlan.blueprints
+    .filter((blueprint) => !builtIds.has(blueprint.id))
+    .map<MonthlyCapacityRuntimeCandidateSkippedBlueprint>((blueprint) => ({
+      id: blueprint.id,
+      status: blocked || blueprint.status === 'blocked' ? 'blocked' : blueprint.status === 'reviewOnly' ? 'reviewOnly' : 'deferred',
+      reason: blocked ? 'Runtime candidate building is blocked until the implementation gate is ready.' : blueprint.reason
+    }));
+
+  return {
+    status: blocked ? 'blocked' : 'ready',
+    variants,
+    skippedBlueprints,
+    builtVariantIds: variants.map((variant) => variant.id),
+    boundary:
+      'Runtime-only candidate variants: builds in-memory plan variants for approved blueprints only. It does not run simulations, score candidates, save output, create funding traces, provide account instructions, add annual sequencing, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateAudit(
+  variantSet: MonthlyCapacityRuntimeCandidateVariantSet
+): MonthlyCapacityRuntimeCandidateAudit {
+  const scoredCount = variantSet.variants.filter((variant) => variant.output !== 'notRun').length;
+  const savedCount = variantSet.variants.filter((variant) => variant.saved !== false).length;
+  const traceCount = variantSet.variants.filter((variant) => Object.prototype.hasOwnProperty.call(variant, 'fundingTrace')).length;
+
+  return {
+    status: scoredCount > 0 || savedCount > 0 || traceCount > 0 ? 'block' : 'pass',
+    builtCount: variantSet.variants.length,
+    scoredCount,
+    savedCount,
+    traceCount,
+    boundary:
+      'Runtime-only candidate audit: verifies built variants have not been scored, saved, traced, turned into account instructions, sequenced annually, or sent to UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSummary(
+  variantSet: MonthlyCapacityRuntimeCandidateVariantSet
+): MonthlyCapacityRuntimeCandidateSummary {
+  const practicalRepairVariantIds = variantSet.variants
+    .filter((variant) => variant.changedLevers.includes('spending') || variant.changedLevers.includes('workTiming'))
+    .map((variant) => variant.id);
+
+  return {
+    status: variantSet.status,
+    builtVariantIds: variantSet.builtVariantIds,
+    practicalRepairVariantIds,
+    reviewOnlyBlueprintIds: variantSet.skippedBlueprints.filter((row) => row.status === 'reviewOnly').map((row) => row.id),
+    deferredBlueprintIds: variantSet.skippedBlueprints.filter((row) => row.status === 'deferred').map((row) => row.id),
+    baselineIncluded: variantSet.builtVariantIds.includes('baseline'),
+    boundary:
+      'Runtime-only candidate summary: summarizes built in-memory variants and skipped blueprints without running simulations, scoring, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateExampleReadiness(
+  id: string,
+  variantSet: MonthlyCapacityRuntimeCandidateVariantSet,
+  summary: MonthlyCapacityRuntimeCandidateSummary = selectMonthlyCapacityRuntimeCandidateSummary(variantSet)
+): MonthlyCapacityRuntimeCandidateExampleReadiness {
+  return {
+    id,
+    status: variantSet.status,
+    builtVariantIds: summary.builtVariantIds,
+    practicalRepairVariantIds: summary.practicalRepairVariantIds,
+    skippedCount: variantSet.skippedBlueprints.length,
+    boundary:
+      'Runtime-only candidate example readiness: records built variant coverage for an example fixture without running simulations, scoring, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateSimulationHandoff(
+  variantSet: MonthlyCapacityRuntimeCandidateVariantSet,
+  audit: MonthlyCapacityRuntimeCandidateAudit = selectMonthlyCapacityRuntimeCandidateAudit(variantSet)
+): MonthlyCapacityRuntimeCandidateSimulationHandoff {
+  const blocked = variantSet.status === 'blocked' || audit.status === 'block' || variantSet.variants.length === 0;
+
+  return {
+    status: blocked ? 'blocked' : 'readyForSimulation',
+    variantIds: blocked ? [] : variantSet.builtVariantIds,
+    allowedNext: blocked ? ['tests', 'docs'] : ['runRuntimeSimulations', 'tests', 'docs'],
+    notAllowedYet: [
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime candidate simulation handoff: allows a later package to run simulations for built in-memory variants, while still blocking scoring, optimizer search, saved output, funding trace, account instructions, annual sequencing, and UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeCandidateCloseout(
+  handoff: MonthlyCapacityRuntimeCandidateSimulationHandoff
+): MonthlyCapacityRuntimeCandidateCloseout {
+  return {
+    status: handoff.status === 'blocked' ? 'blocked' : 'readyForNextPackage',
+    headline:
+      handoff.status === 'blocked'
+        ? 'Runtime candidate builder needs complete variants before simulation work can advance.'
+        : 'Runtime candidate builder is ready for a simulation package.',
+    nextBroadStep: handoff.status === 'blocked' ? 'capacityInputsFirst' : 'runtimeCandidateSimulation',
+    completedPieces: ['runtimeVariants', 'variantSummary', 'variantAudit', 'exampleMatrix', 'simulationHandoff'],
+    stillDeferred: handoff.notAllowedYet,
+    boundary:
+      'Runtime candidate builder closeout: no simulations, scoring, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 
