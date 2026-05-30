@@ -1346,6 +1346,84 @@ export type MonthlyCapacityScoringExecutionPlanningCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityRuntimeScoreFactor = {
+  id: 'floorCoverage' | 'gapRepair' | 'taxReview' | 'disruptionPenalty';
+  points: number;
+  detail: string;
+};
+
+export type MonthlyCapacityRuntimeScoreRow = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  label: string;
+  status: 'scored' | 'blocked';
+  totalScore: number;
+  factors: MonthlyCapacityRuntimeScoreFactor[];
+  suggestionEligible: false;
+  saved: false;
+  fundingTrace: null;
+  accountInstruction: null;
+  annualSequencing: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScoreSet = {
+  status: 'blocked' | 'ready';
+  rows: MonthlyCapacityRuntimeScoreRow[];
+  scoredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScoreAudit = {
+  status: 'pass' | 'block';
+  scoredCount: number;
+  suggestionEligibleCount: number;
+  savedCount: number;
+  traceCount: number;
+  instructionCount: number;
+  annualSequencingCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScoreSummary = {
+  status: MonthlyCapacityRuntimeScoreSet['status'];
+  scoredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  highestScore: number | null;
+  lowestScore: number | null;
+  baselineScore: number | null;
+  practicalRepairScoreIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScoreExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityRuntimeScoreSet['status'];
+  scoredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  baselineScore: number | null;
+  practicalRepairScoreIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScoreCloseout = {
+  status: 'blocked' | 'readyForRankingPlanning';
+  headline: string;
+  nextBroadStep: 'candidateRankingPlanning' | 'capacityInputsFirst';
+  completedPieces: Array<'scoreRows' | 'scoreAudit' | 'scoreSummary' | 'exampleMatrix' | 'noRecommendationBoundary'>;
+  stillDeferred: Array<
+    'candidateRanking' | 'recommendations' | 'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'
+  >;
+  boundary: string;
+};
+
+export type MonthlyCapacityRuntimeScorePackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'candidateScoringExecutionImplementation';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityRuntimeScoreCloseout['nextBroadStep'];
+  stillDeferred: MonthlyCapacityRuntimeScoreCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -3844,6 +3922,196 @@ export function selectMonthlyCapacityScoringExecutionPlanningCloseout(
     stillDeferred: plan.notAllowedYet,
     boundary:
       'Runtime-only scoring execution planning closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+function monthlyCapacityScoreDisruption(id: MonthlyCapacityCandidateBlueprintId): number {
+  if (id === 'baseline') return 0;
+  if (id === 'spendingRepairSmall') return -8;
+  if (id === 'spendingRepairLarge') return -16;
+  if (id === 'workLaterOneYear') return -10;
+  if (id === 'workLaterTwoYears') return -20;
+  return -5;
+}
+
+export function selectMonthlyCapacityRuntimeScores(
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet,
+  plan: MonthlyCapacityScoringExecutionPlan,
+  readiness: MonthlyCapacityScoringExecutionReadiness = selectMonthlyCapacityScoringExecutionReadiness(plan)
+): MonthlyCapacityRuntimeScoreSet {
+  const blocked = simulationSet.status === 'blocked' || plan.status === 'blocked' || readiness.status === 'blocked';
+  const baseline = simulationSet.rows.find((row) => row.id === 'baseline');
+  const baselineGap = baseline?.firstShortfallYear ? 1 : 0;
+  const baselineTax = baseline?.totalTax ?? 0;
+  const rows = simulationSet.rows.map<MonthlyCapacityRuntimeScoreRow>((row) => {
+    if (blocked || row.status === 'blocked' || row.resultYears === 0) {
+      return {
+        id: row.id,
+        label: row.label,
+        status: 'blocked',
+        totalScore: 0,
+        factors: [],
+        suggestionEligible: false,
+        saved: false,
+        fundingTrace: null,
+        accountInstruction: null,
+        annualSequencing: null,
+        boundary:
+          'Runtime-only score row: blocked before scoring and does not rank, recommend, save output, trace funding, add account instructions, sequence annually, or change UI.'
+      };
+    }
+
+    const floorCoveragePoints = row.firstShortfallYear ? 0 : 100;
+    const gapRepairPoints = baselineGap && !row.firstShortfallYear && row.id !== 'baseline' ? 35 : 0;
+    const taxReviewPoints = baselineTax > 0 ? Math.max(-10, Math.min(10, Math.round((baselineTax - row.totalTax) / Math.max(1, baselineTax) * 10))) : 0;
+    const disruptionPoints = monthlyCapacityScoreDisruption(row.id);
+    const factors: MonthlyCapacityRuntimeScoreFactor[] = [
+      {
+        id: 'floorCoverage',
+        points: floorCoveragePoints,
+        detail: row.firstShortfallYear ? 'Variant has a visible shortfall year.' : 'Variant covers the visible simulated years.'
+      },
+      {
+        id: 'gapRepair',
+        points: gapRepairPoints,
+        detail: gapRepairPoints > 0 ? 'Variant repairs a visible baseline gap.' : 'No gap-repair bonus applies.'
+      },
+      {
+        id: 'taxReview',
+        points: taxReviewPoints,
+        detail: 'Tax remains a small secondary adjustment, not the main objective.'
+      },
+      {
+        id: 'disruptionPenalty',
+        points: disruptionPoints,
+        detail: row.id === 'baseline' ? 'Baseline carries no disruption penalty.' : 'Practical changes carry a disruption penalty.'
+      }
+    ];
+
+    return {
+      id: row.id,
+      label: row.label,
+      status: 'scored',
+      totalScore: factors.reduce((total, factor) => total + factor.points, 0),
+      factors,
+      suggestionEligible: false,
+      saved: false,
+      fundingTrace: null,
+      accountInstruction: null,
+      annualSequencing: null,
+      boundary:
+        'Runtime-only score row: calculates bounded score evidence without ranking, recommending, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+    };
+  });
+
+  return {
+    status: blocked ? 'blocked' : 'ready',
+    rows,
+    scoredVariantIds: rows.filter((row) => row.status === 'scored').map((row) => row.id),
+    boundary:
+      'Runtime-only scores: calculates bounded score evidence for simulated variants without optimizer search, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeScoreAudit(scoreSet: MonthlyCapacityRuntimeScoreSet): MonthlyCapacityRuntimeScoreAudit {
+  const suggestionEligibleCount = scoreSet.rows.filter((row) => row.suggestionEligible).length;
+  const savedCount = scoreSet.rows.filter((row) => row.saved !== false).length;
+  const traceCount = scoreSet.rows.filter((row) => row.fundingTrace !== null).length;
+  const instructionCount = scoreSet.rows.filter((row) => row.accountInstruction !== null).length;
+  const annualSequencingCount = scoreSet.rows.filter((row) => row.annualSequencing !== null).length;
+
+  return {
+    status: suggestionEligibleCount > 0 || savedCount > 0 || traceCount > 0 || instructionCount > 0 || annualSequencingCount > 0 ? 'block' : 'pass',
+    scoredCount: scoreSet.rows.filter((row) => row.status === 'scored').length,
+    suggestionEligibleCount,
+    savedCount,
+    traceCount,
+    instructionCount,
+    annualSequencingCount,
+    boundary:
+      'Runtime-only score audit: verifies scores did not become recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeScoreSummary(scoreSet: MonthlyCapacityRuntimeScoreSet): MonthlyCapacityRuntimeScoreSummary {
+  const scoredRows = scoreSet.rows.filter((row) => row.status === 'scored');
+  const scores = scoredRows.map((row) => row.totalScore);
+  const practicalRepairScoreIds = scoredRows
+    .filter((row) => row.id === 'spendingRepairSmall' || row.id === 'spendingRepairLarge' || row.id === 'workLaterOneYear' || row.id === 'workLaterTwoYears')
+    .map((row) => row.id);
+
+  return {
+    status: scoreSet.status,
+    scoredVariantIds: scoreSet.scoredVariantIds,
+    highestScore: scores.length ? Math.max(...scores) : null,
+    lowestScore: scores.length ? Math.min(...scores) : null,
+    baselineScore: scoredRows.find((row) => row.id === 'baseline')?.totalScore ?? null,
+    practicalRepairScoreIds,
+    boundary:
+      'Runtime-only score summary: summarizes score evidence without ranking candidates, choosing recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeScoreExampleReadiness(
+  id: string,
+  scoreSet: MonthlyCapacityRuntimeScoreSet,
+  summary: MonthlyCapacityRuntimeScoreSummary = selectMonthlyCapacityRuntimeScoreSummary(scoreSet)
+): MonthlyCapacityRuntimeScoreExampleReadiness {
+  return {
+    id,
+    status: scoreSet.status,
+    scoredVariantIds: summary.scoredVariantIds,
+    baselineScore: summary.baselineScore,
+    practicalRepairScoreIds: summary.practicalRepairScoreIds,
+    boundary:
+      'Runtime-only score example readiness: records score coverage for an example fixture without ranking, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeScoreCloseout(
+  scoreSet: MonthlyCapacityRuntimeScoreSet,
+  audit: MonthlyCapacityRuntimeScoreAudit = selectMonthlyCapacityRuntimeScoreAudit(scoreSet),
+  summary: MonthlyCapacityRuntimeScoreSummary = selectMonthlyCapacityRuntimeScoreSummary(scoreSet)
+): MonthlyCapacityRuntimeScoreCloseout {
+  const blocked = scoreSet.status === 'blocked' || audit.status === 'block' || summary.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForRankingPlanning',
+    headline: blocked
+      ? 'Runtime score evidence needs clean guardrails before ranking can be planned.'
+      : 'Runtime score evidence is ready for a future ranking-planning package.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateRankingPlanning',
+    completedPieces: ['scoreRows', 'scoreAudit', 'scoreSummary', 'exampleMatrix', 'noRecommendationBoundary'],
+    stillDeferred: [
+      'candidateRanking',
+      'recommendations',
+      'optimizerSearch',
+      'savedOptimizerOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualAccountSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only score closeout: bounded score evidence is available for future ranking planning, but no ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityRuntimeScorePackageCloseout(
+  closeout: MonthlyCapacityRuntimeScoreCloseout
+): MonthlyCapacityRuntimeScorePackageCloseout {
+  return {
+    status: closeout.status === 'readyForRankingPlanning' ? 'complete' : 'blocked',
+    package: 'candidateScoringExecutionImplementation',
+    headline:
+      closeout.status === 'readyForRankingPlanning'
+        ? 'Candidate scoring execution implementation is complete.'
+        : 'Candidate scoring execution implementation is blocked before package closeout.',
+    completedSprints: 'S1527-S1546',
+    nextBroadStep: closeout.nextBroadStep,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only scoring execution package closeout: score rows, audit, summary, examples, and closeout are complete without ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
   };
 }
 
