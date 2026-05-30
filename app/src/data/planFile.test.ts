@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fromV2Payload } from './domainAdapter';
-import { createPlanFile, extractPlanPayload, normalizePlanPayload, roundTripPlanFile } from './planFile';
-import { PLAN_FILE_TYPE, PLAN_FILE_VERSION, SCHEMA_VERSION, V2PlanPayload } from '../types/plan';
+import { createPlanFile, extractPlanPayload, normalizePlanPayload, roundTripPlanFile, validatePlanFile } from './planFile';
+import { CLEAN_SCHEMA_VERSION, PLAN_FILE_TYPE, PLAN_FILE_VERSION, SCHEMA_VERSION, V2PlanPayload } from '../types/plan';
 import {
   futureCleanSchemaResetGoNoGoRows,
   futureCleanSchemaResetProductionPreflightCloseoutRows,
@@ -116,6 +116,210 @@ describe('plan file adapters', () => {
 
     expect(roundTripped).toEqual(extracted);
     expect(roundTripped.schemaVersion).toBe(2);
+  });
+
+  it('keeps current wrapped v2 plan files accepted through the production validator', () => {
+    const result = validatePlanFile(createPlanFile(larryPlan, '2026-05-01T00:00:00.000Z'));
+
+    expect(result).toMatchObject({ ok: true });
+    if (result.ok) {
+      expect(result.plan.schemaVersion).toBe(2);
+      expect(result.plan.p1.name).toBe('Larry');
+    }
+  });
+
+  it('accepts wrapped clean reset plan files and maps the floor into the current runtime plan shape', () => {
+    const result = validatePlanFile({
+      fileType: PLAN_FILE_TYPE,
+      fileVersion: PLAN_FILE_VERSION,
+      exportedAt: '2026-05-01T00:00:00.000Z',
+      app: {
+        name: 'Canadian Retirement Planner',
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        storage: 'local-plan-file'
+      },
+      title: 'Clean floor plan',
+      plan: {
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        title: 'Clean floor plan',
+        minimumMonthlyExpensesExMortgage: 3600,
+        mortgageMonthlyPayment: 400,
+        earlySpendingChangeAge: 76,
+        laterSpendingChangeAge: 86,
+        province: 'ON',
+        taxYear: 2026,
+        household: {
+          p1BirthYear: 1966,
+          p2BirthYear: null
+        }
+      }
+    });
+
+    expect(result).toMatchObject({ ok: true });
+    if (result.ok) {
+      expect(result.plan.schemaVersion).toBe(2);
+      expect(result.plan.title).toBe('Clean floor plan');
+      expect(result.plan.spending).toEqual({ gogo: 48000, gogoEnd: 76, slowgo: 48000, slowgoEnd: 86, nogo: 48000 });
+      expect(result.plan.mortgage?.monthly).toBe(400);
+      expect(result.plan).not.toHaveProperty('confidentMonthlyAfterTaxSpend');
+      expect(result.plan).not.toHaveProperty('fundingTrace');
+    }
+  });
+
+  it('saves a clean reset import back as the current editable v2 plan file during the bridge', () => {
+    const imported = validatePlanFile({
+      fileType: PLAN_FILE_TYPE,
+      fileVersion: PLAN_FILE_VERSION,
+      exportedAt: '2026-05-01T00:00:00.000Z',
+      app: {
+        name: 'Canadian Retirement Planner',
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        storage: 'local-plan-file'
+      },
+      title: 'Clean save bridge',
+      plan: {
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        title: 'Clean save bridge',
+        minimumMonthlyExpensesExMortgage: 3000,
+        mortgageMonthlyPayment: 500,
+        province: 'ON',
+        taxYear: 2026,
+        household: {
+          p1BirthYear: 1964
+        }
+      }
+    });
+
+    expect(imported).toMatchObject({ ok: true });
+    if (imported.ok) {
+      const saved = createPlanFile(imported.plan, '2026-05-02T00:00:00.000Z');
+      const reopened = validatePlanFile(saved);
+
+      expect(saved.app.schemaVersion).toBe(SCHEMA_VERSION);
+      expect(saved.plan.schemaVersion).toBe(2);
+      expect(saved.plan.spending.gogo).toBe(42000);
+      expect(reopened).toMatchObject({ ok: true });
+    }
+  });
+
+  it('blocks incomplete clean reset imports without returning a partially mapped plan', () => {
+    const result = validatePlanFile({
+      fileType: PLAN_FILE_TYPE,
+      fileVersion: PLAN_FILE_VERSION,
+      exportedAt: '2026-05-01T00:00:00.000Z',
+      app: {
+        name: 'Canadian Retirement Planner',
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        storage: 'local-plan-file'
+      },
+      title: 'Incomplete clean file',
+      plan: {
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        title: 'Incomplete clean file',
+        province: 'ON',
+        taxYear: 2026
+      }
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'This plan is missing required current-format details. Start a fresh plan to use the current features.'
+    });
+  });
+
+  it('keeps clean reset imports as runtime inputs rather than engine output files', () => {
+    const result = validatePlanFile({
+      fileType: PLAN_FILE_TYPE,
+      fileVersion: PLAN_FILE_VERSION,
+      exportedAt: '2026-05-01T00:00:00.000Z',
+      app: {
+        name: 'Canadian Retirement Planner',
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        storage: 'local-plan-file'
+      },
+      title: 'Runtime only bridge',
+      plan: {
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        title: 'Runtime only bridge',
+        minimumMonthlyExpensesExMortgage: 2800,
+        mortgageMonthlyPayment: 0,
+        province: 'ON',
+        taxYear: 2026
+      }
+    });
+
+    expect(result).toMatchObject({ ok: true });
+    if (result.ok) {
+      const domain = fromV2Payload(result.plan);
+
+      expect(domain.schemaVersion).toBe(2);
+      expect(domain.spending.gogo).toBe(33600);
+      expect(result.plan).not.toHaveProperty('optimizer');
+      expect(result.plan).not.toHaveProperty('annualAccountSequencing');
+      expect(result.plan).not.toHaveProperty('engineOutput');
+    }
+  });
+
+  it('blocks raw unwrapped imports while leaving internal raw-payload cloning available', () => {
+    const result = validatePlanFile(larryPlan);
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.'
+    });
+    expect(extractPlanPayload(larryPlan).schemaVersion).toBe(2);
+  });
+
+  it('requires clean reset imports to use the local plan-file wrapper', () => {
+    expect(
+      validatePlanFile({
+        schemaVersion: CLEAN_SCHEMA_VERSION,
+        title: 'Raw clean file',
+        minimumMonthlyExpensesExMortgage: 3000,
+        province: 'ON',
+        taxYear: 2026
+      })
+    ).toEqual({
+      ok: false,
+      message: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.'
+    });
+  });
+
+  it('blocks older preview and unsupported future wrapped files with calm messages', () => {
+    expect(
+      validatePlanFile({
+        fileType: PLAN_FILE_TYPE,
+        fileVersion: PLAN_FILE_VERSION,
+        plan: {
+          schemaVersion: 2,
+          spending: {
+            gogo: 85000,
+            slowgo: 72000,
+            nogo: 62000
+          },
+          assumptions: {
+            retireYear: 2032
+          }
+        }
+      })
+    ).toEqual({
+      ok: false,
+      message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.'
+    });
+
+    expect(
+      validatePlanFile({
+        fileType: PLAN_FILE_TYPE,
+        fileVersion: PLAN_FILE_VERSION,
+        plan: {
+          schemaVersion: 'future-clean-reset-draft-plus-one',
+          futureOnlyField: true
+        }
+      })
+    ).toEqual({
+      ok: false,
+      message: 'This plan was created with a newer format this preview cannot open. Please use the newer planner version.'
+    });
   });
 
   it('builds the internal domain model without persisting schema v3', () => {

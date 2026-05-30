@@ -1,4 +1,5 @@
 export const SCHEMA_VERSION = 2 as const;
+export const CLEAN_SCHEMA_VERSION = 'future-clean-reset-draft' as const;
 export const PLAN_FILE_TYPE = 'canadian-retirement-plan' as const;
 export const PLAN_FILE_VERSION = 1 as const;
 
@@ -118,6 +119,21 @@ export type PlanFileV1 = {
   };
   title: string;
   plan: V2PlanPayload;
+};
+
+export type CleanResetPlanPayload = {
+  schemaVersion: typeof CLEAN_SCHEMA_VERSION;
+  title?: string;
+  minimumMonthlyExpensesExMortgage: number;
+  mortgageMonthlyPayment?: number;
+  earlySpendingChangeAge?: number;
+  laterSpendingChangeAge?: number;
+  province?: 'ON';
+  taxYear?: 2026;
+  household?: {
+    p1BirthYear?: number;
+    p2BirthYear?: number | null;
+  };
 };
 
 export type DomainPerson = {

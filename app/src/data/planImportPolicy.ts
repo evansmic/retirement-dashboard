@@ -1,7 +1,7 @@
 export type PlanImportResetDecision = {
-  status: 'planned-reset';
+  status: 'import-wiring-started';
   currentAcceptedSchemaVersion: 2;
-  futureImportBehavior: 'block-older-preview-files';
+  futureImportBehavior: 'accept-wrapped-clean-reset-and-block-unsupported';
   message: string;
   rationale: string[];
   allowedNow: string[];
@@ -9,9 +9,9 @@ export type PlanImportResetDecision = {
 };
 
 export const planImportResetDecision: PlanImportResetDecision = {
-  status: 'planned-reset',
+  status: 'import-wiring-started',
   currentAcceptedSchemaVersion: 2,
-  futureImportBehavior: 'block-older-preview-files',
+  futureImportBehavior: 'accept-wrapped-clean-reset-and-block-unsupported',
   message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
   rationale: [
     'The product is still in tester-only preview, so old test files can be discarded.',
@@ -19,13 +19,13 @@ export const planImportResetDecision: PlanImportResetDecision = {
     'Fresh example plans are clearer than carrying old compatibility into the capacity-first model.'
   ],
   allowedNow: [
-    'Keep current schema v2 plan files working until the reset is explicitly implemented.',
-    'Create future examples directly in the new format.',
-    'Use plain blocking copy when older preview files are no longer accepted.'
+    'Keep current wrapped schema v2 plan files working during the first wiring slice.',
+    'Accept wrapped clean reset plan files through the production validator.',
+    'Use plain blocking copy for older preview, raw, and unsupported future files.'
   ],
   notYetImplemented: [
-    'No saved plan schema change is included in this package.',
-    'No import rejection behavior changes until the new saved format is scoped.',
+    'Save still writes the current editable v2 plan file until the save contract is approved.',
+    'Current bundled examples are not replaced in this package.',
     'No engine output schema or account optimizer output is added here.'
   ]
 };

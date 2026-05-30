@@ -1,12 +1,21 @@
 import {
+  CLEAN_SCHEMA_VERSION,
   PLAN_FILE_TYPE,
   PLAN_FILE_VERSION,
+  CleanResetPlanPayload,
   PlanFileV1,
   SCHEMA_VERSION,
   V2PlanPayload
 } from '../types/plan';
+import { createBlankPlan } from './defaultPlan';
 
 type UnknownRecord = Record<string, unknown>;
+
+export const OLD_PREVIEW_BLOCK_MESSAGE = 'This plan was created with an earlier version. Start a fresh plan to use the current features.';
+export const UNSUPPORTED_FUTURE_BLOCK_MESSAGE =
+  'This plan was created with a newer format this preview cannot open. Please use the newer planner version.';
+export const RAW_PAYLOAD_BLOCK_MESSAGE = 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.';
+export const CLEAN_RESET_INVALID_MESSAGE = 'This plan is missing required current-format details. Start a fresh plan to use the current features.';
 
 const p2BlankNumericFields = [
   'dob',
@@ -51,8 +60,30 @@ function finiteNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function hasFiniteNonNegativeNumber(value: unknown): boolean {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0;
+}
+
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasOldPreviewSpendingShape(value: UnknownRecord): boolean {
+  const spending = value.spending;
+  return isRecord(spending) && ('gogo' in spending || 'slowgo' in spending || 'nogo' in spending) && !isRecord(value.p1);
+}
+
+function isWrappedPlanFile(value: UnknownRecord): boolean {
+  return value.fileType === PLAN_FILE_TYPE;
+}
+
+function isCleanResetPayload(value: UnknownRecord): value is CleanResetPlanPayload & UnknownRecord {
+  return value.schemaVersion === CLEAN_SCHEMA_VERSION;
+}
+
+function isUnsupportedFuturePayload(value: UnknownRecord): boolean {
+  return typeof value.schemaVersion === 'string' && value.schemaVersion.startsWith('future-clean-reset-draft') && value.schemaVersion !== CLEAN_SCHEMA_VERSION;
 }
 
 export function p2LooksBlank(p2: unknown): boolean {
@@ -137,6 +168,36 @@ export function normalizePlanPayload(payload: unknown): V2PlanPayload {
   return d as V2PlanPayload;
 }
 
+export function cleanResetPayloadToV2Plan(payload: CleanResetPlanPayload): V2PlanPayload {
+  if (!hasFiniteNonNegativeNumber(payload.minimumMonthlyExpensesExMortgage)) {
+    throw new Error(CLEAN_RESET_INVALID_MESSAGE);
+  }
+
+  const plan = createBlankPlan();
+  const annualFloor =
+    Math.max(0, finiteNumber(payload.minimumMonthlyExpensesExMortgage) + finiteNumber(payload.mortgageMonthlyPayment)) * 12;
+  const earlyAge = finiteNumber(payload.earlySpendingChangeAge) || 75;
+  const laterAge = finiteNumber(payload.laterSpendingChangeAge) || 85;
+  const p1BirthYear = payload.household?.p1BirthYear ? finiteNumber(payload.household.p1BirthYear) : 1965;
+  const p2BirthYear = payload.household?.p2BirthYear ? finiteNumber(payload.household.p2BirthYear) : 0;
+
+  plan.title = payload.title || 'Retirement plan';
+  plan.p1.dob = p1BirthYear;
+  plan.p1.retireYear = plan.assumptions.retireYear || 2030;
+  plan.p1.db_startYear = plan.p1.retireYear;
+  plan.p2.dob = p2BirthYear;
+  plan.mortgage = { ...plan.mortgage, monthly: finiteNumber(payload.mortgageMonthlyPayment) };
+  plan.spending = {
+    gogo: annualFloor,
+    gogoEnd: earlyAge,
+    slowgo: annualFloor,
+    slowgoEnd: laterAge,
+    nogo: annualFloor
+  };
+
+  return normalizePlanPayload(plan);
+}
+
 export function planTitleFromD(plan: V2PlanPayload): string {
   if (plan.title && String(plan.title).trim()) return String(plan.title).trim();
   const p1 = plan.p1.name && plan.p1.name !== '—' ? plan.p1.name.trim() : '';
@@ -184,9 +245,38 @@ export function extractPlanPayload(fileObj: unknown): V2PlanPayload {
   return normalizePlanPayload(rawPlan);
 }
 
+export function extractSupportedPlanFilePayload(fileObj: unknown): V2PlanPayload {
+  if (!isRecord(fileObj)) {
+    throw new Error('This does not look like a retirement plan file.');
+  }
+
+  if (!isWrappedPlanFile(fileObj)) {
+    throw new Error(RAW_PAYLOAD_BLOCK_MESSAGE);
+  }
+
+  const rawPlan = fileObj.plan;
+  if (!isRecord(rawPlan)) {
+    throw new Error('The plan file is missing its plan payload.');
+  }
+
+  if (isCleanResetPayload(rawPlan)) {
+    return cleanResetPayloadToV2Plan(rawPlan);
+  }
+
+  if (isUnsupportedFuturePayload(rawPlan)) {
+    throw new Error(UNSUPPORTED_FUTURE_BLOCK_MESSAGE);
+  }
+
+  if (hasOldPreviewSpendingShape(rawPlan)) {
+    throw new Error(OLD_PREVIEW_BLOCK_MESSAGE);
+  }
+
+  return normalizePlanPayload(rawPlan);
+}
+
 export function validatePlanFile(fileObj: unknown): { ok: true; plan: V2PlanPayload } | { ok: false; message: string } {
   try {
-    return { ok: true, plan: extractPlanPayload(fileObj) };
+    return { ok: true, plan: extractSupportedPlanFilePayload(fileObj) };
   } catch (error) {
     return {
       ok: false,
