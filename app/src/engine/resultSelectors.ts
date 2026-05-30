@@ -1022,6 +1022,132 @@ export type MonthlyCapacityCandidateSetCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityCandidateBlueprintId =
+  | 'baseline'
+  | 'spendingRepairSmall'
+  | 'spendingRepairLarge'
+  | 'workLaterOneYear'
+  | 'workLaterTwoYears'
+  | 'benefitTimingReview'
+  | 'taxEstateReview'
+  | 'withdrawalFamilyReview'
+  | 'homeEquityRelianceReview'
+  | 'annualSequencingDeferred';
+
+export type MonthlyCapacityCandidateBlueprint = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  familyId: MonthlyCapacityCandidateFamilyId;
+  label: string;
+  status: 'readyToBuild' | 'reviewOnly' | 'blocked' | 'deferred';
+  scoringRole: MonthlyCapacityCandidateFamilyPlanRow['scoringRole'];
+  doesBuildPlan: false;
+  reason: string;
+};
+
+export type MonthlyCapacityCandidateBuilderPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  objective: 'coverMonthlyFloorFirst';
+  blueprints: MonthlyCapacityCandidateBlueprint[];
+  buildableBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  reviewOnlyBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  deferredBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderGuardrail = {
+  id: 'noPlanMutation' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstructions' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'pass' | 'review' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateBuilderExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityCandidateBuilderPlan['status'];
+  buildableBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  reviewOnlyBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  deferredBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderCloseout = {
+  status: 'blocked' | 'readyForRuntimeImplementation';
+  headline: string;
+  nextBroadStep: 'runtimeCandidateBuilderImplementation' | 'capacityInputsFirst';
+  completedPieces: Array<'blueprintMap' | 'builderGuardrails' | 'exampleMatrix' | 'noPlanMutationBoundary'>;
+  stillDeferred: Array<'candidatePlanMutation' | 'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderInputRequirementId =
+  | 'runtimePlan'
+  | 'baselineResult'
+  | 'monthlyFloor'
+  | 'capacitySummary'
+  | 'candidateSetLimits'
+  | 'blueprintStatuses'
+  | 'outputBoundary';
+
+export type MonthlyCapacityCandidateBuilderInputContract = {
+  status: 'blocked' | 'ready';
+  requiredInputIds: MonthlyCapacityCandidateBuilderInputRequirementId[];
+  missingInputIds: MonthlyCapacityCandidateBuilderInputRequirementId[];
+  readyBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderOrder = {
+  status: 'blocked' | 'ready';
+  orderedBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  blockedBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  reviewOnlyBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  deferredBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderDryRunRow = {
+  blueprintId: MonthlyCapacityCandidateBlueprintId;
+  familyId: MonthlyCapacityCandidateFamilyId;
+  label: string;
+  status: 'wouldBuild' | 'reviewOnly' | 'blocked' | 'deferred';
+  mutation: 'none';
+  output: 'notGenerated';
+  reason: string;
+};
+
+export type MonthlyCapacityCandidateBuilderDryRun = {
+  status: 'blocked' | 'ready';
+  rows: MonthlyCapacityCandidateBuilderDryRunRow[];
+  wouldBuildBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  blockedBlueprintIds: MonthlyCapacityCandidateBlueprintId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderDryRunAudit = {
+  status: 'pass' | 'block';
+  checkedRows: number;
+  mutationCount: number;
+  generatedOutputCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderRuntimeGate = {
+  status: 'blocked' | 'readyForRuntimeImplementation';
+  headline: string;
+  requiredBeforeRuntime: Array<'completeBuilderInputs' | 'passDryRunAudit' | 'keepRuntimeOnly' | 'preserveSavedSchema' | 'preserveNoAnnualSequencing'>;
+  allowedNext: Array<'runtimePlanVariantBuilder' | 'tests' | 'docs'>;
+  notAllowedYet: Array<'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateBuilderPackageCloseout = {
+  status: 'blocked' | 'readyForNextPackage';
+  headline: string;
+  packageSummary: string;
+  nextBroadStep: 'runtimeCandidateBuilderImplementation' | 'capacityInputsFirst';
+  preservedBoundaries: MonthlyCapacityCandidateBuilderRuntimeGate['notAllowedYet'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -2653,6 +2779,348 @@ export function selectMonthlyCapacityCandidateSetCloseout(
     ],
     boundary:
       'Runtime-only candidate set closeout: no candidate generation, candidate scoring execution, optimizer search, saved output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderPlan(
+  candidateSet: MonthlyCapacityCandidateSetPlan,
+  limits: MonthlyCapacityCandidateSetLimits
+): MonthlyCapacityCandidateBuilderPlan {
+  const familyById = new Map(candidateSet.rows.map((row) => [row.id, row]));
+  const limitByFamilyId = new Map(limits.familyLimits.map((row) => [row.familyId, row]));
+  const familyStatus = (familyId: MonthlyCapacityCandidateFamilyId): MonthlyCapacityCandidateBlueprint['status'] => {
+    const family = familyById.get(familyId);
+    const limit = limitByFamilyId.get(familyId);
+    if (!family || !limit || family.status === 'blocked' || limit.status === 'blocked') return 'blocked';
+    if (family.status === 'included' && limit.status === 'active') return 'readyToBuild';
+    if (family.status === 'reviewOnly' || limit.status === 'reviewOnly') return 'reviewOnly';
+    return 'deferred';
+  };
+  const blueprint = (
+    id: MonthlyCapacityCandidateBlueprintId,
+    familyId: MonthlyCapacityCandidateFamilyId,
+    label: string,
+    reasonByStatus: Record<MonthlyCapacityCandidateBlueprint['status'], string>
+  ): MonthlyCapacityCandidateBlueprint => {
+    const family = familyById.get(familyId);
+    const status = familyStatus(familyId);
+    return {
+      id,
+      familyId,
+      label,
+      status,
+      scoringRole: family?.scoringRole ?? 'deferred',
+      doesBuildPlan: false,
+      reason: reasonByStatus[status]
+    };
+  };
+  const blueprints: MonthlyCapacityCandidateBlueprint[] = [
+    blueprint('baseline', 'currentPlan', 'Current plan baseline', {
+      readyToBuild: 'Keep the current runtime plan as the comparison baseline.',
+      reviewOnly: 'Current plan baseline should remain visible for review.',
+      blocked: 'Current plan baseline waits for complete monthly capacity inputs.',
+      deferred: 'Current plan baseline is deferred by candidate family limits.'
+    }),
+    blueprint('spendingRepairSmall', 'spendingRepair', 'Small spending repair', {
+      readyToBuild: 'Prepare a small floor-repair spending change only when a monthly floor gap is visible.',
+      reviewOnly: 'Keep small spending repair review-only unless the floor has a visible gap.',
+      blocked: 'Small spending repair waits for complete monthly capacity inputs.',
+      deferred: 'Small spending repair is deferred unless the household has a visible gap.'
+    }),
+    blueprint('spendingRepairLarge', 'spendingRepair', 'Larger spending repair', {
+      readyToBuild: 'Prepare a larger floor-repair spending change only when a monthly floor gap is visible.',
+      reviewOnly: 'Keep larger spending repair review-only unless the floor has a visible gap.',
+      blocked: 'Larger spending repair waits for complete monthly capacity inputs.',
+      deferred: 'Larger spending repair is deferred unless the household has a visible gap.'
+    }),
+    blueprint('workLaterOneYear', 'workTiming', 'Work one year longer', {
+      readyToBuild: 'Prepare a one-year later-work comparison only when a monthly floor gap is visible.',
+      reviewOnly: 'Keep later-work timing review-only unless the floor has a visible gap.',
+      blocked: 'Later-work timing waits for complete monthly capacity inputs.',
+      deferred: 'Later-work timing is deferred unless the household has a visible gap.'
+    }),
+    blueprint('workLaterTwoYears', 'workTiming', 'Work two years longer', {
+      readyToBuild: 'Prepare a two-year later-work comparison only when a monthly floor gap is visible.',
+      reviewOnly: 'Keep later-work timing review-only unless the floor has a visible gap.',
+      blocked: 'Later-work timing waits for complete monthly capacity inputs.',
+      deferred: 'Later-work timing is deferred unless the household has a visible gap.'
+    }),
+    blueprint('benefitTimingReview', 'benefitTiming', 'CPP/OAS timing review', {
+      readyToBuild: 'Benefit timing should remain review evidence until execution is explicitly planned.',
+      reviewOnly: 'Keep benefit timing review-only after floor coverage is considered.',
+      blocked: 'Benefit timing review waits for complete monthly capacity inputs.',
+      deferred: 'Benefit timing review is deferred by candidate family limits.'
+    }),
+    blueprint('taxEstateReview', 'taxEstateReview', 'Tax and estate review', {
+      readyToBuild: 'Tax and estate should remain review evidence until execution is explicitly planned.',
+      reviewOnly: 'Keep tax and estate as caveats and tie-breakers after floor coverage.',
+      blocked: 'Tax and estate review waits for complete monthly capacity inputs.',
+      deferred: 'Tax and estate review is deferred by candidate family limits.'
+    }),
+    blueprint('withdrawalFamilyReview', 'broadWithdrawalFamily', 'Broad withdrawal family review', {
+      readyToBuild: 'Broad withdrawal families should remain review evidence until bounded drawdown execution is explicitly planned.',
+      reviewOnly: 'Keep broad withdrawal families high-level and non-prescriptive.',
+      blocked: 'Broad withdrawal family review waits for complete monthly capacity inputs.',
+      deferred: 'Broad withdrawal family review is deferred by candidate family limits.'
+    }),
+    blueprint('homeEquityRelianceReview', 'homeEquityReliance', 'Home-equity reliance review', {
+      readyToBuild: 'Home equity should remain review-only even when a downsizing lever is open.',
+      reviewOnly: 'Keep home equity as a careful review item, not an automatic repair.',
+      blocked: 'Home-equity reliance review waits for complete monthly capacity inputs.',
+      deferred: 'Home-equity reliance stays deferred unless the floor has a visible gap or the household opts in.'
+    }),
+    blueprint('annualSequencingDeferred', 'annualSequencing', 'Annual sequencing deferred', {
+      readyToBuild: 'Annual account-level sequencing remains deferred.',
+      reviewOnly: 'Annual account-level sequencing remains deferred.',
+      blocked: 'Annual account-level sequencing remains deferred.',
+      deferred: 'Annual account-level sequencing remains deferred until explicitly planned.'
+    })
+  ];
+
+  return {
+    status: candidateSet.status === 'blocked' || limits.status === 'blocked' ? 'blocked' : 'readyForPlanning',
+    objective: 'coverMonthlyFloorFirst',
+    blueprints,
+    buildableBlueprintIds: blueprints.filter((row) => row.status === 'readyToBuild').map((row) => row.id),
+    reviewOnlyBlueprintIds: blueprints.filter((row) => row.status === 'reviewOnly').map((row) => row.id),
+    deferredBlueprintIds: blueprints.filter((row) => row.status === 'deferred').map((row) => row.id),
+    boundary:
+      'Runtime-only candidate builder plan: maps candidate families to future builder blueprints without mutating plans, generating candidates, scoring, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderGuardrails(
+  builderPlan: MonthlyCapacityCandidateBuilderPlan
+): MonthlyCapacityCandidateBuilderGuardrail[] {
+  return [
+    {
+      id: 'noPlanMutation',
+      status: builderPlan.blueprints.every((row) => row.doesBuildPlan === false) ? 'pass' : 'block',
+      detail: 'Blueprints are definitions only; they must not copy, edit, or persist plan variants in this planning layer.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: 'pass',
+      detail: 'Candidate blueprints and future results stay out of saved plan files.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: 'pass',
+      detail: 'Funding trace output remains deferred and is not produced by candidate builder planning.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: 'pass',
+      detail: 'Blueprints must not tell the household which account to draw from.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: builderPlan.deferredBlueprintIds.includes('annualSequencingDeferred') ? 'pass' : 'block',
+      detail: 'Annual account-level sequencing stays deferred until explicitly planned.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: 'pass',
+      detail: 'Candidate builder planning does not change the current interface.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityCandidateBuilderExampleReadiness(
+  id: string,
+  builderPlan: MonthlyCapacityCandidateBuilderPlan
+): MonthlyCapacityCandidateBuilderExampleReadiness {
+  return {
+    id,
+    status: builderPlan.status,
+    buildableBlueprintIds: builderPlan.buildableBlueprintIds,
+    reviewOnlyBlueprintIds: builderPlan.reviewOnlyBlueprintIds,
+    deferredBlueprintIds: builderPlan.deferredBlueprintIds,
+    boundary:
+      'Runtime-only candidate builder example readiness: records blueprint coverage for an example fixture without mutating plans, generating candidates, scoring, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderCloseout(
+  builderPlan: MonthlyCapacityCandidateBuilderPlan,
+  guardrails: MonthlyCapacityCandidateBuilderGuardrail[] = selectMonthlyCapacityCandidateBuilderGuardrails(builderPlan)
+): MonthlyCapacityCandidateBuilderCloseout {
+  const blocked = builderPlan.status === 'blocked' || guardrails.some((row) => row.status === 'block');
+  return {
+    status: blocked ? 'blocked' : 'readyForRuntimeImplementation',
+    headline: blocked
+      ? 'Candidate builder planning is blocked until capacity inputs and guardrails are complete.'
+      : 'Candidate builder planning is ready for a runtime implementation package.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'runtimeCandidateBuilderImplementation',
+    completedPieces: ['blueprintMap', 'builderGuardrails', 'exampleMatrix', 'noPlanMutationBoundary'],
+    stillDeferred: [
+      'candidatePlanMutation',
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only candidate builder closeout: no candidate plan mutation, candidate scoring execution, optimizer search, saved output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderInputContract(
+  packet: MonthlyCapacityRuntimePacket,
+  builderPlan: MonthlyCapacityCandidateBuilderPlan,
+  limits: MonthlyCapacityCandidateSetLimits
+): MonthlyCapacityCandidateBuilderInputContract {
+  const requiredInputIds: MonthlyCapacityCandidateBuilderInputRequirementId[] = [
+    'runtimePlan',
+    'baselineResult',
+    'monthlyFloor',
+    'capacitySummary',
+    'candidateSetLimits',
+    'blueprintStatuses',
+    'outputBoundary'
+  ];
+  const missingInputIds: MonthlyCapacityCandidateBuilderInputRequirementId[] = [
+    ...(packet.floorInputs.status === 'missing' ? (['runtimePlan', 'monthlyFloor'] as const) : []),
+    ...(packet.status === 'cannotTell' ? (['baselineResult', 'capacitySummary'] as const) : []),
+    ...(limits.status === 'blocked' ? (['candidateSetLimits'] as const) : []),
+    ...(builderPlan.status === 'blocked' ? (['blueprintStatuses'] as const) : [])
+  ];
+  const uniqueMissingInputIds = [...new Set(missingInputIds)];
+
+  return {
+    status: uniqueMissingInputIds.length > 0 ? 'blocked' : 'ready',
+    requiredInputIds,
+    missingInputIds: uniqueMissingInputIds,
+    readyBlueprintIds: uniqueMissingInputIds.length > 0 ? [] : builderPlan.buildableBlueprintIds,
+    boundary:
+      'Runtime-only candidate builder input contract: checks evidence needed before a later builder can create runtime variants. It does not mutate plans, generate candidates, score, save output, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderOrder(
+  builderPlan: MonthlyCapacityCandidateBuilderPlan,
+  contract: MonthlyCapacityCandidateBuilderInputContract
+): MonthlyCapacityCandidateBuilderOrder {
+  const blocked = builderPlan.status === 'blocked' || contract.status === 'blocked';
+  return {
+    status: blocked ? 'blocked' : 'ready',
+    orderedBlueprintIds: blocked ? [] : builderPlan.blueprints.filter((row) => row.status === 'readyToBuild').map((row) => row.id),
+    blockedBlueprintIds: builderPlan.blueprints.filter((row) => row.status === 'blocked' || blocked).map((row) => row.id),
+    reviewOnlyBlueprintIds: builderPlan.reviewOnlyBlueprintIds,
+    deferredBlueprintIds: builderPlan.deferredBlueprintIds,
+    boundary:
+      'Runtime-only candidate builder order: orders future buildable blueprints without creating plan variants, scoring candidates, running optimizer search, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderDryRun(
+  builderPlan: MonthlyCapacityCandidateBuilderPlan,
+  order: MonthlyCapacityCandidateBuilderOrder
+): MonthlyCapacityCandidateBuilderDryRun {
+  const wouldBuild = new Set(order.orderedBlueprintIds);
+  const blockedByOrder = new Set(order.blockedBlueprintIds);
+  const rows = builderPlan.blueprints.map<MonthlyCapacityCandidateBuilderDryRunRow>((blueprint) => {
+    const status: MonthlyCapacityCandidateBuilderDryRunRow['status'] = wouldBuild.has(blueprint.id)
+      ? 'wouldBuild'
+      : blockedByOrder.has(blueprint.id) || blueprint.status === 'blocked'
+        ? 'blocked'
+        : blueprint.status === 'reviewOnly'
+          ? 'reviewOnly'
+          : 'deferred';
+
+    return {
+      blueprintId: blueprint.id,
+      familyId: blueprint.familyId,
+      label: blueprint.label,
+      status,
+      mutation: 'none',
+      output: 'notGenerated',
+      reason:
+        status === 'wouldBuild'
+          ? 'This blueprint would be eligible for a later runtime builder, but no plan variant is created here.'
+          : blueprint.reason
+    };
+  });
+
+  return {
+    status: order.status,
+    rows,
+    wouldBuildBlueprintIds: rows.filter((row) => row.status === 'wouldBuild').map((row) => row.blueprintId),
+    blockedBlueprintIds: rows.filter((row) => row.status === 'blocked').map((row) => row.blueprintId),
+    boundary:
+      'Runtime-only candidate builder dry run: previews eligible blueprints without mutating plans, generating candidates, scoring, saving output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderDryRunAudit(
+  dryRun: MonthlyCapacityCandidateBuilderDryRun
+): MonthlyCapacityCandidateBuilderDryRunAudit {
+  const mutationCount = dryRun.rows.filter((row) => row.mutation !== 'none').length;
+  const generatedOutputCount = dryRun.rows.filter((row) => row.output !== 'notGenerated').length;
+
+  return {
+    status: mutationCount > 0 || generatedOutputCount > 0 ? 'block' : 'pass',
+    checkedRows: dryRun.rows.length,
+    mutationCount,
+    generatedOutputCount,
+    boundary:
+      'Runtime-only dry-run audit: verifies the preview did not mutate plans or generate candidate output. It does not run optimizer search or change saved data.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderRuntimeGate(
+  contract: MonthlyCapacityCandidateBuilderInputContract,
+  order: MonthlyCapacityCandidateBuilderOrder,
+  audit: MonthlyCapacityCandidateBuilderDryRunAudit
+): MonthlyCapacityCandidateBuilderRuntimeGate {
+  const blocked = contract.status === 'blocked' || order.status === 'blocked' || audit.status === 'block';
+  const requiredBeforeRuntime: MonthlyCapacityCandidateBuilderRuntimeGate['requiredBeforeRuntime'] = [
+    ...(contract.status === 'blocked' || order.status === 'blocked' ? (['completeBuilderInputs'] as const) : []),
+    ...(audit.status === 'block' ? (['passDryRunAudit'] as const) : []),
+    'keepRuntimeOnly',
+    'preserveSavedSchema',
+    'preserveNoAnnualSequencing'
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForRuntimeImplementation',
+    headline: blocked
+      ? 'Runtime candidate builder implementation is blocked until inputs and dry-run audit pass.'
+      : 'Runtime candidate builder implementation is ready for the next package.',
+    requiredBeforeRuntime,
+    allowedNext: blocked ? ['tests', 'docs'] : ['runtimePlanVariantBuilder', 'tests', 'docs'],
+    notAllowedYet: [
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime implementation gate: allows a future package to build runtime-only plan variants, while still blocking scoring, optimizer search, saved output, funding traces, account instructions, annual sequencing, and UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateBuilderPackageCloseout(
+  gate: MonthlyCapacityCandidateBuilderRuntimeGate
+): MonthlyCapacityCandidateBuilderPackageCloseout {
+  return {
+    status: gate.status === 'blocked' ? 'blocked' : 'readyForNextPackage',
+    headline:
+      gate.status === 'blocked'
+        ? 'Candidate builder implementation planning still needs complete runtime inputs.'
+        : 'Candidate builder implementation planning is complete.',
+    packageSummary:
+      'The runtime-only candidate builder plan now covers blueprint mapping, input readiness, build order, dry-run preview, dry-run audit, and the next implementation gate.',
+    nextBroadStep: gate.status === 'blocked' ? 'capacityInputsFirst' : 'runtimeCandidateBuilderImplementation',
+    preservedBoundaries: gate.notAllowedYet,
+    boundary:
+      'Runtime-only package closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 
