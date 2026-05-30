@@ -143,6 +143,24 @@ export type FutureCleanSchemaResetImplementationCloseoutRow = {
   detail: string;
 };
 
+export type FutureCleanSchemaResetValidationWiringRow = {
+  id: 'requiredKeys' | 'forbiddenKeys' | 'plannedDecisions' | 'blockMessages' | 'statePreservation';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetGracefulBlockRow = {
+  id: 'softCopy' | 'noMigrationPromise' | 'noPrivateFileRequest' | 'noPartialState' | 'localFirst';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetAdapterCloseoutRow = {
+  id: 'testOnlyAdapter' | 'validationWired' | 'gracefulBlocks' | 'noProductionLoaderChange' | 'nextDecisionRequired';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
 export type FutureTestOnlyFixtureShape = {
   id: string;
   intent: 'accepted-new-format' | 'blocked-old-preview' | 'blocked-future-format' | 'blocked-raw-payload';
@@ -231,6 +249,26 @@ export type FutureFixtureValidationSummary = {
   passed: number;
   failed: number;
   results: FutureFixtureValidationResult[];
+  mode: 'test-only';
+};
+
+export type FutureCleanSchemaResetTestAdapterResult = {
+  fixtureId: FutureTestOnlyFixtureShape['id'];
+  decision: 'accept' | 'block';
+  status: 'pass' | 'fail';
+  message: string | null;
+  preservesCurrentState: boolean;
+  createsPlanFile: false;
+  wiresProductionImport: false;
+  mode: 'test-only';
+};
+
+export type FutureCleanSchemaResetTestAdapterSummary = {
+  status: 'pass' | 'fail';
+  total: number;
+  accepted: number;
+  blocked: number;
+  results: FutureCleanSchemaResetTestAdapterResult[];
   mode: 'test-only';
 };
 
@@ -1956,6 +1994,147 @@ export function validateFutureFixtureSamples(
   const plannedImportResultsById = Object.fromEntries(samples.map((sample) => [sample.fixtureId, sample.plannedImportResult]));
 
   return validateFutureFixtureShapeBatch(fixturesById, plannedImportResultsById, draft);
+}
+
+function futureBlockMessageForFixture(shape: FutureTestOnlyFixtureShape, draft = futurePlanFormatDraft): string | null {
+  if (shape.expectedImportResult === 'accept') return null;
+  if (shape.id === 'legacyPreviewDesiredSpendPayload') return draft.oldPreviewImportMessage;
+  if (shape.id === 'unsupportedFuturePlanFile') return draft.importAcceptanceRules.find((rule) => rule.id === 'futureUnknown')?.message || null;
+  if (shape.id === 'rawUnwrappedPayload') return draft.rawPayloadPolicy.message;
+  return 'This file is not a supported plan file.';
+}
+
+export function runFutureCleanSchemaResetTestAdapter(
+  sample: FutureTestOnlyFixtureSample,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetTestAdapterResult {
+  const shape = findFutureTestOnlyFixtureShape(sample.fixtureId, draft);
+  if (!shape) {
+    return {
+      fixtureId: sample.fixtureId,
+      decision: 'block',
+      status: 'fail',
+      message: 'This file is not a supported plan file.',
+      preservesCurrentState: false,
+      createsPlanFile: false,
+      wiresProductionImport: false,
+      mode: 'test-only'
+    };
+  }
+
+  const validation = validateFutureFixtureShape(shape, sample.fixture, sample.plannedImportResult);
+  const decision = validation.status === 'pass' ? shape.expectedImportResult : 'block';
+  const preservesCurrentState = decision === 'accept' || sample.mustNotDo.includes('change current plan state') || sample.mustNotDo.includes('partially load current plan state');
+
+  return {
+    fixtureId: sample.fixtureId,
+    decision,
+    status: validation.status === 'pass' && preservesCurrentState ? 'pass' : 'fail',
+    message: decision === 'block' ? futureBlockMessageForFixture(shape, draft) : null,
+    preservesCurrentState,
+    createsPlanFile: false,
+    wiresProductionImport: false,
+    mode: 'test-only'
+  };
+}
+
+export function summarizeFutureCleanSchemaResetTestAdapter(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetTestAdapterSummary {
+  const results = samples.map((sample) => runFutureCleanSchemaResetTestAdapter(sample, draft));
+  const accepted = results.filter((result) => result.decision === 'accept').length;
+  const blocked = results.filter((result) => result.decision === 'block').length;
+
+  return {
+    status: results.every((result) => result.status === 'pass') ? 'pass' : 'fail',
+    total: results.length,
+    accepted,
+    blocked,
+    results,
+    mode: 'test-only'
+  };
+}
+
+export function futureCleanSchemaResetValidationWiringRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetValidationWiringRow[] {
+  const validationSummary = validateFutureFixtureSamples(samples, draft);
+  const adapterSummary = summarizeFutureCleanSchemaResetTestAdapter(samples, draft);
+  const allRequiredKeysCovered = validationSummary.results.every((result) => result.missingRequiredKeys.length === 0);
+  const allForbiddenKeysAbsent = validationSummary.results.every((result) => result.presentForbiddenKeys.length === 0);
+  const plannedDecisionsMatch = validationSummary.results.every((result) => result.importResultMatches);
+  const blockMessagesPresent = adapterSummary.results
+    .filter((result) => result.decision === 'block')
+    .every((result) => Boolean(result.message && result.message.length > 0));
+  const statePreserved = adapterSummary.results.every((result) => result.preservesCurrentState);
+
+  return [
+    { id: 'requiredKeys', status: allRequiredKeysCovered ? 'pass' : 'fail', detail: 'Required future fixture keys are covered.' },
+    { id: 'forbiddenKeys', status: allForbiddenKeysAbsent ? 'pass' : 'fail', detail: 'Forbidden old or calculated keys are absent.' },
+    { id: 'plannedDecisions', status: plannedDecisionsMatch ? 'pass' : 'fail', detail: 'Planned accept and block decisions match fixture shapes.' },
+    { id: 'blockMessages', status: blockMessagesPresent ? 'pass' : 'fail', detail: 'Blocked test-adapter results carry plain block messages.' },
+    { id: 'statePreservation', status: statePreserved ? 'pass' : 'fail', detail: 'Adapter results preserve current state in accepted and blocked cases.' }
+  ];
+}
+
+export function futureCleanSchemaResetGracefulBlockRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetGracefulBlockRow[] {
+  const adapterSummary = summarizeFutureCleanSchemaResetTestAdapter(samples, draft);
+  const blockedResults = adapterSummary.results.filter((result) => result.decision === 'block');
+  const blockCopy = blockedResults.map((result) => result.message || '').join(' ').toLowerCase();
+  const oldPreviewSample = samples.find((sample) => sample.fixtureId === 'legacyPreviewDesiredSpendPayload');
+  const softCopy =
+    blockedResults.length > 0 &&
+    blockedResults.every((result) => result.message && !result.message.toLowerCase().includes('schema error')) &&
+    draft.oldPreviewImportMessage.includes('Start a fresh plan');
+  const noMigrationPromise = !blockCopy.includes('migrate') && !blockCopy.includes('migration') && !blockCopy.includes('we can convert');
+  const noPrivateFileRequest =
+    oldPreviewSample?.mustNotDo.includes('ask for private tester files') &&
+    !blockCopy.includes('send us') &&
+    !blockCopy.includes('upload your file');
+  const noPartialState = blockedResults.every((result) => result.preservesCurrentState);
+  const localFirst = draft.importBlockExpectationChecks
+    .filter((check) => check.blockedRuleId === 'oldPreview' || check.blockedRuleId === 'rawPayload')
+    .every((check) => check.mustPreserve.includes('local-first posture') || check.mustPreserve.includes('local-only file handling'));
+
+  return [
+    { id: 'softCopy', status: softCopy ? 'pass' : 'fail', detail: 'Blocked files use soft, non-technical copy.' },
+    { id: 'noMigrationPromise', status: noMigrationPromise ? 'pass' : 'fail', detail: 'Blocked files do not promise migration or conversion.' },
+    { id: 'noPrivateFileRequest', status: noPrivateFileRequest ? 'pass' : 'fail', detail: 'Old-file blocking does not ask testers to send private files.' },
+    { id: 'noPartialState', status: noPartialState ? 'pass' : 'fail', detail: 'Blocked files preserve current state instead of partially loading.' },
+    { id: 'localFirst', status: localFirst ? 'pass' : 'fail', detail: 'Blocked file handling preserves local-first expectations.' }
+  ];
+}
+
+export function futureCleanSchemaResetAdapterCloseoutRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetAdapterCloseoutRow[] {
+  const adapterSummary = summarizeFutureCleanSchemaResetTestAdapter(samples, draft);
+  const testOnlyAdapter =
+    adapterSummary.mode === 'test-only' &&
+    adapterSummary.results.every((result) => result.mode === 'test-only' && !result.createsPlanFile && !result.wiresProductionImport);
+  const validationWired = futureCleanSchemaResetValidationWiringRows(samples, draft).every((row) => row.status === 'pass');
+  const gracefulBlocks = futureCleanSchemaResetGracefulBlockRows(samples, draft).every((row) => row.status === 'pass');
+  const noProductionLoaderChange = draft.cleanSchemaResetImplementationPrep.guardrails.includes(
+    'This package prepares implementation contracts but does not wire production import behavior.'
+  );
+  const nextDecisionRequired =
+    noProductionLoaderChange &&
+    draft.schemaResetDecisionReadiness.every((item) => item.decision !== 'ready-to-wire') &&
+    draft.boundaries.includes('Do not implement the schema reset until the field list is reviewed.');
+
+  return [
+    { id: 'testOnlyAdapter', status: testOnlyAdapter ? 'pass' : 'fail', detail: 'Adapter results remain test-only and create no plan files.' },
+    { id: 'validationWired', status: validationWired ? 'pass' : 'fail', detail: 'Fixture validation is wired to adapter decisions.' },
+    { id: 'gracefulBlocks', status: gracefulBlocks ? 'pass' : 'fail', detail: 'Blocked adapter outcomes stay graceful and local-first.' },
+    { id: 'noProductionLoaderChange', status: noProductionLoaderChange ? 'pass' : 'fail', detail: 'Production loader behavior remains unchanged.' },
+    { id: 'nextDecisionRequired', status: nextDecisionRequired ? 'pass' : 'fail', detail: 'A new decision is required before schema or import wiring.' }
+  ];
 }
 
 export function futureFixtureSampleCoverageRows(

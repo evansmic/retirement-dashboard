@@ -6,12 +6,17 @@ import {
   futureCapacitySelectorOutputIds,
   futureCapacitySelectorStatusMappingIds,
   futureCleanSchemaResetFieldContractIds,
+  futureCleanSchemaResetAdapterCloseoutRows,
   futureCleanSchemaResetFixturePrepRows,
+  futureCleanSchemaResetGracefulBlockRows,
   futureCleanSchemaResetImportAdapterContractIds,
   futureCleanSchemaResetImplementationCloseoutRows,
   futureCleanSchemaResetPrepRows,
+  futureCleanSchemaResetValidationWiringRows,
   futureCleanSchemaResetV1FeedbackGateIds,
   futureCleanSchemaResetV1TrustRows,
+  runFutureCleanSchemaResetTestAdapter,
+  summarizeFutureCleanSchemaResetTestAdapter,
   futureCapacitySelectorBoundaryRows,
   futureCapacitySelectorScenarioIds,
   futureCapacityGapOptionIds,
@@ -341,6 +346,127 @@ describe('future plan format draft', () => {
           mustNotDo: futureOldPreviewFixtureSample.mustNotDo.filter((item) => item !== 'partially load current plan state')
         }
       ]).find((row) => row.id === 'oldPreviewFixture')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('runs a test-only clean reset adapter over accepted and blocked fixture samples', () => {
+    expect(summarizeFutureCleanSchemaResetTestAdapter()).toEqual({
+      status: 'pass',
+      total: 4,
+      accepted: 1,
+      blocked: 3,
+      mode: 'test-only',
+      results: [
+        {
+          fixtureId: 'futureMinimumFloorPlan',
+          decision: 'accept',
+          status: 'pass',
+          message: null,
+          preservesCurrentState: true,
+          createsPlanFile: false,
+          wiresProductionImport: false,
+          mode: 'test-only'
+        },
+        {
+          fixtureId: 'legacyPreviewDesiredSpendPayload',
+          decision: 'block',
+          status: 'pass',
+          message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
+          preservesCurrentState: true,
+          createsPlanFile: false,
+          wiresProductionImport: false,
+          mode: 'test-only'
+        },
+        expect.objectContaining({ fixtureId: 'unsupportedFuturePlanFile', decision: 'block', status: 'pass' }),
+        expect.objectContaining({ fixtureId: 'rawUnwrappedPayload', decision: 'block', status: 'pass' })
+      ]
+    });
+  });
+
+  it('keeps the test-only clean reset adapter blocked when fixture validation fails', () => {
+    expect(
+      runFutureCleanSchemaResetTestAdapter({
+        ...futureMinimumFloorFixtureSample,
+        fixture: {
+          schemaVersion: 'future-clean-reset-draft',
+          earlySpendingChangeAge: 75,
+          laterSpendingChangeAge: 85
+        }
+      })
+    ).toMatchObject({
+      fixtureId: 'futureMinimumFloorPlan',
+      decision: 'block',
+      status: 'fail',
+      createsPlanFile: false,
+      wiresProductionImport: false
+    });
+  });
+
+  it('wires clean reset validation checks to the test-only adapter decisions', () => {
+    expect(futureCleanSchemaResetValidationWiringRows()).toEqual([
+      { id: 'requiredKeys', status: 'pass', detail: 'Required future fixture keys are covered.' },
+      { id: 'forbiddenKeys', status: 'pass', detail: 'Forbidden old or calculated keys are absent.' },
+      { id: 'plannedDecisions', status: 'pass', detail: 'Planned accept and block decisions match fixture shapes.' },
+      { id: 'blockMessages', status: 'pass', detail: 'Blocked test-adapter results carry plain block messages.' },
+      { id: 'statePreservation', status: 'pass', detail: 'Adapter results preserve current state in accepted and blocked cases.' }
+    ]);
+  });
+
+  it('marks clean reset validation wiring incomplete when required future keys are missing', () => {
+    expect(
+      futureCleanSchemaResetValidationWiringRows([
+        {
+          ...futureMinimumFloorFixtureSample,
+          fixture: {
+            schemaVersion: 'future-clean-reset-draft',
+            earlySpendingChangeAge: 75,
+            laterSpendingChangeAge: 85
+          }
+        },
+        futureOldPreviewFixtureSample,
+        futureUnsupportedFormatFixtureSample,
+        futureRawPayloadFixtureSample
+      ]).find((row) => row.id === 'requiredKeys')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('keeps clean reset blocked adapter outcomes graceful and local-first', () => {
+    expect(futureCleanSchemaResetGracefulBlockRows()).toEqual([
+      { id: 'softCopy', status: 'pass', detail: 'Blocked files use soft, non-technical copy.' },
+      { id: 'noMigrationPromise', status: 'pass', detail: 'Blocked files do not promise migration or conversion.' },
+      { id: 'noPrivateFileRequest', status: 'pass', detail: 'Old-file blocking does not ask testers to send private files.' },
+      { id: 'noPartialState', status: 'pass', detail: 'Blocked files preserve current state instead of partially loading.' },
+      { id: 'localFirst', status: 'pass', detail: 'Blocked file handling preserves local-first expectations.' }
+    ]);
+  });
+
+  it('marks graceful block coverage incomplete if old-preview copy becomes technical', () => {
+    expect(
+      futureCleanSchemaResetGracefulBlockRows(futureTestOnlyFixtureSamples, {
+        ...futurePlanFormatDraft,
+        oldPreviewImportMessage: 'Schema error: unsupported old preview file.'
+      }).find((row) => row.id === 'softCopy')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('closes clean reset adapter wiring without approving production loader changes', () => {
+    expect(futureCleanSchemaResetAdapterCloseoutRows()).toEqual([
+      { id: 'testOnlyAdapter', status: 'pass', detail: 'Adapter results remain test-only and create no plan files.' },
+      { id: 'validationWired', status: 'pass', detail: 'Fixture validation is wired to adapter decisions.' },
+      { id: 'gracefulBlocks', status: 'pass', detail: 'Blocked adapter outcomes stay graceful and local-first.' },
+      { id: 'noProductionLoaderChange', status: 'pass', detail: 'Production loader behavior remains unchanged.' },
+      { id: 'nextDecisionRequired', status: 'pass', detail: 'A new decision is required before schema or import wiring.' }
+    ]);
+  });
+
+  it('marks clean reset adapter closeout incomplete if schema reset is marked ready to wire', () => {
+    expect(
+      futureCleanSchemaResetAdapterCloseoutRows(futureTestOnlyFixtureSamples, {
+        ...futurePlanFormatDraft,
+        schemaResetDecisionReadiness: futurePlanFormatDraft.schemaResetDecisionReadiness.map((item) =>
+          item.id === 'fieldListFrozen' ? { ...item, decision: 'ready-to-wire' } : item
+        )
+      }).find((row) => row.id === 'nextDecisionRequired')
     ).toMatchObject({ status: 'fail' });
   });
 
