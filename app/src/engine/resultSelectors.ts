@@ -900,6 +900,67 @@ export type MonthlyCapacityOptimizerHandoffCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityScoringFactor = {
+  id: 'floorCoverage' | 'gapRepair' | 'taxImpact' | 'survivorEstate' | 'disruptionPenalty' | 'outputBoundary';
+  label: string;
+  weight: 'primary' | 'secondary' | 'guardrail';
+  direction: 'preferHigher' | 'preferLower' | 'preserve' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityScoringRubric = {
+  status: 'blocked' | 'readyForPlanning';
+  objective: 'coverMonthlyFloorFirst';
+  factors: MonthlyCapacityScoringFactor[];
+  primaryFactorIds: MonthlyCapacityScoringFactor['id'][];
+  guardrailFactorIds: MonthlyCapacityScoringFactor['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateScoreInputs = {
+  status: 'blocked' | 'ready';
+  floorMonthly: number;
+  capacityMonthly: number;
+  gapOrRoomMonthly: number;
+  hasGap: boolean;
+  hasReviewCaveats: boolean;
+  openLeverIds: MonthlyCapacityLeverGate['id'][];
+  forbiddenOutputIds: MonthlyCapacityOptimizerHandoff['blockedOutputIds'];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateScorePolicyRow = {
+  factorId: MonthlyCapacityScoringFactor['id'];
+  status: 'active' | 'reviewOnly' | 'blocked';
+  threshold: string;
+  application: string;
+};
+
+export type MonthlyCapacityCandidateScorePolicy = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityCandidateScorePolicyRow[];
+  tieBreakers: Array<'fewerDisruptiveChanges' | 'lowerTaxPressure' | 'strongerSurvivorEstateFit' | 'currentPlanIfEquivalent'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityScoringExampleReadiness = {
+  id: string;
+  status: 'blocked' | 'readyForPlanning';
+  hasGap: boolean;
+  activePolicyFactorIds: MonthlyCapacityScoringFactor['id'][];
+  reviewOnlyPolicyFactorIds: MonthlyCapacityScoringFactor['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityScoringPlanCloseout = {
+  status: 'blocked' | 'readyForImplementationPlanning';
+  headline: string;
+  nextBroadStep: 'candidateSetImplementationPlan' | 'capacityInputsFirst';
+  completedPieces: Array<'rubric' | 'scoreInputs' | 'scorePolicy' | 'exampleMatrix' | 'persistenceGuardrails'>;
+  stillDeferred: Array<'candidateScoringExecution' | 'optimizerSearch' | 'savedScores' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -2165,6 +2226,177 @@ export function selectMonthlyCapacityOptimizerHandoffCloseout(
     preservedBoundaries: gate.notAllowedYet,
     boundary:
       'Runtime-only package closeout: no UI change, saved schema change, engine output schema change, optimizer execution, funding trace, account instructions, or annual sequencing was added.'
+  };
+}
+
+export function selectMonthlyCapacityScoringRubric(gate: MonthlyCapacityOptimizerExecutionGate): MonthlyCapacityScoringRubric {
+  const factors: MonthlyCapacityScoringFactor[] = [
+    {
+      id: 'floorCoverage',
+      label: 'Monthly floor coverage',
+      weight: 'primary',
+      direction: 'preferHigher',
+      detail: 'Prefer candidates that keep modelled after-tax monthly capacity at or above the minimum monthly floor.'
+    },
+    {
+      id: 'gapRepair',
+      label: 'Gap repair',
+      weight: 'primary',
+      direction: 'preferLower',
+      detail: 'When the floor is not covered, prefer candidates that reduce or remove the modelled monthly gap.'
+    },
+    {
+      id: 'taxImpact',
+      label: 'Tax impact',
+      weight: 'secondary',
+      direction: 'preferLower',
+      detail: 'Review lifetime tax, OAS recovery, and registered-tax pressure after floor coverage is considered.'
+    },
+    {
+      id: 'survivorEstate',
+      label: 'Survivor and estate intent',
+      weight: 'secondary',
+      direction: 'preserve',
+      detail: 'Preserve survivor resilience and explicit estate intent before treating room above the floor as available.'
+    },
+    {
+      id: 'disruptionPenalty',
+      label: 'Household disruption',
+      weight: 'secondary',
+      direction: 'preferLower',
+      detail: 'Penalize disruptive choices such as spending cuts, later retirement, or downsizing unless the floor has a gap or the household opts in.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      weight: 'guardrail',
+      direction: 'block',
+      detail: 'Block saved optimizer output, funding trace output, account instructions, and annual account-level sequencing.'
+    }
+  ];
+
+  return {
+    status: gate.status === 'blocked' ? 'blocked' : 'readyForPlanning',
+    objective: 'coverMonthlyFloorFirst',
+    factors,
+    primaryFactorIds: factors.filter((factor) => factor.weight === 'primary').map((factor) => factor.id),
+    guardrailFactorIds: factors.filter((factor) => factor.weight === 'guardrail').map((factor) => factor.id),
+    boundary:
+      'Runtime-only scoring rubric: defines future optimizer scoring factors without running candidates, saving scores, changing UI, or changing engine output schema.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateScoreInputs(
+  packet: MonthlyCapacityRuntimePacket,
+  handoff: MonthlyCapacityOptimizerHandoff = selectMonthlyCapacityOptimizerHandoff(packet)
+): MonthlyCapacityCandidateScoreInputs {
+  return {
+    status: handoff.status === 'blocked' ? 'blocked' : 'ready',
+    floorMonthly: packet.foundation.monthlyFloor,
+    capacityMonthly: packet.foundation.monthlyAfterTaxCapacity,
+    gapOrRoomMonthly: packet.foundation.monthlyRoom,
+    hasGap: packet.status === 'gap',
+    hasReviewCaveats: packet.caveatSignals.some((signal) => signal.status === 'review'),
+    openLeverIds: [...handoff.allowedPracticalLeverIds, ...handoff.reviewOnlyLeverIds],
+    forbiddenOutputIds: handoff.blockedOutputIds,
+    boundary:
+      'Runtime-only score inputs: normalizes capacity evidence for future scoring. It does not calculate candidate scores, save results, or run optimizer search.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateScorePolicy(
+  rubric: MonthlyCapacityScoringRubric,
+  inputs: MonthlyCapacityCandidateScoreInputs
+): MonthlyCapacityCandidateScorePolicy {
+  const blocked = rubric.status === 'blocked' || inputs.status === 'blocked';
+  const rows: MonthlyCapacityCandidateScorePolicyRow[] = [
+    {
+      factorId: 'floorCoverage',
+      status: blocked ? 'blocked' : 'active',
+      threshold: 'Capacity should meet or exceed the monthly floor.',
+      application: 'Rank floor coverage before tax, estate, or discretionary room improvements.'
+    },
+    {
+      factorId: 'gapRepair',
+      status: blocked ? 'blocked' : inputs.hasGap ? 'active' : 'reviewOnly',
+      threshold: 'Gap repair matters only when modelled capacity is below the monthly floor.',
+      application: inputs.hasGap ? 'Prefer candidates that reduce the monthly gap.' : 'Keep gap repair visible but do not open practical levers without a gap.'
+    },
+    {
+      factorId: 'taxImpact',
+      status: blocked ? 'blocked' : 'reviewOnly',
+      threshold: 'Tax impact is secondary after floor coverage.',
+      application: 'Use tax as a tie-breaker or caveat, not as the first objective.'
+    },
+    {
+      factorId: 'survivorEstate',
+      status: blocked ? 'blocked' : inputs.hasReviewCaveats ? 'reviewOnly' : 'active',
+      threshold: 'Preserve survivor resilience and explicit estate intent.',
+      application: 'Avoid treating room above floor as available when survivor or estate caveats need review.'
+    },
+    {
+      factorId: 'disruptionPenalty',
+      status: blocked ? 'blocked' : 'active',
+      threshold: 'Disruptive changes need a clear reason.',
+      application: 'Penalize spending cuts, later retirement, and downsizing unless they repair a gap or reflect household intent.'
+    },
+    {
+      factorId: 'outputBoundary',
+      status: 'active',
+      threshold: 'Unsupported outputs are always blocked.',
+      application: 'Do not score toward saved outputs, funding traces, account instructions, or annual sequencing.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows,
+    tieBreakers: ['fewerDisruptiveChanges', 'lowerTaxPressure', 'strongerSurvivorEstateFit', 'currentPlanIfEquivalent'],
+    boundary:
+      'Runtime-only score policy: defines how future scoring should apply rubric factors. It does not rank candidates, persist scores, or alter optimizer execution.'
+  };
+}
+
+export function selectMonthlyCapacityScoringExampleReadiness(
+  id: string,
+  inputs: MonthlyCapacityCandidateScoreInputs,
+  policy: MonthlyCapacityCandidateScorePolicy
+): MonthlyCapacityScoringExampleReadiness {
+  return {
+    id,
+    status: policy.status,
+    hasGap: inputs.hasGap,
+    activePolicyFactorIds: policy.rows.filter((row) => row.status === 'active').map((row) => row.factorId),
+    reviewOnlyPolicyFactorIds: policy.rows.filter((row) => row.status === 'reviewOnly').map((row) => row.factorId),
+    boundary:
+      'Runtime-only scoring example readiness: records policy coverage for an example fixture without scoring candidates or saving output.'
+  };
+}
+
+export function selectMonthlyCapacityScoringPlanCloseout(
+  rubric: MonthlyCapacityScoringRubric,
+  policy: MonthlyCapacityCandidateScorePolicy
+): MonthlyCapacityScoringPlanCloseout {
+  const blocked = rubric.status === 'blocked' || policy.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForImplementationPlanning',
+    headline: blocked
+      ? 'Candidate scoring planning is blocked until capacity inputs are complete.'
+      : 'Candidate scoring planning is ready for a future candidate-set implementation plan.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateSetImplementationPlan',
+    completedPieces: ['rubric', 'scoreInputs', 'scorePolicy', 'exampleMatrix', 'persistenceGuardrails'],
+    stillDeferred: [
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedScores',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only scoring plan closeout: no candidate scoring execution, optimizer search, saved scores, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 

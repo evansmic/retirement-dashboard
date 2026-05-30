@@ -20,6 +20,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
+  selectMonthlyCapacityCandidateScoreInputs,
   selectMonthlyCapacityCaveatSignals,
   selectMonthlyCapacityFoundation,
   selectMonthlyCapacityDecisionLayer,
@@ -35,6 +36,10 @@ import {
   selectMonthlyCapacityReadinessCloseout,
   selectMonthlyCapacityReviewRows,
   selectMonthlyCapacityRuntimePacket,
+  selectMonthlyCapacityCandidateScorePolicy,
+  selectMonthlyCapacityScoringExampleReadiness,
+  selectMonthlyCapacityScoringPlanCloseout,
+  selectMonthlyCapacityScoringRubric,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -1160,6 +1165,271 @@ describe('result selectors', () => {
     expect(closeout.status).toBe('blocked');
     expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
     expect(closeout.headline).toContain('needs inputs');
+  });
+
+  it('defines a runtime-only candidate scoring rubric after optimizer handoff readiness', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const contract = selectMonthlyCapacityOptimizerInputContract(handoff, review);
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(contract, selectMonthlyCapacityOptimizerGuardrails(handoff));
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+
+    expect(rubric.status).toBe('readyForPlanning');
+    expect(rubric.objective).toBe('coverMonthlyFloorFirst');
+    expect(rubric.primaryFactorIds).toEqual(['floorCoverage', 'gapRepair']);
+    expect(rubric.guardrailFactorIds).toEqual(['outputBoundary']);
+    expect(rubric.factors.map((factor) => factor.id)).toEqual([
+      'floorCoverage',
+      'gapRepair',
+      'taxImpact',
+      'survivorEstate',
+      'disruptionPenalty',
+      'outputBoundary'
+    ]);
+    expect(rubric.factors.find((factor) => factor.id === 'outputBoundary')?.detail).toContain('funding trace');
+    expect(rubric.boundary).toContain('without running candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringRubric');
+  });
+
+  it('keeps the scoring rubric blocked when execution prerequisites are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const contract = selectMonthlyCapacityOptimizerInputContract(handoff, review);
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(contract, selectMonthlyCapacityOptimizerGuardrails(handoff));
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+
+    expect(gate.status).toBe('blocked');
+    expect(rubric.status).toBe('blocked');
+    expect(rubric.factors.find((factor) => factor.id === 'floorCoverage')?.weight).toBe('primary');
+  });
+
+  it('normalizes runtime score inputs for future candidate scoring without scoring candidates', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+
+    expect(inputs).toMatchObject({
+      status: 'ready',
+      floorMonthly: 70000 / 12,
+      capacityMonthly: 70000 / 12,
+      gapOrRoomMonthly: 0,
+      hasGap: false,
+      hasReviewCaveats: true,
+      openLeverIds: ['taxReview', 'estateReview'],
+      forbiddenOutputIds: ['savedCapacity', 'accountLevelSequencing', 'accountInstructions', 'fundingTrace']
+    });
+    expect(inputs.boundary).toContain('does not calculate candidate scores');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateScoreInputs');
+  });
+
+  it('normalizes gap score inputs with practical levers open', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet);
+
+    expect(inputs.status).toBe('ready');
+    expect(inputs.hasGap).toBe(true);
+    expect(inputs.gapOrRoomMonthly).toBeLessThan(0);
+    expect(inputs.openLeverIds).toEqual(['reduceSpending', 'workLonger', 'downsize', 'saveMore', 'taxReview', 'estateReview']);
+  });
+
+  it('blocks score inputs when capacity handoff is blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet);
+
+    expect(inputs.status).toBe('blocked');
+    expect(inputs.floorMonthly).toBe(0);
+    expect(inputs.openLeverIds).toEqual([]);
+  });
+
+  it('defines candidate score policy rows without ranking candidates', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const contract = selectMonthlyCapacityOptimizerInputContract(handoff, review);
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(contract, selectMonthlyCapacityOptimizerGuardrails(handoff));
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, inputs);
+
+    expect(policy.status).toBe('readyForPlanning');
+    expect(policy.rows.map((row) => row.factorId)).toEqual([
+      'floorCoverage',
+      'gapRepair',
+      'taxImpact',
+      'survivorEstate',
+      'disruptionPenalty',
+      'outputBoundary'
+    ]);
+    expect(policy.rows.find((row) => row.factorId === 'floorCoverage')).toMatchObject({ status: 'active' });
+    expect(policy.rows.find((row) => row.factorId === 'gapRepair')).toMatchObject({ status: 'reviewOnly' });
+    expect(policy.rows.find((row) => row.factorId === 'taxImpact')?.application).toContain('tie-breaker');
+    expect(policy.tieBreakers).toEqual(['fewerDisruptiveChanges', 'lowerTaxPressure', 'strongerSurvivorEstateFit', 'currentPlanIfEquivalent']);
+    expect(policy.boundary).toContain('does not rank candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateScorePolicy');
+  });
+
+  it('activates gap repair in candidate score policy only for visible gaps', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(shortfallResult, planFixture, answer));
+    const contract = selectMonthlyCapacityOptimizerInputContract(handoff, review);
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(contract, selectMonthlyCapacityOptimizerGuardrails(handoff));
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), selectMonthlyCapacityCandidateScoreInputs(packet, handoff));
+
+    expect(policy.rows.find((row) => row.factorId === 'gapRepair')).toMatchObject({
+      status: 'active',
+      application: expect.stringContaining('reduce the monthly gap')
+    });
+  });
+
+  it('blocks candidate score policy when rubric or inputs are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const contract = selectMonthlyCapacityOptimizerInputContract(handoff, review);
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(contract, selectMonthlyCapacityOptimizerGuardrails(handoff));
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), selectMonthlyCapacityCandidateScoreInputs(packet, handoff));
+
+    expect(policy.status).toBe('blocked');
+    expect(policy.rows.filter((row) => row.status === 'blocked').map((row) => row.factorId)).toEqual([
+      'floorCoverage',
+      'gapRepair',
+      'taxImpact',
+      'survivorEstate',
+      'disruptionPenalty'
+    ]);
+    expect(policy.rows.find((row) => row.factorId === 'outputBoundary')).toMatchObject({ status: 'active' });
+  });
+
+  it('runs fresh clean examples through the candidate scoring readiness matrix', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+      const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, { ...plan, inheritance: 0 }, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example scoring readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only scoring readiness gate for example matrix coverage.'
+      };
+      const rubric = selectMonthlyCapacityScoringRubric(gate);
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, inputs);
+      const readiness = selectMonthlyCapacityScoringExampleReadiness(card.id, inputs, policy);
+
+      expect(readiness.status, card.id).toBe('readyForPlanning');
+      expect(readiness.activePolicyFactorIds, card.id).toContain('floorCoverage');
+      expect(readiness.activePolicyFactorIds, card.id).toContain('outputBoundary');
+      if (card.id === 'coupleTightFloor') expect(readiness.activePolicyFactorIds, card.id).toContain('gapRepair');
+      else expect(readiness.reviewOnlyPolicyFactorIds, card.id).toContain('gapRepair');
+      expect(readiness.boundary, card.id).toContain('without scoring candidates');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityScoringExampleReadiness');
+    }
+  });
+
+  it('closes out candidate scoring planning without executing scoring', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, selectMonthlyCapacityCandidateScoreInputs(packet, handoff));
+    const closeout = selectMonthlyCapacityScoringPlanCloseout(rubric, policy);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementationPlanning',
+      nextBroadStep: 'candidateSetImplementationPlan',
+      completedPieces: ['rubric', 'scoreInputs', 'scorePolicy', 'exampleMatrix', 'persistenceGuardrails']
+    });
+    expect(closeout.stillDeferred).toEqual([
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedScores',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(closeout.boundary).toContain('no candidate scoring execution');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringPlanCloseout');
+  });
+
+  it('closes out candidate scoring planning as blocked when inputs are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, selectMonthlyCapacityCandidateScoreInputs(packet, handoff));
+    const closeout = selectMonthlyCapacityScoringPlanCloseout(rubric, policy);
+
+    expect(closeout.status).toBe('blocked');
+    expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
