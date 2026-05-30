@@ -1299,6 +1299,53 @@ export type MonthlyCapacityRuntimeCandidateSimulationCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityScoringExecutionPlanningRow = {
+  id: 'floorCoverage' | 'gapRepair' | 'taxReview' | 'disruptionPenalty' | 'survivorEstate' | 'outputBoundary';
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityScoringExecutionPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityScoringExecutionPlanningRow[];
+  primaryObjective: 'coverMonthlyFloorFirst';
+  simulatedVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  notAllowedYet: Array<'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityScoringExecutionGuardrail = {
+  id: 'noScoresYet' | 'noRankingYet' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstructions' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityScoringExecutionReadiness = {
+  status: 'blocked' | 'readyForFutureExecution';
+  readyRowIds: MonthlyCapacityScoringExecutionPlanningRow['id'][];
+  reviewRowIds: MonthlyCapacityScoringExecutionPlanningRow['id'][];
+  blockedRowIds: MonthlyCapacityScoringExecutionPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityScoringExecutionExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityScoringExecutionReadiness['status'];
+  simulatedVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  readyRowIds: MonthlyCapacityScoringExecutionPlanningRow['id'][];
+  reviewRowIds: MonthlyCapacityScoringExecutionPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityScoringExecutionPlanningCloseout = {
+  status: 'blocked' | 'readyForImplementationPlanning';
+  headline: string;
+  nextBroadStep: 'candidateScoringExecutionImplementation' | 'capacityInputsFirst';
+  completedPieces: Array<'scoringRows' | 'guardrails' | 'readiness' | 'exampleMatrix' | 'noOutputBoundary'>;
+  stillDeferred: MonthlyCapacityScoringExecutionPlan['notAllowedYet'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -3636,6 +3683,167 @@ export function selectMonthlyCapacityRuntimeCandidateSimulationCloseout(
     ],
     boundary:
       'Runtime-only candidate simulation closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityScoringExecutionPlan(
+  simulationSet: MonthlyCapacityRuntimeCandidateSimulationSet,
+  summary: MonthlyCapacityRuntimeCandidateSimulationSummary = selectMonthlyCapacityRuntimeCandidateSimulationSummary(simulationSet),
+  audit: MonthlyCapacityRuntimeCandidateSimulationAudit = selectMonthlyCapacityRuntimeCandidateSimulationAudit(simulationSet)
+): MonthlyCapacityScoringExecutionPlan {
+  const blocked = simulationSet.status === 'blocked' || audit.status === 'block' || simulationSet.simulatedVariantIds.length === 0;
+  const hasGap = summary.gapVariantIds.length > 0;
+  const hasRepairEvidence = summary.coveredVariantIds.some((id) => id !== 'baseline');
+  const rows: MonthlyCapacityScoringExecutionPlanningRow[] = [
+    {
+      id: 'floorCoverage',
+      status: blocked ? 'blocked' : 'ready',
+      detail: blocked
+        ? 'Complete runtime candidate simulations before scoring can compare floor coverage.'
+        : 'Floor coverage should be the first scoring objective.'
+    },
+    {
+      id: 'gapRepair',
+      status: blocked ? 'blocked' : hasGap && hasRepairEvidence ? 'ready' : 'review',
+      detail:
+        hasGap && hasRepairEvidence
+          ? 'Gap repair evidence is present for practical variants.'
+          : 'Keep gap repair visible but do not force repair scoring without a visible gap and repair evidence.'
+    },
+    {
+      id: 'taxReview',
+      status: blocked ? 'blocked' : 'review',
+      detail: 'Tax remains a secondary review factor after floor coverage.'
+    },
+    {
+      id: 'disruptionPenalty',
+      status: blocked ? 'blocked' : 'ready',
+      detail: 'Spending and work-timing variants should carry a disruption penalty before they can outrank baseline.'
+    },
+    {
+      id: 'survivorEstate',
+      status: blocked ? 'blocked' : 'review',
+      detail: 'Survivor and estate caveats remain review factors, not automatic score winners.'
+    },
+    {
+      id: 'outputBoundary',
+      status: 'ready',
+      detail: 'Scoring planning must not create saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows,
+    primaryObjective: 'coverMonthlyFloorFirst',
+    simulatedVariantIds: simulationSet.simulatedVariantIds,
+    notAllowedYet: [
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only scoring execution plan: prepares scoring prerequisites from simulation evidence without calculating scores, ranking candidates, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityScoringExecutionGuardrails(
+  plan: MonthlyCapacityScoringExecutionPlan
+): MonthlyCapacityScoringExecutionGuardrail[] {
+  const boundaryClear = plan.notAllowedYet.includes('candidateScoringExecution') && plan.notAllowedYet.includes('savedCandidateOutput');
+
+  return [
+    {
+      id: 'noScoresYet',
+      status: plan.status === 'readyForPlanning' || plan.status === 'blocked' ? 'pass' : 'block',
+      detail: 'This layer plans scoring execution but does not calculate numeric scores.'
+    },
+    {
+      id: 'noRankingYet',
+      status: 'pass',
+      detail: 'No candidate is ranked or recommended in scoring execution planning.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: boundaryClear ? 'pass' : 'block',
+      detail: 'Scores and optimizer results must stay out of saved plan files.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: plan.notAllowedYet.includes('fundingTrace') ? 'pass' : 'block',
+      detail: 'Funding trace output remains deferred.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: plan.notAllowedYet.includes('accountInstructions') ? 'pass' : 'block',
+      detail: 'Scoring planning must not tell the household which account to use.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: plan.notAllowedYet.includes('annualSequencing') ? 'pass' : 'block',
+      detail: 'Annual account-level sequencing remains deferred.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: plan.notAllowedYet.includes('uiPresentation') ? 'pass' : 'block',
+      detail: 'Scoring planning does not change the interface.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityScoringExecutionReadiness(
+  plan: MonthlyCapacityScoringExecutionPlan,
+  guardrails: MonthlyCapacityScoringExecutionGuardrail[] = selectMonthlyCapacityScoringExecutionGuardrails(plan)
+): MonthlyCapacityScoringExecutionReadiness {
+  const blockedByRows = plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id);
+  const blockedByGuardrails = guardrails.filter((row) => row.status === 'block').map((row) => row.id);
+
+  return {
+    status: plan.status === 'blocked' || blockedByRows.length > 0 || blockedByGuardrails.length > 0 ? 'blocked' : 'readyForFutureExecution',
+    readyRowIds: plan.rows.filter((row) => row.status === 'ready').map((row) => row.id),
+    reviewRowIds: plan.rows.filter((row) => row.status === 'review').map((row) => row.id),
+    blockedRowIds: blockedByRows,
+    boundary:
+      'Runtime-only scoring execution readiness: confirms prerequisites and guardrails for a future scoring package without scoring, ranking, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityScoringExecutionExampleReadiness(
+  id: string,
+  plan: MonthlyCapacityScoringExecutionPlan,
+  readiness: MonthlyCapacityScoringExecutionReadiness = selectMonthlyCapacityScoringExecutionReadiness(plan)
+): MonthlyCapacityScoringExecutionExampleReadiness {
+  return {
+    id,
+    status: readiness.status,
+    simulatedVariantIds: plan.simulatedVariantIds,
+    readyRowIds: readiness.readyRowIds,
+    reviewRowIds: readiness.reviewRowIds,
+    boundary:
+      'Runtime-only scoring execution example readiness: records scoring prerequisites for an example fixture without scoring, ranking, saving output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityScoringExecutionPlanningCloseout(
+  plan: MonthlyCapacityScoringExecutionPlan,
+  readiness: MonthlyCapacityScoringExecutionReadiness = selectMonthlyCapacityScoringExecutionReadiness(plan)
+): MonthlyCapacityScoringExecutionPlanningCloseout {
+  const blocked = plan.status === 'blocked' || readiness.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForImplementationPlanning',
+    headline: blocked
+      ? 'Candidate scoring execution planning needs complete simulation evidence.'
+      : 'Candidate scoring execution planning is ready for a future implementation package.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateScoringExecutionImplementation',
+    completedPieces: ['scoringRows', 'guardrails', 'readiness', 'exampleMatrix', 'noOutputBoundary'],
+    stillDeferred: plan.notAllowedYet,
+    boundary:
+      'Runtime-only scoring execution planning closeout: no candidate scoring execution, optimizer search, saved candidate output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 

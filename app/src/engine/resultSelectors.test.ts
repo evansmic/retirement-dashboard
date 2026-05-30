@@ -61,6 +61,11 @@ import {
   selectMonthlyCapacityRuntimeCandidateSummary,
   selectMonthlyCapacityRuntimeCandidateVariants,
   selectMonthlyCapacityRuntimePacket,
+  selectMonthlyCapacityScoringExecutionExampleReadiness,
+  selectMonthlyCapacityScoringExecutionGuardrails,
+  selectMonthlyCapacityScoringExecutionPlan,
+  selectMonthlyCapacityScoringExecutionPlanningCloseout,
+  selectMonthlyCapacityScoringExecutionReadiness,
   selectMonthlyCapacityCandidateScorePolicy,
   selectMonthlyCapacityScoringExampleReadiness,
   selectMonthlyCapacityScoringPlanCloseout,
@@ -2969,6 +2974,257 @@ describe('result selectors', () => {
     ]);
     expect(closeout.boundary).toContain('no candidate scoring execution');
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeCandidateSimulationCloseout');
+  });
+
+  it('plans scoring execution from simulation evidence without calculating scores', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const summary = selectMonthlyCapacityRuntimeCandidateSimulationSummary(simulationSet);
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet, summary);
+
+    expect(plan.status).toBe('readyForPlanning');
+    expect(plan.primaryObjective).toBe('coverMonthlyFloorFirst');
+    expect(plan.simulatedVariantIds).toEqual(['baseline']);
+    expect(plan.rows.map((row) => row.id)).toEqual([
+      'floorCoverage',
+      'gapRepair',
+      'taxReview',
+      'disruptionPenalty',
+      'survivorEstate',
+      'outputBoundary'
+    ]);
+    expect(plan.rows.find((row) => row.id === 'floorCoverage')).toMatchObject({ status: 'ready' });
+    expect(plan.rows.find((row) => row.id === 'gapRepair')).toMatchObject({ status: 'review' });
+    expect(plan.notAllowedYet).toEqual([
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(plan.boundary).toContain('without calculating scores');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringExecutionPlan');
+  });
+
+  it('marks gap repair scoring as ready when simulated repair evidence is present', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const runtime = buildMonthlyCandidateRuntime(shortfallResult, planFixture, { spendLessGogo: repairedResult });
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, (plan) =>
+      withRows([
+        {
+          year: 2028,
+          shortfall: plan.spending.gogo === 70000 && plan.assumptions.retireYear === 2028 ? 5000 : 0,
+          totalTaxYear: 1000,
+          bal_total: 300000
+        },
+        { year: 2029, shortfall: 0, totalTaxYear: 2000, bal_total: 250000 }
+      ])
+    );
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+
+    expect(plan.rows.find((row) => row.id === 'gapRepair')).toMatchObject({
+      status: 'ready',
+      detail: expect.stringContaining('Gap repair evidence')
+    });
+    expect(plan.simulatedVariantIds).toEqual([
+      'baseline',
+      'spendingRepairSmall',
+      'spendingRepairLarge',
+      'workLaterOneYear',
+      'workLaterTwoYears'
+    ]);
+  });
+
+  it('blocks scoring execution planning when simulation evidence is blocked', () => {
+    const simulationSet = {
+      status: 'blocked' as const,
+      rows: [],
+      simulatedVariantIds: [],
+      blockedVariantIds: [],
+      boundary: 'Test blocked simulation set.'
+    };
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+
+    expect(plan.status).toBe('blocked');
+    expect(plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id)).toEqual([
+      'floorCoverage',
+      'gapRepair',
+      'taxReview',
+      'disruptionPenalty',
+      'survivorEstate'
+    ]);
+    expect(plan.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'ready' });
+  });
+
+  it('keeps scoring execution guardrails closed before implementation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const guardrails = selectMonthlyCapacityScoringExecutionGuardrails(plan);
+
+    expect(guardrails.map((row) => row.id)).toEqual([
+      'noScoresYet',
+      'noRankingYet',
+      'noSavedOutput',
+      'noFundingTrace',
+      'noAccountInstructions',
+      'noAnnualSequencing',
+      'noUiPresentation'
+    ]);
+    expect(guardrails.every((row) => row.status === 'pass')).toBe(true);
+    expect(guardrails.find((row) => row.id === 'noRankingYet')?.detail).toContain('No candidate is ranked');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringExecutionGuardrails');
+  });
+
+  it('summarizes scoring execution readiness without executing scoring', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const readiness = selectMonthlyCapacityScoringExecutionReadiness(plan);
+
+    expect(readiness.status).toBe('readyForFutureExecution');
+    expect(readiness.readyRowIds).toEqual(['floorCoverage', 'disruptionPenalty', 'outputBoundary']);
+    expect(readiness.reviewRowIds).toEqual(['gapRepair', 'taxReview', 'survivorEstate']);
+    expect(readiness.blockedRowIds).toEqual([]);
+    expect(readiness.boundary).toContain('without scoring');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringExecutionReadiness');
+  });
+
+  it('keeps scoring execution readiness blocked when simulation evidence is incomplete', () => {
+    const simulationSet = {
+      status: 'blocked' as const,
+      rows: [],
+      simulatedVariantIds: [],
+      blockedVariantIds: [],
+      boundary: 'Test blocked simulation set.'
+    };
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const readiness = selectMonthlyCapacityScoringExecutionReadiness(plan);
+
+    expect(readiness.status).toBe('blocked');
+    expect(readiness.blockedRowIds).toEqual(['floorCoverage', 'gapRepair', 'taxReview', 'disruptionPenalty', 'survivorEstate']);
+  });
+
+  it('runs clean examples through scoring execution planning readiness', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = { ...createCleanExampleRuntimePlan(card.id), inheritance: 0 };
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, plan);
+      const spending = selectSpendingCapacitySummary(result, {}, plan, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, plan, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example scoring execution planning readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only scoring execution planning readiness gate for example matrix coverage.'
+      };
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+      const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+      const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+      const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+      const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+      const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+      const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+      const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+        contract,
+        order,
+        selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+      );
+      const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
+      const simulationHandoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(variants);
+      const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(variants, simulationHandoff, () => result);
+      const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+      const readiness = selectMonthlyCapacityScoringExecutionReadiness(scoringPlan);
+      const example = selectMonthlyCapacityScoringExecutionExampleReadiness(card.id, scoringPlan, readiness);
+
+      expect(example.status, card.id).toBe('readyForFutureExecution');
+      expect(example.simulatedVariantIds, card.id).toContain('baseline');
+      expect(example.readyRowIds, card.id).toContain('floorCoverage');
+      expect(example.readyRowIds, card.id).toContain('outputBoundary');
+      expect(example.boundary, card.id).toContain('without scoring');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityScoringExecutionExampleReadiness');
+    }
+  });
+
+  it('closes out scoring execution planning without executing scores', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const closeout = selectMonthlyCapacityScoringExecutionPlanningCloseout(plan);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementationPlanning',
+      nextBroadStep: 'candidateScoringExecutionImplementation',
+      completedPieces: ['scoringRows', 'guardrails', 'readiness', 'exampleMatrix', 'noOutputBoundary']
+    });
+    expect(closeout.stillDeferred).toEqual([
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(closeout.boundary).toContain('no candidate scoring execution');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityScoringExecutionPlanningCloseout');
+  });
+
+  it('closes out scoring execution planning as blocked when evidence is blocked', () => {
+    const simulationSet = {
+      status: 'blocked' as const,
+      rows: [],
+      simulatedVariantIds: [],
+      blockedVariantIds: [],
+      boundary: 'Test blocked simulation set.'
+    };
+    const plan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const closeout = selectMonthlyCapacityScoringExecutionPlanningCloseout(plan);
+
+    expect(closeout.status).toBe('blocked');
+    expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
