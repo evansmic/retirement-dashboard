@@ -287,6 +287,25 @@ export type FutureCapacitySelectorScenario = {
   mustAvoid: string[];
 };
 
+export type FutureExampleDataBoundaryRow = {
+  id: FutureExampleDataDraft['id'];
+  status: 'pass' | 'fail';
+  isPlanningOnly: boolean;
+  hasSyntheticHousehold: boolean;
+  avoidsSavedAnswers: boolean;
+  avoidsAccountInstructions: boolean;
+};
+
+export type FutureExampleRebuildAlignmentRow = {
+  id: FutureFreshExampleRebuildPlan['id'];
+  exampleId: FutureExampleDataDraft['id'];
+  status: 'pass' | 'fail';
+  hasExampleDraft: boolean;
+  isPlanningStage: boolean;
+  hasProofs: boolean;
+  hasAvoidance: boolean;
+};
+
 export type FutureCapacitySelectorBoundaryRow = {
   id: 'runtimeOnly' | 'noSavedOutput' | 'gapOptionsNeutral' | 'noAccountInstructions';
   status: 'pass' | 'fail';
@@ -308,6 +327,7 @@ export type FutureExampleDataDraft = {
   household: string;
   minimumMonthlyExpensesExMortgage: number;
   mortgageMonthlyPayment: number;
+  projectedMonthlyAfterTaxCapacity: number;
   earlySpendingChangeAge: number;
   laterSpendingChangeAge: number;
   expectedCapacityStatus: 'covered' | 'tight' | 'gap' | 'cannotTell';
@@ -959,6 +979,7 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       household: 'Single renter or mortgage-free owner with moderate registered savings and CPP/OAS income.',
       minimumMonthlyExpensesExMortgage: 3600,
       mortgageMonthlyPayment: 0,
+      projectedMonthlyAfterTaxCapacity: 4800,
       earlySpendingChangeAge: 75,
       laterSpendingChangeAge: 85,
       expectedCapacityStatus: 'covered',
@@ -972,11 +993,17 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       household: 'Retiring couple with moderate savings, a remaining mortgage, and a minimum expense floor that may not be fully covered.',
       minimumMonthlyExpensesExMortgage: 6200,
       mortgageMonthlyPayment: 1800,
+      projectedMonthlyAfterTaxCapacity: 7200,
       earlySpendingChangeAge: 74,
       laterSpendingChangeAge: 84,
       expectedCapacityStatus: 'gap',
       reviewFocus: ['gap options are practical', 'work-longer and downsize comparisons are not pushy', 'tax review is visible without advice'],
-      mustAvoid: ['single-option pressure', 'automatic recommendation to cut spending', 'false certainty that one option fixes the plan']
+      mustAvoid: [
+        'single-option pressure',
+        'automatic recommendation to cut spending',
+        'false certainty that one option fixes the plan',
+        'account withdrawal instructions'
+      ]
     },
     {
       id: 'pensionCoupleSurvivor',
@@ -985,11 +1012,18 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       household: 'Couple with one DB pension, survivor continuation risk, CPP/OAS income, and enough assets to make the first monthly answer look comfortable.',
       minimumMonthlyExpensesExMortgage: 5400,
       mortgageMonthlyPayment: 0,
+      projectedMonthlyAfterTaxCapacity: 5750,
       earlySpendingChangeAge: 76,
       laterSpendingChangeAge: 86,
       expectedCapacityStatus: 'tight',
       reviewFocus: ['survivor resilience is visible', 'DB pension continuation is easy to review', 'monthly capacity does not hide couple risk'],
-      mustAvoid: ['hiding survivor impact behind one number', 'survivor recommendation', 'pension advice']
+      mustAvoid: [
+        'hiding survivor impact behind one number',
+        'safe-spend language',
+        'survivor recommendation',
+        'pension advice',
+        'account withdrawal instructions'
+      ]
     },
     {
       id: 'estateHeavyRoom',
@@ -998,11 +1032,12 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       household: 'Mortgage-free couple with significant non-registered and TFSA assets, an explicit estate intent, and apparent room above the minimum floor.',
       minimumMonthlyExpensesExMortgage: 7000,
       mortgageMonthlyPayment: 0,
+      projectedMonthlyAfterTaxCapacity: 8600,
       earlySpendingChangeAge: 77,
       laterSpendingChangeAge: 87,
       expectedCapacityStatus: 'covered',
       reviewFocus: ['estate trade-off is visible', 'room above floor is caveated', 'tax and spending path caveats remain prominent'],
-      mustAvoid: ['permission to spend more', 'guaranteed-room language', 'estate recommendation']
+      mustAvoid: ['permission to spend more', 'guaranteed-room language', 'estate recommendation', 'account withdrawal instructions']
     }
   ],
   freshExampleRebuildPlan: [
@@ -1879,6 +1914,71 @@ export function validateFutureCapacitySelectorScenarios(
 
 export function futureExampleDataDraftIds(draft = futurePlanFormatDraft): string[] {
   return draft.futureExampleDataDrafts.map((example) => example.id);
+}
+
+export function validateFutureExampleCapacityStatusDrafts(
+  draft = futurePlanFormatDraft
+): Array<{ id: FutureExampleDataDraft['id']; status: 'pass' | 'fail'; expectedStatusId: FutureCapacityStatusId; actualStatusId: FutureCapacityStatusId }> {
+  return draft.futureExampleDataDrafts.map((example) => {
+    const actualStatusId = selectFutureCapacityStatusPreview(
+      {
+        minimumMonthlyExpensesExMortgage: example.minimumMonthlyExpensesExMortgage,
+        mortgageMonthlyPayment: example.mortgageMonthlyPayment,
+        projectedMonthlyAfterTaxCapacity: example.projectedMonthlyAfterTaxCapacity,
+        sensitivityFlags: example.expectedCapacityStatus === 'tight' ? ['survivor'] : []
+      },
+      draft
+    ).statusId;
+
+    return {
+      id: example.id,
+      status: actualStatusId === example.expectedCapacityStatus ? 'pass' : 'fail',
+      expectedStatusId: example.expectedCapacityStatus,
+      actualStatusId
+    };
+  });
+}
+
+export function futureExampleDataBoundaryRows(draft = futurePlanFormatDraft): FutureExampleDataBoundaryRow[] {
+  return draft.futureExampleDataDrafts.map((example) => {
+    const isPlanningOnly = example.status === 'planning-only';
+    const hasSyntheticHousehold = example.household.length > 0 && !example.household.toLowerCase().includes('tester');
+    const avoidsSavedAnswers =
+      example.mustAvoid.includes('safe-spend language') ||
+      example.mustAvoid.includes('guaranteed-room language') ||
+      example.mustAvoid.includes('false certainty that one option fixes the plan');
+    const avoidsAccountInstructions = example.mustAvoid.some((item) => item.includes('account withdrawal instructions'));
+
+    return {
+      id: example.id,
+      status: isPlanningOnly && hasSyntheticHousehold && avoidsSavedAnswers && avoidsAccountInstructions ? 'pass' : 'fail',
+      isPlanningOnly,
+      hasSyntheticHousehold,
+      avoidsSavedAnswers,
+      avoidsAccountInstructions
+    };
+  });
+}
+
+export function futureExampleRebuildAlignmentRows(draft = futurePlanFormatDraft): FutureExampleRebuildAlignmentRow[] {
+  const exampleIds = new Set(draft.futureExampleDataDrafts.map((example) => example.id));
+
+  return draft.freshExampleRebuildPlan.map((step) => {
+    const hasExampleDraft = step.stage === 'fixture-later' || step.stage === 'smoke-later' || exampleIds.has(step.exampleId);
+    const isPlanningStage = step.stage === 'draft-values' || step.stage === 'fixture-later' || step.stage === 'smoke-later';
+    const hasProofs = step.mustProve.length > 0;
+    const hasAvoidance = step.mustAvoid.length > 0;
+
+    return {
+      id: step.id,
+      exampleId: step.exampleId,
+      status: hasExampleDraft && isPlanningStage && hasProofs && hasAvoidance ? 'pass' : 'fail',
+      hasExampleDraft,
+      isPlanningStage,
+      hasProofs,
+      hasAvoidance
+    };
+  });
 }
 
 export function futureFreshExampleRebuildPlanIds(draft = futurePlanFormatDraft): string[] {

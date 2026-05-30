@@ -12,7 +12,9 @@ import {
   futureBlockedImportRules,
   futureCapacityStatusIds,
   futureExampleRequirementIds,
+  futureExampleDataBoundaryRows,
   futureExampleDataDraftIds,
+  futureExampleRebuildAlignmentRows,
   futureFreshExampleRebuildPlanIds,
   futureFixtureExpectationHardeningIds,
   futureFixtureSampleCoverageRows,
@@ -44,6 +46,7 @@ import {
   futureFixtureExpectationCoverageRows,
   futureImportBlockExpectationCoverageRows,
   selectFutureCapacityStatusPreview,
+  validateFutureExampleCapacityStatusDrafts,
   validateFutureCapacitySelectorScenarios,
   validateFutureFixtureSamples,
   validateFutureFixtureShapeBatch,
@@ -961,6 +964,7 @@ describe('future plan format draft', () => {
         status: 'planning-only',
         minimumMonthlyExpensesExMortgage: 3600,
         mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 4800,
         expectedCapacityStatus: 'covered'
       })
     );
@@ -976,6 +980,7 @@ describe('future plan format draft', () => {
         status: 'planning-only',
         minimumMonthlyExpensesExMortgage: 6200,
         mortgageMonthlyPayment: 1800,
+        projectedMonthlyAfterTaxCapacity: 7200,
         expectedCapacityStatus: 'gap'
       })
     );
@@ -991,11 +996,13 @@ describe('future plan format draft', () => {
         status: 'planning-only',
         minimumMonthlyExpensesExMortgage: 5400,
         mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 5750,
         expectedCapacityStatus: 'tight'
       })
     );
     expect(survivor?.reviewFocus).toContain('survivor resilience is visible');
     expect(survivor?.mustAvoid).toContain('hiding survivor impact behind one number');
+    expect(survivor?.mustAvoid).toContain('account withdrawal instructions');
   });
 
   it('drafts the estate-heavy example without permission-to-spend language', () => {
@@ -1006,12 +1013,63 @@ describe('future plan format draft', () => {
         status: 'planning-only',
         minimumMonthlyExpensesExMortgage: 7000,
         mortgageMonthlyPayment: 0,
+        projectedMonthlyAfterTaxCapacity: 8600,
         expectedCapacityStatus: 'covered'
       })
     );
     expect(estate?.reviewFocus).toContain('estate trade-off is visible');
     expect(estate?.mustAvoid).toContain('permission to spend more');
     expect(estate?.mustAvoid).toContain('guaranteed-room language');
+    expect(estate?.mustAvoid).toContain('account withdrawal instructions');
+  });
+
+  it('keeps future example data planning-only and out of saved-answer territory', () => {
+    expect(futureExampleDataBoundaryRows()).toEqual([
+      expect.objectContaining({ id: 'singleMinimumFloor', status: 'pass' }),
+      expect.objectContaining({ id: 'coupleTightFloor', status: 'pass' }),
+      expect.objectContaining({ id: 'pensionCoupleSurvivor', status: 'pass' }),
+      expect.objectContaining({ id: 'estateHeavyRoom', status: 'pass' })
+    ]);
+  });
+
+  it('marks future example data boundaries incomplete when examples drift', () => {
+    expect(
+      futureExampleDataBoundaryRows({
+        ...futurePlanFormatDraft,
+        futureExampleDataDrafts: futurePlanFormatDraft.futureExampleDataDrafts.map((example) =>
+          example.id === 'estateHeavyRoom'
+            ? { ...example, status: 'planning-only', household: 'Tester export copied from a file', mustAvoid: ['estate recommendation'] }
+            : example
+        )
+      }).find((row) => row.id === 'estateHeavyRoom')
+    ).toEqual({
+      id: 'estateHeavyRoom',
+      status: 'fail',
+      isPlanningOnly: true,
+      hasSyntheticHousehold: false,
+      avoidsSavedAnswers: false,
+      avoidsAccountInstructions: false
+    });
+  });
+
+  it('keeps future example capacity statuses aligned with selector planning', () => {
+    expect(validateFutureExampleCapacityStatusDrafts()).toEqual([
+      { id: 'singleMinimumFloor', status: 'pass', expectedStatusId: 'covered', actualStatusId: 'covered' },
+      { id: 'coupleTightFloor', status: 'pass', expectedStatusId: 'gap', actualStatusId: 'gap' },
+      { id: 'pensionCoupleSurvivor', status: 'pass', expectedStatusId: 'tight', actualStatusId: 'tight' },
+      { id: 'estateHeavyRoom', status: 'pass', expectedStatusId: 'covered', actualStatusId: 'covered' }
+    ]);
+  });
+
+  it('marks future example capacity status drafts incomplete when values drift', () => {
+    expect(
+      validateFutureExampleCapacityStatusDrafts({
+        ...futurePlanFormatDraft,
+        futureExampleDataDrafts: futurePlanFormatDraft.futureExampleDataDrafts.map((example) =>
+          example.id === 'coupleTightFloor' ? { ...example, projectedMonthlyAfterTaxCapacity: 9000 } : example
+        )
+      }).find((result) => result.id === 'coupleTightFloor')
+    ).toEqual({ id: 'coupleTightFloor', status: 'fail', expectedStatusId: 'gap', actualStatusId: 'covered' });
   });
 
   it('plans fresh example rebuild steps before fixture or smoke wiring', () => {
@@ -1029,6 +1087,37 @@ describe('future plan format draft', () => {
     expect(
       futurePlanFormatDraft.freshExampleRebuildPlan.find((item) => item.id === 'newFormatSmokeLater')?.mustAvoid
     ).toContain('account optimizer implementation');
+  });
+
+  it('keeps future example rebuild steps aligned with planning drafts', () => {
+    const rows = futureExampleRebuildAlignmentRows();
+
+    expect(rows.map((row) => row.id)).toEqual([
+      'singleMinimumFloorDraftValues',
+      'coupleTightFloorDraftValues',
+      'pensionCoupleSurvivorDraftValues',
+      'estateHeavyRoomDraftValues',
+      'acceptedFixtureLater',
+      'newFormatSmokeLater'
+    ]);
+    expect(rows.every((row) => row.status === 'pass')).toBe(true);
+  });
+
+  it('marks future example rebuild alignment incomplete when a step loses proofs', () => {
+    expect(
+      futureExampleRebuildAlignmentRows({
+        ...futurePlanFormatDraft,
+        freshExampleRebuildPlan: futurePlanFormatDraft.freshExampleRebuildPlan.map((step) =>
+          step.id === 'singleMinimumFloorDraftValues' ? { ...step, mustProve: [] } : step
+        )
+      }).find((row) => row.id === 'singleMinimumFloorDraftValues')
+    ).toMatchObject({
+      status: 'fail',
+      hasExampleDraft: true,
+      isPlanningStage: true,
+      hasProofs: false,
+      hasAvoidance: true
+    });
   });
 
   it('plans funding trace account groups without withdrawal instructions', () => {
