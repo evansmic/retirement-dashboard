@@ -20,6 +20,10 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
+  selectMonthlyCapacityCandidateSetCloseout,
+  selectMonthlyCapacityCandidateSetExampleReadiness,
+  selectMonthlyCapacityCandidateSetLimits,
+  selectMonthlyCapacityCandidateSetPlan,
   selectMonthlyCapacityCandidateScoreInputs,
   selectMonthlyCapacityCaveatSignals,
   selectMonthlyCapacityFoundation,
@@ -1427,6 +1431,269 @@ describe('result selectors', () => {
     const rubric = selectMonthlyCapacityScoringRubric(gate);
     const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, selectMonthlyCapacityCandidateScoreInputs(packet, handoff));
     const closeout = selectMonthlyCapacityScoringPlanCloseout(rubric, policy);
+
+    expect(closeout.status).toBe('blocked');
+    expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
+  });
+
+  it('plans floor-first candidate families without building candidates', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const rubric = selectMonthlyCapacityScoringRubric(gate);
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(rubric, inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+
+    expect(candidateSet.status).toBe('readyForPlanning');
+    expect(candidateSet.objective).toBe('coverMonthlyFloorFirst');
+    expect(candidateSet.rows.map((row) => row.id)).toEqual([
+      'currentPlan',
+      'spendingRepair',
+      'workTiming',
+      'benefitTiming',
+      'taxEstateReview',
+      'broadWithdrawalFamily',
+      'homeEquityReliance',
+      'annualSequencing'
+    ]);
+    expect(candidateSet.includedFamilyIds).toEqual(['currentPlan']);
+    expect(candidateSet.reviewOnlyFamilyIds).toEqual([
+      'spendingRepair',
+      'workTiming',
+      'benefitTiming',
+      'taxEstateReview',
+      'broadWithdrawalFamily'
+    ]);
+    expect(candidateSet.deferredFamilyIds).toEqual(['homeEquityReliance', 'annualSequencing']);
+    expect(candidateSet.boundary).toContain('without building candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateSetPlan');
+  });
+
+  it('includes practical gap-repair candidate families only when the floor has a gap', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(shortfallResult, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+
+    expect(candidateSet.includedFamilyIds).toEqual(['currentPlan', 'spendingRepair', 'workTiming']);
+    expect(candidateSet.reviewOnlyFamilyIds).toEqual(['benefitTiming', 'taxEstateReview', 'broadWithdrawalFamily', 'homeEquityReliance']);
+    expect(candidateSet.rows.find((row) => row.id === 'homeEquityReliance')).toMatchObject({
+      status: 'reviewOnly',
+      scoringRole: 'secondaryReview'
+    });
+    expect(candidateSet.rows.find((row) => row.id === 'annualSequencing')).toMatchObject({ status: 'deferred' });
+  });
+
+  it('blocks candidate family planning when score inputs are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+
+    expect(candidateSet.status).toBe('blocked');
+    expect(candidateSet.rows.find((row) => row.id === 'currentPlan')).toMatchObject({ status: 'blocked' });
+    expect(candidateSet.deferredFamilyIds).toEqual(['annualSequencing']);
+  });
+
+  it('caps future candidate families without generating candidates', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+
+    expect(limits.status).toBe('readyForPlanning');
+    expect(limits.totalCandidateCap).toBe(1);
+    expect(limits.familyLimits.map((row) => row.familyId)).toEqual([
+      'currentPlan',
+      'spendingRepair',
+      'workTiming',
+      'benefitTiming',
+      'taxEstateReview',
+      'broadWithdrawalFamily',
+      'homeEquityReliance',
+      'annualSequencing'
+    ]);
+    expect(limits.familyLimits.find((row) => row.familyId === 'currentPlan')).toMatchObject({ maxCandidates: 1, status: 'active' });
+    expect(limits.familyLimits.find((row) => row.familyId === 'annualSequencing')).toMatchObject({ maxCandidates: 0, status: 'deferred' });
+    expect(limits.boundary).toContain('without generating candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateSetLimits');
+  });
+
+  it('raises the active candidate cap only for included gap-repair families', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(shortfallResult, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(shortfallResult, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const limits = selectMonthlyCapacityCandidateSetLimits(selectMonthlyCapacityCandidateSetPlan(inputs, policy));
+
+    expect(limits.totalCandidateCap).toBe(5);
+    expect(limits.familyLimits.find((row) => row.familyId === 'spendingRepair')).toMatchObject({ status: 'active', maxCandidates: 2 });
+    expect(limits.familyLimits.find((row) => row.familyId === 'workTiming')).toMatchObject({ status: 'active', maxCandidates: 2 });
+    expect(limits.familyLimits.find((row) => row.familyId === 'homeEquityReliance')).toMatchObject({ status: 'reviewOnly', maxCandidates: 1 });
+  });
+
+  it('runs fresh clean examples through the candidate set readiness matrix', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+    const expectedCaps: Record<string, number> = {
+      singleMinimumFloor: 1,
+      coupleTightFloor: 5,
+      pensionCoupleSurvivor: 1,
+      estateHeavyRoom: 1
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+      const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, { ...plan, inheritance: 0 }, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example candidate set readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only candidate set readiness gate for example matrix coverage.'
+      };
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+      const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+      const readiness = selectMonthlyCapacityCandidateSetExampleReadiness(card.id, candidateSet);
+
+      expect(readiness.status, card.id).toBe('readyForPlanning');
+      expect(readiness.includedFamilyIds, card.id).toContain('currentPlan');
+      expect(readiness.deferredFamilyIds, card.id).toContain('annualSequencing');
+      expect(readiness.totalCandidateCap, card.id).toBe(expectedCaps[card.id]);
+      if (card.id === 'coupleTightFloor') expect(readiness.includedFamilyIds, card.id).toEqual(['currentPlan', 'spendingRepair', 'workTiming']);
+      else expect(readiness.reviewOnlyFamilyIds, card.id).toEqual(expect.arrayContaining(['spendingRepair', 'workTiming']));
+      expect(readiness.boundary, card.id).toContain('without generating candidates');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityCandidateSetExampleReadiness');
+    }
+  });
+
+  it('closes out candidate set planning without generating candidates', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const packet = selectMonthlyCapacityRuntimePacket(fixture, planFixture, spending);
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture, answer));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+    const closeout = selectMonthlyCapacityCandidateSetCloseout(candidateSet, limits);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementationPlanning',
+      nextBroadStep: 'candidateBuilderImplementationPlan',
+      completedPieces: ['familyPlan', 'familyLimits', 'exampleMatrix', 'deferredBoundaries', 'persistenceGuardrails']
+    });
+    expect(closeout.stillDeferred).toEqual([
+      'candidateGeneration',
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ]);
+    expect(closeout.boundary).toContain('no candidate generation');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateSetCloseout');
+  });
+
+  it('closes out candidate set planning as blocked when inputs are blocked', () => {
+    const packet = selectMonthlyCapacityRuntimePacket({ years: [] }, { ...planFixture, spending: { ...planFixture.spending, gogo: 0 } });
+    const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+    const review = selectOptimizerInputReview(selectOptimizerDecisionBoundaries(fixture, planFixture));
+    const gate = selectMonthlyCapacityOptimizerExecutionGate(
+      selectMonthlyCapacityOptimizerInputContract(handoff, review),
+      selectMonthlyCapacityOptimizerGuardrails(handoff)
+    );
+    const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+    const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+    const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+    const closeout = selectMonthlyCapacityCandidateSetCloseout(candidateSet, selectMonthlyCapacityCandidateSetLimits(candidateSet));
 
     expect(closeout.status).toBe('blocked');
     expect(closeout.nextBroadStep).toBe('capacityInputsFirst');

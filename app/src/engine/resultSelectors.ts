@@ -961,6 +961,67 @@ export type MonthlyCapacityScoringPlanCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityCandidateFamilyId =
+  | 'currentPlan'
+  | 'spendingRepair'
+  | 'workTiming'
+  | 'benefitTiming'
+  | 'taxEstateReview'
+  | 'broadWithdrawalFamily'
+  | 'homeEquityReliance'
+  | 'annualSequencing';
+
+export type MonthlyCapacityCandidateFamilyPlanRow = {
+  id: MonthlyCapacityCandidateFamilyId;
+  label: string;
+  status: 'included' | 'reviewOnly' | 'blocked' | 'deferred';
+  reason: string;
+  scoringRole: 'baseline' | 'gapRepair' | 'secondaryReview' | 'guardrailOnly' | 'deferred';
+};
+
+export type MonthlyCapacityCandidateSetPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  objective: 'coverMonthlyFloorFirst';
+  rows: MonthlyCapacityCandidateFamilyPlanRow[];
+  includedFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  reviewOnlyFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  deferredFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateFamilyLimit = {
+  familyId: MonthlyCapacityCandidateFamilyId;
+  maxCandidates: number;
+  status: 'active' | 'reviewOnly' | 'deferred' | 'blocked';
+  examples: string[];
+};
+
+export type MonthlyCapacityCandidateSetLimits = {
+  status: 'blocked' | 'readyForPlanning';
+  totalCandidateCap: number;
+  familyLimits: MonthlyCapacityCandidateFamilyLimit[];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateSetExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityCandidateSetPlan['status'];
+  includedFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  reviewOnlyFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  deferredFamilyIds: MonthlyCapacityCandidateFamilyId[];
+  totalCandidateCap: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateSetCloseout = {
+  status: 'blocked' | 'readyForImplementationPlanning';
+  headline: string;
+  nextBroadStep: 'candidateBuilderImplementationPlan' | 'capacityInputsFirst';
+  completedPieces: Array<'familyPlan' | 'familyLimits' | 'exampleMatrix' | 'deferredBoundaries' | 'persistenceGuardrails'>;
+  stillDeferred: Array<'candidateGeneration' | 'candidateScoringExecution' | 'optimizerSearch' | 'savedCandidateOutput' | 'fundingTrace' | 'accountInstructions' | 'annualSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -2397,6 +2458,201 @@ export function selectMonthlyCapacityScoringPlanCloseout(
     ],
     boundary:
       'Runtime-only scoring plan closeout: no candidate scoring execution, optimizer search, saved scores, funding trace, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateSetPlan(
+  inputs: MonthlyCapacityCandidateScoreInputs,
+  policy: MonthlyCapacityCandidateScorePolicy
+): MonthlyCapacityCandidateSetPlan {
+  const blocked = inputs.status === 'blocked' || policy.status === 'blocked';
+  const hasGap = inputs.hasGap;
+  const openLevers = new Set(inputs.openLeverIds);
+  const rows: MonthlyCapacityCandidateFamilyPlanRow[] = [
+    {
+      id: 'currentPlan',
+      label: 'Current plan',
+      status: blocked ? 'blocked' : 'included',
+      reason: blocked ? 'Current plan comparison waits for complete monthly capacity inputs.' : 'Always keep the current plan as the comparison baseline.',
+      scoringRole: 'baseline'
+    },
+    {
+      id: 'spendingRepair',
+      label: 'Spending repair',
+      status: blocked ? 'blocked' : hasGap && openLevers.has('reduceSpending') ? 'included' : 'reviewOnly',
+      reason: hasGap
+        ? 'Included because the monthly floor is not covered and spending repair is an open practical lever.'
+        : 'Review-only unless the monthly floor has a visible gap.',
+      scoringRole: hasGap ? 'gapRepair' : 'secondaryReview'
+    },
+    {
+      id: 'workTiming',
+      label: 'Work timing',
+      status: blocked ? 'blocked' : hasGap && openLevers.has('workLonger') ? 'included' : 'reviewOnly',
+      reason: hasGap ? 'Included only as a practical gap-repair comparison.' : 'Review-only unless the floor is visibly strained.',
+      scoringRole: hasGap ? 'gapRepair' : 'secondaryReview'
+    },
+    {
+      id: 'benefitTiming',
+      label: 'CPP/OAS timing',
+      status: blocked ? 'blocked' : 'reviewOnly',
+      reason: 'Benefit timing can affect taxes, bridge years, and survivor resilience, but should not outrank floor coverage.',
+      scoringRole: 'secondaryReview'
+    },
+    {
+      id: 'taxEstateReview',
+      label: 'Tax and estate review',
+      status: blocked ? 'blocked' : 'reviewOnly',
+      reason: 'Tax and estate are caveats and tie-breakers after floor coverage is considered.',
+      scoringRole: 'secondaryReview'
+    },
+    {
+      id: 'broadWithdrawalFamily',
+      label: 'Broad withdrawal family',
+      status: blocked ? 'blocked' : 'reviewOnly',
+      reason: 'Broad withdrawal families remain high-level review evidence until drawdown execution is explicitly implemented.',
+      scoringRole: 'secondaryReview'
+    },
+    {
+      id: 'homeEquityReliance',
+      label: 'Home-equity reliance',
+      status: blocked ? 'blocked' : hasGap && openLevers.has('downsize') ? 'reviewOnly' : 'deferred',
+      reason: hasGap
+        ? 'Keep home equity as review-only even when downsizing is a practical option; do not treat it as an automatic repair.'
+        : 'Defer home-equity comparisons unless the household has a visible gap or opts in.',
+      scoringRole: hasGap ? 'secondaryReview' : 'deferred'
+    },
+    {
+      id: 'annualSequencing',
+      label: 'Annual account-level sequencing',
+      status: 'deferred',
+      reason: 'Annual account-level sequencing remains deferred until explicitly planned.',
+      scoringRole: 'deferred'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    objective: 'coverMonthlyFloorFirst',
+    rows,
+    includedFamilyIds: rows.filter((row) => row.status === 'included').map((row) => row.id),
+    reviewOnlyFamilyIds: rows.filter((row) => row.status === 'reviewOnly').map((row) => row.id),
+    deferredFamilyIds: rows.filter((row) => row.status === 'deferred').map((row) => row.id),
+    boundary:
+      'Runtime-only candidate set plan: defines future optimizer candidate families without building candidates, scoring candidates, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateSetLimits(candidateSet: MonthlyCapacityCandidateSetPlan): MonthlyCapacityCandidateSetLimits {
+  const statusFor = (familyId: MonthlyCapacityCandidateFamilyId): MonthlyCapacityCandidateFamilyLimit['status'] => {
+    const family = candidateSet.rows.find((row) => row.id === familyId);
+    if (!family) return 'blocked';
+    if (family.status === 'included') return 'active';
+    if (family.status === 'reviewOnly') return 'reviewOnly';
+    if (family.status === 'deferred') return 'deferred';
+    return 'blocked';
+  };
+  const limits: MonthlyCapacityCandidateFamilyLimit[] = [
+    {
+      familyId: 'currentPlan',
+      maxCandidates: 1,
+      status: statusFor('currentPlan'),
+      examples: ['current plan baseline']
+    },
+    {
+      familyId: 'spendingRepair',
+      maxCandidates: 2,
+      status: statusFor('spendingRepair'),
+      examples: ['small floor-repair spending change', 'larger floor-repair spending change']
+    },
+    {
+      familyId: 'workTiming',
+      maxCandidates: 2,
+      status: statusFor('workTiming'),
+      examples: ['work one year longer', 'work two years longer']
+    },
+    {
+      familyId: 'benefitTiming',
+      maxCandidates: 3,
+      status: statusFor('benefitTiming'),
+      examples: ['current timing review', 'delayed CPP/OAS review', 'bridge-year review']
+    },
+    {
+      familyId: 'taxEstateReview',
+      maxCandidates: 2,
+      status: statusFor('taxEstateReview'),
+      examples: ['tax pressure review', 'estate intent review']
+    },
+    {
+      familyId: 'broadWithdrawalFamily',
+      maxCandidates: 3,
+      status: statusFor('broadWithdrawalFamily'),
+      examples: ['current order', 'registered-first family', 'non-registered-first family']
+    },
+    {
+      familyId: 'homeEquityReliance',
+      maxCandidates: 1,
+      status: statusFor('homeEquityReliance'),
+      examples: ['home-equity reliance check']
+    },
+    {
+      familyId: 'annualSequencing',
+      maxCandidates: 0,
+      status: 'deferred',
+      examples: []
+    }
+  ];
+
+  return {
+    status: candidateSet.status,
+    totalCandidateCap: limits.reduce((total, row) => total + (row.status === 'active' ? row.maxCandidates : 0), 0),
+    familyLimits: limits,
+    boundary:
+      'Runtime-only candidate set limits: caps future candidate families without generating candidates, running search, saving output, or adding annual sequencing.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateSetExampleReadiness(
+  id: string,
+  candidateSet: MonthlyCapacityCandidateSetPlan,
+  limits: MonthlyCapacityCandidateSetLimits = selectMonthlyCapacityCandidateSetLimits(candidateSet)
+): MonthlyCapacityCandidateSetExampleReadiness {
+  return {
+    id,
+    status: candidateSet.status,
+    includedFamilyIds: candidateSet.includedFamilyIds,
+    reviewOnlyFamilyIds: candidateSet.reviewOnlyFamilyIds,
+    deferredFamilyIds: candidateSet.deferredFamilyIds,
+    totalCandidateCap: limits.totalCandidateCap,
+    boundary:
+      'Runtime-only candidate set example readiness: records family coverage for an example fixture without generating candidates, scoring, saving output, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateSetCloseout(
+  candidateSet: MonthlyCapacityCandidateSetPlan,
+  limits: MonthlyCapacityCandidateSetLimits
+): MonthlyCapacityCandidateSetCloseout {
+  const blocked = candidateSet.status === 'blocked' || limits.status === 'blocked';
+  return {
+    status: blocked ? 'blocked' : 'readyForImplementationPlanning',
+    headline: blocked
+      ? 'Candidate set planning is blocked until capacity inputs are complete.'
+      : 'Candidate set planning is ready for a future candidate-builder implementation plan.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateBuilderImplementationPlan',
+    completedPieces: ['familyPlan', 'familyLimits', 'exampleMatrix', 'deferredBoundaries', 'persistenceGuardrails'],
+    stillDeferred: [
+      'candidateGeneration',
+      'candidateScoringExecution',
+      'optimizerSearch',
+      'savedCandidateOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualSequencing',
+      'uiPresentation'
+    ],
+    boundary:
+      'Runtime-only candidate set closeout: no candidate generation, candidate scoring execution, optimizer search, saved output, funding trace, account instructions, annual sequencing, or UI presentation was added.'
   };
 }
 
