@@ -762,6 +762,24 @@ export type MonthlyCapacityReviewRow = {
   detailArea: ResultsWorkspaceSection;
 };
 
+export type MonthlyCapacityDecisionRow = {
+  id: 'floorCoverage' | 'shortfallTiming' | 'survivorEstate' | 'optionGate';
+  label: string;
+  status: 'pass' | 'review' | 'block' | 'unknown';
+  detail: string;
+  detailArea: ResultsWorkspaceSection;
+};
+
+export type MonthlyCapacityDecisionLayer = {
+  status: MonthlyCapacityStatus;
+  headline: string;
+  decision: 'readyForPresentation' | 'needsReview' | 'needsAction' | 'cannotDecide';
+  rows: MonthlyCapacityDecisionRow[];
+  primaryOptionIds: MonthlyCapacityOption['id'][];
+  caveats: string[];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -1520,6 +1538,92 @@ export function selectMonthlyCapacityReviewRows(summary: MonthlyCapacityFoundati
       detailArea: summary.status === 'gap' ? 'stressTests' : 'details'
     }
   ];
+}
+
+export function selectMonthlyCapacityDecisionLayer(
+  summary: MonthlyCapacityFoundationSummary,
+  plan: V2PlanPayload | null | undefined
+): MonthlyCapacityDecisionLayer {
+  const hasCouple = !personLooksBlank(plan?.p2);
+  const hasEstateInput = n(plan?.inheritance) > 0 || n(plan?.downsize?.year) > 0 || n(plan?.downsize?.netProceeds) > 0;
+  const mortgageIncluded = summary.monthlyMortgagePayment > 0;
+  const caveats = [
+    'Modelled monthly capacity is a runtime estimate in today’s dollars.',
+    'Taxes, benefit timing, market returns, survivor needs, estate intent, and spending path assumptions can change the result.'
+  ];
+  if (hasCouple) caveats.push('Couple plans should review survivor resilience before relying on room above the floor.');
+  if (hasEstateInput) caveats.push('Estate and home-equity choices should stay visible when comparing room or gaps.');
+
+  const rows: MonthlyCapacityDecisionRow[] = [
+    {
+      id: 'floorCoverage',
+      label: 'Floor coverage',
+      status: summary.status === 'cannotTell' ? 'unknown' : summary.status === 'gap' ? 'block' : summary.status === 'tight' ? 'review' : 'pass',
+      detail:
+        summary.status === 'gap'
+          ? 'Modelled after-tax monthly capacity is below the minimum monthly floor.'
+          : mortgageIncluded
+            ? 'The minimum monthly floor includes expenses excluding mortgage plus the mortgage payment already entered in debts.'
+            : 'The minimum monthly floor uses expenses excluding mortgage; no mortgage payment is currently included.',
+      detailArea: 'overview'
+    },
+    {
+      id: 'shortfallTiming',
+      label: 'Shortfall timing',
+      status: summary.status === 'cannotTell' ? 'unknown' : summary.firstShortfallYear ? 'block' : 'pass',
+      detail: summary.firstShortfallYear
+        ? `The first visible shortfall appears in ${summary.firstShortfallYear}.`
+        : 'No visible projection shortfall is present in the runtime rows used for this capacity estimate.',
+      detailArea: 'stressTests'
+    },
+    {
+      id: 'survivorEstate',
+      label: 'Survivor and estate caveats',
+      status: summary.status === 'cannotTell' ? 'unknown' : hasCouple || hasEstateInput ? 'review' : 'pass',
+      detail:
+        hasCouple || hasEstateInput
+          ? 'Review survivor resilience, estate intent, and home-equity assumptions before relying on room above the floor.'
+          : 'No active second person, estate target, or downsize input is present in this runtime plan.',
+      detailArea: hasCouple ? 'householdResilience' : 'details'
+    },
+    {
+      id: 'optionGate',
+      label: 'Option gate',
+      status: summary.status === 'cannotTell' ? 'unknown' : summary.status === 'gap' ? 'block' : 'pass',
+      detail:
+        summary.status === 'gap'
+          ? 'Show practical options to compare because the minimum floor is not covered.'
+          : 'Do not show lifestyle-reduction options unless the runtime status is gap.',
+      detailArea: summary.status === 'gap' ? 'stressTests' : 'details'
+    }
+  ];
+
+  const decision: MonthlyCapacityDecisionLayer['decision'] =
+    summary.status === 'cannotTell'
+      ? 'cannotDecide'
+      : summary.status === 'gap'
+        ? 'needsAction'
+        : rows.some((row) => row.status === 'review')
+          ? 'needsReview'
+          : 'readyForPresentation';
+
+  return {
+    status: summary.status,
+    headline:
+      summary.status === 'gap'
+        ? 'Minimum monthly expenses are not covered under the current runtime estimate.'
+        : summary.status === 'cannotTell'
+          ? 'Monthly capacity cannot be decided yet.'
+          : summary.status === 'tight'
+            ? 'Minimum monthly expenses appear covered, with limited room.'
+            : 'Minimum monthly expenses appear covered under the current runtime estimate.',
+    decision,
+    rows,
+    primaryOptionIds: summary.status === 'gap' ? ['reduceSpending', 'workLonger', 'downsize', 'saveMore'] : summary.optionIds,
+    caveats,
+    boundary:
+      'Runtime-only decision layer: this summarizes capacity decisions for later presentation. It does not save capacity output, prescribe actions, or change engine output schema.'
+  };
 }
 
 export const selectSpendingStressSummary = selectSpendingStressSummaryFromStressModule;

@@ -21,6 +21,7 @@ import {
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
   selectMonthlyCapacityFoundation,
+  selectMonthlyCapacityDecisionLayer,
   selectMonthlyCapacityReviewRows,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
@@ -585,6 +586,100 @@ describe('result selectors', () => {
     });
     expect(rows.find((row) => row.id === 'capacity')?.detail).toContain('not saved');
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityReviewRows');
+  });
+
+  it('hardens monthly capacity decisions for covered and tight statuses without reduction prompts', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(fixture, planFixture, spending);
+    const decision = selectMonthlyCapacityDecisionLayer(capacity, planFixture);
+
+    expect(decision.status).toBe('tight');
+    expect(decision.decision).toBe('needsReview');
+    expect(decision.rows.map((row) => row.id)).toEqual(['floorCoverage', 'shortfallTiming', 'survivorEstate', 'optionGate']);
+    expect(decision.rows.find((row) => row.id === 'optionGate')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('unless the runtime status is gap')
+    });
+    expect(decision.primaryOptionIds).toEqual(['taxReview', 'estateReview']);
+    expect(decision.boundary).toContain('does not save capacity output');
+  });
+
+  it('hardens monthly capacity gap decisions with practical options only', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const repairedResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 63000, bal_total: 220000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64000, bal_total: 100000 }
+    ]);
+    const answer = selectRetirementAnswerSummary(shortfallResult, planFixture);
+    const spending = selectSpendingCapacitySummary(shortfallResult, { spendLessGogo: repairedResult }, planFixture, answer);
+    const capacity = selectMonthlyCapacityFoundation(shortfallResult, planFixture, spending);
+    const decision = selectMonthlyCapacityDecisionLayer(capacity, planFixture);
+
+    expect(decision.decision).toBe('needsAction');
+    expect(decision.rows.find((row) => row.id === 'floorCoverage')).toMatchObject({ status: 'block' });
+    expect(decision.rows.find((row) => row.id === 'shortfallTiming')?.detail).toContain('2029');
+    expect(decision.primaryOptionIds).toEqual(['reduceSpending', 'workLonger', 'downsize', 'saveMore']);
+    expect(decision.caveats.join(' ')).toContain('runtime estimate');
+  });
+
+  it('keeps mortgage treatment and survivor estate caveats visible in capacity decisions', () => {
+    const plan = createCleanExampleRuntimePlan('coupleTightFloor');
+    const result = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 500000 },
+      { ...fixture.years[1], shortfall: 0, totalAftaxYear: plan.spending.gogo || 0, spending: plan.spending.gogo || 0, bal_total: 450000 }
+    ]);
+    const capacity = selectMonthlyCapacityFoundation(result, plan);
+    const decision = selectMonthlyCapacityDecisionLayer(capacity, plan);
+
+    expect(capacity.monthlyMortgagePayment).toBe(1800);
+    expect(decision.rows.find((row) => row.id === 'floorCoverage')?.detail).toContain('mortgage payment');
+    expect(decision.rows.find((row) => row.id === 'survivorEstate')).toMatchObject({
+      status: 'review',
+      detailArea: 'householdResilience'
+    });
+    expect(decision.caveats.join(' ')).toContain('survivor resilience');
+  });
+
+  it('uses fresh clean examples as an expected monthly capacity decision matrix', () => {
+    const expected: Record<string, { status: string; decision: string }> = {
+      singleMinimumFloor: { status: 'tight', decision: 'needsReview' },
+      coupleTightFloor: { status: 'gap', decision: 'needsAction' },
+      pensionCoupleSurvivor: { status: 'tight', decision: 'needsReview' },
+      estateHeavyRoom: { status: 'covered', decision: 'needsReview' }
+    };
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, { ...plan, inheritance: 0 });
+      const spending = selectSpendingCapacitySummary(result, {}, { ...plan, inheritance: 0 }, answer);
+      const capacity = selectMonthlyCapacityFoundation(result, { ...plan, inheritance: 0 }, spending);
+      const decision = selectMonthlyCapacityDecisionLayer(capacity, { ...plan, inheritance: 0 });
+
+      expect({ status: capacity.status, decision: decision.decision }, card.id).toEqual(expected[card.id]);
+    }
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
