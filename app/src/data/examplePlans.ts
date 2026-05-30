@@ -1,6 +1,6 @@
-import { PlanPerson, V2PlanPayload } from '../types/plan';
+import { CLEAN_SCHEMA_VERSION, CleanResetPlanPayload, PLAN_FILE_TYPE, PLAN_FILE_VERSION, PlanFileV1, PlanPerson, V2PlanPayload } from '../types/plan';
 import { createBlankPlan } from './defaultPlan';
-import { extractPlanPayload } from './planFile';
+import { cleanResetPayloadToV2Plan, extractPlanPayload } from './planFile';
 
 export type ExamplePlanId =
   | 'diy-couple'
@@ -19,6 +19,15 @@ export type ExamplePlanCard = {
   focus: string;
 };
 
+export type CleanExamplePlanId = 'singleMinimumFloor' | 'coupleTightFloor' | 'pensionCoupleSurvivor' | 'estateHeavyRoom';
+
+export type CleanExamplePlanCard = {
+  id: CleanExamplePlanId;
+  label: string;
+  summary: string;
+  focus: string;
+};
+
 type PersonInput = PlanPerson & {
   cpp65Mo?: number;
   cpp70Mo?: number;
@@ -28,6 +37,107 @@ type PersonInput = PlanPerson & {
 };
 
 const OAS_2026_MONTHLY = 742;
+
+export const cleanExamplePlanCards: CleanExamplePlanCard[] = [
+  {
+    id: 'singleMinimumFloor',
+    label: 'Single covered floor',
+    summary: 'Single person with minimum monthly expenses covered under the modelled floor.',
+    focus: 'Monthly floor coverage'
+  },
+  {
+    id: 'coupleTightFloor',
+    label: 'Couple with a tight floor',
+    summary: 'Couple with a remaining mortgage and a minimum floor that needs careful review.',
+    focus: 'Gap options and mortgage pressure'
+  },
+  {
+    id: 'pensionCoupleSurvivor',
+    label: 'Pension couple with survivor sensitivity',
+    summary: 'Couple with DB pension income where survivor resilience needs to stay visible.',
+    focus: 'Pension and survivor review'
+  },
+  {
+    id: 'estateHeavyRoom',
+    label: 'Estate-focused household',
+    summary: 'Household with apparent room above the floor and an estate trade-off to review.',
+    focus: 'Room above floor and estate intent'
+  }
+];
+
+const cleanExamplePayloads: Record<CleanExamplePlanId, CleanResetPlanPayload> = {
+  singleMinimumFloor: {
+    schemaVersion: CLEAN_SCHEMA_VERSION,
+    title: 'Single covered floor',
+    minimumMonthlyExpensesExMortgage: 3600,
+    mortgageMonthlyPayment: 0,
+    earlySpendingChangeAge: 75,
+    laterSpendingChangeAge: 85,
+    province: 'ON',
+    taxYear: 2026,
+    household: {
+      p1Name: 'Morgan',
+      p1BirthYear: 1965,
+      p1RetirementYear: 2030
+    }
+  },
+  coupleTightFloor: {
+    schemaVersion: CLEAN_SCHEMA_VERSION,
+    title: 'Couple tight floor',
+    minimumMonthlyExpensesExMortgage: 6200,
+    mortgageMonthlyPayment: 1800,
+    earlySpendingChangeAge: 74,
+    laterSpendingChangeAge: 84,
+    province: 'ON',
+    taxYear: 2026,
+    household: {
+      p1Name: 'Amrita',
+      p1BirthYear: 1964,
+      p1RetirementYear: 2029,
+      p2Name: 'Noah',
+      p2BirthYear: 1966,
+      p2RetirementYear: 2031
+    }
+  },
+  pensionCoupleSurvivor: {
+    schemaVersion: CLEAN_SCHEMA_VERSION,
+    title: 'Pension couple survivor review',
+    minimumMonthlyExpensesExMortgage: 5400,
+    mortgageMonthlyPayment: 0,
+    earlySpendingChangeAge: 76,
+    laterSpendingChangeAge: 86,
+    province: 'ON',
+    taxYear: 2026,
+    household: {
+      p1Name: 'Evelyn',
+      p1BirthYear: 1962,
+      p1RetirementYear: 2027,
+      p2Name: 'Marc',
+      p2BirthYear: 1961,
+      p2RetirementYear: 2027
+    }
+  },
+  estateHeavyRoom: {
+    schemaVersion: CLEAN_SCHEMA_VERSION,
+    title: 'Estate-focused room above floor',
+    minimumMonthlyExpensesExMortgage: 7000,
+    mortgageMonthlyPayment: 0,
+    earlySpendingChangeAge: 77,
+    laterSpendingChangeAge: 87,
+    province: 'ON',
+    taxYear: 2026,
+    downsizeYear: 2040,
+    downsizeNetProceeds: 250000,
+    household: {
+      p1Name: 'Rina',
+      p1BirthYear: 1960,
+      p1RetirementYear: 2026,
+      p2Name: 'Cal',
+      p2BirthYear: 1959,
+      p2RetirementYear: 2026
+    }
+  }
+};
 
 export const examplePlanCards: ExamplePlanCard[] = [
   {
@@ -494,6 +604,30 @@ const exampleFactories: Record<ExamplePlanId, () => V2PlanPayload> = {
   'retired-traditional': retiredTraditional,
   'fire-couple': fireCouple
 };
+
+export function createCleanExamplePayload(id: CleanExamplePlanId): CleanResetPlanPayload {
+  return JSON.parse(JSON.stringify(cleanExamplePayloads[id])) as CleanResetPlanPayload;
+}
+
+export function createCleanExamplePlanFile(id: CleanExamplePlanId, now = '2026-05-01T00:00:00.000Z'): PlanFileV1 {
+  const plan = createCleanExamplePayload(id);
+  return {
+    fileType: PLAN_FILE_TYPE,
+    fileVersion: PLAN_FILE_VERSION,
+    exportedAt: now,
+    app: {
+      name: 'Canadian Retirement Planner',
+      schemaVersion: CLEAN_SCHEMA_VERSION,
+      storage: 'local-plan-file'
+    },
+    title: plan.title || 'Retirement plan',
+    plan
+  };
+}
+
+export function createCleanExampleRuntimePlan(id: CleanExamplePlanId): V2PlanPayload {
+  return cleanResetPayloadToV2Plan(createCleanExamplePayload(id));
+}
 
 export function createExamplePlan(id: ExamplePlanId): V2PlanPayload {
   return extractPlanPayload(exampleFactories[id]());

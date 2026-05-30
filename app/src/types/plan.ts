@@ -133,8 +133,12 @@ export type CleanResetPlanPayload = {
   downsizeYear?: number;
   downsizeNetProceeds?: number;
   household?: {
+    p1Name?: string;
     p1BirthYear?: number;
+    p1RetirementYear?: number;
+    p2Name?: string;
     p2BirthYear?: number | null;
+    p2RetirementYear?: number | null;
   };
 };
 

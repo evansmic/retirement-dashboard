@@ -180,12 +180,18 @@ export function cleanResetPayloadToV2Plan(payload: CleanResetPlanPayload): V2Pla
   const laterAge = finiteNumber(payload.laterSpendingChangeAge) || 85;
   const p1BirthYear = payload.household?.p1BirthYear ? finiteNumber(payload.household.p1BirthYear) : 1965;
   const p2BirthYear = payload.household?.p2BirthYear ? finiteNumber(payload.household.p2BirthYear) : 0;
+  const p1RetirementYear = payload.household?.p1RetirementYear ? finiteNumber(payload.household.p1RetirementYear) : plan.assumptions.retireYear || 2030;
+  const p2RetirementYear = payload.household?.p2RetirementYear ? finiteNumber(payload.household.p2RetirementYear) : p1RetirementYear;
 
   plan.title = payload.title || 'Retirement plan';
+  plan.p1.name = payload.household?.p1Name || '';
   plan.p1.dob = p1BirthYear;
-  plan.p1.retireYear = plan.assumptions.retireYear || 2030;
+  plan.p1.retireYear = p1RetirementYear;
+  plan.assumptions.retireYear = p1RetirementYear;
   plan.p1.db_startYear = plan.p1.retireYear;
+  plan.p2.name = p2BirthYear > 0 ? payload.household?.p2Name || 'Person 2' : '';
   plan.p2.dob = p2BirthYear;
+  plan.p2.retireYear = p2BirthYear > 0 ? p2RetirementYear : 0;
   plan.mortgage = { ...plan.mortgage, monthly: finiteNumber(payload.mortgageMonthlyPayment) };
   plan.downsize = {
     ...plan.downsize,
@@ -220,8 +226,12 @@ export function v2PlanToCleanResetPayload(payload: unknown): CleanResetPlanPaylo
     downsizeYear: finiteNumber(plan.downsize?.year),
     downsizeNetProceeds: finiteNumber(plan.downsize?.netProceeds),
     household: {
+      p1Name: plan.p1?.name || undefined,
       p1BirthYear: finiteNumber(plan.p1?.dob) || undefined,
-      p2BirthYear: p2LooksBlank(plan.p2) ? null : finiteNumber(plan.p2?.dob) || null
+      p1RetirementYear: finiteNumber(plan.p1?.retireYear) || undefined,
+      p2Name: p2LooksBlank(plan.p2) ? undefined : plan.p2?.name || undefined,
+      p2BirthYear: p2LooksBlank(plan.p2) ? null : finiteNumber(plan.p2?.dob) || null,
+      p2RetirementYear: p2LooksBlank(plan.p2) ? null : finiteNumber(plan.p2?.retireYear) || null
     }
   };
 }
