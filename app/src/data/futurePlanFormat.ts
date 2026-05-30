@@ -22,6 +22,7 @@ export type FuturePlanFormatDraft = {
   testOnlyFixtureShapes: FutureTestOnlyFixtureShape[];
   fixtureExpectationHardening: FutureFixtureExpectationHardening[];
   importBlockExpectationChecks: FutureImportBlockExpectationCheck[];
+  cleanSchemaResetImplementationPrep: FutureCleanSchemaResetImplementationPrep;
   optimizerContractReadiness: FutureOptimizerContractItem[];
   fixtureSpecifications: FutureFixtureSpecification[];
   accountOptimizerReadiness: FutureAccountOptimizerReadinessItem[];
@@ -85,6 +86,59 @@ export type FutureSchemaResetImportDecisionRow = {
 
 export type FutureSchemaResetFinalGateRow = {
   id: 'decisionEvidenceComplete' | 'implementationStillBlocked' | 'importDecisionsPinned' | 'notReadyToWireYet' | 'nextStepIsExplicitReview';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetImplementationPrep = {
+  status: 'planning-scoped-implementation-prep';
+  fieldContracts: FutureCleanSchemaResetFieldContract[];
+  importAdapterContracts: FutureCleanSchemaResetImportAdapterContract[];
+  v1FeedbackGates: FutureCleanSchemaResetV1FeedbackGate[];
+  guardrails: string[];
+};
+
+export type FutureCleanSchemaResetFieldContract = {
+  id: string;
+  savedStatus: 'saved-input' | 'runtime-derived' | 'deferred-output';
+  source: 'user-entered' | 'engine-derived' | 'future-runtime';
+  mustAvoid: string[];
+};
+
+export type FutureCleanSchemaResetImportAdapterContract = {
+  id: string;
+  plannedBehavior: 'accept' | 'block' | 'defer';
+  mustProve: string[];
+  mustAvoid: string[];
+};
+
+export type FutureCleanSchemaResetV1FeedbackGate = {
+  id: string;
+  stage: 'before-v1' | 'checkpoint' | 'later-ux-pass';
+  requiredEvidence: string[];
+  mustAvoid: string[];
+};
+
+export type FutureCleanSchemaResetPrepRow = {
+  id: 'fieldContract' | 'importAdapter' | 'feedbackGates' | 'guardrails';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetFixturePrepRow = {
+  id: 'acceptedFutureFixture' | 'oldPreviewFixture' | 'unsupportedFutureFixture' | 'rawPayloadFixture' | 'noPersistedFixtureFiles';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetV1TrustRow = {
+  id: 'capacityFirst' | 'todayDollarsVisible' | 'softOldFileBlock' | 'minimumBridgeExplanatory' | 'noPersistedRuntimeOutputs';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
+export type FutureCleanSchemaResetImplementationCloseoutRow = {
+  id: 'planningScoped' | 'contractsReady' | 'fixturePrepReady' | 'v1TrustGatesReady' | 'nextPackageNeedsApproval';
   status: 'pass' | 'fail';
   detail: string;
 };
@@ -493,7 +547,7 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
   status: 'planning-only',
   schemaReset: 'clean-reset',
   oldPreviewImportBehavior: 'block',
-  oldPreviewImportMessage: 'This plan was created with an earlier preview format. Please start a new plan.',
+  oldPreviewImportMessage: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
   implementationChecklist: [
     {
       id: 'fieldReview',
@@ -702,7 +756,7 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
     {
       id: 'oldPreviewBlockMessage',
       blockedRuleId: 'oldPreview',
-      expectedMessage: 'This plan was created with an earlier preview format. Please start a new plan.',
+      expectedMessage: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
       mustPreserve: ['current plan state', 'local-first posture', 'plain fresh-start instruction'],
       mustAvoid: ['migration promise', 'technical schema explanation']
     },
@@ -721,6 +775,87 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       mustAvoid: ['raw payload fallback', 'partial import']
     }
   ],
+  cleanSchemaResetImplementationPrep: {
+    status: 'planning-scoped-implementation-prep',
+    fieldContracts: [
+      {
+        id: 'minimumMonthlyExpensesExMortgage',
+        savedStatus: 'saved-input',
+        source: 'user-entered',
+        mustAvoid: ['migrated desired spending', 'mortgage double count']
+      },
+      {
+        id: 'confidentMonthlyAfterTaxSpend',
+        savedStatus: 'runtime-derived',
+        source: 'engine-derived',
+        mustAvoid: ['saved output field', 'user-entered target']
+      },
+      {
+        id: 'fundingTrace',
+        savedStatus: 'deferred-output',
+        source: 'future-runtime',
+        mustAvoid: ['account-by-account advice', 'saved withdrawal instructions']
+      }
+    ],
+    importAdapterContracts: [
+      {
+        id: 'acceptWrappedFuturePlan',
+        plannedBehavior: 'accept',
+        mustProve: ['minimum monthly expenses survive import', 'capacity answer is derived after load'],
+        mustAvoid: ['saved calculated capacity', 'current production loader change in prep']
+      },
+      {
+        id: 'blockOlderPreviewPlan',
+        plannedBehavior: 'block',
+        mustProve: ['soft fresh-start copy is shown', 'no partial plan state loads'],
+        mustAvoid: ['hard crash', 'desired-spending migration']
+      },
+      {
+        id: 'blockRawPayload',
+        plannedBehavior: 'block',
+        mustProve: ['raw payloads do not load as plan files', 'wrapped-file boundary is required'],
+        mustAvoid: ['best-effort raw import', 'partial state load']
+      }
+    ],
+    v1FeedbackGates: [
+      {
+        id: 'derivedCapacityHero',
+        stage: 'before-v1',
+        requiredEvidence: ['Overview leads with derived after-tax monthly capacity', "Today's dollars is visible near the monthly number"],
+        mustAvoid: ['user must guess desired spend first', 'target-spend hero framing']
+      },
+      {
+        id: 'minimumExpenseBridgeExplanation',
+        stage: 'before-v1',
+        requiredEvidence: ['Minimum-expense bridge reads as explanation only', 'Mortgage exclusion is clear when debts already include mortgage'],
+        mustAvoid: ['editable-looking bridge fields', 'saved-input hint before reset']
+      },
+      {
+        id: 'drawdownOutputNotPersisted',
+        stage: 'before-v1',
+        requiredEvidence: ['Saved plan excludes optimizer output', 'Saved plan excludes funding trace output'],
+        mustAvoid: ['persisted drawdown result', 'account-level sequencing in saved files']
+      },
+      {
+        id: 'spendingPathOptionality',
+        stage: 'checkpoint',
+        requiredEvidence: ['Breakpoint ages read as optional assumptions', 'Age-based changes tie back to monthly capacity'],
+        mustAvoid: ['required expertise framing', 'false precision']
+      },
+      {
+        id: 'overviewDensityPolish',
+        stage: 'later-ux-pass',
+        requiredEvidence: ['Non-critical Details bridges can be collapsed', 'Monthly number remains visually primary'],
+        mustAvoid: ['dense first screen', 'review actions crowding the answer']
+      }
+    ],
+    guardrails: [
+      'This package prepares implementation contracts but does not wire production import behavior.',
+      'The reset must derive capacity from assets, income, debts, tax, and assumptions rather than asking for a desired spend.',
+      'Older preview files may block, but the block must be soft, calm, and crash-free.',
+      'Optimizer, funding trace, and drawdown outputs must stay out of saved plan files.'
+    ]
+  },
   optimizerContractReadiness: [
     {
       id: 'floorInputs',
@@ -818,7 +953,7 @@ export const futurePlanFormatDraft: FuturePlanFormatDraft = {
       id: 'oldPreview',
       decision: 'block',
       appliesTo: 'Older preview files from the phased-spending schema',
-      message: 'This plan was created with an earlier preview format. Please start a new plan.',
+      message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
       reason: 'Old desired-spending fields should not be interpreted as minimum expenses.'
     },
     {
@@ -2083,6 +2218,191 @@ export function futureSchemaResetFinalGateRows(draft = futurePlanFormatDraft): F
       id: 'nextStepIsExplicitReview',
       status: nextStepIsExplicitReview ? 'pass' : 'fail',
       detail: 'The next step is an explicit review, not implementation by implication.'
+    }
+  ];
+}
+
+export function futureCleanSchemaResetFieldContractIds(draft = futurePlanFormatDraft): string[] {
+  return draft.cleanSchemaResetImplementationPrep.fieldContracts.map((contract) => contract.id);
+}
+
+export function futureCleanSchemaResetImportAdapterContractIds(draft = futurePlanFormatDraft): string[] {
+  return draft.cleanSchemaResetImplementationPrep.importAdapterContracts.map((contract) => contract.id);
+}
+
+export function futureCleanSchemaResetV1FeedbackGateIds(draft = futurePlanFormatDraft): string[] {
+  return draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.map((gate) => gate.id);
+}
+
+export function futureCleanSchemaResetPrepRows(draft = futurePlanFormatDraft): FutureCleanSchemaResetPrepRow[] {
+  const fieldContract =
+    draft.cleanSchemaResetImplementationPrep.fieldContracts.some(
+      (contract) =>
+        contract.id === 'confidentMonthlyAfterTaxSpend' &&
+        contract.savedStatus === 'runtime-derived' &&
+        contract.mustAvoid.includes('user-entered target')
+    ) &&
+    draft.cleanSchemaResetImplementationPrep.fieldContracts.some(
+      (contract) => contract.id === 'minimumMonthlyExpensesExMortgage' && contract.savedStatus === 'saved-input'
+    );
+  const importAdapter =
+    draft.cleanSchemaResetImplementationPrep.importAdapterContracts.some(
+      (contract) => contract.id === 'blockOlderPreviewPlan' && contract.mustAvoid.includes('hard crash')
+    ) &&
+    draft.importAcceptanceRules.some((rule) => rule.id === 'oldPreview' && rule.message === draft.oldPreviewImportMessage);
+  const feedbackGates =
+    draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.some(
+      (gate) => gate.id === 'derivedCapacityHero' && gate.mustAvoid.includes('user must guess desired spend first')
+    ) &&
+    draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.some(
+      (gate) => gate.id === 'drawdownOutputNotPersisted' && gate.stage === 'before-v1'
+    );
+  const guardrails =
+    draft.cleanSchemaResetImplementationPrep.status === 'planning-scoped-implementation-prep' &&
+    draft.cleanSchemaResetImplementationPrep.guardrails.includes(
+      'This package prepares implementation contracts but does not wire production import behavior.'
+    );
+
+  return [
+    { id: 'fieldContract', status: fieldContract ? 'pass' : 'fail', detail: 'Saved inputs and runtime-derived answers are separated.' },
+    { id: 'importAdapter', status: importAdapter ? 'pass' : 'fail', detail: 'Import adapter prep keeps old-file blocking soft and crash-free.' },
+    { id: 'feedbackGates', status: feedbackGates ? 'pass' : 'fail', detail: 'V1 feedback gates keep derived capacity and saved-output trust visible.' },
+    { id: 'guardrails', status: guardrails ? 'pass' : 'fail', detail: 'Implementation prep remains planning-scoped.' }
+  ];
+}
+
+export function futureCleanSchemaResetFixturePrepRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetFixturePrepRow[] {
+  const sampleByFixtureId = new Map(samples.map((sample) => [sample.fixtureId, sample]));
+  const accepted = sampleByFixtureId.get('futureMinimumFloorPlan');
+  const oldPreview = sampleByFixtureId.get('legacyPreviewDesiredSpendPayload');
+  const unsupportedFuture = sampleByFixtureId.get('unsupportedFuturePlanFile');
+  const rawPayload = sampleByFixtureId.get('rawUnwrappedPayload');
+  const allTestOnly = samples.every((sample) => sample.mode === 'test-only');
+  const noPersistedFixtureFiles =
+    allTestOnly &&
+    draft.schemaResetDecisionReadiness
+      .find((item) => item.id === 'newExamplesReady')
+      ?.mustAvoid.includes('creating persisted .plan.json files during planning');
+
+  return [
+    {
+      id: 'acceptedFutureFixture',
+      status:
+        accepted?.plannedImportResult === 'accept' &&
+        accepted.mustNotDo.includes('save calculated capacity') &&
+        accepted.mustNotDo.includes('write a .plan.json file')
+          ? 'pass'
+          : 'fail',
+      detail: 'Accepted future fixture stays in memory and excludes calculated capacity.'
+    },
+    {
+      id: 'oldPreviewFixture',
+      status:
+        oldPreview?.plannedImportResult === 'block' &&
+        oldPreview.mustNotDo.includes('map desired spending into minimum expenses') &&
+        oldPreview.mustNotDo.includes('partially load current plan state')
+          ? 'pass'
+          : 'fail',
+      detail: 'Old preview fixture blocks without migration or partial state.'
+    },
+    {
+      id: 'unsupportedFutureFixture',
+      status:
+        unsupportedFuture?.plannedImportResult === 'block' &&
+        unsupportedFuture.mustNotDo.includes('drop unknown future fields') &&
+        unsupportedFuture.mustNotDo.includes('change current plan state')
+          ? 'pass'
+          : 'fail',
+      detail: 'Unsupported future fixture blocks before unknown fields are dropped.'
+    },
+    {
+      id: 'rawPayloadFixture',
+      status:
+        rawPayload?.plannedImportResult === 'block' &&
+        rawPayload.mustNotDo.includes('treat raw payloads as plan files') &&
+        rawPayload.mustNotDo.includes('change current plan state')
+          ? 'pass'
+          : 'fail',
+      detail: 'Raw payload fixture blocks without becoming a plan file.'
+    },
+    {
+      id: 'noPersistedFixtureFiles',
+      status: noPersistedFixtureFiles ? 'pass' : 'fail',
+      detail: 'Fixture prep remains in-memory and does not create .plan.json files.'
+    }
+  ];
+}
+
+export function futureCleanSchemaResetV1TrustRows(draft = futurePlanFormatDraft): FutureCleanSchemaResetV1TrustRow[] {
+  const derivedCapacityGate = draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.find((gate) => gate.id === 'derivedCapacityHero');
+  const minimumBridgeGate = draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.find(
+    (gate) => gate.id === 'minimumExpenseBridgeExplanation'
+  );
+  const savedOutputGate = draft.cleanSchemaResetImplementationPrep.v1FeedbackGates.find((gate) => gate.id === 'drawdownOutputNotPersisted');
+  const oldFileBlockSoft =
+    draft.oldPreviewImportMessage.includes('earlier version') &&
+    draft.oldPreviewImportMessage.includes('Start a fresh plan') &&
+    !draft.oldPreviewImportMessage.toLowerCase().includes('error');
+  const todayDollarsVisible = Boolean(derivedCapacityGate?.requiredEvidence.some((evidence) => evidence.includes("Today's dollars")));
+
+  return [
+    {
+      id: 'capacityFirst',
+      status: derivedCapacityGate?.mustAvoid.includes('user must guess desired spend first') ? 'pass' : 'fail',
+      detail: 'The primary answer must be derived capacity, not a guessed desired spend.'
+    },
+    {
+      id: 'todayDollarsVisible',
+      status: todayDollarsVisible ? 'pass' : 'fail',
+      detail: "Today's dollars must be visible near the monthly capacity answer."
+    },
+    {
+      id: 'softOldFileBlock',
+      status: oldFileBlockSoft ? 'pass' : 'fail',
+      detail: 'Older preview files use soft fresh-start copy and avoid technical error framing.'
+    },
+    {
+      id: 'minimumBridgeExplanatory',
+      status: minimumBridgeGate?.mustAvoid.includes('editable-looking bridge fields') ? 'pass' : 'fail',
+      detail: 'The minimum-expense bridge should read as explanation, not a saved input.'
+    },
+    {
+      id: 'noPersistedRuntimeOutputs',
+      status:
+        savedOutputGate?.requiredEvidence.includes('Saved plan excludes optimizer output') &&
+        savedOutputGate.requiredEvidence.includes('Saved plan excludes funding trace output')
+          ? 'pass'
+          : 'fail',
+      detail: 'Optimizer, drawdown, and funding trace outputs stay out of saved plan files.'
+    }
+  ];
+}
+
+export function futureCleanSchemaResetImplementationCloseoutRows(
+  samples = futureTestOnlyFixtureSamples,
+  draft = futurePlanFormatDraft
+): FutureCleanSchemaResetImplementationCloseoutRow[] {
+  const planningScoped = draft.cleanSchemaResetImplementationPrep.status === 'planning-scoped-implementation-prep';
+  const contractsReady = futureCleanSchemaResetPrepRows(draft).every((row) => row.status === 'pass');
+  const fixturePrepReady = futureCleanSchemaResetFixturePrepRows(samples, draft).every((row) => row.status === 'pass');
+  const v1TrustGatesReady = futureCleanSchemaResetV1TrustRows(draft).every((row) => row.status === 'pass');
+  const nextPackageNeedsApproval =
+    draft.cleanSchemaResetImplementationPrep.guardrails.includes(
+      'This package prepares implementation contracts but does not wire production import behavior.'
+    ) && draft.schemaResetDecisionReadiness.every((item) => item.decision !== 'ready-to-wire');
+
+  return [
+    { id: 'planningScoped', status: planningScoped ? 'pass' : 'fail', detail: 'This package remains planning-scoped implementation prep.' },
+    { id: 'contractsReady', status: contractsReady ? 'pass' : 'fail', detail: 'Field and import adapter contracts are ready for review.' },
+    { id: 'fixturePrepReady', status: fixturePrepReady ? 'pass' : 'fail', detail: 'Fixture prep is in-memory and covers accepted and blocked cases.' },
+    { id: 'v1TrustGatesReady', status: v1TrustGatesReady ? 'pass' : 'fail', detail: 'Current v1 feedback is captured as trust gates.' },
+    {
+      id: 'nextPackageNeedsApproval',
+      status: nextPackageNeedsApproval ? 'pass' : 'fail',
+      detail: 'The next package still needs explicit approval before wiring schema or import behavior.'
     }
   ];
 }

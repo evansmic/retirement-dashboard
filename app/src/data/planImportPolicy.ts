@@ -12,7 +12,7 @@ export const planImportResetDecision: PlanImportResetDecision = {
   status: 'planned-reset',
   currentAcceptedSchemaVersion: 2,
   futureImportBehavior: 'block-older-preview-files',
-  message: 'This plan was created with an earlier preview format. Please start a new plan.',
+  message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.',
   rationale: [
     'The product is still in tester-only preview, so old test files can be discarded.',
     'Migrating desired-spending fields into minimum expenses could silently misstate what the household needs.',
@@ -29,4 +29,3 @@ export const planImportResetDecision: PlanImportResetDecision = {
     'No engine output schema or account optimizer output is added here.'
   ]
 };
-

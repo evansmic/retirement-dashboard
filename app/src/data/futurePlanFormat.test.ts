@@ -5,6 +5,13 @@ import {
   futureCapacitySelectorInputIds,
   futureCapacitySelectorOutputIds,
   futureCapacitySelectorStatusMappingIds,
+  futureCleanSchemaResetFieldContractIds,
+  futureCleanSchemaResetFixturePrepRows,
+  futureCleanSchemaResetImportAdapterContractIds,
+  futureCleanSchemaResetImplementationCloseoutRows,
+  futureCleanSchemaResetPrepRows,
+  futureCleanSchemaResetV1FeedbackGateIds,
+  futureCleanSchemaResetV1TrustRows,
   futureCapacitySelectorBoundaryRows,
   futureCapacitySelectorScenarioIds,
   futureCapacityGapOptionIds,
@@ -68,7 +75,9 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.status).toBe('planning-only');
     expect(futurePlanFormatDraft.schemaReset).toBe('clean-reset');
     expect(futurePlanFormatDraft.oldPreviewImportBehavior).toBe('block');
-    expect(futurePlanFormatDraft.oldPreviewImportMessage).toBe('This plan was created with an earlier preview format. Please start a new plan.');
+    expect(futurePlanFormatDraft.oldPreviewImportMessage).toBe(
+      'This plan was created with an earlier version. Start a fresh plan to use the current features.'
+    );
   });
 
   it('defines minimum expenses as a new field instead of a migrated desired-spend value', () => {
@@ -112,7 +121,7 @@ describe('future plan format draft', () => {
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'newFormat')?.decision).toBe('accept');
     expect(futureBlockedImportRules().map((rule) => rule.id)).toEqual(['oldPreview', 'futureUnknown', 'rawPayload']);
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'oldPreview')?.message).toBe(
-      'This plan was created with an earlier preview format. Please start a new plan.'
+      'This plan was created with an earlier version. Start a fresh plan to use the current features.'
     );
     expect(futurePlanFormatDraft.importAcceptanceRules.find((rule) => rule.id === 'rawPayload')?.decision).toBe('block');
     expect(futureAcceptedImportRuleIds()).toEqual(['newFormat']);
@@ -281,6 +290,104 @@ describe('future plan format draft', () => {
     ).toMatchObject({ status: 'fail' });
   });
 
+  it('starts clean schema reset implementation prep without wiring production behavior', () => {
+    expect(futurePlanFormatDraft.cleanSchemaResetImplementationPrep.status).toBe('planning-scoped-implementation-prep');
+    expect(futureCleanSchemaResetFieldContractIds()).toEqual([
+      'minimumMonthlyExpensesExMortgage',
+      'confidentMonthlyAfterTaxSpend',
+      'fundingTrace'
+    ]);
+    expect(futureCleanSchemaResetImportAdapterContractIds()).toEqual(['acceptWrappedFuturePlan', 'blockOlderPreviewPlan', 'blockRawPayload']);
+    expect(futureCleanSchemaResetPrepRows()).toEqual([
+      { id: 'fieldContract', status: 'pass', detail: 'Saved inputs and runtime-derived answers are separated.' },
+      { id: 'importAdapter', status: 'pass', detail: 'Import adapter prep keeps old-file blocking soft and crash-free.' },
+      { id: 'feedbackGates', status: 'pass', detail: 'V1 feedback gates keep derived capacity and saved-output trust visible.' },
+      { id: 'guardrails', status: 'pass', detail: 'Implementation prep remains planning-scoped.' }
+    ]);
+  });
+
+  it('folds current v1 feedback into reset prep gates without starting the UI overhaul', () => {
+    expect(futureCleanSchemaResetV1FeedbackGateIds()).toEqual([
+      'derivedCapacityHero',
+      'minimumExpenseBridgeExplanation',
+      'drawdownOutputNotPersisted',
+      'spendingPathOptionality',
+      'overviewDensityPolish'
+    ]);
+    expect(
+      futurePlanFormatDraft.cleanSchemaResetImplementationPrep.v1FeedbackGates.find((gate) => gate.id === 'derivedCapacityHero')?.mustAvoid
+    ).toContain('user must guess desired spend first');
+    expect(
+      futurePlanFormatDraft.cleanSchemaResetImplementationPrep.v1FeedbackGates.find((gate) => gate.id === 'overviewDensityPolish')?.stage
+    ).toBe('later-ux-pass');
+  });
+
+  it('keeps clean reset fixture prep in-memory, blocked where needed, and without persisted plan files', () => {
+    expect(futureCleanSchemaResetFixturePrepRows()).toEqual([
+      { id: 'acceptedFutureFixture', status: 'pass', detail: 'Accepted future fixture stays in memory and excludes calculated capacity.' },
+      { id: 'oldPreviewFixture', status: 'pass', detail: 'Old preview fixture blocks without migration or partial state.' },
+      { id: 'unsupportedFutureFixture', status: 'pass', detail: 'Unsupported future fixture blocks before unknown fields are dropped.' },
+      { id: 'rawPayloadFixture', status: 'pass', detail: 'Raw payload fixture blocks without becoming a plan file.' },
+      { id: 'noPersistedFixtureFiles', status: 'pass', detail: 'Fixture prep remains in-memory and does not create .plan.json files.' }
+    ]);
+  });
+
+  it('marks clean reset fixture prep incomplete when old-preview block guardrails drift', () => {
+    expect(
+      futureCleanSchemaResetFixturePrepRows([
+        ...futureTestOnlyFixtureSamples.filter((sample) => sample.fixtureId !== 'legacyPreviewDesiredSpendPayload'),
+        {
+          ...futureOldPreviewFixtureSample,
+          mustNotDo: futureOldPreviewFixtureSample.mustNotDo.filter((item) => item !== 'partially load current plan state')
+        }
+      ]).find((row) => row.id === 'oldPreviewFixture')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('tracks v1 trust feedback before clean reset implementation proceeds', () => {
+    expect(futureCleanSchemaResetV1TrustRows()).toEqual([
+      { id: 'capacityFirst', status: 'pass', detail: 'The primary answer must be derived capacity, not a guessed desired spend.' },
+      { id: 'todayDollarsVisible', status: 'pass', detail: "Today's dollars must be visible near the monthly capacity answer." },
+      { id: 'softOldFileBlock', status: 'pass', detail: 'Older preview files use soft fresh-start copy and avoid technical error framing.' },
+      { id: 'minimumBridgeExplanatory', status: 'pass', detail: 'The minimum-expense bridge should read as explanation, not a saved input.' },
+      { id: 'noPersistedRuntimeOutputs', status: 'pass', detail: 'Optimizer, drawdown, and funding trace outputs stay out of saved plan files.' }
+    ]);
+  });
+
+  it('marks v1 trust feedback incomplete if old-file block copy becomes technical or harsh', () => {
+    expect(
+      futureCleanSchemaResetV1TrustRows({
+        ...futurePlanFormatDraft,
+        oldPreviewImportMessage: 'Schema error: unsupported old preview file.'
+      }).find((row) => row.id === 'softOldFileBlock')
+    ).toMatchObject({ status: 'fail' });
+  });
+
+  it('closes clean reset implementation prep without approving schema or import wiring', () => {
+    expect(futureCleanSchemaResetImplementationCloseoutRows()).toEqual([
+      { id: 'planningScoped', status: 'pass', detail: 'This package remains planning-scoped implementation prep.' },
+      { id: 'contractsReady', status: 'pass', detail: 'Field and import adapter contracts are ready for review.' },
+      { id: 'fixturePrepReady', status: 'pass', detail: 'Fixture prep is in-memory and covers accepted and blocked cases.' },
+      { id: 'v1TrustGatesReady', status: 'pass', detail: 'Current v1 feedback is captured as trust gates.' },
+      {
+        id: 'nextPackageNeedsApproval',
+        status: 'pass',
+        detail: 'The next package still needs explicit approval before wiring schema or import behavior.'
+      }
+    ]);
+  });
+
+  it('marks clean reset implementation closeout incomplete if a decision row is ready to wire', () => {
+    expect(
+      futureCleanSchemaResetImplementationCloseoutRows(futureTestOnlyFixtureSamples, {
+        ...futurePlanFormatDraft,
+        schemaResetDecisionReadiness: futurePlanFormatDraft.schemaResetDecisionReadiness.map((item) =>
+          item.id === 'fieldListFrozen' ? { ...item, decision: 'ready-to-wire' } : item
+        )
+      }).find((row) => row.id === 'nextPackageNeedsApproval')
+    ).toMatchObject({ status: 'fail' });
+  });
+
   it('defines test-only fixture shapes without saving calculated answers', () => {
     expect(futureTestOnlyFixtureShapeIds()).toEqual([
       'futureMinimumFloorPlan',
@@ -320,7 +427,7 @@ describe('future plan format draft', () => {
   it('pins import-block expectations to plain messages and state preservation', () => {
     expect(futureImportBlockExpectationCheckIds()).toEqual(['oldPreviewBlockMessage', 'futureUnknownBlockMessage', 'rawPayloadBlockMessage']);
     expect(futurePlanFormatDraft.importBlockExpectationChecks.find((check) => check.id === 'oldPreviewBlockMessage')?.expectedMessage).toBe(
-      'This plan was created with an earlier preview format. Please start a new plan.'
+      'This plan was created with an earlier version. Start a fresh plan to use the current features.'
     );
     expect(futurePlanFormatDraft.importBlockExpectationChecks.find((check) => check.id === 'futureUnknownBlockMessage')?.mustAvoid).toContain(
       'silent downgrade'

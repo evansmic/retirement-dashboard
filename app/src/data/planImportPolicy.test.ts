@@ -7,7 +7,7 @@ describe('plan import reset decision', () => {
     expect(planImportResetDecision.status).toBe('planned-reset');
     expect(planImportResetDecision.currentAcceptedSchemaVersion).toBe(SCHEMA_VERSION);
     expect(planImportResetDecision.futureImportBehavior).toBe('block-older-preview-files');
-    expect(planImportResetDecision.message).toBe('This plan was created with an earlier preview format. Please start a new plan.');
+    expect(planImportResetDecision.message).toBe('This plan was created with an earlier version. Start a fresh plan to use the current features.');
   });
 
   it('keeps the package scoped away from migration and optimizer output', () => {
@@ -22,4 +22,3 @@ describe('plan import reset decision', () => {
     );
   });
 });
-
