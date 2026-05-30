@@ -835,6 +835,71 @@ export type MonthlyCapacityReadinessCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityOptimizerHandoffRow = {
+  id: 'floorFirstObjective' | 'floorCoverage' | 'leverGate' | 'caveatCoverage' | 'outputBoundary';
+  label: string;
+  status: 'pass' | 'review' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityOptimizerHandoff = {
+  status: 'ready' | 'review' | 'blocked';
+  objective: 'coverMonthlyFloorFirst';
+  packetStatus: MonthlyCapacityStatus;
+  allowedPracticalLeverIds: MonthlyCapacityLeverGate['id'][];
+  reviewOnlyLeverIds: MonthlyCapacityLeverGate['id'][];
+  blockedOutputIds: MonthlyCapacityOptimizerObjective['forbiddenOutputs'];
+  rows: MonthlyCapacityOptimizerHandoffRow[];
+  boundary: string;
+};
+
+export type MonthlyCapacityOptimizerInputContract = {
+  status: 'ready' | 'review' | 'blocked';
+  capacityStatus: MonthlyCapacityOptimizerHandoff['status'];
+  optimizerInputStatus: OptimizerInputReviewSummary['status'];
+  canExploreLeverIds: OptimizerInputReviewRow['id'][];
+  mustPreserveLeverIds: OptimizerInputReviewRow['id'][];
+  needsDecisionLeverIds: OptimizerInputReviewRow['id'][];
+  blockedReasons: string[];
+  boundary: string;
+};
+
+export type MonthlyCapacityOptimizerGuardrail = {
+  id: 'floorFirst' | 'neutralGapOptions' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstructions' | 'noAnnualSequencing';
+  status: 'pass' | 'review' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityOptimizerExampleHandoff = {
+  id: string;
+  capacityStatus: MonthlyCapacityStatus;
+  handoffStatus: MonthlyCapacityOptimizerHandoff['status'];
+  objective: 'coverMonthlyFloorFirst';
+  openLeverIds: MonthlyCapacityLeverGate['id'][];
+  guardrailStatuses: Record<MonthlyCapacityOptimizerGuardrail['id'], MonthlyCapacityOptimizerGuardrail['status']>;
+  boundary: string;
+};
+
+export type MonthlyCapacityOptimizerExecutionGate = {
+  status: 'blocked' | 'reviewOnly' | 'readyForFutureImplementation';
+  headline: string;
+  requiredBeforeExecution: Array<
+    'completeCapacityInputs' | 'resolveOptimizerInputDecisions' | 'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+  >;
+  allowedNow: Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>;
+  notAllowedYet: Array<'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityOptimizerHandoffCloseout = {
+  status: 'blocked' | 'readyForPlanning' | 'readyForFutureImplementation';
+  headline: string;
+  packageSummary: string;
+  nextBroadStep: 'candidateScoringPlan' | 'capacityInputsFirst' | 'futureImplementationPackage';
+  preservedBoundaries: MonthlyCapacityOptimizerExecutionGate['notAllowedYet'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -1873,6 +1938,233 @@ export function selectMonthlyCapacityReadinessCloseout(
     openGateIds,
     boundary:
       'Runtime-only closeout: summarizes capacity readiness for future work. It does not change UI, saved schema, engine output schema, optimizer execution, or funding trace output.'
+  };
+}
+
+export function selectMonthlyCapacityOptimizerHandoff(
+  packet: MonthlyCapacityRuntimePacket,
+  leverGates: MonthlyCapacityLeverGate[] = selectMonthlyCapacityLeverGates(packet)
+): MonthlyCapacityOptimizerHandoff {
+  const allowedPracticalLeverIds = leverGates.filter((gate) => gate.status === 'allowed').map((gate) => gate.id);
+  const reviewOnlyLeverIds = leverGates.filter((gate) => gate.status === 'reviewOnly').map((gate) => gate.id);
+  const blocked = packet.status === 'cannotTell';
+  const rows: MonthlyCapacityOptimizerHandoffRow[] = [
+    {
+      id: 'floorFirstObjective',
+      label: 'Floor-first objective',
+      status: packet.optimizerObjective.status === 'needsInputs' ? 'block' : 'pass',
+      detail: 'Future optimizer work should cover the monthly floor before testing discretionary room.'
+    },
+    {
+      id: 'floorCoverage',
+      label: 'Floor coverage decision',
+      status: packet.status === 'cannotTell' ? 'block' : packet.status === 'gap' || packet.status === 'tight' ? 'review' : 'pass',
+      detail:
+        packet.status === 'gap'
+          ? 'The handoff should compare practical gap options before any room-above-floor logic.'
+          : packet.status === 'cannotTell'
+            ? 'The handoff is blocked until runtime floor and capacity inputs are complete.'
+            : 'The handoff can preserve floor coverage while reviewing caveats.'
+    },
+    {
+      id: 'leverGate',
+      label: 'Lever gate',
+      status: blocked ? 'block' : allowedPracticalLeverIds.length > 0 ? 'review' : 'pass',
+      detail:
+        allowedPracticalLeverIds.length > 0
+          ? 'Practical levers are open only because the monthly floor has a gap.'
+          : 'Practical levers stay suppressed unless the monthly floor has a gap.'
+    },
+    {
+      id: 'caveatCoverage',
+      label: 'Caveat coverage',
+      status: blocked ? 'block' : packet.caveatSignals.some((signal) => signal.status === 'review') ? 'review' : 'pass',
+      detail: 'Tax, survivor, estate, home-equity, and spending-path caveats stay attached to the handoff.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: 'pass',
+      detail: 'The handoff forbids saved capacity, funding trace output, account instructions, and annual account-level sequencing.'
+    }
+  ];
+  const status: MonthlyCapacityOptimizerHandoff['status'] = rows.some((row) => row.status === 'block')
+    ? 'blocked'
+    : rows.some((row) => row.status === 'review')
+      ? 'review'
+      : 'ready';
+
+  return {
+    status,
+    objective: 'coverMonthlyFloorFirst',
+    packetStatus: packet.status,
+    allowedPracticalLeverIds,
+    reviewOnlyLeverIds,
+    blockedOutputIds: packet.optimizerObjective.forbiddenOutputs,
+    rows,
+    boundary:
+      'Runtime-only optimizer handoff: describes how monthly capacity evidence can feed later optimizer work. It does not run optimizer search, save output, change UI, or change engine output schema.'
+  };
+}
+
+export function selectMonthlyCapacityOptimizerInputContract(
+  handoff: MonthlyCapacityOptimizerHandoff,
+  optimizerInputReview: OptimizerInputReviewSummary
+): MonthlyCapacityOptimizerInputContract {
+  const canExploreLeverIds = optimizerInputReview.rows.filter((row) => row.permission === 'canExplore').map((row) => row.id);
+  const mustPreserveLeverIds = optimizerInputReview.rows.filter((row) => row.permission === 'mustPreserve').map((row) => row.id);
+  const needsDecisionLeverIds = optimizerInputReview.rows.filter((row) => row.permission === 'needsDecision').map((row) => row.id);
+  const blockedReasons = [
+    ...(handoff.status === 'blocked' ? ['Monthly capacity handoff is blocked until runtime floor and capacity inputs are complete.'] : []),
+    ...(needsDecisionLeverIds.length > 0 ? ['Some optimizer inputs need household decisions before search would be responsible.'] : [])
+  ];
+  const status: MonthlyCapacityOptimizerInputContract['status'] =
+    blockedReasons.length > 0 ? 'blocked' : handoff.status === 'review' || optimizerInputReview.status === 'review' ? 'review' : 'ready';
+
+  return {
+    status,
+    capacityStatus: handoff.status,
+    optimizerInputStatus: optimizerInputReview.status,
+    canExploreLeverIds,
+    mustPreserveLeverIds,
+    needsDecisionLeverIds,
+    blockedReasons,
+    boundary:
+      'Runtime-only input contract: combines floor-first capacity evidence with existing optimizer input permissions. It does not persist optimizer permissions or execute optimizer candidates.'
+  };
+}
+
+export function selectMonthlyCapacityOptimizerGuardrails(handoff: MonthlyCapacityOptimizerHandoff): MonthlyCapacityOptimizerGuardrail[] {
+  const hasGap = handoff.packetStatus === 'gap';
+  return [
+    {
+      id: 'floorFirst',
+      status: handoff.status === 'blocked' ? 'block' : 'pass',
+      detail: 'The first objective is covering minimum monthly expenses before comparing room above the floor.'
+    },
+    {
+      id: 'neutralGapOptions',
+      status: hasGap ? 'review' : 'pass',
+      detail: hasGap
+        ? 'Gap options should stay practical and neutral: reduce spending, work longer, downsize if realistic, or save more.'
+        : 'Gap options remain suppressed when the monthly floor is not visibly strained.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: 'pass',
+      detail: 'Calculated capacity and optimizer results must stay out of saved plan files.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: 'pass',
+      detail: 'Funding trace output remains deferred and should not be generated by this handoff.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: 'pass',
+      detail: 'The handoff must not tell the household which account to withdraw from.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: 'pass',
+      detail: 'Annual account-level sequencing remains deferred until explicitly planned.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityOptimizerExampleHandoff(
+  id: string,
+  packet: MonthlyCapacityRuntimePacket
+): MonthlyCapacityOptimizerExampleHandoff {
+  const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+  const guardrails = selectMonthlyCapacityOptimizerGuardrails(handoff);
+  const guardrailStatuses = guardrails.reduce<MonthlyCapacityOptimizerExampleHandoff['guardrailStatuses']>((acc, row) => {
+    acc[row.id] = row.status;
+    return acc;
+  }, {
+    floorFirst: 'pass',
+    neutralGapOptions: 'pass',
+    noSavedOutput: 'pass',
+    noFundingTrace: 'pass',
+    noAccountInstructions: 'pass',
+    noAnnualSequencing: 'pass'
+  });
+
+  return {
+    id,
+    capacityStatus: packet.status,
+    handoffStatus: handoff.status,
+    objective: 'coverMonthlyFloorFirst',
+    openLeverIds: [...handoff.allowedPracticalLeverIds, ...handoff.reviewOnlyLeverIds],
+    guardrailStatuses,
+    boundary:
+      'Runtime-only example handoff: summarizes capacity optimizer readiness for an example fixture. It does not run optimizer search or persist calculated output.'
+  };
+}
+
+export function selectMonthlyCapacityOptimizerExecutionGate(
+  contract: MonthlyCapacityOptimizerInputContract,
+  guardrails: MonthlyCapacityOptimizerGuardrail[]
+): MonthlyCapacityOptimizerExecutionGate {
+  const blockedGuardrails = guardrails.filter((row) => row.status === 'block');
+  const requiredBeforeExecution: MonthlyCapacityOptimizerExecutionGate['requiredBeforeExecution'] = [
+    ...(contract.status === 'blocked' ? (['completeCapacityInputs', 'resolveOptimizerInputDecisions'] as const) : []),
+    'keepOutputRuntimeOnly',
+    'defineCandidateScoring',
+    'preserveNoAnnualSequencing'
+  ];
+  const status: MonthlyCapacityOptimizerExecutionGate['status'] =
+    contract.status === 'blocked' || blockedGuardrails.length > 0
+      ? 'blocked'
+      : contract.status === 'review'
+        ? 'reviewOnly'
+        : 'readyForFutureImplementation';
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'Optimizer execution is blocked until capacity and input decisions are complete.'
+        : status === 'reviewOnly'
+          ? 'Optimizer execution should remain review-only until scoring and output rules are explicitly implemented.'
+          : 'Optimizer execution can be planned as a future implementation package.',
+    requiredBeforeExecution,
+    allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'],
+    notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'],
+    boundary:
+      'Runtime-only execution gate: this does not start optimizer search. It records what must be true before a future implementation package can execute candidates.'
+  };
+}
+
+export function selectMonthlyCapacityOptimizerHandoffCloseout(
+  gate: MonthlyCapacityOptimizerExecutionGate
+): MonthlyCapacityOptimizerHandoffCloseout {
+  const status: MonthlyCapacityOptimizerHandoffCloseout['status'] =
+    gate.status === 'blocked'
+      ? 'blocked'
+      : gate.status === 'reviewOnly'
+        ? 'readyForPlanning'
+        : 'readyForFutureImplementation';
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'Floor-first optimizer handoff still needs inputs before planning can advance.'
+        : status === 'readyForPlanning'
+          ? 'Floor-first optimizer handoff is ready for candidate scoring planning.'
+          : 'Floor-first optimizer handoff is ready for a future implementation package.',
+    packageSummary:
+      'The runtime handoff now connects monthly capacity evidence, floor-first objective, lever gates, optimizer input permissions, example readiness, and execution guardrails.',
+    nextBroadStep:
+      status === 'blocked'
+        ? 'capacityInputsFirst'
+        : status === 'readyForPlanning'
+          ? 'candidateScoringPlan'
+          : 'futureImplementationPackage',
+    preservedBoundaries: gate.notAllowedYet,
+    boundary:
+      'Runtime-only package closeout: no UI change, saved schema change, engine output schema change, optimizer execution, funding trace, account instructions, or annual sequencing was added.'
   };
 }
 
