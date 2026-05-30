@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../data/defaultPlan';
 import { createPlanFile } from '../data/planFile';
+import { CLEAN_SCHEMA_VERSION } from '../types/plan';
 import { runResultsPreviewBundle } from './previewScenarios';
 import {
   resultsWorkspaceMap,
@@ -306,7 +307,7 @@ describe('Sprint 6 results workspace smoke', () => {
     expect(readinessSummary.stableDashboardHandoff).toContain('printable report');
     expect(readinessRows).toHaveLength(6);
     expect(readinessRows.find((row) => row.id === 'savePlan')?.detailArea).toBe('exportSave');
-    expect(planFile.plan.schemaVersion).toBe(2);
+    expect(planFile.plan.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
     expect(Object.keys(planFile.plan)).not.toContain('resultsReadiness');
   });
 

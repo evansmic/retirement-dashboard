@@ -1347,7 +1347,7 @@ describe('drawdown execution readiness contract', () => {
     expect(closeout.status).toBe('holdForPolish');
   });
 
-  it('blocks recommended-plan drawdown polish when copy or saved-plan boundaries fail', () => {
+  it('keeps recommended-plan saved output clean while copy boundaries can still block polish', () => {
     const { consumerSummary, limits, headline, comparison, actions, reentryCloseout } = readyRecommendedPlanInputs();
     const dirtyPlan = {
       ...plan,
@@ -1364,8 +1364,8 @@ describe('drawdown execution readiness contract', () => {
     const copyGuard = selectTaxAwareDrawdownV1ReviewCopyGuard({ savedPlanClean: false });
     const closeout = selectTaxAwareDrawdownV1RecommendedPlanCloseout({ plan: dirtyPlan, review, placement, copyGuard });
 
-    expect(review.status).toBe('blocked');
-    expect(review.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(review.status).toBe('readyForDetails');
+    expect(review.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'ready' });
     expect(copyGuard.status).toBe('blocked');
     expect(closeout.status).toBe('blocked');
     expect(createPlanFile(plan).plan).not.toHaveProperty('v1DrawdownRecommendedPlanCloseout');
@@ -1600,11 +1600,11 @@ describe('drawdown execution readiness contract', () => {
 
     expect(gate.status).toBe('blocked');
     expect(gate.rows.find((row) => row.id === 'copy')).toMatchObject({ status: 'blocked' });
-    expect(gate.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(gate.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'ready' });
     expect(narrative.status).toBe('blocked');
     expect(implementationCloseout.status).toBe('blocked');
     expect(checkpoint.status).toBe('simplifyBeforeV1');
-    expect(checkpoint.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(checkpoint.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'ready' });
   });
 
   it('holds v1 drawdown re-entry when detailed stress or examples still need review', () => {
@@ -1648,7 +1648,7 @@ describe('drawdown execution readiness contract', () => {
 
     expect(reentry.status).toBe('blocked');
     expect(reentry.rows.find((row) => row.id === 'executionPhase')).toMatchObject({ status: 'blocked' });
-    expect(reentry.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'blocked' });
+    expect(reentry.rows.find((row) => row.id === 'savedPlan')).toMatchObject({ status: 'ready' });
     expect(nextSprint.status).toBe('blocked');
     expect(closeout.status).toBe('blocked');
   });

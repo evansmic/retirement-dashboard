@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../data/defaultPlan';
 import { createExamplePlan, examplePlanCards } from '../data/examplePlans';
-import { createPlanFile } from '../data/planFile';
+import { createPlanFile, extractPlanPayload } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import { buildBoundedOptimizerCandidates, runBoundedOptimizer, type BoundedOptimizerCandidateId } from './boundedOptimizer';
 import type { SimulationConfig } from './runSimulation';
@@ -1323,8 +1323,10 @@ describe('bounded optimizer runner', () => {
       label: 'Income-sharing checks',
       candidateIds: ['cppSharing']
     });
-    expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
-    expect(createPlanFile(plan).plan.assumptions.cppSharing).toBe(false);
+    const savedPlan = createPlanFile(plan).plan;
+    const runtimePlan = extractPlanPayload(createPlanFile(plan));
+    expect(savedPlan).not.toHaveProperty('boundedOptimizer');
+    expect(runtimePlan.assumptions.cppSharing).toBe(false);
   });
 
   it('skips CPP sharing for single plans, missing CPP estimates, and plans where it is already on', () => {
@@ -1568,8 +1570,10 @@ describe('bounded optimizer runner', () => {
       reviewOnlyCount: 1,
       canHighlightCount: 0
     });
-    expect(createPlanFile(plan).plan).not.toHaveProperty('boundedOptimizer');
-    expect(createPlanFile(plan).plan.downsize).toEqual({ year: 2040, netProceeds: 250000 });
+    const savedPlan = createPlanFile(plan).plan;
+    const runtimePlan = extractPlanPayload(createPlanFile(plan));
+    expect(savedPlan).not.toHaveProperty('boundedOptimizer');
+    expect(runtimePlan.downsize).toEqual({ year: 2040, netProceeds: 250000 });
   });
 
   it('holds back candidates that weaken an entered estate goal', () => {

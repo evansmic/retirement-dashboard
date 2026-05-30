@@ -187,6 +187,11 @@ export function cleanResetPayloadToV2Plan(payload: CleanResetPlanPayload): V2Pla
   plan.p1.db_startYear = plan.p1.retireYear;
   plan.p2.dob = p2BirthYear;
   plan.mortgage = { ...plan.mortgage, monthly: finiteNumber(payload.mortgageMonthlyPayment) };
+  plan.downsize = {
+    ...plan.downsize,
+    year: finiteNumber(payload.downsizeYear),
+    netProceeds: finiteNumber(payload.downsizeNetProceeds)
+  };
   plan.spending = {
     gogo: annualFloor,
     gogoEnd: earlyAge,
@@ -196,6 +201,29 @@ export function cleanResetPayloadToV2Plan(payload: CleanResetPlanPayload): V2Pla
   };
 
   return normalizePlanPayload(plan);
+}
+
+export function v2PlanToCleanResetPayload(payload: unknown): CleanResetPlanPayload {
+  const plan = normalizePlanPayload(payload);
+  const mortgageMonthlyPayment = Math.max(0, finiteNumber(plan.mortgage?.monthly));
+  const firstPhaseMonthly = Math.max(0, finiteNumber(plan.spending?.gogo) / 12);
+
+  return {
+    schemaVersion: CLEAN_SCHEMA_VERSION,
+    title: planTitleFromD(plan),
+    minimumMonthlyExpensesExMortgage: Math.max(0, firstPhaseMonthly - mortgageMonthlyPayment),
+    mortgageMonthlyPayment,
+    earlySpendingChangeAge: finiteNumber(plan.spending?.gogoEnd) || 75,
+    laterSpendingChangeAge: finiteNumber(plan.spending?.slowgoEnd) || 85,
+    province: 'ON',
+    taxYear: 2026,
+    downsizeYear: finiteNumber(plan.downsize?.year),
+    downsizeNetProceeds: finiteNumber(plan.downsize?.netProceeds),
+    household: {
+      p1BirthYear: finiteNumber(plan.p1?.dob) || undefined,
+      p2BirthYear: p2LooksBlank(plan.p2) ? null : finiteNumber(plan.p2?.dob) || null
+    }
+  };
 }
 
 export function planTitleFromD(plan: V2PlanPayload): string {
@@ -218,15 +246,15 @@ export function safeFilenamePart(value: string): string {
 }
 
 export function createPlanFile(planPayload: unknown, now = new Date().toISOString()): PlanFileV1 {
-  const plan = normalizePlanPayload(planPayload);
-  const title = planTitleFromD(plan);
+  const plan = v2PlanToCleanResetPayload(planPayload);
+  const title = plan.title || 'Retirement plan';
   return {
     fileType: PLAN_FILE_TYPE,
     fileVersion: PLAN_FILE_VERSION,
     exportedAt: now,
     app: {
       name: 'Canadian Retirement Planner',
-      schemaVersion: SCHEMA_VERSION,
+      schemaVersion: CLEAN_SCHEMA_VERSION,
       storage: 'local-plan-file'
     },
     title,
@@ -241,6 +269,9 @@ export function extractPlanPayload(fileObj: unknown): V2PlanPayload {
   const rawPlan = fileObj.fileType === PLAN_FILE_TYPE ? fileObj.plan : fileObj;
   if (!isRecord(rawPlan)) {
     throw new Error('The plan file is missing its plan payload.');
+  }
+  if (isCleanResetPayload(rawPlan)) {
+    return cleanResetPayloadToV2Plan(rawPlan);
   }
   return normalizePlanPayload(rawPlan);
 }
@@ -267,11 +298,11 @@ export function extractSupportedPlanFilePayload(fileObj: unknown): V2PlanPayload
     throw new Error(UNSUPPORTED_FUTURE_BLOCK_MESSAGE);
   }
 
-  if (hasOldPreviewSpendingShape(rawPlan)) {
+  if (hasOldPreviewSpendingShape(rawPlan) || rawPlan.schemaVersion === SCHEMA_VERSION) {
     throw new Error(OLD_PREVIEW_BLOCK_MESSAGE);
   }
 
-  return normalizePlanPayload(rawPlan);
+  throw new Error(RAW_PAYLOAD_BLOCK_MESSAGE);
 }
 
 export function validatePlanFile(fileObj: unknown): { ok: true; plan: V2PlanPayload } | { ok: false; message: string } {

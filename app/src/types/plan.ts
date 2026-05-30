@@ -114,11 +114,11 @@ export type PlanFileV1 = {
   exportedAt: string;
   app: {
     name: 'Canadian Retirement Planner';
-    schemaVersion: typeof SCHEMA_VERSION;
+    schemaVersion: typeof CLEAN_SCHEMA_VERSION;
     storage: 'local-plan-file';
   };
   title: string;
-  plan: V2PlanPayload;
+  plan: CleanResetPlanPayload;
 };
 
 export type CleanResetPlanPayload = {
@@ -130,6 +130,8 @@ export type CleanResetPlanPayload = {
   laterSpendingChangeAge?: number;
   province?: 'ON';
   taxYear?: 2026;
+  downsizeYear?: number;
+  downsizeNetProceeds?: number;
   household?: {
     p1BirthYear?: number;
     p2BirthYear?: number | null;

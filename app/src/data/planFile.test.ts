@@ -98,8 +98,12 @@ describe('plan file adapters', () => {
 
     expect(file.fileType).toBe(PLAN_FILE_TYPE);
     expect(file.fileVersion).toBe(PLAN_FILE_VERSION);
-    expect(file.app.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(file.app.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
     expect(file.title).toBe('Larry retirement plan');
+    expect(file.plan.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
+    expect(file.plan.minimumMonthlyExpensesExMortgage).toBeCloseTo(5833.333333333333);
+    expect(file.plan.downsizeYear).toBe(2036);
+    expect(file.plan.downsizeNetProceeds).toBe(100000);
   });
 
   it('normalizes placeholder Person 2 and repairs retireYear for Larry-style single plans', () => {
@@ -118,13 +122,14 @@ describe('plan file adapters', () => {
     expect(roundTripped.schemaVersion).toBe(2);
   });
 
-  it('keeps current wrapped v2 plan files accepted through the production validator', () => {
+  it('keeps clean plan files accepted through the production validator', () => {
     const result = validatePlanFile(createPlanFile(larryPlan, '2026-05-01T00:00:00.000Z'));
 
     expect(result).toMatchObject({ ok: true });
     if (result.ok) {
       expect(result.plan.schemaVersion).toBe(2);
-      expect(result.plan.p1.name).toBe('Larry');
+      expect(result.plan.title).toBe('Larry retirement plan');
+      expect(result.plan.spending.gogo).toBeCloseTo(70000);
     }
   });
 
@@ -166,7 +171,7 @@ describe('plan file adapters', () => {
     }
   });
 
-  it('saves a clean reset import back as the current editable v2 plan file during the bridge', () => {
+  it('saves a clean reset import back as a clean schema plan file', () => {
     const imported = validatePlanFile({
       fileType: PLAN_FILE_TYPE,
       fileVersion: PLAN_FILE_VERSION,
@@ -195,9 +200,10 @@ describe('plan file adapters', () => {
       const saved = createPlanFile(imported.plan, '2026-05-02T00:00:00.000Z');
       const reopened = validatePlanFile(saved);
 
-      expect(saved.app.schemaVersion).toBe(SCHEMA_VERSION);
-      expect(saved.plan.schemaVersion).toBe(2);
-      expect(saved.plan.spending.gogo).toBe(42000);
+      expect(saved.app.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
+      expect(saved.plan.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
+      expect(saved.plan.minimumMonthlyExpensesExMortgage).toBe(3000);
+      expect(saved.plan.mortgageMonthlyPayment).toBe(500);
       expect(reopened).toMatchObject({ ok: true });
     }
   });
@@ -282,6 +288,26 @@ describe('plan file adapters', () => {
     ).toEqual({
       ok: false,
       message: 'This file is not a supported plan file. Please start a new plan or open a saved plan from this preview.'
+    });
+  });
+
+  it('blocks current editable v2 plan files now that tester legacy plans are retired', () => {
+    expect(
+      validatePlanFile({
+        fileType: PLAN_FILE_TYPE,
+        fileVersion: PLAN_FILE_VERSION,
+        exportedAt: '2026-05-01T00:00:00.000Z',
+        app: {
+          name: 'Canadian Retirement Planner',
+          schemaVersion: SCHEMA_VERSION,
+          storage: 'local-plan-file'
+        },
+        title: 'Larry retirement plan',
+        plan: larryPlan
+      })
+    ).toEqual({
+      ok: false,
+      message: 'This plan was created with an earlier version. Start a fresh plan to use the current features.'
     });
   });
 
