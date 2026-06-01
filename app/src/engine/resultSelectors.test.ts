@@ -34,6 +34,14 @@ import {
   selectMonthlyCapacityFundingTraceRuntimePackageCloseout,
   selectMonthlyCapacityFundingTraceRuntimeSummary,
   selectMonthlyCapacityFundingTraceRuntimeTrace,
+  selectMonthlyCapacityFundingTraceReviewGuardrails,
+  selectMonthlyCapacityFundingTraceReviewAudit,
+  selectMonthlyCapacityFundingTraceReviewCloseout,
+  selectMonthlyCapacityFundingTraceReviewExampleReadiness,
+  selectMonthlyCapacityFundingTraceReviewPlan,
+  selectMonthlyCapacityFundingTraceReviewPackageCloseout,
+  selectMonthlyCapacityFundingTraceReviewReadiness,
+  selectMonthlyCapacityFundingTraceReviewSummary,
   selectMonthlyCapacityFundingTracePlanningAudit,
   selectMonthlyCapacityFundingTracePlanningCloseout,
   selectMonthlyCapacityFundingTracePlanningExampleReadiness,
@@ -381,6 +389,16 @@ function buildMonthlyFundingTraceImplementationRuntime(result: SimulationResult,
   const packageCloseout = selectMonthlyCapacityFundingTraceImplementationPackageCloseout(closeout, exampleReadiness);
 
   return { contract, closeout, packageCloseout };
+}
+
+function buildMonthlyFundingTraceRuntimeExecution(result: SimulationResult, plan: V2PlanPayload) {
+  const runtime = buildMonthlyFundingTraceImplementationRuntime(result, plan);
+  const trace = selectMonthlyCapacityFundingTraceRuntimeTrace(runtime.packageCloseout, runtime.contract);
+  const closeout = selectMonthlyCapacityFundingTraceRuntimeCloseout(trace);
+  const exampleReadiness = selectMonthlyCapacityFundingTraceRuntimeExampleReadiness([closeout]);
+  const packageCloseout = selectMonthlyCapacityFundingTraceRuntimePackageCloseout(closeout, exampleReadiness);
+
+  return { trace, closeout, packageCloseout };
 }
 
 describe('result selectors', () => {
@@ -6150,6 +6168,215 @@ describe('result selectors', () => {
       saved: false
     });
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceRuntimePackageCloseout');
+  });
+
+  it('plans runtime funding trace review without changing output', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const blockedPlan = selectMonthlyCapacityFundingTraceReviewPlan(
+      { ...runtime.packageCloseout, status: 'blocked' as const, recommendationCandidateId: null },
+      runtime.trace
+    );
+
+    expect(reviewPlan).toMatchObject({
+      status: 'readyForPlanning',
+      recommendationCandidateId: 'baseline',
+      sourceRowCount: 6,
+      caveatCount: 3,
+      limitCount: 3,
+      saved: false
+    });
+    expect(reviewPlan.rows.find((row) => row.id === 'nonAdvisoryTone')).toMatchObject({ status: 'review' });
+    expect(reviewPlan.boundary).toContain('reviews trace wording');
+    expect(blockedPlan).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewPlan');
+  });
+
+  it('checks runtime funding trace review guardrails and readiness', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+
+    expect(guardrails.map((guardrail) => guardrail.status)).toEqual([
+      'pass',
+      'pass',
+      'pass',
+      'pass',
+      'pass',
+      'pass',
+      'pass',
+      'pass'
+    ]);
+    expect(readiness).toMatchObject({
+      status: 'readyForFutureReviewPlanning',
+      reviewRowIds: ['nonAdvisoryTone'],
+      blockedRowIds: [],
+      passedGuardrailIds: [
+        'sourceGroupsPresent',
+        'caveatsPresent',
+        'limitsPresent',
+        'nonAdvisory',
+        'noAccountInstructions',
+        'noAnnualSequencing',
+        'noUiPresentation',
+        'noSavedOutput'
+      ]
+    });
+    expect(readiness.boundary).toContain('without saving output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewReadiness');
+  });
+
+  it('audits runtime funding trace review planning', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+    const audit = selectMonthlyCapacityFundingTraceReviewAudit(reviewPlan, readiness);
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      readyRowCount: 6,
+      reviewRowCount: 1,
+      blockedRowCount: 0,
+      savedOutputCount: 0,
+      accountInstructionCount: 0,
+      annualSequencingCount: 0,
+      uiPresentationCount: 0
+    });
+    expect(audit.boundary).toContain('did not save output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewAudit');
+  });
+
+  it('summarizes runtime funding trace review planning', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+    const summary = selectMonthlyCapacityFundingTraceReviewSummary(reviewPlan, readiness);
+    const blockedSummary = selectMonthlyCapacityFundingTraceReviewSummary(
+      { ...reviewPlan, status: 'blocked' as const, recommendationCandidateId: null },
+      { ...readiness, status: 'blocked' as const, blockedRowIds: ['sourceGroupClarity'] }
+    );
+
+    expect(summary).toMatchObject({
+      status: 'readyForPlanning',
+      recommendationCandidateId: 'baseline',
+      readyRowCount: 6,
+      reviewRowCount: 1,
+      blockedRowCount: 0,
+      nextBroadStep: 'traceReviewCloseout',
+      saved: false
+    });
+    expect(blockedSummary).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      blockedRowCount: 1,
+      nextBroadStep: 'capacityInputsFirst',
+      saved: false
+    });
+    expect(summary.boundary).toContain('without saving output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewSummary');
+  });
+
+  it('closes out runtime funding trace review planning', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+    const closeout = selectMonthlyCapacityFundingTraceReviewCloseout(reviewPlan, readiness);
+    const blockedCloseout = selectMonthlyCapacityFundingTraceReviewCloseout(
+      { ...reviewPlan, status: 'blocked' as const, recommendationCandidateId: null },
+      { ...readiness, status: 'blocked' as const, blockedRowIds: ['sourceGroupClarity'] }
+    );
+
+    expect(closeout).toMatchObject({
+      status: 'complete',
+      headline: 'Funding trace review planning is complete.',
+      recommendationCandidateId: 'baseline',
+      completedPieces: ['reviewPlan', 'guardrails', 'readiness', 'audit', 'summary', 'noUiBoundary'],
+      stillDeferred: ['savedTraceOutput', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+      nextBroadStep: 'traceReviewPackageCloseout',
+      saved: false
+    });
+    expect(closeout.boundary).toContain('trace review planning is complete');
+    expect(blockedCloseout).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      nextBroadStep: 'capacityInputsFirst',
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewCloseout');
+  });
+
+  it('checks runtime funding trace review examples without persistence', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+    const closeout = selectMonthlyCapacityFundingTraceReviewCloseout(reviewPlan, readiness);
+    const exampleReadiness = selectMonthlyCapacityFundingTraceReviewExampleReadiness([closeout, closeout]);
+    const blockedExampleReadiness = selectMonthlyCapacityFundingTraceReviewExampleReadiness([
+      closeout,
+      { ...closeout, status: 'blocked' as const, recommendationCandidateId: null }
+    ]);
+
+    expect(exampleReadiness).toMatchObject({
+      status: 'ready',
+      exampleCount: 2,
+      readyExampleCount: 2,
+      blockedExampleCount: 0,
+      recommendationCandidateIds: ['baseline', 'baseline'],
+      saved: false
+    });
+    expect(blockedExampleReadiness).toMatchObject({
+      status: 'blocked',
+      exampleCount: 2,
+      readyExampleCount: 1,
+      blockedExampleCount: 1,
+      recommendationCandidateIds: ['baseline'],
+      saved: false
+    });
+    expect(exampleReadiness.boundary).toContain('without saving output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewExampleReadiness');
+  });
+
+  it('closes out the funding trace review planning package', () => {
+    const runtime = buildMonthlyFundingTraceRuntimeExecution(fixture, planFixture);
+    const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+    const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+    const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+    const closeout = selectMonthlyCapacityFundingTraceReviewCloseout(reviewPlan, readiness);
+    const exampleReadiness = selectMonthlyCapacityFundingTraceReviewExampleReadiness([closeout]);
+    const packageCloseout = selectMonthlyCapacityFundingTraceReviewPackageCloseout(closeout, exampleReadiness);
+    const blockedPackageCloseout = selectMonthlyCapacityFundingTraceReviewPackageCloseout(
+      closeout,
+      selectMonthlyCapacityFundingTraceReviewExampleReadiness([{ ...closeout, status: 'blocked' as const }])
+    );
+
+    expect(packageCloseout).toMatchObject({
+      status: 'complete',
+      package: 'fundingTraceReviewPlanning',
+      completedSprints: 'S1727-S1746',
+      recommendationCandidateId: 'baseline',
+      readyExampleCount: 1,
+      blockedExampleCount: 0,
+      stillDeferred: ['savedTraceOutput', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+      nextBroadStep: 'uiPlanningDecisionGate',
+      saved: false
+    });
+    expect(packageCloseout.boundary).toContain('trace review planning is complete');
+    expect(blockedPackageCloseout).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      nextBroadStep: 'capacityInputsFirst',
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewPackageCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {

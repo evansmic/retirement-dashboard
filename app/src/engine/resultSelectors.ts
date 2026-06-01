@@ -2216,6 +2216,96 @@ export type MonthlyCapacityFundingTraceRuntimePackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityFundingTraceReviewRow = {
+  id: 'sourceGroupClarity' | 'caveatCoverage' | 'limitCoverage' | 'nonAdvisoryTone' | 'noAccountInstructions' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  rows: MonthlyCapacityFundingTraceReviewRow[];
+  sourceRowCount: number;
+  caveatCount: number;
+  limitCount: number;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewGuardrail = {
+  id: 'sourceGroupsPresent' | 'caveatsPresent' | 'limitsPresent' | 'nonAdvisory' | 'noAccountInstructions' | 'noAnnualSequencing' | 'noUiPresentation' | 'noSavedOutput';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewReadiness = {
+  status: 'blocked' | 'readyForFutureReviewPlanning';
+  readyRowIds: MonthlyCapacityFundingTraceReviewRow['id'][];
+  reviewRowIds: MonthlyCapacityFundingTraceReviewRow['id'][];
+  blockedRowIds: MonthlyCapacityFundingTraceReviewRow['id'][];
+  passedGuardrailIds: MonthlyCapacityFundingTraceReviewGuardrail['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewAudit = {
+  status: 'pass' | 'block';
+  readyRowCount: number;
+  reviewRowCount: number;
+  blockedRowCount: number;
+  savedOutputCount: number;
+  accountInstructionCount: number;
+  annualSequencingCount: number;
+  uiPresentationCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewSummary = {
+  status: MonthlyCapacityFundingTraceReviewPlan['status'];
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  readyRowCount: number;
+  reviewRowCount: number;
+  blockedRowCount: number;
+  nextBroadStep: 'traceReviewCloseout' | 'capacityInputsFirst';
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewCloseout = {
+  status: 'blocked' | 'complete';
+  headline: string;
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  completedPieces: Array<'reviewPlan' | 'guardrails' | 'readiness' | 'audit' | 'summary' | 'noUiBoundary'>;
+  stillDeferred: Array<'savedTraceOutput' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'>;
+  nextBroadStep: 'traceReviewPackageCloseout' | 'capacityInputsFirst';
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewExampleReadiness = {
+  status: 'ready' | 'blocked';
+  exampleCount: number;
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  recommendationCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityFundingTraceReviewPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'fundingTraceReviewPlanning';
+  headline: string;
+  completedSprints: string;
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  stillDeferred: MonthlyCapacityFundingTraceReviewCloseout['stillDeferred'];
+  nextBroadStep: 'uiPlanningDecisionGate' | 'capacityInputsFirst';
+  saved: false;
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -6740,6 +6830,234 @@ export function selectMonthlyCapacityFundingTraceRuntimePackageCloseout(
     saved: false,
     boundary:
       'Runtime-only funding trace execution package closeout: broad trace output is complete while saved trace output, account instructions, annual sequencing, and UI presentation remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewPlan(
+  packageCloseout: MonthlyCapacityFundingTraceRuntimePackageCloseout,
+  trace: MonthlyCapacityFundingTraceRuntimeTrace
+): MonthlyCapacityFundingTraceReviewPlan {
+  const blocked = packageCloseout.status === 'blocked' || trace.status === 'blocked' || !packageCloseout.recommendationCandidateId;
+  const hasNoInstructions =
+    trace.accountInstruction === null && trace.sourceRows.every((row) => row.accountInstruction === null);
+  const hasNoSequencing =
+    trace.annualSequencing === null && trace.sourceRows.every((row) => row.annualSequencing === null);
+  const rows: MonthlyCapacityFundingTraceReviewRow[] = [
+    {
+      id: 'sourceGroupClarity',
+      status: blocked || trace.sourceRows.length === 0 ? 'blocked' : 'ready',
+      detail: 'Trace source groups should be broad and understandable.'
+    },
+    {
+      id: 'caveatCoverage',
+      status: blocked || trace.caveats.length === 0 ? 'blocked' : 'ready',
+      detail: 'Trace caveats should cover model uncertainty, tax and benefit timing, survivor, estate, and home-equity review areas.'
+    },
+    {
+      id: 'limitCoverage',
+      status: blocked || trace.limits.length === 0 ? 'blocked' : 'ready',
+      detail: 'Trace limits should say what the trace does not do.'
+    },
+    {
+      id: 'nonAdvisoryTone',
+      status: blocked ? 'blocked' : 'review',
+      detail: 'Trace language should stay plain, calm, and non-advisory.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: hasNoInstructions ? 'ready' : 'blocked',
+      detail: 'Trace review must confirm there are no account-level withdrawal instructions.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: hasNoSequencing ? 'ready' : 'blocked',
+      detail: 'Trace review must confirm there is no annual account-level sequencing.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: trace.uiPresentation === null ? 'ready' : 'blocked',
+      detail: 'Trace review planning does not change UI presentation.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    recommendationCandidateId: blocked ? null : packageCloseout.recommendationCandidateId,
+    rows,
+    sourceRowCount: trace.sourceRows.length,
+    caveatCount: trace.caveats.length,
+    limitCount: trace.limits.length,
+    saved: false,
+    boundary:
+      'Runtime-only funding trace review plan: reviews trace wording, caveats, and limits without saving output, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewGuardrails(
+  plan: MonthlyCapacityFundingTraceReviewPlan,
+  trace: MonthlyCapacityFundingTraceRuntimeTrace
+): MonthlyCapacityFundingTraceReviewGuardrail[] {
+  return [
+    {
+      id: 'sourceGroupsPresent',
+      status: plan.sourceRowCount > 0 ? 'pass' : 'block',
+      detail: 'Trace review needs broad source groups.'
+    },
+    {
+      id: 'caveatsPresent',
+      status: plan.caveatCount > 0 ? 'pass' : 'block',
+      detail: 'Trace review needs caveats.'
+    },
+    {
+      id: 'limitsPresent',
+      status: plan.limitCount > 0 ? 'pass' : 'block',
+      detail: 'Trace review needs limits.'
+    },
+    {
+      id: 'nonAdvisory',
+      status: trace.caveats.some((caveat) => caveat.includes('not instructions')) ? 'pass' : 'block',
+      detail: 'Trace wording must remain non-advisory.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: trace.accountInstruction === null && trace.sourceRows.every((row) => row.accountInstruction === null) ? 'pass' : 'block',
+      detail: 'Trace review blocks account-level instructions.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: trace.annualSequencing === null && trace.sourceRows.every((row) => row.annualSequencing === null) ? 'pass' : 'block',
+      detail: 'Trace review blocks annual account-level sequencing.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: trace.uiPresentation === null ? 'pass' : 'block',
+      detail: 'UI presentation remains deferred.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: plan.saved === false && trace.saved === false ? 'pass' : 'block',
+      detail: 'Trace review is not saved to the editable plan.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityFundingTraceReviewReadiness(
+  plan: MonthlyCapacityFundingTraceReviewPlan,
+  guardrails: MonthlyCapacityFundingTraceReviewGuardrail[]
+): MonthlyCapacityFundingTraceReviewReadiness {
+  const readyRowIds = plan.rows.filter((row) => row.status === 'ready').map((row) => row.id);
+  const reviewRowIds = plan.rows.filter((row) => row.status === 'review').map((row) => row.id);
+  const blockedRowIds = plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id);
+  const passedGuardrailIds = guardrails.filter((guardrail) => guardrail.status === 'pass').map((guardrail) => guardrail.id);
+  const blocked = plan.status === 'blocked' || blockedRowIds.length > 0 || guardrails.some((guardrail) => guardrail.status === 'block');
+
+  return {
+    status: blocked ? 'blocked' : 'readyForFutureReviewPlanning',
+    readyRowIds,
+    reviewRowIds,
+    blockedRowIds,
+    passedGuardrailIds,
+    boundary:
+      'Runtime-only funding trace review readiness: checks review rows and guardrails without saving output, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewAudit(
+  plan: MonthlyCapacityFundingTraceReviewPlan,
+  readiness: MonthlyCapacityFundingTraceReviewReadiness
+): MonthlyCapacityFundingTraceReviewAudit {
+  return {
+    status: readiness.blockedRowIds.length > 0 || plan.saved !== false ? 'block' : 'pass',
+    readyRowCount: readiness.readyRowIds.length,
+    reviewRowCount: readiness.reviewRowIds.length,
+    blockedRowCount: readiness.blockedRowIds.length,
+    savedOutputCount: plan.saved === false ? 0 : 1,
+    accountInstructionCount: plan.rows.find((row) => row.id === 'noAccountInstructions')?.status === 'ready' ? 0 : 1,
+    annualSequencingCount: plan.rows.find((row) => row.id === 'noAnnualSequencing')?.status === 'ready' ? 0 : 1,
+    uiPresentationCount: plan.rows.find((row) => row.id === 'noUiPresentation')?.status === 'ready' ? 0 : 1,
+    boundary:
+      'Runtime-only funding trace review audit: confirms review planning did not save output, add account instructions, sequence annually, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewSummary(
+  plan: MonthlyCapacityFundingTraceReviewPlan,
+  readiness: MonthlyCapacityFundingTraceReviewReadiness,
+  audit: MonthlyCapacityFundingTraceReviewAudit = selectMonthlyCapacityFundingTraceReviewAudit(plan, readiness)
+): MonthlyCapacityFundingTraceReviewSummary {
+  const blocked = plan.status === 'blocked' || readiness.status === 'blocked' || audit.status === 'block';
+
+  return {
+    status: plan.status,
+    recommendationCandidateId: blocked ? null : plan.recommendationCandidateId,
+    readyRowCount: readiness.readyRowIds.length,
+    reviewRowCount: readiness.reviewRowIds.length,
+    blockedRowCount: readiness.blockedRowIds.length,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'traceReviewCloseout',
+    saved: false,
+    boundary:
+      'Runtime-only funding trace review summary: summarizes trace review planning without saving output, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewCloseout(
+  plan: MonthlyCapacityFundingTraceReviewPlan,
+  readiness: MonthlyCapacityFundingTraceReviewReadiness,
+  audit: MonthlyCapacityFundingTraceReviewAudit = selectMonthlyCapacityFundingTraceReviewAudit(plan, readiness),
+  summary: MonthlyCapacityFundingTraceReviewSummary = selectMonthlyCapacityFundingTraceReviewSummary(plan, readiness, audit)
+): MonthlyCapacityFundingTraceReviewCloseout {
+  const complete = plan.status === 'readyForPlanning' && readiness.status === 'readyForFutureReviewPlanning' && audit.status === 'pass' && summary.nextBroadStep === 'traceReviewCloseout';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    headline: complete ? 'Funding trace review planning is complete.' : 'Funding trace review planning is blocked before closeout.',
+    recommendationCandidateId: complete ? plan.recommendationCandidateId : null,
+    completedPieces: ['reviewPlan', 'guardrails', 'readiness', 'audit', 'summary', 'noUiBoundary'],
+    stillDeferred: ['savedTraceOutput', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+    nextBroadStep: complete ? 'traceReviewPackageCloseout' : 'capacityInputsFirst',
+    saved: false,
+    boundary:
+      'Runtime-only funding trace review closeout: trace review planning is complete while saved trace output, account instructions, annual sequencing, and UI presentation remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewExampleReadiness(
+  closeouts: MonthlyCapacityFundingTraceReviewCloseout[]
+): MonthlyCapacityFundingTraceReviewExampleReadiness {
+  const readyCloseouts = closeouts.filter((closeout) => closeout.status === 'complete' && closeout.recommendationCandidateId);
+  const blockedExampleCount = closeouts.length - readyCloseouts.length;
+
+  return {
+    status: closeouts.length > 0 && blockedExampleCount === 0 ? 'ready' : 'blocked',
+    exampleCount: closeouts.length,
+    readyExampleCount: readyCloseouts.length,
+    blockedExampleCount,
+    recommendationCandidateIds: readyCloseouts.map((closeout) => closeout.recommendationCandidateId).filter((id): id is MonthlyCapacityCandidateBlueprintId => Boolean(id)),
+    saved: false,
+    boundary:
+      'Runtime-only funding trace review example readiness: confirms examples can complete trace review planning without saving output, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityFundingTraceReviewPackageCloseout(
+  closeout: MonthlyCapacityFundingTraceReviewCloseout,
+  exampleReadiness: MonthlyCapacityFundingTraceReviewExampleReadiness
+): MonthlyCapacityFundingTraceReviewPackageCloseout {
+  const complete = closeout.status === 'complete' && exampleReadiness.status === 'ready';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    package: 'fundingTraceReviewPlanning',
+    headline: complete ? 'Funding trace review planning is complete.' : 'Funding trace review planning is blocked before package closeout.',
+    completedSprints: 'S1727-S1746',
+    recommendationCandidateId: complete ? closeout.recommendationCandidateId : null,
+    readyExampleCount: exampleReadiness.readyExampleCount,
+    blockedExampleCount: exampleReadiness.blockedExampleCount,
+    stillDeferred: closeout.stillDeferred,
+    nextBroadStep: complete ? 'uiPlanningDecisionGate' : 'capacityInputsFirst',
+    saved: false,
+    boundary:
+      'Runtime-only funding trace review planning package closeout: trace review planning is complete while saved trace output, account instructions, annual sequencing, and UI presentation remain deferred.'
   };
 }
 
