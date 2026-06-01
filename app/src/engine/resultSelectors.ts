@@ -1795,6 +1795,96 @@ export type MonthlyCapacityRecommendationPlanningPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityRecommendationRuntimeExecutionPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  requiredInputs: Array<'recommendationPlanningCloseout' | 'topCandidateEvidence' | 'copyPolicy' | 'guardrails'>;
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeDryRun = {
+  status: 'blocked' | 'readyForFutureExecution';
+  plannedChecks: Array<'confirmRankingEvidence' | 'confirmCopyPolicy' | 'confirmNonAdvisoryTone' | 'confirmNoPersistence' | 'confirmNoUi'>;
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  saved: false;
+  fundingTrace: null;
+  accountInstruction: null;
+  annualSequencing: null;
+  uiPresentation: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeDryRunAudit = {
+  status: 'pass' | 'block';
+  plannedCheckCount: number;
+  recommendationCount: number;
+  savedOutputCount: number;
+  fundingTraceCount: number;
+  accountInstructionCount: number;
+  annualSequencingCount: number;
+  uiPresentationCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionReadiness = {
+  status: 'blocked' | 'readyForFutureExecution';
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  plannedCheckCount: number;
+  recommendationCandidateId: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionSummary = {
+  status: MonthlyCapacityRecommendationRuntimeExecutionPlan['status'];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  plannedCheckCount: number;
+  nextBroadStep: 'recommendationRuntimeExecution' | 'capacityInputsFirst';
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionCloseout = {
+  status: 'blocked' | 'readyForRuntimeExecution';
+  headline: string;
+  nextBroadStep: MonthlyCapacityRecommendationRuntimeExecutionSummary['nextBroadStep'];
+  completedPieces: Array<'executionPlan' | 'dryRun' | 'dryRunAudit' | 'readiness' | 'summary' | 'noRecommendationBoundary'>;
+  stillDeferred: MonthlyCapacityRecommendationPlanningCloseout['stillDeferred'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionBlockReview = {
+  status: 'clear' | 'blocked';
+  blockedReasonIds: Array<'missingPlanningCloseout' | 'missingTopCandidate' | 'dryRunBlocked' | 'dryRunAuditBlocked' | 'readinessBlocked'>;
+  recommendationCandidateId: null;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionExampleReadiness = {
+  status: 'ready' | 'blocked';
+  exampleCount: number;
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  recommendationCandidateId: null;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExecutionPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'recommendationRuntimeExecutionPlanning';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityRecommendationRuntimeExecutionCloseout['nextBroadStep'];
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  stillDeferred: MonthlyCapacityRecommendationRuntimeExecutionCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -5418,6 +5508,191 @@ export function selectMonthlyCapacityRecommendationPlanningPackageCloseout(
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only recommendation planning package closeout: recommendation inputs, guardrails, readiness, copy policy, audit, summary, examples, and closeout are complete without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionPlan(
+  closeout: MonthlyCapacityRecommendationPlanningCloseout,
+  plan: MonthlyCapacityRecommendationPlan
+): MonthlyCapacityRecommendationRuntimeExecutionPlan {
+  const blocked = closeout.status === 'blocked' || plan.status === 'blocked' || !plan.topCandidateId;
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    requiredInputs: ['recommendationPlanningCloseout', 'topCandidateEvidence', 'copyPolicy', 'guardrails'],
+    topCandidateId: plan.topCandidateId,
+    recommendationCandidateId: null,
+    saved: false,
+    boundary:
+      'Runtime-only recommendation execution plan: prepares future recommendation selection prerequisites without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeDryRun(
+  plan: MonthlyCapacityRecommendationRuntimeExecutionPlan
+): MonthlyCapacityRecommendationRuntimeDryRun {
+  const blocked = plan.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForFutureExecution',
+    plannedChecks: ['confirmRankingEvidence', 'confirmCopyPolicy', 'confirmNonAdvisoryTone', 'confirmNoPersistence', 'confirmNoUi'],
+    topCandidateId: plan.topCandidateId,
+    recommendationCandidateId: null,
+    saved: false,
+    fundingTrace: null,
+    accountInstruction: null,
+    annualSequencing: null,
+    uiPresentation: null,
+    boundary:
+      'Runtime-only recommendation dry run: plans future recommendation selection checks without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeDryRunAudit(
+  dryRun: MonthlyCapacityRecommendationRuntimeDryRun
+): MonthlyCapacityRecommendationRuntimeDryRunAudit {
+  const recommendationCount = dryRun.recommendationCandidateId === null ? 0 : 1;
+  const savedOutputCount = dryRun.saved === false ? 0 : 1;
+  const fundingTraceCount = dryRun.fundingTrace === null ? 0 : 1;
+  const accountInstructionCount = dryRun.accountInstruction === null ? 0 : 1;
+  const annualSequencingCount = dryRun.annualSequencing === null ? 0 : 1;
+  const uiPresentationCount = dryRun.uiPresentation === null ? 0 : 1;
+
+  return {
+    status: recommendationCount || savedOutputCount || fundingTraceCount || accountInstructionCount || annualSequencingCount || uiPresentationCount ? 'block' : 'pass',
+    plannedCheckCount: dryRun.plannedChecks.length,
+    recommendationCount,
+    savedOutputCount,
+    fundingTraceCount,
+    accountInstructionCount,
+    annualSequencingCount,
+    uiPresentationCount,
+    boundary:
+      'Runtime-only recommendation dry-run audit: confirms dry-run planning did not select recommendations, save output, trace funding, add account instructions, sequence annually, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionReadiness(
+  plan: MonthlyCapacityRecommendationRuntimeExecutionPlan,
+  dryRun: MonthlyCapacityRecommendationRuntimeDryRun,
+  audit: MonthlyCapacityRecommendationRuntimeDryRunAudit = selectMonthlyCapacityRecommendationRuntimeDryRunAudit(dryRun)
+): MonthlyCapacityRecommendationRuntimeExecutionReadiness {
+  const blocked = plan.status === 'blocked' || dryRun.status === 'blocked' || audit.status === 'block';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForFutureExecution',
+    topCandidateId: plan.topCandidateId,
+    plannedCheckCount: dryRun.plannedChecks.length,
+    recommendationCandidateId: null,
+    boundary:
+      'Runtime-only recommendation execution readiness: confirms prerequisites for a future execution package without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionSummary(
+  plan: MonthlyCapacityRecommendationRuntimeExecutionPlan,
+  dryRun: MonthlyCapacityRecommendationRuntimeDryRun,
+  readiness: MonthlyCapacityRecommendationRuntimeExecutionReadiness = selectMonthlyCapacityRecommendationRuntimeExecutionReadiness(plan, dryRun)
+): MonthlyCapacityRecommendationRuntimeExecutionSummary {
+  const blocked = plan.status === 'blocked' || dryRun.status === 'blocked' || readiness.status === 'blocked';
+
+  return {
+    status: plan.status,
+    topCandidateId: plan.topCandidateId,
+    recommendationCandidateId: null,
+    plannedCheckCount: dryRun.plannedChecks.length,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'recommendationRuntimeExecution',
+    boundary:
+      'Runtime-only recommendation execution summary: summarizes execution planning without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionCloseout(
+  plan: MonthlyCapacityRecommendationRuntimeExecutionPlan,
+  dryRun: MonthlyCapacityRecommendationRuntimeDryRun,
+  audit: MonthlyCapacityRecommendationRuntimeDryRunAudit = selectMonthlyCapacityRecommendationRuntimeDryRunAudit(dryRun),
+  readiness: MonthlyCapacityRecommendationRuntimeExecutionReadiness = selectMonthlyCapacityRecommendationRuntimeExecutionReadiness(plan, dryRun, audit),
+  summary: MonthlyCapacityRecommendationRuntimeExecutionSummary = selectMonthlyCapacityRecommendationRuntimeExecutionSummary(plan, dryRun, readiness)
+): MonthlyCapacityRecommendationRuntimeExecutionCloseout {
+  const blocked = plan.status === 'blocked' || dryRun.status === 'blocked' || audit.status === 'block' || readiness.status === 'blocked' || summary.nextBroadStep === 'capacityInputsFirst';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForRuntimeExecution',
+    headline: blocked
+      ? 'Recommendation runtime execution planning needs clean prerequisites.'
+      : 'Recommendation runtime execution planning is ready for a future execution package.',
+    nextBroadStep: summary.nextBroadStep,
+    completedPieces: ['executionPlan', 'dryRun', 'dryRunAudit', 'readiness', 'summary', 'noRecommendationBoundary'],
+    stillDeferred: ['recommendations', 'optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+    boundary:
+      'Runtime-only recommendation execution closeout: execution prerequisites are planned, but no recommendation, saved output, funding trace, account instruction, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionBlockReview(
+  plan: MonthlyCapacityRecommendationRuntimeExecutionPlan,
+  dryRun: MonthlyCapacityRecommendationRuntimeDryRun,
+  audit: MonthlyCapacityRecommendationRuntimeDryRunAudit = selectMonthlyCapacityRecommendationRuntimeDryRunAudit(dryRun),
+  readiness: MonthlyCapacityRecommendationRuntimeExecutionReadiness = selectMonthlyCapacityRecommendationRuntimeExecutionReadiness(plan, dryRun, audit)
+): MonthlyCapacityRecommendationRuntimeExecutionBlockReview {
+  const blockedReasonIds: MonthlyCapacityRecommendationRuntimeExecutionBlockReview['blockedReasonIds'] = [];
+  if (plan.status === 'blocked') blockedReasonIds.push('missingPlanningCloseout');
+  if (!plan.topCandidateId) blockedReasonIds.push('missingTopCandidate');
+  if (dryRun.status === 'blocked') blockedReasonIds.push('dryRunBlocked');
+  if (audit.status === 'block') blockedReasonIds.push('dryRunAuditBlocked');
+  if (readiness.status === 'blocked') blockedReasonIds.push('readinessBlocked');
+
+  return {
+    status: blockedReasonIds.length ? 'blocked' : 'clear',
+    blockedReasonIds,
+    recommendationCandidateId: null,
+    saved: false,
+    boundary:
+      'Runtime-only recommendation execution block review: checks future execution prerequisites without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionExampleReadiness(
+  closeouts: MonthlyCapacityRecommendationRuntimeExecutionCloseout[]
+): MonthlyCapacityRecommendationRuntimeExecutionExampleReadiness {
+  const readyExampleCount = closeouts.filter((closeout) => closeout.status === 'readyForRuntimeExecution').length;
+  const blockedExampleCount = closeouts.length - readyExampleCount;
+
+  return {
+    status: closeouts.length > 0 && blockedExampleCount === 0 ? 'ready' : 'blocked',
+    exampleCount: closeouts.length,
+    readyExampleCount,
+    blockedExampleCount,
+    recommendationCandidateId: null,
+    saved: false,
+    boundary:
+      'Runtime-only recommendation execution example readiness: confirms examples can reach future execution readiness without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExecutionPackageCloseout(
+  closeout: MonthlyCapacityRecommendationRuntimeExecutionCloseout,
+  blockReview: MonthlyCapacityRecommendationRuntimeExecutionBlockReview,
+  exampleReadiness: MonthlyCapacityRecommendationRuntimeExecutionExampleReadiness
+): MonthlyCapacityRecommendationRuntimeExecutionPackageCloseout {
+  const complete =
+    closeout.status === 'readyForRuntimeExecution' &&
+    blockReview.status === 'clear' &&
+    exampleReadiness.status === 'ready';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    package: 'recommendationRuntimeExecutionPlanning',
+    headline: complete
+      ? 'Recommendation runtime execution planning is complete.'
+      : 'Recommendation runtime execution planning is blocked before package closeout.',
+    completedSprints: 'S1627-S1646',
+    nextBroadStep: complete ? closeout.nextBroadStep : 'capacityInputsFirst',
+    readyExampleCount: exampleReadiness.readyExampleCount,
+    blockedExampleCount: exampleReadiness.blockedExampleCount,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only recommendation execution planning package closeout: execution plan, dry run, audit, readiness, block review, examples, and closeout are complete without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
   };
 }
 
