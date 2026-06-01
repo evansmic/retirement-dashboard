@@ -1424,6 +1424,103 @@ export type MonthlyCapacityRuntimeScorePackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityCandidateRankingPlanningRow = {
+  id: 'scoreEvidence' | 'auditPass' | 'tieBreakPolicy' | 'recommendationBoundary' | 'persistenceBoundary' | 'uiBoundary';
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityCandidateRankingPlanningRow[];
+  scoredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  scoreCount: number;
+  highestScore: number | null;
+  lowestScore: number | null;
+  baselineScore: number | null;
+  notAllowedYet: Array<
+    'candidateRanking' | 'recommendations' | 'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'
+  >;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingGuardrail = {
+  id: 'noRankingYet' | 'noRecommendations' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstructions' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingReadiness = {
+  status: 'blocked' | 'readyForFutureRankingPlanning';
+  readyRowIds: MonthlyCapacityCandidateRankingPlanningRow['id'][];
+  reviewRowIds: MonthlyCapacityCandidateRankingPlanningRow['id'][];
+  blockedRowIds: MonthlyCapacityCandidateRankingPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityCandidateRankingReadiness['status'];
+  scoredVariantIds: MonthlyCapacityCandidateBlueprintId[];
+  reviewRowIds: MonthlyCapacityCandidateRankingPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingTieBreakRule = {
+  id: 'floorCoverageFirst' | 'lowerDisruption' | 'taxSecondary' | 'baselineAsReference' | 'plainLanguageReview';
+  status: 'planned' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingTieBreakPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  ruleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  rules: MonthlyCapacityCandidateRankingTieBreakRule[];
+  scoreCount: number;
+  stillDeferred: MonthlyCapacityCandidateRankingPlan['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingPlanningAudit = {
+  status: 'pass' | 'block';
+  guardrailBlockCount: number;
+  rankedOutputCount: 0;
+  recommendationCount: 0;
+  savedOutputCount: 0;
+  fundingTraceCount: 0;
+  accountInstructionCount: 0;
+  annualSequencingCount: 0;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingPlanningSummary = {
+  status: MonthlyCapacityCandidateRankingPlan['status'];
+  scoreCount: number;
+  plannedRuleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  reviewRowIds: MonthlyCapacityCandidateRankingPlanningRow['id'][];
+  nextBroadStep: 'candidateRankingImplementationPlanning' | 'capacityInputsFirst';
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingPlanningCloseout = {
+  status: 'blocked' | 'readyForImplementationPlanning';
+  headline: string;
+  nextBroadStep: MonthlyCapacityCandidateRankingPlanningSummary['nextBroadStep'];
+  completedPieces: Array<'rankingInputs' | 'guardrails' | 'readiness' | 'tieBreakPolicy' | 'audit' | 'summary' | 'exampleMatrix'>;
+  stillDeferred: MonthlyCapacityCandidateRankingPlan['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingPlanningPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'candidateRankingPlanning';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityCandidateRankingPlanningCloseout['nextBroadStep'];
+  stillDeferred: MonthlyCapacityCandidateRankingPlanningCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -4112,6 +4209,260 @@ export function selectMonthlyCapacityRuntimeScorePackageCloseout(
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only scoring execution package closeout: score rows, audit, summary, examples, and closeout are complete without ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingPlan(
+  scoreSet: MonthlyCapacityRuntimeScoreSet,
+  closeout: MonthlyCapacityRuntimeScoreCloseout,
+  summary: MonthlyCapacityRuntimeScoreSummary = selectMonthlyCapacityRuntimeScoreSummary(scoreSet),
+  audit: MonthlyCapacityRuntimeScoreAudit = selectMonthlyCapacityRuntimeScoreAudit(scoreSet)
+): MonthlyCapacityCandidateRankingPlan {
+  const blocked = scoreSet.status === 'blocked' || closeout.status === 'blocked' || audit.status === 'block' || summary.scoredVariantIds.length === 0;
+  const rows: MonthlyCapacityCandidateRankingPlanningRow[] = [
+    {
+      id: 'scoreEvidence',
+      status: summary.scoredVariantIds.length > 0 ? 'ready' : 'blocked',
+      detail: summary.scoredVariantIds.length > 0 ? 'Runtime score evidence is available for planning.' : 'Ranking planning needs scored runtime variants.'
+    },
+    {
+      id: 'auditPass',
+      status: audit.status === 'pass' ? 'ready' : 'blocked',
+      detail: audit.status === 'pass' ? 'Score guardrails passed before ranking planning.' : 'Score guardrails blocked ranking planning.'
+    },
+    {
+      id: 'tieBreakPolicy',
+      status: summary.scoredVariantIds.length > 1 ? 'review' : 'ready',
+      detail:
+        summary.scoredVariantIds.length > 1
+          ? 'A future ranking package needs a bounded tie-break policy before ordering candidates.'
+          : 'Only one scored variant is visible, so tie-break policy can stay simple for planning.'
+    },
+    {
+      id: 'recommendationBoundary',
+      status: 'ready',
+      detail: 'Ranking planning cannot choose or recommend an action.'
+    },
+    {
+      id: 'persistenceBoundary',
+      status: 'ready',
+      detail: 'Ranking planning remains runtime-only and cannot be saved to plan files.'
+    },
+    {
+      id: 'uiBoundary',
+      status: 'ready',
+      detail: 'Ranking planning does not change presentation or UI.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows: blocked ? rows.map((row) => (row.id === 'scoreEvidence' || row.id === 'auditPass' ? row : { ...row, status: 'blocked' })) : rows,
+    scoredVariantIds: summary.scoredVariantIds,
+    scoreCount: summary.scoredVariantIds.length,
+    highestScore: summary.highestScore,
+    lowestScore: summary.lowestScore,
+    baselineScore: summary.baselineScore,
+    notAllowedYet: closeout.stillDeferred,
+    boundary:
+      'Runtime-only candidate ranking plan: prepares ranking inputs and guardrails without ordering candidates, choosing recommendations, searching the optimizer, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingGuardrails(
+  plan: MonthlyCapacityCandidateRankingPlan
+): MonthlyCapacityCandidateRankingGuardrail[] {
+  return [
+    {
+      id: 'noRankingYet',
+      status: plan.notAllowedYet.includes('candidateRanking') ? 'pass' : 'block',
+      detail: 'Candidate ranking is still deferred.'
+    },
+    {
+      id: 'noRecommendations',
+      status: plan.notAllowedYet.includes('recommendations') ? 'pass' : 'block',
+      detail: 'Recommendations are still deferred.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: plan.notAllowedYet.includes('savedOptimizerOutput') ? 'pass' : 'block',
+      detail: 'Calculated ranking output is not saved.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: plan.notAllowedYet.includes('fundingTrace') ? 'pass' : 'block',
+      detail: 'Funding trace remains deferred.'
+    },
+    {
+      id: 'noAccountInstructions',
+      status: plan.notAllowedYet.includes('accountInstructions') ? 'pass' : 'block',
+      detail: 'No account-level instructions are produced.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: plan.notAllowedYet.includes('annualAccountSequencing') ? 'pass' : 'block',
+      detail: 'Annual account-level sequencing remains deferred.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: plan.notAllowedYet.includes('uiPresentation') ? 'pass' : 'block',
+      detail: 'UI presentation remains unchanged.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityCandidateRankingReadiness(
+  plan: MonthlyCapacityCandidateRankingPlan,
+  guardrails: MonthlyCapacityCandidateRankingGuardrail[] = selectMonthlyCapacityCandidateRankingGuardrails(plan)
+): MonthlyCapacityCandidateRankingReadiness {
+  const readyRowIds = plan.rows.filter((row) => row.status === 'ready').map((row) => row.id);
+  const reviewRowIds = plan.rows.filter((row) => row.status === 'review').map((row) => row.id);
+  const blockedRowIds = plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id);
+  const guardrailBlocked = guardrails.some((guardrail) => guardrail.status === 'block');
+
+  return {
+    status: plan.status === 'blocked' || blockedRowIds.length > 0 || guardrailBlocked ? 'blocked' : 'readyForFutureRankingPlanning',
+    readyRowIds,
+    reviewRowIds,
+    blockedRowIds,
+    boundary:
+      'Runtime-only candidate ranking readiness: checks planning prerequisites without ranking candidates, recommending actions, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingExampleReadiness(
+  id: string,
+  plan: MonthlyCapacityCandidateRankingPlan,
+  readiness: MonthlyCapacityCandidateRankingReadiness = selectMonthlyCapacityCandidateRankingReadiness(plan)
+): MonthlyCapacityCandidateRankingExampleReadiness {
+  return {
+    id,
+    status: readiness.status,
+    scoredVariantIds: plan.scoredVariantIds,
+    reviewRowIds: readiness.reviewRowIds,
+    boundary:
+      'Runtime-only candidate ranking example readiness: records planning coverage for an example without ranking, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingTieBreakPlan(
+  plan: MonthlyCapacityCandidateRankingPlan,
+  readiness: MonthlyCapacityCandidateRankingReadiness = selectMonthlyCapacityCandidateRankingReadiness(plan)
+): MonthlyCapacityCandidateRankingTieBreakPlan {
+  const blocked = plan.status === 'blocked' || readiness.status === 'blocked';
+  const rules: MonthlyCapacityCandidateRankingTieBreakRule[] = [
+    {
+      id: 'floorCoverageFirst',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future ordering should keep monthly floor coverage ahead of secondary preferences.'
+    },
+    {
+      id: 'lowerDisruption',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'When score evidence is close, lower-disruption changes should be reviewed before disruptive changes.'
+    },
+    {
+      id: 'taxSecondary',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Tax differences remain secondary to floor coverage and practical feasibility.'
+    },
+    {
+      id: 'baselineAsReference',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Baseline remains a reference point, not an automatic recommendation.'
+    },
+    {
+      id: 'plainLanguageReview',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Any future ranking output must stay plain-language and non-advisory.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    ruleIds: rules.map((rule) => rule.id),
+    rules,
+    scoreCount: plan.scoreCount,
+    stillDeferred: plan.notAllowedYet,
+    boundary:
+      'Runtime-only ranking tie-break plan: defines future ordering policy inputs without sorting candidates, choosing recommendations, searching the optimizer, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingPlanningAudit(
+  plan: MonthlyCapacityCandidateRankingPlan,
+  guardrails: MonthlyCapacityCandidateRankingGuardrail[] = selectMonthlyCapacityCandidateRankingGuardrails(plan)
+): MonthlyCapacityCandidateRankingPlanningAudit {
+  const guardrailBlockCount = guardrails.filter((guardrail) => guardrail.status === 'block').length;
+
+  return {
+    status: guardrailBlockCount > 0 ? 'block' : 'pass',
+    guardrailBlockCount,
+    rankedOutputCount: 0,
+    recommendationCount: 0,
+    savedOutputCount: 0,
+    fundingTraceCount: 0,
+    accountInstructionCount: 0,
+    annualSequencingCount: 0,
+    boundary:
+      'Runtime-only ranking planning audit: confirms planning did not create ranked output, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingPlanningSummary(
+  plan: MonthlyCapacityCandidateRankingPlan,
+  tieBreakPlan: MonthlyCapacityCandidateRankingTieBreakPlan,
+  readiness: MonthlyCapacityCandidateRankingReadiness = selectMonthlyCapacityCandidateRankingReadiness(plan)
+): MonthlyCapacityCandidateRankingPlanningSummary {
+  const blocked = plan.status === 'blocked' || tieBreakPlan.status === 'blocked' || readiness.status === 'blocked';
+
+  return {
+    status: plan.status,
+    scoreCount: plan.scoreCount,
+    plannedRuleIds: tieBreakPlan.rules.filter((rule) => rule.status === 'planned').map((rule) => rule.id),
+    reviewRowIds: readiness.reviewRowIds,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateRankingImplementationPlanning',
+    boundary:
+      'Runtime-only ranking planning summary: summarizes future ranking inputs without ranking candidates, recommending actions, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingPlanningCloseout(
+  plan: MonthlyCapacityCandidateRankingPlan,
+  tieBreakPlan: MonthlyCapacityCandidateRankingTieBreakPlan,
+  audit: MonthlyCapacityCandidateRankingPlanningAudit = selectMonthlyCapacityCandidateRankingPlanningAudit(plan),
+  summary: MonthlyCapacityCandidateRankingPlanningSummary = selectMonthlyCapacityCandidateRankingPlanningSummary(plan, tieBreakPlan)
+): MonthlyCapacityCandidateRankingPlanningCloseout {
+  const blocked = plan.status === 'blocked' || tieBreakPlan.status === 'blocked' || audit.status === 'block' || summary.nextBroadStep === 'capacityInputsFirst';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForImplementationPlanning',
+    headline: blocked
+      ? 'Candidate ranking planning needs clean score evidence and guardrails.'
+      : 'Candidate ranking planning is ready for a future implementation-planning package.',
+    nextBroadStep: summary.nextBroadStep,
+    completedPieces: ['rankingInputs', 'guardrails', 'readiness', 'tieBreakPolicy', 'audit', 'summary', 'exampleMatrix'],
+    stillDeferred: plan.notAllowedYet,
+    boundary:
+      'Runtime-only ranking planning closeout: ranking inputs and tie-break policy are planned, but no ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingPlanningPackageCloseout(
+  closeout: MonthlyCapacityCandidateRankingPlanningCloseout
+): MonthlyCapacityCandidateRankingPlanningPackageCloseout {
+  return {
+    status: closeout.status === 'readyForImplementationPlanning' ? 'complete' : 'blocked',
+    package: 'candidateRankingPlanning',
+    headline:
+      closeout.status === 'readyForImplementationPlanning'
+        ? 'Candidate ranking planning is complete.'
+        : 'Candidate ranking planning is blocked before package closeout.',
+    completedSprints: 'S1547-S1566',
+    nextBroadStep: closeout.nextBroadStep,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only ranking planning package closeout: ranking inputs, guardrails, readiness, tie-break policy, audit, summary, examples, and closeout are complete without ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
   };
 }
 

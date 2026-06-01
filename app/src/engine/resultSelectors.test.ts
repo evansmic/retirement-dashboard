@@ -72,6 +72,15 @@ import {
   selectMonthlyCapacityRuntimeScorePackageCloseout,
   selectMonthlyCapacityRuntimeScoreSummary,
   selectMonthlyCapacityRuntimeScores,
+  selectMonthlyCapacityCandidateRankingExampleReadiness,
+  selectMonthlyCapacityCandidateRankingGuardrails,
+  selectMonthlyCapacityCandidateRankingPlan,
+  selectMonthlyCapacityCandidateRankingPlanningAudit,
+  selectMonthlyCapacityCandidateRankingPlanningCloseout,
+  selectMonthlyCapacityCandidateRankingPlanningPackageCloseout,
+  selectMonthlyCapacityCandidateRankingPlanningSummary,
+  selectMonthlyCapacityCandidateRankingReadiness,
+  selectMonthlyCapacityCandidateRankingTieBreakPlan,
   selectMonthlyCapacityCandidateScorePolicy,
   selectMonthlyCapacityScoringExampleReadiness,
   selectMonthlyCapacityScoringPlanCloseout,
@@ -3500,6 +3509,336 @@ describe('result selectors', () => {
     expect(packageCloseout.boundary).toContain('without ranking');
     expect(packageCloseout.boundary).toContain('score rows, audit, summary, examples, and closeout are complete');
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRuntimeScorePackageCloseout');
+  });
+
+  it('plans candidate ranking inputs without ordering candidates', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+
+    expect(rankingPlan).toMatchObject({
+      status: 'readyForPlanning',
+      scoredVariantIds: ['baseline'],
+      scoreCount: 1,
+      highestScore: 100,
+      lowestScore: 100,
+      baselineScore: 100
+    });
+    expect(rankingPlan.rows.map((row) => row.id)).toEqual([
+      'scoreEvidence',
+      'auditPass',
+      'tieBreakPolicy',
+      'recommendationBoundary',
+      'persistenceBoundary',
+      'uiBoundary'
+    ]);
+    expect(rankingPlan.boundary).toContain('without ordering candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingPlan');
+  });
+
+  it('blocks candidate ranking planning when score closeout is blocked', () => {
+    const scoreSet = {
+      status: 'blocked' as const,
+      rows: [],
+      scoredVariantIds: [],
+      boundary: 'Blocked test score set.'
+    };
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+
+    expect(rankingPlan.status).toBe('blocked');
+    expect(rankingPlan.rows.some((row) => row.status === 'blocked')).toBe(true);
+    expect(rankingPlan.scoredVariantIds).toEqual([]);
+    expect(rankingPlan.notAllowedYet).toContain('candidateRanking');
+  });
+
+  it('keeps ranking guardrails closed before ranking implementation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const guardrails = selectMonthlyCapacityCandidateRankingGuardrails(rankingPlan);
+
+    expect(guardrails.map((guardrail) => guardrail.status)).toEqual(['pass', 'pass', 'pass', 'pass', 'pass', 'pass', 'pass']);
+    expect(guardrails.map((guardrail) => guardrail.id)).toEqual([
+      'noRankingYet',
+      'noRecommendations',
+      'noSavedOutput',
+      'noFundingTrace',
+      'noAccountInstructions',
+      'noAnnualSequencing',
+      'noUiPresentation'
+    ]);
+  });
+
+  it('summarizes ranking planning readiness without ranking candidates', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const readiness = selectMonthlyCapacityCandidateRankingReadiness(rankingPlan);
+
+    expect(readiness).toMatchObject({
+      status: 'readyForFutureRankingPlanning',
+      blockedRowIds: [],
+      reviewRowIds: []
+    });
+    expect(readiness.readyRowIds).toEqual([
+      'scoreEvidence',
+      'auditPass',
+      'tieBreakPolicy',
+      'recommendationBoundary',
+      'persistenceBoundary',
+      'uiBoundary'
+    ]);
+    expect(readiness.boundary).toContain('without ranking candidates');
+  });
+
+  it('runs clean examples through candidate ranking planning readiness', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = { ...createCleanExampleRuntimePlan(card.id), inheritance: 0 };
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, plan);
+      const spending = selectSpendingCapacitySummary(result, {}, plan, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, plan, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example ranking planning readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only ranking planning readiness gate for example matrix coverage.'
+      };
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+      const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+      const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+      const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+      const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+      const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+      const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+      const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+        contract,
+        order,
+        selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+      );
+      const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
+      const simulationHandoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(variants);
+      const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(variants, simulationHandoff, () => result);
+      const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+      const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+      const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+      const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+      const readiness = selectMonthlyCapacityCandidateRankingExampleReadiness(card.id, rankingPlan);
+
+      expect(readiness.status, card.id).toBe('readyForFutureRankingPlanning');
+      expect(readiness.scoredVariantIds.length, card.id).toBeGreaterThan(0);
+      expect(readiness.boundary, card.id).toContain('without ranking');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityCandidateRankingExampleReadiness');
+    }
+  });
+
+  it('plans ranking tie-break policy without sorting candidates', () => {
+    const shortfallResult = withRows([
+      { ...fixture.years[0], shortfall: 0, totalAftaxYear: 70000, bal_total: 200000 },
+      { ...fixture.years[1], shortfall: 10000, totalAftaxYear: 71470, bal_total: 0 }
+    ]);
+    const runtime = buildMonthlyCandidateRuntime(shortfallResult, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, (plan) =>
+      withRows([
+        {
+          year: 2028,
+          shortfall: plan.spending.gogo === 70000 && plan.assumptions.retireYear === 2028 ? 5000 : 0,
+          totalTaxYear: 1000,
+          bal_total: 300000
+        },
+        { year: 2029, shortfall: 0, totalTaxYear: 2000, bal_total: 250000 }
+      ])
+    );
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+
+    expect(tieBreakPlan).toMatchObject({
+      status: 'readyForPlanning',
+      scoreCount: 5,
+      ruleIds: ['floorCoverageFirst', 'lowerDisruption', 'taxSecondary', 'baselineAsReference', 'plainLanguageReview']
+    });
+    expect(tieBreakPlan.rules.map((rule) => rule.status)).toEqual(['planned', 'planned', 'planned', 'planned', 'planned']);
+    expect(tieBreakPlan.stillDeferred).toContain('candidateRanking');
+    expect(tieBreakPlan.boundary).toContain('without sorting candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingTieBreakPlan');
+  });
+
+  it('blocks ranking tie-break planning when ranking readiness is blocked', () => {
+    const scoreSet = {
+      status: 'blocked' as const,
+      rows: [],
+      scoredVariantIds: [],
+      boundary: 'Blocked test score set.'
+    };
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+
+    expect(tieBreakPlan.status).toBe('blocked');
+    expect(tieBreakPlan.rules.every((rule) => rule.status === 'blocked')).toBe(true);
+    expect(tieBreakPlan.ruleIds).toEqual(['floorCoverageFirst', 'lowerDisruption', 'taxSecondary', 'baselineAsReference', 'plainLanguageReview']);
+    expect(tieBreakPlan.boundary).toContain('without sorting candidates');
+  });
+
+  it('audits ranking planning so it cannot create ranked output', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const audit = selectMonthlyCapacityCandidateRankingPlanningAudit(rankingPlan);
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      guardrailBlockCount: 0,
+      rankedOutputCount: 0,
+      recommendationCount: 0,
+      savedOutputCount: 0,
+      fundingTraceCount: 0,
+      accountInstructionCount: 0,
+      annualSequencingCount: 0
+    });
+    expect(audit.boundary).toContain('did not create ranked output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingPlanningAudit');
+  });
+
+  it('summarizes ranking planning without selecting a path', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const closeout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, closeout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const summary = selectMonthlyCapacityCandidateRankingPlanningSummary(rankingPlan, tieBreakPlan);
+
+    expect(summary).toMatchObject({
+      status: 'readyForPlanning',
+      scoreCount: 1,
+      plannedRuleIds: ['floorCoverageFirst', 'lowerDisruption', 'taxSecondary', 'baselineAsReference', 'plainLanguageReview'],
+      reviewRowIds: [],
+      nextBroadStep: 'candidateRankingImplementationPlanning'
+    });
+    expect(summary.boundary).toContain('without ranking candidates');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingPlanningSummary');
+  });
+
+  it('closes out candidate ranking planning for implementation planning only', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const closeout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementationPlanning',
+      nextBroadStep: 'candidateRankingImplementationPlanning',
+      completedPieces: ['rankingInputs', 'guardrails', 'readiness', 'tieBreakPolicy', 'audit', 'summary', 'exampleMatrix']
+    });
+    expect(closeout.stillDeferred).toContain('candidateRanking');
+    expect(closeout.stillDeferred).toContain('recommendations');
+    expect(closeout.boundary).toContain('no ranking');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingPlanningCloseout');
+  });
+
+  it('blocks candidate ranking planning closeout when guardrails fail', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = {
+      ...selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout),
+      notAllowedYet: ['recommendations', 'optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'] as Array<
+        'candidateRanking' | 'recommendations' | 'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'
+      >
+    };
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const audit = selectMonthlyCapacityCandidateRankingPlanningAudit(rankingPlan);
+    const closeout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan, audit);
+
+    expect(audit.status).toBe('block');
+    expect(closeout.status).toBe('blocked');
+    expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
+    expect(closeout.headline).toContain('needs clean score evidence');
+  });
+
+  it('closes out the candidate ranking planning package', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const closeout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const packageCloseout = selectMonthlyCapacityCandidateRankingPlanningPackageCloseout(closeout);
+
+    expect(packageCloseout).toMatchObject({
+      status: 'complete',
+      package: 'candidateRankingPlanning',
+      completedSprints: 'S1547-S1566',
+      nextBroadStep: 'candidateRankingImplementationPlanning'
+    });
+    expect(packageCloseout.stillDeferred).toContain('candidateRanking');
+    expect(packageCloseout.stillDeferred).toContain('recommendations');
+    expect(packageCloseout.boundary).toContain('without ranking');
+    expect(packageCloseout.boundary).toContain('ranking inputs, guardrails, readiness, tie-break policy, audit, summary, examples, and closeout are complete');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRankingPlanningPackageCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {
