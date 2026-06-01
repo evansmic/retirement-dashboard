@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Intake Capacity Mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202a;
+        --muted: #5c6875;
+        --canvas: #f7f9fb;
+        --panel: #ffffff;
+        --line: #d9e0e6;
+        --soft: #eef2f5;
+        --green: #146b48;
+        --green-soft: #e6f3ed;
+        --blue: #255f85;
+        --blue-soft: #e7f0f6;
+        --gold: #85620f;
+        --gold-soft: #f7efd6;
+        --shadow: 0 14px 34px rgba(29, 43, 56, 0.07);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      .shell {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: 28px 32px 48px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        line-height: 1.2;
+      }
+
+      header p {
+        margin: 7px 0 0;
+        max-width: 690px;
+        color: var(--muted);
+      }
+
+      .progress {
+        min-width: 260px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 14px;
+        box-shadow: var(--shadow);
+      }
+
+      .progress span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        text-transform: uppercase;
+      }
+
+      .progress strong {
+        display: block;
+        margin-top: 5px;
+      }
+
+      .bar {
+        height: 8px;
+        border-radius: 999px;
+        background: var(--soft);
+        overflow: hidden;
+        margin-top: 10px;
+      }
+
+      .bar i {
+        display: block;
+        width: 42%;
+        height: 100%;
+        background: var(--green);
+        border-radius: inherit;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.72fr) minmax(360px, 0.28fr);
+        gap: 18px;
+      }
+
+      .panel,
+      .side {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      .side {
+        padding: 20px;
+        align-self: start;
+      }
+
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 19px;
+      }
+
+      h3 {
+        font-size: 15px;
+      }
+
+      .helper {
+        margin: 6px 0 22px;
+        color: var(--muted);
+      }
+
+      .fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      select {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 12px;
+        color: var(--ink);
+        background: #ffffff;
+        font: inherit;
+        font-size: 15px;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+
+      .callout {
+        margin-top: 18px;
+        border-radius: 8px;
+        padding: 14px;
+        background: var(--green-soft);
+        color: #164d37;
+        font-size: 14px;
+      }
+
+      .steps {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .steps li {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .steps b {
+        color: var(--ink);
+      }
+
+      .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .optional {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: #fbfcfd;
+      }
+
+      .optional p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      button {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 14px;
+        background: #ffffff;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 750;
+      }
+
+      button.primary {
+        background: #193449;
+        border-color: #193449;
+        color: #ffffff;
+      }
+
+      @media (max-width: 840px) {
+        .shell {
+          padding: 18px;
+        }
+
+        header,
+        .grid,
+        .fields {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+
+        .progress {
+          min-width: 0;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <h1>Build your retirement estimate</h1>
+          <p>
+            Start with the monthly basics you want covered. The app will estimate after-tax monthly capacity from income, assets, debts, and tax assumptions.
+          </p>
+        </div>
+        <aside class="progress" aria-label="Plan progress">
+          <span>Plan setup</span>
+          <strong>Minimum expenses</strong>
+          <div class="bar" aria-hidden="true"><i></i></div>
+        </aside>
+      </header>
+
+      <div class="grid">
+        <section class="panel" aria-labelledby="floor-title">
+          <h2 id="floor-title">Minimum monthly expenses</h2>
+          <p class="helper">
+            Enter the essential monthly amount you want the plan to test first. Mortgage or debt payments already entered in Debts should stay there.
+          </p>
+
+          <div class="fields">
+            <label>
+              Housing, utilities, food, and insurance
+              <input type="text" value="$3,600" inputmode="decimal" />
+            </label>
+            <label>
+              Health, transportation, and essentials
+              <input type="text" value="$1,300" inputmode="decimal" />
+            </label>
+            <label>
+              Province
+              <select>
+                <option>Ontario</option>
+              </select>
+            </label>
+            <label>
+              First retirement year
+              <input type="text" value="2028" inputmode="numeric" />
+            </label>
+            <label class="wide">
+              Notes for yourself
+              <input type="text" value="Keep monthly basics separate from travel and gifts." />
+            </label>
+          </div>
+
+          <div class="callout">
+            Minimum expenses are used as the floor for the capacity estimate. They are not treated as the amount you want to spend.
+          </div>
+
+          <div class="optional">
+            <h3>Optional spending assumptions</h3>
+            <p>
+              Lifestyle spending, travel, gifts, and age-based changes can be reviewed later as assumptions. They should not block the first capacity estimate.
+            </p>
+          </div>
+
+          <div class="actions">
+            <button type="button">Save draft locally</button>
+            <button class="primary" type="button">Continue to income and assets</button>
+          </div>
+        </section>
+
+        <aside class="side" aria-labelledby="next-title">
+          <h3 id="next-title">What comes next</h3>
+          <ul class="steps">
+            <li>
+              <span class="num">1</span>
+              <span><b>Minimum expenses</b><br />Set the floor the estimate should try to cover.</span>
+            </li>
+            <li>
+              <span class="num">2</span>
+              <span><b>Income and assets</b><br />Add CPP, OAS, pensions, accounts, and savings.</span>
+            </li>
+            <li>
+              <span class="num">3</span>
+              <span><b>Debts and home</b><br />Keep mortgage and debt payments separate from the monthly floor.</span>
+            </li>
+            <li>
+              <span class="num">4</span>
+              <span><b>Results</b><br />See estimated after-tax monthly capacity in today's dollars.</span>
+            </li>
+          </ul>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

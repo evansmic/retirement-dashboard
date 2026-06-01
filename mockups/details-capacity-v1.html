@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Details Capacity Mockup</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202a;
+        --muted: #5c6875;
+        --canvas: #f7f9fb;
+        --panel: #ffffff;
+        --line: #d9e0e6;
+        --soft: #eef2f5;
+        --green: #146b48;
+        --green-soft: #e6f3ed;
+        --blue: #255f85;
+        --blue-soft: #e7f0f6;
+        --gold: #85620f;
+        --gold-soft: #f7efd6;
+        --red: #9b3c35;
+        --red-soft: #f8e8e6;
+        --shadow: 0 14px 34px rgba(29, 43, 56, 0.07);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      .shell {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        padding: 28px 32px 48px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .summary {
+        min-width: 270px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 14px 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .summary span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        text-transform: uppercase;
+      }
+
+      .summary strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 28px;
+      }
+
+      .summary p {
+        margin: 2px 0 0;
+        font-size: 13px;
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .tabs button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 0 12px;
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .tabs button.active {
+        background: #193449;
+        border-color: #193449;
+        color: #ffffff;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 18px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 17px;
+      }
+
+      .panel p {
+        color: var(--muted);
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .table th {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: left;
+        text-transform: uppercase;
+      }
+
+      .table th,
+      .table td {
+        border-bottom: 1px solid var(--line);
+        padding: 11px 8px;
+        vertical-align: top;
+      }
+
+      .table td:last-child,
+      .table th:last-child {
+        text-align: right;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        border-radius: 999px;
+        padding: 0 9px;
+        background: var(--green-soft);
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .status.watch {
+        background: var(--gold-soft);
+        color: var(--gold);
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .source-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .source-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 12px;
+      }
+
+      .source-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .source-row b {
+        display: block;
+      }
+
+      .source-row span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .source-row strong {
+        white-space: nowrap;
+      }
+
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 14px 16px;
+      }
+
+      details + details {
+        margin-top: 10px;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 750;
+      }
+
+      details p {
+        margin: 10px 0 0;
+        font-size: 14px;
+      }
+
+      .review-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .review-list li {
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--blue-soft);
+        color: #214b64;
+        font-size: 14px;
+      }
+
+      .review-list li.watch {
+        background: var(--gold-soft);
+        color: #664b0b;
+      }
+
+      @media (max-width: 860px) {
+        .shell {
+          padding: 18px;
+        }
+
+        header,
+        .grid {
+          grid-template-columns: 1fr;
+          display: grid;
+        }
+
+        .summary {
+          min-width: 0;
+        }
+
+        .table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <h1>Details</h1>
+          <p>Supporting checks behind the monthly capacity estimate.</p>
+        </div>
+        <aside class="summary" aria-label="Current capacity">
+          <span>Estimated capacity</span>
+          <strong>$6,850</strong>
+          <p>per month in today's dollars</p>
+        </aside>
+      </header>
+
+      <nav class="tabs" aria-label="Detail sections">
+        <button class="active" type="button">Annual view</button>
+        <button type="button">Funding sources</button>
+        <button type="button">Taxes</button>
+        <button type="button">Survivor and estate</button>
+      </nav>
+
+      <div class="grid">
+        <section class="panel" aria-labelledby="annual-title">
+          <h2 id="annual-title">Annual funding view</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Age</th>
+                <th>After-tax spending</th>
+                <th>Tax</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2028</td>
+                <td>65</td>
+                <td>$82,200</td>
+                <td>$18,400</td>
+                <td><span class="status">Funded</span></td>
+              </tr>
+              <tr>
+                <td>2035</td>
+                <td>72</td>
+                <td>$79,600</td>
+                <td>$23,800</td>
+                <td><span class="status watch">Tax review</span></td>
+              </tr>
+              <tr>
+                <td>2045</td>
+                <td>82</td>
+                <td>$70,500</td>
+                <td>$19,900</td>
+                <td><span class="status">Funded</span></td>
+              </tr>
+              <tr>
+                <td>2058</td>
+                <td>95</td>
+                <td>$63,900</td>
+                <td>$11,200</td>
+                <td><span class="status">Funded</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <details open>
+            <summary>Cash-flow reconciliation</summary>
+            <p>
+              Income, broad withdrawals, tax, and one-time flows reconcile to the modelled after-tax spending shown for each year.
+            </p>
+          </details>
+          <details>
+            <summary>Spending path underneath the monthly number</summary>
+            <p>
+              The monthly capacity can reflect lower or changing spending at later ages. Breakpoints remain assumptions for future review, not required expertise.
+            </p>
+          </details>
+        </section>
+
+        <div class="stack">
+          <section class="panel" aria-labelledby="sources-title">
+            <h2 id="sources-title">Broad source groups</h2>
+            <div class="source-card">
+              <div class="source-row">
+                <div>
+                  <b>Guaranteed income</b>
+                  <span>CPP, OAS, and defined benefit income.</span>
+                </div>
+                <strong>$3,290/mo</strong>
+              </div>
+              <div class="source-row">
+                <div>
+                  <b>Registered assets</b>
+                  <span>RRSP, RRIF, and similar taxable withdrawals.</span>
+                </div>
+                <strong>$2,330/mo</strong>
+              </div>
+              <div class="source-row">
+                <div>
+                  <b>TFSA and taxable assets</b>
+                  <span>Tax-free and non-registered support where modelled.</span>
+                </div>
+                <strong>$1,230/mo</strong>
+              </div>
+            </div>
+            <p>
+              Source groups explain the estimate at a high level. They are not account-level withdrawal instructions.
+            </p>
+          </section>
+
+          <section class="panel" aria-labelledby="review-title">
+            <h2 id="review-title">Review notes</h2>
+            <ul class="review-list">
+              <li class="watch">Registered withdrawals create tax-sensitive years around required minimum withdrawals.</li>
+              <li>Survivor income and tax filing status can change the estimate for couples.</li>
+              <li>Estate intent affects how much cushion is comfortable, but it is not optimized here.</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

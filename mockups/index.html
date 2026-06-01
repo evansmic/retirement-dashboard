@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retirement Planner Mockups</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17202a;
+        --muted: #5c6875;
+        --canvas: #f7f9fb;
+        --panel: #ffffff;
+        --line: #d9e0e6;
+        --blue: #255f85;
+        --shadow: 0 14px 34px rgba(29, 43, 56, 0.07);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        width: min(980px, 100%);
+        margin: 0 auto;
+        padding: 42px 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .intro {
+        margin: 8px 0 24px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      a {
+        display: block;
+        min-height: 150px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 20px;
+        color: inherit;
+        text-decoration: none;
+        box-shadow: var(--shadow);
+      }
+
+      a:hover {
+        border-color: var(--blue);
+      }
+
+      span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        text-transform: uppercase;
+      }
+
+      strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 20px;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Retirement Planner mockups</h1>
+      <p class="intro">Static visual concepts for review before production UI work.</p>
+
+      <section class="grid" aria-label="Available mockups">
+        <a href="./overview-capacity-v1.html">
+          <span>Results</span>
+          <strong>Overview capacity v1</strong>
+          <p>Hero monthly capacity, minimum expense coverage, funding groups, and top review items.</p>
+        </a>
+        <a href="./details-capacity-v1.html">
+          <span>Details</span>
+          <strong>Capacity details v1</strong>
+          <p>Annual rows, broad source groups, tax-sensitive notes, survivor and estate context.</p>
+        </a>
+        <a href="./intake-capacity-v1.html">
+          <span>Intake</span>
+          <strong>Minimum expenses first v1</strong>
+          <p>Floor-first intake flow that avoids asking users to guess desired spending first.</p>
+        </a>
+        <a href="./report-capacity-v1.html">
+          <span>Report</span>
+          <strong>Printable capacity v1</strong>
+          <p>Calm printable summary of capacity, coverage, review notes, and broad source groups.</p>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>
