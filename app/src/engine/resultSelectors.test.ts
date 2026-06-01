@@ -97,6 +97,15 @@ import {
   selectMonthlyCapacityCandidateRuntimeRankingExampleReadiness,
   selectMonthlyCapacityCandidateRuntimeRankingPackageCloseout,
   selectMonthlyCapacityCandidateRuntimeRankingSummary,
+  selectMonthlyCapacityRecommendationExampleReadiness,
+  selectMonthlyCapacityRecommendationGuardrails,
+  selectMonthlyCapacityRecommendationPlan,
+  selectMonthlyCapacityRecommendationCopyPolicy,
+  selectMonthlyCapacityRecommendationPlanningAudit,
+  selectMonthlyCapacityRecommendationPlanningCloseout,
+  selectMonthlyCapacityRecommendationPlanningPackageCloseout,
+  selectMonthlyCapacityRecommendationPlanningSummary,
+  selectMonthlyCapacityRecommendationReadiness,
   selectMonthlyCapacityCandidateScorePolicy,
   selectMonthlyCapacityScoringExampleReadiness,
   selectMonthlyCapacityScoringPlanCloseout,
@@ -2398,7 +2407,7 @@ describe('result selectors', () => {
       id: 'baseline',
       runtimeOnly: true,
       output: 'notRun',
-      saved: false,
+      saved: false as const,
       changedLevers: ['baseline']
     });
     expect(variants.variants[0].plan).not.toBe(planFixture);
@@ -2764,7 +2773,7 @@ describe('result selectors', () => {
       totalTax: 3000,
       score: null,
       runtimeOnly: true,
-      saved: false,
+      saved: false as const,
       fundingTrace: null
     });
     expect(simulationSet.boundary).toContain('without scoring candidates');
@@ -4509,6 +4518,374 @@ describe('result selectors', () => {
     expect(packageCloseout.stillDeferred).toContain('recommendations');
     expect(packageCloseout.boundary).toContain('without recommendations');
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityCandidateRuntimeRankingPackageCloseout');
+  });
+
+  it('plans recommendation prerequisites without selecting a recommendation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+
+    expect(recommendationPlan).toMatchObject({
+      status: 'readyForPlanning',
+      orderedCandidateIds: ['baseline'],
+      topCandidateId: 'baseline',
+      recommendationCandidateId: null
+    });
+    expect(recommendationPlan.rows.map((row) => row.id)).toEqual([
+      'rankingCloseout',
+      'topCandidateEvidence',
+      'nonAdvisoryCopy',
+      'recommendationBoundary',
+      'persistenceBoundary',
+      'uiBoundary'
+    ]);
+    expect(recommendationPlan.boundary).toContain('without selecting a recommendation');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationPlan');
+  });
+
+  it('keeps recommendation planning guardrails closed', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const guardrails = selectMonthlyCapacityRecommendationGuardrails(recommendationPlan);
+
+    expect(guardrails.map((guardrail) => guardrail.status)).toEqual(['pass', 'pass', 'pass', 'pass', 'pass', 'pass']);
+    expect(guardrails.map((guardrail) => guardrail.id)).toEqual([
+      'noRecommendationYet',
+      'noSavedOutput',
+      'noFundingTrace',
+      'noAccountInstruction',
+      'noAnnualSequencing',
+      'noUiPresentation'
+    ]);
+  });
+
+  it('summarizes recommendation planning readiness without recommendations', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const recommendationReadiness = selectMonthlyCapacityRecommendationReadiness(recommendationPlan);
+
+    expect(recommendationReadiness).toMatchObject({
+      status: 'readyForFutureRecommendationPlanning',
+      reviewRowIds: ['nonAdvisoryCopy'],
+      blockedRowIds: []
+    });
+    expect(recommendationReadiness.boundary).toContain('without selecting recommendations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationReadiness');
+  });
+
+  it('runs clean examples through recommendation planning readiness', () => {
+    const runtimeRowsByExample: Record<string, SimulationResult> = {
+      singleMinimumFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 500000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 43200, spending: 43200, bal_total: 450000 }
+      ]),
+      coupleTightFloor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 96000, spending: 96000, bal_total: 200000 },
+        { ...fixture.years[1], shortfall: 12000, totalAftaxYear: 96000, spending: 96000, bal_total: 0 }
+      ]),
+      pensionCoupleSurvivor: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 600000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 64800, spending: 64800, bal_total: 500000 }
+      ]),
+      estateHeavyRoom: withRows([
+        { ...fixture.years[0], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 6000000 },
+        { ...fixture.years[1], shortfall: 0, totalAftaxYear: 84000, spending: 84000, bal_total: 7000000 }
+      ])
+    };
+
+    for (const card of cleanExamplePlanCards) {
+      const plan = { ...createCleanExampleRuntimePlan(card.id), inheritance: 0 };
+      const result = runtimeRowsByExample[card.id];
+      const answer = selectRetirementAnswerSummary(result, plan);
+      const spending = selectSpendingCapacitySummary(result, {}, plan, answer);
+      const packet = selectMonthlyCapacityRuntimePacket(result, plan, spending);
+      const handoff = selectMonthlyCapacityOptimizerHandoff(packet);
+      const gateStatus: 'blocked' | 'reviewOnly' = handoff.status === 'blocked' ? 'blocked' : 'reviewOnly';
+      const gate = {
+        status: gateStatus,
+        headline: 'Example recommendation planning readiness gate',
+        requiredBeforeExecution: ['keepOutputRuntimeOnly', 'defineCandidateScoring', 'preserveNoAnnualSequencing'] as Array<
+          'keepOutputRuntimeOnly' | 'defineCandidateScoring' | 'preserveNoAnnualSequencing'
+        >,
+        allowedNow: ['runtimeEvidence', 'tests', 'docs', 'boundedReviewOnly'] as Array<'runtimeEvidence' | 'tests' | 'docs' | 'boundedReviewOnly'>,
+        notAllowedYet: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing'] as Array<
+          'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing'
+        >,
+        boundary: 'Test-only recommendation planning readiness gate for example matrix coverage.'
+      };
+      const inputs = selectMonthlyCapacityCandidateScoreInputs(packet, handoff);
+      const policy = selectMonthlyCapacityCandidateScorePolicy(selectMonthlyCapacityScoringRubric(gate), inputs);
+      const candidateSet = selectMonthlyCapacityCandidateSetPlan(inputs, policy);
+      const limits = selectMonthlyCapacityCandidateSetLimits(candidateSet);
+      const builderPlan = selectMonthlyCapacityCandidateBuilderPlan(candidateSet, limits);
+      const contract = selectMonthlyCapacityCandidateBuilderInputContract(packet, builderPlan, limits);
+      const order = selectMonthlyCapacityCandidateBuilderOrder(builderPlan, contract);
+      const dryRun = selectMonthlyCapacityCandidateBuilderDryRun(builderPlan, order);
+      const runtimeGate = selectMonthlyCapacityCandidateBuilderRuntimeGate(
+        contract,
+        order,
+        selectMonthlyCapacityCandidateBuilderDryRunAudit(dryRun)
+      );
+      const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
+      const simulationHandoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(variants);
+      const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(variants, simulationHandoff, () => result);
+      const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+      const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+      const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+      const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+      const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+      const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+      const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+      const contractPlan = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+      const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+      const implementationDryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+      const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(
+        implementationPlan,
+        contractPlan,
+        readiness,
+        implementationDryRun
+      );
+      const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+      const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+      const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+      const recommendationReadiness = selectMonthlyCapacityRecommendationExampleReadiness(card.id, recommendationPlan);
+
+      expect(recommendationReadiness.status, card.id).toBe('readyForFutureRecommendationPlanning');
+      expect(recommendationReadiness.topCandidateId, card.id).toBeTruthy();
+      expect(recommendationReadiness.recommendationCandidateId, card.id).toBeNull();
+      expect(recommendationReadiness.boundary, card.id).toContain('without recommendations');
+      expect(createPlanFile(plan).plan).not.toHaveProperty('monthlyCapacityRecommendationExampleReadiness');
+    }
+  });
+
+  it('plans recommendation copy policy without selecting a recommendation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+
+    expect(copyPolicy).toMatchObject({
+      status: 'readyForPlanning',
+      allowedTone: ['plain', 'calm', 'consumerFacing', 'nonAdvisory'],
+      disallowedTone: ['directive', 'advisorLike', 'accountSpecific', 'certaintyOverstated'],
+      recommendationCandidateId: null
+    });
+    expect(copyPolicy.rows.map((row) => row.id)).toEqual(['plainLanguage', 'nonAdvisory', 'optionsNotInstructions', 'floorFirst', 'localFirst', 'noAccountDirections']);
+    expect(copyPolicy.rows.every((row) => row.status === 'planned')).toBe(true);
+    expect(copyPolicy.boundary).toContain('without selecting recommendations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationCopyPolicy');
+  });
+
+  it('audits recommendation planning so it cannot become a recommendation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+    const audit = selectMonthlyCapacityRecommendationPlanningAudit(recommendationPlan, copyPolicy);
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      recommendationCount: 0,
+      savedOutputCount: 0,
+      fundingTraceCount: 0,
+      accountInstructionCount: 0,
+      annualSequencingCount: 0,
+      uiPresentationCount: 0
+    });
+    expect(audit.boundary).toContain('did not select recommendations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationPlanningAudit');
+  });
+
+  it('summarizes recommendation planning without selecting a recommendation', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+    const summary = selectMonthlyCapacityRecommendationPlanningSummary(recommendationPlan, copyPolicy);
+
+    expect(summary).toMatchObject({
+      status: 'readyForPlanning',
+      topCandidateId: 'baseline',
+      recommendationCandidateId: null,
+      plannedCopyRowIds: ['plainLanguage', 'nonAdvisory', 'optionsNotInstructions', 'floorFirst', 'localFirst', 'noAccountDirections'],
+      reviewRowIds: ['nonAdvisoryCopy'],
+      nextBroadStep: 'recommendationRuntimeExecutionPlanning'
+    });
+    expect(summary.boundary).toContain('without selecting recommendations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationPlanningSummary');
+  });
+
+  it('closes out recommendation planning for future runtime execution planning only', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+    const closeout = selectMonthlyCapacityRecommendationPlanningCloseout(recommendationPlan, copyPolicy);
+
+    expect(closeout).toMatchObject({
+      status: 'readyForImplementationPlanning',
+      nextBroadStep: 'recommendationRuntimeExecutionPlanning',
+      completedPieces: ['recommendationInputs', 'guardrails', 'readiness', 'copyPolicy', 'audit', 'summary', 'exampleMatrix']
+    });
+    expect(closeout.stillDeferred).toContain('recommendations');
+    expect(closeout.boundary).toContain('but no recommendation');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationPlanningCloseout');
+  });
+
+  it('blocks recommendation planning closeout when copy policy is blocked', () => {
+    const ranking = {
+      status: 'blocked' as const,
+      orderedRows: [],
+      orderedCandidateIds: [],
+      recommendationCandidateId: null,
+      saved: false as const,
+      fundingTrace: null,
+      accountInstruction: null,
+      annualSequencing: null,
+      uiPresentation: null,
+      boundary: 'Blocked test ranking.'
+    };
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+    const closeout = selectMonthlyCapacityRecommendationPlanningCloseout(recommendationPlan, copyPolicy);
+
+    expect(copyPolicy.status).toBe('blocked');
+    expect(closeout.status).toBe('blocked');
+    expect(closeout.nextBroadStep).toBe('capacityInputsFirst');
+  });
+
+  it('closes out the recommendation planning package', () => {
+    const runtime = buildMonthlyCandidateRuntime(fixture, planFixture);
+    const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+    const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => fixture);
+    const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+    const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+    const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+    const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+    const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+    const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+    const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+    const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+    const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+    const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+    const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(implementationPlan, contract, readiness, dryRun);
+    const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+    const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+    const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+    const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+    const closeout = selectMonthlyCapacityRecommendationPlanningCloseout(recommendationPlan, copyPolicy);
+    const packageCloseout = selectMonthlyCapacityRecommendationPlanningPackageCloseout(closeout);
+
+    expect(packageCloseout).toMatchObject({
+      status: 'complete',
+      package: 'recommendationPlanning',
+      completedSprints: 'S1607-S1626',
+      nextBroadStep: 'recommendationRuntimeExecutionPlanning'
+    });
+    expect(packageCloseout.stillDeferred).toContain('recommendations');
+    expect(packageCloseout.boundary).toContain('without recommendations');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationPlanningPackageCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {

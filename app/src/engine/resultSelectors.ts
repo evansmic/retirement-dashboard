@@ -1702,6 +1702,99 @@ export type MonthlyCapacityCandidateRuntimeRankingPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityRecommendationPlanningRow = {
+  id: 'rankingCloseout' | 'topCandidateEvidence' | 'nonAdvisoryCopy' | 'recommendationBoundary' | 'persistenceBoundary' | 'uiBoundary';
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityRecommendationPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityRecommendationPlanningRow[];
+  orderedCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  notAllowedYet: MonthlyCapacityCandidateRuntimeRankingCloseout['stillDeferred'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationGuardrail = {
+  id: 'noRecommendationYet' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstruction' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityRecommendationReadiness = {
+  status: 'blocked' | 'readyForFutureRecommendationPlanning';
+  readyRowIds: MonthlyCapacityRecommendationPlanningRow['id'][];
+  reviewRowIds: MonthlyCapacityRecommendationPlanningRow['id'][];
+  blockedRowIds: MonthlyCapacityRecommendationPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityRecommendationReadiness['status'];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationCopyPolicyRow = {
+  id: 'plainLanguage' | 'nonAdvisory' | 'optionsNotInstructions' | 'floorFirst' | 'localFirst' | 'noAccountDirections';
+  status: 'planned' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityRecommendationCopyPolicy = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityRecommendationCopyPolicyRow[];
+  allowedTone: Array<'plain' | 'calm' | 'consumerFacing' | 'nonAdvisory'>;
+  disallowedTone: Array<'directive' | 'advisorLike' | 'accountSpecific' | 'certaintyOverstated'>;
+  recommendationCandidateId: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationPlanningAudit = {
+  status: 'pass' | 'block';
+  recommendationCount: number;
+  savedOutputCount: number;
+  fundingTraceCount: number;
+  accountInstructionCount: number;
+  annualSequencingCount: number;
+  uiPresentationCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationPlanningSummary = {
+  status: MonthlyCapacityRecommendationPlan['status'];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  plannedCopyRowIds: MonthlyCapacityRecommendationCopyPolicyRow['id'][];
+  reviewRowIds: MonthlyCapacityRecommendationPlanningRow['id'][];
+  nextBroadStep: 'recommendationRuntimeExecutionPlanning' | 'capacityInputsFirst';
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationPlanningCloseout = {
+  status: 'blocked' | 'readyForImplementationPlanning';
+  headline: string;
+  nextBroadStep: MonthlyCapacityRecommendationPlanningSummary['nextBroadStep'];
+  completedPieces: Array<'recommendationInputs' | 'guardrails' | 'readiness' | 'copyPolicy' | 'audit' | 'summary' | 'exampleMatrix'>;
+  stillDeferred: MonthlyCapacityRecommendationPlan['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationPlanningPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'recommendationPlanning';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityRecommendationPlanningCloseout['nextBroadStep'];
+  stillDeferred: MonthlyCapacityRecommendationPlanningCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -5079,6 +5172,252 @@ export function selectMonthlyCapacityCandidateRuntimeRankingPackageCloseout(
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only candidate ranking package closeout: ordering, audit, summary, examples, and closeout are complete without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationPlan(
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet,
+  rankingCloseout: MonthlyCapacityCandidateRuntimeRankingCloseout,
+  summary: MonthlyCapacityCandidateRuntimeRankingSummary = selectMonthlyCapacityCandidateRuntimeRankingSummary(ranking)
+): MonthlyCapacityRecommendationPlan {
+  const blocked = ranking.status === 'blocked' || rankingCloseout.status === 'blocked' || summary.orderedCandidateCount === 0;
+  const rows: MonthlyCapacityRecommendationPlanningRow[] = [
+    {
+      id: 'rankingCloseout',
+      status: rankingCloseout.status === 'complete' ? 'ready' : 'blocked',
+      detail: rankingCloseout.status === 'complete' ? 'Runtime ranking closeout is available.' : 'Recommendation planning needs complete runtime ranking evidence.'
+    },
+    {
+      id: 'topCandidateEvidence',
+      status: summary.topCandidateId ? 'ready' : 'blocked',
+      detail: summary.topCandidateId ? 'Top candidate evidence is available for future recommendation planning.' : 'Recommendation planning needs a top candidate reference.'
+    },
+    {
+      id: 'nonAdvisoryCopy',
+      status: 'review',
+      detail: 'Future recommendation copy must stay plain-language, consumer-facing, and non-advisory.'
+    },
+    {
+      id: 'recommendationBoundary',
+      status: 'ready',
+      detail: 'This package plans recommendations but does not select one.'
+    },
+    {
+      id: 'persistenceBoundary',
+      status: 'ready',
+      detail: 'Recommendation planning remains runtime-only and is not saved.'
+    },
+    {
+      id: 'uiBoundary',
+      status: 'ready',
+      detail: 'Recommendation planning does not change UI presentation.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows: blocked ? rows.map((row) => (row.id === 'recommendationBoundary' || row.id === 'persistenceBoundary' || row.id === 'uiBoundary' ? row : { ...row, status: 'blocked' })) : rows,
+    orderedCandidateIds: summary.orderedCandidateIds,
+    topCandidateId: summary.topCandidateId,
+    recommendationCandidateId: null,
+    notAllowedYet: rankingCloseout.stillDeferred,
+    boundary:
+      'Runtime-only recommendation plan: prepares future recommendation prerequisites without selecting a recommendation, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationGuardrails(plan: MonthlyCapacityRecommendationPlan): MonthlyCapacityRecommendationGuardrail[] {
+  return [
+    {
+      id: 'noRecommendationYet',
+      status: plan.recommendationCandidateId === null && plan.notAllowedYet.includes('recommendations') ? 'pass' : 'block',
+      detail: 'Recommendation selection remains deferred.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: plan.notAllowedYet.includes('savedOptimizerOutput') ? 'pass' : 'block',
+      detail: 'Recommendation planning is not saved.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: plan.notAllowedYet.includes('fundingTrace') ? 'pass' : 'block',
+      detail: 'Funding trace remains deferred.'
+    },
+    {
+      id: 'noAccountInstruction',
+      status: plan.notAllowedYet.includes('accountInstructions') ? 'pass' : 'block',
+      detail: 'No account-level instructions are produced.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: plan.notAllowedYet.includes('annualAccountSequencing') ? 'pass' : 'block',
+      detail: 'Annual account-level sequencing remains deferred.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: plan.notAllowedYet.includes('uiPresentation') ? 'pass' : 'block',
+      detail: 'UI presentation remains deferred.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityRecommendationReadiness(
+  plan: MonthlyCapacityRecommendationPlan,
+  guardrails: MonthlyCapacityRecommendationGuardrail[] = selectMonthlyCapacityRecommendationGuardrails(plan)
+): MonthlyCapacityRecommendationReadiness {
+  const readyRowIds = plan.rows.filter((row) => row.status === 'ready').map((row) => row.id);
+  const reviewRowIds = plan.rows.filter((row) => row.status === 'review').map((row) => row.id);
+  const blockedRowIds = plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id);
+  const guardrailBlocked = guardrails.some((guardrail) => guardrail.status === 'block');
+
+  return {
+    status: plan.status === 'blocked' || blockedRowIds.length > 0 || guardrailBlocked ? 'blocked' : 'readyForFutureRecommendationPlanning',
+    readyRowIds,
+    reviewRowIds,
+    blockedRowIds,
+    boundary:
+      'Runtime-only recommendation readiness: checks planning prerequisites without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationExampleReadiness(
+  id: string,
+  plan: MonthlyCapacityRecommendationPlan,
+  readiness: MonthlyCapacityRecommendationReadiness = selectMonthlyCapacityRecommendationReadiness(plan)
+): MonthlyCapacityRecommendationExampleReadiness {
+  return {
+    id,
+    status: readiness.status,
+    topCandidateId: plan.topCandidateId,
+    recommendationCandidateId: null,
+    boundary:
+      'Runtime-only recommendation example readiness: records recommendation-planning coverage for an example without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationCopyPolicy(
+  plan: MonthlyCapacityRecommendationPlan,
+  readiness: MonthlyCapacityRecommendationReadiness = selectMonthlyCapacityRecommendationReadiness(plan)
+): MonthlyCapacityRecommendationCopyPolicy {
+  const blocked = plan.status === 'blocked' || readiness.status === 'blocked';
+  const rows: MonthlyCapacityRecommendationCopyPolicyRow[] = [
+    {
+      id: 'plainLanguage',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future recommendation copy should use plain consumer language.'
+    },
+    {
+      id: 'nonAdvisory',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future recommendation copy should describe modelled options, not financial advice.'
+    },
+    {
+      id: 'optionsNotInstructions',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future output should frame practical options neutrally.'
+    },
+    {
+      id: 'floorFirst',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future copy should keep minimum-expense coverage first.'
+    },
+    {
+      id: 'localFirst',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future copy should preserve local-first trust boundaries.'
+    },
+    {
+      id: 'noAccountDirections',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future copy must not include account-by-account directions.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows,
+    allowedTone: ['plain', 'calm', 'consumerFacing', 'nonAdvisory'],
+    disallowedTone: ['directive', 'advisorLike', 'accountSpecific', 'certaintyOverstated'],
+    recommendationCandidateId: null,
+    boundary:
+      'Runtime-only recommendation copy policy: plans future copy boundaries without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationPlanningAudit(
+  plan: MonthlyCapacityRecommendationPlan,
+  copyPolicy: MonthlyCapacityRecommendationCopyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(plan)
+): MonthlyCapacityRecommendationPlanningAudit {
+  const recommendationCount = plan.recommendationCandidateId === null && copyPolicy.recommendationCandidateId === null ? 0 : 1;
+
+  return {
+    status: recommendationCount === 0 ? 'pass' : 'block',
+    recommendationCount,
+    savedOutputCount: 0,
+    fundingTraceCount: 0,
+    accountInstructionCount: 0,
+    annualSequencingCount: 0,
+    uiPresentationCount: 0,
+    boundary:
+      'Runtime-only recommendation planning audit: confirms planning did not select recommendations, save output, trace funding, add account instructions, sequence annually, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationPlanningSummary(
+  plan: MonthlyCapacityRecommendationPlan,
+  copyPolicy: MonthlyCapacityRecommendationCopyPolicy,
+  readiness: MonthlyCapacityRecommendationReadiness = selectMonthlyCapacityRecommendationReadiness(plan)
+): MonthlyCapacityRecommendationPlanningSummary {
+  const blocked = plan.status === 'blocked' || copyPolicy.status === 'blocked' || readiness.status === 'blocked';
+
+  return {
+    status: plan.status,
+    topCandidateId: plan.topCandidateId,
+    recommendationCandidateId: null,
+    plannedCopyRowIds: copyPolicy.rows.filter((row) => row.status === 'planned').map((row) => row.id),
+    reviewRowIds: readiness.reviewRowIds,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'recommendationRuntimeExecutionPlanning',
+    boundary:
+      'Runtime-only recommendation planning summary: summarizes planning inputs without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationPlanningCloseout(
+  plan: MonthlyCapacityRecommendationPlan,
+  copyPolicy: MonthlyCapacityRecommendationCopyPolicy,
+  audit: MonthlyCapacityRecommendationPlanningAudit = selectMonthlyCapacityRecommendationPlanningAudit(plan, copyPolicy),
+  summary: MonthlyCapacityRecommendationPlanningSummary = selectMonthlyCapacityRecommendationPlanningSummary(plan, copyPolicy)
+): MonthlyCapacityRecommendationPlanningCloseout {
+  const blocked = plan.status === 'blocked' || copyPolicy.status === 'blocked' || audit.status === 'block' || summary.nextBroadStep === 'capacityInputsFirst';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForImplementationPlanning',
+    headline: blocked
+      ? 'Recommendation planning needs clean ordered evidence and copy guardrails.'
+      : 'Recommendation planning is ready for a future runtime execution planning package.',
+    nextBroadStep: summary.nextBroadStep,
+    completedPieces: ['recommendationInputs', 'guardrails', 'readiness', 'copyPolicy', 'audit', 'summary', 'exampleMatrix'],
+    stillDeferred: plan.notAllowedYet,
+    boundary:
+      'Runtime-only recommendation planning closeout: recommendation prerequisites and copy policy are planned, but no recommendation, saved output, funding trace, account instruction, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationPlanningPackageCloseout(
+  closeout: MonthlyCapacityRecommendationPlanningCloseout
+): MonthlyCapacityRecommendationPlanningPackageCloseout {
+  return {
+    status: closeout.status === 'readyForImplementationPlanning' ? 'complete' : 'blocked',
+    package: 'recommendationPlanning',
+    headline:
+      closeout.status === 'readyForImplementationPlanning'
+        ? 'Recommendation planning is complete.'
+        : 'Recommendation planning is blocked before package closeout.',
+    completedSprints: 'S1607-S1626',
+    nextBroadStep: closeout.nextBroadStep,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only recommendation planning package closeout: recommendation inputs, guardrails, readiness, copy policy, audit, summary, examples, and closeout are complete without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
   };
 }
 
