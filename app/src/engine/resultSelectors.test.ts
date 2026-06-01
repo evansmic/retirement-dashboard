@@ -42,6 +42,14 @@ import {
   selectMonthlyCapacityFundingTraceReviewPackageCloseout,
   selectMonthlyCapacityFundingTraceReviewReadiness,
   selectMonthlyCapacityFundingTraceReviewSummary,
+  selectMonthlyCapacityUiConsumptionContract,
+  selectMonthlyCapacityUiConsumptionAudit,
+  selectMonthlyCapacityUiConsumptionCloseout,
+  selectMonthlyCapacityUiConsumptionGuardrails,
+  selectMonthlyCapacityUiConsumptionExampleReadiness,
+  selectMonthlyCapacityUiConsumptionPackageCloseout,
+  selectMonthlyCapacityUiConsumptionReadiness,
+  selectMonthlyCapacityUiConsumptionSummary,
   selectMonthlyCapacityFundingTracePlanningAudit,
   selectMonthlyCapacityFundingTracePlanningCloseout,
   selectMonthlyCapacityFundingTracePlanningExampleReadiness,
@@ -399,6 +407,18 @@ function buildMonthlyFundingTraceRuntimeExecution(result: SimulationResult, plan
   const packageCloseout = selectMonthlyCapacityFundingTraceRuntimePackageCloseout(closeout, exampleReadiness);
 
   return { trace, closeout, packageCloseout };
+}
+
+function buildMonthlyFundingTraceReviewRuntime(result: SimulationResult, plan: V2PlanPayload) {
+  const runtime = buildMonthlyFundingTraceRuntimeExecution(result, plan);
+  const reviewPlan = selectMonthlyCapacityFundingTraceReviewPlan(runtime.packageCloseout, runtime.trace);
+  const guardrails = selectMonthlyCapacityFundingTraceReviewGuardrails(reviewPlan, runtime.trace);
+  const readiness = selectMonthlyCapacityFundingTraceReviewReadiness(reviewPlan, guardrails);
+  const closeout = selectMonthlyCapacityFundingTraceReviewCloseout(reviewPlan, readiness);
+  const exampleReadiness = selectMonthlyCapacityFundingTraceReviewExampleReadiness([closeout]);
+  const packageCloseout = selectMonthlyCapacityFundingTraceReviewPackageCloseout(closeout, exampleReadiness);
+
+  return { reviewPlan, closeout, packageCloseout };
 }
 
 describe('result selectors', () => {
@@ -6377,6 +6397,201 @@ describe('result selectors', () => {
       saved: false
     });
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityFundingTraceReviewPackageCloseout');
+  });
+
+  it('plans UI consumption selectors without changing UI', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const blockedContract = selectMonthlyCapacityUiConsumptionContract({
+      ...runtime.packageCloseout,
+      status: 'blocked' as const
+    });
+
+    expect(contract).toMatchObject({
+      status: 'readyForPlanning',
+      uiChanged: false,
+      saved: false
+    });
+    expect(contract.overviewSelectorIds).toContain('spendingCapacitySummary');
+    expect(contract.overviewSelectorIds).toContain('monthlyCapacityRecommendationRuntimeSelection');
+    expect(contract.overviewSelectorIds).toContain('monthlyCapacityFundingTraceRuntimeTrace');
+    expect(contract.detailSelectorIds).toContain('taxSummaryMetrics');
+    expect(contract.detailSelectorIds).toContain('accountDrawdownReviewRows');
+    expect(contract.hiddenFamilies).toContain('audits');
+    expect(contract.hiddenFamilies).toContain('packageCloseouts');
+    expect(contract.boundary).toContain('without changing UI');
+    expect(blockedContract).toMatchObject({
+      status: 'blocked',
+      overviewSelectorIds: [],
+      detailSelectorIds: [],
+      uiChanged: false,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionContract');
+  });
+
+  it('checks UI consumption guardrails and readiness', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const guardrails = selectMonthlyCapacityUiConsumptionGuardrails(contract);
+    const readiness = selectMonthlyCapacityUiConsumptionReadiness(contract, guardrails);
+
+    expect(guardrails.map((guardrail) => guardrail.status)).toEqual(['pass', 'pass', 'pass', 'pass', 'pass', 'pass']);
+    expect(readiness).toMatchObject({
+      status: 'readyForFutureUiPlanning',
+      overviewSelectorCount: 13,
+      detailSelectorCount: 11,
+      hiddenFamilyCount: 11,
+      passedGuardrailIds: [
+        'finalSummariesOnlyInOverview',
+        'detailsForTransparency',
+        'hidePlanningInternals',
+        'noSavedOutput',
+        'noUiChangeYet',
+        'nonAdvisoryTrace'
+      ]
+    });
+    expect(readiness.boundary).toContain('without changing UI');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionReadiness');
+  });
+
+  it('audits UI consumption planning without UI or saved-output changes', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const audit = selectMonthlyCapacityUiConsumptionAudit(contract);
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      overviewSelectorCount: 13,
+      detailSelectorCount: 11,
+      hiddenFamilyCount: 11,
+      uiChangeCount: 0,
+      savedOutputCount: 0,
+      visibleInternalFamilyCount: 0
+    });
+    expect(audit.boundary).toContain('did not change UI');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionAudit');
+  });
+
+  it('summarizes UI consumption planning without changing UI', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const summary = selectMonthlyCapacityUiConsumptionSummary(contract);
+    const blockedSummary = selectMonthlyCapacityUiConsumptionSummary({ ...contract, status: 'blocked' as const, overviewSelectorIds: [], detailSelectorIds: [] });
+
+    expect(summary).toMatchObject({
+      status: 'readyForPlanning',
+      overviewSelectorCount: 13,
+      detailSelectorCount: 11,
+      hiddenFamilyCount: 11,
+      nextBroadStep: 'uiContractCloseout',
+      uiChanged: false,
+      saved: false
+    });
+    expect(summary.boundary).toContain('without changing UI');
+    expect(blockedSummary).toMatchObject({
+      status: 'blocked',
+      overviewSelectorCount: 0,
+      detailSelectorCount: 0,
+      nextBroadStep: 'capacityInputsFirst',
+      uiChanged: false,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionSummary');
+  });
+
+  it('closes out UI consumption planning without changing UI', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const closeout = selectMonthlyCapacityUiConsumptionCloseout(contract);
+    const blockedCloseout = selectMonthlyCapacityUiConsumptionCloseout({ ...contract, status: 'blocked' as const, overviewSelectorIds: [] });
+
+    expect(closeout).toMatchObject({
+      status: 'complete',
+      headline: 'UI consumption contract planning is complete.',
+      completedPieces: ['consumptionContract', 'guardrails', 'readiness', 'audit', 'summary', 'noUiChangeBoundary'],
+      overviewSelectorCount: 13,
+      detailSelectorCount: 11,
+      hiddenFamilyCount: 11,
+      stillDeferred: ['uiChanges', 'savedOutputChanges', 'accountInstructions', 'annualAccountSequencing'],
+      nextBroadStep: 'uiConsumptionPackageCloseout',
+      uiChanged: false,
+      saved: false
+    });
+    expect(closeout.boundary).toContain('selector visibility planning is complete');
+    expect(blockedCloseout).toMatchObject({
+      status: 'blocked',
+      nextBroadStep: 'capacityInputsFirst',
+      uiChanged: false,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionCloseout');
+  });
+
+  it('checks UI consumption examples without changing UI', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const closeout = selectMonthlyCapacityUiConsumptionCloseout(contract);
+    const exampleReadiness = selectMonthlyCapacityUiConsumptionExampleReadiness([closeout, closeout]);
+    const blockedExampleReadiness = selectMonthlyCapacityUiConsumptionExampleReadiness([
+      closeout,
+      { ...closeout, status: 'blocked' as const }
+    ]);
+
+    expect(exampleReadiness).toMatchObject({
+      status: 'ready',
+      exampleCount: 2,
+      readyExampleCount: 2,
+      blockedExampleCount: 0,
+      uiChanged: false,
+      saved: false
+    });
+    expect(blockedExampleReadiness).toMatchObject({
+      status: 'blocked',
+      exampleCount: 2,
+      readyExampleCount: 1,
+      blockedExampleCount: 1,
+      uiChanged: false,
+      saved: false
+    });
+    expect(exampleReadiness.boundary).toContain('without changing UI');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionExampleReadiness');
+  });
+
+  it('closes out the UI consumption contract planning package without changing UI', () => {
+    const runtime = buildMonthlyFundingTraceReviewRuntime(fixture, planFixture);
+    const contract = selectMonthlyCapacityUiConsumptionContract(runtime.packageCloseout);
+    const closeout = selectMonthlyCapacityUiConsumptionCloseout(contract);
+    const exampleReadiness = selectMonthlyCapacityUiConsumptionExampleReadiness([closeout]);
+    const packageCloseout = selectMonthlyCapacityUiConsumptionPackageCloseout(closeout, exampleReadiness);
+    const blockedPackageCloseout = selectMonthlyCapacityUiConsumptionPackageCloseout(
+      closeout,
+      selectMonthlyCapacityUiConsumptionExampleReadiness([{ ...closeout, status: 'blocked' as const }])
+    );
+
+    expect(packageCloseout).toMatchObject({
+      status: 'complete',
+      package: 'uiConsumptionContractPlanning',
+      completedSprints: 'S1747-S1766',
+      overviewSelectorCount: 13,
+      detailSelectorCount: 11,
+      hiddenFamilyCount: 11,
+      readyExampleCount: 1,
+      blockedExampleCount: 0,
+      stillDeferred: ['uiChanges', 'savedOutputChanges', 'accountInstructions', 'annualAccountSequencing'],
+      nextBroadStep: 'uiPlanningStart',
+      uiChanged: false,
+      saved: false
+    });
+    expect(packageCloseout.boundary).toContain('final runtime selectors are identified');
+    expect(blockedPackageCloseout).toMatchObject({
+      status: 'blocked',
+      blockedExampleCount: 1,
+      nextBroadStep: 'capacityInputsFirst',
+      uiChanged: false,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityUiConsumptionPackageCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {

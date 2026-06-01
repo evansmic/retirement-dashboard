@@ -2306,6 +2306,133 @@ export type MonthlyCapacityFundingTraceReviewPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityUiConsumptionSelectorId =
+  | 'retirementAnswerSummary'
+  | 'spendingCapacitySummary'
+  | 'minimumExpenseCoverageSummary'
+  | 'monthlyCapacityRecommendationRuntimeSelection'
+  | 'monthlyCapacityFundingTraceRuntimeTrace'
+  | 'monthlyCapacityFundingTraceRuntimeSummary'
+  | 'monthlyCapacityFundingTraceReviewSummary'
+  | 'overviewMetrics'
+  | 'planHealthExplainer'
+  | 'monthlyCapacityReviewRows'
+  | 'checkpointReviewBoard'
+  | 'resultsReadinessSummary'
+  | 'resultsReadinessRows'
+  | 'annualDetailRows'
+  | 'cashFlowReconciliationRows'
+  | 'fundingSourceRows'
+  | 'incomeSourceRows'
+  | 'taxSummaryMetrics'
+  | 'taxPressureRows'
+  | 'taxReviewRows'
+  | 'survivorStorySummary'
+  | 'estateIntentSummary'
+  | 'accountDrawdownStory'
+  | 'accountDrawdownReviewRows';
+
+export type MonthlyCapacityUiHiddenSelectorFamily =
+  | 'candidatePlanning'
+  | 'candidateScoring'
+  | 'candidateRanking'
+  | 'recommendationPlanning'
+  | 'fundingTracePlanning'
+  | 'implementationPlanning'
+  | 'audits'
+  | 'closeouts'
+  | 'dryRuns'
+  | 'readinessMatrices'
+  | 'packageCloseouts';
+
+export type MonthlyCapacityUiConsumptionContract = {
+  status: 'blocked' | 'readyForPlanning';
+  overviewSelectorIds: MonthlyCapacityUiConsumptionSelectorId[];
+  detailSelectorIds: MonthlyCapacityUiConsumptionSelectorId[];
+  hiddenFamilies: MonthlyCapacityUiHiddenSelectorFamily[];
+  uiChanged: false;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionGuardrail = {
+  id: 'finalSummariesOnlyInOverview' | 'detailsForTransparency' | 'hidePlanningInternals' | 'noSavedOutput' | 'noUiChangeYet' | 'nonAdvisoryTrace';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityUiConsumptionReadiness = {
+  status: 'blocked' | 'readyForFutureUiPlanning';
+  overviewSelectorCount: number;
+  detailSelectorCount: number;
+  hiddenFamilyCount: number;
+  passedGuardrailIds: MonthlyCapacityUiConsumptionGuardrail['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionAudit = {
+  status: 'pass' | 'block';
+  overviewSelectorCount: number;
+  detailSelectorCount: number;
+  hiddenFamilyCount: number;
+  uiChangeCount: number;
+  savedOutputCount: number;
+  visibleInternalFamilyCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionSummary = {
+  status: MonthlyCapacityUiConsumptionContract['status'];
+  overviewSelectorCount: number;
+  detailSelectorCount: number;
+  hiddenFamilyCount: number;
+  nextBroadStep: 'uiContractCloseout' | 'capacityInputsFirst';
+  uiChanged: false;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionCloseout = {
+  status: 'blocked' | 'complete';
+  headline: string;
+  completedPieces: Array<'consumptionContract' | 'guardrails' | 'readiness' | 'audit' | 'summary' | 'noUiChangeBoundary'>;
+  overviewSelectorCount: number;
+  detailSelectorCount: number;
+  hiddenFamilyCount: number;
+  stillDeferred: Array<'uiChanges' | 'savedOutputChanges' | 'accountInstructions' | 'annualAccountSequencing'>;
+  nextBroadStep: 'uiConsumptionPackageCloseout' | 'capacityInputsFirst';
+  uiChanged: false;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionExampleReadiness = {
+  status: 'ready' | 'blocked';
+  exampleCount: number;
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  uiChanged: false;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityUiConsumptionPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'uiConsumptionContractPlanning';
+  headline: string;
+  completedSprints: string;
+  overviewSelectorCount: number;
+  detailSelectorCount: number;
+  hiddenFamilyCount: number;
+  readyExampleCount: number;
+  blockedExampleCount: number;
+  stillDeferred: MonthlyCapacityUiConsumptionCloseout['stillDeferred'];
+  nextBroadStep: 'uiPlanningStart' | 'capacityInputsFirst';
+  uiChanged: false;
+  saved: false;
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -7058,6 +7185,239 @@ export function selectMonthlyCapacityFundingTraceReviewPackageCloseout(
     saved: false,
     boundary:
       'Runtime-only funding trace review planning package closeout: trace review planning is complete while saved trace output, account instructions, annual sequencing, and UI presentation remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionContract(
+  traceReviewPackageCloseout: MonthlyCapacityFundingTraceReviewPackageCloseout
+): MonthlyCapacityUiConsumptionContract {
+  const blocked = traceReviewPackageCloseout.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    overviewSelectorIds: blocked
+      ? []
+      : [
+          'retirementAnswerSummary',
+          'spendingCapacitySummary',
+          'minimumExpenseCoverageSummary',
+          'monthlyCapacityRecommendationRuntimeSelection',
+          'monthlyCapacityFundingTraceRuntimeTrace',
+          'monthlyCapacityFundingTraceRuntimeSummary',
+          'monthlyCapacityFundingTraceReviewSummary',
+          'overviewMetrics',
+          'planHealthExplainer',
+          'monthlyCapacityReviewRows',
+          'checkpointReviewBoard',
+          'resultsReadinessSummary',
+          'resultsReadinessRows'
+        ],
+    detailSelectorIds: blocked
+      ? []
+      : [
+          'annualDetailRows',
+          'cashFlowReconciliationRows',
+          'fundingSourceRows',
+          'incomeSourceRows',
+          'taxSummaryMetrics',
+          'taxPressureRows',
+          'taxReviewRows',
+          'survivorStorySummary',
+          'estateIntentSummary',
+          'accountDrawdownStory',
+          'accountDrawdownReviewRows'
+        ],
+    hiddenFamilies: [
+      'candidatePlanning',
+      'candidateScoring',
+      'candidateRanking',
+      'recommendationPlanning',
+      'fundingTracePlanning',
+      'implementationPlanning',
+      'audits',
+      'closeouts',
+      'dryRuns',
+      'readinessMatrices',
+      'packageCloseouts'
+    ],
+    uiChanged: false,
+    saved: false,
+    boundary:
+      'Runtime-only UI consumption contract: plans which final runtime selectors UI may consume while hiding planning internals, without changing UI or saved output.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionGuardrails(
+  contract: MonthlyCapacityUiConsumptionContract
+): MonthlyCapacityUiConsumptionGuardrail[] {
+  return [
+    {
+      id: 'finalSummariesOnlyInOverview',
+      status:
+        contract.overviewSelectorIds.includes('monthlyCapacityRecommendationRuntimeSelection') &&
+        contract.overviewSelectorIds.includes('monthlyCapacityFundingTraceRuntimeTrace') &&
+        !contract.overviewSelectorIds.some((id) => id.includes('Planning'))
+          ? 'pass'
+          : 'block',
+      detail: 'Overview should consume final answer selectors and runtime outputs, not planning internals.'
+    },
+    {
+      id: 'detailsForTransparency',
+      status: contract.detailSelectorIds.length > 0 ? 'pass' : 'block',
+      detail: 'Details may use transparency selectors for tax, survivor, cash flow, and drawdown context.'
+    },
+    {
+      id: 'hidePlanningInternals',
+      status: contract.hiddenFamilies.includes('audits') && contract.hiddenFamilies.includes('packageCloseouts') ? 'pass' : 'block',
+      detail: 'Planning, audit, readiness, dry-run, and package closeout selectors stay hidden from normal UI.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: contract.saved === false ? 'pass' : 'block',
+      detail: 'UI consumption planning does not change saved output.'
+    },
+    {
+      id: 'noUiChangeYet',
+      status: contract.uiChanged === false ? 'pass' : 'block',
+      detail: 'This package plans UI consumption but does not change UI.'
+    },
+    {
+      id: 'nonAdvisoryTrace',
+      status:
+        contract.overviewSelectorIds.includes('monthlyCapacityFundingTraceRuntimeTrace') &&
+        contract.overviewSelectorIds.includes('monthlyCapacityFundingTraceReviewSummary')
+          ? 'pass'
+          : 'block',
+      detail: 'Trace output must remain broad, caveated, and reviewed before presentation work.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityUiConsumptionReadiness(
+  contract: MonthlyCapacityUiConsumptionContract,
+  guardrails: MonthlyCapacityUiConsumptionGuardrail[] = selectMonthlyCapacityUiConsumptionGuardrails(contract)
+): MonthlyCapacityUiConsumptionReadiness {
+  const blocked = contract.status === 'blocked' || guardrails.some((guardrail) => guardrail.status === 'block');
+
+  return {
+    status: blocked ? 'blocked' : 'readyForFutureUiPlanning',
+    overviewSelectorCount: contract.overviewSelectorIds.length,
+    detailSelectorCount: contract.detailSelectorIds.length,
+    hiddenFamilyCount: contract.hiddenFamilies.length,
+    passedGuardrailIds: guardrails.filter((guardrail) => guardrail.status === 'pass').map((guardrail) => guardrail.id),
+    boundary:
+      'Runtime-only UI consumption readiness: checks selector visibility rules without changing UI, saving output, adding account instructions, or sequencing annually.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionAudit(
+  contract: MonthlyCapacityUiConsumptionContract
+): MonthlyCapacityUiConsumptionAudit {
+  const uiChangeCount = contract.uiChanged === false ? 0 : 1;
+  const savedOutputCount = contract.saved === false ? 0 : 1;
+  const visibleInternalFamilyCount = contract.overviewSelectorIds
+    .concat(contract.detailSelectorIds)
+    .filter((id) => id.toLowerCase().includes('planning') || id.toLowerCase().includes('audit') || id.toLowerCase().includes('closeout')).length;
+
+  return {
+    status: uiChangeCount || savedOutputCount || visibleInternalFamilyCount ? 'block' : 'pass',
+    overviewSelectorCount: contract.overviewSelectorIds.length,
+    detailSelectorCount: contract.detailSelectorIds.length,
+    hiddenFamilyCount: contract.hiddenFamilies.length,
+    uiChangeCount,
+    savedOutputCount,
+    visibleInternalFamilyCount,
+    boundary:
+      'Runtime-only UI consumption audit: confirms contract planning did not change UI, save output, or expose internal planning selectors.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionSummary(
+  contract: MonthlyCapacityUiConsumptionContract,
+  readiness: MonthlyCapacityUiConsumptionReadiness = selectMonthlyCapacityUiConsumptionReadiness(contract),
+  audit: MonthlyCapacityUiConsumptionAudit = selectMonthlyCapacityUiConsumptionAudit(contract)
+): MonthlyCapacityUiConsumptionSummary {
+  const blocked = contract.status === 'blocked' || readiness.status === 'blocked' || audit.status === 'block';
+
+  return {
+    status: contract.status,
+    overviewSelectorCount: contract.overviewSelectorIds.length,
+    detailSelectorCount: contract.detailSelectorIds.length,
+    hiddenFamilyCount: contract.hiddenFamilies.length,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'uiContractCloseout',
+    uiChanged: false,
+    saved: false,
+    boundary:
+      'Runtime-only UI consumption summary: summarizes selector visibility planning without changing UI, saving output, adding account instructions, or sequencing annually.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionCloseout(
+  contract: MonthlyCapacityUiConsumptionContract,
+  readiness: MonthlyCapacityUiConsumptionReadiness = selectMonthlyCapacityUiConsumptionReadiness(contract),
+  audit: MonthlyCapacityUiConsumptionAudit = selectMonthlyCapacityUiConsumptionAudit(contract),
+  summary: MonthlyCapacityUiConsumptionSummary = selectMonthlyCapacityUiConsumptionSummary(contract, readiness, audit)
+): MonthlyCapacityUiConsumptionCloseout {
+  const complete = contract.status === 'readyForPlanning' && readiness.status === 'readyForFutureUiPlanning' && audit.status === 'pass' && summary.nextBroadStep === 'uiContractCloseout';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    headline: complete ? 'UI consumption contract planning is complete.' : 'UI consumption contract planning is blocked before closeout.',
+    completedPieces: ['consumptionContract', 'guardrails', 'readiness', 'audit', 'summary', 'noUiChangeBoundary'],
+    overviewSelectorCount: contract.overviewSelectorIds.length,
+    detailSelectorCount: contract.detailSelectorIds.length,
+    hiddenFamilyCount: contract.hiddenFamilies.length,
+    stillDeferred: ['uiChanges', 'savedOutputChanges', 'accountInstructions', 'annualAccountSequencing'],
+    nextBroadStep: complete ? 'uiConsumptionPackageCloseout' : 'capacityInputsFirst',
+    uiChanged: false,
+    saved: false,
+    boundary:
+      'Runtime-only UI consumption closeout: selector visibility planning is complete while UI changes, saved output changes, account instructions, and annual sequencing remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionExampleReadiness(
+  closeouts: MonthlyCapacityUiConsumptionCloseout[]
+): MonthlyCapacityUiConsumptionExampleReadiness {
+  const readyExampleCount = closeouts.filter((closeout) => closeout.status === 'complete').length;
+  const blockedExampleCount = closeouts.length - readyExampleCount;
+
+  return {
+    status: closeouts.length > 0 && blockedExampleCount === 0 ? 'ready' : 'blocked',
+    exampleCount: closeouts.length,
+    readyExampleCount,
+    blockedExampleCount,
+    uiChanged: false,
+    saved: false,
+    boundary:
+      'Runtime-only UI consumption example readiness: confirms examples can reach selector contract closeout without changing UI, saving output, adding account instructions, or sequencing annually.'
+  };
+}
+
+export function selectMonthlyCapacityUiConsumptionPackageCloseout(
+  closeout: MonthlyCapacityUiConsumptionCloseout,
+  exampleReadiness: MonthlyCapacityUiConsumptionExampleReadiness
+): MonthlyCapacityUiConsumptionPackageCloseout {
+  const complete = closeout.status === 'complete' && exampleReadiness.status === 'ready';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    package: 'uiConsumptionContractPlanning',
+    headline: complete
+      ? 'UI consumption contract planning is complete.'
+      : 'UI consumption contract planning is blocked before package closeout.',
+    completedSprints: 'S1747-S1766',
+    overviewSelectorCount: closeout.overviewSelectorCount,
+    detailSelectorCount: closeout.detailSelectorCount,
+    hiddenFamilyCount: closeout.hiddenFamilyCount,
+    readyExampleCount: exampleReadiness.readyExampleCount,
+    blockedExampleCount: exampleReadiness.blockedExampleCount,
+    stillDeferred: closeout.stillDeferred,
+    nextBroadStep: complete ? 'uiPlanningStart' : 'capacityInputsFirst',
+    uiChanged: false,
+    saved: false,
+    boundary:
+      'Runtime-only UI consumption contract planning package closeout: final runtime selectors are identified for future UI planning while UI changes, saved output changes, account instructions, and annual sequencing remain deferred.'
   };
 }
 
