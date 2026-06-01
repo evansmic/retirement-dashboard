@@ -1625,6 +1625,83 @@ export type MonthlyCapacityCandidateRankingImplementationPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityCandidateRuntimeRankingRow = {
+  id: MonthlyCapacityCandidateBlueprintId;
+  label: string;
+  ordinal: number;
+  totalScore: number;
+  floorCoveragePoints: number;
+  gapRepairPoints: number;
+  disruptionPoints: number;
+  taxReviewPoints: number;
+  recommendationEligible: false;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingSet = {
+  status: 'blocked' | 'ready';
+  orderedRows: MonthlyCapacityCandidateRuntimeRankingRow[];
+  orderedCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  recommendationCandidateId: null;
+  saved: false;
+  fundingTrace: null;
+  accountInstruction: null;
+  annualSequencing: null;
+  uiPresentation: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingAudit = {
+  status: 'pass' | 'block';
+  orderedCandidateCount: number;
+  recommendationCount: number;
+  savedOutputCount: number;
+  traceCount: number;
+  instructionCount: number;
+  annualSequencingCount: number;
+  uiPresentationCount: number;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingSummary = {
+  status: MonthlyCapacityCandidateRuntimeRankingSet['status'];
+  orderedCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  baselineOrdinal: number | null;
+  orderedCandidateCount: number;
+  recommendationCandidateId: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityCandidateRuntimeRankingSet['status'];
+  orderedCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  topCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  recommendationCandidateId: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingCloseout = {
+  status: 'blocked' | 'complete';
+  headline: string;
+  nextBroadStep: 'recommendationPlanning' | 'capacityInputsFirst';
+  completedPieces: Array<'runtimeOrdering' | 'rankingAudit' | 'rankingSummary' | 'exampleMatrix' | 'noRecommendationBoundary' | 'noPersistenceBoundary'>;
+  stillDeferred: Array<'recommendations' | 'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'>;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRuntimeRankingPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'candidateRankingRuntimeExecution';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityCandidateRuntimeRankingCloseout['nextBroadStep'];
+  stillDeferred: MonthlyCapacityCandidateRuntimeRankingCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -4846,6 +4923,162 @@ export function selectMonthlyCapacityCandidateRankingImplementationPackageCloseo
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only ranking implementation planning package closeout: implementation plan, contract, guardrails, readiness, dry-run plan, dry-run audit, examples, summary, and closeout are complete without candidate ordering, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+function monthlyCapacityRuntimeRankingFactor(row: MonthlyCapacityRuntimeScoreRow, id: MonthlyCapacityRuntimeScoreFactor['id']): number {
+  return row.factors.find((factor) => factor.id === id)?.points ?? 0;
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRanking(
+  scoreSet: MonthlyCapacityRuntimeScoreSet,
+  closeout: MonthlyCapacityCandidateRankingImplementationCloseout
+): MonthlyCapacityCandidateRuntimeRankingSet {
+  const blocked = scoreSet.status === 'blocked' || closeout.status === 'blocked';
+  const orderedRows = blocked
+    ? []
+    : scoreSet.rows
+        .filter((row) => row.status === 'scored')
+        .map((row) => ({
+          row,
+          floorCoveragePoints: monthlyCapacityRuntimeRankingFactor(row, 'floorCoverage'),
+          gapRepairPoints: monthlyCapacityRuntimeRankingFactor(row, 'gapRepair'),
+          disruptionPoints: monthlyCapacityRuntimeRankingFactor(row, 'disruptionPenalty'),
+          taxReviewPoints: monthlyCapacityRuntimeRankingFactor(row, 'taxReview')
+        }))
+        .sort((left, right) => {
+          const scoreDiff = right.row.totalScore - left.row.totalScore;
+          if (scoreDiff) return scoreDiff;
+          const floorDiff = right.floorCoveragePoints - left.floorCoveragePoints;
+          if (floorDiff) return floorDiff;
+          const disruptionDiff = right.disruptionPoints - left.disruptionPoints;
+          if (disruptionDiff) return disruptionDiff;
+          const taxDiff = right.taxReviewPoints - left.taxReviewPoints;
+          if (taxDiff) return taxDiff;
+          if (left.row.id === 'baseline') return -1;
+          if (right.row.id === 'baseline') return 1;
+          return left.row.label.localeCompare(right.row.label);
+        })
+        .map<MonthlyCapacityCandidateRuntimeRankingRow>((entry, index) => ({
+          id: entry.row.id,
+          label: entry.row.label,
+          ordinal: index + 1,
+          totalScore: entry.row.totalScore,
+          floorCoveragePoints: entry.floorCoveragePoints,
+          gapRepairPoints: entry.gapRepairPoints,
+          disruptionPoints: entry.disruptionPoints,
+          taxReviewPoints: entry.taxReviewPoints,
+          recommendationEligible: false,
+          saved: false,
+          boundary:
+            'Runtime-only candidate ranking row: orders score evidence internally without recommending, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+        }));
+
+  return {
+    status: blocked ? 'blocked' : 'ready',
+    orderedRows,
+    orderedCandidateIds: orderedRows.map((row) => row.id),
+    recommendationCandidateId: null,
+    saved: false,
+    fundingTrace: null,
+    accountInstruction: null,
+    annualSequencing: null,
+    uiPresentation: null,
+    boundary:
+      'Runtime-only candidate ranking: orders score evidence for internal runtime review without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRankingAudit(
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet
+): MonthlyCapacityCandidateRuntimeRankingAudit {
+  const recommendationCount = ranking.recommendationCandidateId === null && ranking.orderedRows.every((row) => row.recommendationEligible === false) ? 0 : 1;
+  const savedOutputCount = ranking.saved === false && ranking.orderedRows.every((row) => row.saved === false) ? 0 : 1;
+  const traceCount = ranking.fundingTrace === null ? 0 : 1;
+  const instructionCount = ranking.accountInstruction === null ? 0 : 1;
+  const annualSequencingCount = ranking.annualSequencing === null ? 0 : 1;
+  const uiPresentationCount = ranking.uiPresentation === null ? 0 : 1;
+
+  return {
+    status: recommendationCount || savedOutputCount || traceCount || instructionCount || annualSequencingCount || uiPresentationCount ? 'block' : 'pass',
+    orderedCandidateCount: ranking.orderedRows.length,
+    recommendationCount,
+    savedOutputCount,
+    traceCount,
+    instructionCount,
+    annualSequencingCount,
+    uiPresentationCount,
+    boundary:
+      'Runtime-only candidate ranking audit: confirms ordered evidence did not become a recommendation, saved output, funding trace, account instruction, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRankingSummary(
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet
+): MonthlyCapacityCandidateRuntimeRankingSummary {
+  return {
+    status: ranking.status,
+    orderedCandidateIds: ranking.orderedCandidateIds,
+    topCandidateId: ranking.orderedRows[0]?.id ?? null,
+    baselineOrdinal: ranking.orderedRows.find((row) => row.id === 'baseline')?.ordinal ?? null,
+    orderedCandidateCount: ranking.orderedRows.length,
+    recommendationCandidateId: null,
+    boundary:
+      'Runtime-only candidate ranking summary: summarizes ordered evidence without selecting a recommendation, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRankingExampleReadiness(
+  id: string,
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet,
+  summary: MonthlyCapacityCandidateRuntimeRankingSummary = selectMonthlyCapacityCandidateRuntimeRankingSummary(ranking)
+): MonthlyCapacityCandidateRuntimeRankingExampleReadiness {
+  return {
+    id,
+    status: ranking.status,
+    orderedCandidateIds: summary.orderedCandidateIds,
+    topCandidateId: summary.topCandidateId,
+    recommendationCandidateId: null,
+    boundary:
+      'Runtime-only candidate ranking example readiness: records ordered evidence coverage for an example without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRankingCloseout(
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet,
+  audit: MonthlyCapacityCandidateRuntimeRankingAudit = selectMonthlyCapacityCandidateRuntimeRankingAudit(ranking),
+  summary: MonthlyCapacityCandidateRuntimeRankingSummary = selectMonthlyCapacityCandidateRuntimeRankingSummary(ranking)
+): MonthlyCapacityCandidateRuntimeRankingCloseout {
+  const blocked = ranking.status === 'blocked' || audit.status === 'block' || summary.status === 'blocked';
+
+  return {
+    status: blocked ? 'blocked' : 'complete',
+    headline: blocked
+      ? 'Runtime candidate ranking needs clean ordered evidence and guardrails.'
+      : 'Runtime candidate ranking is complete for internal ordered evidence.',
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'recommendationPlanning',
+    completedPieces: ['runtimeOrdering', 'rankingAudit', 'rankingSummary', 'exampleMatrix', 'noRecommendationBoundary', 'noPersistenceBoundary'],
+    stillDeferred: ['recommendations', 'optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+    boundary:
+      'Runtime-only candidate ranking closeout: ordered evidence is complete, but recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, and UI presentation remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRuntimeRankingPackageCloseout(
+  closeout: MonthlyCapacityCandidateRuntimeRankingCloseout
+): MonthlyCapacityCandidateRuntimeRankingPackageCloseout {
+  return {
+    status: closeout.status,
+    package: 'candidateRankingRuntimeExecution',
+    headline:
+      closeout.status === 'complete'
+        ? 'Candidate ranking runtime execution is complete.'
+        : 'Candidate ranking runtime execution is blocked before package closeout.',
+    completedSprints: 'S1587-S1606',
+    nextBroadStep: closeout.nextBroadStep,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only candidate ranking package closeout: ordering, audit, summary, examples, and closeout are complete without recommendations, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
   };
 }
 
