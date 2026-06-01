@@ -1521,6 +1521,110 @@ export type MonthlyCapacityCandidateRankingPlanningPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityCandidateRankingImplementationPlanningRow = {
+  id: 'planningCloseout' | 'scoreRows' | 'tieBreakRules' | 'runtimeOnlyBoundary' | 'recommendationBoundary' | 'persistenceBoundary' | 'uiBoundary';
+  status: 'ready' | 'review' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationPlan = {
+  status: 'blocked' | 'readyForPlanning';
+  rows: MonthlyCapacityCandidateRankingImplementationPlanningRow[];
+  scoreCount: number;
+  tieBreakRuleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  notAllowedYet: MonthlyCapacityCandidateRankingPlanningCloseout['stillDeferred'];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationContract = {
+  status: 'blocked' | 'ready';
+  requiredInputs: Array<'runtimeScores' | 'rankingPlanningCloseout' | 'tieBreakRules' | 'guardrails'>;
+  outputShape: 'runtimeOrderingOnly';
+  saved: false;
+  recommendation: false;
+  fundingTrace: null;
+  accountInstruction: null;
+  annualSequencing: null;
+  uiPresentation: null;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationGuardrail = {
+  id: 'noRuntimeOrderingYet' | 'noRecommendation' | 'noSavedOutput' | 'noFundingTrace' | 'noAccountInstruction' | 'noAnnualSequencing' | 'noUiPresentation';
+  status: 'pass' | 'block';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationReadiness = {
+  status: 'blocked' | 'readyForFutureImplementation';
+  readyRowIds: MonthlyCapacityCandidateRankingImplementationPlanningRow['id'][];
+  reviewRowIds: MonthlyCapacityCandidateRankingImplementationPlanningRow['id'][];
+  blockedRowIds: MonthlyCapacityCandidateRankingImplementationPlanningRow['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationExampleReadiness = {
+  id: string;
+  status: MonthlyCapacityCandidateRankingImplementationReadiness['status'];
+  scoreCount: number;
+  tieBreakRuleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationStep = {
+  id: 'readRuntimeScores' | 'applyFloorFirstRule' | 'applyDisruptionRule' | 'applyTaxSecondaryRule' | 'keepBaselineReference' | 'returnRuntimeOnlyOrdering';
+  status: 'planned' | 'blocked';
+  detail: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationDryRun = {
+  status: 'blocked' | 'readyForFutureDryRun';
+  steps: MonthlyCapacityCandidateRankingImplementationStep[];
+  scoreCount: number;
+  tieBreakRuleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  orderedCandidateIds: null;
+  recommendationCandidateId: null;
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationDryRunAudit = {
+  status: 'pass' | 'block';
+  plannedStepCount: number;
+  orderedCandidateCount: 0;
+  recommendationCount: 0;
+  savedOutputCount: 0;
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationSummary = {
+  status: MonthlyCapacityCandidateRankingImplementationPlan['status'];
+  scoreCount: number;
+  plannedStepCount: number;
+  tieBreakRuleIds: MonthlyCapacityCandidateRankingTieBreakRule['id'][];
+  nextBroadStep: 'candidateRankingRuntimeExecution' | 'capacityInputsFirst';
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationCloseout = {
+  status: 'blocked' | 'readyForRuntimeExecution';
+  headline: string;
+  nextBroadStep: MonthlyCapacityCandidateRankingImplementationSummary['nextBroadStep'];
+  completedPieces: Array<'implementationPlan' | 'contract' | 'guardrails' | 'readiness' | 'dryRunPlan' | 'dryRunAudit' | 'exampleMatrix' | 'summary'>;
+  stillDeferred: MonthlyCapacityCandidateRankingImplementationPlan['notAllowedYet'];
+  boundary: string;
+};
+
+export type MonthlyCapacityCandidateRankingImplementationPackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'candidateRankingImplementationPlanning';
+  headline: string;
+  completedSprints: string;
+  nextBroadStep: MonthlyCapacityCandidateRankingImplementationCloseout['nextBroadStep'];
+  stillDeferred: MonthlyCapacityCandidateRankingImplementationCloseout['stillDeferred'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -4463,6 +4567,285 @@ export function selectMonthlyCapacityCandidateRankingPlanningPackageCloseout(
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only ranking planning package closeout: ranking inputs, guardrails, readiness, tie-break policy, audit, summary, examples, and closeout are complete without ranking, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationPlan(
+  closeout: MonthlyCapacityCandidateRankingPlanningCloseout,
+  tieBreakPlan: MonthlyCapacityCandidateRankingTieBreakPlan
+): MonthlyCapacityCandidateRankingImplementationPlan {
+  const blocked = closeout.status === 'blocked' || tieBreakPlan.status === 'blocked' || tieBreakPlan.scoreCount === 0;
+  const rows: MonthlyCapacityCandidateRankingImplementationPlanningRow[] = [
+    {
+      id: 'planningCloseout',
+      status: closeout.status === 'readyForImplementationPlanning' ? 'ready' : 'blocked',
+      detail: closeout.status === 'readyForImplementationPlanning' ? 'Ranking planning closeout is available.' : 'Ranking implementation planning needs a clean ranking-planning closeout.'
+    },
+    {
+      id: 'scoreRows',
+      status: tieBreakPlan.scoreCount > 0 ? 'ready' : 'blocked',
+      detail: tieBreakPlan.scoreCount > 0 ? 'Runtime score rows are available for implementation planning.' : 'Implementation planning needs scored runtime candidates.'
+    },
+    {
+      id: 'tieBreakRules',
+      status: tieBreakPlan.ruleIds.length > 0 ? 'ready' : 'blocked',
+      detail: tieBreakPlan.ruleIds.length > 0 ? 'Tie-break rule ids are available for future ordering.' : 'Implementation planning needs tie-break rules.'
+    },
+    {
+      id: 'runtimeOnlyBoundary',
+      status: 'ready',
+      detail: 'Future ordering must remain runtime-only.'
+    },
+    {
+      id: 'recommendationBoundary',
+      status: 'ready',
+      detail: 'Implementation planning cannot choose or recommend an action.'
+    },
+    {
+      id: 'persistenceBoundary',
+      status: 'ready',
+      detail: 'Implementation planning cannot save calculated ordering output.'
+    },
+    {
+      id: 'uiBoundary',
+      status: 'ready',
+      detail: 'Implementation planning does not change UI presentation.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForPlanning',
+    rows: blocked ? rows.map((row) => (row.status === 'ready' && row.id !== 'runtimeOnlyBoundary' && row.id !== 'recommendationBoundary' && row.id !== 'persistenceBoundary' && row.id !== 'uiBoundary' ? { ...row, status: 'blocked' } : row)) : rows,
+    scoreCount: tieBreakPlan.scoreCount,
+    tieBreakRuleIds: tieBreakPlan.ruleIds,
+    notAllowedYet: closeout.stillDeferred,
+    boundary:
+      'Runtime-only ranking implementation plan: defines implementation prerequisites for a future ordering layer without ordering candidates, recommending actions, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationContract(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan
+): MonthlyCapacityCandidateRankingImplementationContract {
+  return {
+    status: plan.status === 'blocked' ? 'blocked' : 'ready',
+    requiredInputs: ['runtimeScores', 'rankingPlanningCloseout', 'tieBreakRules', 'guardrails'],
+    outputShape: 'runtimeOrderingOnly',
+    saved: false,
+    recommendation: false,
+    fundingTrace: null,
+    accountInstruction: null,
+    annualSequencing: null,
+    uiPresentation: null,
+    boundary:
+      'Runtime-only ranking implementation contract: future output shape is ordering-only and does not save output, recommend actions, trace funding, add account instructions, sequence annually, or change UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationGuardrails(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  contract: MonthlyCapacityCandidateRankingImplementationContract = selectMonthlyCapacityCandidateRankingImplementationContract(plan)
+): MonthlyCapacityCandidateRankingImplementationGuardrail[] {
+  return [
+    {
+      id: 'noRuntimeOrderingYet',
+      status: plan.notAllowedYet.includes('candidateRanking') ? 'pass' : 'block',
+      detail: 'Candidate ordering implementation remains deferred.'
+    },
+    {
+      id: 'noRecommendation',
+      status: contract.recommendation === false && plan.notAllowedYet.includes('recommendations') ? 'pass' : 'block',
+      detail: 'Recommendations remain deferred.'
+    },
+    {
+      id: 'noSavedOutput',
+      status: contract.saved === false && plan.notAllowedYet.includes('savedOptimizerOutput') ? 'pass' : 'block',
+      detail: 'No calculated ordering output is saved.'
+    },
+    {
+      id: 'noFundingTrace',
+      status: contract.fundingTrace === null && plan.notAllowedYet.includes('fundingTrace') ? 'pass' : 'block',
+      detail: 'Funding traces remain deferred.'
+    },
+    {
+      id: 'noAccountInstruction',
+      status: contract.accountInstruction === null && plan.notAllowedYet.includes('accountInstructions') ? 'pass' : 'block',
+      detail: 'No account instructions are produced.'
+    },
+    {
+      id: 'noAnnualSequencing',
+      status: contract.annualSequencing === null && plan.notAllowedYet.includes('annualAccountSequencing') ? 'pass' : 'block',
+      detail: 'Annual account-level sequencing remains deferred.'
+    },
+    {
+      id: 'noUiPresentation',
+      status: contract.uiPresentation === null && plan.notAllowedYet.includes('uiPresentation') ? 'pass' : 'block',
+      detail: 'UI presentation remains deferred.'
+    }
+  ];
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationReadiness(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  guardrails: MonthlyCapacityCandidateRankingImplementationGuardrail[] = selectMonthlyCapacityCandidateRankingImplementationGuardrails(plan)
+): MonthlyCapacityCandidateRankingImplementationReadiness {
+  const readyRowIds = plan.rows.filter((row) => row.status === 'ready').map((row) => row.id);
+  const reviewRowIds = plan.rows.filter((row) => row.status === 'review').map((row) => row.id);
+  const blockedRowIds = plan.rows.filter((row) => row.status === 'blocked').map((row) => row.id);
+  const guardrailBlocked = guardrails.some((guardrail) => guardrail.status === 'block');
+
+  return {
+    status: plan.status === 'blocked' || blockedRowIds.length > 0 || guardrailBlocked ? 'blocked' : 'readyForFutureImplementation',
+    readyRowIds,
+    reviewRowIds,
+    blockedRowIds,
+    boundary:
+      'Runtime-only ranking implementation readiness: checks future implementation prerequisites without ordering candidates, recommending actions, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationExampleReadiness(
+  id: string,
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  readiness: MonthlyCapacityCandidateRankingImplementationReadiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(plan)
+): MonthlyCapacityCandidateRankingImplementationExampleReadiness {
+  return {
+    id,
+    status: readiness.status,
+    scoreCount: plan.scoreCount,
+    tieBreakRuleIds: plan.tieBreakRuleIds,
+    boundary:
+      'Runtime-only ranking implementation example readiness: records implementation-planning coverage for an example without ordering candidates, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationDryRun(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  readiness: MonthlyCapacityCandidateRankingImplementationReadiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(plan)
+): MonthlyCapacityCandidateRankingImplementationDryRun {
+  const blocked = plan.status === 'blocked' || readiness.status === 'blocked';
+  const steps: MonthlyCapacityCandidateRankingImplementationStep[] = [
+    {
+      id: 'readRuntimeScores',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would read runtime score rows.'
+    },
+    {
+      id: 'applyFloorFirstRule',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would keep floor coverage as the first ordering rule.'
+    },
+    {
+      id: 'applyDisruptionRule',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would use disruption as a secondary ordering rule.'
+    },
+    {
+      id: 'applyTaxSecondaryRule',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would keep tax as a small secondary adjustment.'
+    },
+    {
+      id: 'keepBaselineReference',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would keep baseline as a reference, not a recommendation.'
+    },
+    {
+      id: 'returnRuntimeOnlyOrdering',
+      status: blocked ? 'blocked' : 'planned',
+      detail: 'Future implementation would return runtime-only ordering evidence.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'blocked' : 'readyForFutureDryRun',
+    steps,
+    scoreCount: plan.scoreCount,
+    tieBreakRuleIds: plan.tieBreakRuleIds,
+    orderedCandidateIds: null,
+    recommendationCandidateId: null,
+    saved: false,
+    boundary:
+      'Runtime-only ranking implementation dry run: plans future ordering steps without producing ordered candidates, recommendations, saved output, funding traces, account instructions, annual sequencing, or UI changes.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationDryRunAudit(
+  dryRun: MonthlyCapacityCandidateRankingImplementationDryRun
+): MonthlyCapacityCandidateRankingImplementationDryRunAudit {
+  return {
+    status: dryRun.orderedCandidateIds === null && dryRun.recommendationCandidateId === null && dryRun.saved === false ? 'pass' : 'block',
+    plannedStepCount: dryRun.steps.filter((step) => step.status === 'planned').length,
+    orderedCandidateCount: 0,
+    recommendationCount: 0,
+    savedOutputCount: 0,
+    boundary:
+      'Runtime-only ranking implementation dry-run audit: confirms planning did not produce ordered candidates, recommendations, or saved output.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationSummary(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  dryRun: MonthlyCapacityCandidateRankingImplementationDryRun,
+  audit: MonthlyCapacityCandidateRankingImplementationDryRunAudit = selectMonthlyCapacityCandidateRankingImplementationDryRunAudit(dryRun)
+): MonthlyCapacityCandidateRankingImplementationSummary {
+  const blocked = plan.status === 'blocked' || dryRun.status === 'blocked' || audit.status === 'block';
+
+  return {
+    status: plan.status,
+    scoreCount: plan.scoreCount,
+    plannedStepCount: dryRun.steps.filter((step) => step.status === 'planned').length,
+    tieBreakRuleIds: plan.tieBreakRuleIds,
+    nextBroadStep: blocked ? 'capacityInputsFirst' : 'candidateRankingRuntimeExecution',
+    boundary:
+      'Runtime-only ranking implementation summary: summarizes implementation planning without ordering candidates, recommending actions, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationCloseout(
+  plan: MonthlyCapacityCandidateRankingImplementationPlan,
+  contract: MonthlyCapacityCandidateRankingImplementationContract,
+  readiness: MonthlyCapacityCandidateRankingImplementationReadiness,
+  dryRun: MonthlyCapacityCandidateRankingImplementationDryRun,
+  audit: MonthlyCapacityCandidateRankingImplementationDryRunAudit = selectMonthlyCapacityCandidateRankingImplementationDryRunAudit(dryRun),
+  summary: MonthlyCapacityCandidateRankingImplementationSummary = selectMonthlyCapacityCandidateRankingImplementationSummary(plan, dryRun, audit)
+): MonthlyCapacityCandidateRankingImplementationCloseout {
+  const blocked =
+    plan.status === 'blocked' ||
+    contract.status === 'blocked' ||
+    readiness.status === 'blocked' ||
+    dryRun.status === 'blocked' ||
+    audit.status === 'block' ||
+    summary.nextBroadStep === 'capacityInputsFirst';
+
+  return {
+    status: blocked ? 'blocked' : 'readyForRuntimeExecution',
+    headline: blocked
+      ? 'Candidate ranking implementation planning needs clean runtime-only prerequisites.'
+      : 'Candidate ranking implementation planning is ready for a future runtime execution package.',
+    nextBroadStep: summary.nextBroadStep,
+    completedPieces: ['implementationPlan', 'contract', 'guardrails', 'readiness', 'dryRunPlan', 'dryRunAudit', 'exampleMatrix', 'summary'],
+    stillDeferred: plan.notAllowedYet,
+    boundary:
+      'Runtime-only ranking implementation closeout: implementation prerequisites are planned, but no candidate ordering, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation was added.'
+  };
+}
+
+export function selectMonthlyCapacityCandidateRankingImplementationPackageCloseout(
+  closeout: MonthlyCapacityCandidateRankingImplementationCloseout
+): MonthlyCapacityCandidateRankingImplementationPackageCloseout {
+  return {
+    status: closeout.status === 'readyForRuntimeExecution' ? 'complete' : 'blocked',
+    package: 'candidateRankingImplementationPlanning',
+    headline:
+      closeout.status === 'readyForRuntimeExecution'
+        ? 'Candidate ranking implementation planning is complete.'
+        : 'Candidate ranking implementation planning is blocked before package closeout.',
+    completedSprints: 'S1567-S1586',
+    nextBroadStep: closeout.nextBroadStep,
+    stillDeferred: closeout.stillDeferred,
+    boundary:
+      'Runtime-only ranking implementation planning package closeout: implementation plan, contract, guardrails, readiness, dry-run plan, dry-run audit, examples, summary, and closeout are complete without candidate ordering, recommendations, optimizer search, saved output, funding traces, account instructions, annual sequencing, or UI presentation.'
   };
 }
 
