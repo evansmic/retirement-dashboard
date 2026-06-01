@@ -115,6 +115,12 @@ import {
   selectMonthlyCapacityRecommendationRuntimeExecutionPlan,
   selectMonthlyCapacityRecommendationRuntimeExecutionReadiness,
   selectMonthlyCapacityRecommendationRuntimeExecutionSummary,
+  selectMonthlyCapacityRecommendationRuntimeCloseout,
+  selectMonthlyCapacityRecommendationRuntimeExampleReadiness,
+  selectMonthlyCapacityRecommendationRuntimePackageCloseout,
+  selectMonthlyCapacityRecommendationRuntimeSelection,
+  selectMonthlyCapacityRecommendationRuntimeSelectionAudit,
+  selectMonthlyCapacityRecommendationRuntimeSummary,
   selectMonthlyCapacityCandidateScorePolicy,
   selectMonthlyCapacityScoringExampleReadiness,
   selectMonthlyCapacityScoringPlanCloseout,
@@ -282,6 +288,49 @@ function buildMonthlyCandidateRuntime(result: SimulationResult, plan: V2PlanPayl
   const variants = selectMonthlyCapacityRuntimeCandidateVariants(plan, builderPlan, order, runtimeGate);
 
   return { packet, builderPlan, order, runtimeGate, variants };
+}
+
+function buildMonthlyRecommendationExecutionRuntime(
+  result: SimulationResult,
+  plan: V2PlanPayload,
+  comparisons: Record<string, SimulationResult> = {}
+) {
+  const runtime = buildMonthlyCandidateRuntime(result, plan, comparisons);
+  const handoff = selectMonthlyCapacityRuntimeCandidateSimulationHandoff(runtime.variants);
+  const simulationSet = selectMonthlyCapacityRuntimeCandidateSimulations(runtime.variants, handoff, () => result);
+  const scoringPlan = selectMonthlyCapacityScoringExecutionPlan(simulationSet);
+  const scoreSet = selectMonthlyCapacityRuntimeScores(simulationSet, scoringPlan);
+  const scoreCloseout = selectMonthlyCapacityRuntimeScoreCloseout(scoreSet);
+  const rankingPlan = selectMonthlyCapacityCandidateRankingPlan(scoreSet, scoreCloseout);
+  const tieBreakPlan = selectMonthlyCapacityCandidateRankingTieBreakPlan(rankingPlan);
+  const planningCloseout = selectMonthlyCapacityCandidateRankingPlanningCloseout(rankingPlan, tieBreakPlan);
+  const implementationPlan = selectMonthlyCapacityCandidateRankingImplementationPlan(planningCloseout, tieBreakPlan);
+  const contract = selectMonthlyCapacityCandidateRankingImplementationContract(implementationPlan);
+  const readiness = selectMonthlyCapacityCandidateRankingImplementationReadiness(implementationPlan);
+  const dryRun = selectMonthlyCapacityCandidateRankingImplementationDryRun(implementationPlan, readiness);
+  const implementationCloseout = selectMonthlyCapacityCandidateRankingImplementationCloseout(
+    implementationPlan,
+    contract,
+    readiness,
+    dryRun
+  );
+  const ranking = selectMonthlyCapacityCandidateRuntimeRanking(scoreSet, implementationCloseout);
+  const rankingCloseout = selectMonthlyCapacityCandidateRuntimeRankingCloseout(ranking);
+  const recommendationPlan = selectMonthlyCapacityRecommendationPlan(ranking, rankingCloseout);
+  const copyPolicy = selectMonthlyCapacityRecommendationCopyPolicy(recommendationPlan);
+  const recommendationCloseout = selectMonthlyCapacityRecommendationPlanningCloseout(recommendationPlan, copyPolicy);
+  const executionPlan = selectMonthlyCapacityRecommendationRuntimeExecutionPlan(recommendationCloseout, recommendationPlan);
+  const recommendationDryRun = selectMonthlyCapacityRecommendationRuntimeDryRun(executionPlan);
+  const executionCloseout = selectMonthlyCapacityRecommendationRuntimeExecutionCloseout(executionPlan, recommendationDryRun);
+  const blockReview = selectMonthlyCapacityRecommendationRuntimeExecutionBlockReview(executionPlan, recommendationDryRun);
+  const exampleReadiness = selectMonthlyCapacityRecommendationRuntimeExecutionExampleReadiness([executionCloseout]);
+  const packageCloseout = selectMonthlyCapacityRecommendationRuntimeExecutionPackageCloseout(
+    executionCloseout,
+    blockReview,
+    exampleReadiness
+  );
+
+  return { ranking, executionCloseout, packageCloseout };
 }
 
 describe('result selectors', () => {
@@ -5259,6 +5308,179 @@ describe('result selectors', () => {
       blockedExampleCount: 1
     });
     expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeExecutionPackageCloseout');
+  });
+
+  it('selects one runtime recommendation candidate without saving or tracing output', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const blockedSelection = selectMonthlyCapacityRecommendationRuntimeSelection(
+      { ...runtime.packageCloseout, status: 'blocked' as const },
+      runtime.ranking
+    );
+
+    expect(selection).toMatchObject({
+      status: 'selected',
+      source: 'topRankedCandidate',
+      recommendationCandidateId: 'baseline',
+      label: 'Current plan baseline',
+      ordinal: 1,
+      saved: false,
+      fundingTrace: null,
+      accountInstruction: null,
+      annualSequencing: null,
+      uiPresentation: null
+    });
+    expect(selection.totalScore).toBeGreaterThanOrEqual(0);
+    expect(selection.copy).toContain('not financial advice');
+    expect(selection.boundary).toContain('without saving output');
+    expect(blockedSelection).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      label: null,
+      ordinal: null,
+      totalScore: null,
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeSelection');
+  });
+
+  it('audits runtime recommendation selection boundaries', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const audit = selectMonthlyCapacityRecommendationRuntimeSelectionAudit(selection);
+    const advisoryCopyAudit = selectMonthlyCapacityRecommendationRuntimeSelectionAudit({
+      ...selection,
+      copy: 'Use this path.'
+    });
+
+    expect(audit).toMatchObject({
+      status: 'pass',
+      selectedCandidateCount: 1,
+      savedOutputCount: 0,
+      fundingTraceCount: 0,
+      accountInstructionCount: 0,
+      annualSequencingCount: 0,
+      uiPresentationCount: 0,
+      nonAdvisoryCopy: true
+    });
+    expect(audit.boundary).toContain('allows one selected candidate');
+    expect(advisoryCopyAudit).toMatchObject({
+      status: 'block',
+      selectedCandidateCount: 1,
+      nonAdvisoryCopy: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeSelectionAudit');
+  });
+
+  it('summarizes runtime recommendation selection without trace or UI output', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const summary = selectMonthlyCapacityRecommendationRuntimeSummary(selection);
+    const blockedSummary = selectMonthlyCapacityRecommendationRuntimeSummary({ ...selection, status: 'blocked' as const, recommendationCandidateId: null });
+
+    expect(summary).toMatchObject({
+      status: 'ready',
+      recommendationCandidateId: 'baseline',
+      label: 'Current plan baseline',
+      source: 'topRankedCandidate',
+      nonAdvisoryCopy: true,
+      nextBroadStep: 'fundingTracePlanning',
+      saved: false
+    });
+    expect(summary.boundary).toContain('without saving output');
+    expect(blockedSummary).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      label: null,
+      nextBroadStep: 'capacityInputsFirst',
+      saved: false
+    });
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeSummary');
+  });
+
+  it('closes out runtime recommendation selection without expanding scope', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const closeout = selectMonthlyCapacityRecommendationRuntimeCloseout(selection);
+
+    expect(closeout).toMatchObject({
+      status: 'complete',
+      headline: 'Runtime recommendation selection is complete.',
+      recommendationCandidateId: 'baseline',
+      completedPieces: ['selection', 'selectionAudit', 'summary', 'noPersistenceBoundary', 'noTraceBoundary', 'noUiBoundary'],
+      stillDeferred: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+      nextBroadStep: 'fundingTracePlanning'
+    });
+    expect(closeout.stillDeferred).not.toContain('recommendations');
+    expect(closeout.boundary).toContain('one modelled recommendation candidate is selected');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeCloseout');
+  });
+
+  it('checks runtime recommendation examples without persistence', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const closeout = selectMonthlyCapacityRecommendationRuntimeCloseout(selection);
+    const readiness = selectMonthlyCapacityRecommendationRuntimeExampleReadiness([closeout, closeout]);
+    const blockedReadiness = selectMonthlyCapacityRecommendationRuntimeExampleReadiness([
+      closeout,
+      { ...closeout, status: 'blocked' as const, recommendationCandidateId: null }
+    ]);
+
+    expect(readiness).toMatchObject({
+      status: 'ready',
+      exampleCount: 2,
+      selectedExampleCount: 2,
+      blockedExampleCount: 0,
+      recommendationCandidateIds: ['baseline', 'baseline'],
+      saved: false
+    });
+    expect(blockedReadiness).toMatchObject({
+      status: 'blocked',
+      exampleCount: 2,
+      selectedExampleCount: 1,
+      blockedExampleCount: 1,
+      recommendationCandidateIds: ['baseline'],
+      saved: false
+    });
+    expect(readiness.boundary).toContain('without saving output');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimeExampleReadiness');
+  });
+
+  it('closes out the runtime recommendation execution package', () => {
+    const runtime = buildMonthlyRecommendationExecutionRuntime(fixture, planFixture);
+    const selection = selectMonthlyCapacityRecommendationRuntimeSelection(runtime.packageCloseout, runtime.ranking);
+    const closeout = selectMonthlyCapacityRecommendationRuntimeCloseout(selection);
+    const readiness = selectMonthlyCapacityRecommendationRuntimeExampleReadiness([closeout]);
+    const packageCloseout = selectMonthlyCapacityRecommendationRuntimePackageCloseout(closeout, readiness);
+    const blockedPackageCloseout = selectMonthlyCapacityRecommendationRuntimePackageCloseout(
+      closeout,
+      selectMonthlyCapacityRecommendationRuntimeExampleReadiness([{ ...closeout, status: 'blocked' as const }])
+    );
+
+    expect(packageCloseout).toMatchObject({
+      status: 'complete',
+      package: 'recommendationRuntimeExecution',
+      completedSprints: 'S1647-S1666',
+      selectedExampleCount: 1,
+      blockedExampleCount: 0,
+      recommendationCandidateId: 'baseline',
+      nextBroadStep: 'fundingTracePlanning'
+    });
+    expect(packageCloseout.stillDeferred).toEqual([
+      'optimizerSearch',
+      'savedOptimizerOutput',
+      'fundingTrace',
+      'accountInstructions',
+      'annualAccountSequencing',
+      'uiPresentation'
+    ]);
+    expect(blockedPackageCloseout).toMatchObject({
+      status: 'blocked',
+      recommendationCandidateId: null,
+      nextBroadStep: 'capacityInputsFirst'
+    });
+    expect(packageCloseout.boundary).toContain('one modelled recommendation candidate can be selected');
+    expect(createPlanFile(planFixture).plan).not.toHaveProperty('monthlyCapacityRecommendationRuntimePackageCloseout');
   });
 
   it('summarizes discretionary room above the temporary floor for review', () => {

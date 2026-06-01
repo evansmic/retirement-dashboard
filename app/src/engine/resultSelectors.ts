@@ -1885,6 +1885,78 @@ export type MonthlyCapacityRecommendationRuntimeExecutionPackageCloseout = {
   boundary: string;
 };
 
+export type MonthlyCapacityRecommendationRuntimeSelection = {
+  status: 'blocked' | 'selected';
+  source: 'topRankedCandidate';
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  label: string | null;
+  ordinal: number | null;
+  totalScore: number | null;
+  saved: false;
+  fundingTrace: null;
+  accountInstruction: null;
+  annualSequencing: null;
+  uiPresentation: null;
+  copy: string;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeSelectionAudit = {
+  status: 'pass' | 'block';
+  selectedCandidateCount: number;
+  savedOutputCount: number;
+  fundingTraceCount: number;
+  accountInstructionCount: number;
+  annualSequencingCount: number;
+  uiPresentationCount: number;
+  nonAdvisoryCopy: boolean;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeSummary = {
+  status: 'blocked' | 'ready';
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  label: string | null;
+  source: MonthlyCapacityRecommendationRuntimeSelection['source'];
+  nonAdvisoryCopy: boolean;
+  nextBroadStep: 'fundingTracePlanning' | 'capacityInputsFirst';
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeCloseout = {
+  status: 'blocked' | 'complete';
+  headline: string;
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  completedPieces: Array<'selection' | 'selectionAudit' | 'summary' | 'noPersistenceBoundary' | 'noTraceBoundary' | 'noUiBoundary'>;
+  stillDeferred: Array<'optimizerSearch' | 'savedOptimizerOutput' | 'fundingTrace' | 'accountInstructions' | 'annualAccountSequencing' | 'uiPresentation'>;
+  nextBroadStep: MonthlyCapacityRecommendationRuntimeSummary['nextBroadStep'];
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimeExampleReadiness = {
+  status: 'ready' | 'blocked';
+  exampleCount: number;
+  selectedExampleCount: number;
+  blockedExampleCount: number;
+  recommendationCandidateIds: MonthlyCapacityCandidateBlueprintId[];
+  saved: false;
+  boundary: string;
+};
+
+export type MonthlyCapacityRecommendationRuntimePackageCloseout = {
+  status: 'blocked' | 'complete';
+  package: 'recommendationRuntimeExecution';
+  headline: string;
+  completedSprints: string;
+  selectedExampleCount: number;
+  blockedExampleCount: number;
+  recommendationCandidateId: MonthlyCapacityCandidateBlueprintId | null;
+  stillDeferred: MonthlyCapacityRecommendationRuntimeCloseout['stillDeferred'];
+  nextBroadStep: MonthlyCapacityRecommendationRuntimeCloseout['nextBroadStep'];
+  boundary: string;
+};
+
 export type MinimumExpenseCoverageStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MinimumExpenseCoverageSummary = {
@@ -5693,6 +5765,149 @@ export function selectMonthlyCapacityRecommendationRuntimeExecutionPackageCloseo
     stillDeferred: closeout.stillDeferred,
     boundary:
       'Runtime-only recommendation execution planning package closeout: execution plan, dry run, audit, readiness, block review, examples, and closeout are complete without selecting recommendations, saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeSelection(
+  packageCloseout: MonthlyCapacityRecommendationRuntimeExecutionPackageCloseout,
+  ranking: MonthlyCapacityCandidateRuntimeRankingSet
+): MonthlyCapacityRecommendationRuntimeSelection {
+  const topRow = ranking.orderedRows[0] ?? null;
+  const blocked = packageCloseout.status === 'blocked' || ranking.status === 'blocked' || !topRow;
+
+  return {
+    status: blocked ? 'blocked' : 'selected',
+    source: 'topRankedCandidate',
+    recommendationCandidateId: blocked ? null : topRow.id,
+    label: blocked ? null : topRow.label,
+    ordinal: blocked ? null : topRow.ordinal,
+    totalScore: blocked ? null : topRow.totalScore,
+    saved: false,
+    fundingTrace: null,
+    accountInstruction: null,
+    annualSequencing: null,
+    uiPresentation: null,
+    copy: blocked
+      ? 'A runtime recommendation needs complete ranked candidate evidence before it can be shown.'
+      : `${topRow.label} is the top modelled path in this runtime comparison. Treat it as an estimate to review, not financial advice.`,
+    boundary:
+      'Runtime-only recommendation selection: selects one top-ranked candidate for internal runtime output without saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeSelectionAudit(
+  selection: MonthlyCapacityRecommendationRuntimeSelection
+): MonthlyCapacityRecommendationRuntimeSelectionAudit {
+  const selectedCandidateCount = selection.recommendationCandidateId ? 1 : 0;
+  const savedOutputCount = selection.saved === false ? 0 : 1;
+  const fundingTraceCount = selection.fundingTrace === null ? 0 : 1;
+  const accountInstructionCount = selection.accountInstruction === null ? 0 : 1;
+  const annualSequencingCount = selection.annualSequencing === null ? 0 : 1;
+  const uiPresentationCount = selection.uiPresentation === null ? 0 : 1;
+  const nonAdvisoryCopy =
+    selection.status === 'blocked' ||
+    (selection.copy.toLowerCase().includes('modelled') && selection.copy.toLowerCase().includes('not financial advice'));
+  const blocked =
+    selectedCandidateCount > 1 ||
+    savedOutputCount > 0 ||
+    fundingTraceCount > 0 ||
+    accountInstructionCount > 0 ||
+    annualSequencingCount > 0 ||
+    uiPresentationCount > 0 ||
+    !nonAdvisoryCopy;
+
+  return {
+    status: blocked ? 'block' : 'pass',
+    selectedCandidateCount,
+    savedOutputCount,
+    fundingTraceCount,
+    accountInstructionCount,
+    annualSequencingCount,
+    uiPresentationCount,
+    nonAdvisoryCopy,
+    boundary:
+      'Runtime-only recommendation selection audit: allows one selected candidate while blocking saved output, funding traces, account instructions, annual sequencing, UI presentation, and advisory copy.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeSummary(
+  selection: MonthlyCapacityRecommendationRuntimeSelection,
+  audit: MonthlyCapacityRecommendationRuntimeSelectionAudit = selectMonthlyCapacityRecommendationRuntimeSelectionAudit(selection)
+): MonthlyCapacityRecommendationRuntimeSummary {
+  const ready = selection.status === 'selected' && audit.status === 'pass' && audit.selectedCandidateCount === 1;
+
+  return {
+    status: ready ? 'ready' : 'blocked',
+    recommendationCandidateId: ready ? selection.recommendationCandidateId : null,
+    label: ready ? selection.label : null,
+    source: selection.source,
+    nonAdvisoryCopy: audit.nonAdvisoryCopy,
+    nextBroadStep: ready ? 'fundingTracePlanning' : 'capacityInputsFirst',
+    saved: false,
+    boundary:
+      'Runtime-only recommendation summary: summarizes one selected modelled candidate without saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeCloseout(
+  selection: MonthlyCapacityRecommendationRuntimeSelection,
+  audit: MonthlyCapacityRecommendationRuntimeSelectionAudit = selectMonthlyCapacityRecommendationRuntimeSelectionAudit(selection),
+  summary: MonthlyCapacityRecommendationRuntimeSummary = selectMonthlyCapacityRecommendationRuntimeSummary(selection, audit)
+): MonthlyCapacityRecommendationRuntimeCloseout {
+  const complete = selection.status === 'selected' && audit.status === 'pass' && summary.status === 'ready';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    headline: complete
+      ? 'Runtime recommendation selection is complete.'
+      : 'Runtime recommendation selection is blocked before closeout.',
+    recommendationCandidateId: complete ? selection.recommendationCandidateId : null,
+    completedPieces: ['selection', 'selectionAudit', 'summary', 'noPersistenceBoundary', 'noTraceBoundary', 'noUiBoundary'],
+    stillDeferred: ['optimizerSearch', 'savedOptimizerOutput', 'fundingTrace', 'accountInstructions', 'annualAccountSequencing', 'uiPresentation'],
+    nextBroadStep: summary.nextBroadStep,
+    boundary:
+      'Runtime-only recommendation closeout: one modelled recommendation candidate is selected, while optimizer search, saved output, funding trace, account instructions, annual sequencing, and UI presentation remain deferred.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimeExampleReadiness(
+  closeouts: MonthlyCapacityRecommendationRuntimeCloseout[]
+): MonthlyCapacityRecommendationRuntimeExampleReadiness {
+  const selectedCloseouts = closeouts.filter((closeout) => closeout.status === 'complete' && closeout.recommendationCandidateId);
+  const blockedExampleCount = closeouts.length - selectedCloseouts.length;
+
+  return {
+    status: closeouts.length > 0 && blockedExampleCount === 0 ? 'ready' : 'blocked',
+    exampleCount: closeouts.length,
+    selectedExampleCount: selectedCloseouts.length,
+    blockedExampleCount,
+    recommendationCandidateIds: selectedCloseouts.map((closeout) => closeout.recommendationCandidateId).filter((id): id is MonthlyCapacityCandidateBlueprintId => Boolean(id)),
+    saved: false,
+    boundary:
+      'Runtime-only recommendation example readiness: confirms examples can select one runtime recommendation candidate without saving output, tracing funding, adding account instructions, sequencing annually, or changing UI.'
+  };
+}
+
+export function selectMonthlyCapacityRecommendationRuntimePackageCloseout(
+  closeout: MonthlyCapacityRecommendationRuntimeCloseout,
+  exampleReadiness: MonthlyCapacityRecommendationRuntimeExampleReadiness
+): MonthlyCapacityRecommendationRuntimePackageCloseout {
+  const complete = closeout.status === 'complete' && exampleReadiness.status === 'ready';
+
+  return {
+    status: complete ? 'complete' : 'blocked',
+    package: 'recommendationRuntimeExecution',
+    headline: complete
+      ? 'Recommendation runtime execution is complete.'
+      : 'Recommendation runtime execution is blocked before package closeout.',
+    completedSprints: 'S1647-S1666',
+    selectedExampleCount: exampleReadiness.selectedExampleCount,
+    blockedExampleCount: exampleReadiness.blockedExampleCount,
+    recommendationCandidateId: complete ? closeout.recommendationCandidateId : null,
+    stillDeferred: closeout.stillDeferred,
+    nextBroadStep: complete ? closeout.nextBroadStep : 'capacityInputsFirst',
+    boundary:
+      'Runtime-only recommendation execution package closeout: one modelled recommendation candidate can be selected at runtime while saved output, funding trace, account instructions, annual sequencing, and UI presentation remain deferred.'
   };
 }
 
