@@ -115,6 +115,12 @@
         margin: 22px 0;
       }
 
+      .input-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
       .metric {
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -187,6 +193,30 @@
         background: var(--soft);
       }
 
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      .table th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        text-align: left;
+      }
+
+      .table th,
+      .table td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+      }
+
+      .table td:last-child,
+      .table th:last-child {
+        text-align: right;
+      }
+
       footer {
         margin-top: 28px;
         color: var(--muted);
@@ -214,7 +244,8 @@
 
         header,
         .hero,
-        .grid {
+        .grid,
+        .input-grid {
           grid-template-columns: 1fr;
           display: grid;
         }
@@ -244,13 +275,35 @@
         </div>
       </header>
 
+      <section aria-labelledby="inputs-title">
+        <h2 id="inputs-title">Inputs used for this estimate</h2>
+        <div class="input-grid">
+          <div class="metric">
+            <span>Household</span>
+            <strong>Couple</strong>
+          </div>
+          <div class="metric">
+            <span>Province</span>
+            <strong>Ontario</strong>
+          </div>
+          <div class="metric">
+            <span>Retirement year</span>
+            <strong>2028</strong>
+          </div>
+          <div class="metric">
+            <span>Minimum floor</span>
+            <strong>$4,900/mo</strong>
+          </div>
+        </div>
+      </section>
+
       <section class="hero" aria-labelledby="capacity-title">
         <div>
           <p class="label" id="capacity-title">Estimated after-tax monthly spending capacity</p>
           <p class="amount">$6,850</p>
           <p class="sub">per month in today's dollars</p>
           <p class="note">
-            This is calculated from the plan inputs, projected income, taxes, and assets. It is not a desired spending target.
+            Based on the data entered, the calculator projects about $6,850 in after-tax income per month starting in 2028. This is not a desired spending target.
           </p>
         </div>
         <aside class="status">
@@ -261,8 +314,8 @@
 
       <div class="grid">
         <div class="metric">
-          <span>Minimum expenses</span>
-          <strong>$4,900/mo</strong>
+          <span>Before tax</span>
+          <strong>$8,420/mo</strong>
         </div>
         <div class="metric">
           <span>Projection</span>
@@ -274,15 +327,63 @@
         </div>
       </div>
 
+      <section aria-labelledby="age-title">
+        <h2 id="age-title">Monthly amounts at checkpoints</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Age</th>
+              <th>Total income</th>
+              <th>Tax</th>
+              <th>After tax</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>65</td>
+              <td>$8,420/mo</td>
+              <td>$1,570/mo</td>
+              <td>$6,850/mo</td>
+            </tr>
+            <tr>
+              <td>72</td>
+              <td>$8,620/mo</td>
+              <td>$1,980/mo</td>
+              <td>$6,640/mo</td>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>$7,530/mo</td>
+              <td>$1,660/mo</td>
+              <td>$5,870/mo</td>
+            </tr>
+            <tr>
+              <td>95</td>
+              <td>$6,260/mo</td>
+              <td>$930/mo</td>
+              <td>$5,330/mo</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">Checkpoint ages are shown to explain timing. A live version should make age-based assumptions reviewable.</p>
+      </section>
+
       <section aria-labelledby="sources-title">
         <h2 id="sources-title">Broad source groups</h2>
         <div class="rows">
           <div class="row">
             <div>
-              <b>Guaranteed income</b>
-              <span>CPP, OAS, and defined benefit income.</span>
+              <b>CPP and OAS</b>
+              <span>CPP starts at age 65. OAS starts at age 65, subject to recovery tax where applicable.</span>
             </div>
-            <strong>48%</strong>
+            <strong>28%</strong>
+          </div>
+          <div class="row">
+            <div>
+              <b>Workplace pension</b>
+              <span>Pension income starts at age 64 in this example.</span>
+            </div>
+            <strong>20%</strong>
           </div>
           <div class="row">
             <div>
@@ -305,9 +406,10 @@
       <section aria-labelledby="review-title">
         <h2 id="review-title">Review notes</h2>
         <ul class="review">
-          <li>Check that the minimum monthly expense floor reflects real essentials.</li>
+          <li>Minimum floor is optional context. The main projection is based on income, assets, debts, taxes, and timing assumptions.</li>
           <li>Review tax-sensitive years where registered withdrawals increase taxable income.</li>
           <li>Confirm survivor assumptions for the household plan.</li>
+          <li>Estimated estate value at age 95 is $430,000 in this mockup example.</li>
         </ul>
       </section>
 

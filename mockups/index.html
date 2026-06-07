@@ -13,6 +13,8 @@
         --panel: #ffffff;
         --line: #d9e0e6;
         --blue: #255f85;
+        --green: #146b48;
+        --green-soft: #e6f3ed;
         --shadow: 0 14px 34px rgba(29, 43, 56, 0.07);
       }
 
@@ -41,8 +43,43 @@
       }
 
       .intro {
-        margin: 8px 0 24px;
+        margin: 8px 0 14px;
         color: var(--muted);
+      }
+
+      .review-note {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 18px;
+        margin: 0 0 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .review-note h2 {
+        margin: 0 0 10px;
+        font-size: 17px;
+      }
+
+      .review-note ol {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding-left: 22px;
+        color: var(--muted);
+      }
+
+      .static {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        padding: 0 10px;
+        margin: 0 0 18px;
+        font-size: 13px;
+        font-weight: 750;
       }
 
       .grid {
@@ -65,6 +102,10 @@
 
       a:hover {
         border-color: var(--blue);
+      }
+
+      a.recommended {
+        border-color: rgba(20, 107, 72, 0.45);
       }
 
       span {
@@ -97,8 +138,24 @@
     <main>
       <h1>Retirement Planner mockups</h1>
       <p class="intro">Static visual concepts for review before production UI work.</p>
+      <div class="static">Static design mockups. Buttons, tabs, and inputs do not run calculations yet.</div>
+
+      <section class="review-note" aria-labelledby="review-order-title">
+        <h2 id="review-order-title">Suggested review order</h2>
+        <ol>
+          <li>Start with Intake to see how plan information is collected.</li>
+          <li>Open Results Overview to review the first answer.</li>
+          <li>Open Details to review the supporting explanation.</li>
+          <li>Open Printable Report to review the summary format.</li>
+        </ol>
+      </section>
 
       <section class="grid" aria-label="Available mockups">
+        <a class="recommended" href="./intake-capacity-v1.html">
+          <span>Start here</span>
+          <strong>Intake: minimum expenses first v1</strong>
+          <p>Floor-first intake flow that avoids asking users to guess desired spending first.</p>
+        </a>
         <a href="./overview-capacity-v1.html">
           <span>Results</span>
           <strong>Overview capacity v1</strong>
@@ -108,11 +165,6 @@
           <span>Details</span>
           <strong>Capacity details v1</strong>
           <p>Annual rows, broad source groups, tax-sensitive notes, survivor and estate context.</p>
-        </a>
-        <a href="./intake-capacity-v1.html">
-          <span>Intake</span>
-          <strong>Minimum expenses first v1</strong>
-          <p>Floor-first intake flow that avoids asking users to guess desired spending first.</p>
         </a>
         <a href="./report-capacity-v1.html">
           <span>Report</span>
