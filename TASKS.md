@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1888-S1907: Capacity Objective Selector Hardening
+## Latest Package — S1908-S1927: Capacity Objective Report Readiness
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare capacity objective evidence for a later printable/report path without changing current printable report output. The bounded optimizer now emits runtime-only report-readiness metadata that identifies reusable capacity fields, defers tax context to annual result rows, and blocks saved output and account instructions.
+
+Non-scope: printable report output changes, production UI promotion, saved plan schema changes, engine output schema changes, persisted optimizer output, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1908_1927_capacity_objective_report_readiness.md`](docs/sprint_1908_1927_capacity_objective_report_readiness.md).
+
+### S1908-S1927 Completed Path
+
+- **S1908-S1912 — Report readiness shape batch.** Added runtime report-readiness type, rows, field list, selector, and summary output.
+- **S1913-S1917 — Boundary batch.** Deferred tax context, saved output, account instructions, and annual sequencing.
+- **S1918-S1922 — Test batch.** Added ready, blocked, field-list, and bounded-summary tests.
+- **S1923-S1927 — Verification and closeout.** Ran focused optimizer tests, production build, file guards, and closed the package.
+
+### S1908-S1927 Definition Of Done
+
+- Capacity report readiness is available in runtime bounded optimizer output.
+- Current printable report output is unchanged.
+- Tax detail remains sourced from annual result rows later.
+- Saved output remains deferred.
+- Account instructions remain deferred.
+- Annual sequencing remains deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests and production build pass.
+
+## Previous Package — S1888-S1907: Capacity Objective Selector Hardening
 
 **Status:** Complete 2026-06-08.
 

@@ -187,6 +187,31 @@ export type OptimizerCapacityObjectiveInput = {
   benefitTimingStatus: OptimizerCandidateFamily['status'] | null;
 };
 
+export type OptimizerCapacityReportReadinessRow = {
+  id: 'capacitySummary' | 'floorComparison' | 'constraintRows' | 'taxContext' | 'savedOutput' | 'accountInstructions';
+  label: string;
+  status: 'ready' | 'deferred' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerCapacityReportReadiness = {
+  status: 'readyForLaterReport' | 'needsInputs' | 'deferred';
+  reportFields: Array<
+    | 'monthlyAfterTaxCapacity'
+    | 'minimumMonthlyExpenseFloor'
+    | 'optionalMonthlyRoom'
+    | 'estateTarget'
+    | 'projectedEstate'
+    | 'survivorConstraint'
+    | 'timingComparison'
+    | 'withdrawalSequencingDeferred'
+  >;
+  rows: OptimizerCapacityReportReadinessRow[];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerGoalReview = {
   summary: string;
   architecture: {
@@ -817,6 +842,7 @@ export type BoundedOptimizerSummary = {
   candidateFamilies: OptimizerCandidateFamily[];
   searchPlan: OptimizerSearchPlan;
   capacityObjective: OptimizerCapacityObjective;
+  capacityReportReadiness: OptimizerCapacityReportReadiness;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -2648,6 +2674,75 @@ export function selectOptimizerCapacityObjective(input: OptimizerCapacityObjecti
               ? 'Required inputs need review before a runtime capacity answer is available.'
               : 'Runtime evidence is not complete enough to state monthly capacity.',
     boundary: 'Capacity objective output is runtime-only; it is not saved, not a production UI contract, and not an annual account-level withdrawal instruction.'
+  };
+}
+
+export function selectOptimizerCapacityReportReadiness(
+  objective: OptimizerCapacityObjective
+): OptimizerCapacityReportReadiness {
+  const hasCapacity = objective.monthlyAfterTaxCapacity !== null && objective.minimumMonthlyExpenseFloor !== null;
+  const hasConstraintRows = objective.rows.length > 0;
+  const blocked = objective.status === 'blocked' || objective.status === 'cannotTell';
+  const rows: OptimizerCapacityReportReadinessRow[] = [
+    {
+      id: 'capacitySummary',
+      label: 'Capacity summary',
+      status: hasCapacity && !blocked ? 'ready' : 'blocked',
+      detail: hasCapacity
+        ? 'Monthly capacity, expense floor, and optional room can be reused later in a printable report.'
+        : 'Capacity report fields wait for a usable runtime capacity estimate and expense floor.'
+    },
+    {
+      id: 'floorComparison',
+      label: 'Floor comparison',
+      status: objective.minimumMonthlyExpenseFloor !== null ? 'ready' : 'blocked',
+      detail: 'The report can show floor-first capacity framing without asking for a desired-spend target.'
+    },
+    {
+      id: 'constraintRows',
+      label: 'Constraint rows',
+      status: hasConstraintRows ? 'ready' : 'blocked',
+      detail: 'Minimum floor, estate, survivor, CPP/OAS timing, and sequencing boundary rows are ready for later report review.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context',
+      status: 'deferred',
+      detail: 'Detailed tax schedules should come from annual result rows, not from the capacity objective packet.'
+    },
+    {
+      id: 'savedOutput',
+      label: 'Saved output',
+      status: 'deferred',
+      detail: 'Do not save capacity objective fields into plan files or engine output schema.'
+    },
+    {
+      id: 'accountInstructions',
+      label: 'Account instructions',
+      status: 'deferred',
+      detail: 'Do not turn report readiness into account-level withdrawal instructions or annual sequencing.'
+    }
+  ];
+
+  return {
+    status: blocked ? 'needsInputs' : 'readyForLaterReport',
+    reportFields: [
+      'monthlyAfterTaxCapacity',
+      'minimumMonthlyExpenseFloor',
+      'optionalMonthlyRoom',
+      'estateTarget',
+      'projectedEstate',
+      'survivorConstraint',
+      'timingComparison',
+      'withdrawalSequencingDeferred'
+    ],
+    rows,
+    summary: blocked
+      ? 'Capacity objective report readiness waits for complete runtime capacity evidence.'
+      : 'Capacity objective evidence is ready for a later printable/report path once report implementation is explicitly planned.',
+    boundary:
+      'Report readiness is runtime-only planning metadata. It does not change printable report output, saved plan files, engine output schema, or annual account sequencing.',
+    nextStep: 'Plan report rendering separately before adding capacity objective fields to printable output.'
   };
 }
 
@@ -4695,6 +4790,7 @@ export function runBoundedOptimizer(
     eligibilityNotes,
     contract
   });
+  const capacityReportReadiness = selectOptimizerCapacityReportReadiness(capacityObjective);
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -4714,6 +4810,7 @@ export function runBoundedOptimizer(
     candidateFamilies,
     searchPlan,
     capacityObjective,
+    capacityReportReadiness,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

@@ -7,6 +7,7 @@ import {
   buildBoundedOptimizerCandidates,
   runBoundedOptimizer,
   selectOptimizerCapacityObjective,
+  selectOptimizerCapacityReportReadiness,
   selectOptimizerCapacityStatus,
   selectOptimizerMinimumAnnualExpenseFloor,
   type BoundedOptimizerCandidateId
@@ -187,6 +188,71 @@ describe('bounded optimizer runner', () => {
     expect(objective.rows.find((row) => row.id === 'minimumFloor')).toMatchObject({ status: 'blocked' });
   });
 
+  it('prepares capacity objective report readiness without changing report output or saved data', () => {
+    const objective = selectOptimizerCapacityObjective({
+      contractReady: true,
+      selectedCandidateId: 'baseline',
+      selectedCandidateLabel: 'Current plan',
+      sustainableAnnualSpend: 84000,
+      annualExpenseFloor: 60000,
+      estateTarget: 200000,
+      projectedEstate: 240000,
+      hasSecondPerson: false,
+      survivorNeedsReview: false,
+      benefitTimingStatus: 'included'
+    });
+    const readiness = selectOptimizerCapacityReportReadiness(objective);
+
+    expect(readiness).toMatchObject({
+      status: 'readyForLaterReport',
+      reportFields: [
+        'monthlyAfterTaxCapacity',
+        'minimumMonthlyExpenseFloor',
+        'optionalMonthlyRoom',
+        'estateTarget',
+        'projectedEstate',
+        'survivorConstraint',
+        'timingComparison',
+        'withdrawalSequencingDeferred'
+      ],
+      boundary: expect.stringContaining('does not change printable report output')
+    });
+    expect(readiness.rows.find((row) => row.id === 'capacitySummary')).toMatchObject({ status: 'ready' });
+    expect(readiness.rows.find((row) => row.id === 'taxContext')).toMatchObject({
+      status: 'deferred',
+      detail: expect.stringContaining('annual result rows')
+    });
+    expect(readiness.rows.find((row) => row.id === 'savedOutput')).toMatchObject({
+      status: 'deferred',
+      detail: expect.stringContaining('Do not save')
+    });
+    expect(readiness.rows.find((row) => row.id === 'accountInstructions')).toMatchObject({
+      status: 'deferred',
+      detail: expect.stringContaining('Do not turn report readiness into account-level withdrawal instructions')
+    });
+  });
+
+  it('blocks capacity report readiness when capacity objective inputs are incomplete', () => {
+    const readiness = selectOptimizerCapacityReportReadiness(
+      selectOptimizerCapacityObjective({
+        contractReady: false,
+        selectedCandidateId: null,
+        selectedCandidateLabel: '',
+        sustainableAnnualSpend: null,
+        annualExpenseFloor: null,
+        estateTarget: null,
+        projectedEstate: null,
+        hasSecondPerson: false,
+        survivorNeedsReview: false,
+        benefitTimingStatus: null
+      })
+    );
+
+    expect(readiness.status).toBe('needsInputs');
+    expect(readiness.rows.find((row) => row.id === 'capacitySummary')).toMatchObject({ status: 'blocked' });
+    expect(readiness.nextStep).toContain('Plan report rendering separately');
+  });
+
   it('builds a limited candidate set from optimizer contract levers', () => {
     const candidates = buildBoundedOptimizerCandidates(readyPlan());
 
@@ -360,6 +426,13 @@ describe('bounded optimizer runner', () => {
       'withdrawalSequencing'
     ]);
     expect(summary.capacityObjective.boundary).toContain('runtime-only');
+    expect(summary.capacityReportReadiness).toMatchObject({
+      status: 'readyForLaterReport',
+      boundary: expect.stringContaining('does not change printable report output')
+    });
+    expect(summary.capacityReportReadiness.rows.find((row) => row.id === 'accountInstructions')).toMatchObject({
+      status: 'deferred'
+    });
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

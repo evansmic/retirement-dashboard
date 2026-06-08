@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1908-S1927 is complete. Capacity objective report readiness is now available as runtime-only metadata in the bounded optimizer summary, identifying later report fields while explicitly deferring tax context, saved output, account instructions, and annual sequencing. This did not change printable report output, production UI, saved schema, engine output schema, saved optimizer output, or `.plan.json` generation.
+
+Current package doc: [`docs/sprint_1908_1927_capacity_objective_report_readiness.md`](docs/sprint_1908_1927_capacity_objective_report_readiness.md).
+
 S1888-S1907 is complete. Capacity objective logic is now selector-hardened for reuse: minimum-floor normalization, status mapping, and capacity objective row generation are exported and tested directly, while bounded optimizer output still remains runtime-only. This did not promote production UI, save optimizer output, change saved schema, change engine output schema, create account instructions, or generate `.plan.json` files.
 
 Current package doc: [`docs/sprint_1888_1907_capacity_objective_selector_hardening.md`](docs/sprint_1888_1907_capacity_objective_selector_hardening.md).
