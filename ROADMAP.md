@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2148-S2167 is complete. Experimental draft example matrix scoring now includes repair targets for low row coverage, blockers, watch items, tax context, and low confidence, with affected example ids preserved for targeted improvement. This keeps the work focused on runtime draft quality while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md`](docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md).
+
 S2128-S2147 is complete. Experimental draft readiness can now be scored across bundled and clean synthetic examples, with ready, review-first, and blocked counts plus per-example confidence, row coverage, blocker, watch, and review-item detail. This supports runtime repair targeting while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
 
 Current package doc: [`docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md`](docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md).

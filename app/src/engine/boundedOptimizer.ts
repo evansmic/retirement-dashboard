@@ -417,6 +417,13 @@ export type OptimizerExperimentalDraftExampleMatrix = {
   reviewFirstCount: number;
   blockedCount: number;
   items: OptimizerExperimentalDraftExampleMatrixItem[];
+  repairTargets: Array<{
+    id: 'rowCoverage' | 'blockers' | 'watchItems' | 'taxContext' | 'confidence';
+    label: string;
+    status: 'pass' | 'repair';
+    exampleIds: string[];
+    detail: string;
+  }>;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -3649,6 +3656,48 @@ export function selectOptimizerExperimentalDraftExampleMatrix(
     : reviewFirstCount
       ? 'reviewFirst'
       : 'readyForTesterReview';
+  const lowCoverage = items.filter((item) => item.draftRows < 3).map((item) => item.id);
+  const blockedExamples = items.filter((item) => item.blockerCount > 0 || item.status === 'blocked').map((item) => item.id);
+  const watchExamples = items.filter((item) => item.watchCount > 0).map((item) => item.id);
+  const taxContextExamples = items.filter((item) => item.reviewItems.some((reviewItem) => reviewItem.toLowerCase().includes('tax'))).map((item) => item.id);
+  const lowConfidence = items.filter((item) => item.confidenceLevel === 'low' || item.confidenceLevel === 'blocked').map((item) => item.id);
+  const repairTargets: OptimizerExperimentalDraftExampleMatrix['repairTargets'] = [
+    {
+      id: 'rowCoverage',
+      label: 'Draft row coverage',
+      status: lowCoverage.length ? 'repair' : 'pass',
+      exampleIds: lowCoverage,
+      detail: lowCoverage.length ? 'Some examples have fewer than three draft rows in the first modelled window.' : 'All examples have enough draft-row coverage for matrix scoring.'
+    },
+    {
+      id: 'blockers',
+      label: 'Blocked examples',
+      status: blockedExamples.length ? 'repair' : 'pass',
+      exampleIds: blockedExamples,
+      detail: blockedExamples.length ? 'Some examples are blocked or have blocker evidence to repair.' : 'No examples are blocked in the matrix.'
+    },
+    {
+      id: 'watchItems',
+      label: 'Watch items',
+      status: watchExamples.length ? 'repair' : 'pass',
+      exampleIds: watchExamples,
+      detail: watchExamples.length ? 'Some examples need review-first handling before tester presentation.' : 'No examples carry watch items.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context repair',
+      status: taxContextExamples.length ? 'repair' : 'pass',
+      exampleIds: taxContextExamples,
+      detail: taxContextExamples.length ? 'Some examples need clearer tax context before tester review.' : 'Tax context does not appear as a repair theme in the matrix.'
+    },
+    {
+      id: 'confidence',
+      label: 'Confidence repair',
+      status: lowConfidence.length ? 'repair' : 'pass',
+      exampleIds: lowConfidence,
+      detail: lowConfidence.length ? 'Some examples have low or blocked draft confidence.' : 'No examples have low or blocked draft confidence.'
+    }
+  ];
 
   return {
     status,
@@ -3657,6 +3706,7 @@ export function selectOptimizerExperimentalDraftExampleMatrix(
     reviewFirstCount,
     blockedCount,
     items,
+    repairTargets,
     summary:
       status === 'readyForTesterReview'
         ? 'All experimental draft examples are ready for synthetic tester review.'

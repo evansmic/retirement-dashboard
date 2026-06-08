@@ -4,7 +4,35 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2128-S2147: Experimental Draft Example Matrix Scoring
+## Latest Package — S2148-S2167: Experimental Draft Readiness Repair Targeting
+
+**Status:** Complete 2026-06-08.
+
+Goal: use experimental draft example matrix scoring to identify common repair themes before UI, CSV, saved output, or report output. The matrix now exposes repair targets for low row coverage, blockers, watch items, tax context, and low confidence while preserving example ids for targeted improvement.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md`](docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md).
+
+### S2148-S2167 Completed Path
+
+- **S2148-S2152 — Repair target shape batch.** Added repair targets to the example matrix for row coverage, blockers, and watch items.
+- **S2153-S2157 — Repair theme batch.** Added tax context and confidence repair targets with per-example ids.
+- **S2158-S2162 — Example coverage batch.** Added focused selector tests plus bundled and clean example repair target assertions.
+- **S2163-S2167 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example matrix tests, production build, file guards, and closed the package.
+
+### S2148-S2167 Definition Of Done
+
+- Experimental draft example matrix includes repair targets.
+- Repair targets cover row coverage, blockers, watch items, tax context, and confidence.
+- Repair targets preserve affected example ids.
+- Repair targeting remains runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example matrix tests, and production build pass.
+
+## Previous Package — S2128-S2147: Experimental Draft Example Matrix Scoring
 
 **Status:** Complete 2026-06-08.
 

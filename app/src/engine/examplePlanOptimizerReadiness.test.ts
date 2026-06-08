@@ -308,6 +308,9 @@ describe('example-plan optimizer readiness matrix', () => {
     expect(matrix.readyCount + matrix.reviewFirstCount + matrix.blockedCount).toBe(matrix.exampleCount);
     expect(matrix.items.every((item) => ['readyForTesterReview', 'reviewFirst', 'blocked'].includes(item.status))).toBe(true);
     expect(matrix.items.every((item) => item.draftRows >= 0 && item.modelledYears >= 0)).toBe(true);
+    expect(matrix.repairTargets.map((target) => target.id)).toEqual(['rowCoverage', 'blockers', 'watchItems', 'taxContext', 'confidence']);
+    expect(matrix.repairTargets.every((target) => ['pass', 'repair'].includes(target.status))).toBe(true);
+    expect(matrix.repairTargets.every((target) => Array.isArray(target.exampleIds))).toBe(true);
     expect(matrix.boundary).toContain('runtime-only');
     expect(matrix.boundary).not.toContain('CSV export is ready');
     expect(JSON.stringify(matrix).toLowerCase()).not.toContain('tax-bracket instructions');

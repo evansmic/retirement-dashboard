@@ -417,6 +417,16 @@ describe('bounded optimizer runner', () => {
     });
     expect(matrix.items.map((item) => item.id)).toEqual(['ready-example', 'review-example']);
     expect(matrix.items[1].reviewItems).toContain('Survivor review');
+    expect(matrix.repairTargets.map((target) => target.id)).toEqual(['rowCoverage', 'blockers', 'watchItems', 'taxContext', 'confidence']);
+    expect(matrix.repairTargets.find((target) => target.id === 'rowCoverage')).toMatchObject({
+      status: 'repair',
+      exampleIds: ['review-example']
+    });
+    expect(matrix.repairTargets.find((target) => target.id === 'watchItems')).toMatchObject({
+      status: 'repair',
+      exampleIds: ['review-example']
+    });
+    expect(matrix.repairTargets.find((target) => target.id === 'blockers')).toMatchObject({ status: 'pass' });
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
   });
