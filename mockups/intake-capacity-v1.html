@@ -99,27 +99,12 @@
         border-radius: inherit;
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: minmax(0, 0.72fr) minmax(360px, 0.28fr);
-        gap: 18px;
-      }
-
-      .panel,
-      .side {
+      .panel {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 8px;
         box-shadow: var(--shadow);
-      }
-
-      .panel {
         padding: 24px;
-      }
-
-      .side {
-        padding: 20px;
-        align-self: start;
       }
 
       h2,
@@ -228,33 +213,42 @@
         font-size: 13px;
       }
 
-      .steps {
+      .progress-line {
         display: grid;
-        gap: 10px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0 0 18px;
       }
 
-      .steps li {
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr);
-        gap: 10px;
-        align-items: start;
+      .step {
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 10px;
         color: var(--muted);
-        font-size: 14px;
+        font-size: 13px;
       }
 
-      .steps b {
+      .step.active {
+        border-color: rgba(20, 107, 72, 0.45);
+        background: var(--green-soft);
+        color: #164d37;
+      }
+
+      .step b {
+        display: flex;
+        align-items: center;
+        gap: 7px;
         color: var(--ink);
       }
 
-      .num {
+      .step-number {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background: var(--blue-soft);
         color: var(--blue);
@@ -306,7 +300,7 @@
         }
 
         header,
-        .grid,
+        .progress-line,
         .fields {
           grid-template-columns: 1fr;
           display: grid;
@@ -338,8 +332,26 @@
         </aside>
       </header>
 
-      <div class="grid">
-        <section class="panel" aria-labelledby="floor-title">
+      <section class="panel" aria-labelledby="floor-title">
+        <div class="progress-line" aria-label="Plan setup progress">
+          <div class="step active">
+            <b><span class="step-number">1</span> Profile and income</b>
+            <span>Age, CPP, OAS, pensions</span>
+          </div>
+          <div class="step">
+            <b><span class="step-number">2</span> Assets and debts</b>
+            <span>Accounts, savings, mortgage</span>
+          </div>
+          <div class="step">
+            <b><span class="step-number">3</span> Minimum floor</b>
+            <span>Optional basic-expense check</span>
+          </div>
+          <div class="step">
+            <b><span class="step-number">4</span> Results</b>
+            <span>Before-tax and after-tax monthly amounts</span>
+          </div>
+        </div>
+
           <h2 id="floor-title">Choose how to start</h2>
           <p class="helper">
             The calculator can first show projected monthly income from your data. If you add a minimum monthly floor, it can also show whether the projection covers your basics.
@@ -433,30 +445,7 @@
             <button type="button">Save draft locally</button>
             <button class="primary" type="button">Continue to assets and debts</button>
           </div>
-        </section>
-
-        <aside class="side" aria-labelledby="next-title">
-          <h3 id="next-title">What comes next</h3>
-          <ul class="steps">
-            <li>
-              <span class="num">1</span>
-              <span><b>Profile and income</b><br />Add age, CPP, OAS, pensions, and income sources.</span>
-            </li>
-            <li>
-              <span class="num">2</span>
-              <span><b>Assets and debts</b><br />Add accounts, savings, mortgage, and other debts.</span>
-            </li>
-            <li>
-              <span class="num">3</span>
-              <span><b>Minimum floor</b><br />Optional check for basic expenses. Debt payments stay in Debts.</span>
-            </li>
-            <li>
-              <span class="num">4</span>
-              <span><b>Results</b><br />See estimated before-tax and after-tax monthly amounts in today's dollars.</span>
-            </li>
-          </ul>
-        </aside>
-      </div>
+      </section>
     </main>
   </body>
 </html>
