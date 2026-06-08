@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1988-S2007 is complete. The bounded optimizer now emits a runtime-only annual sequencing input adapter for tester-only synthetic scenario planning. It captures selected-candidate context, modelled year range, available account balance fields, available tax fields, and constraint hooks while still blocking account order, annual account instructions, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation.
+
+Current package doc: [`docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md`](docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md).
+
 S1968-S1987 is complete. The bounded optimizer now emits a runtime-only annual sequencing prep contract with required future inputs and blocked outputs. Account-level instructions, account order, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output changes, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md`](docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md).

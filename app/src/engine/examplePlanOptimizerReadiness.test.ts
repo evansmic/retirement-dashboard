@@ -72,6 +72,7 @@ const CAPACITY_RUNTIME_KEYS = [
   'capacityReportReadiness',
   'capacityExportGuard',
   'annualSequencingPrepContract',
+  'annualSequencingInputAdapter',
   'boundedOptimizer',
   'optimizerOutput',
   'annualAccountInstructions'
@@ -149,6 +150,7 @@ describe('example-plan optimizer readiness matrix', () => {
           'capacityReportReadiness',
           'capacityExportGuard',
           'annualSequencingPrepContract',
+          'annualSequencingInputAdapter',
           'boundedOptimizer',
           'optimizerOutput',
           'annualAccountInstructions'
@@ -162,6 +164,9 @@ describe('example-plan optimizer readiness matrix', () => {
         blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'accountOrder', 'taxBracketInstructions'])
       });
       expect(item.optimizer.annualSequencingPrepContract.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'blocked' });
+      expect(['readyForDraftPlanning', 'needsInputs', 'blocked']).toContain(item.optimizer.annualSequencingInputAdapter.status);
+      expect(item.optimizer.annualSequencingInputAdapter.boundary).toContain('does not produce account order');
+      expect(item.optimizer.annualSequencingInputAdapter.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'blocked' });
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
@@ -199,6 +204,7 @@ describe('example-plan optimizer readiness matrix', () => {
         capacityReportReadiness: optimizer.capacityReportReadiness,
         capacityExportGuard: optimizer.capacityExportGuard,
         annualSequencingPrepContract: optimizer.annualSequencingPrepContract,
+        annualSequencingInputAdapter: optimizer.annualSequencingInputAdapter,
         boundedOptimizer: optimizer,
         optimizerOutput: { selectedCandidateId: optimizer.suggestedCandidateId },
         annualAccountInstructions: [{ year: plan.assumptions.retireYear, account: 'rrsp', amount: 1 }]
@@ -211,6 +217,7 @@ describe('example-plan optimizer readiness matrix', () => {
       }
       expect(serialized, `${card.id} serialized saved plan excludes monthly capacity`).not.toContain('monthlyAfterTaxCapacity');
       expect(serialized, `${card.id} serialized saved plan excludes sequencing prep`).not.toContain('annualSequencingPrepContract');
+      expect(serialized, `${card.id} serialized saved plan excludes sequencing adapter`).not.toContain('annualSequencingInputAdapter');
       expect(serialized, `${card.id} serialized saved plan excludes account order`).not.toContain('accountOrder');
       expect(serialized, `${card.id} serialized saved plan excludes selected candidate`).not.toContain('selectedCandidateId');
       expect(serialized, `${card.id} serialized saved plan excludes account instructions`).not.toContain('annualAccountInstructions');
@@ -226,7 +233,8 @@ describe('example-plan optimizer readiness matrix', () => {
         capacityObjective: optimizer.capacityObjective,
         capacityReportReadiness: optimizer.capacityReportReadiness,
         capacityExportGuard: optimizer.capacityExportGuard,
-        annualSequencingPrepContract: optimizer.annualSequencingPrepContract
+        annualSequencingPrepContract: optimizer.annualSequencingPrepContract,
+        annualSequencingInputAdapter: optimizer.annualSequencingInputAdapter
       });
 
       expect(['covered', 'tight', 'gap', 'cannotTell', 'blocked']).toContain(optimizer.capacityObjective.status);
@@ -236,6 +244,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.capacityExportGuard.rows.find((row) => row.id === 'schemaBoundary')).toMatchObject({ status: 'blocked' });
       expect(optimizer.annualSequencingPrepContract.boundary).toContain('does not implement annual account-level sequencing');
       expect(optimizer.annualSequencingPrepContract.blockedOutputs).toContain('savedSequencingOutput');
+      expect(optimizer.annualSequencingInputAdapter.nextStep).toContain('experimental account-order draft');
       for (const key of CAPACITY_RUNTIME_KEYS) {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }

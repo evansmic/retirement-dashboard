@@ -265,6 +265,7 @@ describe('bounded optimizer runner', () => {
         'capacityReportReadiness',
         'capacityExportGuard',
         'annualSequencingPrepContract',
+        'annualSequencingInputAdapter',
         'boundedOptimizer',
         'optimizerOutput',
         'annualAccountInstructions'
@@ -512,6 +513,17 @@ describe('bounded optimizer runner', () => {
       blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'accountOrder', 'taxBracketInstructions'])
     });
     expect(summary.annualSequencingPrepContract.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'blocked' });
+    expect(summary.annualSequencingInputAdapter).toMatchObject({
+      status: 'readyForDraftPlanning',
+      sourceCandidateId: 'withdrawalRegisteredFirst',
+      availableAccountBalanceFields: expect.arrayContaining(['bal_rrsp', 'bal_tfsa', 'bal_total']),
+      availableTaxFields: expect.arrayContaining(['totalTaxYear', 'taxableIncome', 'totalAftaxYear'])
+    });
+    expect(summary.annualSequencingInputAdapter.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('does not produce account order')
+    });
+    expect(summary.annualSequencingInputAdapter.boundary).toContain('does not produce account order');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

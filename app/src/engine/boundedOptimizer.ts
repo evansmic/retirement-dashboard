@@ -227,6 +227,7 @@ export type OptimizerCapacityExportGuard = {
     | 'capacityReportReadiness'
     | 'capacityExportGuard'
     | 'annualSequencingPrepContract'
+    | 'annualSequencingInputAdapter'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -261,6 +262,31 @@ export type OptimizerAnnualSequencingPrepContract = {
   };
   blockedOutputs: Array<'annualAccountInstructions' | 'accountOrder' | 'taxBracketInstructions' | 'savedSequencingOutput' | 'csvSequencingOutput'>;
   rows: OptimizerAnnualSequencingPrepRow[];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerAnnualSequencingInputAdapterRow = {
+  id: 'annualRows' | 'accountBalances' | 'taxContext' | 'capacityObjective' | 'constraints' | 'outputBoundary';
+  label: string;
+  status: 'ready' | 'partial' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerAnnualSequencingInputAdapter = {
+  status: 'readyForDraftPlanning' | 'needsInputs' | 'blocked';
+  sourceCandidateId: BoundedOptimizerCandidateId | null;
+  sourceCandidateLabel: string;
+  yearRange: {
+    firstYear: number | null;
+    lastYear: number | null;
+    yearCount: number;
+  };
+  availableAccountBalanceFields: Array<'bal_rrsp' | 'bal_rrsp_f' | 'bal_rrsp_m' | 'bal_tfsa' | 'bal_lif' | 'bal_nonreg' | 'bal_cash' | 'bal_total'>;
+  availableTaxFields: Array<'totalTaxYear' | 'taxableIncome' | 'totalOasClawY' | 'totalAftaxYear'>;
+  constraintInputs: Array<'minimumExpenseFloor' | 'estateTarget' | 'survivorReview' | 'benefitTimingComparison'>;
+  rows: OptimizerAnnualSequencingInputAdapterRow[];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -899,6 +925,7 @@ export type BoundedOptimizerSummary = {
   capacityReportReadiness: OptimizerCapacityReportReadiness;
   capacityExportGuard: OptimizerCapacityExportGuard;
   annualSequencingPrepContract: OptimizerAnnualSequencingPrepContract;
+  annualSequencingInputAdapter: OptimizerAnnualSequencingInputAdapter;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -2810,6 +2837,7 @@ export function selectOptimizerCapacityExportGuard(): OptimizerCapacityExportGua
       'capacityReportReadiness',
       'capacityExportGuard',
       'annualSequencingPrepContract',
+      'annualSequencingInputAdapter',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions'
@@ -2928,6 +2956,121 @@ export function selectOptimizerAnnualSequencingPrepContract(
     boundary:
       'This prep contract does not implement annual account-level sequencing, produce account instructions, change saved output, change CSV output, or change report output.',
     nextStep: 'Plan a separate annual sequencing adapter only after inputs, constraints, and consumer-facing boundaries are reviewed.'
+  };
+}
+
+function availableFields<T extends string>(rows: Array<Record<string, unknown>>, fields: T[]): T[] {
+  return fields.filter((field) => rows.some((row) => Number.isFinite(Number(row[field]))));
+}
+
+export function selectOptimizerAnnualSequencingInputAdapter({
+  sourceCandidateId,
+  sourceCandidateLabel,
+  summary,
+  capacityObjective,
+  prepContract
+}: {
+  sourceCandidateId: BoundedOptimizerCandidateId | null;
+  sourceCandidateLabel: string;
+  summary: ReturnType<typeof summarizeResult> | null | undefined;
+  capacityObjective: OptimizerCapacityObjective;
+  prepContract: OptimizerAnnualSequencingPrepContract;
+}): OptimizerAnnualSequencingInputAdapter {
+  const rows = Array.isArray(summary?.rows) ? summary.rows : [];
+  const firstYear = rows.length ? n(rows[0]?.year) : null;
+  const lastYear = rows.length ? n(rows[rows.length - 1]?.year) : null;
+  const accountFields = availableFields(rows as Array<Record<string, unknown>>, [
+    'bal_rrsp',
+    'bal_rrsp_f',
+    'bal_rrsp_m',
+    'bal_tfsa',
+    'bal_lif',
+    'bal_nonreg',
+    'bal_cash',
+    'bal_total'
+  ]);
+  const taxFields = availableFields(rows as Array<Record<string, unknown>>, ['totalTaxYear', 'taxableIncome', 'totalOasClawY', 'totalAftaxYear']);
+  const constraintInputs: OptimizerAnnualSequencingInputAdapter['constraintInputs'] = ['minimumExpenseFloor'];
+  if (capacityObjective.estateTarget !== null) constraintInputs.push('estateTarget');
+  if (capacityObjective.survivorConstraint === 'reviewFirst') constraintInputs.push('survivorReview');
+  if (capacityObjective.timingComparison === 'included') constraintInputs.push('benefitTimingComparison');
+
+  const hasAnnualRows = rows.length > 0;
+  const hasAccountContext = accountFields.includes('bal_total') && accountFields.length >= 2;
+  const hasTaxContext = taxFields.includes('totalTaxYear') && taxFields.includes('totalAftaxYear');
+  const prepBlocked = prepContract.rows.some((row) => row.id === 'outputBoundary' && row.status === 'blocked');
+  const status: OptimizerAnnualSequencingInputAdapter['status'] =
+    hasAnnualRows && hasAccountContext && hasTaxContext && !['blocked', 'cannotTell'].includes(capacityObjective.status)
+      ? 'readyForDraftPlanning'
+      : prepBlocked && hasAnnualRows
+        ? 'needsInputs'
+        : 'blocked';
+
+  return {
+    status,
+    sourceCandidateId,
+    sourceCandidateLabel: sourceCandidateLabel || 'No modelled candidate selected',
+    yearRange: {
+      firstYear,
+      lastYear,
+      yearCount: rows.length
+    },
+    availableAccountBalanceFields: accountFields,
+    availableTaxFields: taxFields,
+    constraintInputs,
+    rows: [
+      {
+        id: 'annualRows',
+        label: 'Annual result rows',
+        status: hasAnnualRows ? 'ready' : 'blocked',
+        detail: hasAnnualRows
+          ? `Annual context is available from ${firstYear ?? 'the first modelled year'} to ${lastYear ?? 'the last modelled year'}.`
+          : 'No annual result rows are available for sequencing draft planning.'
+      },
+      {
+        id: 'accountBalances',
+        label: 'Account balance fields',
+        status: hasAccountContext ? 'ready' : accountFields.length ? 'partial' : 'blocked',
+        detail: hasAccountContext
+          ? 'Annual balance fields are available for draft planning context, including total balance and at least one account balance field.'
+          : 'More account balance context is needed before draft account-order planning.'
+      },
+      {
+        id: 'taxContext',
+        label: 'Tax context fields',
+        status: hasTaxContext ? 'ready' : taxFields.length ? 'partial' : 'blocked',
+        detail: hasTaxContext
+          ? 'Annual tax and after-tax fields are available as context, not as tax-bracket instructions.'
+          : 'Tax context is incomplete for draft sequencing planning.'
+      },
+      {
+        id: 'capacityObjective',
+        label: 'Capacity objective',
+        status: ['blocked', 'cannotTell'].includes(capacityObjective.status) ? 'blocked' : 'ready',
+        detail: 'The adapter uses the runtime monthly capacity objective as context for later draft planning.'
+      },
+      {
+        id: 'constraints',
+        label: 'Constraint hooks',
+        status: constraintInputs.includes('survivorReview') ? 'partial' : 'ready',
+        detail: constraintInputs.includes('survivorReview')
+          ? 'Survivor review remains visible and must be handled before draft instructions are trusted.'
+          : 'Minimum expense floor, estate, and benefit timing constraints remain context inputs.'
+      },
+      {
+        id: 'outputBoundary',
+        label: 'Output boundary',
+        status: 'blocked',
+        detail: 'This adapter does not produce account order, annual account instructions, tax-bracket instructions, saved sequencing output, or CSV sequencing output.'
+      }
+    ],
+    summary:
+      status === 'readyForDraftPlanning'
+        ? 'Annual sequencing inputs are available for a later experimental modelled plan draft.'
+        : 'Annual sequencing inputs need more review before a modelled plan draft can be produced.',
+    boundary:
+      'This runtime input adapter gathers annual context only. It does not produce account order, annual account instructions, tax-bracket instructions, saved output, CSV output, or report output.',
+    nextStep: 'Plan an experimental account-order draft for synthetic tester scenarios only.'
   };
 }
 
@@ -4978,6 +5121,13 @@ export function runBoundedOptimizer(
   const capacityReportReadiness = selectOptimizerCapacityReportReadiness(capacityObjective);
   const capacityExportGuard = selectOptimizerCapacityExportGuard();
   const annualSequencingPrepContract = selectOptimizerAnnualSequencingPrepContract(capacityObjective);
+  const annualSequencingInputAdapter = selectOptimizerAnnualSequencingInputAdapter({
+    sourceCandidateId: suggestedRow?.id ?? null,
+    sourceCandidateLabel: suggestedRow?.label ?? suggestedLabel,
+    summary: suggestedRow ? summaryById[suggestedRow.id] : null,
+    capacityObjective,
+    prepContract: annualSequencingPrepContract
+  });
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -5000,6 +5150,7 @@ export function runBoundedOptimizer(
     capacityReportReadiness,
     capacityExportGuard,
     annualSequencingPrepContract,
+    annualSequencingInputAdapter,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

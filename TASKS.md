@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1968-S1987: Annual Account Sequencing Prep Contract
+## Latest Package — S1988-S2007: Annual Sequencing Runtime Input Adapter
+
+**Status:** Complete 2026-06-08.
+
+Goal: gather runtime-only annual sequencing inputs for later tester-only modelled plan drafts. The bounded optimizer now emits an annual sequencing input adapter with selected-candidate context, year range, available account balance fields, available tax fields, and constraint hooks while still blocking account order, annual account instructions, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output, and production UI.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, account-order output, annual account-level withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or final advice-like copy.
+
+Package doc: [`docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md`](docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md).
+
+### S1988-S2007 Completed Path
+
+- **S1988-S1992 — Adapter shape batch.** Added annual sequencing input adapter types, selector, selected-candidate context, year range, account balance fields, and tax fields.
+- **S1993-S1997 — Constraint hook batch.** Added capacity objective, minimum floor, estate, survivor review, and benefit timing comparison hooks as context only.
+- **S1998-S2002 — Save and example boundary batch.** Added export guard, save stripping, bundled-example, and clean-example runtime-only coverage.
+- **S2003-S2007 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S1988-S2007 Definition Of Done
+
+- Annual sequencing input adapter is available in runtime bounded optimizer output.
+- Adapter identifies selected modelled candidate and annual row range.
+- Adapter identifies available account balance and tax context fields.
+- Adapter carries capacity, estate, survivor, floor, and benefit timing context only.
+- Account-order output remains blocked.
+- Annual account instructions remain blocked.
+- Saved sequencing output and CSV sequencing output remain blocked.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S1968-S1987: Annual Account Sequencing Prep Contract
 
 **Status:** Complete 2026-06-08.
 
