@@ -177,6 +177,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(['draftReady', 'needsInputs', 'blocked']).toContain(item.optimizer.experimentalAnnualInstructionDraft.status);
       expect(item.optimizer.experimentalAnnualInstructionDraft.audience).toBe('syntheticTesterOnly');
       expect(item.optimizer.experimentalAnnualInstructionDraft.boundary).toContain('runtime-only experimental draft rows');
+      expect(item.optimizer.experimentalAnnualInstructionDraft.taxContextRows.find((row) => row.id === 'boundary')).toMatchObject({ status: 'blocked' });
+      expect(JSON.stringify(item.optimizer.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
@@ -263,6 +265,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.annualSequencingInputAdapter.nextStep).toContain('experimental account-order draft');
       expect(optimizer.experimentalAccountOrderDraft.blockedOutputs).toContain('savedAccountOrder');
       expect(optimizer.experimentalAnnualInstructionDraft.blockedOutputs).toContain('savedInstructionOutput');
+      expect(optimizer.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toContain('effectiveRate');
       for (const key of CAPACITY_RUNTIME_KEYS) {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }

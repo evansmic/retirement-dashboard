@@ -548,9 +548,28 @@ describe('bounded optimizer runner', () => {
       year: 2032,
       account: 'registered',
       amount: 26000,
+      taxContext: {
+        totalTaxYear: Math.round(80000 / 3),
+        taxableIncome: 90000,
+        afterTaxSpending: 85000,
+        effectiveTaxRatePct: 29.6,
+        oasRecoveryStatus: 'none'
+      },
       status: 'experimentalDraft'
     });
+    expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
+      'taxRange',
+      'oasRecovery',
+      'afterTaxSpending',
+      'effectiveRate',
+      'boundary'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.taxContextRows.find((row) => row.id === 'boundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('without creating tax-bracket instructions')
+    });
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
+    expect(JSON.stringify(summary.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

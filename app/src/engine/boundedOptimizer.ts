@@ -326,9 +326,19 @@ export type OptimizerExperimentalAnnualInstructionDraftRow = {
     totalTaxYear: number;
     taxableIncome: number;
     oasRecovery: number;
+    afterTaxSpending: number;
+    effectiveTaxRatePct: number | null;
+    oasRecoveryStatus: 'none' | 'present';
   };
   status: 'experimentalDraft';
   rationale: string;
+};
+
+export type OptimizerExperimentalDraftTaxContextRow = {
+  id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
+  label: string;
+  status: 'context' | 'watch' | 'blocked';
+  detail: string;
 };
 
 export type OptimizerExperimentalAnnualInstructionDraft = {
@@ -338,6 +348,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   sourceCandidateLabel: string;
   yearCount: number;
   rows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
@@ -3214,6 +3225,62 @@ function rowDraftWithdrawals(row: Record<string, unknown>): Array<{ account: Opt
   return draftRows.filter((item) => item.amount > 1);
 }
 
+function effectiveTaxRatePct(row: Record<string, unknown>): number | null {
+  const taxableIncome = n(row.taxableIncome);
+  if (taxableIncome <= 0) return null;
+  return Math.round((n(row.totalTaxYear) / taxableIncome) * 1000) / 10;
+}
+
+function buildExperimentalDraftTaxContextRows(
+  annualRows: Array<Record<string, unknown>>,
+  draftRows: OptimizerExperimentalAnnualInstructionDraftRow[]
+): OptimizerExperimentalDraftTaxContextRow[] {
+  const taxes = annualRows.map((row) => n(row.totalTaxYear)).filter((value) => value > 0);
+  const afterTax = annualRows.map((row) => n(row.totalAftaxYear)).filter((value) => value > 0);
+  const effectiveRates = annualRows.map(effectiveTaxRatePct).filter((value): value is number => value !== null);
+  const oasRecoveryYears = annualRows.filter((row) => n(row.totalOasClawY) > 1).map((row) => n(row.year));
+  return [
+    {
+      id: 'taxRange',
+      label: 'Tax range',
+      status: 'context',
+      detail: taxes.length
+        ? `Modelled annual tax in the draft window ranges from $${Math.min(...taxes).toLocaleString()} to $${Math.max(...taxes).toLocaleString()}.`
+        : 'Modelled annual tax is not available in the draft window.'
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery',
+      status: oasRecoveryYears.length ? 'watch' : 'context',
+      detail: oasRecoveryYears.length
+        ? `OAS recovery appears in ${oasRecoveryYears.length} draft-window year${oasRecoveryYears.length === 1 ? '' : 's'}; review those years as context.`
+        : 'No OAS recovery appears in the draft window.'
+    },
+    {
+      id: 'afterTaxSpending',
+      label: 'After-tax spending',
+      status: 'context',
+      detail: afterTax.length
+        ? `Modelled after-tax spending in the draft window ranges from $${Math.min(...afterTax).toLocaleString()} to $${Math.max(...afterTax).toLocaleString()}.`
+        : 'Modelled after-tax spending is not available in the draft window.'
+    },
+    {
+      id: 'effectiveRate',
+      label: 'Effective tax rate',
+      status: 'context',
+      detail: effectiveRates.length
+        ? `Approximate effective tax rates in the draft window range from ${Math.min(...effectiveRates).toFixed(1)}% to ${Math.max(...effectiveRates).toFixed(1)}%.`
+        : 'Effective tax rate context is unavailable because taxable income is missing.'
+    },
+    {
+      id: 'boundary',
+      label: 'Tax boundary',
+      status: 'blocked',
+      detail: `Tax context explains ${draftRows.length} experimental draft row${draftRows.length === 1 ? '' : 's'} without creating tax-bracket instructions.`
+    }
+  ];
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3237,10 +3304,13 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
       taxContext: {
         totalTaxYear: Math.round(n(annualRow.totalTaxYear)),
         taxableIncome: Math.round(n(annualRow.taxableIncome)),
-        oasRecovery: Math.round(n(annualRow.totalOasClawY))
+        oasRecovery: Math.round(n(annualRow.totalOasClawY)),
+        afterTaxSpending: Math.round(n(annualRow.totalAftaxYear)),
+        effectiveTaxRatePct: effectiveTaxRatePct(annualRow as Record<string, unknown>),
+        oasRecoveryStatus: n(annualRow.totalOasClawY) > 1 ? ('present' as const) : ('none' as const)
       },
       status: 'experimentalDraft' as const,
-      rationale: 'Draft row mirrors the selected modelled candidate annual withdrawal field for synthetic tester review.'
+      rationale: 'Draft row mirrors the selected modelled candidate annual withdrawal field and shows tax context for synthetic tester review.'
     }));
   });
   const status: OptimizerExperimentalAnnualInstructionDraft['status'] =
@@ -3253,10 +3323,11 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     sourceCandidateLabel: adapter.sourceCandidateLabel,
     yearCount: annualRows.length,
     rows,
+    taxContextRows: buildExperimentalDraftTaxContextRows(annualRows as Array<Record<string, unknown>>, rows),
     blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
     summary:
       status === 'draftReady'
-        ? 'Experimental annual instruction draft rows are available for synthetic tester review.'
+        ? 'Experimental annual instruction draft rows include compact tax context for synthetic tester review.'
         : 'Experimental annual instruction draft rows need selected-candidate withdrawal rows before tester review.',
     boundary:
       'These rows are runtime-only experimental draft rows for synthetic tester scenarios. They are not saved, exported to CSV, printed in reports, shown in production UI, or framed as tax-bracket instructions.',

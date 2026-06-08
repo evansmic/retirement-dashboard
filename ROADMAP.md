@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2048-S2067 is complete. Experimental annual draft rows now carry clearer runtime tax context: after-tax spending, approximate effective tax rate, OAS recovery status, and draft-level tax context rows. This improves tester confidence in the modelled draft while keeping tax-bracket instructions, saved output, CSV output, report output, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
+
+Current package doc: [`docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md`](docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md).
+
 S2028-S2047 is complete. The bounded optimizer now emits runtime-only experimental annual instruction draft rows for synthetic tester scenarios. Draft rows mirror selected-candidate annual withdrawal fields and include compact tax context, while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md`](docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md).

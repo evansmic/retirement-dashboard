@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2028-S2047: Experimental Annual Instruction Draft Rows
+## Latest Package — S2048-S2067: Experimental Draft Tax Context Hardening
+
+**Status:** Complete 2026-06-08.
+
+Goal: improve runtime-only experimental annual draft rows with clearer tax context for synthetic tester scenarios. Draft rows now include after-tax spending, approximate effective tax rate, OAS recovery status, and draft-level tax context rows while tax-bracket instructions, saved output, CSV output, report output, and production UI remain deferred.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md`](docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md).
+
+### S2048-S2067 Completed Path
+
+- **S2048-S2052 — Row tax context batch.** Added after-tax spending, effective tax rate, OAS recovery status, and clearer draft row rationale.
+- **S2053-S2057 — Draft summary tax context batch.** Added tax range, OAS recovery, after-tax spending, and effective-rate context rows.
+- **S2058-S2062 — Boundary batch.** Added tax boundary row and copy guards against tax-bracket instruction language.
+- **S2063-S2067 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2048-S2067 Definition Of Done
+
+- Experimental annual draft rows include after-tax spending context.
+- Experimental annual draft rows include approximate effective tax rate context.
+- Experimental annual draft rows include OAS recovery status.
+- Draft-level tax context rows explain tax range, OAS recovery, after-tax spending, and effective tax rate.
+- Tax-bracket instructions remain blocked.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S2028-S2047: Experimental Annual Instruction Draft Rows
 
 **Status:** Complete 2026-06-08.
 
