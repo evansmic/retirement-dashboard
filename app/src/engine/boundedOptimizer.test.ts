@@ -568,6 +568,24 @@ describe('bounded optimizer runner', () => {
       status: 'blocked',
       detail: expect.stringContaining('without creating tax-bracket instructions')
     });
+    expect(summary.experimentalAnnualInstructionDraft.confidence).toMatchObject({
+      level: 'higher',
+      blockers: [],
+      summary: expect.stringContaining('synthetic tester review')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.confidence.score).toBeGreaterThanOrEqual(11);
+    expect(summary.experimentalAnnualInstructionDraft.confidence.rows.map((row) => row.id)).toEqual([
+      'draftRows',
+      'taxContext',
+      'accountOrder',
+      'constraintCoverage',
+      'survivorReview',
+      'outputBoundary'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.confidence.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('runtime-only')
+    });
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
     expect(JSON.stringify(summary.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');

@@ -341,6 +341,23 @@ export type OptimizerExperimentalDraftTaxContextRow = {
   detail: string;
 };
 
+export type OptimizerExperimentalDraftConfidenceLevel = 'higher' | 'medium' | 'low' | 'blocked';
+
+export type OptimizerExperimentalDraftConfidenceRow = {
+  id: 'draftRows' | 'taxContext' | 'accountOrder' | 'constraintCoverage' | 'survivorReview' | 'outputBoundary';
+  label: string;
+  status: 'pass' | 'watch' | 'block';
+  detail: string;
+};
+
+export type OptimizerExperimentalDraftConfidence = {
+  level: OptimizerExperimentalDraftConfidenceLevel;
+  score: number;
+  rows: OptimizerExperimentalDraftConfidenceRow[];
+  blockers: string[];
+  summary: string;
+};
+
 export type OptimizerExperimentalAnnualInstructionDraft = {
   status: 'draftReady' | 'needsInputs' | 'blocked';
   audience: 'syntheticTesterOnly';
@@ -349,6 +366,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   yearCount: number;
   rows: OptimizerExperimentalAnnualInstructionDraftRow[];
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
+  confidence: OptimizerExperimentalDraftConfidence;
   blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
@@ -3281,6 +3299,92 @@ function buildExperimentalDraftTaxContextRows(
   ];
 }
 
+function buildExperimentalDraftConfidence({
+  adapter,
+  accountOrderDraft,
+  draftRows,
+  taxContextRows
+}: {
+  adapter: OptimizerAnnualSequencingInputAdapter;
+  accountOrderDraft: OptimizerExperimentalAccountOrderDraft;
+  draftRows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
+}): OptimizerExperimentalDraftConfidence {
+  const rows: OptimizerExperimentalDraftConfidenceRow[] = [
+    {
+      id: 'draftRows',
+      label: 'Draft row coverage',
+      status: draftRows.length >= 3 ? 'pass' : draftRows.length > 0 ? 'watch' : 'block',
+      detail:
+        draftRows.length >= 3
+          ? `${draftRows.length} experimental draft rows are available in the first modelled window.`
+          : draftRows.length > 0
+            ? 'Only a small number of experimental draft rows are available.'
+            : 'No experimental draft rows are available.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context coverage',
+      status: taxContextRows.some((row) => row.id === 'effectiveRate') && taxContextRows.some((row) => row.id === 'afterTaxSpending') ? 'pass' : 'watch',
+      detail: 'Draft includes tax range, effective rate, OAS recovery, and after-tax spending context when annual fields are present.'
+    },
+    {
+      id: 'accountOrder',
+      label: 'Account order source',
+      status: accountOrderDraft.status === 'draftReady' ? 'pass' : accountOrderDraft.status === 'needsInputs' ? 'watch' : 'block',
+      detail:
+        accountOrderDraft.status === 'draftReady'
+          ? 'Account order is tied to the selected modelled candidate and available balance fields.'
+          : 'Account order draft needs more runtime inputs.'
+    },
+    {
+      id: 'constraintCoverage',
+      label: 'Constraint hooks',
+      status: adapter.constraintInputs.includes('minimumExpenseFloor') ? 'pass' : 'block',
+      detail: `Constraint inputs available: ${adapter.constraintInputs.join(', ') || 'none'}.`
+    },
+    {
+      id: 'survivorReview',
+      label: 'Survivor review',
+      status: adapter.constraintInputs.includes('survivorReview') ? 'watch' : 'pass',
+      detail: adapter.constraintInputs.includes('survivorReview')
+        ? 'Survivor-sensitive scenario should be reviewed before relying on draft rows.'
+        : 'No survivor-specific review flag is attached to this draft.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: 'pass',
+      detail: 'Draft remains runtime-only and is not saved, exported, printed, or promoted to production UI.'
+    }
+  ];
+  const blockers = rows.filter((row) => row.status === 'block').map((row) => row.label);
+  const watchCount = rows.filter((row) => row.status === 'watch').length;
+  const score = Math.max(0, rows.reduce((sum, row) => sum + (row.status === 'pass' ? 2 : row.status === 'watch' ? 1 : 0), 0));
+  const level: OptimizerExperimentalDraftConfidenceLevel = blockers.length
+    ? 'blocked'
+    : score >= 11
+      ? 'higher'
+      : watchCount <= 2
+        ? 'medium'
+        : 'low';
+
+  return {
+    level,
+    score,
+    rows,
+    blockers,
+    summary:
+      level === 'higher'
+        ? 'Draft confidence is higher for synthetic tester review, with runtime-only boundaries still in place.'
+        : level === 'medium'
+          ? 'Draft confidence is medium; review watch items before relying on the modelled draft.'
+          : level === 'low'
+            ? 'Draft confidence is low; more runtime evidence is needed before tester review.'
+            : 'Draft confidence is blocked until required runtime evidence is available.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3315,6 +3419,13 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   });
   const status: OptimizerExperimentalAnnualInstructionDraft['status'] =
     accountOrderDraft.status === 'draftReady' && rows.length ? 'draftReady' : accountOrderDraft.status === 'blocked' ? 'blocked' : 'needsInputs';
+  const taxContextRows = buildExperimentalDraftTaxContextRows(annualRows as Array<Record<string, unknown>>, rows);
+  const confidence = buildExperimentalDraftConfidence({
+    adapter,
+    accountOrderDraft,
+    draftRows: rows,
+    taxContextRows
+  });
 
   return {
     status,
@@ -3323,7 +3434,8 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     sourceCandidateLabel: adapter.sourceCandidateLabel,
     yearCount: annualRows.length,
     rows,
-    taxContextRows: buildExperimentalDraftTaxContextRows(annualRows as Array<Record<string, unknown>>, rows),
+    taxContextRows,
+    confidence,
     blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
     summary:
       status === 'draftReady'

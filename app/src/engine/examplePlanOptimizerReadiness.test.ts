@@ -178,6 +178,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.optimizer.experimentalAnnualInstructionDraft.audience).toBe('syntheticTesterOnly');
       expect(item.optimizer.experimentalAnnualInstructionDraft.boundary).toContain('runtime-only experimental draft rows');
       expect(item.optimizer.experimentalAnnualInstructionDraft.taxContextRows.find((row) => row.id === 'boundary')).toMatchObject({ status: 'blocked' });
+      expect(['higher', 'medium', 'low', 'blocked']).toContain(item.optimizer.experimentalAnnualInstructionDraft.confidence.level);
+      expect(item.optimizer.experimentalAnnualInstructionDraft.confidence.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'pass' });
       expect(JSON.stringify(item.optimizer.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
@@ -266,6 +268,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAccountOrderDraft.blockedOutputs).toContain('savedAccountOrder');
       expect(optimizer.experimentalAnnualInstructionDraft.blockedOutputs).toContain('savedInstructionOutput');
       expect(optimizer.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toContain('effectiveRate');
+      expect(optimizer.experimentalAnnualInstructionDraft.confidence.summary).toContain('Draft confidence');
       for (const key of CAPACITY_RUNTIME_KEYS) {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2068-S2087 is complete. Experimental annual draft rows now include runtime confidence scoring with quality rows for draft coverage, tax context, account-order source, constraints, survivor review, and output boundaries. This improves confidence in synthetic tester draft output while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
+
+Current package doc: [`docs/sprint_2068_2087_experimental_draft_confidence_scoring.md`](docs/sprint_2068_2087_experimental_draft_confidence_scoring.md).
+
 S2048-S2067 is complete. Experimental annual draft rows now carry clearer runtime tax context: after-tax spending, approximate effective tax rate, OAS recovery status, and draft-level tax context rows. This improves tester confidence in the modelled draft while keeping tax-bracket instructions, saved output, CSV output, report output, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
 
 Current package doc: [`docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md`](docs/sprint_2048_2067_experimental_draft_tax_context_hardening.md).

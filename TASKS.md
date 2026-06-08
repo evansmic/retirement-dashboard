@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2048-S2067: Experimental Draft Tax Context Hardening
+## Latest Package — S2068-S2087: Experimental Draft Confidence Scoring
+
+**Status:** Complete 2026-06-08.
+
+Goal: add runtime-only confidence scoring to experimental annual draft rows before any UI, CSV, saved output, or report output. The draft now scores row coverage, tax context, account-order source, constraint hooks, survivor review, and output boundaries while collecting blockers and preserving synthetic-tester-only scope.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2068_2087_experimental_draft_confidence_scoring.md`](docs/sprint_2068_2087_experimental_draft_confidence_scoring.md).
+
+### S2068-S2087 Completed Path
+
+- **S2068-S2072 — Confidence shape batch.** Added confidence level, row, and summary types to the experimental annual draft.
+- **S2073-S2077 — Quality signal batch.** Scored draft row coverage, tax context, account-order source, constraint hooks, and survivor review.
+- **S2078-S2082 — Boundary and blocker batch.** Added output-boundary row, blocker collection, score, and level mapping.
+- **S2083-S2087 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2068-S2087 Definition Of Done
+
+- Experimental annual draft includes confidence level.
+- Experimental annual draft includes numeric confidence score.
+- Confidence rows cover draft rows, tax context, account order, constraints, survivor review, and output boundary.
+- Blockers are collected when required evidence is missing.
+- Confidence remains runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S2048-S2067: Experimental Draft Tax Context Hardening
 
 **Status:** Complete 2026-06-08.
 
