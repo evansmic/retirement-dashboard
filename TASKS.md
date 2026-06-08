@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2268-S2287: Runtime Annual Instruction Candidate Shape
+## Latest Package — S2288-S2307: Runtime Annual Candidate Quality Scoring
+
+**Status:** Complete 2026-06-08.
+
+Goal: add runtime-only quality scoring and repair targets to annual instruction candidates before saved sequencing output, CSV sequencing output, report output, or production UI. Annual instruction candidates now include quality levels, scores, quality rows, and repair targets for annual totals, account order, tax context, and output boundaries.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate quality packet, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2288_2307_runtime_annual_candidate_quality_scoring.md`](docs/sprint_2288_2307_runtime_annual_candidate_quality_scoring.md).
+
+### S2288-S2307 Completed Path
+
+- **S2288-S2292 — Quality score batch.** Added candidate quality level, score, and quality rows.
+- **S2293-S2297 — Repair target batch.** Added repair targets for missing annual totals, account-order gaps, partial account order, and limited tax context.
+- **S2298-S2302 — Example coverage batch.** Added focused optimizer and example readiness coverage for candidate quality.
+- **S2303-S2307 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2288-S2307 Definition Of Done
+
+- Annual instruction candidates include runtime quality levels and scores.
+- Candidate quality rows cover annual total, account order, tax context, and output boundary.
+- Candidate repair targets identify account-order gaps, partial account order, limited tax context, and missing annual totals.
+- Quality scoring remains runtime-only repair/comparison context.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft candidate quality is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2268-S2287: Runtime Annual Instruction Candidate Shape
 
 **Status:** Complete 2026-06-08.
 

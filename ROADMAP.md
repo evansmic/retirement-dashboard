@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2288-S2307 is complete. Runtime annual instruction candidates now include quality levels, scores, quality rows, and repair targets for annual totals, account order, tax context, and output boundaries. This supports candidate comparison and repair before saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate quality packet, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2288_2307_runtime_annual_candidate_quality_scoring.md`](docs/sprint_2288_2307_runtime_annual_candidate_quality_scoring.md).
+
 S2268-S2287 is complete. Experimental annual draft output now packages annual account totals into runtime annual instruction candidates with status, display order, review flags, summaries, and runtime-only boundaries. This prepares reviewable per-year candidate shape while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate shape, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md`](docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md).

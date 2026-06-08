@@ -398,6 +398,22 @@ export type OptimizerExperimentalAnnualInstructionCandidate = {
     displayOrder: number;
   }>;
   reviewFlags: Array<'accountOrderGap' | 'partialAccountOrder' | 'limitedTaxContext'>;
+  quality: {
+    level: 'higher' | 'medium' | 'low' | 'blocked';
+    score: number;
+    rows: Array<{
+      id: 'annualTotal' | 'accountOrder' | 'taxContext' | 'outputBoundary';
+      label: string;
+      status: 'pass' | 'watch' | 'block';
+      detail: string;
+    }>;
+    repairTargets: Array<{
+      id: 'accountOrderGap' | 'partialAccountOrder' | 'limitedTaxContext' | 'missingAnnualTotal';
+      label: string;
+      status: 'pass' | 'repair';
+      detail: string;
+    }>;
+  };
   summary: string;
   boundary: string;
 };
@@ -3815,6 +3831,74 @@ function buildExperimentalAnnualInstructionCandidates(
     if (total.taxContext.afterTaxSpending <= 0 && total.taxContext.totalTaxYear <= 0) reviewFlags.push('limitedTaxContext');
     const status: OptimizerExperimentalAnnualInstructionCandidate['status'] =
       total.totalAmount <= 0 ? 'blocked' : reviewFlags.length ? 'reviewFirst' : 'readyForReview';
+    const qualityRows: OptimizerExperimentalAnnualInstructionCandidate['quality']['rows'] = [
+      {
+        id: 'annualTotal',
+        label: 'Annual total',
+        status: total.totalAmount > 0 ? 'pass' : 'block',
+        detail: total.totalAmount > 0 ? 'Annual account total is available for review.' : 'Annual account total is missing.'
+      },
+      {
+        id: 'accountOrder',
+        label: 'Account order',
+        status: total.accountOrder.status === 'contiguous' ? 'pass' : 'watch',
+        detail: total.accountOrder.detail
+      },
+      {
+        id: 'taxContext',
+        label: 'Tax context',
+        status: reviewFlags.includes('limitedTaxContext') ? 'watch' : 'pass',
+        detail: reviewFlags.includes('limitedTaxContext')
+          ? 'Tax context is limited for this annual candidate.'
+          : 'Annual tax and after-tax spending context are available for review.'
+      },
+      {
+        id: 'outputBoundary',
+        label: 'Output boundary',
+        status: 'pass',
+        detail: 'Candidate quality is runtime-only and does not create saved, CSV, report, production UI, or tax-bracket instruction output.'
+      }
+    ];
+    const qualityScore = qualityRows.reduce((sum, row) => sum + (row.status === 'pass' ? 2 : row.status === 'watch' ? 1 : 0), 0);
+    const qualityLevel: OptimizerExperimentalAnnualInstructionCandidate['quality']['level'] = qualityRows.some((row) => row.status === 'block')
+      ? 'blocked'
+      : qualityScore >= 8
+        ? 'higher'
+        : qualityScore >= 6
+          ? 'medium'
+          : 'low';
+    const repairTargets: OptimizerExperimentalAnnualInstructionCandidate['quality']['repairTargets'] = [
+      {
+        id: 'missingAnnualTotal',
+        label: 'Missing annual total',
+        status: total.totalAmount > 0 ? 'pass' : 'repair',
+        detail: total.totalAmount > 0 ? 'Annual total repair is not needed.' : 'Repair annual account total evidence before tester review.'
+      },
+      {
+        id: 'accountOrderGap',
+        label: 'Account order gap',
+        status: reviewFlags.includes('accountOrderGap') ? 'repair' : 'pass',
+        detail: reviewFlags.includes('accountOrderGap')
+          ? 'Review skipped inactive account-order positions before treating this candidate as ready.'
+          : 'No account-order gap repair is needed.'
+      },
+      {
+        id: 'partialAccountOrder',
+        label: 'Partial account order',
+        status: reviewFlags.includes('partialAccountOrder') ? 'repair' : 'pass',
+        detail: reviewFlags.includes('partialAccountOrder')
+          ? 'Repair missing account-order position evidence before tester review.'
+          : 'No partial account-order repair is needed.'
+      },
+      {
+        id: 'limitedTaxContext',
+        label: 'Limited tax context',
+        status: reviewFlags.includes('limitedTaxContext') ? 'repair' : 'pass',
+        detail: reviewFlags.includes('limitedTaxContext')
+          ? 'Improve annual tax and after-tax context before tester review.'
+          : 'No limited tax-context repair is needed.'
+      }
+    ];
 
     return {
       year: total.year,
@@ -3826,6 +3910,12 @@ function buildExperimentalAnnualInstructionCandidates(
         displayOrder: index + 1
       })),
       reviewFlags,
+      quality: {
+        level: qualityLevel,
+        score: qualityScore,
+        rows: qualityRows,
+        repairTargets
+      },
       summary:
         status === 'readyForReview'
           ? `Runtime annual instruction candidate for ${total.year} is ready for synthetic tester review.`

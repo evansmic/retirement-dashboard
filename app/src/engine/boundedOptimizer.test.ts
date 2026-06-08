@@ -770,6 +770,38 @@ describe('bounded optimizer runner', () => {
         }
       ],
       reviewFlags: ['accountOrderGap'],
+      quality: {
+        level: 'medium',
+        score: 7,
+        rows: [
+          {
+            id: 'annualTotal',
+            status: 'pass'
+          },
+          {
+            id: 'accountOrder',
+            status: 'watch'
+          },
+          {
+            id: 'taxContext',
+            status: 'pass'
+          },
+          {
+            id: 'outputBoundary',
+            status: 'pass'
+          }
+        ],
+        repairTargets: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'accountOrderGap',
+            status: 'repair'
+          }),
+          expect.objectContaining({
+            id: 'limitedTaxContext',
+            status: 'pass'
+          })
+        ])
+      },
       boundary: expect.stringContaining('runtime-only review context')
     });
     expect(summary.experimentalAnnualInstructionDraft.annualInstructionCandidates[0].summary).toContain('needs review');
