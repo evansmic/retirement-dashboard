@@ -302,6 +302,11 @@ describe('example-plan optimizer readiness matrix', () => {
     });
     const matrix = selectOptimizerExperimentalDraftExampleMatrix([...bundledExamples, ...cleanExamples]);
 
+    for (const example of cleanExamples) {
+      expect(example.draft.rows.length, `${example.id} clean example draft rows`).toBeGreaterThanOrEqual(3);
+      expect(example.draft.readinessSummary.rowCoverage.modelledYears, `${example.id} clean example modelled years`).toBeGreaterThan(0);
+      expect(example.draft.confidence.level, `${example.id} clean example confidence`).not.toBe('blocked');
+    }
     expect(matrix.exampleCount).toBe(examplePlanCards.length + cleanExamplePlanCards.length);
     expect(matrix.items).toHaveLength(matrix.exampleCount);
     expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(matrix.status);

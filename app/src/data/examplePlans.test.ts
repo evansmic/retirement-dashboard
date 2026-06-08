@@ -106,6 +106,25 @@ describe('React example plans', () => {
     expect(createCleanExampleRuntimePlan('estateHeavyRoom').downsize).toEqual({ year: 2040, netProceeds: 250000 });
   });
 
+  it('adds runtime-only planning seeds to clean examples without changing their clean files', () => {
+    for (const card of cleanExamplePlanCards) {
+      const file = createCleanExamplePlanFile(card.id);
+      const runtime = createCleanExampleRuntimePlan(card.id);
+      const runtimeAccountBalance =
+        (runtime.p1.rrsp || 0) +
+        (runtime.p1.tfsa || 0) +
+        (runtime.p1.nonreg || 0) +
+        (runtime.p2.rrsp || 0) +
+        (runtime.p2.tfsa || 0) +
+        (runtime.p2.nonreg || 0);
+
+      expect(file.plan).not.toHaveProperty('p1');
+      expect(file.plan).not.toHaveProperty('rrsp');
+      expect(runtimeAccountBalance, `${card.id} runtime account balance`).toBeGreaterThan(0);
+      expect(runtime.p1.cpp65_monthly, `${card.id} runtime CPP estimate`).toBeGreaterThan(0);
+    }
+  });
+
   it('keeps fresh clean examples aligned with the approved draft values', () => {
     for (const draft of futurePlanFormatDraft.futureExampleDataDrafts) {
       const payload = createCleanExamplePayload(draft.id);

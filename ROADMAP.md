@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2188-S2207 is complete. Clean synthetic examples now get runtime-only planning seeds after clean reset adaptation, so the experimental optimizer can test annual draft rows against plausible account, CPP/OAS, mortgage, survivor, and estate evidence while clean files remain clean. Saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2188_2207_clean_example_draft_repair.md`](docs/sprint_2188_2207_clean_example_draft_repair.md).
+
 S2168-S2187 is complete. Experimental draft repair implementation now scans a wider ten-year modelled window and adds concrete repair actions to row coverage, blocker, watch-item, tax-context, and confidence repair targets. This improves runtime draft quality while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2168_2187_experimental_draft_repair_implementation.md`](docs/sprint_2168_2187_experimental_draft_repair_implementation.md).

@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2168-S2187: Experimental Draft Repair Implementation
+## Latest Package — S2188-S2207: Clean Example Draft Repair
+
+**Status:** Complete 2026-06-08.
+
+Goal: improve clean-example annual draft readiness without changing clean reset files, saved schema, engine output schema, CSV output, report output, or production UI. Clean synthetic examples now receive runtime-only planning seeds so the experimental optimizer can test annual draft rows against plausible account, benefit, mortgage, estate, and survivor evidence.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2188_2207_clean_example_draft_repair.md`](docs/sprint_2188_2207_clean_example_draft_repair.md).
+
+### S2188-S2207 Completed Path
+
+- **S2188-S2192 — Clean runtime seed batch.** Added runtime-only planning evidence for clean examples while preserving clean file payloads.
+- **S2193-S2197 — Scenario constraint batch.** Added scenario-specific mortgage, survivor, estate, account, and benefit evidence for synthetic clean examples.
+- **S2198-S2202 — Matrix readiness batch.** Added coverage proving clean examples now produce annual draft rows and non-blocked confidence.
+- **S2203-S2207 — Verification and closeout.** Ran focused clean-example tests, matrix tests, optimizer tests, production build, file guards, and closed the package.
+
+### S2188-S2207 Definition Of Done
+
+- Clean example plan files remain clean reset files.
+- Clean example runtime plans include synthetic planning seeds for optimizer testing.
+- Each clean example can produce at least three experimental annual draft rows.
+- Clean example draft confidence is not blocked.
+- Runtime seeds remain synthetic-tester-only and do not create saved sequencing output.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused clean-example tests, optimizer tests, plan-file tests, matrix tests, and production build pass.
+
+## Previous Package — S2168-S2187: Experimental Draft Repair Implementation
 
 **Status:** Complete 2026-06-08.
 

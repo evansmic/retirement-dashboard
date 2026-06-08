@@ -1,6 +1,6 @@
 import { CLEAN_SCHEMA_VERSION, CleanResetPlanPayload, PLAN_FILE_TYPE, PLAN_FILE_VERSION, PlanFileV1, PlanPerson, V2PlanPayload } from '../types/plan';
 import { createBlankPlan } from './defaultPlan';
-import { cleanResetPayloadToV2Plan, extractPlanPayload } from './planFile';
+import { cleanResetPayloadToV2Plan, extractPlanPayload, normalizePlanPayload } from './planFile';
 
 export type ExamplePlanId =
   | 'diy-couple'
@@ -625,8 +625,154 @@ export function createCleanExamplePlanFile(id: CleanExamplePlanId, now = '2026-0
   };
 }
 
+function applyCleanExampleRuntimePlanningSeeds(plan: V2PlanPayload, id: CleanExamplePlanId): V2PlanPayload {
+  const seeded = structuredClone(plan);
+
+  if (id === 'singleMinimumFloor') {
+    seeded.p1 = person({
+      ...seeded.p1,
+      salary: 76000,
+      salaryRefYear: 2026,
+      salaryRaise: 0.025,
+      annualRrspContrib: 9000,
+      annualTfsaContrib: 5000,
+      rrsp: 260000,
+      tfsa: 95000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 5000,
+      nonreg: 35000,
+      nonregAcb: 32000,
+      cpp65Mo: 980,
+      cpp70Mo: 1390,
+      oasMo: OAS_2026_MONTHLY
+    });
+  }
+
+  if (id === 'coupleTightFloor') {
+    seeded.p1 = person({
+      ...seeded.p1,
+      salary: 102000,
+      salaryRefYear: 2026,
+      salaryRaise: 0.025,
+      annualRrspContrib: 11000,
+      annualTfsaContrib: 4000,
+      rrsp: 210000,
+      tfsa: 52000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 4000,
+      nonreg: 15000,
+      nonregAcb: 14000,
+      cpp65Mo: 1050,
+      cpp70Mo: 1490,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 420,
+      cppSurvOver65Mo: 510
+    });
+    seeded.p2 = person({
+      ...seeded.p2,
+      salary: 78000,
+      salaryRefYear: 2026,
+      salaryRaise: 0.025,
+      annualRrspContrib: 8000,
+      annualTfsaContrib: 3000,
+      rrsp: 145000,
+      tfsa: 41000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 3000,
+      cpp65Mo: 840,
+      cpp70Mo: 1190,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 360,
+      cppSurvOver65Mo: 450
+    });
+    seeded.mortgage = { ...seeded.mortgage, balance: 260000, rate: 0.052, monthly: seeded.mortgage?.monthly || 1800 };
+  }
+
+  if (id === 'pensionCoupleSurvivor') {
+    seeded.assumptions = { ...seeded.assumptions, p1DiesInSurvivor: 2037 };
+    seeded.p1 = person({
+      ...seeded.p1,
+      salary: 112000,
+      salaryRefYear: 2026,
+      salaryRaise: 0.02,
+      db_before65: 52000,
+      db_after65: 44000,
+      db_index: 0.02,
+      db_startYear: seeded.p1.retireYear,
+      db_survivor_pct: 0.6,
+      rrsp: 180000,
+      tfsa: 115000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 7000,
+      cpp65Mo: 1120,
+      cpp70Mo: 1590,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 460,
+      cppSurvOver65Mo: 560
+    });
+    seeded.p2 = person({
+      ...seeded.p2,
+      salary: 96000,
+      salaryRefYear: 2026,
+      salaryRaise: 0.02,
+      db_before65: 41000,
+      db_after65: 35000,
+      db_index: 0.02,
+      db_startYear: seeded.p2.retireYear,
+      db_survivor_pct: 0.6,
+      rrsp: 140000,
+      tfsa: 98000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 7000,
+      cpp65Mo: 990,
+      cpp70Mo: 1400,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 410,
+      cppSurvOver65Mo: 500
+    });
+  }
+
+  if (id === 'estateHeavyRoom') {
+    seeded.inheritance = 350000;
+    seeded.p1 = person({
+      ...seeded.p1,
+      salary: 0,
+      salaryRefYear: 2026,
+      rrsp: 420000,
+      tfsa: 125000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 0,
+      nonreg: 360000,
+      nonregAcb: 250000,
+      cpp65Mo: 1160,
+      cpp70Mo: 1640,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 500,
+      cppSurvOver65Mo: 600
+    });
+    seeded.p2 = person({
+      ...seeded.p2,
+      salary: 0,
+      salaryRefYear: 2026,
+      rrsp: 360000,
+      tfsa: 118000,
+      tfsaRoom: 7000,
+      tfsaAnnual: 0,
+      nonreg: 240000,
+      nonregAcb: 175000,
+      cpp65Mo: 1040,
+      cpp70Mo: 1470,
+      oasMo: OAS_2026_MONTHLY,
+      cppSurvUnder65Mo: 430,
+      cppSurvOver65Mo: 520
+    });
+  }
+
+  return normalizePlanPayload(seeded);
+}
+
 export function createCleanExampleRuntimePlan(id: CleanExamplePlanId): V2PlanPayload {
-  return cleanResetPayloadToV2Plan(createCleanExamplePayload(id));
+  return applyCleanExampleRuntimePlanningSeeds(cleanResetPayloadToV2Plan(createCleanExamplePayload(id)), id);
 }
 
 export function createExamplePlan(id: ExamplePlanId): V2PlanPayload {
