@@ -4,7 +4,35 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2148-S2167: Experimental Draft Readiness Repair Targeting
+## Latest Package — S2168-S2187: Experimental Draft Repair Implementation
+
+**Status:** Complete 2026-06-08.
+
+Goal: use repair-target signals to improve experimental draft quality before UI, CSV, saved output, or report output. The draft now scans a wider ten-year modelled window and each matrix repair target includes a concrete runtime repair action.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2168_2187_experimental_draft_repair_implementation.md`](docs/sprint_2168_2187_experimental_draft_repair_implementation.md).
+
+### S2168-S2187 Completed Path
+
+- **S2168-S2172 — Coverage repair batch.** Expanded draft scanning to the first ten modelled years while preserving selected-candidate annual-row derivation.
+- **S2173-S2177 — Repair action batch.** Added repair actions for row coverage, blockers, watch items, tax context, and confidence.
+- **S2178-S2182 — Example coverage batch.** Updated focused selector, bundled-example, and clean-example matrix coverage.
+- **S2183-S2187 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example matrix tests, production build, file guards, and closed the package.
+
+### S2168-S2187 Definition Of Done
+
+- Experimental annual draft scans a wider modelled draft window.
+- Matrix repair targets include concrete repair actions.
+- Row coverage, blocker, watch-item, tax-context, and confidence targets remain visible.
+- Repair implementation remains runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example matrix tests, and production build pass.
+
+## Previous Package — S2148-S2167: Experimental Draft Readiness Repair Targeting
 
 **Status:** Complete 2026-06-08.
 

@@ -311,9 +311,11 @@ describe('example-plan optimizer readiness matrix', () => {
     expect(matrix.repairTargets.map((target) => target.id)).toEqual(['rowCoverage', 'blockers', 'watchItems', 'taxContext', 'confidence']);
     expect(matrix.repairTargets.every((target) => ['pass', 'repair'].includes(target.status))).toBe(true);
     expect(matrix.repairTargets.every((target) => Array.isArray(target.exampleIds))).toBe(true);
+    expect(matrix.repairTargets.every((target) => target.repairAction.length > 0)).toBe(true);
     expect(matrix.boundary).toContain('runtime-only');
     expect(matrix.boundary).not.toContain('CSV export is ready');
-    expect(JSON.stringify(matrix).toLowerCase()).not.toContain('tax-bracket instructions');
+    expect(JSON.stringify(matrix).toLowerCase()).not.toContain('stay under');
+    expect(JSON.stringify(matrix).toLowerCase()).not.toContain('use this bracket');
   });
 
   it('keeps disruptive example-plan suggestions behind the material-repair gate', () => {

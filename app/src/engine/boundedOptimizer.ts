@@ -423,6 +423,7 @@ export type OptimizerExperimentalDraftExampleMatrix = {
     status: 'pass' | 'repair';
     exampleIds: string[];
     detail: string;
+    repairAction: string;
   }>;
   summary: string;
   boundary: string;
@@ -3562,7 +3563,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   accountOrderDraft: OptimizerExperimentalAccountOrderDraft;
   summary: ReturnType<typeof summarizeResult> | null | undefined;
 }): OptimizerExperimentalAnnualInstructionDraft {
-  const annualRows = Array.isArray(summary?.rows) ? summary.rows.slice(0, 5) : [];
+  const annualRows = Array.isArray(summary?.rows) ? summary.rows.slice(0, 10) : [];
   const orderIndex = new Map(accountOrderDraft.order.map((bucket, index) => [bucket, index]));
   const rows = annualRows.flatMap((annualRow) => {
     const withdrawals = rowDraftWithdrawals(annualRow as Record<string, unknown>).sort(
@@ -3667,35 +3668,50 @@ export function selectOptimizerExperimentalDraftExampleMatrix(
       label: 'Draft row coverage',
       status: lowCoverage.length ? 'repair' : 'pass',
       exampleIds: lowCoverage,
-      detail: lowCoverage.length ? 'Some examples have fewer than three draft rows in the first modelled window.' : 'All examples have enough draft-row coverage for matrix scoring.'
+      detail: lowCoverage.length ? 'Some examples have fewer than three draft rows in the draft window.' : 'All examples have enough draft-row coverage for matrix scoring.',
+      repairAction: lowCoverage.length
+        ? 'Inspect selected-candidate annual rows and account balance fields for these examples before widening tester presentation.'
+        : 'No row coverage repair needed.'
     },
     {
       id: 'blockers',
       label: 'Blocked examples',
       status: blockedExamples.length ? 'repair' : 'pass',
       exampleIds: blockedExamples,
-      detail: blockedExamples.length ? 'Some examples are blocked or have blocker evidence to repair.' : 'No examples are blocked in the matrix.'
+      detail: blockedExamples.length ? 'Some examples are blocked or have blocker evidence to repair.' : 'No examples are blocked in the matrix.',
+      repairAction: blockedExamples.length
+        ? 'Repair blocking evidence before treating these examples as tester-ready.'
+        : 'No blocker repair needed.'
     },
     {
       id: 'watchItems',
       label: 'Watch items',
       status: watchExamples.length ? 'repair' : 'pass',
       exampleIds: watchExamples,
-      detail: watchExamples.length ? 'Some examples need review-first handling before tester presentation.' : 'No examples carry watch items.'
+      detail: watchExamples.length ? 'Some examples need review-first handling before tester presentation.' : 'No examples carry watch items.',
+      repairAction: watchExamples.length
+        ? 'Review the watch-item labels for these examples and decide whether better runtime evidence can clear them.'
+        : 'No watch-item repair needed.'
     },
     {
       id: 'taxContext',
       label: 'Tax context repair',
       status: taxContextExamples.length ? 'repair' : 'pass',
       exampleIds: taxContextExamples,
-      detail: taxContextExamples.length ? 'Some examples need clearer tax context before tester review.' : 'Tax context does not appear as a repair theme in the matrix.'
+      detail: taxContextExamples.length ? 'Some examples need clearer tax context before tester review.' : 'Tax context does not appear as a repair theme in the matrix.',
+      repairAction: taxContextExamples.length
+        ? 'Improve annual tax, OAS recovery, and after-tax spending context for these examples without adding tax-bracket instructions.'
+        : 'No tax context repair needed.'
     },
     {
       id: 'confidence',
       label: 'Confidence repair',
       status: lowConfidence.length ? 'repair' : 'pass',
       exampleIds: lowConfidence,
-      detail: lowConfidence.length ? 'Some examples have low or blocked draft confidence.' : 'No examples have low or blocked draft confidence.'
+      detail: lowConfidence.length ? 'Some examples have low or blocked draft confidence.' : 'No examples have low or blocked draft confidence.',
+      repairAction: lowConfidence.length
+        ? 'Improve row coverage, account-order source evidence, or constraint evidence before tester presentation.'
+        : 'No confidence repair needed.'
     }
   ];
 

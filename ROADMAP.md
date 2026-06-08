@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2168-S2187 is complete. Experimental draft repair implementation now scans a wider ten-year modelled window and adds concrete repair actions to row coverage, blocker, watch-item, tax-context, and confidence repair targets. This improves runtime draft quality while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2168_2187_experimental_draft_repair_implementation.md`](docs/sprint_2168_2187_experimental_draft_repair_implementation.md).
+
 S2148-S2167 is complete. Experimental draft example matrix scoring now includes repair targets for low row coverage, blockers, watch items, tax context, and low confidence, with affected example ids preserved for targeted improvement. This keeps the work focused on runtime draft quality while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md`](docs/sprint_2148_2167_experimental_draft_readiness_repair_targeting.md).

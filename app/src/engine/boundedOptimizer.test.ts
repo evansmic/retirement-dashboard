@@ -420,13 +420,18 @@ describe('bounded optimizer runner', () => {
     expect(matrix.repairTargets.map((target) => target.id)).toEqual(['rowCoverage', 'blockers', 'watchItems', 'taxContext', 'confidence']);
     expect(matrix.repairTargets.find((target) => target.id === 'rowCoverage')).toMatchObject({
       status: 'repair',
-      exampleIds: ['review-example']
+      exampleIds: ['review-example'],
+      repairAction: expect.stringContaining('Inspect selected-candidate annual rows')
     });
     expect(matrix.repairTargets.find((target) => target.id === 'watchItems')).toMatchObject({
       status: 'repair',
-      exampleIds: ['review-example']
+      exampleIds: ['review-example'],
+      repairAction: expect.stringContaining('Review the watch-item labels')
     });
-    expect(matrix.repairTargets.find((target) => target.id === 'blockers')).toMatchObject({ status: 'pass' });
+    expect(matrix.repairTargets.find((target) => target.id === 'blockers')).toMatchObject({
+      status: 'pass',
+      repairAction: 'No blocker repair needed.'
+    });
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
   });
