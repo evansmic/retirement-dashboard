@@ -144,6 +144,13 @@ describe('plan file adapters', () => {
       capacityReportReadiness: {
         reportFields: ['monthlyAfterTaxCapacity']
       },
+      capacityExportGuard: {
+        forbiddenSavedKeys: ['capacityObjective']
+      },
+      annualSequencingPrepContract: {
+        status: 'contractOnly',
+        blockedOutputs: ['annualAccountInstructions', 'accountOrder']
+      },
       boundedOptimizer: {
         status: 'ready'
       },
@@ -158,10 +165,14 @@ describe('plan file adapters', () => {
 
     expect(saved.plan).not.toHaveProperty('capacityObjective');
     expect(saved.plan).not.toHaveProperty('capacityReportReadiness');
+    expect(saved.plan).not.toHaveProperty('capacityExportGuard');
+    expect(saved.plan).not.toHaveProperty('annualSequencingPrepContract');
     expect(saved.plan).not.toHaveProperty('boundedOptimizer');
     expect(saved.plan).not.toHaveProperty('optimizerOutput');
     expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
     expect(serialized).not.toContain('monthlyAfterTaxCapacity');
+    expect(serialized).not.toContain('annualSequencingPrepContract');
+    expect(serialized).not.toContain('accountOrder');
     expect(serialized).not.toContain('selectedCandidateId');
     expect(serialized).not.toContain('annualAccountInstructions');
     expect(saved.plan.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);

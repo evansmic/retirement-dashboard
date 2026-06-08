@@ -6,6 +6,7 @@ import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import {
   buildBoundedOptimizerCandidates,
   runBoundedOptimizer,
+  selectOptimizerAnnualSequencingPrepContract,
   selectOptimizerCapacityObjective,
   selectOptimizerCapacityExportGuard,
   selectOptimizerCapacityReportReadiness,
@@ -259,7 +260,15 @@ describe('bounded optimizer runner', () => {
 
     expect(guard).toMatchObject({
       status: 'guarded',
-      forbiddenSavedKeys: ['capacityObjective', 'capacityReportReadiness', 'boundedOptimizer', 'optimizerOutput', 'annualAccountInstructions'],
+      forbiddenSavedKeys: [
+        'capacityObjective',
+        'capacityReportReadiness',
+        'capacityExportGuard',
+        'annualSequencingPrepContract',
+        'boundedOptimizer',
+        'optimizerOutput',
+        'annualAccountInstructions'
+      ],
       boundary: expect.stringContaining('runtime-only')
     });
     expect(guard.rows.find((row) => row.id === 'planFile')).toMatchObject({
@@ -269,6 +278,50 @@ describe('bounded optimizer runner', () => {
     expect(guard.rows.find((row) => row.id === 'reportOutput')).toMatchObject({ status: 'deferred' });
     expect(guard.rows.find((row) => row.id === 'csvOutput')).toMatchObject({ status: 'deferred' });
     expect(guard.rows.find((row) => row.id === 'schemaBoundary')).toMatchObject({ status: 'blocked' });
+  });
+
+  it('defines annual sequencing prep as an input-only runtime contract', () => {
+    const objective = selectOptimizerCapacityObjective({
+      contractReady: true,
+      selectedCandidateId: 'benefitGridCpp70Oas70',
+      selectedCandidateLabel: 'Test CPP/OAS at 70',
+      sustainableAnnualSpend: 78000,
+      annualExpenseFloor: 60000,
+      estateTarget: 250000,
+      projectedEstate: 260000,
+      hasSecondPerson: true,
+      survivorNeedsReview: true,
+      benefitTimingStatus: 'included'
+    });
+    const contract = selectOptimizerAnnualSequencingPrepContract(objective);
+
+    expect(contract).toMatchObject({
+      status: 'contractOnly',
+      inputs: {
+        capacityObjective: 'required',
+        annualResultRows: 'required',
+        accountBalances: 'required',
+        taxContext: 'annualRowsOnly',
+        estateAndSurvivorConstraints: 'required',
+        benefitTimingComparison: 'boundedReviewOnly'
+      },
+      blockedOutputs: [
+        'annualAccountInstructions',
+        'accountOrder',
+        'taxBracketInstructions',
+        'savedSequencingOutput',
+        'csvSequencingOutput'
+      ],
+      boundary: expect.stringContaining('does not implement annual account-level sequencing')
+    });
+    expect(contract.rows.find((row) => row.id === 'capacityObjective')).toMatchObject({ status: 'ready' });
+    expect(contract.rows.find((row) => row.id === 'estateSurvivorConstraints')).toMatchObject({ status: 'deferred' });
+    expect(contract.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('blocks annual account instructions')
+    });
+    expect(JSON.stringify(contract).toLowerCase()).not.toContain('withdraw from this account');
+    expect(JSON.stringify(contract).toLowerCase()).not.toContain('withdraw $');
   });
 
   it('builds a limited candidate set from optimizer contract levers', () => {
@@ -452,7 +505,13 @@ describe('bounded optimizer runner', () => {
       status: 'deferred'
     });
     expect(summary.capacityExportGuard.forbiddenSavedKeys).toContain('capacityObjective');
+    expect(summary.capacityExportGuard.forbiddenSavedKeys).toContain('annualSequencingPrepContract');
     expect(summary.capacityExportGuard.rows.find((row) => row.id === 'planFile')).toMatchObject({ status: 'blocked' });
+    expect(summary.annualSequencingPrepContract).toMatchObject({
+      status: 'contractOnly',
+      blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'accountOrder', 'taxBracketInstructions'])
+    });
+    expect(summary.annualSequencingPrepContract.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'blocked' });
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

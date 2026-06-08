@@ -222,9 +222,48 @@ export type OptimizerCapacityExportGuardRow = {
 export type OptimizerCapacityExportGuard = {
   status: 'guarded';
   rows: OptimizerCapacityExportGuardRow[];
-  forbiddenSavedKeys: Array<'capacityObjective' | 'capacityReportReadiness' | 'boundedOptimizer' | 'optimizerOutput' | 'annualAccountInstructions'>;
+  forbiddenSavedKeys: Array<
+    | 'capacityObjective'
+    | 'capacityReportReadiness'
+    | 'capacityExportGuard'
+    | 'annualSequencingPrepContract'
+    | 'boundedOptimizer'
+    | 'optimizerOutput'
+    | 'annualAccountInstructions'
+  >;
   summary: string;
   boundary: string;
+};
+
+export type OptimizerAnnualSequencingPrepRow = {
+  id:
+    | 'capacityObjective'
+    | 'annualResults'
+    | 'accountBalances'
+    | 'taxContext'
+    | 'estateSurvivorConstraints'
+    | 'benefitTimingComparison'
+    | 'outputBoundary';
+  label: string;
+  status: 'ready' | 'deferred' | 'blocked';
+  detail: string;
+};
+
+export type OptimizerAnnualSequencingPrepContract = {
+  status: 'contractOnly';
+  inputs: {
+    capacityObjective: 'required';
+    annualResultRows: 'required';
+    accountBalances: 'required';
+    taxContext: 'annualRowsOnly';
+    estateAndSurvivorConstraints: 'required';
+    benefitTimingComparison: 'boundedReviewOnly';
+  };
+  blockedOutputs: Array<'annualAccountInstructions' | 'accountOrder' | 'taxBracketInstructions' | 'savedSequencingOutput' | 'csvSequencingOutput'>;
+  rows: OptimizerAnnualSequencingPrepRow[];
+  summary: string;
+  boundary: string;
+  nextStep: string;
 };
 
 export type OptimizerGoalReview = {
@@ -859,6 +898,7 @@ export type BoundedOptimizerSummary = {
   capacityObjective: OptimizerCapacityObjective;
   capacityReportReadiness: OptimizerCapacityReportReadiness;
   capacityExportGuard: OptimizerCapacityExportGuard;
+  annualSequencingPrepContract: OptimizerAnnualSequencingPrepContract;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -2765,7 +2805,15 @@ export function selectOptimizerCapacityReportReadiness(
 export function selectOptimizerCapacityExportGuard(): OptimizerCapacityExportGuard {
   return {
     status: 'guarded',
-    forbiddenSavedKeys: ['capacityObjective', 'capacityReportReadiness', 'boundedOptimizer', 'optimizerOutput', 'annualAccountInstructions'],
+    forbiddenSavedKeys: [
+      'capacityObjective',
+      'capacityReportReadiness',
+      'capacityExportGuard',
+      'annualSequencingPrepContract',
+      'boundedOptimizer',
+      'optimizerOutput',
+      'annualAccountInstructions'
+    ],
     rows: [
       {
         id: 'planFile',
@@ -2801,6 +2849,85 @@ export function selectOptimizerCapacityExportGuard(): OptimizerCapacityExportGua
     summary: 'Capacity objective export guards keep runtime optimizer packets out of saved files and export outputs.',
     boundary:
       'Export guard metadata is runtime-only. It does not write plan files, change report output, change CSV output, or create account-level instructions.'
+  };
+}
+
+export function selectOptimizerAnnualSequencingPrepContract(
+  capacityObjective: OptimizerCapacityObjective
+): OptimizerAnnualSequencingPrepContract {
+  const capacityReady = !['blocked', 'cannotTell'].includes(capacityObjective.status);
+  const survivorReady = capacityObjective.survivorConstraint === 'reviewFirst' ? 'deferred' : 'ready';
+
+  return {
+    status: 'contractOnly',
+    inputs: {
+      capacityObjective: 'required',
+      annualResultRows: 'required',
+      accountBalances: 'required',
+      taxContext: 'annualRowsOnly',
+      estateAndSurvivorConstraints: 'required',
+      benefitTimingComparison: 'boundedReviewOnly'
+    },
+    blockedOutputs: [
+      'annualAccountInstructions',
+      'accountOrder',
+      'taxBracketInstructions',
+      'savedSequencingOutput',
+      'csvSequencingOutput'
+    ],
+    rows: [
+      {
+        id: 'capacityObjective',
+        label: 'Monthly capacity objective',
+        status: capacityReady ? 'ready' : 'blocked',
+        detail: capacityReady
+          ? 'Use the runtime capacity objective as an input to a later sequencing design.'
+          : 'Do not plan annual sequencing until runtime capacity can be calculated.'
+      },
+      {
+        id: 'annualResults',
+        label: 'Annual result rows',
+        status: 'ready',
+        detail: 'Use existing annual result rows for tax, OAS recovery, income, spending, and balance context later.'
+      },
+      {
+        id: 'accountBalances',
+        label: 'Account balance context',
+        status: 'deferred',
+        detail: 'Account-level sequencing still needs a separate runtime adapter before any account-by-account review exists.'
+      },
+      {
+        id: 'taxContext',
+        label: 'Tax context',
+        status: 'deferred',
+        detail: 'Tax context may be read from annual result rows later, but this contract does not create tax-bracket instructions.'
+      },
+      {
+        id: 'estateSurvivorConstraints',
+        label: 'Estate and survivor constraints',
+        status: survivorReady,
+        detail:
+          survivorReady === 'deferred'
+            ? 'Survivor-sensitive plans must keep survivor review visible before any annual sequencing work is planned.'
+            : 'Estate and survivor constraints remain inputs, not account-level instructions.'
+      },
+      {
+        id: 'benefitTimingComparison',
+        label: 'CPP/OAS timing comparison',
+        status: capacityObjective.timingComparison === 'included' ? 'ready' : 'deferred',
+        detail: 'CPP/OAS timing stays a bounded comparison input and is not converted into filing instructions.'
+      },
+      {
+        id: 'outputBoundary',
+        label: 'Output boundary',
+        status: 'blocked',
+        detail: 'This contract blocks annual account instructions, account order, tax-bracket instructions, saved sequencing output, and CSV sequencing output.'
+      }
+    ],
+    summary: 'Annual sequencing prep is limited to a runtime-only input contract for a later implementation decision.',
+    boundary:
+      'This prep contract does not implement annual account-level sequencing, produce account instructions, change saved output, change CSV output, or change report output.',
+    nextStep: 'Plan a separate annual sequencing adapter only after inputs, constraints, and consumer-facing boundaries are reviewed.'
   };
 }
 
@@ -4850,6 +4977,7 @@ export function runBoundedOptimizer(
   });
   const capacityReportReadiness = selectOptimizerCapacityReportReadiness(capacityObjective);
   const capacityExportGuard = selectOptimizerCapacityExportGuard();
+  const annualSequencingPrepContract = selectOptimizerAnnualSequencingPrepContract(capacityObjective);
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -4871,6 +4999,7 @@ export function runBoundedOptimizer(
     capacityObjective,
     capacityReportReadiness,
     capacityExportGuard,
+    annualSequencingPrepContract,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

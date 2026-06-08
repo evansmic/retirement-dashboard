@@ -71,6 +71,7 @@ const CAPACITY_RUNTIME_KEYS = [
   'capacityObjective',
   'capacityReportReadiness',
   'capacityExportGuard',
+  'annualSequencingPrepContract',
   'boundedOptimizer',
   'optimizerOutput',
   'annualAccountInstructions'
@@ -143,11 +144,24 @@ describe('example-plan optimizer readiness matrix', () => {
         expect.arrayContaining(['monthlyAfterTaxCapacity', 'minimumMonthlyExpenseFloor', 'withdrawalSequencingDeferred'])
       );
       expect(item.optimizer.capacityExportGuard.forbiddenSavedKeys).toEqual(
-        expect.arrayContaining(['capacityObjective', 'capacityReportReadiness', 'boundedOptimizer', 'optimizerOutput', 'annualAccountInstructions'])
+        expect.arrayContaining([
+          'capacityObjective',
+          'capacityReportReadiness',
+          'capacityExportGuard',
+          'annualSequencingPrepContract',
+          'boundedOptimizer',
+          'optimizerOutput',
+          'annualAccountInstructions'
+        ])
       );
       expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'planFile')).toMatchObject({ status: 'blocked' });
       expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'reportOutput')).toMatchObject({ status: 'deferred' });
       expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'csvOutput')).toMatchObject({ status: 'deferred' });
+      expect(item.optimizer.annualSequencingPrepContract).toMatchObject({
+        status: 'contractOnly',
+        blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'accountOrder', 'taxBracketInstructions'])
+      });
+      expect(item.optimizer.annualSequencingPrepContract.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({ status: 'blocked' });
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
@@ -184,6 +198,7 @@ describe('example-plan optimizer readiness matrix', () => {
         capacityObjective: optimizer.capacityObjective,
         capacityReportReadiness: optimizer.capacityReportReadiness,
         capacityExportGuard: optimizer.capacityExportGuard,
+        annualSequencingPrepContract: optimizer.annualSequencingPrepContract,
         boundedOptimizer: optimizer,
         optimizerOutput: { selectedCandidateId: optimizer.suggestedCandidateId },
         annualAccountInstructions: [{ year: plan.assumptions.retireYear, account: 'rrsp', amount: 1 }]
@@ -195,6 +210,8 @@ describe('example-plan optimizer readiness matrix', () => {
         expect(saved.plan, `${card.id} saved enriched plan excludes ${key}`).not.toHaveProperty(key);
       }
       expect(serialized, `${card.id} serialized saved plan excludes monthly capacity`).not.toContain('monthlyAfterTaxCapacity');
+      expect(serialized, `${card.id} serialized saved plan excludes sequencing prep`).not.toContain('annualSequencingPrepContract');
+      expect(serialized, `${card.id} serialized saved plan excludes account order`).not.toContain('accountOrder');
       expect(serialized, `${card.id} serialized saved plan excludes selected candidate`).not.toContain('selectedCandidateId');
       expect(serialized, `${card.id} serialized saved plan excludes account instructions`).not.toContain('annualAccountInstructions');
     }
@@ -208,7 +225,8 @@ describe('example-plan optimizer readiness matrix', () => {
         ...plan,
         capacityObjective: optimizer.capacityObjective,
         capacityReportReadiness: optimizer.capacityReportReadiness,
-        capacityExportGuard: optimizer.capacityExportGuard
+        capacityExportGuard: optimizer.capacityExportGuard,
+        annualSequencingPrepContract: optimizer.annualSequencingPrepContract
       });
 
       expect(['covered', 'tight', 'gap', 'cannotTell', 'blocked']).toContain(optimizer.capacityObjective.status);
@@ -216,6 +234,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.capacityObjective.rows.find((row) => row.id === 'withdrawalSequencing')).toMatchObject({ status: 'deferred' });
       expect(optimizer.capacityReportReadiness.nextStep).toContain('Plan report rendering separately');
       expect(optimizer.capacityExportGuard.rows.find((row) => row.id === 'schemaBoundary')).toMatchObject({ status: 'blocked' });
+      expect(optimizer.annualSequencingPrepContract.boundary).toContain('does not implement annual account-level sequencing');
+      expect(optimizer.annualSequencingPrepContract.blockedOutputs).toContain('savedSequencingOutput');
       for (const key of CAPACITY_RUNTIME_KEYS) {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1968-S1987 is complete. The bounded optimizer now emits a runtime-only annual sequencing prep contract with required future inputs and blocked outputs. Account-level instructions, account order, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output changes, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md`](docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md).
+
 S1948-S1967 is complete. Capacity objective expectations are now hardened across bundled examples and fresh clean-example runtime adapters. The matrix proves runtime capacity objective metadata, report readiness, and export guards are present for examples, while accidental runtime-enriched example payloads are stripped before editable save output. This did not change report output, CSV output, saved schema, engine output schema, production UI, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md`](docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md).

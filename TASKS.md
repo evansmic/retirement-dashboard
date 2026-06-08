@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1948-S1967: Capacity Objective Example Matrix Hardening
+## Latest Package — S1968-S1987: Annual Account Sequencing Prep Contract
+
+**Status:** Complete 2026-06-08.
+
+Goal: define the runtime-only input contract for a future annual account-level withdrawal sequencing adapter. The bounded optimizer now emits sequencing-prep metadata that lists required future inputs and blocked outputs while keeping account instructions, account order, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output changes, and production UI out of scope.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, annual account-level withdrawal instructions, account-order output, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md`](docs/sprint_1968_1987_annual_account_sequencing_prep_contract.md).
+
+### S1968-S1987 Completed Path
+
+- **S1968-S1972 — Contract shape batch.** Added annual sequencing prep types, input requirements, blocked outputs, selector, and bounded optimizer summary output.
+- **S1973-S1977 — Guardrail batch.** Blocked account instructions, account order, tax-bracket instructions, saved sequencing output, and CSV sequencing output.
+- **S1978-S1982 — Example matrix batch.** Added bundled and clean-example coverage proving sequencing prep remains runtime-only and unsaved.
+- **S1983-S1987 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S1968-S1987 Definition Of Done
+
+- Annual sequencing prep contract is available in runtime bounded optimizer output.
+- Contract lists future sequencing inputs without producing annual rows.
+- Account instructions remain blocked.
+- Account-order output remains blocked.
+- Tax-bracket instructions remain blocked.
+- Saved sequencing output and CSV sequencing output remain blocked.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S1948-S1967: Capacity Objective Example Matrix Hardening
 
 **Status:** Complete 2026-06-08.
 
