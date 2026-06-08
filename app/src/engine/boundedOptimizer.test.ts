@@ -706,6 +706,12 @@ describe('bounded optimizer runner', () => {
       year: 2032,
       totalAmount: 31000,
       accountCount: 2,
+      accountOrder: {
+        status: 'gapped',
+        activePositions: [1, 4],
+        skippedPositions: [2, 3],
+        detail: expect.stringContaining('skip draft account-order positions')
+      },
       accounts: [
         {
           account: 'registered',
@@ -725,7 +731,7 @@ describe('bounded optimizer runner', () => {
       }
     });
     expect(summary.experimentalAnnualInstructionDraft.instructionReadiness).toMatchObject({
-      status: 'readyForReview',
+      status: 'reviewFirst',
       totalDraftAmount: 93000,
       yearCount: 3,
       blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'savedInstructionOutput', 'csvInstructionOutput', 'taxBracketInstructions', 'productionUi']),
@@ -734,9 +740,14 @@ describe('bounded optimizer runner', () => {
     expect(summary.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toEqual([
       'yearTotals',
       'accountOrderConsistency',
+      'accountOrderGaps',
       'taxContext',
       'outputBoundary'
     ]);
+    expect(summary.experimentalAnnualInstructionDraft.instructionReadiness.rows.find((row) => row.id === 'accountOrderGaps')).toMatchObject({
+      status: 'watch',
+      detail: expect.stringContaining('skip inactive draft account-order positions')
+    });
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

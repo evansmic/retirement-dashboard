@@ -350,6 +350,12 @@ export type OptimizerExperimentalAnnualAccountTotal = {
   year: number;
   totalAmount: number;
   accountCount: number;
+  accountOrder: {
+    status: 'contiguous' | 'gapped' | 'partial';
+    activePositions: number[];
+    skippedPositions: number[];
+    detail: string;
+  };
   accounts: Array<{
     account: OptimizerExperimentalAccountBucket;
     label: string;
@@ -366,7 +372,7 @@ export type OptimizerExperimentalAnnualAccountTotal = {
 export type OptimizerExperimentalAnnualInstructionReadiness = {
   status: 'readyForReview' | 'reviewFirst' | 'blocked';
   rows: Array<{
-    id: 'yearTotals' | 'accountOrderConsistency' | 'taxContext' | 'outputBoundary';
+    id: 'yearTotals' | 'accountOrderConsistency' | 'accountOrderGaps' | 'taxContext' | 'outputBoundary';
     label: string;
     status: 'pass' | 'watch' | 'block';
     detail: string;
@@ -3660,10 +3666,34 @@ function buildExperimentalAnnualAccountTotals(
     .sort(([yearA], [yearB]) => yearA - yearB)
     .map(([year, yearRows]) => {
       const orderedRows = [...yearRows].sort((a, b) => a.grouping.yearAccountIndex - b.grouping.yearAccountIndex);
+      const activePositions = orderedRows
+        .map((row) => row.source.accountOrderPosition)
+        .filter((position): position is number => position !== null)
+        .sort((a, b) => a - b);
+      const highestPosition = activePositions.length ? Math.max(...activePositions) : 0;
+      const skippedPositions = activePositions.length
+        ? Array.from({ length: highestPosition }, (_, index) => index + 1).filter((position) => !activePositions.includes(position))
+        : [];
+      const orderStatus: OptimizerExperimentalAnnualAccountTotal['accountOrder']['status'] = orderedRows.some((row) => row.source.accountOrderPosition === null)
+        ? 'partial'
+        : skippedPositions.length
+          ? 'gapped'
+          : 'contiguous';
       return {
         year,
         totalAmount: orderedRows.reduce((sum, row) => sum + row.amount, 0),
         accountCount: orderedRows.length,
+        accountOrder: {
+          status: orderStatus,
+          activePositions,
+          skippedPositions,
+          detail:
+            orderStatus === 'contiguous'
+              ? 'Active annual accounts are contiguous in the draft account order.'
+              : orderStatus === 'gapped'
+                ? `Active annual accounts skip draft account-order position${skippedPositions.length === 1 ? '' : 's'} ${skippedPositions.join(', ')} because those account buckets have no modelled withdrawal in this year.`
+                : 'Some active annual accounts do not have draft account-order position evidence.'
+        },
         accounts: orderedRows.map((row) => ({
           account: row.account,
           label: row.label,
@@ -3687,6 +3717,8 @@ function buildExperimentalAnnualInstructionReadiness({
   annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
 }): OptimizerExperimentalAnnualInstructionReadiness {
   const missingOrderRows = rows.filter((row) => row.source.accountOrderPosition === null);
+  const gappedAnnualTotals = annualAccountTotals.filter((total) => total.accountOrder.status === 'gapped');
+  const partialAnnualTotals = annualAccountTotals.filter((total) => total.accountOrder.status === 'partial');
   const yearsWithoutTotals = annualAccountTotals.filter((total) => total.totalAmount <= 0).map((total) => total.year);
   const yearsWithoutTaxContext = annualAccountTotals
     .filter((total) => total.taxContext.afterTaxSpending <= 0 && total.taxContext.totalTaxYear <= 0)
@@ -3707,6 +3739,16 @@ function buildExperimentalAnnualInstructionReadiness({
       detail: missingOrderRows.length
         ? `${missingOrderRows.length} draft row${missingOrderRows.length === 1 ? '' : 's'} do not have an account-order position.`
         : 'Draft rows retain account-order position evidence where annual account totals are available.'
+    },
+    {
+      id: 'accountOrderGaps',
+      label: 'Account order gaps',
+      status: partialAnnualTotals.length ? 'watch' : gappedAnnualTotals.length ? 'watch' : annualAccountTotals.length ? 'pass' : 'block',
+      detail: partialAnnualTotals.length
+        ? `${partialAnnualTotals.length} annual total${partialAnnualTotals.length === 1 ? '' : 's'} have partial account-order evidence.`
+        : gappedAnnualTotals.length
+          ? `${gappedAnnualTotals.length} annual total${gappedAnnualTotals.length === 1 ? '' : 's'} skip inactive draft account-order positions.`
+          : 'Active annual accounts are contiguous within the draft account order for reviewed years.'
     },
     {
       id: 'taxContext',
