@@ -193,6 +193,21 @@
         background: var(--soft);
       }
 
+      .callout {
+        border: 1px solid rgba(37, 95, 133, 0.28);
+        border-radius: 8px;
+        background: #e7f0f6;
+        color: #214b64;
+        padding: 14px;
+        margin-top: 14px;
+      }
+
+      .callout b {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+
       .table {
         width: 100%;
         border-collapse: collapse;
@@ -407,10 +422,45 @@
         <h2 id="review-title">Review notes</h2>
         <ul class="review">
           <li>Minimum floor is optional context. The main projection is based on income, assets, debts, taxes, and timing assumptions.</li>
-          <li>Review tax-sensitive years where registered withdrawals increase taxable income.</li>
-          <li>Confirm survivor assumptions for the household plan.</li>
+          <li>Review tax-sensitive years where registered withdrawals increase taxable income. In a live report this links to the tax detail section.</li>
+          <li>Confirm survivor assumptions for the household plan. In a live report this links to household assumptions.</li>
           <li>Estimated estate value at age 95 is $430,000 in this mockup example.</li>
         </ul>
+      </section>
+
+      <section aria-labelledby="detail-title">
+        <h2 id="detail-title">Detail available in the full report</h2>
+        <div class="rows">
+          <div class="row">
+            <div>
+              <b>Annual income and spending table</b>
+              <span>Income sources, withdrawals, tax, debt and mortgage servicing, spending, and ending portfolio by year.</span>
+            </div>
+            <strong>Export</strong>
+          </div>
+          <div class="row">
+            <div>
+              <b>Funding flow by year</b>
+              <span>Visual source-to-tax-to-spending view for each selected year.</span>
+            </div>
+            <strong>View</strong>
+          </div>
+          <div class="row">
+            <div>
+              <b>Spouse and benefit detail</b>
+              <span>CPP, OAS, pension, and survivor assumptions for each spouse where applicable.</span>
+            </div>
+            <strong>Review</strong>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="assumptions-title">
+        <h2 id="assumptions-title">Assumptions and limits</h2>
+        <div class="callout">
+          <b>Estimate, not a guarantee</b>
+          This report is based on the information entered and conservative planning assumptions for tax, inflation, returns, benefit timing, and withdrawals. Future rules, markets, health, household needs, and timing may differ from the assumptions shown here.
+        </div>
       </section>
 
       <footer>

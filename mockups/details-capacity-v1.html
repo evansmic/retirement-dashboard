@@ -258,13 +258,54 @@
         color: #664b0b;
       }
 
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0;
+      }
+
+      .legend div {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfcfd;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .legend b {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 3px;
+      }
+
+      .flow-link {
+        display: block;
+        margin-top: 12px;
+        border: 1px solid rgba(37, 95, 133, 0.35);
+        border-radius: 8px;
+        background: var(--blue-soft);
+        color: #214b64;
+        padding: 13px;
+        text-decoration: none;
+        font-weight: 750;
+      }
+
+      .flow-link span {
+        display: block;
+        margin-top: 3px;
+        font-weight: 400;
+      }
+
       @media (max-width: 860px) {
         .shell {
           padding: 18px;
         }
 
         header,
-        .grid {
+        .grid,
+        .legend {
           grid-template-columns: 1fr;
           display: grid;
         }
@@ -286,7 +327,7 @@
       <header>
         <div>
           <h1>Details</h1>
-          <p>Supporting checks behind the monthly capacity estimate.</p>
+          <p>Supporting checks behind the monthly capacity estimate. Annual rows use annual dollars; source cards show monthly equivalents.</p>
         </div>
         <aside class="summary" aria-label="Current capacity">
           <span>Estimated capacity</span>
@@ -352,10 +393,26 @@
             </tbody>
           </table>
 
+          <div class="legend" aria-label="Status legend">
+            <div>
+              <b>Funded</b>
+              Projected total income covers tax and the after-tax amount for that year.
+            </div>
+            <div>
+              <b>Tax review</b>
+              The year is still funded, but registered withdrawals or benefit recovery make taxes worth reviewing.
+            </div>
+          </div>
+
+          <a class="flow-link" href="./funding-flow-v1.html">
+            Open funding flow for 2035
+            <span>See sources, tax, after-tax spending, and ending portfolio in one visual view.</span>
+          </a>
+
           <details open>
             <summary>Cash-flow reconciliation</summary>
             <p>
-              Income, broad withdrawals, tax, and one-time flows reconcile to the modelled after-tax spending shown for each year.
+              Income, broad withdrawals, tax, and one-time flows reconcile to the modelled after-tax amount shown for each year.
             </p>
           </details>
           <details>
@@ -413,8 +470,8 @@
           <section class="panel" aria-labelledby="review-title">
             <h2 id="review-title">Review notes</h2>
             <ul class="review-list">
-              <li class="watch">Registered withdrawals create tax-sensitive years around required minimum withdrawals.</li>
-              <li>Survivor income and tax filing status can change the estimate for couples.</li>
+              <li class="watch">Registered withdrawals create tax-sensitive years around required minimum withdrawals. Review the Taxes section in a live version.</li>
+              <li>Survivor income and tax filing status can change the estimate for couples. Review household assumptions in a live version.</li>
               <li>Estate value at age 95 is estimated at $430,000 in this example, before any final expenses or estate costs.</li>
             </ul>
           </section>
