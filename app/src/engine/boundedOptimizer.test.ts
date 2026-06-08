@@ -7,6 +7,7 @@ import {
   buildBoundedOptimizerCandidates,
   runBoundedOptimizer,
   selectOptimizerCapacityObjective,
+  selectOptimizerCapacityExportGuard,
   selectOptimizerCapacityReportReadiness,
   selectOptimizerCapacityStatus,
   selectOptimizerMinimumAnnualExpenseFloor,
@@ -253,6 +254,23 @@ describe('bounded optimizer runner', () => {
     expect(readiness.nextStep).toContain('Plan report rendering separately');
   });
 
+  it('keeps capacity objective export guard focused on blocking saved optimizer packets', () => {
+    const guard = selectOptimizerCapacityExportGuard();
+
+    expect(guard).toMatchObject({
+      status: 'guarded',
+      forbiddenSavedKeys: ['capacityObjective', 'capacityReportReadiness', 'boundedOptimizer', 'optimizerOutput', 'annualAccountInstructions'],
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(guard.rows.find((row) => row.id === 'planFile')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('must not be written into saved plan files')
+    });
+    expect(guard.rows.find((row) => row.id === 'reportOutput')).toMatchObject({ status: 'deferred' });
+    expect(guard.rows.find((row) => row.id === 'csvOutput')).toMatchObject({ status: 'deferred' });
+    expect(guard.rows.find((row) => row.id === 'schemaBoundary')).toMatchObject({ status: 'blocked' });
+  });
+
   it('builds a limited candidate set from optimizer contract levers', () => {
     const candidates = buildBoundedOptimizerCandidates(readyPlan());
 
@@ -433,6 +451,8 @@ describe('bounded optimizer runner', () => {
     expect(summary.capacityReportReadiness.rows.find((row) => row.id === 'accountInstructions')).toMatchObject({
       status: 'deferred'
     });
+    expect(summary.capacityExportGuard.forbiddenSavedKeys).toContain('capacityObjective');
+    expect(summary.capacityExportGuard.rows.find((row) => row.id === 'planFile')).toMatchObject({ status: 'blocked' });
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

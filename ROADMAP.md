@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1928-S1947 is complete. Capacity objective export guardrails are now runtime-visible, with forbidden saved keys and plan-file adapter coverage proving capacity objective packets, report readiness, optimizer output, and annual account instructions stay out of editable saved plan files. This did not change report output, CSV output, saved schema, engine output schema, or `.plan.json` generation.
+
+Current package doc: [`docs/sprint_1928_1947_capacity_objective_export_guardrails.md`](docs/sprint_1928_1947_capacity_objective_export_guardrails.md).
+
 S1908-S1927 is complete. Capacity objective report readiness is now available as runtime-only metadata in the bounded optimizer summary, identifying later report fields while explicitly deferring tax context, saved output, account instructions, and annual sequencing. This did not change printable report output, production UI, saved schema, engine output schema, saved optimizer output, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1908_1927_capacity_objective_report_readiness.md`](docs/sprint_1908_1927_capacity_objective_report_readiness.md).

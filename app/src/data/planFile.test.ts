@@ -133,6 +133,40 @@ describe('plan file adapters', () => {
     }
   });
 
+  it('strips runtime capacity objective packets from editable plan files', () => {
+    const runtimePlan = {
+      ...larryPlan,
+      capacityObjective: {
+        monthlyAfterTaxCapacity: 6500,
+        minimumMonthlyExpenseFloor: 5000,
+        optionalMonthlyRoom: 1500
+      },
+      capacityReportReadiness: {
+        reportFields: ['monthlyAfterTaxCapacity']
+      },
+      boundedOptimizer: {
+        status: 'ready'
+      },
+      optimizerOutput: {
+        selectedCandidateId: 'baseline'
+      },
+      annualAccountInstructions: [{ year: 2030, account: 'rrsp', amount: 10000 }]
+    };
+
+    const saved = createPlanFile(runtimePlan, '2026-05-03T00:00:00.000Z');
+    const serialized = JSON.stringify(saved);
+
+    expect(saved.plan).not.toHaveProperty('capacityObjective');
+    expect(saved.plan).not.toHaveProperty('capacityReportReadiness');
+    expect(saved.plan).not.toHaveProperty('boundedOptimizer');
+    expect(saved.plan).not.toHaveProperty('optimizerOutput');
+    expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
+    expect(serialized).not.toContain('monthlyAfterTaxCapacity');
+    expect(serialized).not.toContain('selectedCandidateId');
+    expect(serialized).not.toContain('annualAccountInstructions');
+    expect(saved.plan.schemaVersion).toBe(CLEAN_SCHEMA_VERSION);
+  });
+
   it('accepts wrapped clean reset plan files and maps the floor into the current runtime plan shape', () => {
     const result = validatePlanFile({
       fileType: PLAN_FILE_TYPE,

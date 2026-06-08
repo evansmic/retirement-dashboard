@@ -4,7 +4,35 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1908-S1927: Capacity Objective Report Readiness
+## Latest Package — S1928-S1947: Capacity Objective Export Guardrails
+
+**Status:** Complete 2026-06-08.
+
+Goal: add export/save boundary checks around capacity objective runtime packets. The bounded optimizer now emits runtime export-guard metadata, and the plan-file adapter test proves runtime capacity packets are stripped from editable saved plan files.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1928_1947_capacity_objective_export_guardrails.md`](docs/sprint_1928_1947_capacity_objective_export_guardrails.md).
+
+### S1928-S1947 Completed Path
+
+- **S1928-S1932 — Export guard shape batch.** Added runtime export guard type, rows, forbidden saved keys, selector, and summary output.
+- **S1933-S1937 — Save boundary batch.** Added tests proving capacity objective, report readiness, bounded optimizer output, optimizer output, and annual account instructions do not save.
+- **S1938-S1942 — Export boundary batch.** Kept printable report output, CSV output, saved schema, and engine output schema unchanged.
+- **S1943-S1947 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, production build, file guards, and closed the package.
+
+### S1928-S1947 Definition Of Done
+
+- Capacity export guard is available in runtime bounded optimizer output.
+- Runtime capacity packets stay out of editable plan files.
+- Report output remains unchanged.
+- CSV output remains unchanged.
+- Annual sequencing remains deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, and production build pass.
+
+## Previous Package — S1908-S1927: Capacity Objective Report Readiness
 
 **Status:** Complete 2026-06-08.
 
