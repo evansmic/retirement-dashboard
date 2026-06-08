@@ -155,6 +155,14 @@ describe('plan file adapters', () => {
         status: 'readyForDraftPlanning',
         availableAccountBalanceFields: ['bal_rrsp', 'bal_total']
       },
+      experimentalAccountOrderDraft: {
+        status: 'draftReady',
+        order: ['registered', 'tfsa']
+      },
+      experimentalAnnualInstructionDraft: {
+        status: 'draftReady',
+        rows: [{ year: 2030, account: 'registered', amount: 10000 }]
+      },
       boundedOptimizer: {
         status: 'ready'
       },
@@ -172,12 +180,16 @@ describe('plan file adapters', () => {
     expect(saved.plan).not.toHaveProperty('capacityExportGuard');
     expect(saved.plan).not.toHaveProperty('annualSequencingPrepContract');
     expect(saved.plan).not.toHaveProperty('annualSequencingInputAdapter');
+    expect(saved.plan).not.toHaveProperty('experimentalAccountOrderDraft');
+    expect(saved.plan).not.toHaveProperty('experimentalAnnualInstructionDraft');
     expect(saved.plan).not.toHaveProperty('boundedOptimizer');
     expect(saved.plan).not.toHaveProperty('optimizerOutput');
     expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
     expect(serialized).not.toContain('monthlyAfterTaxCapacity');
     expect(serialized).not.toContain('annualSequencingPrepContract');
     expect(serialized).not.toContain('annualSequencingInputAdapter');
+    expect(serialized).not.toContain('experimentalAccountOrderDraft');
+    expect(serialized).not.toContain('experimentalAnnualInstructionDraft');
     expect(serialized).not.toContain('accountOrder');
     expect(serialized).not.toContain('selectedCandidateId');
     expect(serialized).not.toContain('annualAccountInstructions');

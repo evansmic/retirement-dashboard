@@ -228,6 +228,8 @@ export type OptimizerCapacityExportGuard = {
     | 'capacityExportGuard'
     | 'annualSequencingPrepContract'
     | 'annualSequencingInputAdapter'
+    | 'experimentalAccountOrderDraft'
+    | 'experimentalAnnualInstructionDraft'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -287,6 +289,56 @@ export type OptimizerAnnualSequencingInputAdapter = {
   availableTaxFields: Array<'totalTaxYear' | 'taxableIncome' | 'totalOasClawY' | 'totalAftaxYear'>;
   constraintInputs: Array<'minimumExpenseFloor' | 'estateTarget' | 'survivorReview' | 'benefitTimingComparison'>;
   rows: OptimizerAnnualSequencingInputAdapterRow[];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerExperimentalAccountBucket = 'registered' | 'lif' | 'nonRegistered' | 'tfsa' | 'cash';
+
+export type OptimizerExperimentalAccountOrderDraftRow = {
+  bucket: OptimizerExperimentalAccountBucket;
+  label: string;
+  position: number;
+  status: 'included' | 'contextOnly' | 'unavailable';
+  rationale: string;
+};
+
+export type OptimizerExperimentalAccountOrderDraft = {
+  status: 'draftReady' | 'needsInputs' | 'blocked';
+  audience: 'syntheticTesterOnly';
+  sourceCandidateId: BoundedOptimizerCandidateId | null;
+  sourceCandidateLabel: string;
+  order: OptimizerExperimentalAccountBucket[];
+  rows: OptimizerExperimentalAccountOrderDraftRow[];
+  blockedOutputs: Array<'annualDollarInstructions' | 'savedAccountOrder' | 'csvAccountOrder' | 'reportAccountOrder' | 'taxBracketInstructions'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerExperimentalAnnualInstructionDraftRow = {
+  year: number;
+  account: OptimizerExperimentalAccountBucket;
+  label: string;
+  amount: number;
+  taxContext: {
+    totalTaxYear: number;
+    taxableIncome: number;
+    oasRecovery: number;
+  };
+  status: 'experimentalDraft';
+  rationale: string;
+};
+
+export type OptimizerExperimentalAnnualInstructionDraft = {
+  status: 'draftReady' | 'needsInputs' | 'blocked';
+  audience: 'syntheticTesterOnly';
+  sourceCandidateId: BoundedOptimizerCandidateId | null;
+  sourceCandidateLabel: string;
+  yearCount: number;
+  rows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -926,6 +978,8 @@ export type BoundedOptimizerSummary = {
   capacityExportGuard: OptimizerCapacityExportGuard;
   annualSequencingPrepContract: OptimizerAnnualSequencingPrepContract;
   annualSequencingInputAdapter: OptimizerAnnualSequencingInputAdapter;
+  experimentalAccountOrderDraft: OptimizerExperimentalAccountOrderDraft;
+  experimentalAnnualInstructionDraft: OptimizerExperimentalAnnualInstructionDraft;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -2838,6 +2892,8 @@ export function selectOptimizerCapacityExportGuard(): OptimizerCapacityExportGua
       'capacityExportGuard',
       'annualSequencingPrepContract',
       'annualSequencingInputAdapter',
+      'experimentalAccountOrderDraft',
+      'experimentalAnnualInstructionDraft',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions'
@@ -3071,6 +3127,140 @@ export function selectOptimizerAnnualSequencingInputAdapter({
     boundary:
       'This runtime input adapter gathers annual context only. It does not produce account order, annual account instructions, tax-bracket instructions, saved output, CSV output, or report output.',
     nextStep: 'Plan an experimental account-order draft for synthetic tester scenarios only.'
+  };
+}
+
+function buildDraftOrderFromCandidate(
+  sourceCandidateId: BoundedOptimizerCandidateId | null,
+  availableFields: OptimizerAnnualSequencingInputAdapter['availableAccountBalanceFields']
+): OptimizerExperimentalAccountBucket[] {
+  const has = (field: OptimizerAnnualSequencingInputAdapter['availableAccountBalanceFields'][number]) => availableFields.includes(field);
+  const registered: OptimizerExperimentalAccountBucket[] = has('bal_rrsp') || has('bal_rrsp_f') || has('bal_rrsp_m') ? ['registered'] : [];
+  const lif: OptimizerExperimentalAccountBucket[] = has('bal_lif') ? ['lif'] : [];
+  const nonRegistered: OptimizerExperimentalAccountBucket[] = has('bal_nonreg') ? ['nonRegistered'] : [];
+  const tfsa: OptimizerExperimentalAccountBucket[] = has('bal_tfsa') ? ['tfsa'] : [];
+  const cash: OptimizerExperimentalAccountBucket[] = has('bal_cash') ? ['cash'] : [];
+
+  if (sourceCandidateId === 'withdrawalNonRegisteredFirst') {
+    return [...nonRegistered, ...registered, ...lif, ...tfsa, ...cash];
+  }
+  if (sourceCandidateId === 'withdrawalRegisteredFirst') {
+    return [...registered, ...lif, ...nonRegistered, ...tfsa, ...cash];
+  }
+  return [...registered, ...lif, ...nonRegistered, ...tfsa, ...cash];
+}
+
+function accountBucketLabel(bucket: OptimizerExperimentalAccountBucket): string {
+  switch (bucket) {
+    case 'registered':
+      return 'Registered accounts';
+    case 'lif':
+      return 'LIF accounts';
+    case 'nonRegistered':
+      return 'Non-registered accounts';
+    case 'tfsa':
+      return 'TFSA accounts';
+    case 'cash':
+      return 'Cash reserve';
+  }
+}
+
+export function selectOptimizerExperimentalAccountOrderDraft(
+  adapter: OptimizerAnnualSequencingInputAdapter
+): OptimizerExperimentalAccountOrderDraft {
+  const order = adapter.status === 'readyForDraftPlanning' ? buildDraftOrderFromCandidate(adapter.sourceCandidateId, adapter.availableAccountBalanceFields) : [];
+  const hasOrder = order.length > 0;
+  const status: OptimizerExperimentalAccountOrderDraft['status'] =
+    adapter.status === 'readyForDraftPlanning' && hasOrder ? 'draftReady' : adapter.status === 'blocked' ? 'blocked' : 'needsInputs';
+
+  return {
+    status,
+    audience: 'syntheticTesterOnly',
+    sourceCandidateId: adapter.sourceCandidateId,
+    sourceCandidateLabel: adapter.sourceCandidateLabel,
+    order,
+    rows: order.map((bucket, index) => ({
+      bucket,
+      label: accountBucketLabel(bucket),
+      position: index + 1,
+      status: 'included',
+      rationale:
+        adapter.sourceCandidateId === 'withdrawalNonRegisteredFirst'
+          ? 'Included because the selected modelled candidate tested non-registered withdrawals earlier.'
+          : adapter.sourceCandidateId === 'withdrawalRegisteredFirst'
+            ? 'Included because the selected modelled candidate tested registered withdrawals earlier.'
+            : 'Included as a neutral draft order based on available account balance context.'
+    })),
+    blockedOutputs: ['annualDollarInstructions', 'savedAccountOrder', 'csvAccountOrder', 'reportAccountOrder', 'taxBracketInstructions'],
+    summary:
+      status === 'draftReady'
+        ? 'Experimental account-order draft is available for synthetic tester review.'
+        : 'Experimental account-order draft needs more runtime inputs before tester review.',
+    boundary:
+      'This is a runtime-only experimental account-order draft for synthetic tester scenarios. It does not produce annual dollar instructions, saved output, CSV output, report output, or tax-bracket instructions.',
+    nextStep: 'Use this order as context for a later experimental annual instruction draft.'
+  };
+}
+
+function rowDraftWithdrawals(row: Record<string, unknown>): Array<{ account: OptimizerExperimentalAccountBucket; amount: number }> {
+  const registeredAmount = n(row.rrif_draw_f) + n(row.rrif_draw_m);
+  const draftRows: Array<{ account: OptimizerExperimentalAccountBucket; amount: number }> = [
+    { account: 'registered', amount: registeredAmount },
+    { account: 'lif', amount: n(row.lif_draw) },
+    { account: 'tfsa', amount: n(row.tfsa_draw) },
+    { account: 'nonRegistered', amount: n(row.nonreg_draw) },
+    { account: 'cash', amount: n(row.cash_draw) }
+  ];
+  return draftRows.filter((item) => item.amount > 1);
+}
+
+export function selectOptimizerExperimentalAnnualInstructionDraft({
+  adapter,
+  accountOrderDraft,
+  summary
+}: {
+  adapter: OptimizerAnnualSequencingInputAdapter;
+  accountOrderDraft: OptimizerExperimentalAccountOrderDraft;
+  summary: ReturnType<typeof summarizeResult> | null | undefined;
+}): OptimizerExperimentalAnnualInstructionDraft {
+  const annualRows = Array.isArray(summary?.rows) ? summary.rows.slice(0, 5) : [];
+  const orderIndex = new Map(accountOrderDraft.order.map((bucket, index) => [bucket, index]));
+  const rows = annualRows.flatMap((annualRow) => {
+    const withdrawals = rowDraftWithdrawals(annualRow as Record<string, unknown>).sort(
+      (a, b) => (orderIndex.get(a.account) ?? 99) - (orderIndex.get(b.account) ?? 99)
+    );
+    return withdrawals.map((withdrawal) => ({
+      year: n(annualRow.year),
+      account: withdrawal.account,
+      label: accountBucketLabel(withdrawal.account),
+      amount: Math.round(withdrawal.amount),
+      taxContext: {
+        totalTaxYear: Math.round(n(annualRow.totalTaxYear)),
+        taxableIncome: Math.round(n(annualRow.taxableIncome)),
+        oasRecovery: Math.round(n(annualRow.totalOasClawY))
+      },
+      status: 'experimentalDraft' as const,
+      rationale: 'Draft row mirrors the selected modelled candidate annual withdrawal field for synthetic tester review.'
+    }));
+  });
+  const status: OptimizerExperimentalAnnualInstructionDraft['status'] =
+    accountOrderDraft.status === 'draftReady' && rows.length ? 'draftReady' : accountOrderDraft.status === 'blocked' ? 'blocked' : 'needsInputs';
+
+  return {
+    status,
+    audience: 'syntheticTesterOnly',
+    sourceCandidateId: adapter.sourceCandidateId,
+    sourceCandidateLabel: adapter.sourceCandidateLabel,
+    yearCount: annualRows.length,
+    rows,
+    blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+    summary:
+      status === 'draftReady'
+        ? 'Experimental annual instruction draft rows are available for synthetic tester review.'
+        : 'Experimental annual instruction draft rows need selected-candidate withdrawal rows before tester review.',
+    boundary:
+      'These rows are runtime-only experimental draft rows for synthetic tester scenarios. They are not saved, exported to CSV, printed in reports, shown in production UI, or framed as tax-bracket instructions.',
+    nextStep: 'Review the experimental rows with synthetic scenarios before considering CSV, saved output, or production UI.'
   };
 }
 
@@ -5128,6 +5318,12 @@ export function runBoundedOptimizer(
     capacityObjective,
     prepContract: annualSequencingPrepContract
   });
+  const experimentalAccountOrderDraft = selectOptimizerExperimentalAccountOrderDraft(annualSequencingInputAdapter);
+  const experimentalAnnualInstructionDraft = selectOptimizerExperimentalAnnualInstructionDraft({
+    adapter: annualSequencingInputAdapter,
+    accountOrderDraft: experimentalAccountOrderDraft,
+    summary: suggestedRow ? summaryById[suggestedRow.id] : null
+  });
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -5151,6 +5347,8 @@ export function runBoundedOptimizer(
     capacityExportGuard,
     annualSequencingPrepContract,
     annualSequencingInputAdapter,
+    experimentalAccountOrderDraft,
+    experimentalAnnualInstructionDraft,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

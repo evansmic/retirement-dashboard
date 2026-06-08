@@ -40,6 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2028-S2047 is complete. The bounded optimizer now emits runtime-only experimental annual instruction draft rows for synthetic tester scenarios. Draft rows mirror selected-candidate annual withdrawal fields and include compact tax context, while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md`](docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md).
+
+S2008-S2027 is complete. The bounded optimizer now emits a runtime-only experimental account-order draft for synthetic tester scenarios, derived from selected modelled candidate context and available account balance fields. Annual dollar rows, saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remained out of scope for that package.
+
+Current package doc: [`docs/sprint_2008_2027_experimental_account_order_draft.md`](docs/sprint_2008_2027_experimental_account_order_draft.md).
+
 S1988-S2007 is complete. The bounded optimizer now emits a runtime-only annual sequencing input adapter for tester-only synthetic scenario planning. It captures selected-candidate context, modelled year range, available account balance fields, available tax fields, and constraint hooks while still blocking account order, annual account instructions, tax-bracket instructions, saved sequencing output, CSV sequencing output, report output, production UI, saved schema changes, engine output schema changes, and `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md`](docs/sprint_1988_2007_annual_sequencing_runtime_input_adapter.md).

@@ -81,7 +81,7 @@ function result(
   endPortfolio: number,
   lifetimeTax: number,
   firstShortfallYear: number | null = null,
-  options: { oasRecovery?: number } = {}
+  options: { oasRecovery?: number; registeredDraw?: number; tfsaDraw?: number; nonregDraw?: number; cashDraw?: number } = {}
 ): SimulationResult {
   const years = [2032, 2033, 2034].map((year, index) => ({
     year,
@@ -92,9 +92,10 @@ function result(
     dbPension: 0,
     cpp_f: 0,
     oas_f: 0,
-    tfsa_draw: 0,
-    nonreg_draw: 0,
-    cash_draw: 0,
+    rrif_draw_f: options.registeredDraw || 0,
+    tfsa_draw: options.tfsaDraw || 0,
+    nonreg_draw: options.nonregDraw || 0,
+    cash_draw: options.cashDraw || 0,
     totalTaxYear: Math.round(lifetimeTax / 3),
     taxableIncome: 90000,
     totalOasClawY: Math.round((options.oasRecovery || 0) / 3),
@@ -266,6 +267,8 @@ describe('bounded optimizer runner', () => {
         'capacityExportGuard',
         'annualSequencingPrepContract',
         'annualSequencingInputAdapter',
+        'experimentalAccountOrderDraft',
+        'experimentalAnnualInstructionDraft',
         'boundedOptimizer',
         'optimizerOutput',
         'annualAccountInstructions'
@@ -417,8 +420,8 @@ describe('bounded optimizer runner', () => {
       benefitGridCpp65Oas70: result(118000, 89000, null),
       benefitGridCpp70Oas65: result(119000, 88000, null),
       delayBenefits: result(155000, 83000, null),
-      withdrawalRegisteredFirst: result(170000, 80000, null),
-      withdrawalNonRegisteredFirst: result(160000, 82000, null)
+      withdrawalRegisteredFirst: result(170000, 80000, null, { registeredDraw: 26000, tfsaDraw: 5000 }),
+      withdrawalNonRegisteredFirst: result(160000, 82000, null, { nonregDraw: 24000, registeredDraw: 4000 })
     };
 
     const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
@@ -524,6 +527,30 @@ describe('bounded optimizer runner', () => {
       detail: expect.stringContaining('does not produce account order')
     });
     expect(summary.annualSequencingInputAdapter.boundary).toContain('does not produce account order');
+    expect(summary.experimentalAccountOrderDraft).toMatchObject({
+      status: 'draftReady',
+      audience: 'syntheticTesterOnly',
+      sourceCandidateId: 'withdrawalRegisteredFirst',
+      order: expect.arrayContaining(['registered', 'tfsa'])
+    });
+    expect(summary.experimentalAccountOrderDraft.rows[0]).toMatchObject({
+      bucket: 'registered',
+      position: 1,
+      status: 'included'
+    });
+    expect(summary.experimentalAccountOrderDraft.boundary).toContain('runtime-only experimental account-order draft');
+    expect(summary.experimentalAnnualInstructionDraft).toMatchObject({
+      status: 'draftReady',
+      audience: 'syntheticTesterOnly',
+      sourceCandidateId: 'withdrawalRegisteredFirst'
+    });
+    expect(summary.experimentalAnnualInstructionDraft.rows[0]).toMatchObject({
+      year: 2032,
+      account: 'registered',
+      amount: 26000,
+      status: 'experimentalDraft'
+    });
+    expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');

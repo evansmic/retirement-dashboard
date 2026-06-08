@@ -4,7 +4,64 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1988-S2007: Annual Sequencing Runtime Input Adapter
+## Latest Package — S2028-S2047: Experimental Annual Instruction Draft Rows
+
+**Status:** Complete 2026-06-08.
+
+Goal: produce runtime-only experimental annual account draft rows for synthetic tester scenarios. The bounded optimizer now emits experimental draft rows that mirror selected-candidate annual withdrawal fields and include compact tax context while saved output, CSV output, report output, production UI, and tax-bracket instructions remain deferred.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md`](docs/sprint_2028_2047_experimental_annual_instruction_draft_rows.md).
+
+### S2028-S2047 Completed Path
+
+- **S2028-S2032 — Draft row shape batch.** Added annual instruction draft types, synthetic tester marker, and compact tax context fields.
+- **S2033-S2037 — Selected candidate mapping batch.** Mapped selected-candidate annual withdrawal fields into draft rows sorted by experimental account order.
+- **S2038-S2042 — Boundary batch.** Blocked saved instruction output, CSV instruction output, report instruction output, production UI, and tax-bracket instructions.
+- **S2043-S2047 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2028-S2047 Definition Of Done
+
+- Experimental annual instruction draft is available in runtime bounded optimizer output.
+- Draft rows are marked synthetic-tester-only.
+- Draft rows mirror modelled annual withdrawal fields rather than a new sequencing engine.
+- Draft rows include compact tax context.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Tax-bracket instructions remain blocked.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S2008-S2027: Experimental Account Order Draft
+
+**Status:** Complete 2026-06-08.
+
+Goal: produce a runtime-only experimental account-order draft for synthetic tester scenarios. The bounded optimizer now emits account-order draft metadata derived from the selected modelled candidate and available account balance fields while annual dollar rows, saved output, CSV output, report output, production UI, and tax-bracket instructions stay deferred.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, annual dollar instructions, tax-bracket instructions, or exportable account order.
+
+Package doc: [`docs/sprint_2008_2027_experimental_account_order_draft.md`](docs/sprint_2008_2027_experimental_account_order_draft.md).
+
+### S2008-S2027 Completed Path
+
+- **S2008-S2012 — Draft shape batch.** Added experimental account bucket, row, and summary types with a synthetic tester audience marker.
+- **S2013-S2017 — Candidate mapping batch.** Derived draft order from registered-first, non-registered-first, or neutral selected-candidate context.
+- **S2018-S2022 — Boundary batch.** Blocked annual dollar instructions, saved account order, CSV account order, report account order, and tax-bracket instructions.
+- **S2023-S2027 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2008-S2027 Definition Of Done
+
+- Experimental account-order draft is available in runtime bounded optimizer output.
+- Draft order is synthetic-tester-only.
+- Draft order derives from selected modelled candidate context.
+- Annual dollar instructions remain deferred in this package.
+- Saved account order, CSV account order, report account order, production UI, and tax-bracket instructions remain blocked.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S1988-S2007: Annual Sequencing Runtime Input Adapter
 
 **Status:** Complete 2026-06-08.
 
