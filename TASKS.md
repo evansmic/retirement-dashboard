@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1928-S1947: Capacity Objective Export Guardrails
+## Latest Package — S1948-S1967: Capacity Objective Example Matrix Hardening
+
+**Status:** Complete 2026-06-08.
+
+Goal: harden capacity objective expectations across bundled examples and fresh clean-example runtime adapters. The example optimizer readiness matrix now proves capacity objective, report readiness, and export guard metadata are runtime-only, and accidental runtime-enriched examples are stripped before editable save output.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md`](docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md).
+
+### S1948-S1967 Completed Path
+
+- **S1948-S1952 — Example matrix shape batch.** Added bundled-example capacity objective, report readiness, and export guard expectations to the existing optimizer readiness matrix.
+- **S1953-S1957 — Save boundary batch.** Added accidental runtime-enriched save checks proving capacity packets, optimizer output, and annual account instructions are stripped.
+- **S1958-S1962 — Clean example runtime batch.** Ran fresh clean examples through runtime capacity objective, report readiness, export guard, and save stripping expectations.
+- **S1963-S1967 — Verification and closeout.** Ran focused matrix tests, full matrix tests, production build, file guards, and closed the package.
+
+### S1948-S1967 Definition Of Done
+
+- Bundled examples expose runtime capacity objective metadata.
+- Fresh clean examples expose runtime capacity objective metadata after runtime adaptation.
+- Runtime capacity packets stay out of editable plan files across examples.
+- Report output remains unchanged.
+- CSV output remains unchanged.
+- Annual sequencing remains deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused matrix tests, full example optimizer readiness tests, and production build pass.
+
+## Previous Package — S1928-S1947: Capacity Objective Export Guardrails
 
 **Status:** Complete 2026-06-08.
 

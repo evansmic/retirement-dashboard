@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1948-S1967 is complete. Capacity objective expectations are now hardened across bundled examples and fresh clean-example runtime adapters. The matrix proves runtime capacity objective metadata, report readiness, and export guards are present for examples, while accidental runtime-enriched example payloads are stripped before editable save output. This did not change report output, CSV output, saved schema, engine output schema, production UI, or `.plan.json` generation.
+
+Current package doc: [`docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md`](docs/sprint_1948_1967_capacity_objective_example_matrix_hardening.md).
+
 S1928-S1947 is complete. Capacity objective export guardrails are now runtime-visible, with forbidden saved keys and plan-file adapter coverage proving capacity objective packets, report readiness, optimizer output, and annual account instructions stay out of editable saved plan files. This did not change report output, CSV output, saved schema, engine output schema, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1928_1947_capacity_objective_export_guardrails.md`](docs/sprint_1928_1947_capacity_objective_export_guardrails.md).

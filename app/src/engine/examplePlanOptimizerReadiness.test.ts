@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createExamplePlan, examplePlanCards } from '../data/examplePlans';
+import { cleanExamplePlanCards, createCleanExampleRuntimePlan, createExamplePlan, examplePlanCards } from '../data/examplePlans';
 import { createPlanFile } from '../data/planFile';
 import { selectDrawdownReadinessSummary, selectSpendingStressSummary } from './resultSelectors';
 import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
@@ -67,6 +67,14 @@ import {
 } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
+const CAPACITY_RUNTIME_KEYS = [
+  'capacityObjective',
+  'capacityReportReadiness',
+  'capacityExportGuard',
+  'boundedOptimizer',
+  'optimizerOutput',
+  'annualAccountInstructions'
+];
 
 function isFiniteNumber(value: unknown): boolean {
   return typeof value === 'number' && Number.isFinite(value);
@@ -126,9 +134,26 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.optimizer.optionGroups.flatMap((group) => group.candidateIds)).toEqual(
         expect.arrayContaining(item.optimizer.candidates.map((row) => row.id))
       );
+      expect(['covered', 'tight', 'gap', 'cannotTell', 'blocked']).toContain(item.optimizer.capacityObjective.status);
+      expect(item.optimizer.capacityObjective.boundary).toContain('runtime-only');
+      expect(item.optimizer.capacityObjective.withdrawalSequencing).toBe('deferred');
+      expect(item.optimizer.capacityObjective.rows.find((row) => row.id === 'minimumFloor'), `${item.card.id} capacity floor row`).toBeTruthy();
+      expect(item.optimizer.capacityReportReadiness.boundary).toContain('does not change printable report output');
+      expect(item.optimizer.capacityReportReadiness.reportFields).toEqual(
+        expect.arrayContaining(['monthlyAfterTaxCapacity', 'minimumMonthlyExpenseFloor', 'withdrawalSequencingDeferred'])
+      );
+      expect(item.optimizer.capacityExportGuard.forbiddenSavedKeys).toEqual(
+        expect.arrayContaining(['capacityObjective', 'capacityReportReadiness', 'boundedOptimizer', 'optimizerOutput', 'annualAccountInstructions'])
+      );
+      expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'planFile')).toMatchObject({ status: 'blocked' });
+      expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'reportOutput')).toMatchObject({ status: 'deferred' });
+      expect(item.optimizer.capacityExportGuard.rows.find((row) => row.id === 'csvOutput')).toMatchObject({ status: 'deferred' });
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
       expect(item.saved.plan).not.toHaveProperty('optimizerContract');
+      for (const key of CAPACITY_RUNTIME_KEYS) {
+        expect(item.saved.plan, `${item.card.id} saved plan excludes ${key}`).not.toHaveProperty(key);
+      }
       expect(item.saved.plan).not.toHaveProperty('spendingStress');
       expect(item.saved.plan).not.toHaveProperty('drawdownReadiness');
       expect(item.saved.plan).not.toHaveProperty('taxAwareDrawdownPrototype');
@@ -147,6 +172,53 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.saved.plan).not.toHaveProperty('withdrawalStrategy');
       expect(item.saved.plan).not.toHaveProperty('annualOverrides');
       expect(item.saved.plan).not.toHaveProperty('optionGroups');
+    }
+  });
+
+  it('keeps capacity objective packets runtime-only when example plans are accidentally enriched before save', () => {
+    for (const card of examplePlanCards) {
+      const plan = createExamplePlan(card.id);
+      const optimizer = runBoundedOptimizer(plan);
+      const runtimeEnrichedPlan = {
+        ...plan,
+        capacityObjective: optimizer.capacityObjective,
+        capacityReportReadiness: optimizer.capacityReportReadiness,
+        capacityExportGuard: optimizer.capacityExportGuard,
+        boundedOptimizer: optimizer,
+        optimizerOutput: { selectedCandidateId: optimizer.suggestedCandidateId },
+        annualAccountInstructions: [{ year: plan.assumptions.retireYear, account: 'rrsp', amount: 1 }]
+      };
+      const saved = createPlanFile(runtimeEnrichedPlan);
+      const serialized = JSON.stringify(saved);
+
+      for (const key of CAPACITY_RUNTIME_KEYS) {
+        expect(saved.plan, `${card.id} saved enriched plan excludes ${key}`).not.toHaveProperty(key);
+      }
+      expect(serialized, `${card.id} serialized saved plan excludes monthly capacity`).not.toContain('monthlyAfterTaxCapacity');
+      expect(serialized, `${card.id} serialized saved plan excludes selected candidate`).not.toContain('selectedCandidateId');
+      expect(serialized, `${card.id} serialized saved plan excludes account instructions`).not.toContain('annualAccountInstructions');
+    }
+  });
+
+  it('runs fresh clean examples through capacity objective runtime expectations without saved optimizer output', () => {
+    for (const card of cleanExamplePlanCards) {
+      const plan = createCleanExampleRuntimePlan(card.id);
+      const optimizer = runBoundedOptimizer(plan);
+      const saved = createPlanFile({
+        ...plan,
+        capacityObjective: optimizer.capacityObjective,
+        capacityReportReadiness: optimizer.capacityReportReadiness,
+        capacityExportGuard: optimizer.capacityExportGuard
+      });
+
+      expect(['covered', 'tight', 'gap', 'cannotTell', 'blocked']).toContain(optimizer.capacityObjective.status);
+      expect(optimizer.capacityObjective.boundary, `${card.id} capacity boundary`).toContain('runtime-only');
+      expect(optimizer.capacityObjective.rows.find((row) => row.id === 'withdrawalSequencing')).toMatchObject({ status: 'deferred' });
+      expect(optimizer.capacityReportReadiness.nextStep).toContain('Plan report rendering separately');
+      expect(optimizer.capacityExportGuard.rows.find((row) => row.id === 'schemaBoundary')).toMatchObject({ status: 'blocked' });
+      for (const key of CAPACITY_RUNTIME_KEYS) {
+        expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
+      }
     }
   });
 
