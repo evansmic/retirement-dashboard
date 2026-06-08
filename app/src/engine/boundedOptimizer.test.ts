@@ -257,6 +257,24 @@ describe('bounded optimizer runner', () => {
       'registeredFirst',
       'nonRegisteredFirst'
     ]);
+    expect(summary.capacityObjective).toMatchObject({
+      status: 'covered',
+      selectedCandidateId: 'withdrawalRegisteredFirst',
+      monthlyAfterTaxCapacity: 85000 / 12,
+      minimumMonthlyExpenseFloor: 62000 / 12,
+      survivorConstraint: 'notApplicable',
+      timingComparison: 'included',
+      withdrawalSequencing: 'deferred'
+    });
+    expect(summary.capacityObjective.optionalMonthlyRoom).toBeCloseTo((85000 - 62000) / 12, 2);
+    expect(summary.capacityObjective.rows.map((row) => row.id)).toEqual([
+      'minimumFloor',
+      'estate',
+      'survivor',
+      'benefitTiming',
+      'withdrawalSequencing'
+    ]);
+    expect(summary.capacityObjective.boundary).toContain('runtime-only');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');
     expect(summary.explanation.tradeoffs.join(' ')).toContain('drawdown order');
@@ -1576,6 +1594,25 @@ describe('bounded optimizer runner', () => {
     expect(runtimePlan.downsize).toEqual({ year: 2040, netProceeds: 250000 });
   });
 
+  it('reports capacity gaps before optional room when the runtime result falls below the expense floor', () => {
+    const summary = runBoundedOptimizer(readyPlan(), () => {
+      const lowCapacity = result(100000, 90000, null);
+      lowCapacity.years = lowCapacity.years.map((row) => ({ ...row, totalAftaxYear: 50000 }));
+      return lowCapacity;
+    });
+
+    expect(summary.capacityObjective).toMatchObject({
+      status: 'gap',
+      monthlyAfterTaxCapacity: 50000 / 12,
+      minimumMonthlyExpenseFloor: 62000 / 12,
+      optionalMonthlyRoom: 0
+    });
+    expect(summary.capacityObjective.rows.find((row) => row.id === 'minimumFloor')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('does not cover')
+    });
+  });
+
   it('holds back candidates that weaken an entered estate goal', () => {
     const plan = readyPlan();
     plan.inheritance = 300000;
@@ -1589,6 +1626,10 @@ describe('bounded optimizer runner', () => {
     expect(summary.recommendationNotes.find((note) => note.candidateId === 'withdrawalRegisteredFirst')).toMatchObject({
       status: 'reviewOnly',
       reason: expect.stringContaining('weakens the entered estate goal')
+    });
+    expect(summary.capacityObjective.rows.find((row) => row.id === 'estate')).toMatchObject({
+      status: 'protected',
+      detail: expect.stringContaining('$300,000')
     });
   });
 
@@ -1730,6 +1771,13 @@ describe('bounded optimizer runner', () => {
       reason: expect.stringContaining('survivor scenario year')
     });
     expect(summary.status).toBe('ready');
+    expect(summary.capacityObjective).toMatchObject({
+      survivorConstraint: 'reviewFirst'
+    });
+    expect(summary.capacityObjective.rows.find((row) => row.id === 'survivor')).toMatchObject({
+      status: 'review',
+      detail: expect.stringContaining('survivor scenario year')
+    });
   });
 
   it('keeps benefit timing review-only for two-person plans without a survivor year', () => {

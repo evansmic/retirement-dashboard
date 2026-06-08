@@ -148,6 +148,30 @@ export type BoundedOptimizerCompactEvidenceRow = {
   tone: 'neutral' | 'ok' | 'watch';
 };
 
+export type OptimizerCapacityConstraintRow = {
+  id: 'minimumFloor' | 'estate' | 'survivor' | 'benefitTiming' | 'withdrawalSequencing';
+  label: string;
+  status: 'protected' | 'review' | 'blocked' | 'deferred';
+  detail: string;
+};
+
+export type OptimizerCapacityObjective = {
+  status: 'covered' | 'tight' | 'gap' | 'cannotTell' | 'blocked';
+  selectedCandidateId: BoundedOptimizerCandidateId | null;
+  selectedCandidateLabel: string;
+  monthlyAfterTaxCapacity: number | null;
+  minimumMonthlyExpenseFloor: number | null;
+  optionalMonthlyRoom: number | null;
+  estateTarget: number | null;
+  projectedEstate: number | null;
+  survivorConstraint: 'protected' | 'reviewFirst' | 'notApplicable';
+  timingComparison: 'included' | 'blocked' | 'deferred';
+  withdrawalSequencing: 'deferred';
+  rows: OptimizerCapacityConstraintRow[];
+  detail: string;
+  boundary: string;
+};
+
 export type OptimizerGoalReview = {
   summary: string;
   architecture: {
@@ -777,6 +801,7 @@ export type BoundedOptimizerSummary = {
   readinessRows: OptimizerReadinessRow[];
   candidateFamilies: OptimizerCandidateFamily[];
   searchPlan: OptimizerSearchPlan;
+  capacityObjective: OptimizerCapacityObjective;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -2504,6 +2529,129 @@ function buildCompactEvidenceRows(
       tone: oasRecovery?.tone || 'neutral'
     }
   ];
+}
+
+function minimumAnnualExpenseFloor(plan: V2PlanPayload): number {
+  const phases = [plan.spending.gogo, plan.spending.slowgo, plan.spending.nogo]
+    .map(n)
+    .filter((value) => value > 0);
+  return phases.length ? Math.min(...phases) : 0;
+}
+
+function capacityStatus(monthlyCapacity: number | null, monthlyFloor: number | null): OptimizerCapacityObjective['status'] {
+  if (monthlyCapacity === null) return 'cannotTell';
+  if (monthlyFloor === null || monthlyFloor <= 0) return 'cannotTell';
+  const room = monthlyCapacity - monthlyFloor;
+  if (room < -1) return 'gap';
+  if (room < 250) return 'tight';
+  return 'covered';
+}
+
+function buildCapacityObjective({
+  plan,
+  suggested,
+  summaryById,
+  candidateFamilies,
+  eligibilityNotes,
+  contract
+}: {
+  plan: V2PlanPayload;
+  suggested: BoundedOptimizerCandidateRow | null;
+  summaryById: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>;
+  candidateFamilies: OptimizerCandidateFamily[];
+  eligibilityNotes: BoundedOptimizerEligibilityNote[];
+  contract: OptimizerContract;
+}): OptimizerCapacityObjective {
+  const selectedSummary = suggested ? summaryById[suggested.id] : null;
+  const annualFloor = minimumAnnualExpenseFloor(plan);
+  const monthlyFloor = annualFloor > 0 ? annualFloor / 12 : null;
+  const monthlyCapacity = selectedSummary && selectedSummary.sustainableAnnualSpend > 0 ? selectedSummary.sustainableAnnualSpend / 12 : null;
+  const optionalRoom = monthlyCapacity !== null && monthlyFloor !== null ? Math.max(0, monthlyCapacity - monthlyFloor) : null;
+  const estateTarget = n(plan.inheritance) > 0 ? n(plan.inheritance) : null;
+  const projectedEstate = selectedSummary && selectedSummary.totalYears > 0 ? selectedSummary.endPortfolio : null;
+  const survivorNeedsReview = eligibilityNotes.some((note) => note.lever === 'survivor' && note.status === 'needsReview');
+  const hasSecondPerson = !p2LooksBlank(plan.p2);
+  const timingFamily = candidateFamilies.find((family) => family.id === 'benefitTimingGrid');
+  const status =
+    contract.status !== 'readyForExtraction'
+      ? 'blocked'
+      : capacityStatus(monthlyCapacity, monthlyFloor);
+  const estateProtected = estateTarget === null || (projectedEstate !== null && projectedEstate >= estateTarget);
+  const rows: OptimizerCapacityConstraintRow[] = [
+    {
+      id: 'minimumFloor',
+      label: 'Minimum expense floor',
+      status: status === 'blocked' || status === 'cannotTell' ? 'blocked' : status === 'gap' ? 'blocked' : 'protected',
+      detail:
+        monthlyFloor === null
+          ? 'A usable expense floor is needed before monthly capacity can be trusted.'
+          : status === 'gap'
+            ? 'The selected runtime result does not cover the entered expense floor.'
+            : `The selected runtime result covers about ${moneyText(monthlyFloor)} per month before optional room is counted.`
+    },
+    {
+      id: 'estate',
+      label: 'Estate constraint',
+      status: estateTarget === null ? 'review' : estateProtected ? 'protected' : 'blocked',
+      detail:
+        estateTarget === null
+          ? 'No estate floor is entered, so projected money left remains a review trade-off.'
+          : estateProtected
+            ? `The selected runtime result preserves the entered estate target of ${moneyText(estateTarget)}.`
+            : `The selected runtime result falls below the entered estate target of ${moneyText(estateTarget)}.`
+    },
+    {
+      id: 'survivor',
+      label: 'Survivor constraint',
+      status: survivorNeedsReview ? 'review' : 'protected',
+      detail: survivorNeedsReview
+        ? 'Set a survivor scenario year before relying on optimizer choices for a two-person plan.'
+        : hasSecondPerson
+          ? 'The current survivor setup does not block this runtime capacity review.'
+          : 'No second person is active in this plan.'
+    },
+    {
+      id: 'benefitTiming',
+      label: 'CPP/OAS timing comparison',
+      status: timingFamily?.status === 'included' ? 'protected' : 'review',
+      detail:
+        timingFamily?.status === 'included'
+          ? 'Bounded CPP/OAS timing evidence is included as a comparison, not advice.'
+          : 'CPP/OAS timing comparison waits for eligible estimates and age ranges.'
+    },
+    {
+      id: 'withdrawalSequencing',
+      label: 'Annual withdrawal sequencing',
+      status: 'deferred',
+      detail: 'Annual account-level sequencing remains deferred; broad withdrawal-family evidence is review-only.'
+    }
+  ];
+
+  return {
+    status,
+    selectedCandidateId: suggested?.id || null,
+    selectedCandidateLabel: suggested?.label || 'No runtime capacity candidate',
+    monthlyAfterTaxCapacity: monthlyCapacity,
+    minimumMonthlyExpenseFloor: monthlyFloor,
+    optionalMonthlyRoom: optionalRoom,
+    estateTarget,
+    projectedEstate,
+    survivorConstraint: survivorNeedsReview ? 'reviewFirst' : hasSecondPerson ? 'protected' : 'notApplicable',
+    timingComparison: timingFamily?.status === 'included' ? 'included' : timingFamily?.status === 'blocked' ? 'blocked' : 'deferred',
+    withdrawalSequencing: 'deferred',
+    rows,
+    detail:
+      status === 'covered'
+        ? 'Runtime evidence can show after-tax monthly capacity above the protected expense floor.'
+        : status === 'tight'
+          ? 'Runtime evidence covers the expense floor, but optional room is narrow.'
+          : status === 'gap'
+            ? 'Runtime evidence shows a gap against the expense floor before optional spending is considered.'
+            : status === 'blocked'
+              ? 'Required inputs need review before a runtime capacity answer is available.'
+              : 'Runtime evidence is not complete enough to state monthly capacity.',
+    boundary: 'Capacity objective output is runtime-only; it is not saved, not a production UI contract, and not an annual account-level withdrawal instruction.'
+  };
 }
 
 function buildWithdrawalFeedbackReview({
@@ -4510,6 +4658,14 @@ export function runBoundedOptimizer(
   const readinessRows = buildReadinessRows(plan, contract, eligibilityNotes);
   const candidateFamilies = buildCandidateFamilies(readinessRows);
   const searchPlan = buildSearchPlan(plan);
+  const capacityObjective = buildCapacityObjective({
+    plan,
+    suggested: suggestedRow,
+    summaryById,
+    candidateFamilies,
+    eligibilityNotes,
+    contract
+  });
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -4528,6 +4684,7 @@ export function runBoundedOptimizer(
     readinessRows,
     candidateFamilies,
     searchPlan,
+    capacityObjective,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

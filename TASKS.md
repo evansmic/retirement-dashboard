@@ -4,7 +4,66 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Sprint — Sprint 701: Reload Recovery Closeout
+## Latest Package — S1848-S1867: Runtime-Only Optimizer Objective Adapter
+
+**Status:** Complete 2026-06-08.
+
+Goal: implement the first bounded runtime layer behind the planner-grade objective. The optimizer now emits a runtime-only capacity objective packet with sustainable after-tax monthly capacity, minimum-floor protection, estate and survivor constraint states, bounded CPP/OAS timing state, and annual sequencing deferral.
+
+Non-scope: production UI, saved plan schema changes, engine output schema changes, persisted optimizer output, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1848_1867_runtime_only_optimizer_objective_adapter.md`](docs/sprint_1848_1867_runtime_only_optimizer_objective_adapter.md).
+
+### S1848-S1867 Completed Path
+
+- **S1848-S1852 — Capacity metric batch.** Added runtime capacity objective type, after-tax monthly capacity, expense-floor comparison, optional room, and runtime-only boundary.
+- **S1853-S1857 — Constraint batch.** Added minimum-floor, estate, survivor, missing-survivor, and review-first states.
+- **S1858-S1862 — Timing batch.** Connected capacity objective to bounded CPP/OAS timing family state while keeping timing evidence non-advisory.
+- **S1863-S1867 — Boundary and verification.** Added tests, confirmed no saved optimizer output, ran focused optimizer tests, ran production build, and closed the package.
+
+### S1848-S1867 Definition Of Done
+
+- Optimizer summary includes `capacityObjective`.
+- Monthly after-tax capacity is derived at runtime from the selected bounded candidate.
+- Minimum expense floor is checked before optional room.
+- Estate and survivor constraints are represented in runtime output.
+- CPP/OAS timing comparison is evidence-only.
+- Annual account-level withdrawal sequencing remains deferred.
+- Optimizer output remains runtime-only.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests and production build pass.
+
+## Previous Package — S1828-S1847: Planner-Grade Optimizer Objective Decision Gate
+
+**Status:** Planned/documented 2026-06-08.
+
+Goal: define the planner-grade optimizer objective and boundaries before implementation. The product answer remains sustainable after-tax monthly household capacity, not user-entered desired spend.
+
+Non-scope: production UI, saved plan schema changes, engine output schema changes, persisted optimizer output, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1828_1847_planner_grade_optimizer_objective_decision_gate.md`](docs/sprint_1828_1847_planner_grade_optimizer_objective_decision_gate.md).
+
+### S1828-S1847 Planned Path
+
+- **S1828-S1832 — Objective batch.** Define sustainable after-tax monthly capacity, today's-dollar framing, expense-floor separation, hard constraints, and checkpoint.
+- **S1833-S1837 — Constraint batch.** Define minimum floor, estate, survivor, missing-input, blocked, and caution states.
+- **S1838-S1842 — Timing and sequencing prep.** Define CPP/OAS timing comparison boundaries, evidence rows, and future annual sequencing prerequisites.
+- **S1843-S1847 — Runtime boundary and closeout.** Reconfirm runtime-only treatment, schema boundaries, copy guardrails, verification expectations, and implementation readiness gate.
+
+### S1828-S1847 Definition Of Done
+
+- Optimizer objective is documented as maximizing sustainable after-tax monthly household capacity.
+- Minimum expense floor is a hard protection boundary.
+- Estate and survivor constraints are hard boundaries before candidate ranking.
+- CPP/OAS timing comparison is allowed as bounded evidence, not advice.
+- Annual account-level withdrawal sequencing remains deferred.
+- Optimizer output remains runtime-only.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Consumer copy remains calm, review-oriented, and non-advisory.
+
+## Previous Latest Sprint — Sprint 701: Reload Recovery Closeout
 
 **Status:** Complete 2026-05-28.
 
