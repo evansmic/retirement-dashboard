@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1868-S1887: Capacity Objective Evidence Surface And Guardrails
+## Latest Package — S1888-S1907: Capacity Objective Selector Hardening
+
+**Status:** Complete 2026-06-08.
+
+Goal: normalize capacity-objective selector logic for reuse outside the React panel while keeping output runtime-only. The bounded optimizer now builds capacity objective output through exported selectors with focused tests for status mapping, floor handling, survivor review, annual sequencing deferral, and copy-safe boundaries.
+
+Non-scope: production UI promotion, saved plan schema changes, engine output schema changes, persisted optimizer output, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1888_1907_capacity_objective_selector_hardening.md`](docs/sprint_1888_1907_capacity_objective_selector_hardening.md).
+
+### S1888-S1907 Completed Path
+
+- **S1888-S1892 — Selector extraction batch.** Exported capacity objective types and selector helpers, then rewired bounded optimizer output through them.
+- **S1893-S1897 — Status mapping batch.** Added deterministic covered, tight, gap, and cannot-tell status tests.
+- **S1898-S1902 — Copy safety batch.** Added runtime-only, survivor review, annual sequencing deferral, and prohibited wording coverage.
+- **S1903-S1907 — Verification and closeout.** Ran focused optimizer tests, production build, file guards, and closed the package.
+
+### S1888-S1907 Definition Of Done
+
+- Capacity objective status mapping is reusable outside the React panel.
+- Minimum expense floor normalization is exported.
+- Full capacity objective row generation is exported.
+- Bounded optimizer still emits the same runtime `capacityObjective` shape.
+- Annual sequencing remains deferred.
+- Optimizer output remains runtime-only.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests and production build pass.
+
+## Previous Package — S1868-S1887: Capacity Objective Evidence Surface And Guardrails
 
 **Status:** Complete 2026-06-08.
 

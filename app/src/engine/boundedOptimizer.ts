@@ -155,8 +155,10 @@ export type OptimizerCapacityConstraintRow = {
   detail: string;
 };
 
+export type OptimizerCapacityStatus = 'covered' | 'tight' | 'gap' | 'cannotTell' | 'blocked';
+
 export type OptimizerCapacityObjective = {
-  status: 'covered' | 'tight' | 'gap' | 'cannotTell' | 'blocked';
+  status: OptimizerCapacityStatus;
   selectedCandidateId: BoundedOptimizerCandidateId | null;
   selectedCandidateLabel: string;
   monthlyAfterTaxCapacity: number | null;
@@ -170,6 +172,19 @@ export type OptimizerCapacityObjective = {
   rows: OptimizerCapacityConstraintRow[];
   detail: string;
   boundary: string;
+};
+
+export type OptimizerCapacityObjectiveInput = {
+  contractReady: boolean;
+  selectedCandidateId: BoundedOptimizerCandidateId | null;
+  selectedCandidateLabel: string;
+  sustainableAnnualSpend: number | null;
+  annualExpenseFloor: number | null;
+  estateTarget: number | null;
+  projectedEstate: number | null;
+  hasSecondPerson: boolean;
+  survivorNeedsReview: boolean;
+  benefitTimingStatus: OptimizerCandidateFamily['status'] | null;
 };
 
 export type OptimizerGoalReview = {
@@ -2531,14 +2546,14 @@ function buildCompactEvidenceRows(
   ];
 }
 
-function minimumAnnualExpenseFloor(plan: V2PlanPayload): number {
+export function selectOptimizerMinimumAnnualExpenseFloor(plan: V2PlanPayload): number {
   const phases = [plan.spending.gogo, plan.spending.slowgo, plan.spending.nogo]
     .map(n)
     .filter((value) => value > 0);
   return phases.length ? Math.min(...phases) : 0;
 }
 
-function capacityStatus(monthlyCapacity: number | null, monthlyFloor: number | null): OptimizerCapacityObjective['status'] {
+export function selectOptimizerCapacityStatus(monthlyCapacity: number | null, monthlyFloor: number | null): OptimizerCapacityStatus {
   if (monthlyCapacity === null) return 'cannotTell';
   if (monthlyFloor === null || monthlyFloor <= 0) return 'cannotTell';
   const room = monthlyCapacity - monthlyFloor;
@@ -2547,35 +2562,17 @@ function capacityStatus(monthlyCapacity: number | null, monthlyFloor: number | n
   return 'covered';
 }
 
-function buildCapacityObjective({
-  plan,
-  suggested,
-  summaryById,
-  candidateFamilies,
-  eligibilityNotes,
-  contract
-}: {
-  plan: V2PlanPayload;
-  suggested: BoundedOptimizerCandidateRow | null;
-  summaryById: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>;
-  candidateFamilies: OptimizerCandidateFamily[];
-  eligibilityNotes: BoundedOptimizerEligibilityNote[];
-  contract: OptimizerContract;
-}): OptimizerCapacityObjective {
-  const selectedSummary = suggested ? summaryById[suggested.id] : null;
-  const annualFloor = minimumAnnualExpenseFloor(plan);
+export function selectOptimizerCapacityObjective(input: OptimizerCapacityObjectiveInput): OptimizerCapacityObjective {
+  const annualFloor = input.annualExpenseFloor || 0;
   const monthlyFloor = annualFloor > 0 ? annualFloor / 12 : null;
-  const monthlyCapacity = selectedSummary && selectedSummary.sustainableAnnualSpend > 0 ? selectedSummary.sustainableAnnualSpend / 12 : null;
+  const monthlyCapacity = input.sustainableAnnualSpend && input.sustainableAnnualSpend > 0 ? input.sustainableAnnualSpend / 12 : null;
   const optionalRoom = monthlyCapacity !== null && monthlyFloor !== null ? Math.max(0, monthlyCapacity - monthlyFloor) : null;
-  const estateTarget = n(plan.inheritance) > 0 ? n(plan.inheritance) : null;
-  const projectedEstate = selectedSummary && selectedSummary.totalYears > 0 ? selectedSummary.endPortfolio : null;
-  const survivorNeedsReview = eligibilityNotes.some((note) => note.lever === 'survivor' && note.status === 'needsReview');
-  const hasSecondPerson = !p2LooksBlank(plan.p2);
-  const timingFamily = candidateFamilies.find((family) => family.id === 'benefitTimingGrid');
+  const estateTarget = input.estateTarget && input.estateTarget > 0 ? input.estateTarget : null;
+  const projectedEstate = input.projectedEstate;
   const status =
-    contract.status !== 'readyForExtraction'
+    !input.contractReady
       ? 'blocked'
-      : capacityStatus(monthlyCapacity, monthlyFloor);
+      : selectOptimizerCapacityStatus(monthlyCapacity, monthlyFloor);
   const estateProtected = estateTarget === null || (projectedEstate !== null && projectedEstate >= estateTarget);
   const rows: OptimizerCapacityConstraintRow[] = [
     {
@@ -2603,19 +2600,19 @@ function buildCapacityObjective({
     {
       id: 'survivor',
       label: 'Survivor constraint',
-      status: survivorNeedsReview ? 'review' : 'protected',
-      detail: survivorNeedsReview
+      status: input.survivorNeedsReview ? 'review' : 'protected',
+      detail: input.survivorNeedsReview
         ? 'Set a survivor scenario year before relying on optimizer choices for a two-person plan.'
-        : hasSecondPerson
+        : input.hasSecondPerson
           ? 'The current survivor setup does not block this runtime capacity review.'
           : 'No second person is active in this plan.'
     },
     {
       id: 'benefitTiming',
       label: 'CPP/OAS timing comparison',
-      status: timingFamily?.status === 'included' ? 'protected' : 'review',
+      status: input.benefitTimingStatus === 'included' ? 'protected' : 'review',
       detail:
-        timingFamily?.status === 'included'
+        input.benefitTimingStatus === 'included'
           ? 'Bounded CPP/OAS timing evidence is included as a comparison, not advice.'
           : 'CPP/OAS timing comparison waits for eligible estimates and age ranges.'
     },
@@ -2629,15 +2626,15 @@ function buildCapacityObjective({
 
   return {
     status,
-    selectedCandidateId: suggested?.id || null,
-    selectedCandidateLabel: suggested?.label || 'No runtime capacity candidate',
+    selectedCandidateId: input.selectedCandidateId,
+    selectedCandidateLabel: input.selectedCandidateLabel || 'No runtime capacity candidate',
     monthlyAfterTaxCapacity: monthlyCapacity,
     minimumMonthlyExpenseFloor: monthlyFloor,
     optionalMonthlyRoom: optionalRoom,
     estateTarget,
     projectedEstate,
-    survivorConstraint: survivorNeedsReview ? 'reviewFirst' : hasSecondPerson ? 'protected' : 'notApplicable',
-    timingComparison: timingFamily?.status === 'included' ? 'included' : timingFamily?.status === 'blocked' ? 'blocked' : 'deferred',
+    survivorConstraint: input.survivorNeedsReview ? 'reviewFirst' : input.hasSecondPerson ? 'protected' : 'notApplicable',
+    timingComparison: input.benefitTimingStatus === 'included' ? 'included' : input.benefitTimingStatus === 'blocked' ? 'blocked' : 'deferred',
     withdrawalSequencing: 'deferred',
     rows,
     detail:
@@ -2652,6 +2649,38 @@ function buildCapacityObjective({
               : 'Runtime evidence is not complete enough to state monthly capacity.',
     boundary: 'Capacity objective output is runtime-only; it is not saved, not a production UI contract, and not an annual account-level withdrawal instruction.'
   };
+}
+
+function buildCapacityObjective({
+  plan,
+  suggested,
+  summaryById,
+  candidateFamilies,
+  eligibilityNotes,
+  contract
+}: {
+  plan: V2PlanPayload;
+  suggested: BoundedOptimizerCandidateRow | null;
+  summaryById: Partial<Record<BoundedOptimizerCandidateId, ReturnType<typeof summarizeResult>>>;
+  candidateFamilies: OptimizerCandidateFamily[];
+  eligibilityNotes: BoundedOptimizerEligibilityNote[];
+  contract: OptimizerContract;
+}): OptimizerCapacityObjective {
+  const selectedSummary = suggested ? summaryById[suggested.id] : null;
+  const survivorNeedsReview = eligibilityNotes.some((note) => note.lever === 'survivor' && note.status === 'needsReview');
+  const timingFamily = candidateFamilies.find((family) => family.id === 'benefitTimingGrid');
+  return selectOptimizerCapacityObjective({
+    contractReady: contract.status === 'readyForExtraction',
+    selectedCandidateId: suggested?.id || null,
+    selectedCandidateLabel: suggested?.label || 'No runtime capacity candidate',
+    sustainableAnnualSpend: selectedSummary && selectedSummary.sustainableAnnualSpend > 0 ? selectedSummary.sustainableAnnualSpend : null,
+    annualExpenseFloor: selectOptimizerMinimumAnnualExpenseFloor(plan),
+    estateTarget: n(plan.inheritance) > 0 ? n(plan.inheritance) : null,
+    projectedEstate: selectedSummary && selectedSummary.totalYears > 0 ? selectedSummary.endPortfolio : null,
+    hasSecondPerson: !p2LooksBlank(plan.p2),
+    survivorNeedsReview,
+    benefitTimingStatus: timingFamily?.status || null
+  });
 }
 
 function buildWithdrawalFeedbackReview({

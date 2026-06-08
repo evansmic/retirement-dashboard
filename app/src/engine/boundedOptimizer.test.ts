@@ -3,7 +3,14 @@ import { createBlankPlan } from '../data/defaultPlan';
 import { createExamplePlan, examplePlanCards } from '../data/examplePlans';
 import { createPlanFile, extractPlanPayload } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
-import { buildBoundedOptimizerCandidates, runBoundedOptimizer, type BoundedOptimizerCandidateId } from './boundedOptimizer';
+import {
+  buildBoundedOptimizerCandidates,
+  runBoundedOptimizer,
+  selectOptimizerCapacityObjective,
+  selectOptimizerCapacityStatus,
+  selectOptimizerMinimumAnnualExpenseFloor,
+  type BoundedOptimizerCandidateId
+} from './boundedOptimizer';
 import type { SimulationConfig } from './runSimulation';
 
 function readyPlan(): V2PlanPayload {
@@ -102,6 +109,84 @@ function result(
 }
 
 describe('bounded optimizer runner', () => {
+  it('normalizes capacity objective status and minimum floor without running optimizer candidates', () => {
+    const plan = readyPlan();
+    plan.spending.gogo = 90000;
+    plan.spending.slowgo = 66000;
+    plan.spending.nogo = 54000;
+
+    expect(selectOptimizerMinimumAnnualExpenseFloor(plan)).toBe(54000);
+    expect(selectOptimizerCapacityStatus(7000, 4500)).toBe('covered');
+    expect(selectOptimizerCapacityStatus(4600, 4500)).toBe('tight');
+    expect(selectOptimizerCapacityStatus(4300, 4500)).toBe('gap');
+    expect(selectOptimizerCapacityStatus(null, 4500)).toBe('cannotTell');
+    expect(selectOptimizerCapacityStatus(7000, null)).toBe('cannotTell');
+  });
+
+  it('builds copy-safe runtime capacity objective rows without saved output or account instructions', () => {
+    const objective = selectOptimizerCapacityObjective({
+      contractReady: true,
+      selectedCandidateId: 'benefitGridCpp70Oas70',
+      selectedCandidateLabel: 'Test CPP/OAS at 70',
+      sustainableAnnualSpend: 78000,
+      annualExpenseFloor: 60000,
+      estateTarget: 250000,
+      projectedEstate: 260000,
+      hasSecondPerson: true,
+      survivorNeedsReview: true,
+      benefitTimingStatus: 'included'
+    });
+
+    expect(objective).toMatchObject({
+      status: 'covered',
+      selectedCandidateId: 'benefitGridCpp70Oas70',
+      monthlyAfterTaxCapacity: 6500,
+      minimumMonthlyExpenseFloor: 5000,
+      optionalMonthlyRoom: 1500,
+      survivorConstraint: 'reviewFirst',
+      timingComparison: 'included',
+      withdrawalSequencing: 'deferred'
+    });
+    expect(objective.rows.find((row) => row.id === 'estate')).toMatchObject({ status: 'protected' });
+    expect(objective.rows.find((row) => row.id === 'survivor')).toMatchObject({
+      status: 'review',
+      detail: expect.stringContaining('survivor scenario year')
+    });
+    expect(objective.rows.find((row) => row.id === 'withdrawalSequencing')).toMatchObject({
+      status: 'deferred',
+      detail: expect.stringContaining('Annual account-level sequencing remains deferred')
+    });
+    const combinedCopy = [objective.detail, objective.boundary, ...objective.rows.map((row) => row.detail)].join(' ');
+    expect(combinedCopy).toContain('runtime-only');
+    expect(combinedCopy).not.toContain('withdraw from this account');
+    expect(combinedCopy).not.toContain('take CPP at');
+    expect(combinedCopy).not.toContain('claim OAS at');
+    expect(combinedCopy).not.toContain('save optimizer');
+  });
+
+  it('keeps selector-built capacity objective blocked when the optimizer contract is not ready', () => {
+    const objective = selectOptimizerCapacityObjective({
+      contractReady: false,
+      selectedCandidateId: null,
+      selectedCandidateLabel: '',
+      sustainableAnnualSpend: 80000,
+      annualExpenseFloor: 60000,
+      estateTarget: null,
+      projectedEstate: 100000,
+      hasSecondPerson: false,
+      survivorNeedsReview: false,
+      benefitTimingStatus: 'blocked'
+    });
+
+    expect(objective).toMatchObject({
+      status: 'blocked',
+      selectedCandidateLabel: 'No runtime capacity candidate',
+      survivorConstraint: 'notApplicable',
+      timingComparison: 'blocked'
+    });
+    expect(objective.rows.find((row) => row.id === 'minimumFloor')).toMatchObject({ status: 'blocked' });
+  });
+
   it('builds a limited candidate set from optimizer contract levers', () => {
     const candidates = buildBoundedOptimizerCandidates(readyPlan());
 

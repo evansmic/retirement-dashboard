@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1888-S1907 is complete. Capacity objective logic is now selector-hardened for reuse: minimum-floor normalization, status mapping, and capacity objective row generation are exported and tested directly, while bounded optimizer output still remains runtime-only. This did not promote production UI, save optimizer output, change saved schema, change engine output schema, create account instructions, or generate `.plan.json` files.
+
+Current package doc: [`docs/sprint_1888_1907_capacity_objective_selector_hardening.md`](docs/sprint_1888_1907_capacity_objective_selector_hardening.md).
+
 S1868-S1887 is complete. The runtime-only capacity objective now has a guarded Details evidence surface: compact monthly capacity, expense floor, and optional room in the normal Details optimizer card, with full constraint evidence kept behind the option research gate. Overview remains unpromoted, and there are still no saved optimizer outputs, saved schema changes, engine output schema changes, annual account instructions, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md`](docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md).
