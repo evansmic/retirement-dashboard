@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2108-S2127: Experimental Draft Readiness Summary
+## Latest Package — S2128-S2147: Experimental Draft Example Matrix Scoring
+
+**Status:** Complete 2026-06-08.
+
+Goal: aggregate experimental draft readiness across bundled and clean synthetic examples. The optimizer now provides runtime-only matrix scoring that identifies ready, review-first, and blocked draft examples with confidence, row coverage, blocker, watch, and review-item detail.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md`](docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md).
+
+### S2128-S2147 Completed Path
+
+- **S2128-S2132 — Matrix shape batch.** Added matrix item and summary types with status counts, row coverage, and review item fields.
+- **S2133-S2137 — Aggregation batch.** Aggregated readiness statuses, confidence levels, blockers, watch counts, and review items.
+- **S2138-S2142 — Example coverage batch.** Added focused selector tests plus bundled and clean example matrix coverage.
+- **S2143-S2147 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example matrix tests, production build, file guards, and closed the package.
+
+### S2128-S2147 Definition Of Done
+
+- Experimental draft example matrix selector exists.
+- Matrix reports ready, review-first, and blocked counts.
+- Matrix preserves per-example confidence, row coverage, blockers, watch counts, and review items.
+- Matrix covers bundled and clean examples.
+- Matrix remains runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example matrix tests, and production build pass.
+
+## Previous Package — S2108-S2127: Experimental Draft Readiness Summary
 
 **Status:** Complete 2026-06-08.
 

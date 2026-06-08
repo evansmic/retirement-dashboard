@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cleanExamplePlanCards, createCleanExampleRuntimePlan, createExamplePlan, examplePlanCards } from '../data/examplePlans';
 import { createPlanFile } from '../data/planFile';
 import { selectDrawdownReadinessSummary, selectSpendingStressSummary } from './resultSelectors';
-import { runBoundedOptimizer, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
+import { runBoundedOptimizer, selectOptimizerExperimentalDraftExampleMatrix, type BoundedOptimizerCandidateRow } from './boundedOptimizer';
 import { runResultsPreviewBundle } from './previewScenarios';
 import { runSingleDrawdownComparison, selectHiddenDrawdownComparisonGuardrails } from './drawdownComparison';
 import {
@@ -281,6 +281,36 @@ describe('example-plan optimizer readiness matrix', () => {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }
     }
+  });
+
+  it('scores experimental draft readiness across bundled and clean examples without export output', () => {
+    const bundledExamples = examplePlanCards.map((card) => {
+      const optimizer = runBoundedOptimizer(createExamplePlan(card.id));
+      return {
+        id: card.id,
+        label: card.label,
+        draft: optimizer.experimentalAnnualInstructionDraft
+      };
+    });
+    const cleanExamples = cleanExamplePlanCards.map((card) => {
+      const optimizer = runBoundedOptimizer(createCleanExampleRuntimePlan(card.id));
+      return {
+        id: card.id,
+        label: card.label,
+        draft: optimizer.experimentalAnnualInstructionDraft
+      };
+    });
+    const matrix = selectOptimizerExperimentalDraftExampleMatrix([...bundledExamples, ...cleanExamples]);
+
+    expect(matrix.exampleCount).toBe(examplePlanCards.length + cleanExamplePlanCards.length);
+    expect(matrix.items).toHaveLength(matrix.exampleCount);
+    expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(matrix.status);
+    expect(matrix.readyCount + matrix.reviewFirstCount + matrix.blockedCount).toBe(matrix.exampleCount);
+    expect(matrix.items.every((item) => ['readyForTesterReview', 'reviewFirst', 'blocked'].includes(item.status))).toBe(true);
+    expect(matrix.items.every((item) => item.draftRows >= 0 && item.modelledYears >= 0)).toBe(true);
+    expect(matrix.boundary).toContain('runtime-only');
+    expect(matrix.boundary).not.toContain('CSV export is ready');
+    expect(JSON.stringify(matrix).toLowerCase()).not.toContain('tax-bracket instructions');
   });
 
   it('keeps disruptive example-plan suggestions behind the material-repair gate', () => {

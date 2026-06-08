@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2128-S2147 is complete. Experimental draft readiness can now be scored across bundled and clean synthetic examples, with ready, review-first, and blocked counts plus per-example confidence, row coverage, blocker, watch, and review-item detail. This supports runtime repair targeting while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
+
+Current package doc: [`docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md`](docs/sprint_2128_2147_experimental_draft_example_matrix_scoring.md).
+
 S2108-S2127 is complete. Experimental annual draft rows now include a runtime readiness summary that rolls up confidence, blockers, harm checks, watch items, tax context, and row coverage into a ready/review/blocked status. This supports synthetic tester review decisions while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
 
 Current package doc: [`docs/sprint_2108_2127_experimental_draft_readiness_summary.md`](docs/sprint_2108_2127_experimental_draft_readiness_summary.md).

@@ -398,6 +398,30 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   nextStep: string;
 };
 
+export type OptimizerExperimentalDraftExampleMatrixItem = {
+  id: string;
+  label: string;
+  status: OptimizerExperimentalDraftReadinessSummary['status'];
+  confidenceLevel: OptimizerExperimentalDraftConfidenceLevel;
+  draftRows: number;
+  modelledYears: number;
+  blockerCount: number;
+  watchCount: number;
+  reviewItems: string[];
+};
+
+export type OptimizerExperimentalDraftExampleMatrix = {
+  status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
+  exampleCount: number;
+  readyCount: number;
+  reviewFirstCount: number;
+  blockedCount: number;
+  items: OptimizerExperimentalDraftExampleMatrixItem[];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerGoalReview = {
   summary: string;
   architecture: {
@@ -3596,6 +3620,52 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     boundary:
       'These rows are runtime-only experimental draft rows for synthetic tester scenarios. They are not saved, exported to CSV, printed in reports, shown in production UI, or framed as tax-bracket instructions.',
     nextStep: 'Review the experimental rows with synthetic scenarios before considering CSV, saved output, or production UI.'
+  };
+}
+
+export function selectOptimizerExperimentalDraftExampleMatrix(
+  examples: Array<{
+    id: string;
+    label: string;
+    draft: OptimizerExperimentalAnnualInstructionDraft;
+  }>
+): OptimizerExperimentalDraftExampleMatrix {
+  const items = examples.map((example) => ({
+    id: example.id,
+    label: example.label,
+    status: example.draft.readinessSummary.status,
+    confidenceLevel: example.draft.readinessSummary.confidenceLevel,
+    draftRows: example.draft.readinessSummary.rowCoverage.draftRows,
+    modelledYears: example.draft.readinessSummary.rowCoverage.modelledYears,
+    blockerCount: example.draft.readinessSummary.blockerCount,
+    watchCount: example.draft.readinessSummary.watchCount,
+    reviewItems: example.draft.readinessSummary.reviewItems
+  }));
+  const readyCount = items.filter((item) => item.status === 'readyForTesterReview').length;
+  const reviewFirstCount = items.filter((item) => item.status === 'reviewFirst').length;
+  const blockedCount = items.filter((item) => item.status === 'blocked').length;
+  const status: OptimizerExperimentalDraftExampleMatrix['status'] = blockedCount
+    ? 'blocked'
+    : reviewFirstCount
+      ? 'reviewFirst'
+      : 'readyForTesterReview';
+
+  return {
+    status,
+    exampleCount: items.length,
+    readyCount,
+    reviewFirstCount,
+    blockedCount,
+    items,
+    summary:
+      status === 'readyForTesterReview'
+        ? 'All experimental draft examples are ready for synthetic tester review.'
+        : status === 'reviewFirst'
+          ? 'Some experimental draft examples need review before synthetic tester use.'
+          : 'At least one experimental draft example is blocked and needs repair before tester review.',
+    boundary:
+      'Example matrix scoring is runtime-only. It does not save draft output, export CSV, change reports, change production UI, or change schemas.',
+    nextStep: 'Use matrix results to repair weak examples before considering tester-facing presentation.'
   };
 }
 

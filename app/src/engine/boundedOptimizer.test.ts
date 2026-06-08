@@ -6,6 +6,7 @@ import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import {
   buildBoundedOptimizerCandidates,
   runBoundedOptimizer,
+  selectOptimizerExperimentalDraftExampleMatrix,
   selectOptimizerAnnualSequencingPrepContract,
   selectOptimizerCapacityObjective,
   selectOptimizerCapacityExportGuard,
@@ -326,6 +327,98 @@ describe('bounded optimizer runner', () => {
     });
     expect(JSON.stringify(contract).toLowerCase()).not.toContain('withdraw from this account');
     expect(JSON.stringify(contract).toLowerCase()).not.toContain('withdraw $');
+  });
+
+  it('scores experimental draft example matrix readiness without creating export output', () => {
+    const matrix = selectOptimizerExperimentalDraftExampleMatrix([
+      {
+        id: 'ready-example',
+        label: 'Ready example',
+        draft: {
+          status: 'draftReady',
+          audience: 'syntheticTesterOnly',
+          sourceCandidateId: 'baseline',
+          sourceCandidateLabel: 'Current plan',
+          yearCount: 3,
+          rows: [],
+          taxContextRows: [],
+          confidence: {
+            level: 'higher',
+            score: 12,
+            rows: [],
+            blockers: [],
+            summary: 'Draft confidence is higher for synthetic tester review.'
+          },
+          harmChecks: [],
+          readinessSummary: {
+            status: 'readyForTesterReview',
+            headline: 'Experimental draft is ready for synthetic tester review.',
+            rowCoverage: { draftRows: 4, modelledYears: 3 },
+            confidenceLevel: 'higher',
+            blockerCount: 0,
+            watchCount: 0,
+            taxContext: 'available',
+            reviewItems: [],
+            boundary: 'Runtime-only.',
+            nextStep: 'Use synthetic scenarios.'
+          },
+          blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+          summary: 'Draft ready.',
+          boundary: 'Runtime-only.',
+          nextStep: 'Review.'
+        }
+      },
+      {
+        id: 'review-example',
+        label: 'Review example',
+        draft: {
+          status: 'draftReady',
+          audience: 'syntheticTesterOnly',
+          sourceCandidateId: 'baseline',
+          sourceCandidateLabel: 'Current plan',
+          yearCount: 2,
+          rows: [],
+          taxContextRows: [],
+          confidence: {
+            level: 'medium',
+            score: 9,
+            rows: [],
+            blockers: [],
+            summary: 'Draft confidence is medium.'
+          },
+          harmChecks: [],
+          readinessSummary: {
+            status: 'reviewFirst',
+            headline: 'Experimental draft needs review before tester use.',
+            rowCoverage: { draftRows: 1, modelledYears: 2 },
+            confidenceLevel: 'medium',
+            blockerCount: 0,
+            watchCount: 2,
+            taxContext: 'available',
+            reviewItems: ['Survivor review'],
+            boundary: 'Runtime-only.',
+            nextStep: 'Review watch items.'
+          },
+          blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+          summary: 'Draft review.',
+          boundary: 'Runtime-only.',
+          nextStep: 'Review.'
+        }
+      }
+    ]);
+
+    expect(matrix).toMatchObject({
+      status: 'reviewFirst',
+      exampleCount: 2,
+      readyCount: 1,
+      reviewFirstCount: 1,
+      blockedCount: 0,
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(matrix.items.map((item) => item.id)).toEqual(['ready-example', 'review-example']);
+    expect(matrix.items[1].reviewItems).toContain('Survivor review');
+    expect(matrix.boundary).toContain('does not save draft output');
+    expect(matrix.boundary).not.toContain('CSV export is ready');
   });
 
   it('builds a limited candidate set from optimizer contract levers', () => {
