@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2108-S2127 is complete. Experimental annual draft rows now include a runtime readiness summary that rolls up confidence, blockers, harm checks, watch items, tax context, and row coverage into a ready/review/blocked status. This supports synthetic tester review decisions while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
+
+Current package doc: [`docs/sprint_2108_2127_experimental_draft_readiness_summary.md`](docs/sprint_2108_2127_experimental_draft_readiness_summary.md).
+
 S2088-S2107 is complete. Experimental annual draft rows now include runtime harm checks for projected shortfall, estate pressure, survivor review, OAS recovery, tax context availability, and output boundary posture. This improves draft confidence for synthetic tester scenarios while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
 
 Current package doc: [`docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md`](docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md).

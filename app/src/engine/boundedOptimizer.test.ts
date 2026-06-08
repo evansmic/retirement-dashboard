@@ -602,6 +602,19 @@ describe('bounded optimizer runner', () => {
       status: 'pass',
       detail: expect.stringContaining('runtime-only')
     });
+    expect(summary.experimentalAnnualInstructionDraft.readinessSummary).toMatchObject({
+      status: 'readyForTesterReview',
+      confidenceLevel: 'higher',
+      blockerCount: 0,
+      taxContext: 'available',
+      rowCoverage: {
+        draftRows: 6,
+        modelledYears: 3
+      },
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.readinessSummary.watchCount).toBe(0);
+    expect(summary.experimentalAnnualInstructionDraft.readinessSummary.nextStep).toContain('synthetic scenarios');
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
     expect(JSON.stringify(summary.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');

@@ -4,7 +4,35 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2088-S2107: Experimental Draft Stress And Harm Checks
+## Latest Package — S2108-S2127: Experimental Draft Readiness Summary
+
+**Status:** Complete 2026-06-08.
+
+Goal: summarize the runtime experimental annual draft into one readiness packet before UI, CSV, saved output, or report output. The draft now rolls up confidence, blockers, harm checks, watch items, tax context, and row coverage into a clear ready/review/blocked status while preserving synthetic-tester-only scope.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2108_2127_experimental_draft_readiness_summary.md`](docs/sprint_2108_2127_experimental_draft_readiness_summary.md).
+
+### S2108-S2127 Completed Path
+
+- **S2108-S2112 — Readiness shape batch.** Added readiness summary type, status mapping, row coverage, confidence, and blocker fields.
+- **S2113-S2117 — Review item batch.** Rolled up blockers and watch items from confidence and harm checks.
+- **S2118-S2122 — Boundary batch.** Added tax context readiness, runtime-only boundary, tester-review next step, and deferred output posture.
+- **S2123-S2127 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2108-S2127 Definition Of Done
+
+- Experimental annual draft includes readiness summary.
+- Readiness summary reports ready, review-first, or blocked.
+- Readiness summary includes row coverage, confidence level, blocker count, watch count, tax context status, and review items.
+- Readiness summary remains runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S2088-S2107: Experimental Draft Stress And Harm Checks
 
 **Status:** Complete 2026-06-08.
 

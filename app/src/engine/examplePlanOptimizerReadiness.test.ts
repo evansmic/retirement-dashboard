@@ -184,6 +184,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(item.optimizer.experimentalAnnualInstructionDraft.harmChecks.map((row) => row.id)).toEqual(
         expect.arrayContaining(['shortfall', 'survivorReview', 'oasRecovery', 'taxContext'])
       );
+      expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(item.optimizer.experimentalAnnualInstructionDraft.readinessSummary.status);
+      expect(item.optimizer.experimentalAnnualInstructionDraft.readinessSummary.boundary).toContain('runtime-only');
       expect(JSON.stringify(item.optimizer.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
@@ -274,6 +276,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toContain('effectiveRate');
       expect(optimizer.experimentalAnnualInstructionDraft.confidence.summary).toContain('Draft confidence');
       expect(optimizer.experimentalAnnualInstructionDraft.harmChecks.map((row) => row.id)).toContain('shortfall');
+      expect(optimizer.experimentalAnnualInstructionDraft.readinessSummary.nextStep).toBeTruthy();
       for (const key of CAPACITY_RUNTIME_KEYS) {
         expect(saved.plan, `${card.id} saved clean runtime excludes ${key}`).not.toHaveProperty(key);
       }

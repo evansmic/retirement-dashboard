@@ -365,6 +365,22 @@ export type OptimizerExperimentalDraftHarmCheckRow = {
   detail: string;
 };
 
+export type OptimizerExperimentalDraftReadinessSummary = {
+  status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
+  headline: string;
+  rowCoverage: {
+    draftRows: number;
+    modelledYears: number;
+  };
+  confidenceLevel: OptimizerExperimentalDraftConfidenceLevel;
+  blockerCount: number;
+  watchCount: number;
+  taxContext: 'available' | 'partial';
+  reviewItems: string[];
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalAnnualInstructionDraft = {
   status: 'draftReady' | 'needsInputs' | 'blocked';
   audience: 'syntheticTesterOnly';
@@ -375,6 +391,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
+  readinessSummary: OptimizerExperimentalDraftReadinessSummary;
   blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
@@ -3454,6 +3471,57 @@ function buildExperimentalDraftHarmChecks({
   ];
 }
 
+function buildExperimentalDraftReadinessSummary({
+  yearCount,
+  draftRows,
+  taxContextRows,
+  confidence,
+  harmChecks
+}: {
+  yearCount: number;
+  draftRows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
+  confidence: OptimizerExperimentalDraftConfidence;
+  harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
+}): OptimizerExperimentalDraftReadinessSummary {
+  const blockers = [...confidence.blockers, ...harmChecks.filter((row) => row.status === 'block').map((row) => row.label)];
+  const watchItems = [
+    ...confidence.rows.filter((row) => row.status === 'watch').map((row) => row.label),
+    ...harmChecks.filter((row) => row.status === 'watch').map((row) => row.label)
+  ];
+  const taxContext = taxContextRows.some((row) => row.detail.toLowerCase().includes('unavailable')) ? 'partial' : 'available';
+  const status: OptimizerExperimentalDraftReadinessSummary['status'] = blockers.length
+    ? 'blocked'
+    : confidence.level === 'higher' && watchItems.length <= 1
+      ? 'readyForTesterReview'
+      : 'reviewFirst';
+
+  return {
+    status,
+    headline:
+      status === 'readyForTesterReview'
+        ? 'Experimental draft is ready for synthetic tester review.'
+        : status === 'reviewFirst'
+          ? 'Experimental draft needs review before tester use.'
+          : 'Experimental draft is blocked until required evidence is repaired.',
+    rowCoverage: {
+      draftRows: draftRows.length,
+      modelledYears: yearCount
+    },
+    confidenceLevel: confidence.level,
+    blockerCount: blockers.length,
+    watchCount: watchItems.length,
+    taxContext,
+    reviewItems: [...new Set([...blockers, ...watchItems])],
+    boundary:
+      'Readiness summary is runtime-only for synthetic tester scenarios. It does not save, export, print, or promote draft rows to production UI.',
+    nextStep:
+      status === 'readyForTesterReview'
+        ? 'Use synthetic scenarios to review whether the draft rows feel understandable and useful.'
+        : 'Repair blockers and review watch items before considering tester-facing presentation.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3501,6 +3569,13 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     taxContextRows,
     confidence
   });
+  const readinessSummary = buildExperimentalDraftReadinessSummary({
+    yearCount: annualRows.length,
+    draftRows: rows,
+    taxContextRows,
+    confidence,
+    harmChecks
+  });
 
   return {
     status,
@@ -3512,6 +3587,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     taxContextRows,
     confidence,
     harmChecks,
+    readinessSummary,
     blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
     summary:
       status === 'draftReady'
