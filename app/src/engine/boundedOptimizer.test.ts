@@ -586,6 +586,22 @@ describe('bounded optimizer runner', () => {
       status: 'pass',
       detail: expect.stringContaining('runtime-only')
     });
+    expect(summary.experimentalAnnualInstructionDraft.harmChecks.map((row) => row.id)).toEqual([
+      'shortfall',
+      'estatePressure',
+      'survivorReview',
+      'oasRecovery',
+      'taxContext',
+      'outputBoundary'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.harmChecks.find((row) => row.id === 'shortfall')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('No projected shortfall')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.harmChecks.find((row) => row.id === 'outputBoundary')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('runtime-only')
+    });
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
     expect(JSON.stringify(summary.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');

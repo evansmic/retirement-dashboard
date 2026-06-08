@@ -358,6 +358,13 @@ export type OptimizerExperimentalDraftConfidence = {
   summary: string;
 };
 
+export type OptimizerExperimentalDraftHarmCheckRow = {
+  id: 'shortfall' | 'estatePressure' | 'survivorReview' | 'oasRecovery' | 'taxContext' | 'outputBoundary';
+  label: string;
+  status: 'pass' | 'watch' | 'block';
+  detail: string;
+};
+
 export type OptimizerExperimentalAnnualInstructionDraft = {
   status: 'draftReady' | 'needsInputs' | 'blocked';
   audience: 'syntheticTesterOnly';
@@ -367,6 +374,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   rows: OptimizerExperimentalAnnualInstructionDraftRow[];
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
+  harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
   blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
@@ -3385,6 +3393,67 @@ function buildExperimentalDraftConfidence({
   };
 }
 
+function buildExperimentalDraftHarmChecks({
+  adapter,
+  summary,
+  taxContextRows,
+  confidence
+}: {
+  adapter: OptimizerAnnualSequencingInputAdapter;
+  summary: ReturnType<typeof summarizeResult> | null | undefined;
+  taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
+  confidence: OptimizerExperimentalDraftConfidence;
+}): OptimizerExperimentalDraftHarmCheckRow[] {
+  const oasWatch = taxContextRows.find((row) => row.id === 'oasRecovery')?.status === 'watch';
+  const taxContextUnavailable = taxContextRows.some((row) => row.detail.toLowerCase().includes('unavailable'));
+  return [
+    {
+      id: 'shortfall',
+      label: 'Projected shortfall',
+      status: summary?.firstShortfallYear ? 'block' : 'pass',
+      detail: summary?.firstShortfallYear
+        ? `First projected shortfall appears in ${summary.firstShortfallYear}; do not rely on draft rows without repair.`
+        : 'No projected shortfall appears in the selected modelled candidate.'
+    },
+    {
+      id: 'estatePressure',
+      label: 'Estate pressure',
+      status: adapter.constraintInputs.includes('estateTarget') && summary && summary.endPortfolio <= 0 ? 'watch' : 'pass',
+      detail: adapter.constraintInputs.includes('estateTarget')
+        ? 'Estate target is present as a constraint hook; review end portfolio before relying on draft rows.'
+        : 'No entered estate target is attached to this draft.'
+    },
+    {
+      id: 'survivorReview',
+      label: 'Survivor review',
+      status: adapter.constraintInputs.includes('survivorReview') ? 'watch' : 'pass',
+      detail: adapter.constraintInputs.includes('survivorReview')
+        ? 'Survivor-sensitive scenario should be reviewed before draft rows are treated as usable.'
+        : 'No survivor review flag is attached to this draft.'
+    },
+    {
+      id: 'oasRecovery',
+      label: 'OAS recovery watch',
+      status: oasWatch ? 'watch' : 'pass',
+      detail: oasWatch ? 'OAS recovery appears in the draft window and should be reviewed as a trade-off.' : 'No OAS recovery appears in the draft window.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context availability',
+      status: taxContextUnavailable ? 'watch' : 'pass',
+      detail: taxContextUnavailable
+        ? 'Some tax context is unavailable in the draft window.'
+        : 'Tax context is available for draft-window review without bracket instructions.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: confidence.level === 'blocked' ? 'block' : 'pass',
+      detail: 'Draft remains runtime-only and is not saved, exported, printed, or promoted to production UI.'
+    }
+  ];
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3426,6 +3495,12 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     draftRows: rows,
     taxContextRows
   });
+  const harmChecks = buildExperimentalDraftHarmChecks({
+    adapter,
+    summary,
+    taxContextRows,
+    confidence
+  });
 
   return {
     status,
@@ -3436,6 +3511,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     rows,
     taxContextRows,
     confidence,
+    harmChecks,
     blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
     summary:
       status === 'draftReady'

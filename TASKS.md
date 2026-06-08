@@ -4,7 +4,34 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2068-S2087: Experimental Draft Confidence Scoring
+## Latest Package — S2088-S2107: Experimental Draft Stress And Harm Checks
+
+**Status:** Complete 2026-06-08.
+
+Goal: add runtime stress and harm checks around experimental annual draft rows before UI, CSV, saved output, or report output. The draft now flags projected shortfall, estate pressure, survivor review, OAS recovery, tax context availability, and output boundary posture while preserving synthetic-tester-only scope.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md`](docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md).
+
+### S2088-S2107 Completed Path
+
+- **S2088-S2092 — Harm check shape batch.** Added harm check type, draft output field, shortfall check, and output boundary check.
+- **S2093-S2097 — Constraint and tax watch batch.** Added estate pressure, survivor review, OAS recovery, and tax context availability checks.
+- **S2098-S2102 — Example matrix batch.** Added focused optimizer, bundled-example, and clean-example harm check assertions.
+- **S2103-S2107 — Verification and closeout.** Ran focused optimizer tests, plan-file tests, example capacity matrix tests, production build, file guards, and closed the package.
+
+### S2088-S2107 Definition Of Done
+
+- Experimental annual draft includes harm check rows.
+- Harm checks cover projected shortfall, estate pressure, survivor review, OAS recovery, tax context availability, and output boundary.
+- Harm checks remain runtime-only and synthetic-tester-only.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example capacity matrix tests, and production build pass.
+
+## Previous Package — S2068-S2087: Experimental Draft Confidence Scoring
 
 **Status:** Complete 2026-06-08.
 

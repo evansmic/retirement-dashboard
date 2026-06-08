@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2088-S2107 is complete. Experimental annual draft rows now include runtime harm checks for projected shortfall, estate pressure, survivor review, OAS recovery, tax context availability, and output boundary posture. This improves draft confidence for synthetic tester scenarios while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
+
+Current package doc: [`docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md`](docs/sprint_2088_2107_experimental_draft_stress_harm_checks.md).
+
 S2068-S2087 is complete. Experimental annual draft rows now include runtime confidence scoring with quality rows for draft coverage, tax context, account-order source, constraints, survivor review, and output boundaries. This improves confidence in synthetic tester draft output while keeping saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation out of scope.
 
 Current package doc: [`docs/sprint_2068_2087_experimental_draft_confidence_scoring.md`](docs/sprint_2068_2087_experimental_draft_confidence_scoring.md).
