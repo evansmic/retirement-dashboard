@@ -956,6 +956,35 @@ button.secondary,
   gap: 14px;
 }
 
+.optimizer-capacity-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d5ded8;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  padding: 14px;
+}
+
+.optimizer-capacity-panel h3,
+.optimizer-capacity-panel p {
+  margin: 0;
+}
+
+.optimizer-capacity-panel p {
+  color: var(--muted);
+}
+
+.capacity-gap,
+.capacity-blocked {
+  border-color: #e1b9ae;
+  background: #fff7f4;
+}
+
+.capacity-tight {
+  border-color: #ded2a8;
+  background: #fffaf0;
+}
+
 .spending-stress-panel {
   display: grid;
   gap: 14px;
@@ -1195,6 +1224,19 @@ button.secondary,
 
 .guardrail-tested {
   border-color: #b9d2c5;
+}
+
+.guardrail-protected {
+  border-color: #b9d2c5;
+}
+
+.guardrail-deferred,
+.guardrail-review {
+  border-color: #ded2a8;
+}
+
+.guardrail-blocked {
+  border-color: #e1b9ae;
 }
 
 .guardrail-reviewFirst,

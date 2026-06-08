@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S1868-S1887 is complete. The runtime-only capacity objective now has a guarded Details evidence surface: compact monthly capacity, expense floor, and optional room in the normal Details optimizer card, with full constraint evidence kept behind the option research gate. Overview remains unpromoted, and there are still no saved optimizer outputs, saved schema changes, engine output schema changes, annual account instructions, or `.plan.json` generation.
+
+Current package doc: [`docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md`](docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md).
+
 S1848-S1867 is complete. The bounded optimizer runtime summary now includes a runtime-only `capacityObjective` packet with sustainable after-tax monthly capacity, minimum expense floor comparison, optional room, estate and survivor constraint states, bounded CPP/OAS timing state, and explicit annual sequencing deferral. This did not add production UI, saved optimizer output, saved plan schema changes, engine output schema changes, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_1848_1867_runtime_only_optimizer_objective_adapter.md`](docs/sprint_1848_1867_runtime_only_optimizer_objective_adapter.md).

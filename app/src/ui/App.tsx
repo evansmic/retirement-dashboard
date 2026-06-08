@@ -4609,11 +4609,39 @@ function BoundedOptimizerPanel({
       <div className="summary-grid">
         <Metric label="Options checked" value={loading ? 'Calculating' : String(summary?.candidateCount || 0)} />
         <Metric label="Objective" value={summary ? 'Max after-tax spend' : '-'} />
-        <Metric label="Monthly spend reviewed" value={suggested ? formatMoney(suggested.sustainableAnnualSpend / 12) : '-'} />
+        <Metric label="Monthly capacity" value={summary?.capacityObjective.monthlyAfterTaxCapacity ? formatMoney(summary.capacityObjective.monthlyAfterTaxCapacity) : suggested ? formatMoney(suggested.sustainableAnnualSpend / 12) : '-'} />
+        <Metric label="Expense floor" value={summary?.capacityObjective.minimumMonthlyExpenseFloor ? formatMoney(summary.capacityObjective.minimumMonthlyExpenseFloor) : '-'} />
         <Metric label="Funded years" value={suggested ? `${suggested.fundedYears}/${suggested.totalYears}` : '-'} />
         <Metric label="First shortfall" value={suggested?.firstShortfallYear ? String(suggested.firstShortfallYear) : suggested ? 'None' : '-'} />
         <Metric label="Projected money left" value={suggested ? formatMoney(suggested.endPortfolio) : '-'} />
       </div>
+
+      {summary?.capacityObjective ? (
+        <section className={`optimizer-capacity-panel capacity-${summary.capacityObjective.status}`}>
+          <div>
+            <p className="eyebrow">Capacity objective</p>
+            <h3>Floor first, then optional room</h3>
+            <p>{summary.capacityObjective.detail}</p>
+          </div>
+          <div className="optimizer-driver-grid">
+            <article className={`optimizer-driver-row driver-${summary.capacityObjective.status === 'gap' || summary.capacityObjective.status === 'blocked' ? 'watch' : 'ok'}`}>
+              <span>Monthly capacity</span>
+              <strong>{summary.capacityObjective.monthlyAfterTaxCapacity !== null ? formatMoney(summary.capacityObjective.monthlyAfterTaxCapacity) : '-'}</strong>
+              <p>After-tax monthly capacity from the selected runtime option.</p>
+            </article>
+            <article className="optimizer-driver-row">
+              <span>Expense floor</span>
+              <strong>{summary.capacityObjective.minimumMonthlyExpenseFloor !== null ? formatMoney(summary.capacityObjective.minimumMonthlyExpenseFloor) : '-'}</strong>
+              <p>Protected before optional spending room is counted.</p>
+            </article>
+            <article className={`optimizer-driver-row driver-${summary.capacityObjective.optionalMonthlyRoom && summary.capacityObjective.optionalMonthlyRoom > 0 ? 'ok' : 'watch'}`}>
+              <span>Optional room</span>
+              <strong>{summary.capacityObjective.optionalMonthlyRoom !== null ? formatMoney(summary.capacityObjective.optionalMonthlyRoom) : '-'}</strong>
+              <p>Runtime room above the floor, not a spending instruction.</p>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
       {isCompact && summary?.compactEvidenceRows.length ? (
         <section className="optimizer-driver-panel">
@@ -4690,6 +4718,29 @@ function BoundedOptimizerPanel({
               </article>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {!isCompact && summary?.capacityObjective ? (
+        <section className="optimizer-guardrail-panel optimizer-capacity-research">
+          <div>
+            <p className="eyebrow">Capacity constraint evidence</p>
+            <h3>What the runtime capacity answer protects</h3>
+            <p>{summary.capacityObjective.boundary}</p>
+          </div>
+          <div className="optimizer-guardrail-grid">
+            {summary.capacityObjective.rows.map((row) => (
+              <article className={`optimizer-guardrail-row guardrail-${row.status}`} key={row.id}>
+                <span>{row.status === 'protected' ? 'Protected' : row.status === 'deferred' ? 'Deferred' : row.status === 'blocked' ? 'Blocked' : 'Review'}</span>
+                <strong>{row.label}</strong>
+                <p>{row.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">
+            This evidence stays in the Details research path. It does not save optimizer results, change the plan file,
+            or create annual account instructions.
+          </p>
         </section>
       ) : null}
 

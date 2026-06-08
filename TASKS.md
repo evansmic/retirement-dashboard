@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S1848-S1867: Runtime-Only Optimizer Objective Adapter
+## Latest Package — S1868-S1887: Capacity Objective Evidence Surface And Guardrails
+
+**Status:** Complete 2026-06-08.
+
+Goal: surface the runtime-only capacity objective evidence in Details without promoting production Overview UI. The compact Details optimizer card now shows monthly capacity, expense floor, and optional room, while full constraint evidence stays behind the option research gate.
+
+Non-scope: production Overview UI, saved plan schema changes, engine output schema changes, persisted optimizer output, `.plan.json` files, account-level annual withdrawal instructions, tax-bracket instructions, Monte Carlo-in-loop optimization, or advice-like copy.
+
+Package doc: [`docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md`](docs/sprint_1868_1887_capacity_objective_evidence_surface_and_guardrails.md).
+
+### S1868-S1887 Completed Path
+
+- **S1868-S1872 — Compact evidence batch.** Added monthly capacity, expense floor, optional room, and floor-first language to the compact Details optimizer card.
+- **S1873-S1877 — Research surface batch.** Added full capacity constraint rows inside the gated optimizer research panel.
+- **S1878-S1882 — Copy guard batch.** Preserved review language and blocked spending instructions, account instructions, production promotion, and annual sequencing.
+- **S1883-S1887 — Verification and closeout.** Updated structure guards, ran focused tests, ran production build, and closed the package.
+
+### S1868-S1887 Definition Of Done
+
+- Compact capacity evidence appears in Details optimizer review.
+- Full capacity constraint evidence remains gated behind option research.
+- Overview remains free of optimizer capacity constraint evidence.
+- Minimum floor appears before optional room.
+- Annual sequencing remains deferred.
+- Optimizer output remains runtime-only.
+- Saved plan schema and engine output schema remain unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused UI and optimizer tests plus production build pass.
+
+## Previous Package — S1848-S1867: Runtime-Only Optimizer Objective Adapter
 
 **Status:** Complete 2026-06-08.
 
