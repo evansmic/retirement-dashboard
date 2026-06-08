@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2208-S2227 is complete. Experimental annual draft rows now include runtime source-field evidence, year-level grouping, account-order position, and clearer account-level rationale. This improves synthetic tester review of annual draft rows while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft rows, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2208_2227_annual_draft_row_quality_rationale.md`](docs/sprint_2208_2227_annual_draft_row_quality_rationale.md).
+
 S2188-S2207 is complete. Clean synthetic examples now get runtime-only planning seeds after clean reset adaptation, so the experimental optimizer can test annual draft rows against plausible account, CPP/OAS, mortgage, survivor, and estate evidence while clean files remain clean. Saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, engine output schema changes, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2188_2207_clean_example_draft_repair.md`](docs/sprint_2188_2207_clean_example_draft_repair.md).

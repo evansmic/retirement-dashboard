@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2188-S2207: Clean Example Draft Repair
+## Latest Package — S2208-S2227: Annual Draft Row Quality And Rationale
+
+**Status:** Complete 2026-06-08.
+
+Goal: improve runtime annual draft row quality before saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft rows now include source-field evidence, year-level grouping, account-order position, and clearer account-level rationale for synthetic tester review.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft rows, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2208_2227_annual_draft_row_quality_rationale.md`](docs/sprint_2208_2227_annual_draft_row_quality_rationale.md).
+
+### S2208-S2227 Completed Path
+
+- **S2208-S2212 — Source evidence batch.** Added selected-candidate withdrawal source fields and source labels to experimental annual draft rows.
+- **S2213-S2217 — Grouping batch.** Added year-level grouping, row index, year withdrawal count, and account-order position to runtime draft rows.
+- **S2218-S2222 — Rationale batch.** Replaced generic draft rationale with account-specific modelled-source and tax-context rationale.
+- **S2223-S2227 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2208-S2227 Definition Of Done
+
+- Annual draft rows expose runtime source-field evidence.
+- Annual draft rows expose grouping within each modelled year.
+- Annual draft rows expose account-order position when available.
+- Annual draft rationale is account-specific and modelled-source based.
+- Rationale remains calm, consumer-facing, and non-directive.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft row evidence is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2188-S2207: Clean Example Draft Repair
 
 **Status:** Complete 2026-06-08.
 

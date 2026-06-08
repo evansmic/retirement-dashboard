@@ -322,6 +322,18 @@ export type OptimizerExperimentalAnnualInstructionDraftRow = {
   account: OptimizerExperimentalAccountBucket;
   label: string;
   amount: number;
+  source: {
+    candidateLabel: string;
+    withdrawalField: string;
+    withdrawalFieldLabel: string;
+    accountOrderPosition: number | null;
+    yearWithdrawalCount: number;
+  };
+  grouping: {
+    yearAccountIndex: number;
+    yearWithdrawalCount: number;
+    mode: 'singleAccountYear' | 'multiAccountYear';
+  };
   taxContext: {
     totalTaxYear: number;
     taxableIncome: number;
@@ -3288,14 +3300,61 @@ export function selectOptimizerExperimentalAccountOrderDraft(
   };
 }
 
-function rowDraftWithdrawals(row: Record<string, unknown>): Array<{ account: OptimizerExperimentalAccountBucket; amount: number }> {
+function withdrawalFieldLabel(field: string): string {
+  switch (field) {
+    case 'rrif_draw_f + rrif_draw_m':
+      return 'registered withdrawal fields';
+    case 'lif_draw':
+      return 'LIF withdrawal field';
+    case 'tfsa_draw':
+      return 'TFSA withdrawal field';
+    case 'nonreg_draw':
+      return 'non-registered withdrawal field';
+    case 'cash_draw':
+      return 'cash withdrawal field';
+    default:
+      return 'modelled withdrawal field';
+  }
+}
+
+function buildAnnualDraftRowRationale({
+  year,
+  label,
+  amount,
+  sourceField,
+  accountOrderPosition,
+  yearAccountIndex,
+  yearWithdrawalCount,
+  taxContextAvailable
+}: {
+  year: number;
+  label: string;
+  amount: number;
+  sourceField: string;
+  accountOrderPosition: number | null;
+  yearAccountIndex: number;
+  yearWithdrawalCount: number;
+  taxContextAvailable: boolean;
+}): string {
+  const orderDetail = accountOrderPosition === null ? 'outside the current draft account order' : `draft account-order position ${accountOrderPosition}`;
+  const groupDetail =
+    accountOrderPosition === null
+      ? `row ${yearAccountIndex} of ${yearWithdrawalCount} for that year`
+      : `row ${yearAccountIndex} of ${yearWithdrawalCount} for that year`;
+  const taxDetail = taxContextAvailable
+    ? 'with after-tax spending and tax context attached for review'
+    : 'with limited tax context attached for review';
+  return `For ${year}, this runtime draft mirrors the selected candidate ${withdrawalFieldLabel(sourceField)} for ${label}: $${Math.round(amount).toLocaleString()}, shown as ${groupDetail} at ${orderDetail}, ${taxDetail}.`;
+}
+
+function rowDraftWithdrawals(row: Record<string, unknown>): Array<{ account: OptimizerExperimentalAccountBucket; amount: number; sourceField: string }> {
   const registeredAmount = n(row.rrif_draw_f) + n(row.rrif_draw_m);
-  const draftRows: Array<{ account: OptimizerExperimentalAccountBucket; amount: number }> = [
-    { account: 'registered', amount: registeredAmount },
-    { account: 'lif', amount: n(row.lif_draw) },
-    { account: 'tfsa', amount: n(row.tfsa_draw) },
-    { account: 'nonRegistered', amount: n(row.nonreg_draw) },
-    { account: 'cash', amount: n(row.cash_draw) }
+  const draftRows: Array<{ account: OptimizerExperimentalAccountBucket; amount: number; sourceField: string }> = [
+    { account: 'registered', amount: registeredAmount, sourceField: 'rrif_draw_f + rrif_draw_m' },
+    { account: 'lif', amount: n(row.lif_draw), sourceField: 'lif_draw' },
+    { account: 'tfsa', amount: n(row.tfsa_draw), sourceField: 'tfsa_draw' },
+    { account: 'nonRegistered', amount: n(row.nonreg_draw), sourceField: 'nonreg_draw' },
+    { account: 'cash', amount: n(row.cash_draw), sourceField: 'cash_draw' }
   ];
   return draftRows.filter((item) => item.amount > 1);
 }
@@ -3569,22 +3628,50 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     const withdrawals = rowDraftWithdrawals(annualRow as Record<string, unknown>).sort(
       (a, b) => (orderIndex.get(a.account) ?? 99) - (orderIndex.get(b.account) ?? 99)
     );
-    return withdrawals.map((withdrawal) => ({
-      year: n(annualRow.year),
-      account: withdrawal.account,
-      label: accountBucketLabel(withdrawal.account),
-      amount: Math.round(withdrawal.amount),
-      taxContext: {
+    return withdrawals.map((withdrawal, index) => {
+      const year = n(annualRow.year);
+      const label = accountBucketLabel(withdrawal.account);
+      const amount = Math.round(withdrawal.amount);
+      const accountOrderPosition = orderIndex.has(withdrawal.account) ? (orderIndex.get(withdrawal.account) ?? 0) + 1 : null;
+      const taxContext = {
         totalTaxYear: Math.round(n(annualRow.totalTaxYear)),
         taxableIncome: Math.round(n(annualRow.taxableIncome)),
         oasRecovery: Math.round(n(annualRow.totalOasClawY)),
         afterTaxSpending: Math.round(n(annualRow.totalAftaxYear)),
         effectiveTaxRatePct: effectiveTaxRatePct(annualRow as Record<string, unknown>),
         oasRecoveryStatus: n(annualRow.totalOasClawY) > 1 ? ('present' as const) : ('none' as const)
-      },
-      status: 'experimentalDraft' as const,
-      rationale: 'Draft row mirrors the selected modelled candidate annual withdrawal field and shows tax context for synthetic tester review.'
-    }));
+      };
+      return {
+        year,
+        account: withdrawal.account,
+        label,
+        amount,
+        source: {
+          candidateLabel: adapter.sourceCandidateLabel,
+          withdrawalField: withdrawal.sourceField,
+          withdrawalFieldLabel: withdrawalFieldLabel(withdrawal.sourceField),
+          accountOrderPosition,
+          yearWithdrawalCount: withdrawals.length
+        },
+        grouping: {
+          yearAccountIndex: index + 1,
+          yearWithdrawalCount: withdrawals.length,
+          mode: withdrawals.length === 1 ? ('singleAccountYear' as const) : ('multiAccountYear' as const)
+        },
+        taxContext,
+        status: 'experimentalDraft' as const,
+        rationale: buildAnnualDraftRowRationale({
+          year,
+          label,
+          amount,
+          sourceField: withdrawal.sourceField,
+          accountOrderPosition,
+          yearAccountIndex: index + 1,
+          yearWithdrawalCount: withdrawals.length,
+          taxContextAvailable: taxContext.afterTaxSpending > 0 && taxContext.taxableIncome >= 0
+        })
+      };
+    });
   });
   const status: OptimizerExperimentalAnnualInstructionDraft['status'] =
     accountOrderDraft.status === 'draftReady' && rows.length ? 'draftReady' : accountOrderDraft.status === 'blocked' ? 'blocked' : 'needsInputs';

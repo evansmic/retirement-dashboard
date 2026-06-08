@@ -656,6 +656,18 @@ describe('bounded optimizer runner', () => {
       year: 2032,
       account: 'registered',
       amount: 26000,
+      source: {
+        candidateLabel: expect.stringContaining('Registered accounts first'),
+        withdrawalField: 'rrif_draw_f + rrif_draw_m',
+        withdrawalFieldLabel: 'registered withdrawal fields',
+        accountOrderPosition: 1,
+        yearWithdrawalCount: 2
+      },
+      grouping: {
+        yearAccountIndex: 1,
+        yearWithdrawalCount: 2,
+        mode: 'multiAccountYear'
+      },
       taxContext: {
         totalTaxYear: Math.round(80000 / 3),
         taxableIncome: 90000,
@@ -663,8 +675,11 @@ describe('bounded optimizer runner', () => {
         effectiveTaxRatePct: 29.6,
         oasRecoveryStatus: 'none'
       },
-      status: 'experimentalDraft'
+      status: 'experimentalDraft',
+      rationale: expect.stringContaining('runtime draft mirrors the selected candidate')
     });
+    expect(summary.experimentalAnnualInstructionDraft.rows[0].rationale).toContain('row 1 of 2');
+    expect(summary.experimentalAnnualInstructionDraft.rows[0].rationale).toContain('draft account-order position 1');
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

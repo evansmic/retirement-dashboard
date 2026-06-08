@@ -273,6 +273,9 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.annualSequencingInputAdapter.nextStep).toContain('experimental account-order draft');
       expect(optimizer.experimentalAccountOrderDraft.blockedOutputs).toContain('savedAccountOrder');
       expect(optimizer.experimentalAnnualInstructionDraft.blockedOutputs).toContain('savedInstructionOutput');
+      expect(optimizer.experimentalAnnualInstructionDraft.rows.every((row) => row.source.withdrawalField.length > 0)).toBe(true);
+      expect(optimizer.experimentalAnnualInstructionDraft.rows.every((row) => row.grouping.yearAccountIndex >= 1)).toBe(true);
+      expect(optimizer.experimentalAnnualInstructionDraft.rows.every((row) => row.rationale.includes('runtime draft mirrors'))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toContain('effectiveRate');
       expect(optimizer.experimentalAnnualInstructionDraft.confidence.summary).toContain('Draft confidence');
       expect(optimizer.experimentalAnnualInstructionDraft.harmChecks.map((row) => row.id)).toContain('shortfall');
