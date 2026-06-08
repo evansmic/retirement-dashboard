@@ -341,6 +341,17 @@ describe('bounded optimizer runner', () => {
           sourceCandidateLabel: 'Current plan',
           yearCount: 3,
           rows: [],
+          annualAccountTotals: [],
+          instructionReadiness: {
+            status: 'readyForReview',
+            rows: [],
+            totalDraftAmount: 0,
+            yearCount: 0,
+            blockedOutputs: ['annualAccountInstructions', 'savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+            summary: 'Runtime annual account totals are ready for synthetic tester review.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           taxContextRows: [],
           confidence: {
             level: 'higher',
@@ -378,6 +389,17 @@ describe('bounded optimizer runner', () => {
           sourceCandidateLabel: 'Current plan',
           yearCount: 2,
           rows: [],
+          annualAccountTotals: [],
+          instructionReadiness: {
+            status: 'reviewFirst',
+            rows: [],
+            totalDraftAmount: 0,
+            yearCount: 0,
+            blockedOutputs: ['annualAccountInstructions', 'savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+            summary: 'Runtime annual account totals need review before tester presentation.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           taxContextRows: [],
           confidence: {
             level: 'medium',
@@ -680,6 +702,41 @@ describe('bounded optimizer runner', () => {
     });
     expect(summary.experimentalAnnualInstructionDraft.rows[0].rationale).toContain('row 1 of 2');
     expect(summary.experimentalAnnualInstructionDraft.rows[0].rationale).toContain('draft account-order position 1');
+    expect(summary.experimentalAnnualInstructionDraft.annualAccountTotals[0]).toMatchObject({
+      year: 2032,
+      totalAmount: 31000,
+      accountCount: 2,
+      accounts: [
+        {
+          account: 'registered',
+          amount: 26000,
+          accountOrderPosition: 1
+        },
+        {
+          account: 'tfsa',
+          amount: 5000,
+          accountOrderPosition: 4
+        }
+      ],
+      taxContext: {
+        totalTaxYear: Math.round(80000 / 3),
+        afterTaxSpending: 85000,
+        oasRecovery: 0
+      }
+    });
+    expect(summary.experimentalAnnualInstructionDraft.instructionReadiness).toMatchObject({
+      status: 'readyForReview',
+      totalDraftAmount: 93000,
+      yearCount: 3,
+      blockedOutputs: expect.arrayContaining(['annualAccountInstructions', 'savedInstructionOutput', 'csvInstructionOutput', 'taxBracketInstructions', 'productionUi']),
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toEqual([
+      'yearTotals',
+      'accountOrderConsistency',
+      'taxContext',
+      'outputBoundary'
+    ]);
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

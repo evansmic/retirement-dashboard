@@ -346,6 +346,39 @@ export type OptimizerExperimentalAnnualInstructionDraftRow = {
   rationale: string;
 };
 
+export type OptimizerExperimentalAnnualAccountTotal = {
+  year: number;
+  totalAmount: number;
+  accountCount: number;
+  accounts: Array<{
+    account: OptimizerExperimentalAccountBucket;
+    label: string;
+    amount: number;
+    accountOrderPosition: number | null;
+  }>;
+  taxContext: {
+    totalTaxYear: number;
+    afterTaxSpending: number;
+    oasRecovery: number;
+  };
+};
+
+export type OptimizerExperimentalAnnualInstructionReadiness = {
+  status: 'readyForReview' | 'reviewFirst' | 'blocked';
+  rows: Array<{
+    id: 'yearTotals' | 'accountOrderConsistency' | 'taxContext' | 'outputBoundary';
+    label: string;
+    status: 'pass' | 'watch' | 'block';
+    detail: string;
+  }>;
+  totalDraftAmount: number;
+  yearCount: number;
+  blockedOutputs: Array<'annualAccountInstructions' | 'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -400,6 +433,8 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   sourceCandidateLabel: string;
   yearCount: number;
   rows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
+  instructionReadiness: OptimizerExperimentalAnnualInstructionReadiness;
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -3613,6 +3648,103 @@ function buildExperimentalDraftReadinessSummary({
   };
 }
 
+function buildExperimentalAnnualAccountTotals(
+  rows: OptimizerExperimentalAnnualInstructionDraftRow[]
+): OptimizerExperimentalAnnualAccountTotal[] {
+  const grouped = new Map<number, OptimizerExperimentalAnnualInstructionDraftRow[]>();
+  for (const row of rows) {
+    grouped.set(row.year, [...(grouped.get(row.year) || []), row]);
+  }
+
+  return [...grouped.entries()]
+    .sort(([yearA], [yearB]) => yearA - yearB)
+    .map(([year, yearRows]) => {
+      const orderedRows = [...yearRows].sort((a, b) => a.grouping.yearAccountIndex - b.grouping.yearAccountIndex);
+      return {
+        year,
+        totalAmount: orderedRows.reduce((sum, row) => sum + row.amount, 0),
+        accountCount: orderedRows.length,
+        accounts: orderedRows.map((row) => ({
+          account: row.account,
+          label: row.label,
+          amount: row.amount,
+          accountOrderPosition: row.source.accountOrderPosition
+        })),
+        taxContext: {
+          totalTaxYear: orderedRows[0]?.taxContext.totalTaxYear || 0,
+          afterTaxSpending: orderedRows[0]?.taxContext.afterTaxSpending || 0,
+          oasRecovery: orderedRows[0]?.taxContext.oasRecovery || 0
+        }
+      };
+    });
+}
+
+function buildExperimentalAnnualInstructionReadiness({
+  rows,
+  annualAccountTotals
+}: {
+  rows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
+}): OptimizerExperimentalAnnualInstructionReadiness {
+  const missingOrderRows = rows.filter((row) => row.source.accountOrderPosition === null);
+  const yearsWithoutTotals = annualAccountTotals.filter((total) => total.totalAmount <= 0).map((total) => total.year);
+  const yearsWithoutTaxContext = annualAccountTotals
+    .filter((total) => total.taxContext.afterTaxSpending <= 0 && total.taxContext.totalTaxYear <= 0)
+    .map((total) => total.year);
+  const rowsForQuality: OptimizerExperimentalAnnualInstructionReadiness['rows'] = [
+    {
+      id: 'yearTotals',
+      label: 'Annual account totals',
+      status: annualAccountTotals.length && yearsWithoutTotals.length === 0 ? 'pass' : annualAccountTotals.length ? 'watch' : 'block',
+      detail: annualAccountTotals.length
+        ? `${annualAccountTotals.length} modelled year${annualAccountTotals.length === 1 ? '' : 's'} have runtime annual account totals for review.`
+        : 'No runtime annual account totals are available for review.'
+    },
+    {
+      id: 'accountOrderConsistency',
+      label: 'Account order consistency',
+      status: missingOrderRows.length ? 'watch' : rows.length ? 'pass' : 'block',
+      detail: missingOrderRows.length
+        ? `${missingOrderRows.length} draft row${missingOrderRows.length === 1 ? '' : 's'} do not have an account-order position.`
+        : 'Draft rows retain account-order position evidence where annual account totals are available.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Annual tax context',
+      status: yearsWithoutTaxContext.length ? 'watch' : annualAccountTotals.length ? 'pass' : 'block',
+      detail: yearsWithoutTaxContext.length
+        ? `Tax context is limited for ${yearsWithoutTaxContext.length} annual total${yearsWithoutTaxContext.length === 1 ? '' : 's'}.`
+        : 'Annual account totals carry after-tax spending, annual tax, and OAS recovery context for review.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: 'pass',
+      detail: 'Readiness supports runtime review only and does not create saved, CSV, report, production UI, or tax-bracket instruction output.'
+    }
+  ];
+  const blocked = rowsForQuality.some((row) => row.status === 'block');
+  const watch = rowsForQuality.some((row) => row.status === 'watch');
+  const status: OptimizerExperimentalAnnualInstructionReadiness['status'] = blocked ? 'blocked' : watch ? 'reviewFirst' : 'readyForReview';
+
+  return {
+    status,
+    rows: rowsForQuality,
+    totalDraftAmount: annualAccountTotals.reduce((sum, total) => sum + total.totalAmount, 0),
+    yearCount: annualAccountTotals.length,
+    blockedOutputs: ['annualAccountInstructions', 'savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
+    summary:
+      status === 'readyForReview'
+        ? 'Runtime annual account totals are ready for synthetic tester review.'
+        : status === 'reviewFirst'
+          ? 'Runtime annual account totals need review before tester presentation.'
+          : 'Runtime annual account totals are blocked until draft rows are available.',
+    boundary:
+      'Instruction readiness is runtime-only. It does not save annual account instructions, export CSV sequencing output, change reports, change production UI, or create tax-bracket instructions.',
+    nextStep: 'Review annual account totals and account-order consistency before planning saved sequencing output or CSV sequencing output.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3695,6 +3827,11 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     confidence,
     harmChecks
   });
+  const annualAccountTotals = buildExperimentalAnnualAccountTotals(rows);
+  const instructionReadiness = buildExperimentalAnnualInstructionReadiness({
+    rows,
+    annualAccountTotals
+  });
 
   return {
     status,
@@ -3703,6 +3840,8 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     sourceCandidateLabel: adapter.sourceCandidateLabel,
     yearCount: annualRows.length,
     rows,
+    annualAccountTotals,
+    instructionReadiness,
     taxContextRows,
     confidence,
     harmChecks,

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2228-S2247 is complete. Experimental annual draft output now includes runtime annual account totals and an instruction-readiness packet with annual totals, account-order consistency, tax-context, and output-boundary checks. This prepares annual account instruction review while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft readiness packet, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2228_2247_annual_account_instruction_readiness.md`](docs/sprint_2228_2247_annual_account_instruction_readiness.md).
+
 S2208-S2227 is complete. Experimental annual draft rows now include runtime source-field evidence, year-level grouping, account-order position, and clearer account-level rationale. This improves synthetic tester review of annual draft rows while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft rows, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2208_2227_annual_draft_row_quality_rationale.md`](docs/sprint_2208_2227_annual_draft_row_quality_rationale.md).

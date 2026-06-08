@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2208-S2227: Annual Draft Row Quality And Rationale
+## Latest Package — S2228-S2247: Annual Account Instruction Readiness
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare runtime annual account instruction readiness before saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now includes per-year account totals and an instruction-readiness packet with account-order consistency, tax-context, and blocked-output guards.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft rows, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2228_2247_annual_account_instruction_readiness.md`](docs/sprint_2228_2247_annual_account_instruction_readiness.md).
+
+### S2228-S2247 Completed Path
+
+- **S2228-S2232 — Annual totals batch.** Added runtime per-year account totals from experimental draft rows.
+- **S2233-S2237 — Consistency batch.** Added account-order consistency, tax-context, and output-boundary readiness checks.
+- **S2238-S2242 — Guard batch.** Added explicit annual account instruction, saved output, CSV output, report output, production UI, and tax-bracket blocked-output guards.
+- **S2243-S2247 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2228-S2247 Definition Of Done
+
+- Runtime annual account totals are available by modelled year.
+- Annual totals include account count, account amounts, account-order positions, annual tax, after-tax spending, and OAS recovery context.
+- Instruction-readiness rows cover annual totals, account-order consistency, tax context, and output boundary.
+- Annual account instructions remain blocked as saved/exported/final output.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft readiness is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2208-S2227: Annual Draft Row Quality And Rationale
 
 **Status:** Complete 2026-06-08.
 
