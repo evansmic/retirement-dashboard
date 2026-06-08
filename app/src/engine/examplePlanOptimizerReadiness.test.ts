@@ -278,6 +278,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAnnualInstructionDraft.rows.every((row) => row.rationale.includes('runtime draft mirrors'))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.annualAccountTotals.every((total) => total.totalAmount > 0)).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.annualAccountTotals.every((total) => ['contiguous', 'gapped', 'partial'].includes(total.accountOrder.status))).toBe(true);
+      expect(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.every((candidate) => ['readyForReview', 'reviewFirst', 'blocked'].includes(candidate.status))).toBe(true);
+      expect(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.every((candidate) => candidate.boundary.includes('runtime-only'))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toContain('accountOrderGaps');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.blockedOutputs).toContain('annualAccountInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.boundary).toContain('runtime-only');

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2268-S2287 is complete. Experimental annual draft output now packages annual account totals into runtime annual instruction candidates with status, display order, review flags, summaries, and runtime-only boundaries. This prepares reviewable per-year candidate shape while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate shape, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md`](docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md).
+
 S2248-S2267 is complete. Annual account totals now distinguish active draft-order positions from skipped inactive draft-order positions, and instruction readiness now includes a dedicated account-order gap review row. This repairs runtime ordering evidence before final annual account instructions while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft readiness packet, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2248_2267_account_order_consistency_repair.md`](docs/sprint_2248_2267_account_order_consistency_repair.md).

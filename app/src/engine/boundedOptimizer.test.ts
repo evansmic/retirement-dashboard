@@ -342,6 +342,7 @@ describe('bounded optimizer runner', () => {
           yearCount: 3,
           rows: [],
           annualAccountTotals: [],
+          annualInstructionCandidates: [],
           instructionReadiness: {
             status: 'readyForReview',
             rows: [],
@@ -390,6 +391,7 @@ describe('bounded optimizer runner', () => {
           yearCount: 2,
           rows: [],
           annualAccountTotals: [],
+          annualInstructionCandidates: [],
           instructionReadiness: {
             status: 'reviewFirst',
             rows: [],
@@ -748,6 +750,29 @@ describe('bounded optimizer runner', () => {
       status: 'watch',
       detail: expect.stringContaining('skip inactive draft account-order positions')
     });
+    expect(summary.experimentalAnnualInstructionDraft.annualInstructionCandidates[0]).toMatchObject({
+      year: 2032,
+      status: 'reviewFirst',
+      totalAmount: 31000,
+      accountCount: 2,
+      accounts: [
+        {
+          account: 'registered',
+          amount: 26000,
+          accountOrderPosition: 1,
+          displayOrder: 1
+        },
+        {
+          account: 'tfsa',
+          amount: 5000,
+          accountOrderPosition: 4,
+          displayOrder: 2
+        }
+      ],
+      reviewFlags: ['accountOrderGap'],
+      boundary: expect.stringContaining('runtime-only review context')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.annualInstructionCandidates[0].summary).toContain('needs review');
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

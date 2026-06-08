@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2248-S2267: Account Order Consistency Repair
+## Latest Package — S2268-S2287: Runtime Annual Instruction Candidate Shape
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare a runtime-only annual instruction candidate shape before saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now packages annual totals into reviewable per-year candidates with status, display order, review flags, summaries, and runtime-only boundaries.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft readiness packet, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md`](docs/sprint_2268_2287_runtime_annual_instruction_candidate_shape.md).
+
+### S2268-S2287 Completed Path
+
+- **S2268-S2272 — Candidate shape batch.** Added runtime annual instruction candidates built from annual account totals.
+- **S2273-S2277 — Candidate account batch.** Added candidate account display order and retained account-order position evidence.
+- **S2278-S2282 — Review flag batch.** Added review flags for account-order gaps, partial order evidence, and limited tax context.
+- **S2283-S2287 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2268-S2287 Definition Of Done
+
+- Runtime annual instruction candidates are available by modelled year.
+- Candidates include status, total amount, account count, account display order, and review flags.
+- Account-order gap evidence carries into candidate review flags.
+- Candidate summaries remain modelled, review-oriented, and non-directive.
+- Candidate boundaries explicitly block saved, CSV, report, production UI, and tax-bracket instruction output.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft candidate shape is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2248-S2267: Account Order Consistency Repair
 
 **Status:** Complete 2026-06-08.
 

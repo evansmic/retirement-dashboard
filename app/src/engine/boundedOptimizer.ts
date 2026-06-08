@@ -385,6 +385,23 @@ export type OptimizerExperimentalAnnualInstructionReadiness = {
   nextStep: string;
 };
 
+export type OptimizerExperimentalAnnualInstructionCandidate = {
+  year: number;
+  status: 'readyForReview' | 'reviewFirst' | 'blocked';
+  totalAmount: number;
+  accountCount: number;
+  accounts: Array<{
+    account: OptimizerExperimentalAccountBucket;
+    label: string;
+    amount: number;
+    accountOrderPosition: number | null;
+    displayOrder: number;
+  }>;
+  reviewFlags: Array<'accountOrderGap' | 'partialAccountOrder' | 'limitedTaxContext'>;
+  summary: string;
+  boundary: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -441,6 +458,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   rows: OptimizerExperimentalAnnualInstructionDraftRow[];
   annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
   instructionReadiness: OptimizerExperimentalAnnualInstructionReadiness;
+  annualInstructionCandidates: OptimizerExperimentalAnnualInstructionCandidate[];
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -3787,6 +3805,39 @@ function buildExperimentalAnnualInstructionReadiness({
   };
 }
 
+function buildExperimentalAnnualInstructionCandidates(
+  annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[]
+): OptimizerExperimentalAnnualInstructionCandidate[] {
+  return annualAccountTotals.map((total) => {
+    const reviewFlags: OptimizerExperimentalAnnualInstructionCandidate['reviewFlags'] = [];
+    if (total.accountOrder.status === 'gapped') reviewFlags.push('accountOrderGap');
+    if (total.accountOrder.status === 'partial') reviewFlags.push('partialAccountOrder');
+    if (total.taxContext.afterTaxSpending <= 0 && total.taxContext.totalTaxYear <= 0) reviewFlags.push('limitedTaxContext');
+    const status: OptimizerExperimentalAnnualInstructionCandidate['status'] =
+      total.totalAmount <= 0 ? 'blocked' : reviewFlags.length ? 'reviewFirst' : 'readyForReview';
+
+    return {
+      year: total.year,
+      status,
+      totalAmount: total.totalAmount,
+      accountCount: total.accountCount,
+      accounts: total.accounts.map((account, index) => ({
+        ...account,
+        displayOrder: index + 1
+      })),
+      reviewFlags,
+      summary:
+        status === 'readyForReview'
+          ? `Runtime annual instruction candidate for ${total.year} is ready for synthetic tester review.`
+          : status === 'reviewFirst'
+            ? `Runtime annual instruction candidate for ${total.year} needs review before tester presentation.`
+            : `Runtime annual instruction candidate for ${total.year} is blocked until annual account totals are available.`,
+      boundary:
+        'This candidate is runtime-only review context. It is not saved, exported to CSV, printed in reports, shown in production UI, or framed as tax-bracket instructions.'
+    };
+  });
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -3874,6 +3925,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     rows,
     annualAccountTotals
   });
+  const annualInstructionCandidates = buildExperimentalAnnualInstructionCandidates(annualAccountTotals);
 
   return {
     status,
@@ -3884,6 +3936,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     rows,
     annualAccountTotals,
     instructionReadiness,
+    annualInstructionCandidates,
     taxContextRows,
     confidence,
     harmChecks,
