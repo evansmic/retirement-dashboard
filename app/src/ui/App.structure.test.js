@@ -123,6 +123,29 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.tester-feedback-interpretation-panel');
   });
 
+  it('keeps tester cleanup target buckets static and non-actionable', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('TESTER_FEEDBACK_CLEANUP_BUCKETS');
+    expect(testerSurface).toContain('Cleanup target buckets');
+    expect(appSource).toContain('Input/context cleanup');
+    expect(appSource).toContain('Model/plausibility cleanup');
+    expect(appSource).toContain('Scenario coverage gap');
+    expect(appSource).toContain('Blocked-output confusion');
+    expect(appSource).toContain('No-action hold');
+    expect(appSource).toContain('Use when testers expect saved output, CSV output, final instructions, tax instructions, or production use.');
+    expect(testerSurface).not.toContain('createCleanupTask');
+    expect(testerSurface).not.toContain('assignCleanup');
+    expect(testerSurface).not.toContain('saveCleanup');
+    expect(testerSurface).not.toContain('runModelRepair');
+    expect(testerSurface).not.toContain('openIssue');
+    expect(testerSurface).not.toContain('markReady');
+    expect(testerSurface).not.toContain('applyBucket');
+    expect(stylesSource).toContain('.tester-cleanup-bucket-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

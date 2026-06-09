@@ -2996,6 +2996,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.tester-cleanup-bucket-panel {
+  border-left: 3px solid #6d8f54;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

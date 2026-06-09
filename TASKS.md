@@ -14,7 +14,36 @@ As of S2628-S2647 planning, the working estimate is:
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2728-S2747.
 
-## Latest Package — S2628-S2647: Tester Handoff Feedback Interpretation Guard
+## Latest Package — S2648-S2667: Tester Feedback Cleanup Target Buckets
+
+**Status:** Complete 2026-06-08.
+
+Goal: turn interpreted tester observations into clear cleanup target buckets. The tester-only surface now separates copy cleanup, input/context cleanup, model/plausibility cleanup, scenario coverage gaps, blocked-output confusion, and no-action holds without adding workflow machinery.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, or model repair automation.
+
+Package doc: [`docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md`](docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md).
+
+### S2648-S2667 Completed Path
+
+- **S2648-S2652 — Cleanup bucket batch.** Added static cleanup buckets for copy, input/context, model/plausibility, scenario coverage, blocked-output confusion, and no-action hold.
+- **S2653-S2657 — Bucket boundary batch.** Kept buckets as interpretation targets only, not task creation, issue creation, scoring, or repair automation.
+- **S2658-S2662 — Source guard batch.** Added checks that block cleanup actions, model repair triggers, readiness marking, and bucket application paths.
+- **S2663-S2667 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2648-S2667 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Cleanup target buckets are visible.
+- Copy, input/context, model/plausibility, scenario coverage, blocked-output confusion, and no-action hold are distinct.
+- Buckets remain static and non-actionable.
+- Handoff does not collect, score, submit, save, download, copy, approve, unlock, clear, assign, or repair tester notes.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2628-S2647: Tester Handoff Feedback Interpretation Guard
 
 **Status:** Complete 2026-06-08.
 

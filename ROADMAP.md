@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2648-S2667 is complete. The tester-only surface now includes cleanup target buckets for copy cleanup, input/context cleanup, model/plausibility cleanup, scenario coverage gaps, blocked-output confusion, and no-action holds. These buckets are static, read-only interpretation targets and do not create issues, assign tasks, trigger model repair, collect feedback, score feedback, approve sequencing, change schemas, save output, export CSV, create reports, promote production UI, create final instructions, create tax-bracket instructions, or generate `.plan.json` files.
+
+Current package doc: [`docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md`](docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md).
+
 S2628-S2647 is complete. The tester-only surface now includes a feedback interpretation guard that separates useful feedback, copy cleanup, input/model cleanup, blockers, and not-approval boundaries. Positive tester feedback is explicitly not approval for saved sequencing, CSV output, reports, final instructions, production use, tax-bracket instructions, saved schema changes, engine output schema changes, or `.plan.json` generation. The optimizer timeline baseline is recorded in TASKS with the next material reassessment at S2728-S2747.
 
 Current package doc: [`docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md`](docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md).

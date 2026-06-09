@@ -268,6 +268,32 @@ const TESTER_FEEDBACK_INTERPRETATION_ROWS = [
     detail: 'Positive tester feedback does not approve saved sequencing, CSV output, reports, final instructions, or production use.'
   }
 ];
+const TESTER_FEEDBACK_CLEANUP_BUCKETS = [
+  {
+    label: 'Copy cleanup',
+    detail: 'Use when wording, labels, row notes, or boundary copy need to be clearer.'
+  },
+  {
+    label: 'Input/context cleanup',
+    detail: 'Use when testers need more scenario context before the candidate rows make sense.'
+  },
+  {
+    label: 'Model/plausibility cleanup',
+    detail: 'Use when a made-up scenario result looks inconsistent, surprising, or hard to explain.'
+  },
+  {
+    label: 'Scenario coverage gap',
+    detail: 'Use when the issue needs another synthetic household type before we can judge it.'
+  },
+  {
+    label: 'Blocked-output confusion',
+    detail: 'Use when testers expect saved output, CSV output, final instructions, tax instructions, or production use.'
+  },
+  {
+    label: 'No-action hold',
+    detail: 'Use when feedback is understandable but does not justify a product or model change yet.'
+  }
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4734,6 +4760,16 @@ function TinyTesterSurfacePanel({
             {TESTER_FEEDBACK_INTERPRETATION_ROWS.map((row) => (
               <li key={row.label}>
                 <strong>{row.label}:</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel tester-cleanup-bucket-panel">
+          <h3>Cleanup target buckets</h3>
+          <ul className="compact-list">
+            {TESTER_FEEDBACK_CLEANUP_BUCKETS.map((bucket) => (
+              <li key={bucket.label}>
+                <strong>{bucket.label}:</strong> {bucket.detail}
               </li>
             ))}
           </ul>
