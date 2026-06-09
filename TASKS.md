@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2588-S2607: Tiny Tester Surface Verification Hardening
+## Latest Package — S2608-S2627: Limited Tester Handoff Packet
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare the first limited tester handoff packet around the tiny tester-only surface. The surface now includes static handoff steps, suggested synthetic scenarios, and source guards that keep the handoff read-only, local, and non-persistent.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, or in-app feedback collection.
+
+Package doc: [`docs/sprint_2608_2627_limited_tester_handoff_packet.md`](docs/sprint_2608_2627_limited_tester_handoff_packet.md).
+
+### S2608-S2627 Completed Path
+
+- **S2608-S2612 — Handoff step batch.** Added static tester handoff steps for opening Results Details and reviewing the tiny surface.
+- **S2613-S2617 — Scenario batch.** Added suggested synthetic scenarios for tester review.
+- **S2618-S2622 — Non-persistence guard batch.** Added source checks that block forms, inputs, submission, storage, downloads, and clipboard paths inside the tester handoff surface.
+- **S2623-S2627 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2608-S2627 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static handoff steps explain what testers should open and review.
+- Suggested scenarios are synthetic examples only.
+- Handoff does not collect, submit, save, download, or copy tester notes.
+- Existing tester questions and disabled boundaries remain visible.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2588-S2607: Tiny Tester Surface Verification Hardening
 
 **Status:** Complete 2026-06-08.
 

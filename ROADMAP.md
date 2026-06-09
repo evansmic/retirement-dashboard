@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2608-S2627 is complete. The tiny tester-only surface now includes a limited handoff packet with static tester steps, suggested synthetic scenarios, and non-persistence guards. The handoff tells testers what to open and what to review without collecting notes, saving feedback, exporting output, promoting production UI, changing schemas, creating final annual instructions, creating tax-bracket instructions, or generating `.plan.json` files.
+
+Current package doc: [`docs/sprint_2608_2627_limited_tester_handoff_packet.md`](docs/sprint_2608_2627_limited_tester_handoff_packet.md).
+
 S2588-S2607 is complete. The tiny tester-only surface is now hardened with a stable accessible label, safer fallback copy, explicit translation of internal output ids before display, stronger disabled-action checks, compact-screen styling guards, and browser verification. Saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, engine output schema changes, final annual instructions, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md`](docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md).

@@ -2986,6 +2986,11 @@ button.secondary,
   margin: 0;
 }
 
+.tester-handoff-panel {
+  border-left: 3px solid #4f7cac;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

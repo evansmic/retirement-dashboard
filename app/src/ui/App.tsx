@@ -236,6 +236,16 @@ const SHOW_OPTION_RESEARCH_PANELS = false;
 const SHOW_SCENARIO_RESEARCH_PANELS = false;
 const SHOW_TAX_RESEARCH_PANELS = false;
 const SHOW_TINY_TESTER_SURFACE = true;
+
+const TESTER_HANDOFF_STEPS = [
+  'Open a synthetic household, then go to Results and Details.',
+  'Review the tester-only annual candidate rows for clarity and plausibility.',
+  'Use made-up scenarios only; do not enter personal financial information.',
+  'Note confusing labels, missing context, or anything that sounds too final.',
+  'Leave saved output, CSV output, reports, and final instructions out of scope.'
+];
+
+const TESTER_HANDOFF_SCENARIOS = ['DIY couple', 'DB pension couple', 'Already retired'];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4680,6 +4690,22 @@ function TinyTesterSurfacePanel({
       </div>
 
       <div className="result-overview-grid">
+        <section className="tester-surface-subpanel tester-handoff-panel">
+          <h3>Tester handoff</h3>
+          <ul className="compact-list">
+            {TESTER_HANDOFF_STEPS.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel tester-handoff-panel">
+          <h3>Suggested synthetic scenarios</h3>
+          <ul className="compact-list">
+            {TESTER_HANDOFF_SCENARIOS.map((scenario) => (
+              <li key={scenario}>{scenario}</li>
+            ))}
+          </ul>
+        </section>
         <section className="tester-surface-subpanel">
           <h3>Tester questions</h3>
           <ul className="compact-list">

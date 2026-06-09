@@ -75,6 +75,30 @@ describe('Results overview structure', () => {
     expect(testerSurface).not.toContain('downloadCsv');
   });
 
+  it('keeps the limited tester handoff static and non-persistent', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('TESTER_HANDOFF_STEPS');
+    expect(appSource).toContain('TESTER_HANDOFF_SCENARIOS');
+    expect(testerSurface).toContain('Tester handoff');
+    expect(testerSurface).toContain('Suggested synthetic scenarios');
+    expect(appSource).toContain('Use made-up scenarios only; do not enter personal financial information.');
+    expect(appSource).toContain('Leave saved output, CSV output, reports, and final instructions out of scope.');
+    expect(appSource).toContain('DIY couple');
+    expect(appSource).toContain('DB pension couple');
+    expect(appSource).toContain('Already retired');
+    expect(testerSurface).not.toContain('<textarea');
+    expect(testerSurface).not.toContain('<input');
+    expect(testerSurface).not.toContain('<form');
+    expect(testerSurface).not.toContain('submit');
+    expect(testerSurface).not.toContain('localStorage');
+    expect(testerSurface).not.toContain('download');
+    expect(testerSurface).not.toContain('clipboard');
+    expect(stylesSource).toContain('.tester-handoff-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
