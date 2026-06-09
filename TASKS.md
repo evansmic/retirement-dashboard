@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2328-S2347: Annual Candidate Presentation Readiness
+## Latest Package — S2348-S2367: Synthetic Tester Packet Boundary Review
+
+**Status:** Complete 2026-06-08.
+
+Goal: define the runtime-only synthetic tester packet boundary before tester-facing UI, saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now identifies visible tester material, hidden material, tester-purpose copy, blocked outputs, and packet-boundary checks.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tester packet boundary, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md`](docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md).
+
+### S2348-S2367 Completed Path
+
+- **S2348-S2352 — Packet boundary shape batch.** Added runtime tester packet boundary with visible sections, hidden sections, rows, tester copy, and blocked outputs.
+- **S2353-S2357 — Visibility batch.** Marked candidate display rows, quality labels, repair themes, and runtime boundary as visible tester material.
+- **S2358-S2362 — Hidden-output batch.** Kept final annual instructions, saved sequencing, CSV sequencing, reports, production UI, and tax-bracket instructions hidden.
+- **S2363-S2367 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2348-S2367 Definition Of Done
+
+- Tester packet boundary defines visible runtime sections.
+- Tester packet boundary defines hidden/final output sections.
+- Tester copy explains feature testing with made-up scenarios and not personal decisions.
+- Blocked outputs include final annual instructions, saved sequencing, CSV sequencing, report output, production UI, and tax-bracket instructions.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tester packet boundary is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2328-S2347: Annual Candidate Presentation Readiness
 
 **Status:** Complete 2026-06-08.
 

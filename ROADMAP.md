@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2348-S2367 is complete. Experimental annual draft output now includes a runtime synthetic tester packet boundary with visible sections, hidden sections, tester-purpose copy, blocked outputs, and packet-boundary checks. This makes it clearer what testers can critique while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only tester packet boundary, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md`](docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md).
+
 S2328-S2347 is complete. Experimental annual draft output now includes runtime candidate presentation readiness with display rows, status labels, quality labels, repair previews, presentation checks, and tester-boundary copy. This supports earlier synthetic tester review while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft presentation readiness packet, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2328_2347_annual_candidate_presentation_readiness.md`](docs/sprint_2328_2347_annual_candidate_presentation_readiness.md).

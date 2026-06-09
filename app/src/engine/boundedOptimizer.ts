@@ -455,6 +455,26 @@ export type OptimizerExperimentalAnnualCandidatePresentationReadiness = {
   nextStep: string;
 };
 
+export type OptimizerExperimentalTesterPacketBoundary = {
+  status: 'readyForSyntheticTesterPacket' | 'reviewFirst' | 'blocked';
+  visibleSections: Array<'candidateDisplayRows' | 'qualityLabels' | 'repairThemes' | 'runtimeBoundary'>;
+  hiddenSections: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions' | 'finalAnnualInstructions'>;
+  rows: Array<{
+    id: 'visibleMaterial' | 'hiddenMaterial' | 'testerPurpose' | 'outputBoundary';
+    label: string;
+    status: 'pass' | 'watch' | 'block';
+    detail: string;
+  }>;
+  testerCopy: {
+    headline: string;
+    purpose: string;
+    boundary: string;
+  };
+  blockedOutputs: Array<'finalAnnualInstructions' | 'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions'>;
+  summary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -514,6 +534,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   annualInstructionCandidates: OptimizerExperimentalAnnualInstructionCandidate[];
   candidateSelectionSummary: OptimizerExperimentalAnnualCandidateSelectionSummary;
   presentationReadiness: OptimizerExperimentalAnnualCandidatePresentationReadiness;
+  testerPacketBoundary: OptimizerExperimentalTesterPacketBoundary;
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -4113,6 +4134,78 @@ function buildExperimentalAnnualCandidatePresentationReadiness({
   };
 }
 
+function buildExperimentalTesterPacketBoundary(
+  presentationReadiness: OptimizerExperimentalAnnualCandidatePresentationReadiness
+): OptimizerExperimentalTesterPacketBoundary {
+  const visibleSections: OptimizerExperimentalTesterPacketBoundary['visibleSections'] = [
+    'candidateDisplayRows',
+    'qualityLabels',
+    'repairThemes',
+    'runtimeBoundary'
+  ];
+  const hiddenSections: OptimizerExperimentalTesterPacketBoundary['hiddenSections'] = [
+    'savedSequencingOutput',
+    'csvSequencingOutput',
+    'reportOutput',
+    'productionUi',
+    'taxBracketInstructions',
+    'finalAnnualInstructions'
+  ];
+  const hasDisplayRows = presentationReadiness.displayRows.length > 0;
+  const rows: OptimizerExperimentalTesterPacketBoundary['rows'] = [
+    {
+      id: 'visibleMaterial',
+      label: 'Visible tester material',
+      status: hasDisplayRows ? 'pass' : 'block',
+      detail: hasDisplayRows
+        ? 'Tester packet can show candidate display rows, quality labels, repair themes, and runtime boundary copy.'
+        : 'Tester packet cannot be shown until candidate display rows exist.'
+    },
+    {
+      id: 'hiddenMaterial',
+      label: 'Hidden material',
+      status: 'pass',
+      detail: 'Saved sequencing output, CSV sequencing output, reports, production UI, tax-bracket instructions, and final annual instructions remain hidden.'
+    },
+    {
+      id: 'testerPurpose',
+      label: 'Tester purpose',
+      status: presentationReadiness.status === 'blocked' ? 'block' : presentationReadiness.status === 'reviewFirst' ? 'watch' : 'pass',
+      detail: 'Tester packet is for feature testing with made-up scenarios and is not for personal retirement decisions.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: 'pass',
+      detail: 'Tester packet boundary is runtime-only and does not create saved, CSV, report, production UI, or tax-bracket instruction output.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'block');
+  const watch = rows.some((row) => row.status === 'watch');
+  const status: OptimizerExperimentalTesterPacketBoundary['status'] = blocked ? 'blocked' : watch ? 'reviewFirst' : 'readyForSyntheticTesterPacket';
+
+  return {
+    status,
+    visibleSections,
+    hiddenSections,
+    rows,
+    testerCopy: {
+      headline: 'Experimental annual candidate review',
+      purpose: 'Use this runtime packet to test whether candidate summaries are understandable in made-up scenarios.',
+      boundary:
+        'This packet is not a retirement plan, is not saved, is not exported, and should not be used for personal decisions.'
+    },
+    blockedOutputs: ['finalAnnualInstructions', 'savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions'],
+    summary:
+      status === 'readyForSyntheticTesterPacket'
+        ? 'Synthetic tester packet boundary is ready for runtime review.'
+        : status === 'reviewFirst'
+          ? 'Synthetic tester packet boundary can be reviewed with visible repair themes.'
+          : 'Synthetic tester packet boundary is blocked until display rows are available.',
+    nextStep: 'Review the runtime tester packet boundary before planning tester-facing UI, saved sequencing output, or CSV sequencing output.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -4206,6 +4299,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     candidates: annualInstructionCandidates,
     selectionSummary: candidateSelectionSummary
   });
+  const testerPacketBoundary = buildExperimentalTesterPacketBoundary(presentationReadiness);
 
   return {
     status,
@@ -4219,6 +4313,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     annualInstructionCandidates,
     candidateSelectionSummary,
     presentationReadiness,
+    testerPacketBoundary,
     taxContextRows,
     confidence,
     harmChecks,

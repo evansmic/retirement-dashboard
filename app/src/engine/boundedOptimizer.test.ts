@@ -360,6 +360,20 @@ describe('bounded optimizer runner', () => {
             boundary: 'Runtime-only.',
             nextStep: 'Review.'
           },
+          testerPacketBoundary: {
+            status: 'readyForSyntheticTesterPacket',
+            visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
+            hiddenSections: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+            rows: [],
+            testerCopy: {
+              headline: 'Experimental annual candidate review',
+              purpose: 'Use this runtime packet to test made-up scenarios.',
+              boundary: 'Not a retirement plan.'
+            },
+            blockedOutputs: ['finalAnnualInstructions', 'savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions'],
+            summary: 'Synthetic tester packet boundary is ready for runtime review.',
+            nextStep: 'Review.'
+          },
           instructionReadiness: {
             status: 'readyForReview',
             rows: [],
@@ -424,6 +438,20 @@ describe('bounded optimizer runner', () => {
             rows: [],
             summary: 'Annual candidate summaries can be reviewed by testers with repair themes visible.',
             boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
+          testerPacketBoundary: {
+            status: 'reviewFirst',
+            visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
+            hiddenSections: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+            rows: [],
+            testerCopy: {
+              headline: 'Experimental annual candidate review',
+              purpose: 'Use this runtime packet to test made-up scenarios.',
+              boundary: 'Not a retirement plan.'
+            },
+            blockedOutputs: ['finalAnnualInstructions', 'savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions'],
+            summary: 'Synthetic tester packet boundary can be reviewed with visible repair themes.',
             nextStep: 'Review.'
           },
           instructionReadiness: {
@@ -895,6 +923,24 @@ describe('bounded optimizer runner', () => {
       'qualityLabels',
       'repairPreview',
       'boundary'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.testerPacketBoundary).toMatchObject({
+      status: 'reviewFirst',
+      visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
+      hiddenSections: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+      blockedOutputs: ['finalAnnualInstructions', 'savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions'],
+      testerCopy: {
+        headline: 'Experimental annual candidate review',
+        purpose: expect.stringContaining('made-up scenarios'),
+        boundary: expect.stringContaining('not a retirement plan')
+      },
+      nextStep: expect.stringContaining('tester packet boundary')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.testerPacketBoundary.rows.map((row) => row.id)).toEqual([
+      'visibleMaterial',
+      'hiddenMaterial',
+      'testerPurpose',
+      'outputBoundary'
     ]);
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',

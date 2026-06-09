@@ -293,6 +293,11 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.displayRows.length).toBe(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.length);
       expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.rows.map((row) => row.id)).toContain('boundary');
       expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.boundary).toContain('runtime-only');
+      expect(['readyForSyntheticTesterPacket', 'reviewFirst', 'blocked']).toContain(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.status);
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.visibleSections).toContain('candidateDisplayRows');
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.hiddenSections).toContain('finalAnnualInstructions');
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.testerCopy.boundary).toContain('not a retirement plan');
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.blockedOutputs).toContain('csvSequencingOutput');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toContain('accountOrderGaps');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.blockedOutputs).toContain('annualAccountInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.boundary).toContain('runtime-only');
