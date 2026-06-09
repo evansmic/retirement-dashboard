@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2468-S2487 is complete. The limited tester packet dry-run payload now includes a runtime surface planning gate with surface scope, disabled output actions, review-only copy, planning rows, and boundary checks. This decides whether a very small tester-facing surface can be planned later while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only surface planning gate, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2468_2487_limited_tester_packet_surface_planning_gate.md`](docs/sprint_2468_2487_limited_tester_packet_surface_planning_gate.md).
+
 S2448-S2467 is complete. The limited tester packet dry-run payload now includes a runtime quality gate with status, score, repair example ids, row coverage, prompt coverage, boundary clarity, readiness mix, and output-boundary checks. This prepares payload quality review before any tester-facing surface planning while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only quality gate, final annual instructions, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2448_2467_limited_tester_packet_payload_quality_gate.md`](docs/sprint_2448_2467_limited_tester_packet_payload_quality_gate.md).

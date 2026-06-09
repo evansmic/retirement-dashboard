@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2448-S2467: Limited Tester Packet Payload Quality Gate
+## Latest Package — S2468-S2487: Limited Tester Packet Surface Planning Gate
+
+**Status:** Complete 2026-06-08.
+
+Goal: decide whether a very small tester-facing surface can be planned from the runtime dry-run payload and quality gate. The dry-run payload now includes surface scope, disabled output actions, review-only copy, planning rows, and runtime-only boundaries.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only limited tester packet surface planning gate, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2468_2487_limited_tester_packet_surface_planning_gate.md`](docs/sprint_2468_2487_limited_tester_packet_surface_planning_gate.md).
+
+### S2468-S2487 Completed Path
+
+- **S2468-S2472 — Surface gate shape batch.** Added surface planning gate status, scope, disabled actions, review copy, rows, summary, boundary, and next step.
+- **S2473-S2477 — Surface scope batch.** Limited possible surface planning to example list, candidate rows, quality rows, review prompts, and runtime boundary copy.
+- **S2478-S2482 — Disabled action batch.** Kept save sequencing, CSV export, report printing, production use, final instructions, and tax-bracket instructions disabled.
+- **S2483-S2487 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2468-S2487 Definition Of Done
+
+- Surface planning gate reflects quality gate readiness.
+- Surface scope is explicit and limited.
+- Disabled output actions are explicit.
+- Review-only copy stays scoped to feature testing with made-up scenarios.
+- Gate does not implement tester-facing UI.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only limited tester packet surface planning gate is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2448-S2467: Limited Tester Packet Payload Quality Gate
 
 **Status:** Complete 2026-06-08.
 

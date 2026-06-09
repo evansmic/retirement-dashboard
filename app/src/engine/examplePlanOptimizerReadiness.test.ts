@@ -425,6 +425,22 @@ describe('example-plan optimizer readiness matrix', () => {
     expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.rows.find((row) => row.id === 'promptCoverage')).toMatchObject({ status: 'pass' });
     expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.boundary).toContain('runtime-only review evidence');
     expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.nextStep).toContain('tester-facing surface');
+    expect(['readyForSurfacePlan', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.status);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.surfaceScope).toEqual(
+      expect.arrayContaining(['exampleList', 'candidateRows', 'qualityRows', 'reviewPrompts', 'runtimeBoundary'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.disabledActions).toEqual(
+      expect.arrayContaining(['saveSequencing', 'exportCsv', 'printReport', 'useInProduction', 'finalizeInstructions', 'taxBracketInstructions'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.rows.map((row) => row.id)).toEqual([
+      'qualityGate',
+      'surfaceScope',
+      'disabledActions',
+      'reviewCopy',
+      'implementationBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.reviewCopy.boundary).toContain('not a retirement plan');
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.nextStep).toContain('limited synthetic tester packet');

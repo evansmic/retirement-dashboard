@@ -656,6 +656,25 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
       boundary: string;
       nextStep: string;
     };
+    surfacePlanningGate: {
+      status: 'readyForSurfacePlan' | 'reviewFirst' | 'blocked';
+      surfaceScope: Array<'exampleList' | 'candidateRows' | 'qualityRows' | 'reviewPrompts' | 'runtimeBoundary'>;
+      disabledActions: Array<'saveSequencing' | 'exportCsv' | 'printReport' | 'useInProduction' | 'finalizeInstructions' | 'taxBracketInstructions'>;
+      reviewCopy: {
+        headline: string;
+        purpose: string;
+        boundary: string;
+      };
+      rows: Array<{
+        id: 'qualityGate' | 'surfaceScope' | 'disabledActions' | 'reviewCopy' | 'implementationBoundary';
+        label: string;
+        status: 'pass' | 'watch' | 'block';
+        detail: string;
+      }>;
+      summary: string;
+      boundary: string;
+      nextStep: string;
+    };
     rows: Array<{
       id: 'payloadItems' | 'contractFields' | 'reviewMetadata' | 'outputBoundary';
       label: string;
@@ -4765,10 +4784,84 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       'Payload quality gate is runtime-only review evidence. It does not implement tester UI, save sequencing output, export CSV, change reports, create final instructions, or create tax-bracket instructions.',
     nextStep: 'Repair watch or blocked quality rows before planning a very small tester-facing surface.'
   };
+  const surfaceScope: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['surfaceScope'] = [
+    'exampleList',
+    'candidateRows',
+    'qualityRows',
+    'reviewPrompts',
+    'runtimeBoundary'
+  ];
+  const disabledActions: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['disabledActions'] = [
+    'saveSequencing',
+    'exportCsv',
+    'printReport',
+    'useInProduction',
+    'finalizeInstructions',
+    'taxBracketInstructions'
+  ];
+  const surfaceStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['status'] =
+    qualityStatus === 'readyForSurfacePlanning' ? 'readyForSurfacePlan' : qualityStatus;
+  const surfacePlanningGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate'] = {
+    status: surfaceStatus,
+    surfaceScope,
+    disabledActions,
+    reviewCopy: {
+      headline: 'Experimental tester packet review',
+      purpose: 'Use this small runtime surface to test whether made-up annual candidate summaries are clear.',
+      boundary: 'This is feature-testing material only. It is not a retirement plan, not saved, and not for personal decisions.'
+    },
+    rows: [
+      {
+        id: 'qualityGate',
+        label: 'Quality gate',
+        status: qualityStatus === 'readyForSurfacePlanning' ? 'pass' : qualityStatus === 'reviewFirst' ? 'watch' : 'block',
+        detail:
+          qualityStatus === 'readyForSurfacePlanning'
+            ? 'Dry-run payload quality is ready for small surface planning.'
+            : qualityStatus === 'reviewFirst'
+              ? 'Dry-run payload quality has watch items to review before small surface planning.'
+              : 'Dry-run payload quality is blocked before small surface planning.'
+      },
+      {
+        id: 'surfaceScope',
+        label: 'Surface scope',
+        status: surfaceScope.length === 5 ? 'pass' : 'block',
+        detail: 'Small tester surface planning is limited to example list, candidate rows, quality rows, review prompts, and runtime boundary copy.'
+      },
+      {
+        id: 'disabledActions',
+        label: 'Disabled actions',
+        status: disabledActions.length === 6 ? 'pass' : 'block',
+        detail: 'Save sequencing, CSV export, report printing, production use, final instructions, and tax-bracket instructions remain disabled.'
+      },
+      {
+        id: 'reviewCopy',
+        label: 'Review-only copy',
+        status: 'pass',
+        detail: 'Surface copy is framed as feature testing with made-up scenarios, not personal retirement decisions.'
+      },
+      {
+        id: 'implementationBoundary',
+        label: 'Implementation boundary',
+        status: 'pass',
+        detail: 'This gate plans a possible tester surface but does not implement UI, saved output, CSV output, reports, final instructions, or tax-bracket instructions.'
+      }
+    ],
+    summary:
+      surfaceStatus === 'readyForSurfacePlan'
+        ? 'A very small limited tester packet surface can be planned from the runtime payload.'
+        : surfaceStatus === 'reviewFirst'
+          ? 'A very small limited tester packet surface needs review-first payload quality checks before planning.'
+          : 'A very small limited tester packet surface is blocked until payload quality issues are repaired.',
+    boundary:
+      'Surface planning gate is runtime-only. It does not implement production UI, save sequencing output, export CSV, change reports, create final annual instructions, or create tax-bracket instructions.',
+    nextStep: 'Use this gate to decide whether to plan a tiny tester-only surface in a later package.'
+  };
   const dryRunPayload: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload'] = {
     status: dryRunStatus,
     items: dryRunItems,
     qualityGate,
+    surfacePlanningGate,
     rows: [
       {
         id: 'payloadItems',

@@ -685,6 +685,29 @@ describe('bounded optimizer runner', () => {
       status: 'watch',
       detail: expect.stringContaining('review-example')
     });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate).toMatchObject({
+      status: 'reviewFirst',
+      surfaceScope: ['exampleList', 'candidateRows', 'qualityRows', 'reviewPrompts', 'runtimeBoundary'],
+      disabledActions: ['saveSequencing', 'exportCsv', 'printReport', 'useInProduction', 'finalizeInstructions', 'taxBracketInstructions'],
+      reviewCopy: {
+        headline: 'Experimental tester packet review',
+        purpose: expect.stringContaining('made-up annual candidate summaries'),
+        boundary: expect.stringContaining('not a retirement plan')
+      },
+      boundary: expect.stringContaining('runtime-only'),
+      nextStep: expect.stringContaining('tester-only surface')
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.rows.map((row) => row.id)).toEqual([
+      'qualityGate',
+      'surfaceScope',
+      'disabledActions',
+      'reviewCopy',
+      'implementationBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.rows.find((row) => row.id === 'qualityGate')).toMatchObject({
+      status: 'watch'
+    });
+    expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate).toLowerCase()).not.toContain('you should');
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload).toLowerCase()).not.toContain('savedplan');
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
