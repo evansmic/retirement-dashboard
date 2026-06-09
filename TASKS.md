@@ -14,7 +14,36 @@ As of S2628-S2647 planning, the working estimate is:
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2728-S2747.
 
-## Latest Package — S2668-S2687: Annual Instruction Prototype Decision Gate
+## Latest Package — S2688-S2707: Annual Instruction Prototype Shape Boundary
+
+**Status:** Complete 2026-06-08.
+
+Goal: define the internal-only prototype shape for annual instruction rows without implementing calculations, final instructions, saved output, CSV output, reports, production UI, tax-bracket instructions, saved schema changes, or `.plan.json` generation.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, annual instruction calculations, or annual instruction prototype implementation.
+
+Package doc: [`docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md`](docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md).
+
+### S2688-S2707 Completed Path
+
+- **S2688-S2692 — Prototype field batch.** Added static row-shape fields for year, account label, amount label, review reason, quality flag, and boundary note.
+- **S2693-S2697 — Exclusion batch.** Added shape exclusions for exact tax-bracket commands, final instructions, saved sequencing, CSV, reports, production UI, and saved schema changes.
+- **S2698-S2702 — Contract guard batch.** Added checks that block generated rows, calculations, persistence, download, print, publish, and schema paths.
+- **S2703-S2707 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2688-S2707 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Prototype row shape fields are visible.
+- Prototype shape exclusions are visible.
+- Shape remains a static contract, not generated rows.
+- Shape does not calculate annual instructions, persist output, download output, print output, publish output, or change schemas.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2668-S2687: Annual Instruction Prototype Decision Gate
 
 **Status:** Complete 2026-06-08.
 

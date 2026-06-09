@@ -173,6 +173,33 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.annual-prototype-decision-panel');
   });
 
+  it('keeps the annual instruction prototype row shape contractual only', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_FIELDS');
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_EXCLUSIONS');
+    expect(testerSurface).toContain('Prototype row shape');
+    expect(appSource).toContain('Account label');
+    expect(appSource).toContain('Amount label');
+    expect(appSource).toContain('Review reason');
+    expect(appSource).toContain('Quality flag');
+    expect(appSource).toContain('Boundary note');
+    expect(appSource).toContain('Excluded from the prototype shape:');
+    expect(appSource).toContain('No exact tax-bracket commands.');
+    expect(appSource).toContain('No saved schema changes.');
+    expect(testerSurface).not.toContain('prototypeRows.map');
+    expect(testerSurface).not.toContain('calculateAnnualInstruction');
+    expect(testerSurface).not.toContain('buildAnnualInstruction');
+    expect(testerSurface).not.toContain('persistPrototypeShape');
+    expect(testerSurface).not.toContain('downloadPrototype');
+    expect(testerSurface).not.toContain('printPrototype');
+    expect(testerSurface).not.toContain('publishPrototype');
+    expect(testerSurface).not.toContain('schemaVersion');
+    expect(stylesSource).toContain('.annual-prototype-shape-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

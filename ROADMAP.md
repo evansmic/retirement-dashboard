@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2688-S2707 is complete. The tester-only surface now includes an internal-only annual instruction prototype shape boundary with allowed row fields for year, account label, amount label, review reason, quality flag, and boundary note. The same section excludes exact tax-bracket commands, final annual instructions, saved sequencing, CSV output, report output, production UI, and saved schema changes. This is a static contract only; it does not calculate, generate, persist, download, print, publish, or promote annual instruction rows.
+
+Current package doc: [`docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md`](docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md).
+
 S2668-S2687 is complete. The tester-only surface now includes an annual instruction prototype decision gate. The gate says boundary and cleanup evidence are ready enough to define a future internal-only prototype shape, while real tester observations, scenario coverage, and performance notes are still missing before implementation. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, prototype implementation, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md`](docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md).

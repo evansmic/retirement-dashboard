@@ -3006,6 +3006,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-prototype-shape-panel {
+  border-left: 3px solid #5f6f96;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

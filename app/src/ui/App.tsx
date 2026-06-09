@@ -321,6 +321,42 @@ const ANNUAL_INSTRUCTION_PROTOTYPE_DECISION_ROWS = [
     detail: 'Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.'
   }
 ];
+const ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_FIELDS = [
+  {
+    label: 'Year',
+    detail: 'Calendar year for the draft annual review row.'
+  },
+  {
+    label: 'Account label',
+    detail: 'Plain account category label, such as RRSP, TFSA, taxable, cash, or benefit timing.'
+  },
+  {
+    label: 'Amount label',
+    detail: 'Rounded review amount or amount range label for made-up scenario testing.'
+  },
+  {
+    label: 'Review reason',
+    detail: 'Short reason the row exists, such as bridge funding, tax review, survivor review, or account-order review.'
+  },
+  {
+    label: 'Quality flag',
+    detail: 'Review flag that says ready, review first, or blocked for tester interpretation.'
+  },
+  {
+    label: 'Boundary note',
+    detail: 'Plain note that the row is internal-only, not saved, not final, and not an instruction to follow.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_EXCLUSIONS = [
+  'No exact tax-bracket commands.',
+  'No final annual account instructions.',
+  'No saved sequencing output.',
+  'No CSV sequencing output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No saved schema changes.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4808,6 +4844,22 @@ function TinyTesterSurfacePanel({
               <li key={row.label}>
                 <strong>{row.label} ({row.status}):</strong> {row.detail}
               </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-prototype-shape-panel">
+          <h3>Prototype row shape</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_FIELDS.map((field) => (
+              <li key={field.label}>
+                <strong>{field.label}:</strong> {field.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Excluded from the prototype shape:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_EXCLUSIONS.map((exclusion) => (
+              <li key={exclusion}>{exclusion}</li>
             ))}
           </ul>
         </section>
