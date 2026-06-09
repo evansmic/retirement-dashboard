@@ -581,6 +581,27 @@ export type OptimizerExperimentalDraftExampleMatrixItem = {
   reviewItems: string[];
 };
 
+export type OptimizerSyntheticTesterPacketReadinessMatrix = {
+  status: 'readyForLimitedTesterReview' | 'reviewFirst' | 'blocked';
+  exampleCount: number;
+  readyExampleIds: string[];
+  reviewExampleIds: string[];
+  blockedExampleIds: string[];
+  rows: Array<{
+    id: 'draftReadiness' | 'packetBoundary' | 'exportGuard' | 'testerPurpose' | 'outputBoundary';
+    label: string;
+    status: 'pass' | 'watch' | 'block';
+    detail: string;
+  }>;
+  releaseScope: {
+    visibleSections: Array<'candidateDisplayRows' | 'qualityLabels' | 'repairThemes' | 'runtimeBoundary'>;
+    hiddenOutputs: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions' | 'finalAnnualInstructions'>;
+  };
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrix = {
   status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
   exampleCount: number;
@@ -596,6 +617,7 @@ export type OptimizerExperimentalDraftExampleMatrix = {
     detail: string;
     repairAction: string;
   }>;
+  testerPacketReadiness: OptimizerSyntheticTesterPacketReadinessMatrix;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -4433,6 +4455,107 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   };
 }
 
+function selectOptimizerSyntheticTesterPacketReadinessMatrix(
+  examples: Array<{
+    id: string;
+    label: string;
+    draft: OptimizerExperimentalAnnualInstructionDraft;
+  }>
+): OptimizerSyntheticTesterPacketReadinessMatrix {
+  const readyExampleIds = examples
+    .filter(
+      (example) =>
+        example.draft.readinessSummary.status === 'readyForTesterReview' &&
+        example.draft.testerPacketBoundary.status === 'readyForSyntheticTesterPacket' &&
+        example.draft.testerPacketExportGuard.status === 'guarded'
+    )
+    .map((example) => example.id);
+  const blockedExampleIds = examples
+    .filter(
+      (example) =>
+        example.draft.readinessSummary.status === 'blocked' ||
+        example.draft.testerPacketBoundary.status === 'blocked' ||
+        example.draft.testerPacketExportGuard.status === 'blocked'
+    )
+    .map((example) => example.id);
+  const reviewExampleIds = examples
+    .filter((example) => !readyExampleIds.includes(example.id) && !blockedExampleIds.includes(example.id))
+    .map((example) => example.id);
+  const allGuarded = examples.every((example) => example.draft.testerPacketExportGuard.status === 'guarded');
+  const allBoundariesReady = examples.every((example) => example.draft.testerPacketBoundary.status === 'readyForSyntheticTesterPacket');
+  const allDraftsReady = examples.every((example) => example.draft.readinessSummary.status === 'readyForTesterReview');
+  const status: OptimizerSyntheticTesterPacketReadinessMatrix['status'] = blockedExampleIds.length
+    ? 'blocked'
+    : reviewExampleIds.length
+      ? 'reviewFirst'
+      : 'readyForLimitedTesterReview';
+  const rows: OptimizerSyntheticTesterPacketReadinessMatrix['rows'] = [
+    {
+      id: 'draftReadiness',
+      label: 'Draft readiness',
+      status: allDraftsReady ? 'pass' : blockedExampleIds.length ? 'block' : 'watch',
+      detail: allDraftsReady
+        ? 'All examples have draft readiness for limited synthetic tester review.'
+        : blockedExampleIds.length
+          ? 'At least one example is blocked before synthetic tester review.'
+          : 'Some examples need review-first handling before limited synthetic tester review.'
+    },
+    {
+      id: 'packetBoundary',
+      label: 'Tester packet boundary',
+      status: allBoundariesReady ? 'pass' : blockedExampleIds.length ? 'block' : 'watch',
+      detail: allBoundariesReady
+        ? 'Tester packet boundaries are ready across examples.'
+        : 'Some tester packet boundaries need review before widening tester access.'
+    },
+    {
+      id: 'exportGuard',
+      label: 'Export guard',
+      status: allGuarded ? 'pass' : 'block',
+      detail: allGuarded
+        ? 'Tester packet export guards keep synthetic review content runtime-only across examples.'
+        : 'At least one tester packet export guard is blocked.'
+    },
+    {
+      id: 'testerPurpose',
+      label: 'Tester purpose',
+      status: examples.length ? 'pass' : 'block',
+      detail: examples.length
+        ? 'Limited tester review is scoped to made-up scenarios for feature testing, not personal decisions.'
+        : 'No examples are available for tester packet review.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: allGuarded ? 'pass' : 'block',
+      detail:
+        'Readiness matrix remains runtime-only and does not create saved sequencing output, CSV output, report output, production UI, final annual instructions, or tax-bracket instructions.'
+    }
+  ];
+
+  return {
+    status,
+    exampleCount: examples.length,
+    readyExampleIds,
+    reviewExampleIds,
+    blockedExampleIds,
+    rows,
+    releaseScope: {
+      visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
+      hiddenOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions']
+    },
+    summary:
+      status === 'readyForLimitedTesterReview'
+        ? 'Synthetic tester packet is ready for limited review with made-up scenarios.'
+        : status === 'reviewFirst'
+          ? 'Synthetic tester packet needs review-first handling before limited tester use.'
+          : 'Synthetic tester packet is blocked until example readiness or export guards are repaired.',
+    boundary:
+      'Synthetic tester packet readiness is runtime-only. It does not save sequencing output, export CSV, change reports, change production UI, create final annual instructions, or create tax-bracket instructions.',
+    nextStep: 'Use this matrix to decide whether a limited synthetic tester packet can be planned next.'
+  };
+}
+
 export function selectOptimizerExperimentalDraftExampleMatrix(
   examples: Array<{
     id: string;
@@ -4516,6 +4639,7 @@ export function selectOptimizerExperimentalDraftExampleMatrix(
         : 'No confidence repair needed.'
     }
   ];
+  const testerPacketReadiness = selectOptimizerSyntheticTesterPacketReadinessMatrix(examples);
 
   return {
     status,
@@ -4525,6 +4649,7 @@ export function selectOptimizerExperimentalDraftExampleMatrix(
     blockedCount,
     items,
     repairTargets,
+    testerPacketReadiness,
     summary:
       status === 'readyForTesterReview'
         ? 'All experimental draft examples are ready for synthetic tester review.'

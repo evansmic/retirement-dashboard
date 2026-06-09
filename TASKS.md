@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2368-S2387: Tester Packet Export Guard Review
+## Latest Package — S2388-S2407: Synthetic Tester Packet Readiness Matrix
+
+**Status:** Complete 2026-06-08.
+
+Goal: add a runtime-only readiness matrix that decides whether synthetic examples are ready for limited tester packet review. The matrix now combines draft readiness, tester packet boundary status, export guard status, tester purpose, and output-boundary checks before any tester-facing implementation.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only synthetic tester packet readiness matrix, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2388_2407_synthetic_tester_packet_readiness_matrix.md`](docs/sprint_2388_2407_synthetic_tester_packet_readiness_matrix.md).
+
+### S2388-S2407 Completed Path
+
+- **S2388-S2392 — Readiness matrix shape batch.** Added runtime tester packet readiness matrix with ready, review-first, and blocked example buckets.
+- **S2393-S2397 — Gate evidence batch.** Combined draft readiness, tester packet boundary, export guard, tester purpose, and output-boundary rows.
+- **S2398-S2402 — Release-scope batch.** Added visible tester sections and hidden output scope for limited synthetic tester packet review.
+- **S2403-S2407 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2388-S2407 Definition Of Done
+
+- Tester packet readiness matrix groups examples into ready, review-first, and blocked buckets.
+- Matrix rows evaluate draft readiness, packet boundary, export guard, tester purpose, and output boundary.
+- Release scope identifies visible runtime sections and hidden outputs.
+- Readiness copy stays scoped to feature testing with made-up scenarios, not personal decisions.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tester packet readiness matrix is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2368-S2387: Tester Packet Export Guard Review
 
 **Status:** Complete 2026-06-08.
 

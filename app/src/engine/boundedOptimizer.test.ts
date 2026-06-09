@@ -552,6 +552,29 @@ describe('bounded optimizer runner', () => {
       status: 'pass',
       repairAction: 'No blocker repair needed.'
     });
+    expect(matrix.testerPacketReadiness).toMatchObject({
+      status: 'reviewFirst',
+      exampleCount: 2,
+      readyExampleIds: ['ready-example'],
+      reviewExampleIds: ['review-example'],
+      blockedExampleIds: [],
+      releaseScope: {
+        visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
+        hiddenOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions']
+      },
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(matrix.testerPacketReadiness.rows.map((row) => row.id)).toEqual([
+      'draftReadiness',
+      'packetBoundary',
+      'exportGuard',
+      'testerPurpose',
+      'outputBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.rows.find((row) => row.id === 'exportGuard')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('runtime-only')
+    });
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
   });

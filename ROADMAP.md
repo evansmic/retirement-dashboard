@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2388-S2407 is complete. Experimental draft example matrix output now includes a runtime synthetic tester packet readiness matrix with ready, review-first, and blocked example buckets, gate evidence rows, and visible/hidden release scope. This prepares a limited tester packet decision while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only readiness matrix, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2388_2407_synthetic_tester_packet_readiness_matrix.md`](docs/sprint_2388_2407_synthetic_tester_packet_readiness_matrix.md).
+
 S2368-S2387 is complete. Experimental annual draft output now includes a runtime tester packet export guard with saved plan, CSV, report, production UI, final instruction, and tax-bracket instruction checks. This makes the synthetic tester packet boundary explicit before tester-facing implementation while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only export guard, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2368_2387_tester_packet_export_guard_review.md`](docs/sprint_2368_2387_tester_packet_export_guard_review.md).

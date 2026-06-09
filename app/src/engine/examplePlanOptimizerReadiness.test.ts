@@ -363,6 +363,26 @@ describe('example-plan optimizer readiness matrix', () => {
     expect(matrix.repairTargets.every((target) => ['pass', 'repair'].includes(target.status))).toBe(true);
     expect(matrix.repairTargets.every((target) => Array.isArray(target.exampleIds))).toBe(true);
     expect(matrix.repairTargets.every((target) => target.repairAction.length > 0)).toBe(true);
+    expect(['readyForLimitedTesterReview', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.status);
+    expect(matrix.testerPacketReadiness.exampleCount).toBe(matrix.exampleCount);
+    expect(
+      matrix.testerPacketReadiness.readyExampleIds.length +
+        matrix.testerPacketReadiness.reviewExampleIds.length +
+        matrix.testerPacketReadiness.blockedExampleIds.length
+    ).toBe(matrix.exampleCount);
+    expect(matrix.testerPacketReadiness.rows.map((row) => row.id)).toEqual([
+      'draftReadiness',
+      'packetBoundary',
+      'exportGuard',
+      'testerPurpose',
+      'outputBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.releaseScope.visibleSections).toContain('candidateDisplayRows');
+    expect(matrix.testerPacketReadiness.releaseScope.hiddenOutputs).toEqual(
+      expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'])
+    );
+    expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
+    expect(matrix.testerPacketReadiness.nextStep).toContain('limited synthetic tester packet');
     expect(matrix.boundary).toContain('runtime-only');
     expect(matrix.boundary).not.toContain('CSV export is ready');
     expect(JSON.stringify(matrix).toLowerCase()).not.toContain('stay under');
