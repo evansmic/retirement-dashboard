@@ -465,6 +465,24 @@ describe('example-plan optimizer readiness matrix', () => {
       'implementationBoundary'
     ]);
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.boundary).toContain('runtime-only planning evidence');
+    expect(['readyForImplementationPackage', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.status);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.route).toMatchObject({
+      path: '/tester/annual-candidates',
+      audience: 'syntheticTesterOnly'
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.dataSource).toBe('runtimeDryRunPayloadOnly');
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.verificationSteps).toEqual(
+      expect.arrayContaining(['payloadItemsRender', 'disabledActionsRender', 'copyBoundaryVisible', 'noSavedOutput', 'noCsvOutput', 'noReportOutput'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.rows.map((row) => row.id)).toEqual([
+      'route',
+      'dataSource',
+      'readOnlyRendering',
+      'disabledActions',
+      'copyPlacement',
+      'verification'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.boundary).toContain('runtime-only planning evidence');
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');

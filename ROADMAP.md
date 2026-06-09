@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2528-S2547 is complete. The tester surface planning gate now includes a runtime preflight checklist with route, runtime data source, read-only rendering, disabled action, copy placement, and verification checks. This prepares implementation preflight while saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only preflight checklist, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md`](docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md).
+
 S2508-S2527 is complete. The tester surface planning gate now includes a runtime implementation decision gate with allowed implementation scope, blocked implementation scope, decision rows, decision value, boundary, and next step. This decides whether a tiny tester-only surface may be implemented later while saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only decision gate, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md`](docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md).

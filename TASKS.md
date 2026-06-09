@@ -4,7 +4,38 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2508-S2527: Tester Surface Implementation Decision Gate
+## Latest Package — S2528-S2547: Tiny Tester Surface Preflight Checklist
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare the preflight checklist for a tiny tester-only surface if the implementation decision gate allows it. The surface planning gate now includes route, data source, read-only rendering, disabled action, copy placement, and verification checks.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tiny tester surface preflight checklist, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md`](docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md).
+
+### S2528-S2547 Completed Path
+
+- **S2528-S2532 — Preflight shape batch.** Added preflight status, route, data source, verification steps, rows, summary, boundary, and next step.
+- **S2533-S2537 — Rendering batch.** Added route, runtime data source, read-only rendering, disabled actions, and copy placement checks.
+- **S2538-S2542 — Verification batch.** Added verification steps for payload rendering, disabled actions, visible boundary copy, and no saved, CSV, or report output.
+- **S2543-S2547 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2528-S2547 Definition Of Done
+
+- Preflight checklist reflects implementation decision readiness.
+- Tester-only route is explicit.
+- Runtime dry-run payload is the only data source.
+- Read-only rendering and disabled actions are explicit.
+- Verification steps are explicit.
+- Gate does not implement tester-facing UI.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tiny tester surface preflight checklist is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2508-S2527: Tester Surface Implementation Decision Gate
 
 **Status:** Complete 2026-06-08.
 

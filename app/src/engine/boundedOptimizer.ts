@@ -700,6 +700,24 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
         boundary: string;
         nextStep: string;
       };
+      preflightChecklist: {
+        status: 'readyForImplementationPackage' | 'reviewFirst' | 'blocked';
+        rows: Array<{
+          id: 'route' | 'dataSource' | 'readOnlyRendering' | 'disabledActions' | 'copyPlacement' | 'verification';
+          label: string;
+          status: 'pass' | 'watch' | 'block';
+          detail: string;
+        }>;
+        route: {
+          path: '/tester/annual-candidates';
+          audience: 'syntheticTesterOnly';
+        };
+        dataSource: 'runtimeDryRunPayloadOnly';
+        verificationSteps: Array<'payloadItemsRender' | 'disabledActionsRender' | 'copyBoundaryVisible' | 'noSavedOutput' | 'noCsvOutput' | 'noReportOutput'>;
+        summary: string;
+        boundary: string;
+        nextStep: string;
+      };
       rows: Array<{
         id: 'qualityGate' | 'surfaceScope' | 'disabledActions' | 'reviewCopy' | 'implementationBoundary';
         label: string;
@@ -5011,6 +5029,72 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       'Implementation decision gate is runtime-only planning evidence. It does not implement UI, save sequencing output, export CSV, change reports, promote production UI, create final annual instructions, create tax-bracket instructions, or change saved schema.',
     nextStep: 'Review this decision gate before deciding whether the next package may implement a tiny tester-only surface.'
   };
+  const preflightStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['preflightChecklist']['status'] =
+    implementationStatus === 'readyForTinyTesterSurface' ? 'readyForImplementationPackage' : implementationStatus;
+  const verificationSteps: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['preflightChecklist']['verificationSteps'] = [
+    'payloadItemsRender',
+    'disabledActionsRender',
+    'copyBoundaryVisible',
+    'noSavedOutput',
+    'noCsvOutput',
+    'noReportOutput'
+  ];
+  const preflightChecklist: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['preflightChecklist'] = {
+    status: preflightStatus,
+    route: {
+      path: '/tester/annual-candidates',
+      audience: 'syntheticTesterOnly'
+    },
+    dataSource: 'runtimeDryRunPayloadOnly',
+    verificationSteps,
+    rows: [
+      {
+        id: 'route',
+        label: 'Tester route',
+        status: implementationStatus === 'blocked' ? 'block' : 'pass',
+        detail: 'Future implementation may use a tester-only annual candidate route that is not production navigation.'
+      },
+      {
+        id: 'dataSource',
+        label: 'Data source',
+        status: 'pass',
+        detail: 'Future implementation may read only the runtime dry-run payload.'
+      },
+      {
+        id: 'readOnlyRendering',
+        label: 'Read-only rendering',
+        status: implementationStatus === 'readyForTinyTesterSurface' ? 'pass' : 'watch',
+        detail: 'Candidate rows, quality checks, prompts, and boundary copy must render read-only.'
+      },
+      {
+        id: 'disabledActions',
+        label: 'Disabled actions',
+        status: disabledActionLabels.length === disabledActions.length ? 'pass' : 'block',
+        detail: 'Save, export, report, production, final instruction, and tax-bracket actions must render disabled if shown.'
+      },
+      {
+        id: 'copyPlacement',
+        label: 'Copy placement',
+        status: copyAndActionStatus === 'blocked' ? 'block' : copyAndActionStatus === 'reviewFirst' ? 'watch' : 'pass',
+        detail: 'Review-only boundary copy must be visible before payload rows.'
+      },
+      {
+        id: 'verification',
+        label: 'Verification steps',
+        status: verificationSteps.length === 6 ? 'pass' : 'block',
+        detail: 'Future implementation must verify payload rendering, disabled actions, visible boundary copy, and no saved, CSV, or report output.'
+      }
+    ],
+    summary:
+      preflightStatus === 'readyForImplementationPackage'
+        ? 'Tiny tester surface preflight is ready for an implementation package.'
+        : preflightStatus === 'reviewFirst'
+          ? 'Tiny tester surface preflight needs review before implementation.'
+          : 'Tiny tester surface preflight is blocked until decision-gate issues are repaired.',
+    boundary:
+      'Preflight checklist is runtime-only planning evidence. It does not implement UI, save sequencing output, export CSV, change reports, promote production UI, create final annual instructions, create tax-bracket instructions, or change saved schema.',
+    nextStep: 'Use this checklist before approving any tiny tester-only surface implementation package.'
+  };
   const surfacePlanningGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate'] = {
     status: surfaceStatus,
     surfaceScope,
@@ -5022,6 +5106,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
     },
     copyAndActionBoundary,
     implementationDecisionGate,
+    preflightChecklist,
     rows: [
       {
         id: 'qualityGate',
