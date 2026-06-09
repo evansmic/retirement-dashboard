@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2508-S2527 is complete. The tester surface planning gate now includes a runtime implementation decision gate with allowed implementation scope, blocked implementation scope, decision rows, decision value, boundary, and next step. This decides whether a tiny tester-only surface may be implemented later while saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only decision gate, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md`](docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md).
+
 S2488-S2507 is complete. The limited tester packet surface planning gate now includes review-only surface labels, disabled action labels with reasons, copy/action boundary rows, and non-advisory wording checks. This prepares copy and action boundaries for a future tiny tester surface while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only copy/action boundary, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2488_2507_tester_surface_copy_action_boundary_review.md`](docs/sprint_2488_2507_tester_surface_copy_action_boundary_review.md).

@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2488-S2507: Tester Surface Copy And Action Boundary Review
+## Latest Package — S2508-S2527: Tester Surface Implementation Decision Gate
+
+**Status:** Complete 2026-06-08.
+
+Goal: decide whether a tiny tester-only surface may be implemented later from the runtime payload, quality gate, and copy/action boundary. The surface planning gate now includes allowed implementation scope, blocked implementation scope, decision rows, summary, boundary, and next step.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tester surface implementation decision gate, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md`](docs/sprint_2508_2527_tester_surface_implementation_decision_gate.md).
+
+### S2508-S2527 Completed Path
+
+- **S2508-S2512 — Decision gate shape batch.** Added implementation decision status, decision value, allowed scope, blocked scope, rows, summary, boundary, and next step.
+- **S2513-S2517 — Allowed scope batch.** Limited future implementation planning to tester-only route, runtime payload reader, read-only candidate rows, review prompts, disabled action buttons, and boundary copy.
+- **S2518-S2522 — Blocked scope batch.** Kept saved sequencing, CSV output, reports, production UI promotion, final instructions, tax-bracket instructions, and saved schema changes blocked.
+- **S2523-S2527 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2508-S2527 Definition Of Done
+
+- Implementation decision gate reflects quality and copy/action readiness.
+- Allowed implementation scope is explicit and tiny.
+- Blocked implementation scope is explicit.
+- Gate can return plan, review-first, or do-not-implement-yet decisions.
+- Gate does not implement tester-facing UI.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tester surface implementation decision gate is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2488-S2507: Tester Surface Copy And Action Boundary Review
 
 **Status:** Complete 2026-06-08.
 

@@ -685,6 +685,21 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
         summary: string;
         boundary: string;
       };
+      implementationDecisionGate: {
+        status: 'readyForTinyTesterSurface' | 'reviewFirst' | 'blocked';
+        decision: 'planTinyTesterSurface' | 'reviewFirst' | 'doNotImplementYet';
+        allowedImplementationScope: Array<'testerOnlyRoute' | 'runtimePayloadReader' | 'readOnlyCandidateRows' | 'reviewPrompts' | 'disabledActionButtons' | 'boundaryCopy'>;
+        blockedImplementationScope: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUiPromotion' | 'finalAnnualInstructions' | 'taxBracketInstructions' | 'savedSchemaChanges'>;
+        rows: Array<{
+          id: 'qualityReady' | 'copyReady' | 'actionsDisabled' | 'scopeLimited' | 'implementationBoundary';
+          label: string;
+          status: 'pass' | 'watch' | 'block';
+          detail: string;
+        }>;
+        summary: string;
+        boundary: string;
+        nextStep: string;
+      };
       rows: Array<{
         id: 'qualityGate' | 'surfaceScope' | 'disabledActions' | 'reviewCopy' | 'implementationBoundary';
         label: string;
@@ -4910,6 +4925,92 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
     boundary:
       'Copy and action boundary is runtime-only. It prepares labels for a future tester surface without implementing UI, saving sequencing output, exporting CSV, printing reports, finalizing instructions, or creating tax-bracket instructions.'
   };
+  const allowedImplementationScope: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationDecisionGate']['allowedImplementationScope'] = [
+    'testerOnlyRoute',
+    'runtimePayloadReader',
+    'readOnlyCandidateRows',
+    'reviewPrompts',
+    'disabledActionButtons',
+    'boundaryCopy'
+  ];
+  const blockedImplementationScope: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationDecisionGate']['blockedImplementationScope'] = [
+    'savedSequencingOutput',
+    'csvSequencingOutput',
+    'reportOutput',
+    'productionUiPromotion',
+    'finalAnnualInstructions',
+    'taxBracketInstructions',
+    'savedSchemaChanges'
+  ];
+  const implementationRows: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationDecisionGate']['rows'] = [
+    {
+      id: 'qualityReady',
+      label: 'Quality ready',
+      status: qualityStatus === 'readyForSurfacePlanning' ? 'pass' : qualityStatus === 'reviewFirst' ? 'watch' : 'block',
+      detail:
+        qualityStatus === 'readyForSurfacePlanning'
+          ? 'Payload quality is ready for tiny tester surface implementation planning.'
+          : qualityStatus === 'reviewFirst'
+            ? 'Payload quality has watch items before tiny tester surface implementation planning.'
+            : 'Payload quality is blocked before implementation planning.'
+    },
+    {
+      id: 'copyReady',
+      label: 'Copy ready',
+      status: copyAndActionStatus === 'readyForCopyReview' ? 'pass' : copyAndActionStatus === 'reviewFirst' ? 'watch' : 'block',
+      detail:
+        copyAndActionStatus === 'readyForCopyReview'
+          ? 'Copy and disabled action labels are ready for implementation planning.'
+          : copyAndActionStatus === 'reviewFirst'
+            ? 'Copy and disabled action labels need review before implementation planning.'
+            : 'Copy and disabled action labels are blocked before implementation planning.'
+    },
+    {
+      id: 'actionsDisabled',
+      label: 'Actions disabled',
+      status: disabledActionLabels.length === disabledActions.length ? 'pass' : 'block',
+      detail: 'Implementation planning must keep save, export, report, production, final instruction, and tax-bracket actions disabled.'
+    },
+    {
+      id: 'scopeLimited',
+      label: 'Scope limited',
+      status: allowedImplementationScope.length === 6 && blockedImplementationScope.length === 7 ? 'pass' : 'block',
+      detail: 'Allowed scope is limited to a tester-only read-only surface backed by runtime payload data.'
+    },
+    {
+      id: 'implementationBoundary',
+      label: 'Implementation boundary',
+      status: 'pass',
+      detail: 'Decision gate does not implement UI, save output, export CSV, change reports, promote production UI, create final instructions, or change saved schema.'
+    }
+  ];
+  const implementationStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationDecisionGate']['status'] =
+    implementationRows.some((row) => row.status === 'block')
+      ? 'blocked'
+      : implementationRows.some((row) => row.status === 'watch')
+        ? 'reviewFirst'
+        : 'readyForTinyTesterSurface';
+  const implementationDecisionGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationDecisionGate'] = {
+    status: implementationStatus,
+    decision:
+      implementationStatus === 'readyForTinyTesterSurface'
+        ? 'planTinyTesterSurface'
+        : implementationStatus === 'reviewFirst'
+          ? 'reviewFirst'
+          : 'doNotImplementYet',
+    allowedImplementationScope,
+    blockedImplementationScope,
+    rows: implementationRows,
+    summary:
+      implementationStatus === 'readyForTinyTesterSurface'
+        ? 'Tiny tester-only surface implementation can be planned in a later package.'
+        : implementationStatus === 'reviewFirst'
+          ? 'Tiny tester-only surface implementation needs review before planning.'
+          : 'Tiny tester-only surface implementation should not be planned yet.',
+    boundary:
+      'Implementation decision gate is runtime-only planning evidence. It does not implement UI, save sequencing output, export CSV, change reports, promote production UI, create final annual instructions, create tax-bracket instructions, or change saved schema.',
+    nextStep: 'Review this decision gate before deciding whether the next package may implement a tiny tester-only surface.'
+  };
   const surfacePlanningGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate'] = {
     status: surfaceStatus,
     surfaceScope,
@@ -4920,6 +5021,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       boundary: 'This is feature-testing material only. It is not a retirement plan, not saved, and not for personal decisions.'
     },
     copyAndActionBoundary,
+    implementationDecisionGate,
     rows: [
       {
         id: 'qualityGate',

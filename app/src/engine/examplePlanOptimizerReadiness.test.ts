@@ -451,6 +451,20 @@ describe('example-plan optimizer readiness matrix', () => {
     ]);
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.rows.find((row) => row.id === 'nonAdvisoryBoundary')).toMatchObject({ status: 'pass' });
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.boundary).toContain('runtime-only');
+    expect(['readyForTinyTesterSurface', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.status);
+    expect(['planTinyTesterSurface', 'reviewFirst', 'doNotImplementYet']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.decision);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.allowedImplementationScope).toContain('testerOnlyRoute');
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.blockedImplementationScope).toEqual(
+      expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUiPromotion', 'finalAnnualInstructions', 'taxBracketInstructions', 'savedSchemaChanges'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.rows.map((row) => row.id)).toEqual([
+      'qualityReady',
+      'copyReady',
+      'actionsDisabled',
+      'scopeLimited',
+      'implementationBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationDecisionGate.boundary).toContain('runtime-only planning evidence');
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
