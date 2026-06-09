@@ -4,7 +4,46 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2608-S2627: Limited Tester Handoff Packet
+## Optimizer Timeline Baseline
+
+As of S2628-S2647 planning, the working estimate is:
+
+- Internal tester optimizer prototype: 80-120 sprints from S2628.
+- Feature-complete app optimizer beta: 180-260 sprints from S2628.
+- Public-ready optimizer for real planning use: 300-450 sprints from S2628.
+
+Reassess this materially every 100 sprints, with the next checkpoint at S2728-S2747.
+
+## Latest Package — S2628-S2647: Tester Handoff Feedback Interpretation Guard
+
+**Status:** Complete 2026-06-08.
+
+Goal: define how tester observations should be interpreted after handoff without treating feedback as approval for real planning output. The tester-only surface now explains useful feedback, copy cleanup, input/model cleanup, blockers, and not-approval boundaries.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, or approval/unlock logic.
+
+Package doc: [`docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md`](docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md).
+
+### S2628-S2647 Completed Path
+
+- **S2628-S2632 — Interpretation category batch.** Added static feedback interpretation rows for useful feedback, copy cleanup, input/model cleanup, blockers, and not-approval.
+- **S2633-S2637 — Non-authorizing boundary batch.** Made positive tester feedback explicitly non-authorizing for saved sequencing, CSV, reports, final instructions, or production use.
+- **S2638-S2642 — Source guard batch.** Added checks that block scoring, saving, approval, unlock, submit, and change handlers inside the tester surface.
+- **S2643-S2647 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2628-S2647 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Tester feedback interpretation categories are visible.
+- Positive feedback is explicitly not approval for production or sequencing output.
+- Blockers, copy cleanup, and input/model cleanup are distinct.
+- Handoff does not collect, score, submit, save, download, copy, approve, unlock, or clear tester notes.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2608-S2627: Limited Tester Handoff Packet
 
 **Status:** Complete 2026-06-08.
 

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2628-S2647 is complete. The tester-only surface now includes a feedback interpretation guard that separates useful feedback, copy cleanup, input/model cleanup, blockers, and not-approval boundaries. Positive tester feedback is explicitly not approval for saved sequencing, CSV output, reports, final instructions, production use, tax-bracket instructions, saved schema changes, engine output schema changes, or `.plan.json` generation. The optimizer timeline baseline is recorded in TASKS with the next material reassessment at S2728-S2747.
+
+Current package doc: [`docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md`](docs/sprint_2628_2647_tester_handoff_feedback_interpretation_guard.md).
+
 S2608-S2627 is complete. The tiny tester-only surface now includes a limited handoff packet with static tester steps, suggested synthetic scenarios, and non-persistence guards. The handoff tells testers what to open and what to review without collecting notes, saving feedback, exporting output, promoting production UI, changing schemas, creating final annual instructions, creating tax-bracket instructions, or generating `.plan.json` files.
 
 Current package doc: [`docs/sprint_2608_2627_limited_tester_handoff_packet.md`](docs/sprint_2608_2627_limited_tester_handoff_packet.md).

@@ -99,6 +99,30 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.tester-handoff-panel');
   });
 
+  it('keeps tester feedback interpretation read-only and non-authorizing', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('TESTER_FEEDBACK_INTERPRETATION_ROWS');
+    expect(testerSurface).toContain('How feedback will be read');
+    expect(appSource).toContain('Useful feedback');
+    expect(appSource).toContain('Copy cleanup');
+    expect(appSource).toContain('Input or model cleanup');
+    expect(appSource).toContain('Blocker');
+    expect(appSource).toContain('Not approval');
+    expect(appSource).toContain('Positive tester feedback does not approve saved sequencing, CSV output, reports, final instructions, or production use.');
+    expect(testerSurface).not.toContain('approveSequencing');
+    expect(testerSurface).not.toContain('unlockSequencing');
+    expect(testerSurface).not.toContain('clearBlocker');
+    expect(testerSurface).not.toContain('scoreFeedback');
+    expect(testerSurface).not.toContain('saveFeedback');
+    expect(testerSurface).not.toContain('feedbackStatus =');
+    expect(testerSurface).not.toContain('onChange=');
+    expect(testerSurface).not.toContain('onSubmit=');
+    expect(stylesSource).toContain('.tester-feedback-interpretation-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

@@ -2991,6 +2991,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.tester-feedback-interpretation-panel {
+  border-left: 3px solid #7b6f3f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

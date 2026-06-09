@@ -246,6 +246,28 @@ const TESTER_HANDOFF_STEPS = [
 ];
 
 const TESTER_HANDOFF_SCENARIOS = ['DIY couple', 'DB pension couple', 'Already retired'];
+const TESTER_FEEDBACK_INTERPRETATION_ROWS = [
+  {
+    label: 'Useful feedback',
+    detail: 'Tester can explain what the annual candidate rows are showing and names one clear improvement.'
+  },
+  {
+    label: 'Copy cleanup',
+    detail: 'Tester understands the row but a label, note, or boundary sentence feels unclear.'
+  },
+  {
+    label: 'Input or model cleanup',
+    detail: 'Tester finds a scenario result that looks implausible or seems to need missing context.'
+  },
+  {
+    label: 'Blocker',
+    detail: 'Tester thinks the surface is a final plan, account instruction, tax instruction, or action to follow.'
+  },
+  {
+    label: 'Not approval',
+    detail: 'Positive tester feedback does not approve saved sequencing, CSV output, reports, final instructions, or production use.'
+  }
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4703,6 +4725,16 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {TESTER_HANDOFF_SCENARIOS.map((scenario) => (
               <li key={scenario}>{scenario}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel tester-feedback-interpretation-panel">
+          <h3>How feedback will be read</h3>
+          <ul className="compact-list">
+            {TESTER_FEEDBACK_INTERPRETATION_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> {row.detail}
+              </li>
             ))}
           </ul>
         </section>
