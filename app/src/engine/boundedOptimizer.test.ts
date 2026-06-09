@@ -354,7 +354,16 @@ describe('bounded optimizer runner', () => {
           },
           presentationReadiness: {
             status: 'readyForTesterReview',
-            displayRows: [],
+            displayRows: [
+              {
+                year: 2032,
+                label: '2032 annual candidate',
+                statusLabel: 'Ready for review',
+                qualityLabel: 'Higher confidence',
+                repairPreview: 'No repair themes.',
+                totalAmount: 24000
+              }
+            ],
             rows: [],
             summary: 'Annual candidate summaries are ready for synthetic tester review.',
             boundary: 'Runtime-only.',
@@ -451,7 +460,16 @@ describe('bounded optimizer runner', () => {
           },
           presentationReadiness: {
             status: 'reviewFirst',
-            displayRows: [],
+            displayRows: [
+              {
+                year: 2033,
+                label: '2033 annual candidate',
+                statusLabel: 'Review first',
+                qualityLabel: 'Medium confidence',
+                repairPreview: 'Review account order gap.',
+                totalAmount: 18000
+              }
+            ],
             rows: [],
             summary: 'Annual candidate summaries can be reviewed by testers with repair themes visible.',
             boundary: 'Runtime-only.',
@@ -612,6 +630,37 @@ describe('bounded optimizer runner', () => {
       'implementationBoundary'
     ]);
     expect(JSON.stringify(matrix.testerPacketReadiness.packetContract).toLowerCase()).not.toContain('you should');
+    expect(matrix.testerPacketReadiness.dryRunPayload).toMatchObject({
+      status: 'reviewFirst',
+      summary: expect.stringContaining('dry-run payload'),
+      boundary: expect.stringContaining('runtime-only review metadata')
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.items).toHaveLength(2);
+    expect(matrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
+      exampleId: 'ready-example',
+      exampleLabel: 'Ready example',
+      readinessStatus: 'readyForTesterReview',
+      candidateDisplayRows: [
+        {
+          year: 2032,
+          qualityLabel: 'Higher confidence',
+          totalAmount: 24000
+        }
+      ],
+      reviewPromptIds: ['clarity', 'plausibility', 'missingContext', 'boundary'],
+      runtimeBoundary: 'Not a retirement plan.'
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.rows.map((row) => row.id)).toEqual([
+      'payloadItems',
+      'contractFields',
+      'reviewMetadata',
+      'outputBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.rows.find((row) => row.id === 'contractFields')).toMatchObject({
+      status: 'pass',
+      detail: expect.stringContaining('contract-approved fields')
+    });
+    expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload).toLowerCase()).not.toContain('savedplan');
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
   });

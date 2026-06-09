@@ -632,6 +632,25 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
     summary: string;
     boundary: string;
   };
+  dryRunPayload: {
+    status: 'readyForDryRunReview' | 'reviewFirst' | 'blocked';
+    items: Array<{
+      exampleId: string;
+      exampleLabel: string;
+      readinessStatus: OptimizerExperimentalDraftReadinessSummary['status'];
+      candidateDisplayRows: OptimizerExperimentalAnnualCandidatePresentationReadiness['displayRows'];
+      reviewPromptIds: Array<'clarity' | 'plausibility' | 'missingContext' | 'boundary'>;
+      runtimeBoundary: string;
+    }>;
+    rows: Array<{
+      id: 'payloadItems' | 'contractFields' | 'reviewMetadata' | 'outputBoundary';
+      label: string;
+      status: 'pass' | 'watch' | 'block';
+      detail: string;
+    }>;
+    summary: string;
+    boundary: string;
+  };
   summary: string;
   boundary: string;
   nextStep: string;
@@ -4646,6 +4665,64 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
     boundary:
       'Contract is runtime-only. It defines what a future tester packet may consume without changing saved files, CSV output, reports, production UI, final annual instructions, or tax-bracket instructions.'
   };
+  const reviewPromptIds = packetContract.reviewPrompts.map((prompt) => prompt.id);
+  const dryRunItems: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['items'] = examples.map((example) => ({
+    exampleId: example.id,
+    exampleLabel: example.label,
+    readinessStatus: example.draft.readinessSummary.status,
+    candidateDisplayRows: example.draft.presentationReadiness.displayRows,
+    reviewPromptIds,
+    runtimeBoundary: example.draft.testerPacketBoundary.testerCopy.boundary
+  }));
+  const missingPayloadRows = dryRunItems.filter((item) => item.candidateDisplayRows.length === 0).map((item) => item.exampleId);
+  const dryRunStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['status'] =
+    contractStatus === 'blocked'
+      ? 'blocked'
+      : missingPayloadRows.length
+        ? 'reviewFirst'
+        : contractStatus === 'readyForContractReview'
+          ? 'readyForDryRunReview'
+          : 'reviewFirst';
+  const dryRunPayload: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload'] = {
+    status: dryRunStatus,
+    items: dryRunItems,
+    rows: [
+      {
+        id: 'payloadItems',
+        label: 'Payload items',
+        status: examples.length ? (missingPayloadRows.length ? 'watch' : 'pass') : 'block',
+        detail: missingPayloadRows.length
+          ? `Some examples need candidate display rows before payload review: ${missingPayloadRows.join(', ')}.`
+          : `${dryRunItems.length} synthetic example payload item${dryRunItems.length === 1 ? '' : 's'} can be reviewed at runtime.`
+      },
+      {
+        id: 'contractFields',
+        label: 'Contract fields',
+        status: packetContract.allowedFields.length && packetContract.excludedFields.length ? 'pass' : 'block',
+        detail: 'Dry-run payload uses contract-approved fields and keeps excluded fields out.'
+      },
+      {
+        id: 'reviewMetadata',
+        label: 'Review metadata',
+        status: reviewPromptIds.length ? 'pass' : 'block',
+        detail: 'Each payload item carries review prompt ids for clarity, plausibility, missing context, and boundary checks.'
+      },
+      {
+        id: 'outputBoundary',
+        label: 'Output boundary',
+        status: allGuarded ? 'pass' : 'block',
+        detail: 'Dry-run payload is runtime-only and does not create UI, saved output, CSV output, reports, final instructions, or tax-bracket instructions.'
+      }
+    ],
+    summary:
+      dryRunStatus === 'readyForDryRunReview'
+        ? 'Limited synthetic tester packet dry-run payload is ready for runtime review.'
+        : dryRunStatus === 'reviewFirst'
+          ? 'Limited synthetic tester packet dry-run payload needs review before tester use.'
+          : 'Limited synthetic tester packet dry-run payload is blocked until contract or export guard issues are repaired.',
+    boundary:
+      'Dry-run payload is runtime-only review metadata. It is not saved, exported, printed, shown in production UI, or treated as final annual instructions.'
+  };
 
   return {
     status,
@@ -4659,6 +4736,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       hiddenOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions']
     },
     packetContract,
+    dryRunPayload,
     summary:
       status === 'readyForLimitedTesterReview'
         ? 'Synthetic tester packet is ready for limited review with made-up scenarios.'

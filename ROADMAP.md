@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2428-S2447 is complete. The synthetic tester packet readiness matrix now includes a runtime dry-run payload with one item per synthetic example, candidate display rows, review prompt ids, readiness status, and runtime boundary metadata. This prepares payload inspection before any tester-facing implementation while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only dry-run payload, final annual instructions, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md`](docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md).
+
 S2408-S2427 is complete. The synthetic tester packet readiness matrix now includes a runtime contract with allowed fields, excluded fields, calm tester prompts, and contract boundary checks. This defines what a future limited tester packet may consume while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only contract, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2408_2427_limited_synthetic_tester_packet_contract.md`](docs/sprint_2408_2427_limited_synthetic_tester_packet_contract.md).

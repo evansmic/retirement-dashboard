@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2408-S2427: Limited Synthetic Tester Packet Contract
+## Latest Package — S2428-S2447: Limited Tester Packet Payload Dry Run
+
+**Status:** Complete 2026-06-08.
+
+Goal: build a runtime-only dry-run payload from the limited synthetic tester packet contract. The readiness matrix now includes one dry-run payload item per synthetic example with candidate display rows, review prompt ids, readiness status, and runtime boundary metadata.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only limited tester packet payload dry run, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md`](docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md).
+
+### S2428-S2447 Completed Path
+
+- **S2428-S2432 — Payload item batch.** Added runtime dry-run payload items with example id, example label, readiness status, candidate display rows, review prompt ids, and runtime boundary.
+- **S2433-S2437 — Payload check batch.** Added dry-run rows for payload items, contract fields, review metadata, and output boundary.
+- **S2438-S2442 — Example matrix batch.** Verified bundled and clean synthetic examples produce payload items with display rows and review metadata.
+- **S2443-S2447 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2428-S2447 Definition Of Done
+
+- Dry-run payload includes one runtime item per synthetic example.
+- Payload items use only contract-approved fields.
+- Payload items include candidate display rows and review prompt ids.
+- Payload rows cover payload items, contract fields, review metadata, and output boundary.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only limited tester packet payload dry run is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2408-S2427: Limited Synthetic Tester Packet Contract
 
 **Status:** Complete 2026-06-08.
 

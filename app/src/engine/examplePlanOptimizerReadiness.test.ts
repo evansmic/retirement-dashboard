@@ -401,6 +401,18 @@ describe('example-plan optimizer readiness matrix', () => {
       'implementationBoundary'
     ]);
     expect(matrix.testerPacketReadiness.packetContract.boundary).toContain('runtime-only');
+    expect(['readyForDryRunReview', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.dryRunPayload.status);
+    expect(matrix.testerPacketReadiness.dryRunPayload.items).toHaveLength(matrix.exampleCount);
+    expect(matrix.testerPacketReadiness.dryRunPayload.items.every((item) => item.reviewPromptIds.length === 4)).toBe(true);
+    expect(matrix.testerPacketReadiness.dryRunPayload.items.every((item) => item.runtimeBoundary.includes('not a retirement plan'))).toBe(true);
+    expect(matrix.testerPacketReadiness.dryRunPayload.items.every((item) => item.candidateDisplayRows.length > 0)).toBe(true);
+    expect(matrix.testerPacketReadiness.dryRunPayload.rows.map((row) => row.id)).toEqual([
+      'payloadItems',
+      'contractFields',
+      'reviewMetadata',
+      'outputBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.nextStep).toContain('limited synthetic tester packet');
     expect(matrix.boundary).toContain('runtime-only');
