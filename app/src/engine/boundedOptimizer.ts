@@ -418,6 +418,22 @@ export type OptimizerExperimentalAnnualInstructionCandidate = {
   boundary: string;
 };
 
+export type OptimizerExperimentalAnnualCandidateSelectionSummary = {
+  status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
+  strongestCandidateYears: number[];
+  qualityCounts: Record<'higher' | 'medium' | 'low' | 'blocked', number>;
+  repairThemes: Array<{
+    id: 'accountOrderGap' | 'partialAccountOrder' | 'limitedTaxContext' | 'missingAnnualTotal';
+    label: string;
+    candidateYears: number[];
+    status: 'pass' | 'repair';
+    detail: string;
+  }>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -475,6 +491,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
   instructionReadiness: OptimizerExperimentalAnnualInstructionReadiness;
   annualInstructionCandidates: OptimizerExperimentalAnnualInstructionCandidate[];
+  candidateSelectionSummary: OptimizerExperimentalAnnualCandidateSelectionSummary;
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -3928,6 +3945,68 @@ function buildExperimentalAnnualInstructionCandidates(
   });
 }
 
+function buildExperimentalAnnualCandidateSelectionSummary(
+  candidates: OptimizerExperimentalAnnualInstructionCandidate[]
+): OptimizerExperimentalAnnualCandidateSelectionSummary {
+  const qualityCounts: OptimizerExperimentalAnnualCandidateSelectionSummary['qualityCounts'] = {
+    higher: 0,
+    medium: 0,
+    low: 0,
+    blocked: 0
+  };
+  for (const candidate of candidates) {
+    qualityCounts[candidate.quality.level] += 1;
+  }
+  const sortedCandidates = [...candidates].sort((a, b) => b.quality.score - a.quality.score || a.year - b.year);
+  const topScore = sortedCandidates[0]?.quality.score ?? 0;
+  const strongestCandidateYears = sortedCandidates.filter((candidate) => candidate.quality.score === topScore && candidate.status !== 'blocked').map((candidate) => candidate.year);
+  const repairThemeLabels: Record<OptimizerExperimentalAnnualCandidateSelectionSummary['repairThemes'][number]['id'], string> = {
+    accountOrderGap: 'Account order gap',
+    partialAccountOrder: 'Partial account order',
+    limitedTaxContext: 'Limited tax context',
+    missingAnnualTotal: 'Missing annual total'
+  };
+  const repairThemes: OptimizerExperimentalAnnualCandidateSelectionSummary['repairThemes'] = (
+    ['accountOrderGap', 'partialAccountOrder', 'limitedTaxContext', 'missingAnnualTotal'] as const
+  ).map((id) => {
+    const candidateYears = candidates
+      .filter((candidate) => candidate.quality.repairTargets.some((target) => target.id === id && target.status === 'repair'))
+      .map((candidate) => candidate.year);
+    return {
+      id,
+      label: repairThemeLabels[id],
+      candidateYears,
+      status: candidateYears.length ? 'repair' : 'pass',
+      detail: candidateYears.length
+        ? `${repairThemeLabels[id]} appears in ${candidateYears.length} annual candidate${candidateYears.length === 1 ? '' : 's'}.`
+        : `${repairThemeLabels[id]} does not appear as a candidate repair theme.`
+    };
+  });
+  const hasBlocked = qualityCounts.blocked > 0 || candidates.length === 0;
+  const hasRepairThemes = repairThemes.some((theme) => theme.status === 'repair');
+  const status: OptimizerExperimentalAnnualCandidateSelectionSummary['status'] = hasBlocked
+    ? 'blocked'
+    : hasRepairThemes
+      ? 'reviewFirst'
+      : 'readyForTesterReview';
+
+  return {
+    status,
+    strongestCandidateYears,
+    qualityCounts,
+    repairThemes,
+    summary:
+      status === 'readyForTesterReview'
+        ? 'Annual instruction candidates are ready for synthetic tester review.'
+        : status === 'reviewFirst'
+          ? 'Annual instruction candidates have repair themes to review before tester presentation.'
+          : 'Annual instruction candidates are blocked until runtime candidate evidence is available.',
+    boundary:
+      'Candidate selection summary is runtime-only review context. It does not save sequencing output, export CSV, change reports, change production UI, or create tax-bracket instructions.',
+    nextStep: 'Review strongest candidate years and repair themes before planning saved sequencing output or CSV sequencing output.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -4016,6 +4095,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     annualAccountTotals
   });
   const annualInstructionCandidates = buildExperimentalAnnualInstructionCandidates(annualAccountTotals);
+  const candidateSelectionSummary = buildExperimentalAnnualCandidateSelectionSummary(annualInstructionCandidates);
 
   return {
     status,
@@ -4027,6 +4107,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     annualAccountTotals,
     instructionReadiness,
     annualInstructionCandidates,
+    candidateSelectionSummary,
     taxContextRows,
     confidence,
     harmChecks,

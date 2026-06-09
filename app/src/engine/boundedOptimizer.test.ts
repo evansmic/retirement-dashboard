@@ -343,6 +343,15 @@ describe('bounded optimizer runner', () => {
           rows: [],
           annualAccountTotals: [],
           annualInstructionCandidates: [],
+          candidateSelectionSummary: {
+            status: 'readyForTesterReview',
+            strongestCandidateYears: [],
+            qualityCounts: { higher: 0, medium: 0, low: 0, blocked: 0 },
+            repairThemes: [],
+            summary: 'Annual instruction candidates are ready for synthetic tester review.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           instructionReadiness: {
             status: 'readyForReview',
             rows: [],
@@ -392,6 +401,15 @@ describe('bounded optimizer runner', () => {
           rows: [],
           annualAccountTotals: [],
           annualInstructionCandidates: [],
+          candidateSelectionSummary: {
+            status: 'reviewFirst',
+            strongestCandidateYears: [],
+            qualityCounts: { higher: 0, medium: 0, low: 0, blocked: 0 },
+            repairThemes: [],
+            summary: 'Annual instruction candidates have repair themes to review before tester presentation.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           instructionReadiness: {
             status: 'reviewFirst',
             rows: [],
@@ -805,6 +823,26 @@ describe('bounded optimizer runner', () => {
       boundary: expect.stringContaining('runtime-only review context')
     });
     expect(summary.experimentalAnnualInstructionDraft.annualInstructionCandidates[0].summary).toContain('needs review');
+    expect(summary.experimentalAnnualInstructionDraft.candidateSelectionSummary).toMatchObject({
+      status: 'reviewFirst',
+      strongestCandidateYears: [2032, 2033, 2034],
+      qualityCounts: {
+        higher: 0,
+        medium: 3,
+        low: 0,
+        blocked: 0
+      },
+      boundary: expect.stringContaining('runtime-only review context'),
+      nextStep: expect.stringContaining('saved sequencing output')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.candidateSelectionSummary.repairThemes.find((theme) => theme.id === 'accountOrderGap')).toMatchObject({
+      status: 'repair',
+      candidateYears: [2032, 2033, 2034],
+      detail: expect.stringContaining('3 annual candidates')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.candidateSelectionSummary.repairThemes.find((theme) => theme.id === 'limitedTaxContext')).toMatchObject({
+      status: 'pass'
+    });
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

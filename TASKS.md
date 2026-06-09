@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2288-S2307: Runtime Annual Candidate Quality Scoring
+## Latest Package — S2308-S2327: Annual Candidate Selection Summary
+
+**Status:** Complete 2026-06-08.
+
+Goal: add a runtime-only annual candidate selection summary before saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now identifies strongest candidate years, quality-count rollups, common repair themes, and next-step copy for synthetic tester review.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate selection summary, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2308_2327_annual_candidate_selection_summary.md`](docs/sprint_2308_2327_annual_candidate_selection_summary.md).
+
+### S2308-S2327 Completed Path
+
+- **S2308-S2312 — Selection rollup batch.** Added runtime candidate selection summary with strongest candidate years and quality-count rollups.
+- **S2313-S2317 — Repair theme batch.** Added repair-theme rollups across annual candidates.
+- **S2318-S2322 — Boundary batch.** Added summary, boundary, and next-step copy for review-only use.
+- **S2323-S2327 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2308-S2327 Definition Of Done
+
+- Candidate selection summary identifies strongest candidate years by runtime quality score.
+- Summary rolls up higher, medium, low, and blocked candidate counts.
+- Summary rolls up repair themes and affected candidate years.
+- Summary remains comparison/repair context, not final instructions.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft candidate selection summary is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2288-S2307: Runtime Annual Candidate Quality Scoring
 
 **Status:** Complete 2026-06-08.
 

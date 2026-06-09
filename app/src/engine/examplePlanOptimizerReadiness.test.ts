@@ -283,6 +283,12 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.every((candidate) => ['higher', 'medium', 'low', 'blocked'].includes(candidate.quality.level))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.every((candidate) => candidate.quality.rows.map((row) => row.id).includes('outputBoundary'))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.every((candidate) => candidate.quality.repairTargets.length > 0)).toBe(true);
+      expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.status);
+      expect(
+        Object.values(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.qualityCounts).reduce((sum, count) => sum + count, 0)
+      ).toBe(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.length);
+      expect(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.repairThemes.every((theme) => ['pass', 'repair'].includes(theme.status))).toBe(true);
+      expect(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.boundary).toContain('runtime-only');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toContain('accountOrderGaps');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.blockedOutputs).toContain('annualAccountInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.boundary).toContain('runtime-only');
