@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2388-S2407: Synthetic Tester Packet Readiness Matrix
+## Latest Package — S2408-S2427: Limited Synthetic Tester Packet Contract
+
+**Status:** Complete 2026-06-08.
+
+Goal: define the exact runtime contract a future limited synthetic tester packet may consume before any tester-facing implementation. The readiness matrix now includes allowed fields, excluded fields, calm tester prompts, contract rows, and runtime-only boundaries.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only limited synthetic tester packet contract, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, or tester-facing UI implementation.
+
+Package doc: [`docs/sprint_2408_2427_limited_synthetic_tester_packet_contract.md`](docs/sprint_2408_2427_limited_synthetic_tester_packet_contract.md).
+
+### S2408-S2427 Completed Path
+
+- **S2408-S2412 — Contract field batch.** Added allowed runtime fields for future tester packet consumption.
+- **S2413-S2417 — Exclusion batch.** Added excluded fields and outputs for saved sequencing, CSV, reports, production UI, tax-bracket instructions, final annual instructions, personal data, and saved schema fields.
+- **S2418-S2422 — Review prompt batch.** Added calm tester prompts for clarity, plausibility, missing context, and boundary understanding.
+- **S2423-S2427 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2408-S2427 Definition Of Done
+
+- Contract lists allowed runtime fields for a future limited tester packet.
+- Contract lists excluded fields and outputs.
+- Review prompts stay scoped to made-up scenarios and feature testing.
+- Contract rows cover allowed fields, excluded fields, copy boundary, and implementation boundary.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only limited tester packet contract is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2388-S2407: Synthetic Tester Packet Readiness Matrix
 
 **Status:** Complete 2026-06-08.
 

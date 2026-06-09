@@ -597,6 +597,41 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
     visibleSections: Array<'candidateDisplayRows' | 'qualityLabels' | 'repairThemes' | 'runtimeBoundary'>;
     hiddenOutputs: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions' | 'finalAnnualInstructions'>;
   };
+  packetContract: {
+    status: 'readyForContractReview' | 'reviewFirst' | 'blocked';
+    allowedFields: Array<
+      | 'exampleId'
+      | 'exampleLabel'
+      | 'candidateDisplayRows'
+      | 'qualityLabels'
+      | 'repairThemes'
+      | 'runtimeBoundary'
+      | 'reviewPrompts'
+      | 'readinessStatus'
+    >;
+    excludedFields: Array<
+      | 'savedSequencingOutput'
+      | 'csvSequencingOutput'
+      | 'reportOutput'
+      | 'productionUi'
+      | 'taxBracketInstructions'
+      | 'finalAnnualInstructions'
+      | 'personalData'
+      | 'savedPlanSchema'
+    >;
+    reviewPrompts: Array<{
+      id: 'clarity' | 'plausibility' | 'missingContext' | 'boundary';
+      prompt: string;
+    }>;
+    rows: Array<{
+      id: 'allowedFields' | 'excludedFields' | 'copyBoundary' | 'implementationBoundary';
+      label: string;
+      status: 'pass' | 'watch' | 'block';
+      detail: string;
+    }>;
+    summary: string;
+    boundary: string;
+  };
   summary: string;
   boundary: string;
   nextStep: string;
@@ -4532,6 +4567,85 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
         'Readiness matrix remains runtime-only and does not create saved sequencing output, CSV output, report output, production UI, final annual instructions, or tax-bracket instructions.'
     }
   ];
+  const contractStatus: OptimizerSyntheticTesterPacketReadinessMatrix['packetContract']['status'] =
+    status === 'readyForLimitedTesterReview' ? 'readyForContractReview' : status;
+  const allowedFields: OptimizerSyntheticTesterPacketReadinessMatrix['packetContract']['allowedFields'] = [
+    'exampleId',
+    'exampleLabel',
+    'candidateDisplayRows',
+    'qualityLabels',
+    'repairThemes',
+    'runtimeBoundary',
+    'reviewPrompts',
+    'readinessStatus'
+  ];
+  const excludedFields: OptimizerSyntheticTesterPacketReadinessMatrix['packetContract']['excludedFields'] = [
+    'savedSequencingOutput',
+    'csvSequencingOutput',
+    'reportOutput',
+    'productionUi',
+    'taxBracketInstructions',
+    'finalAnnualInstructions',
+    'personalData',
+    'savedPlanSchema'
+  ];
+  const packetContract: OptimizerSyntheticTesterPacketReadinessMatrix['packetContract'] = {
+    status: contractStatus,
+    allowedFields,
+    excludedFields,
+    reviewPrompts: [
+      {
+        id: 'clarity',
+        prompt: 'Does the annual candidate summary make sense for this made-up scenario?'
+      },
+      {
+        id: 'plausibility',
+        prompt: 'Do the annual amounts, labels, and review flags look plausible for the scenario?'
+      },
+      {
+        id: 'missingContext',
+        prompt: 'What context would help you understand the candidate without turning it into final instructions?'
+      },
+      {
+        id: 'boundary',
+        prompt: 'Is it clear that this packet is for feature testing and not for personal decisions?'
+      }
+    ],
+    rows: [
+      {
+        id: 'allowedFields',
+        label: 'Allowed fields',
+        status: examples.length ? 'pass' : 'block',
+        detail: 'Future tester packet work may consume example labels, candidate display rows, quality labels, repair themes, runtime boundaries, review prompts, and readiness status.'
+      },
+      {
+        id: 'excludedFields',
+        label: 'Excluded fields',
+        status: 'pass',
+        detail: 'Saved sequencing output, CSV output, reports, production UI, tax-bracket instructions, final annual instructions, personal data, and saved schema fields are excluded.'
+      },
+      {
+        id: 'copyBoundary',
+        label: 'Copy boundary',
+        status: 'pass',
+        detail: 'Tester prompts ask about clarity and plausibility in made-up scenarios without telling a person what to do.'
+      },
+      {
+        id: 'implementationBoundary',
+        label: 'Implementation boundary',
+        status: allGuarded ? 'pass' : 'block',
+        detail: 'Contract review is runtime-only and does not implement tester UI, saved output, CSV output, reports, or production UI.'
+      }
+    ],
+    summary:
+      contractStatus === 'readyForContractReview'
+        ? 'Limited synthetic tester packet contract is ready for review.'
+        : contractStatus === 'reviewFirst'
+          ? 'Limited synthetic tester packet contract can be reviewed after readiness watch items are checked.'
+          : 'Limited synthetic tester packet contract is blocked until readiness or export guard issues are repaired.',
+    boundary:
+      'Contract is runtime-only. It defines what a future tester packet may consume without changing saved files, CSV output, reports, production UI, final annual instructions, or tax-bracket instructions.'
+  };
 
   return {
     status,
@@ -4544,6 +4658,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       visibleSections: ['candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary'],
       hiddenOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions']
     },
+    packetContract,
     summary:
       status === 'readyForLimitedTesterReview'
         ? 'Synthetic tester packet is ready for limited review with made-up scenarios.'

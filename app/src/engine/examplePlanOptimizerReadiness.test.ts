@@ -381,6 +381,26 @@ describe('example-plan optimizer readiness matrix', () => {
     expect(matrix.testerPacketReadiness.releaseScope.hiddenOutputs).toEqual(
       expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'])
     );
+    expect(['readyForContractReview', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.packetContract.status);
+    expect(matrix.testerPacketReadiness.packetContract.allowedFields).toEqual(
+      expect.arrayContaining(['exampleId', 'exampleLabel', 'candidateDisplayRows', 'qualityLabels', 'repairThemes', 'runtimeBoundary', 'reviewPrompts', 'readinessStatus'])
+    );
+    expect(matrix.testerPacketReadiness.packetContract.excludedFields).toEqual(
+      expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions', 'personalData', 'savedPlanSchema'])
+    );
+    expect(matrix.testerPacketReadiness.packetContract.reviewPrompts.map((prompt) => prompt.id)).toEqual([
+      'clarity',
+      'plausibility',
+      'missingContext',
+      'boundary'
+    ]);
+    expect(matrix.testerPacketReadiness.packetContract.rows.map((row) => row.id)).toEqual([
+      'allowedFields',
+      'excludedFields',
+      'copyBoundary',
+      'implementationBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.packetContract.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.nextStep).toContain('limited synthetic tester packet');
     expect(matrix.boundary).toContain('runtime-only');

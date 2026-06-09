@@ -575,6 +575,43 @@ describe('bounded optimizer runner', () => {
       status: 'pass',
       detail: expect.stringContaining('runtime-only')
     });
+    expect(matrix.testerPacketReadiness.packetContract).toMatchObject({
+      status: 'reviewFirst',
+      allowedFields: [
+        'exampleId',
+        'exampleLabel',
+        'candidateDisplayRows',
+        'qualityLabels',
+        'repairThemes',
+        'runtimeBoundary',
+        'reviewPrompts',
+        'readinessStatus'
+      ],
+      excludedFields: [
+        'savedSequencingOutput',
+        'csvSequencingOutput',
+        'reportOutput',
+        'productionUi',
+        'taxBracketInstructions',
+        'finalAnnualInstructions',
+        'personalData',
+        'savedPlanSchema'
+      ],
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(matrix.testerPacketReadiness.packetContract.reviewPrompts.map((prompt) => prompt.id)).toEqual([
+      'clarity',
+      'plausibility',
+      'missingContext',
+      'boundary'
+    ]);
+    expect(matrix.testerPacketReadiness.packetContract.rows.map((row) => row.id)).toEqual([
+      'allowedFields',
+      'excludedFields',
+      'copyBoundary',
+      'implementationBoundary'
+    ]);
+    expect(JSON.stringify(matrix.testerPacketReadiness.packetContract).toLowerCase()).not.toContain('you should');
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');
   });
