@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2548-S2567: Tiny Tester Surface Implementation Approval Gate
+## Latest Package — S2568-S2587: Tiny Tester Surface Implementation Slice
+
+**Status:** Complete 2026-06-08.
+
+Goal: implement the tiny tester-only read-only surface using the runtime dry-run payload, disabled action rendering, and visible boundary copy. The surface is shown only inside Results Details and does not add saved sequencing output, CSV output, reports, final annual instructions, tax-bracket instructions, production UI promotion, or saved schema changes.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tester surface payload exposure, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, or final annual instructions.
+
+Package doc: [`docs/sprint_2568_2587_tiny_tester_surface_implementation_slice.md`](docs/sprint_2568_2587_tiny_tester_surface_implementation_slice.md).
+
+### S2568-S2587 Completed Path
+
+- **S2568-S2572 — Runtime payload exposure batch.** Exposed a current-runtime tester surface matrix on the bounded optimizer summary.
+- **S2573-S2577 — Read-only surface batch.** Added a Details-only tester surface with candidate rows, tester prompts, disabled action buttons, and boundary copy.
+- **S2578-S2582 — Structure and styling batch.** Added structure checks and compact responsive styling for disabled actions and subpanels.
+- **S2583-S2587 — Verification and closeout.** Ran focused optimizer tests, UI structure tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2568-S2587 Definition Of Done
+
+- Tiny tester surface renders from runtime dry-run payload data.
+- Surface is Details-only and tester-only.
+- Candidate rows render read-only.
+- Disabled action buttons render visibly disabled.
+- Boundary copy is visible.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2548-S2567: Tiny Tester Surface Implementation Approval Gate
 
 **Status:** Complete 2026-06-08.
 

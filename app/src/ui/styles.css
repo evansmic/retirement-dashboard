@@ -2953,6 +2953,29 @@ button.secondary,
   text-transform: uppercase;
 }
 
+.tester-surface-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.tester-surface-actions button:disabled {
+  background: #eef0f3;
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.tester-surface-subpanel {
+  display: grid;
+  gap: 10px;
+}
+
+.tester-surface-subpanel h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

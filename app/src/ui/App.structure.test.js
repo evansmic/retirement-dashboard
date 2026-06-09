@@ -42,10 +42,35 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<DecisionChecklistPanel');
     expect(detailsPanel).toContain('<CompactTaxPressurePanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact"');
+    expect(detailsPanel).toContain('<TinyTesterSurfacePanel loading={loading} summary={boundedOptimizer} />');
     expect(detailsPanel).toContain('<CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<DrawdownReadinessPanel loading={loading} summary={drawdownReadiness} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).not.toContain('<HiddenDrawdownComparisonPanel comparison={hiddenDrawdownComparison} loading={loading} />\n      <CompactDrawdownReviewSummaryPanel');
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
+  });
+
+  it('keeps the tiny tester surface read-only and inside Details', () => {
+    const overviewStart = appSource.indexOf("activeSection === 'overview'");
+    const overviewEnd = appSource.indexOf('<DeferredResultsPanel', overviewStart);
+    const overviewBranch = appSource.slice(overviewStart, overviewEnd);
+    const detailsStart = appSource.indexOf('function DetailsResultsPanel');
+    const detailsEnd = appSource.indexOf('function TinyTesterSurfacePanel');
+    const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('SHOW_TINY_TESTER_SURFACE = true');
+    expect(overviewBranch).not.toContain('<TinyTesterSurfacePanel');
+    expect(detailsPanel).toContain('<TinyTesterSurfacePanel loading={loading} summary={boundedOptimizer} />');
+    expect(testerSurface).toContain('testerSurfaceMatrix.testerPacketReadiness.dryRunPayload');
+    expect(testerSurface).toContain('Experimental tester packet review');
+    expect(testerSurface).toContain('Disabled tester actions');
+    expect(testerSurface).toContain('<button disabled');
+    expect(testerSurface).toContain('not a retirement plan');
+    expect(testerSurface).not.toContain('onClick=');
+    expect(testerSurface).not.toContain('savePlan');
+    expect(testerSurface).not.toContain('downloadCsv');
   });
 
   it('keeps normal consumer research gates disabled for the v1 feedback checkpoint', () => {

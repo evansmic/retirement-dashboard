@@ -1328,6 +1328,15 @@ describe('bounded optimizer runner', () => {
     expect(summary.experimentalAnnualInstructionDraft.readinessSummary.watchCount).toBe(0);
     expect(summary.experimentalAnnualInstructionDraft.readinessSummary.nextStep).toContain('synthetic scenarios');
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
+    expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
+      exampleId: 'current-runtime-scenario',
+      exampleLabel: 'Current runtime scenario',
+      reviewPromptIds: ['clarity', 'plausibility', 'missingContext', 'boundary']
+    });
+    expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.route).toMatchObject({
+      path: '/tester/annual-candidates',
+      audience: 'syntheticTesterOnly'
+    });
     expect(JSON.stringify(summary.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
     expect(summary.explanation.plainLanguageSummary).toContain('first option to review');
     expect(summary.explanation.whyThisOption.join(' ')).toContain('Projected money left improves');

@@ -1414,6 +1414,7 @@ export type BoundedOptimizerSummary = {
   annualSequencingInputAdapter: OptimizerAnnualSequencingInputAdapter;
   experimentalAccountOrderDraft: OptimizerExperimentalAccountOrderDraft;
   experimentalAnnualInstructionDraft: OptimizerExperimentalAnnualInstructionDraft;
+  testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
   suggestedCandidateId: BoundedOptimizerCandidateId | null;
@@ -7475,6 +7476,13 @@ export function runBoundedOptimizer(
     accountOrderDraft: experimentalAccountOrderDraft,
     summary: suggestedRow ? summaryById[suggestedRow.id] : null
   });
+  const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
+    {
+      id: 'current-runtime-scenario',
+      label: 'Current runtime scenario',
+      draft: experimentalAnnualInstructionDraft
+    }
+  ]);
   const goalReview = buildOptimizerGoalReview(candidates);
   const withdrawalFeedbackReview = buildWithdrawalFeedbackReview({
     candidateFamilies,
@@ -7500,6 +7508,7 @@ export function runBoundedOptimizer(
     annualSequencingInputAdapter,
     experimentalAccountOrderDraft,
     experimentalAnnualInstructionDraft,
+    testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
       : 'Plan options can be reviewed after required inputs are cleared.',

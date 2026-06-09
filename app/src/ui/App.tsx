@@ -235,6 +235,7 @@ const SHOW_MONEY_FLOW_RESEARCH_PANELS = false;
 const SHOW_OPTION_RESEARCH_PANELS = false;
 const SHOW_SCENARIO_RESEARCH_PANELS = false;
 const SHOW_TAX_RESEARCH_PANELS = false;
+const SHOW_TINY_TESTER_SURFACE = true;
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4169,6 +4170,7 @@ function DetailsResultsPanel({
         </>
       ) : null}
       <BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />
+      {SHOW_TINY_TESTER_SURFACE ? <TinyTesterSurfacePanel loading={loading} summary={boundedOptimizer} /> : null}
       <CompactDrawdownReviewSummaryPanel
         actions={v1DrawdownUxReviewActions}
         closeout={v1DrawdownRecommendedPlanCloseout}
@@ -4576,6 +4578,125 @@ function RecommendedPathPanel({
         Treat it as a plan-review label, not advice. The first option to review under the current trust checks is not a
         recommendation, financial advice, or a full optimizer. Open the printable report for complete annual detail
         before acting on a path.
+      </p>
+    </section>
+  );
+}
+
+function TinyTesterSurfacePanel({
+  loading,
+  summary
+}: {
+  loading: boolean;
+  summary: BoundedOptimizerSummary | null;
+}) {
+  const surface = summary?.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate;
+  const payload = summary?.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload;
+  const approval = surface?.implementationApprovalGate;
+  const firstItem = payload?.items[0] || null;
+  const candidateRows = firstItem?.candidateDisplayRows || [];
+  const disabledActions = surface?.copyAndActionBoundary.disabledActionLabels || [];
+  const prompts = summary?.testerSurfaceMatrix.testerPacketReadiness.packetContract.reviewPrompts || [];
+  const dataSourceLabel = surface?.preflightChecklist.dataSource ? 'Current tester packet' : 'Preparing';
+  const approvalLabel =
+    approval?.approval === 'approveTinyTesterSurface'
+      ? 'Ready for test review'
+      : approval?.approval === 'reviewBeforeApproval'
+        ? 'Needs review'
+        : 'Hold for review';
+  const blockedOutputLabels: Record<string, string> = {
+    savedSequencingOutput: 'Saved sequencing output',
+    csvSequencingOutput: 'CSV sequencing output',
+    reportOutput: 'Report output',
+    productionUiPromotion: 'Production UI promotion',
+    finalAnnualInstructions: 'Final annual instructions',
+    taxBracketInstructions: 'Tax-bracket instructions',
+    savedSchemaChanges: 'Saved schema changes'
+  };
+
+  return (
+    <section className={`result-card tiny-tester-surface tester-surface-${approval?.status || 'loading'}`}>
+      <div>
+        <p className="eyebrow">Tester-only surface</p>
+        <h3>{loading ? 'Preparing tester packet' : surface?.reviewCopy.headline || 'Experimental tester packet review'}</h3>
+        <p>
+          Use this small tester view to test whether made-up annual candidate summaries are clear.
+        </p>
+      </div>
+
+      <div className="summary-grid">
+        <Metric label="Approval" value={approvalLabel} />
+        <Metric label="Payload items" value={String(payload?.items.length || 0)} />
+        <Metric label="Data source" value={dataSourceLabel} />
+        <Metric label="Saved output" value="Disabled" />
+      </div>
+
+      <p className="table-note">
+        {surface?.reviewCopy.boundary ||
+          'This is feature-testing material only. It is not a retirement plan, not saved, and not for personal decisions.'}
+      </p>
+
+      <div className="result-table-wrap">
+        <table className="result-table">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Status</th>
+              <th>Quality</th>
+              <th>Review note</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {candidateRows.length ? (
+              candidateRows.slice(0, 5).map((row) => (
+                <tr key={`${firstItem?.exampleId || 'tester'}-${row.year}`}>
+                  <td>{row.label}</td>
+                  <td>{row.statusLabel}</td>
+                  <td>{row.qualityLabel}</td>
+                  <td>{row.repairPreview}</td>
+                  <td>{formatMoney(row.totalAmount)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5}>{loading ? 'Preparing runtime tester rows.' : 'No tester rows are available yet.'}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="tester-surface-actions" aria-label="Disabled tester actions">
+        {disabledActions.map((action) => (
+          <button disabled key={action.id} title={action.reason} type="button">
+            {action.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="result-overview-grid">
+        <section className="tester-surface-subpanel">
+          <h3>Tester questions</h3>
+          <ul className="compact-list">
+            {prompts.map((prompt) => (
+              <li key={prompt.id}>{prompt.prompt}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel">
+          <h3>Implementation boundary</h3>
+          <ul className="compact-list">
+            {(approval?.blockedOutputs || []).map((output) => (
+              <li key={output}>{blockedOutputLabels[output] || output}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <p className="table-note">
+        This review surface is for made-up scenario testing only. It does not implement saved output, CSV output,
+        reports, production UI, final annual instructions, tax-bracket instructions, or saved schema changes.
       </p>
     </section>
   );
