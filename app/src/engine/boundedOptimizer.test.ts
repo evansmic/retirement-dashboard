@@ -352,6 +352,14 @@ describe('bounded optimizer runner', () => {
             boundary: 'Runtime-only.',
             nextStep: 'Review.'
           },
+          presentationReadiness: {
+            status: 'readyForTesterReview',
+            displayRows: [],
+            rows: [],
+            summary: 'Annual candidate summaries are ready for synthetic tester review.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           instructionReadiness: {
             status: 'readyForReview',
             rows: [],
@@ -407,6 +415,14 @@ describe('bounded optimizer runner', () => {
             qualityCounts: { higher: 0, medium: 0, low: 0, blocked: 0 },
             repairThemes: [],
             summary: 'Annual instruction candidates have repair themes to review before tester presentation.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
+          presentationReadiness: {
+            status: 'reviewFirst',
+            displayRows: [],
+            rows: [],
+            summary: 'Annual candidate summaries can be reviewed by testers with repair themes visible.',
             boundary: 'Runtime-only.',
             nextStep: 'Review.'
           },
@@ -843,6 +859,43 @@ describe('bounded optimizer runner', () => {
     expect(summary.experimentalAnnualInstructionDraft.candidateSelectionSummary.repairThemes.find((theme) => theme.id === 'limitedTaxContext')).toMatchObject({
       status: 'pass'
     });
+    expect(summary.experimentalAnnualInstructionDraft.presentationReadiness).toMatchObject({
+      status: 'reviewFirst',
+      displayRows: [
+        {
+          year: 2032,
+          label: '2032 annual candidate',
+          statusLabel: 'Review first',
+          qualityLabel: 'Medium confidence',
+          repairPreview: 'Review account order gap.',
+          totalAmount: 31000
+        },
+        {
+          year: 2033,
+          label: '2033 annual candidate',
+          statusLabel: 'Review first',
+          qualityLabel: 'Medium confidence',
+          repairPreview: 'Review account order gap.',
+          totalAmount: 31000
+        },
+        {
+          year: 2034,
+          label: '2034 annual candidate',
+          statusLabel: 'Review first',
+          qualityLabel: 'Medium confidence',
+          repairPreview: 'Review account order gap.',
+          totalAmount: 31000
+        }
+      ],
+      boundary: expect.stringContaining('runtime-only review context'),
+      nextStep: expect.stringContaining('synthetic tester review')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.presentationReadiness.rows.map((row) => row.id)).toEqual([
+      'candidateLabels',
+      'qualityLabels',
+      'repairPreview',
+      'boundary'
+    ]);
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',

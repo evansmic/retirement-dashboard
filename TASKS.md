@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2308-S2327: Annual Candidate Selection Summary
+## Latest Package — S2328-S2347: Annual Candidate Presentation Readiness
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare runtime-only annual candidate display/readiness fields for synthetic tester review before saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now includes display rows, status labels, quality labels, repair preview copy, and presentation readiness checks.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only experimental draft presentation readiness packet, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2328_2347_annual_candidate_presentation_readiness.md`](docs/sprint_2328_2347_annual_candidate_presentation_readiness.md).
+
+### S2328-S2347 Completed Path
+
+- **S2328-S2332 — Display row batch.** Added runtime candidate display rows with year labels, status labels, quality labels, repair preview copy, and total amount.
+- **S2333-S2337 — Presentation check batch.** Added presentation readiness checks for candidate labels, quality labels, repair previews, and output boundary.
+- **S2338-S2342 — Tester-boundary batch.** Added review-only summary, boundary, and next-step copy for synthetic tester presentation.
+- **S2343-S2347 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2328-S2347 Definition Of Done
+
+- Presentation readiness includes candidate display rows.
+- Display rows include status labels, quality labels, repair previews, and total amount.
+- Presentation readiness checks labels, quality copy, repair previews, and output boundary.
+- Presentation copy is suitable for synthetic tester review while remaining non-final.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only experimental draft presentation readiness is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2308-S2327: Annual Candidate Selection Summary
 
 **Status:** Complete 2026-06-08.
 

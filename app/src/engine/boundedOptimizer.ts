@@ -434,6 +434,27 @@ export type OptimizerExperimentalAnnualCandidateSelectionSummary = {
   nextStep: string;
 };
 
+export type OptimizerExperimentalAnnualCandidatePresentationReadiness = {
+  status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
+  displayRows: Array<{
+    year: number;
+    label: string;
+    statusLabel: string;
+    qualityLabel: string;
+    repairPreview: string;
+    totalAmount: number;
+  }>;
+  rows: Array<{
+    id: 'candidateLabels' | 'qualityLabels' | 'repairPreview' | 'boundary';
+    label: string;
+    status: 'pass' | 'watch' | 'block';
+    detail: string;
+  }>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -492,6 +513,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   instructionReadiness: OptimizerExperimentalAnnualInstructionReadiness;
   annualInstructionCandidates: OptimizerExperimentalAnnualInstructionCandidate[];
   candidateSelectionSummary: OptimizerExperimentalAnnualCandidateSelectionSummary;
+  presentationReadiness: OptimizerExperimentalAnnualCandidatePresentationReadiness;
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -4007,6 +4029,90 @@ function buildExperimentalAnnualCandidateSelectionSummary(
   };
 }
 
+function candidateStatusLabel(status: OptimizerExperimentalAnnualInstructionCandidate['status']): string {
+  if (status === 'readyForReview') return 'Ready for review';
+  if (status === 'reviewFirst') return 'Review first';
+  return 'Blocked';
+}
+
+function candidateQualityLabel(level: OptimizerExperimentalAnnualInstructionCandidate['quality']['level']): string {
+  if (level === 'higher') return 'Higher confidence';
+  if (level === 'medium') return 'Medium confidence';
+  if (level === 'low') return 'Low confidence';
+  return 'Blocked confidence';
+}
+
+function candidateRepairPreview(candidate: OptimizerExperimentalAnnualInstructionCandidate): string {
+  const repairLabels = candidate.quality.repairTargets.filter((target) => target.status === 'repair').map((target) => target.label);
+  if (!repairLabels.length) return 'No repair themes flagged.';
+  return `Review ${repairLabels.join(', ').toLowerCase()}.`;
+}
+
+function buildExperimentalAnnualCandidatePresentationReadiness({
+  candidates,
+  selectionSummary
+}: {
+  candidates: OptimizerExperimentalAnnualInstructionCandidate[];
+  selectionSummary: OptimizerExperimentalAnnualCandidateSelectionSummary;
+}): OptimizerExperimentalAnnualCandidatePresentationReadiness {
+  const displayRows = candidates.map((candidate) => ({
+    year: candidate.year,
+    label: `${candidate.year} annual candidate`,
+    statusLabel: candidateStatusLabel(candidate.status),
+    qualityLabel: candidateQualityLabel(candidate.quality.level),
+    repairPreview: candidateRepairPreview(candidate),
+    totalAmount: candidate.totalAmount
+  }));
+  const missingLabels = displayRows.filter((row) => !row.label || !row.statusLabel || !row.qualityLabel);
+  const missingRepairPreview = displayRows.filter((row) => !row.repairPreview);
+  const rows: OptimizerExperimentalAnnualCandidatePresentationReadiness['rows'] = [
+    {
+      id: 'candidateLabels',
+      label: 'Candidate labels',
+      status: displayRows.length && !missingLabels.length ? 'pass' : displayRows.length ? 'watch' : 'block',
+      detail: displayRows.length ? `${displayRows.length} candidate display row${displayRows.length === 1 ? '' : 's'} have tester-facing labels.` : 'No candidate display rows are available.'
+    },
+    {
+      id: 'qualityLabels',
+      label: 'Quality labels',
+      status: displayRows.every((row) => row.qualityLabel.includes('confidence')) && displayRows.length ? 'pass' : displayRows.length ? 'watch' : 'block',
+      detail: 'Display rows use confidence labels for quality instead of directive instruction language.'
+    },
+    {
+      id: 'repairPreview',
+      label: 'Repair preview',
+      status: missingRepairPreview.length ? 'watch' : displayRows.length ? 'pass' : 'block',
+      detail: missingRepairPreview.length
+        ? `${missingRepairPreview.length} display row${missingRepairPreview.length === 1 ? '' : 's'} need repair preview copy.`
+        : 'Display rows include repair preview copy for tester review.'
+    },
+    {
+      id: 'boundary',
+      label: 'Presentation boundary',
+      status: 'pass',
+      detail: 'Presentation readiness is runtime-only and does not create saved, CSV, report, production UI, or tax-bracket instruction output.'
+    }
+  ];
+  const blocked = rows.some((row) => row.status === 'block') || selectionSummary.status === 'blocked';
+  const watch = rows.some((row) => row.status === 'watch') || selectionSummary.status === 'reviewFirst';
+  const status: OptimizerExperimentalAnnualCandidatePresentationReadiness['status'] = blocked ? 'blocked' : watch ? 'reviewFirst' : 'readyForTesterReview';
+
+  return {
+    status,
+    displayRows,
+    rows,
+    summary:
+      status === 'readyForTesterReview'
+        ? 'Annual candidate summaries are ready for synthetic tester review.'
+        : status === 'reviewFirst'
+          ? 'Annual candidate summaries can be reviewed by testers with repair themes visible.'
+          : 'Annual candidate summaries are blocked until candidate evidence is available.',
+    boundary:
+      'Presentation readiness is runtime-only review context. It does not save sequencing output, export CSV, change reports, change production UI, or create tax-bracket instructions.',
+    nextStep: 'Use these display rows for synthetic tester review before planning saved sequencing output, CSV output, or production UI.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -4096,6 +4202,10 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   });
   const annualInstructionCandidates = buildExperimentalAnnualInstructionCandidates(annualAccountTotals);
   const candidateSelectionSummary = buildExperimentalAnnualCandidateSelectionSummary(annualInstructionCandidates);
+  const presentationReadiness = buildExperimentalAnnualCandidatePresentationReadiness({
+    candidates: annualInstructionCandidates,
+    selectionSummary: candidateSelectionSummary
+  });
 
   return {
     status,
@@ -4108,6 +4218,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     instructionReadiness,
     annualInstructionCandidates,
     candidateSelectionSummary,
+    presentationReadiness,
     taxContextRows,
     confidence,
     harmChecks,

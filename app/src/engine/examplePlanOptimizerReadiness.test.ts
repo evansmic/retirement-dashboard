@@ -289,6 +289,10 @@ describe('example-plan optimizer readiness matrix', () => {
       ).toBe(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.length);
       expect(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.repairThemes.every((theme) => ['pass', 'repair'].includes(theme.status))).toBe(true);
       expect(optimizer.experimentalAnnualInstructionDraft.candidateSelectionSummary.boundary).toContain('runtime-only');
+      expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.status);
+      expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.displayRows.length).toBe(optimizer.experimentalAnnualInstructionDraft.annualInstructionCandidates.length);
+      expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.rows.map((row) => row.id)).toContain('boundary');
+      expect(optimizer.experimentalAnnualInstructionDraft.presentationReadiness.boundary).toContain('runtime-only');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toContain('accountOrderGaps');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.blockedOutputs).toContain('annualAccountInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.boundary).toContain('runtime-only');

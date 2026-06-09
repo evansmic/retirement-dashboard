@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2328-S2347 is complete. Experimental annual draft output now includes runtime candidate presentation readiness with display rows, status labels, quality labels, repair previews, presentation checks, and tester-boundary copy. This supports earlier synthetic tester review while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft presentation readiness packet, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2328_2347_annual_candidate_presentation_readiness.md`](docs/sprint_2328_2347_annual_candidate_presentation_readiness.md).
+
 S2308-S2327 is complete. Experimental annual draft output now includes a runtime candidate selection summary with strongest candidate years, quality-count rollups, repair-theme rollups, and review-only next-step copy. This supports synthetic tester comparison and repair before saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only experimental draft candidate selection summary, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2308_2327_annual_candidate_selection_summary.md`](docs/sprint_2308_2327_annual_candidate_selection_summary.md).
