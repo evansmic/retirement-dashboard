@@ -642,6 +642,20 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
       reviewPromptIds: Array<'clarity' | 'plausibility' | 'missingContext' | 'boundary'>;
       runtimeBoundary: string;
     }>;
+    qualityGate: {
+      status: 'readyForSurfacePlanning' | 'reviewFirst' | 'blocked';
+      score: number;
+      rows: Array<{
+        id: 'rowCoverage' | 'promptCoverage' | 'boundaryClarity' | 'readinessMix' | 'outputBoundary';
+        label: string;
+        status: 'pass' | 'watch' | 'block';
+        detail: string;
+      }>;
+      repairExampleIds: string[];
+      summary: string;
+      boundary: string;
+      nextStep: string;
+    };
     rows: Array<{
       id: 'payloadItems' | 'contractFields' | 'reviewMetadata' | 'outputBoundary';
       label: string;
@@ -4683,9 +4697,78 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
         : contractStatus === 'readyForContractReview'
           ? 'readyForDryRunReview'
           : 'reviewFirst';
+  const promptCoverageReady = dryRunItems.every((item) => item.reviewPromptIds.length === packetContract.reviewPrompts.length);
+  const boundaryGaps = dryRunItems
+    .filter((item) => !item.runtimeBoundary.toLowerCase().includes('not a retirement plan') || !item.runtimeBoundary.toLowerCase().includes('not saved'))
+    .map((item) => item.exampleId);
+  const reviewOrBlockedExamples = [...reviewExampleIds, ...blockedExampleIds];
+  const qualityRows: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['qualityGate']['rows'] = [
+    {
+      id: 'rowCoverage',
+      label: 'Payload row coverage',
+      status: dryRunItems.length && !missingPayloadRows.length ? 'pass' : dryRunItems.length ? 'watch' : 'block',
+      detail: missingPayloadRows.length
+        ? `Candidate display rows need review for: ${missingPayloadRows.join(', ')}.`
+        : 'All dry-run payload items include candidate display rows.'
+    },
+    {
+      id: 'promptCoverage',
+      label: 'Prompt coverage',
+      status: promptCoverageReady ? 'pass' : 'block',
+      detail: promptCoverageReady
+        ? 'All payload items include the full review prompt set.'
+        : 'At least one payload item is missing review prompt ids.'
+    },
+    {
+      id: 'boundaryClarity',
+      label: 'Boundary clarity',
+      status: boundaryGaps.length ? 'watch' : 'pass',
+      detail: boundaryGaps.length
+        ? `Runtime boundary copy needs review for: ${boundaryGaps.join(', ')}.`
+        : 'Runtime boundary copy states the packet is not a retirement plan and is not saved.'
+    },
+    {
+      id: 'readinessMix',
+      label: 'Readiness mix',
+      status: blockedExampleIds.length ? 'block' : reviewExampleIds.length ? 'watch' : 'pass',
+      detail: blockedExampleIds.length
+        ? `Blocked examples remain before surface planning: ${blockedExampleIds.join(', ')}.`
+        : reviewExampleIds.length
+          ? `Review-first examples remain before surface planning: ${reviewExampleIds.join(', ')}.`
+          : 'All examples are ready for limited tester review.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: allGuarded ? 'pass' : 'block',
+      detail: 'Quality gate is runtime-only and does not create UI, saved output, CSV output, reports, final instructions, or tax-bracket instructions.'
+    }
+  ];
+  const qualityScore = qualityRows.reduce((sum, row) => sum + (row.status === 'pass' ? 2 : row.status === 'watch' ? 1 : 0), 0);
+  const qualityStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['qualityGate']['status'] = qualityRows.some((row) => row.status === 'block')
+    ? 'blocked'
+    : qualityRows.some((row) => row.status === 'watch')
+      ? 'reviewFirst'
+      : 'readyForSurfacePlanning';
+  const qualityGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['qualityGate'] = {
+    status: qualityStatus,
+    score: qualityScore,
+    rows: qualityRows,
+    repairExampleIds: Array.from(new Set([...missingPayloadRows, ...boundaryGaps, ...reviewOrBlockedExamples])),
+    summary:
+      qualityStatus === 'readyForSurfacePlanning'
+        ? 'Dry-run payload quality is ready for limited tester surface planning.'
+        : qualityStatus === 'reviewFirst'
+          ? 'Dry-run payload quality needs review before limited tester surface planning.'
+          : 'Dry-run payload quality is blocked until payload or readiness issues are repaired.',
+    boundary:
+      'Payload quality gate is runtime-only review evidence. It does not implement tester UI, save sequencing output, export CSV, change reports, create final instructions, or create tax-bracket instructions.',
+    nextStep: 'Repair watch or blocked quality rows before planning a very small tester-facing surface.'
+  };
   const dryRunPayload: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload'] = {
     status: dryRunStatus,
     items: dryRunItems,
+    qualityGate,
     rows: [
       {
         id: 'payloadItems',

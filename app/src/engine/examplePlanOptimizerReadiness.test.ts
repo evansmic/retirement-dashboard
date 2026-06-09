@@ -412,6 +412,19 @@ describe('example-plan optimizer readiness matrix', () => {
       'reviewMetadata',
       'outputBoundary'
     ]);
+    expect(['readyForSurfacePlanning', 'reviewFirst', 'blocked']).toContain(matrix.testerPacketReadiness.dryRunPayload.qualityGate.status);
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.score).toBeGreaterThanOrEqual(0);
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.rows.map((row) => row.id)).toEqual([
+      'rowCoverage',
+      'promptCoverage',
+      'boundaryClarity',
+      'readinessMix',
+      'outputBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.rows.find((row) => row.id === 'rowCoverage')).toMatchObject({ status: 'pass' });
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.rows.find((row) => row.id === 'promptCoverage')).toMatchObject({ status: 'pass' });
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.boundary).toContain('runtime-only review evidence');
+    expect(matrix.testerPacketReadiness.dryRunPayload.qualityGate.nextStep).toContain('tester-facing surface');
     expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.nextStep).toContain('limited synthetic tester packet');

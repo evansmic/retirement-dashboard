@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2448-S2467 is complete. The limited tester packet dry-run payload now includes a runtime quality gate with status, score, repair example ids, row coverage, prompt coverage, boundary clarity, readiness mix, and output-boundary checks. This prepares payload quality review before any tester-facing surface planning while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only quality gate, final annual instructions, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2448_2467_limited_tester_packet_payload_quality_gate.md`](docs/sprint_2448_2467_limited_tester_packet_payload_quality_gate.md).
+
 S2428-S2447 is complete. The synthetic tester packet readiness matrix now includes a runtime dry-run payload with one item per synthetic example, candidate display rows, review prompt ids, readiness status, and runtime boundary metadata. This prepares payload inspection before any tester-facing implementation while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only dry-run payload, final annual instructions, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md`](docs/sprint_2428_2447_limited_tester_packet_payload_dry_run.md).
