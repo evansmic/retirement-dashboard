@@ -4615,7 +4615,11 @@ function TinyTesterSurfacePanel({
   };
 
   return (
-    <section className={`result-card tiny-tester-surface tester-surface-${approval?.status || 'loading'}`}>
+    <section
+      aria-label="Tester-only annual candidate review"
+      aria-live="polite"
+      className={`result-card tiny-tester-surface tester-surface-${approval?.status || 'loading'}`}
+    >
       <div>
         <p className="eyebrow">Tester-only surface</p>
         <h3>{loading ? 'Preparing tester packet' : surface?.reviewCopy.headline || 'Experimental tester packet review'}</h3>
@@ -4660,7 +4664,7 @@ function TinyTesterSurfacePanel({
               ))
             ) : (
               <tr>
-                <td colSpan={5}>{loading ? 'Preparing runtime tester rows.' : 'No tester rows are available yet.'}</td>
+                <td colSpan={5}>{loading ? 'Preparing tester rows.' : 'No tester rows are available yet.'}</td>
               </tr>
             )}
           </tbody>

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2588-S2607 is complete. The tiny tester-only surface is now hardened with a stable accessible label, safer fallback copy, explicit translation of internal output ids before display, stronger disabled-action checks, compact-screen styling guards, and browser verification. Saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, engine output schema changes, final annual instructions, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md`](docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md).
+
 S2568-S2587 is complete. The app now includes a tiny tester-only read-only surface inside Results Details, backed by the runtime dry-run payload with visible boundary copy and disabled action rendering. Saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only tester surface payload exposure, final annual instructions, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2568_2587_tiny_tester_surface_implementation_slice.md`](docs/sprint_2568_2587_tiny_tester_surface_implementation_slice.md).

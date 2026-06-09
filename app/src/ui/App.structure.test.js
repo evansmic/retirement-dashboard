@@ -66,11 +66,43 @@ describe('Results overview structure', () => {
     expect(testerSurface).toContain('testerSurfaceMatrix.testerPacketReadiness.dryRunPayload');
     expect(testerSurface).toContain('Experimental tester packet review');
     expect(testerSurface).toContain('Disabled tester actions');
+    expect(testerSurface).toContain('aria-label="Tester-only annual candidate review"');
+    expect(testerSurface).toContain('aria-live="polite"');
     expect(testerSurface).toContain('<button disabled');
     expect(testerSurface).toContain('not a retirement plan');
     expect(testerSurface).not.toContain('onClick=');
     expect(testerSurface).not.toContain('savePlan');
     expect(testerSurface).not.toContain('downloadCsv');
+  });
+
+  it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(testerSurface).toContain("approval?.approval === 'approveTinyTesterSurface'");
+    expect(testerSurface).toContain('Ready for test review');
+    expect(testerSurface).toContain('Needs review');
+    expect(testerSurface).toContain('Hold for review');
+    expect(testerSurface).toContain('Current tester packet');
+    expect(testerSurface).toContain('Saved sequencing output');
+    expect(testerSurface).toContain('CSV sequencing output');
+    expect(testerSurface).toContain('Report output');
+    expect(testerSurface).toContain('Production UI promotion');
+    expect(testerSurface).toContain('Final annual instructions');
+    expect(testerSurface).toContain('Tax-bracket instructions');
+    expect(testerSurface).toContain('Saved schema changes');
+    expect(testerSurface).toContain('This review surface is for made-up scenario testing only.');
+    expect(testerSurface).toContain('Preparing tester rows.');
+    expect(testerSurface).not.toContain('Preparing runtime tester rows.');
+    expect(testerSurface).not.toContain('approval?.boundary');
+    expect(testerSurface).not.toContain('reviewCopy.purpose');
+
+    expect(stylesSource).toContain('.tiny-tester-surface');
+    expect(stylesSource).toContain('overflow-wrap: anywhere');
+    expect(stylesSource).toContain('min-width: 680px');
+    expect(stylesSource).toContain('min-height: 44px');
+    expect(stylesSource).toContain('.tester-surface-actions {\n    grid-template-columns: 1fr;');
   });
 
   it('keeps normal consumer research gates disabled for the v1 feedback checkpoint', () => {

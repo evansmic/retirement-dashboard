@@ -2959,11 +2959,21 @@ button.secondary,
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
+.tiny-tester-surface {
+  overflow-wrap: anywhere;
+}
+
+.tiny-tester-surface .result-table {
+  min-width: 680px;
+}
+
 .tester-surface-actions button:disabled {
   background: #eef0f3;
   border-color: var(--border);
   color: var(--muted);
   cursor: not-allowed;
+  min-height: 44px;
+  white-space: normal;
 }
 
 .tester-surface-subpanel {
@@ -3058,6 +3068,10 @@ button.secondary,
   .scenario-copy-grid,
   .optimizer-driver-grid,
   .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tester-surface-actions {
     grid-template-columns: 1fr;
   }
 

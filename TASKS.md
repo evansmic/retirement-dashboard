@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2568-S2587: Tiny Tester Surface Implementation Slice
+## Latest Package — S2588-S2607: Tiny Tester Surface Verification Hardening
+
+**Status:** Complete 2026-06-08.
+
+Goal: harden the tiny tester-only surface before tester handoff. The surface now has stronger accessible targeting, safer fallback copy, explicit internal-id translation checks, disabled-action checks, and compact-screen styling guards while staying inside Results Details.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, or new optimizer behavior.
+
+Package doc: [`docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md`](docs/sprint_2588_2607_tiny_tester_surface_verification_hardening.md).
+
+### S2588-S2607 Completed Path
+
+- **S2588-S2592 — Accessible targeting batch.** Added a stable tester-only panel label and polite update region.
+- **S2593-S2597 — Visible copy hardening batch.** Removed internal fallback wording and kept tester-facing labels plain.
+- **S2598-S2602 — Disabled action and layout batch.** Added stronger disabled-button and compact-screen styling guards.
+- **S2603-S2607 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2588-S2607 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Surface has a stable accessible label.
+- Visible fallback copy avoids internal engineering wording.
+- Internal output ids are translated before display.
+- Disabled action buttons remain visibly disabled and non-actionable.
+- Compact-screen styling is guarded.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2568-S2587: Tiny Tester Surface Implementation Slice
 
 **Status:** Complete 2026-06-08.
 
