@@ -14,7 +14,37 @@ As of S2628-S2647 planning, the working estimate is:
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2728-S2747.
 
-## Latest Package — S2648-S2667: Tester Feedback Cleanup Target Buckets
+## Latest Package — S2668-S2687: Annual Instruction Prototype Decision Gate
+
+**Status:** Complete 2026-06-08.
+
+Goal: decide whether the tester surface and feedback cleanup boundaries are strong enough to define an internal-only annual instruction prototype shape in a future package. The tester-only surface now includes a shape-only prototype decision gate with ready evidence, missing evidence, allowed next step, and blocked outputs.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, or annual instruction prototype implementation.
+
+Package doc: [`docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md`](docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md).
+
+### S2668-S2687 Completed Path
+
+- **S2668-S2672 — Decision row batch.** Added shape-only decision rows for boundary evidence, cleanup evidence, missing evidence, allowed next step, and still-blocked outputs.
+- **S2673-S2677 — Allowed next-step batch.** Limited the next step to defining an internal-only prototype shape without producing final instructions.
+- **S2678-S2682 — Blocked output batch.** Kept saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+- **S2683-S2687 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2668-S2687 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Prototype decision gate is visible.
+- Decision gate allows only a future internal-only prototype shape definition.
+- Missing evidence remains explicit.
+- Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Gate does not create annual instruction rows, apply a prototype, save sequencing, export CSV, or promote production UI.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2648-S2667: Tester Feedback Cleanup Target Buckets
 
 **Status:** Complete 2026-06-08.
 

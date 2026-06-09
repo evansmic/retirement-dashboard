@@ -294,6 +294,33 @@ const TESTER_FEEDBACK_CLEANUP_BUCKETS = [
     detail: 'Use when feedback is understandable but does not justify a product or model change yet.'
   }
 ];
+const ANNUAL_INSTRUCTION_PROTOTYPE_DECISION_ROWS = [
+  {
+    label: 'Boundary evidence',
+    status: 'Ready to define shape',
+    detail: 'Tester surface boundaries, disabled actions, and non-approval copy are visible enough to support a prototype-shape discussion.'
+  },
+  {
+    label: 'Cleanup evidence',
+    status: 'Ready to define shape',
+    detail: 'Feedback interpretation and cleanup buckets are distinct enough to sort tester observations before prototype work.'
+  },
+  {
+    label: 'Missing evidence',
+    status: 'Needs review',
+    detail: 'Real tester observations, more scenario coverage, and performance notes are still missing before implementation.'
+  },
+  {
+    label: 'Allowed next step',
+    status: 'Shape only',
+    detail: 'A future package may define an internal-only annual instruction prototype shape without producing final instructions.'
+  },
+  {
+    label: 'Still blocked',
+    status: 'Blocked',
+    detail: 'Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.'
+  }
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4770,6 +4797,16 @@ function TinyTesterSurfacePanel({
             {TESTER_FEEDBACK_CLEANUP_BUCKETS.map((bucket) => (
               <li key={bucket.label}>
                 <strong>{bucket.label}:</strong> {bucket.detail}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-prototype-decision-panel">
+          <h3>Prototype decision gate</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_PROTOTYPE_DECISION_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
               </li>
             ))}
           </ul>

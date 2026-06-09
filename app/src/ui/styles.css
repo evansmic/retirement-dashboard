@@ -3001,6 +3001,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-prototype-decision-panel {
+  border-left: 3px solid #8b5f5f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

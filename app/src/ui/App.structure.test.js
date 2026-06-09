@@ -146,6 +146,33 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.tester-cleanup-bucket-panel');
   });
 
+  it('keeps the annual instruction prototype decision gate shape-only', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_PROTOTYPE_DECISION_ROWS');
+    expect(testerSurface).toContain('Prototype decision gate');
+    expect(appSource).toContain('Boundary evidence');
+    expect(appSource).toContain('Cleanup evidence');
+    expect(appSource).toContain('Missing evidence');
+    expect(appSource).toContain('Allowed next step');
+    expect(appSource).toContain('Shape only');
+    expect(appSource).toContain('Still blocked');
+    expect(appSource).toContain('A future package may define an internal-only annual instruction prototype shape without producing final instructions.');
+    expect(appSource).toContain('Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.');
+    expect(testerSurface).not.toContain('annualInstructionRows');
+    expect(testerSurface).not.toContain('createAnnualInstructions');
+    expect(testerSurface).not.toContain('generateInstructions');
+    expect(testerSurface).not.toContain('saveSequencing');
+    expect(testerSurface).not.toContain('exportSequencingCsv');
+    expect(testerSurface).not.toContain('applyPrototype');
+    expect(testerSurface).not.toContain('promotePrototype');
+    expect(testerSurface).not.toContain('createTaxBracketInstruction');
+    expect(testerSurface).not.toContain('generateTaxBracketInstruction');
+    expect(stylesSource).toContain('.annual-prototype-decision-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2668-S2687 is complete. The tester-only surface now includes an annual instruction prototype decision gate. The gate says boundary and cleanup evidence are ready enough to define a future internal-only prototype shape, while real tester observations, scenario coverage, and performance notes are still missing before implementation. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, prototype implementation, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md`](docs/sprint_2668_2687_annual_instruction_prototype_decision_gate.md).
+
 S2648-S2667 is complete. The tester-only surface now includes cleanup target buckets for copy cleanup, input/context cleanup, model/plausibility cleanup, scenario coverage gaps, blocked-output confusion, and no-action holds. These buckets are static, read-only interpretation targets and do not create issues, assign tasks, trigger model repair, collect feedback, score feedback, approve sequencing, change schemas, save output, export CSV, create reports, promote production UI, create final instructions, create tax-bracket instructions, or generate `.plan.json` files.
 
 Current package doc: [`docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md`](docs/sprint_2648_2667_tester_feedback_cleanup_target_buckets.md).
