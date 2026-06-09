@@ -4,7 +4,36 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2348-S2367: Synthetic Tester Packet Boundary Review
+## Latest Package — S2368-S2387: Tester Packet Export Guard Review
+
+**Status:** Complete 2026-06-08.
+
+Goal: add a runtime-only tester packet export guard before tester-facing UI, saved sequencing output, CSV sequencing output, report output, or production UI. Experimental annual draft output now confirms tester packet content is blocked from saved plan files, CSV output, reports, production UI, final annual instructions, and tax-bracket instructions.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tester packet export guard, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, or exportable sequencing output.
+
+Package doc: [`docs/sprint_2368_2387_tester_packet_export_guard_review.md`](docs/sprint_2368_2387_tester_packet_export_guard_review.md).
+
+### S2368-S2387 Completed Path
+
+- **S2368-S2372 — Export guard shape batch.** Added runtime tester packet export guard rows for saved plan files, CSV output, reports, production UI, final annual instructions, and tax-bracket instructions.
+- **S2373-S2377 — Forbidden saved-key batch.** Added explicit forbidden saved keys for tester packet boundary, tester packet export guard, annual instruction candidates, presentation readiness, experimental annual draft output, and annual account instructions.
+- **S2378-S2382 — Saved boundary batch.** Strengthened saved-plan tests so nested tester packet boundary and export guard strings cannot appear in serialized saved files.
+- **S2383-S2387 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2368-S2387 Definition Of Done
+
+- Tester packet export guard identifies blocked saved, CSV, report, production UI, final instruction, and tax-bracket outputs.
+- Forbidden saved keys include tester packet boundary and tester packet export guard.
+- Saved plan serialization excludes nested tester packet guard fields even if runtime output is accidentally attached before save.
+- Tester packet copy remains for synthetic feature testing with made-up scenarios, not personal decisions.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tester packet export guard is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2348-S2367: Synthetic Tester Packet Boundary Review
 
 **Status:** Complete 2026-06-08.
 

@@ -161,7 +161,14 @@ describe('plan file adapters', () => {
       },
       experimentalAnnualInstructionDraft: {
         status: 'draftReady',
-        rows: [{ year: 2030, account: 'registered', amount: 10000 }]
+        rows: [{ year: 2030, account: 'registered', amount: 10000 }],
+        testerPacketBoundary: {
+          status: 'readyForSyntheticTesterPacket'
+        },
+        testerPacketExportGuard: {
+          status: 'guarded',
+          forbiddenSavedKeys: ['testerPacketExportGuard']
+        }
       },
       boundedOptimizer: {
         status: 'ready'
@@ -190,6 +197,8 @@ describe('plan file adapters', () => {
     expect(serialized).not.toContain('annualSequencingInputAdapter');
     expect(serialized).not.toContain('experimentalAccountOrderDraft');
     expect(serialized).not.toContain('experimentalAnnualInstructionDraft');
+    expect(serialized).not.toContain('testerPacketBoundary');
+    expect(serialized).not.toContain('testerPacketExportGuard');
     expect(serialized).not.toContain('accountOrder');
     expect(serialized).not.toContain('selectedCandidateId');
     expect(serialized).not.toContain('annualAccountInstructions');

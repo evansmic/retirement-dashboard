@@ -475,6 +475,29 @@ export type OptimizerExperimentalTesterPacketBoundary = {
   nextStep: string;
 };
 
+export type OptimizerExperimentalTesterPacketExportGuard = {
+  status: 'guarded' | 'blocked';
+  rows: Array<{
+    id: 'savedPlanFile' | 'csvOutput' | 'reportOutput' | 'productionUi' | 'finalInstructions' | 'taxBracketInstructions';
+    label: string;
+    status: 'guarded' | 'blocked';
+    detail: string;
+  }>;
+  forbiddenSavedKeys: Array<
+    | 'testerPacketBoundary'
+    | 'testerPacketExportGuard'
+    | 'annualInstructionCandidates'
+    | 'candidateSelectionSummary'
+    | 'presentationReadiness'
+    | 'experimentalAnnualInstructionDraft'
+    | 'annualAccountInstructions'
+  >;
+  blockedOutputs: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions' | 'finalAnnualInstructions'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftTaxContextRow = {
   id: 'taxRange' | 'oasRecovery' | 'afterTaxSpending' | 'effectiveRate' | 'boundary';
   label: string;
@@ -535,6 +558,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   candidateSelectionSummary: OptimizerExperimentalAnnualCandidateSelectionSummary;
   presentationReadiness: OptimizerExperimentalAnnualCandidatePresentationReadiness;
   testerPacketBoundary: OptimizerExperimentalTesterPacketBoundary;
+  testerPacketExportGuard: OptimizerExperimentalTesterPacketExportGuard;
   taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
@@ -4206,6 +4230,84 @@ function buildExperimentalTesterPacketBoundary(
   };
 }
 
+function buildExperimentalTesterPacketExportGuard(
+  testerPacketBoundary: OptimizerExperimentalTesterPacketBoundary
+): OptimizerExperimentalTesterPacketExportGuard {
+  const requiredHiddenOutputs: OptimizerExperimentalTesterPacketExportGuard['blockedOutputs'] = [
+    'savedSequencingOutput',
+    'csvSequencingOutput',
+    'reportOutput',
+    'productionUi',
+    'taxBracketInstructions',
+    'finalAnnualInstructions'
+  ];
+  const hiddenOutputs = new Set(testerPacketBoundary.hiddenSections);
+  const blockedOutputs = new Set(testerPacketBoundary.blockedOutputs);
+  const outputBoundaryGuarded = requiredHiddenOutputs.every((output) => hiddenOutputs.has(output) && blockedOutputs.has(output));
+  const rows: OptimizerExperimentalTesterPacketExportGuard['rows'] = [
+    {
+      id: 'savedPlanFile',
+      label: 'Saved plan file',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'Tester packet fields remain runtime-only and are excluded from saved plan files.'
+    },
+    {
+      id: 'csvOutput',
+      label: 'CSV output',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'CSV sequencing output stays unavailable until a separate export package is planned.'
+    },
+    {
+      id: 'reportOutput',
+      label: 'Report output',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'Printable reports do not include synthetic tester packet content.'
+    },
+    {
+      id: 'productionUi',
+      label: 'Production UI',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'Production UI remains unchanged; tester packet content can only be reviewed as runtime evidence.'
+    },
+    {
+      id: 'finalInstructions',
+      label: 'Final annual instructions',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'Final annual account instructions are not created by the tester packet.'
+    },
+    {
+      id: 'taxBracketInstructions',
+      label: 'Tax-bracket instructions',
+      status: outputBoundaryGuarded ? 'guarded' : 'blocked',
+      detail: 'Tester packet content does not create tax-bracket instructions or bracket-targeting copy.'
+    }
+  ];
+  const status: OptimizerExperimentalTesterPacketExportGuard['status'] =
+    outputBoundaryGuarded && rows.every((row) => row.status === 'guarded') ? 'guarded' : 'blocked';
+
+  return {
+    status,
+    rows,
+    forbiddenSavedKeys: [
+      'testerPacketBoundary',
+      'testerPacketExportGuard',
+      'annualInstructionCandidates',
+      'candidateSelectionSummary',
+      'presentationReadiness',
+      'experimentalAnnualInstructionDraft',
+      'annualAccountInstructions'
+    ],
+    blockedOutputs: requiredHiddenOutputs,
+    summary:
+      status === 'guarded'
+        ? 'Tester packet export guard keeps synthetic review content runtime-only.'
+        : 'Tester packet export guard is blocked until all hidden outputs are confirmed.',
+    boundary:
+      'Tester packet export guard is runtime-only review evidence. It does not save sequencing output, export CSV, change reports, change production UI, create final annual instructions, or create tax-bracket instructions.',
+    nextStep: 'Use this guard to verify the synthetic tester packet boundary before planning any tester-facing implementation.'
+  };
+}
+
 export function selectOptimizerExperimentalAnnualInstructionDraft({
   adapter,
   accountOrderDraft,
@@ -4300,6 +4402,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     selectionSummary: candidateSelectionSummary
   });
   const testerPacketBoundary = buildExperimentalTesterPacketBoundary(presentationReadiness);
+  const testerPacketExportGuard = buildExperimentalTesterPacketExportGuard(testerPacketBoundary);
 
   return {
     status,
@@ -4314,6 +4417,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     candidateSelectionSummary,
     presentationReadiness,
     testerPacketBoundary,
+    testerPacketExportGuard,
     taxContextRows,
     confidence,
     harmChecks,

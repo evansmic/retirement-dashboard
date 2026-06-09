@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2368-S2387 is complete. Experimental annual draft output now includes a runtime tester packet export guard with saved plan, CSV, report, production UI, final instruction, and tax-bracket instruction checks. This makes the synthetic tester packet boundary explicit before tester-facing implementation while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only export guard, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2368_2387_tester_packet_export_guard_review.md`](docs/sprint_2368_2387_tester_packet_export_guard_review.md).
+
 S2348-S2367 is complete. Experimental annual draft output now includes a runtime synthetic tester packet boundary with visible sections, hidden sections, tester-purpose copy, blocked outputs, and packet-boundary checks. This makes it clearer what testers can critique while saved output, CSV output, report output, production UI, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only tester packet boundary, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md`](docs/sprint_2348_2367_synthetic_tester_packet_boundary_review.md).

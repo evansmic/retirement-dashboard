@@ -186,6 +186,14 @@ describe('example-plan optimizer readiness matrix', () => {
       );
       expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(item.optimizer.experimentalAnnualInstructionDraft.readinessSummary.status);
       expect(item.optimizer.experimentalAnnualInstructionDraft.readinessSummary.boundary).toContain('runtime-only');
+      expect(['guarded', 'blocked']).toContain(item.optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.status);
+      expect(item.optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.forbiddenSavedKeys).toEqual(
+        expect.arrayContaining(['testerPacketBoundary', 'testerPacketExportGuard', 'experimentalAnnualInstructionDraft', 'annualAccountInstructions'])
+      );
+      expect(item.optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.rows.map((row) => row.id)).toEqual(
+        expect.arrayContaining(['savedPlanFile', 'csvOutput', 'reportOutput', 'productionUi', 'finalInstructions', 'taxBracketInstructions'])
+      );
+      expect(item.optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.boundary).toContain('runtime-only review evidence');
       expect(JSON.stringify(item.optimizer.experimentalAnnualInstructionDraft).toLowerCase()).not.toContain('stay under');
 
       expect(item.saved.plan).not.toHaveProperty('boundedOptimizer');
@@ -242,6 +250,8 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(serialized, `${card.id} serialized saved plan excludes sequencing adapter`).not.toContain('annualSequencingInputAdapter');
       expect(serialized, `${card.id} serialized saved plan excludes account order draft`).not.toContain('experimentalAccountOrderDraft');
       expect(serialized, `${card.id} serialized saved plan excludes annual instruction draft`).not.toContain('experimentalAnnualInstructionDraft');
+      expect(serialized, `${card.id} serialized saved plan excludes tester packet boundary`).not.toContain('testerPacketBoundary');
+      expect(serialized, `${card.id} serialized saved plan excludes tester packet export guard`).not.toContain('testerPacketExportGuard');
       expect(serialized, `${card.id} serialized saved plan excludes account order`).not.toContain('accountOrder');
       expect(serialized, `${card.id} serialized saved plan excludes selected candidate`).not.toContain('selectedCandidateId');
       expect(serialized, `${card.id} serialized saved plan excludes account instructions`).not.toContain('annualAccountInstructions');
@@ -298,6 +308,14 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.hiddenSections).toContain('finalAnnualInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.testerCopy.boundary).toContain('not a retirement plan');
       expect(optimizer.experimentalAnnualInstructionDraft.testerPacketBoundary.blockedOutputs).toContain('csvSequencingOutput');
+      expect(['guarded', 'blocked']).toContain(optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.status);
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.blockedOutputs).toEqual(
+        expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'])
+      );
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.forbiddenSavedKeys).toContain('testerPacketExportGuard');
+      expect(optimizer.experimentalAnnualInstructionDraft.testerPacketExportGuard.rows.find((row) => row.id === 'savedPlanFile')).toMatchObject({
+        status: 'guarded'
+      });
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.rows.map((row) => row.id)).toContain('accountOrderGaps');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.blockedOutputs).toContain('annualAccountInstructions');
       expect(optimizer.experimentalAnnualInstructionDraft.instructionReadiness.boundary).toContain('runtime-only');

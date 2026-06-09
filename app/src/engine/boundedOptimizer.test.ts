@@ -374,6 +374,23 @@ describe('bounded optimizer runner', () => {
             summary: 'Synthetic tester packet boundary is ready for runtime review.',
             nextStep: 'Review.'
           },
+          testerPacketExportGuard: {
+            status: 'guarded',
+            rows: [],
+            forbiddenSavedKeys: [
+              'testerPacketBoundary',
+              'testerPacketExportGuard',
+              'annualInstructionCandidates',
+              'candidateSelectionSummary',
+              'presentationReadiness',
+              'experimentalAnnualInstructionDraft',
+              'annualAccountInstructions'
+            ],
+            blockedOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+            summary: 'Tester packet export guard keeps synthetic review content runtime-only.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           instructionReadiness: {
             status: 'readyForReview',
             rows: [],
@@ -452,6 +469,23 @@ describe('bounded optimizer runner', () => {
             },
             blockedOutputs: ['finalAnnualInstructions', 'savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions'],
             summary: 'Synthetic tester packet boundary can be reviewed with visible repair themes.',
+            nextStep: 'Review.'
+          },
+          testerPacketExportGuard: {
+            status: 'guarded',
+            rows: [],
+            forbiddenSavedKeys: [
+              'testerPacketBoundary',
+              'testerPacketExportGuard',
+              'annualInstructionCandidates',
+              'candidateSelectionSummary',
+              'presentationReadiness',
+              'experimentalAnnualInstructionDraft',
+              'annualAccountInstructions'
+            ],
+            blockedOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+            summary: 'Tester packet export guard keeps synthetic review content runtime-only.',
+            boundary: 'Runtime-only.',
             nextStep: 'Review.'
           },
           instructionReadiness: {
@@ -942,6 +976,28 @@ describe('bounded optimizer runner', () => {
       'testerPurpose',
       'outputBoundary'
     ]);
+    expect(summary.experimentalAnnualInstructionDraft.testerPacketExportGuard).toMatchObject({
+      status: 'guarded',
+      forbiddenSavedKeys: expect.arrayContaining([
+        'testerPacketBoundary',
+        'testerPacketExportGuard',
+        'annualInstructionCandidates',
+        'experimentalAnnualInstructionDraft',
+        'annualAccountInstructions'
+      ]),
+      blockedOutputs: ['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUi', 'taxBracketInstructions', 'finalAnnualInstructions'],
+      boundary: expect.stringContaining('runtime-only review evidence'),
+      nextStep: expect.stringContaining('synthetic tester packet boundary')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.testerPacketExportGuard.rows.map((row) => row.id)).toEqual([
+      'savedPlanFile',
+      'csvOutput',
+      'reportOutput',
+      'productionUi',
+      'finalInstructions',
+      'taxBracketInstructions'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.testerPacketExportGuard.rows.every((row) => row.status === 'guarded')).toBe(true);
     expect(summary.experimentalAnnualInstructionDraft.taxContextRows.map((row) => row.id)).toEqual([
       'taxRange',
       'oasRecovery',
