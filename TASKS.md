@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2468-S2487: Limited Tester Packet Surface Planning Gate
+## Latest Package — S2488-S2507: Tester Surface Copy And Action Boundary Review
+
+**Status:** Complete 2026-06-08.
+
+Goal: prepare the exact review-only copy and disabled action labels a future tiny tester surface would need. The surface planning gate now includes surface labels, disabled action labels with reasons, copy boundary rows, and non-advisory wording checks.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tester surface copy and action boundary review, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2488_2507_tester_surface_copy_action_boundary_review.md`](docs/sprint_2488_2507_tester_surface_copy_action_boundary_review.md).
+
+### S2488-S2507 Completed Path
+
+- **S2488-S2492 — Surface label batch.** Added review-only labels for synthetic examples, annual candidate rows, quality checks, tester questions, and review boundary.
+- **S2493-S2497 — Disabled action label batch.** Added disabled action labels and reasons for save sequencing, CSV export, reports, production use, final instructions, and tax-bracket instructions.
+- **S2498-S2502 — Copy boundary batch.** Added copy/action boundary rows for surface labels, disabled actions, review-only copy, and non-advisory boundary wording.
+- **S2503-S2507 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2488-S2507 Definition Of Done
+
+- Surface labels are explicit and review-only.
+- Disabled action labels and reasons are explicit.
+- Copy boundary checks avoid directive retirement or tax-bracket wording.
+- Copy stays scoped to feature testing with made-up scenarios.
+- Gate does not implement tester-facing UI.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tester surface copy and action boundary review is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2468-S2487: Limited Tester Packet Surface Planning Gate
 
 **Status:** Complete 2026-06-08.
 

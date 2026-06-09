@@ -707,7 +707,40 @@ describe('bounded optimizer runner', () => {
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.rows.find((row) => row.id === 'qualityGate')).toMatchObject({
       status: 'watch'
     });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary).toMatchObject({
+      status: 'reviewFirst',
+      boundary: expect.stringContaining('runtime-only')
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.surfaceLabels.map((label) => label.id)).toEqual([
+      'exampleList',
+      'candidateRows',
+      'qualityRows',
+      'reviewPrompts',
+      'runtimeBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.disabledActionLabels.map((action) => action.id)).toEqual([
+      'saveSequencing',
+      'exportCsv',
+      'printReport',
+      'useInProduction',
+      'finalizeInstructions',
+      'taxBracketInstructions'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.disabledActionLabels.find((action) => action.id === 'exportCsv')).toMatchObject({
+      label: 'Export CSV',
+      reason: expect.stringContaining('not available')
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.rows.map((row) => row.id)).toEqual([
+      'surfaceLabels',
+      'disabledActionLabels',
+      'reviewOnlyCopy',
+      'nonAdvisoryBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary.rows.find((row) => row.id === 'nonAdvisoryBoundary')).toMatchObject({
+      status: 'pass'
+    });
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate).toLowerCase()).not.toContain('you should');
+    expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary).toLowerCase()).not.toContain('stay under');
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload).toLowerCase()).not.toContain('savedplan');
     expect(matrix.boundary).toContain('does not save draft output');
     expect(matrix.boundary).not.toContain('CSV export is ready');

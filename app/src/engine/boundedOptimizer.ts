@@ -665,6 +665,26 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
         purpose: string;
         boundary: string;
       };
+      copyAndActionBoundary: {
+        status: 'readyForCopyReview' | 'reviewFirst' | 'blocked';
+        surfaceLabels: Array<{
+          id: 'exampleList' | 'candidateRows' | 'qualityRows' | 'reviewPrompts' | 'runtimeBoundary';
+          label: string;
+        }>;
+        disabledActionLabels: Array<{
+          id: 'saveSequencing' | 'exportCsv' | 'printReport' | 'useInProduction' | 'finalizeInstructions' | 'taxBracketInstructions';
+          label: string;
+          reason: string;
+        }>;
+        rows: Array<{
+          id: 'surfaceLabels' | 'disabledActionLabels' | 'reviewOnlyCopy' | 'nonAdvisoryBoundary';
+          label: string;
+          status: 'pass' | 'watch' | 'block';
+          detail: string;
+        }>;
+        summary: string;
+        boundary: string;
+      };
       rows: Array<{
         id: 'qualityGate' | 'surfaceScope' | 'disabledActions' | 'reviewCopy' | 'implementationBoundary';
         label: string;
@@ -4801,6 +4821,95 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
   ];
   const surfaceStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['status'] =
     qualityStatus === 'readyForSurfacePlanning' ? 'readyForSurfacePlan' : qualityStatus;
+  const surfaceLabels: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['copyAndActionBoundary']['surfaceLabels'] = [
+    { id: 'exampleList', label: 'Synthetic examples' },
+    { id: 'candidateRows', label: 'Annual candidate rows' },
+    { id: 'qualityRows', label: 'Quality checks' },
+    { id: 'reviewPrompts', label: 'Tester questions' },
+    { id: 'runtimeBoundary', label: 'Review boundary' }
+  ];
+  const disabledActionLabels: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['copyAndActionBoundary']['disabledActionLabels'] = [
+    {
+      id: 'saveSequencing',
+      label: 'Save sequencing',
+      reason: 'Saving annual sequencing is not available in this tester review.'
+    },
+    {
+      id: 'exportCsv',
+      label: 'Export CSV',
+      reason: 'CSV sequencing export is not available in this tester review.'
+    },
+    {
+      id: 'printReport',
+      label: 'Print report',
+      reason: 'Reports do not include tester packet material.'
+    },
+    {
+      id: 'useInProduction',
+      label: 'Use in planner',
+      reason: 'This review material is not part of the production planner.'
+    },
+    {
+      id: 'finalizeInstructions',
+      label: 'Finalize instructions',
+      reason: 'Final annual instructions are not created by this tester review.'
+    },
+    {
+      id: 'taxBracketInstructions',
+      label: 'Tax-bracket instructions',
+      reason: 'Tax-bracket instructions are not created by this tester review.'
+    }
+  ];
+  const copyText = [
+    'Experimental tester packet review',
+    'Use this small runtime surface to test whether made-up annual candidate summaries are clear.',
+    'This is feature-testing material only. It is not a retirement plan, not saved, and not for personal decisions.',
+    ...disabledActionLabels.map((action) => `${action.label}. ${action.reason}`)
+  ].join(' ');
+  const hasAdvisoryLanguage = /\byou should\b|\brecommend\b|\bstay under\b|\buse this bracket\b/i.test(copyText);
+  const copyAndActionStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['copyAndActionBoundary']['status'] =
+    surfaceStatus === 'blocked' || hasAdvisoryLanguage ? 'blocked' : surfaceStatus === 'reviewFirst' ? 'reviewFirst' : 'readyForCopyReview';
+  const copyAndActionBoundary: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['copyAndActionBoundary'] = {
+    status: copyAndActionStatus,
+    surfaceLabels,
+    disabledActionLabels,
+    rows: [
+      {
+        id: 'surfaceLabels',
+        label: 'Surface labels',
+        status: surfaceLabels.length === surfaceScope.length ? 'pass' : 'block',
+        detail: 'Surface labels cover examples, candidate rows, quality checks, tester questions, and review boundary.'
+      },
+      {
+        id: 'disabledActionLabels',
+        label: 'Disabled action labels',
+        status: disabledActionLabels.length === disabledActions.length ? 'pass' : 'block',
+        detail: 'Disabled action labels explain why save, export, report, production, final instruction, and tax-bracket actions are unavailable.'
+      },
+      {
+        id: 'reviewOnlyCopy',
+        label: 'Review-only copy',
+        status: 'pass',
+        detail: 'Copy frames the surface as runtime feature testing with made-up scenarios.'
+      },
+      {
+        id: 'nonAdvisoryBoundary',
+        label: 'Boundary wording',
+        status: hasAdvisoryLanguage ? 'block' : 'pass',
+        detail: hasAdvisoryLanguage
+          ? 'Copy includes wording that must be revised before tester surface planning.'
+          : 'Copy avoids directive retirement or tax-bracket wording.'
+      }
+    ],
+    summary:
+      copyAndActionStatus === 'readyForCopyReview'
+        ? 'Tester surface copy and disabled action labels are ready for copy review.'
+        : copyAndActionStatus === 'reviewFirst'
+          ? 'Tester surface copy can be reviewed after payload watch items are checked.'
+          : 'Tester surface copy is blocked until boundary wording is repaired.',
+    boundary:
+      'Copy and action boundary is runtime-only. It prepares labels for a future tester surface without implementing UI, saving sequencing output, exporting CSV, printing reports, finalizing instructions, or creating tax-bracket instructions.'
+  };
   const surfacePlanningGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate'] = {
     status: surfaceStatus,
     surfaceScope,
@@ -4810,6 +4919,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       purpose: 'Use this small runtime surface to test whether made-up annual candidate summaries are clear.',
       boundary: 'This is feature-testing material only. It is not a retirement plan, not saved, and not for personal decisions.'
     },
+    copyAndActionBoundary,
     rows: [
       {
         id: 'qualityGate',
