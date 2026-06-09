@@ -483,6 +483,22 @@ describe('example-plan optimizer readiness matrix', () => {
       'verification'
     ]);
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.boundary).toContain('runtime-only planning evidence');
+    expect(['approvedForNextPackage', 'reviewFirst', 'notApproved']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.status);
+    expect(['approveTinyTesterSurface', 'reviewBeforeApproval', 'holdImplementation']).toContain(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.approval);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.requiredConditions).toEqual(
+      expect.arrayContaining(['preflightReady', 'runtimeOnlyData', 'readOnlySurface', 'disabledOutputActions', 'copyBoundaryVisible', 'verificationPlanned'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.blockedOutputs).toEqual(
+      expect.arrayContaining(['savedSequencingOutput', 'csvSequencingOutput', 'reportOutput', 'productionUiPromotion', 'finalAnnualInstructions', 'taxBracketInstructions', 'savedSchemaChanges'])
+    );
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.rows.map((row) => row.id)).toEqual([
+      'preflightReady',
+      'testerValue',
+      'implementationScope',
+      'blockedOutputs',
+      'approvalBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.boundary).toContain('runtime-only planning evidence');
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.dryRunPayload.boundary).toContain('runtime-only');
     expect(matrix.testerPacketReadiness.boundary).toContain('runtime-only');

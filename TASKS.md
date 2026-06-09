@@ -4,7 +4,37 @@ The 2026-04-30 product reset made the planner consumer-first, local-first, and r
 
 Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/canadian_retirement_decision_engine.md).
 
-## Latest Package — S2528-S2547: Tiny Tester Surface Preflight Checklist
+## Latest Package — S2548-S2567: Tiny Tester Surface Implementation Approval Gate
+
+**Status:** Complete 2026-06-08.
+
+Goal: explicitly decide whether the tiny tester-only surface may be implemented in the next package. The surface planning gate now includes approval status, approval decision, required conditions, blocked outputs, approval rows, summary, boundary, and next step.
+
+Non-scope: saved plan schema changes, unplanned engine output changes outside the runtime-only tiny tester surface implementation approval gate, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, tester-facing UI implementation, or final annual instructions.
+
+Package doc: [`docs/sprint_2548_2567_tiny_tester_surface_implementation_approval_gate.md`](docs/sprint_2548_2567_tiny_tester_surface_implementation_approval_gate.md).
+
+### S2548-S2567 Completed Path
+
+- **S2548-S2552 — Approval gate shape batch.** Added approval status, approval decision, required conditions, blocked outputs, rows, summary, boundary, and next step.
+- **S2553-S2557 — Required condition batch.** Added conditions for preflight readiness, runtime-only data, read-only surface, disabled output actions, visible copy boundary, and planned verification.
+- **S2558-S2562 — Blocked output batch.** Kept saved sequencing, CSV output, reports, production UI promotion, final instructions, tax-bracket instructions, and saved schema changes blocked.
+- **S2563-S2567 — Verification and closeout.** Ran focused optimizer tests, example readiness tests, plan-file tests, production build, file guards, and closed the package.
+
+### S2548-S2567 Definition Of Done
+
+- Approval gate reflects preflight readiness and tester value.
+- Required approval conditions are explicit.
+- Blocked outputs are explicit.
+- Approval can return approve, review-before-approval, or hold implementation.
+- Gate does not implement tester-facing UI.
+- Saved output, CSV output, report output, and production UI remain deferred.
+- Saved plan schema remains unchanged.
+- Runtime-only tiny tester surface implementation approval gate is the scoped optimizer shape change for this package.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, plan-file tests, example readiness tests, and production build pass.
+
+## Previous Package — S2528-S2547: Tiny Tester Surface Preflight Checklist
 
 **Status:** Complete 2026-06-08.
 

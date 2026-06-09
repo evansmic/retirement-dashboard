@@ -718,6 +718,21 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
         boundary: string;
         nextStep: string;
       };
+      implementationApprovalGate: {
+        status: 'approvedForNextPackage' | 'reviewFirst' | 'notApproved';
+        approval: 'approveTinyTesterSurface' | 'reviewBeforeApproval' | 'holdImplementation';
+        requiredConditions: Array<'preflightReady' | 'runtimeOnlyData' | 'readOnlySurface' | 'disabledOutputActions' | 'copyBoundaryVisible' | 'verificationPlanned'>;
+        blockedOutputs: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUiPromotion' | 'finalAnnualInstructions' | 'taxBracketInstructions' | 'savedSchemaChanges'>;
+        rows: Array<{
+          id: 'preflightReady' | 'testerValue' | 'implementationScope' | 'blockedOutputs' | 'approvalBoundary';
+          label: string;
+          status: 'pass' | 'watch' | 'block';
+          detail: string;
+        }>;
+        summary: string;
+        boundary: string;
+        nextStep: string;
+      };
       rows: Array<{
         id: 'qualityGate' | 'surfaceScope' | 'disabledActions' | 'reviewCopy' | 'implementationBoundary';
         label: string;
@@ -5095,6 +5110,77 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
       'Preflight checklist is runtime-only planning evidence. It does not implement UI, save sequencing output, export CSV, change reports, promote production UI, create final annual instructions, create tax-bracket instructions, or change saved schema.',
     nextStep: 'Use this checklist before approving any tiny tester-only surface implementation package.'
   };
+  const requiredConditions: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationApprovalGate']['requiredConditions'] = [
+    'preflightReady',
+    'runtimeOnlyData',
+    'readOnlySurface',
+    'disabledOutputActions',
+    'copyBoundaryVisible',
+    'verificationPlanned'
+  ];
+  const approvalRows: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationApprovalGate']['rows'] = [
+    {
+      id: 'preflightReady',
+      label: 'Preflight ready',
+      status: preflightStatus === 'readyForImplementationPackage' ? 'pass' : preflightStatus === 'reviewFirst' ? 'watch' : 'block',
+      detail:
+        preflightStatus === 'readyForImplementationPackage'
+          ? 'Preflight checklist is ready for a next implementation package.'
+          : preflightStatus === 'reviewFirst'
+            ? 'Preflight checklist has review items before approval.'
+            : 'Preflight checklist is blocked before approval.'
+    },
+    {
+      id: 'testerValue',
+      label: 'Tester value',
+      status: dryRunItems.length > 0 ? 'pass' : 'block',
+      detail: dryRunItems.length > 0 ? 'Dry-run payload gives testers concrete annual candidate material to review.' : 'No tester payload items are available.'
+    },
+    {
+      id: 'implementationScope',
+      label: 'Implementation scope',
+      status: allowedImplementationScope.length === 6 ? 'pass' : 'block',
+      detail: 'Implementation scope remains tiny, tester-only, read-only, and backed by runtime payload data.'
+    },
+    {
+      id: 'blockedOutputs',
+      label: 'Blocked outputs',
+      status: blockedImplementationScope.length === 7 ? 'pass' : 'block',
+      detail: 'Saved sequencing, CSV, reports, production UI promotion, final instructions, tax-bracket instructions, and saved schema changes remain blocked.'
+    },
+    {
+      id: 'approvalBoundary',
+      label: 'Approval boundary',
+      status: 'pass',
+      detail: 'Approval gate can approve only the next implementation package; it does not implement the surface.'
+    }
+  ];
+  const approvalStatus: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationApprovalGate']['status'] = approvalRows.some((row) => row.status === 'block')
+    ? 'notApproved'
+    : approvalRows.some((row) => row.status === 'watch')
+      ? 'reviewFirst'
+      : 'approvedForNextPackage';
+  const implementationApprovalGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate']['implementationApprovalGate'] = {
+    status: approvalStatus,
+    approval:
+      approvalStatus === 'approvedForNextPackage'
+        ? 'approveTinyTesterSurface'
+        : approvalStatus === 'reviewFirst'
+          ? 'reviewBeforeApproval'
+          : 'holdImplementation',
+    requiredConditions,
+    blockedOutputs: blockedImplementationScope,
+    rows: approvalRows,
+    summary:
+      approvalStatus === 'approvedForNextPackage'
+        ? 'Tiny tester-only surface is approved for the next implementation package.'
+        : approvalStatus === 'reviewFirst'
+          ? 'Tiny tester-only surface needs review before implementation approval.'
+          : 'Tiny tester-only surface implementation is not approved yet.',
+    boundary:
+      'Implementation approval gate is runtime-only planning evidence. It does not implement UI, save sequencing output, export CSV, change reports, promote production UI, create final annual instructions, create tax-bracket instructions, or change saved schema.',
+    nextStep: 'Use this approval gate to decide whether the next package should implement the tiny tester-only surface.'
+  };
   const surfacePlanningGate: OptimizerSyntheticTesterPacketReadinessMatrix['dryRunPayload']['surfacePlanningGate'] = {
     status: surfaceStatus,
     surfaceScope,
@@ -5107,6 +5193,7 @@ function selectOptimizerSyntheticTesterPacketReadinessMatrix(
     copyAndActionBoundary,
     implementationDecisionGate,
     preflightChecklist,
+    implementationApprovalGate,
     rows: [
       {
         id: 'qualityGate',

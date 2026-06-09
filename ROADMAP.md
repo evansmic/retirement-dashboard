@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2548-S2567 is complete. The tester surface planning gate now includes a runtime implementation approval gate with approval status, approval decision, required conditions, blocked outputs, rows, summary, boundary, and next step. This explicitly decides whether a tiny tester-only surface may be implemented in a later package while saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only approval gate, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
+
+Current package doc: [`docs/sprint_2548_2567_tiny_tester_surface_implementation_approval_gate.md`](docs/sprint_2548_2567_tiny_tester_surface_implementation_approval_gate.md).
+
 S2528-S2547 is complete. The tester surface planning gate now includes a runtime preflight checklist with route, runtime data source, read-only rendering, disabled action, copy placement, and verification checks. This prepares implementation preflight while saved output, CSV output, report output, production UI promotion, tax-bracket instructions, saved schema changes, unplanned engine output changes outside the runtime-only preflight checklist, final annual instructions, tester-facing UI implementation, and `.plan.json` generation remain out of scope.
 
 Current package doc: [`docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md`](docs/sprint_2528_2547_tiny_tester_surface_preflight_checklist.md).

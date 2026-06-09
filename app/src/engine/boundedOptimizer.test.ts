@@ -794,6 +794,32 @@ describe('bounded optimizer runner', () => {
     expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.preflightChecklist.rows.find((row) => row.id === 'readOnlyRendering')).toMatchObject({
       status: 'watch'
     });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate).toMatchObject({
+      status: 'reviewFirst',
+      approval: 'reviewBeforeApproval',
+      requiredConditions: ['preflightReady', 'runtimeOnlyData', 'readOnlySurface', 'disabledOutputActions', 'copyBoundaryVisible', 'verificationPlanned'],
+      blockedOutputs: [
+        'savedSequencingOutput',
+        'csvSequencingOutput',
+        'reportOutput',
+        'productionUiPromotion',
+        'finalAnnualInstructions',
+        'taxBracketInstructions',
+        'savedSchemaChanges'
+      ],
+      boundary: expect.stringContaining('runtime-only planning evidence'),
+      nextStep: expect.stringContaining('next package')
+    });
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.rows.map((row) => row.id)).toEqual([
+      'preflightReady',
+      'testerValue',
+      'implementationScope',
+      'blockedOutputs',
+      'approvalBoundary'
+    ]);
+    expect(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.implementationApprovalGate.rows.find((row) => row.id === 'preflightReady')).toMatchObject({
+      status: 'watch'
+    });
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate).toLowerCase()).not.toContain('you should');
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload.surfacePlanningGate.copyAndActionBoundary).toLowerCase()).not.toContain('stay under');
     expect(JSON.stringify(matrix.testerPacketReadiness.dryRunPayload).toLowerCase()).not.toContain('savedplan');
