@@ -488,6 +488,34 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-layout-panel');
   });
 
+  it('keeps static mock surface removal isolated from shared outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_REMOVAL_CONTRACT_ROWS');
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_REMOVAL_BLOCKERS');
+    expect(testerSurface).toContain('Static mock surface removal contract');
+    expect(appSource).toContain('Removal unit');
+    expect(appSource).toContain('Data boundary');
+    expect(appSource).toContain('Route boundary');
+    expect(appSource).toContain('Release boundary');
+    expect(appSource).toContain('Removal blockers:');
+    expect(appSource).toContain('No shared selector dependency.');
+    expect(appSource).toContain('No saved schema dependency.');
+    expect(appSource).toContain('No engine output dependency.');
+    expect(appSource).toContain('No report dependency.');
+    expect(appSource).toContain('No CSV dependency.');
+    expect(testerSurface).not.toContain('mockSurfaceSelector');
+    expect(testerSurface).not.toContain('saveMockSurfaceDependency');
+    expect(testerSurface).not.toContain('engineMockOutput');
+    expect(testerSurface).not.toContain('reportMockDependency');
+    expect(testerSurface).not.toContain('csvMockDependency');
+    expect(testerSurface).not.toContain('productionMockRoute');
+    expect(testerSurface).not.toContain('releaseMockSurface');
+    expect(stylesSource).toContain('.static-mock-surface-removal-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

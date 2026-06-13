@@ -16,7 +16,37 @@ Material change at S2828-S2847: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
 
-## Latest Package — S2868-S2887: Annual Instruction Static Mock Surface Layout Contract
+## Latest Package — S2888-S2907: Annual Instruction Static Mock Surface Removal Contract
+
+**Status:** Complete 2026-06-13.
+
+Goal: define how a future hand-written static mock surface must remain removable before production UI work. The tester-only surface now shows removal units, data/route/release boundaries, and removal blockers while keeping shared selectors, saved schema dependencies, engine output dependencies, report dependencies, CSV dependencies, production routes, rendered rows, calculations, exports, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, timeline approval logic, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2888_2907_annual_instruction_static_mock_surface_removal_contract.md`](docs/sprint_2888_2907_annual_instruction_static_mock_surface_removal_contract.md).
+
+### S2888-S2907 Completed Path
+
+- **S2888-S2892 — Removal unit batch.** Added a rule that any future mock surface must be grouped for removal in one scoped change.
+- **S2893-S2897 — Boundary dependency batch.** Added data, route, and release boundaries that keep future mock content out of shared outputs.
+- **S2898-S2902 — Source guard batch.** Added structure checks that block selector, saved schema, engine output, report, CSV, production route, and release dependencies.
+- **S2903-S2907 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2888-S2907 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock surface removal contract is visible.
+- Removal unit, data boundary, route boundary, and release boundary are visible.
+- Shared selector, saved schema, engine output, report, CSV, and production route dependencies remain blocked.
+- No static mock rows or fixture rows are rendered.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2868-S2887: Annual Instruction Static Mock Surface Layout Contract
 
 **Status:** Complete 2026-06-13.
 

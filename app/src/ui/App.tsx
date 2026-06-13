@@ -686,6 +686,38 @@ const STATIC_MOCK_SURFACE_LAYOUT_BLOCKERS = [
   'No save, CSV, print, report, or production actions in this package.',
   'No schema changes in this package.'
 ];
+
+const STATIC_MOCK_SURFACE_REMOVAL_CONTRACT_ROWS = [
+  {
+    label: 'Removal unit',
+    rule: 'Keep future mock surface code grouped so it can be removed in one scoped change.',
+    blocked: 'Do not spread mock dependencies through shared result panels.'
+  },
+  {
+    label: 'Data boundary',
+    rule: 'Keep future mock content hand-written and local to the tester-only surface.',
+    blocked: 'Do not wire mock content into engine output, saved plans, reports, or exports.'
+  },
+  {
+    label: 'Route boundary',
+    rule: 'Keep future mock content inside Results Details only.',
+    blocked: 'Do not add mock routing, navigation, Overview placement, or print placement.'
+  },
+  {
+    label: 'Release boundary',
+    rule: 'Require removal review before production UI work.',
+    blocked: 'Do not add release flags, upgrade paths, or public launch controls.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_REMOVAL_BLOCKERS = [
+  'No shared selector dependency.',
+  'No saved schema dependency.',
+  'No engine output dependency.',
+  'No report dependency.',
+  'No CSV dependency.',
+  'No production route dependency.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5341,6 +5373,22 @@ function TinyTesterSurfacePanel({
           <p className="table-note">Layout blockers:</p>
           <ul className="compact-list">
             {STATIC_MOCK_SURFACE_LAYOUT_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-removal-panel">
+          <h3>Static mock surface removal contract</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_REMOVAL_CONTRACT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> Rule: {row.rule} Blocked: {row.blocked}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Removal blockers:</p>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_REMOVAL_BLOCKERS.map((blocker) => (
               <li key={blocker}>{blocker}</li>
             ))}
           </ul>
