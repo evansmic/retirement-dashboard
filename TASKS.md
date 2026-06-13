@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3448-S3467 package, the remaining-work estimate is:
+As of the S3468-S3487 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-60 sprints remaining.
+- Public-ready optimizer for real planning use: 10-50 sprints remaining.
 
-Material change at S3448-S3467: yes. Feature-complete beta remains present, and the public-ready path is narrower because fixture builders, shared no-output assertions, and stop-condition assertion batches are now explicitly scoped.
+Material change at S3468-S3487: yes. Feature-complete beta remains present, and the public-ready path is narrower because the synthetic fixture builders and stop-condition assertion rows now exist in code.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3448-S3467: Fixture Coverage Implementation Planning
+## Latest Package — S3468-S3487: Fixture Builders And Stop Assertions
+
+**Status:** Complete 2026-06-13.
+
+Goal: implement the synthetic fixture builders and focused stop-condition assertions named by the fixture coverage implementation plan while public output remains closed. The bounded optimizer now exports `createOptimizerFixtureCoveragePlans` and `selectOptimizerFixtureStopAssertionRows`, with tests proving the five fixture shapes, shared no-output assertions, and save-file stripping behavior.
+
+Package doc: [`docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md`](docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md).
+
+### S3468-S3487 Completed Path
+
+- Added in-memory synthetic fixture builders for staggered-couple, registered-heavy, taxable-heavy, survivor/estate, and thin-data plans.
+- Added focused stop assertion rows for fixture count, fixture shape, thin-data stop evidence, and blocked outputs.
+- Added tests proving all fixture assertion rows pass.
+- Added tests proving fixture planning metadata is stripped from `.plan.json`.
+- Kept public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output blocked.
+
+### S3468-S3487 Definition Of Done
+
+- Fixture builders return the five planned synthetic fixtures.
+- Stop assertion rows pass for the generated fixtures.
+- Every fixture carries no-output assertions for saved files, CSV, reports, final instructions, and tax-bracket wording.
+- Plan-file tests prove fixture metadata is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Fixture Matrix Rollup
+
+Goal: connect fixture assertion results back into the unsupported-case coverage matrix so coverage can move from planned gaps to verified synthetic coverage without opening public output.
+
+## Previous Package — S3448-S3467: Fixture Coverage Implementation Planning
 
 **Status:** Complete 2026-06-13.
 
@@ -41,10 +69,6 @@ Package doc: [`docs/sprint_3448_3467_fixture_coverage_implementation_planning.md
 - Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove fixture implementation planning is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Fixture Builders And Stop Assertions
-
-Goal: implement the synthetic fixture builders and focused stop-condition assertions named by the fixture coverage implementation plan while public output remains closed.
 
 ## Previous Package — S3428-S3447: Unsupported Cases And Scenario Coverage
 

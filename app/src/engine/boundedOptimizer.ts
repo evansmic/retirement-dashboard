@@ -874,6 +874,44 @@ export type OptimizerFixtureCoverageImplementationPlan = {
   nextStep: string;
 };
 
+export type OptimizerFixtureCoveragePlanId =
+  | 'coupleStaggeredFixture'
+  | 'registeredHeavyFixture'
+  | 'taxableHeavyFixture'
+  | 'survivorEstateFixture'
+  | 'thinDataFixture';
+
+export type OptimizerFixtureCoverageAssertion =
+  | 'optimizerStopsWhenContextMissing'
+  | 'reviewOnlyWordingVisible'
+  | 'noSavedOutput'
+  | 'noCsvOutput'
+  | 'noReportOutput'
+  | 'noFinalInstructions'
+  | 'noTaxBracketWording';
+
+export type OptimizerFixtureCoveragePlan = {
+  id: OptimizerFixtureCoveragePlanId;
+  label: string;
+  plan: V2PlanPayload;
+  expectedStopAssertions: OptimizerFixtureCoverageAssertion[];
+  publicOutputBlocked: true;
+  detail: string;
+};
+
+export type OptimizerFixtureStopAssertionRow = {
+  id:
+    | 'fixtureCount'
+    | 'coupleStaggeredFixture'
+    | 'registeredHeavyFixture'
+    | 'taxableHeavyFixture'
+    | 'survivorEstateFixture'
+    | 'thinDataFixture'
+    | 'blockedOutputs';
+  status: 'pass' | 'fail';
+  detail: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrixItem = {
   id: string;
   label: string;
@@ -5515,6 +5553,243 @@ export function selectOptimizerFixtureCoverageImplementationPlan({
     nextStep:
       'Implement fixture builders and stop assertions as the next substantial package before revisiting coverage status.'
   };
+}
+
+function cloneOptimizerFixturePlan(plan: V2PlanPayload, title: string): V2PlanPayload {
+  return {
+    ...structuredClone(plan),
+    title
+  };
+}
+
+const OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS: OptimizerFixtureCoverageAssertion[] = [
+  'optimizerStopsWhenContextMissing',
+  'reviewOnlyWordingVisible',
+  'noSavedOutput',
+  'noCsvOutput',
+  'noReportOutput',
+  'noFinalInstructions',
+  'noTaxBracketWording'
+];
+
+export function createOptimizerFixtureCoveragePlans(basePlan: V2PlanPayload): OptimizerFixtureCoveragePlan[] {
+  const coupleStaggered = cloneOptimizerFixturePlan(basePlan, 'Optimizer fixture - staggered couple');
+  const coupleBaseRetireYear = coupleStaggered.assumptions.retireYear || coupleStaggered.p1.retireYear || 2030;
+  const coupleBaseBirthYear = coupleStaggered.p1.dob || 1966;
+  coupleStaggered.p1 = {
+    ...coupleStaggered.p1,
+    name: coupleStaggered.p1.name || 'Alex',
+    dob: coupleBaseBirthYear,
+    retireYear: coupleBaseRetireYear + 1,
+    salary: Math.max(coupleStaggered.p1.salary || 0, 90000),
+    rrsp: Math.max(coupleStaggered.p1.rrsp || 0, 280000),
+    tfsa: Math.max(coupleStaggered.p1.tfsa || 0, 85000),
+    cpp65_monthly: Math.max(coupleStaggered.p1.cpp65_monthly || 0, 950),
+    cpp70_monthly: Math.max(coupleStaggered.p1.cpp70_monthly || 0, 1350),
+    oas_monthly: Math.max(coupleStaggered.p1.oas_monthly || 0, 742)
+  };
+  coupleStaggered.p2 = {
+    ...coupleStaggered.p2,
+    name: coupleStaggered.p2.name || 'Jordan',
+    dob: coupleStaggered.p2.dob || coupleBaseBirthYear + 3,
+    retireYear: coupleBaseRetireYear + 4,
+    salary: Math.max(coupleStaggered.p2.salary || 0, 72000),
+    rrsp: Math.max(coupleStaggered.p2.rrsp || 0, 180000),
+    tfsa: Math.max(coupleStaggered.p2.tfsa || 0, 65000),
+    cpp65_monthly: Math.max(coupleStaggered.p2.cpp65_monthly || 0, 820),
+    cpp70_monthly: Math.max(coupleStaggered.p2.cpp70_monthly || 0, 1180),
+    oas_monthly: Math.max(coupleStaggered.p2.oas_monthly || 0, 742)
+  };
+  coupleStaggered.assumptions.p1DiesInSurvivor = coupleBaseRetireYear + 16;
+
+  const registeredHeavy = cloneOptimizerFixturePlan(basePlan, 'Optimizer fixture - registered heavy');
+  registeredHeavy.p1 = {
+    ...registeredHeavy.p1,
+    rrsp: 900000,
+    lif: 180000,
+    tfsa: Math.min(registeredHeavy.p1.tfsa || 0, 50000),
+    nonreg: 10000,
+    nonregAcb: 9000
+  };
+  registeredHeavy.p2 = {
+    ...registeredHeavy.p2,
+    rrsp: Math.max(registeredHeavy.p2.rrsp || 0, 300000),
+    lif: Math.max(registeredHeavy.p2.lif || 0, 50000),
+    nonreg: Math.min(registeredHeavy.p2.nonreg || 0, 10000)
+  };
+
+  const taxableHeavy = cloneOptimizerFixturePlan(basePlan, 'Optimizer fixture - taxable heavy');
+  taxableHeavy.p1 = {
+    ...taxableHeavy.p1,
+    rrsp: 75000,
+    tfsa: 50000,
+    nonreg: 850000,
+    nonregAcb: 420000,
+    nonregAnnual: 0
+  };
+  taxableHeavy.p2 = {
+    ...taxableHeavy.p2,
+    rrsp: Math.min(taxableHeavy.p2.rrsp || 0, 50000),
+    tfsa: Math.min(taxableHeavy.p2.tfsa || 0, 50000),
+    nonreg: Math.max(taxableHeavy.p2.nonreg || 0, 250000),
+    nonregAcb: Math.max(taxableHeavy.p2.nonregAcb || 0, 125000)
+  };
+
+  const survivorEstate = cloneOptimizerFixturePlan(basePlan, 'Optimizer fixture - survivor estate constraint');
+  survivorEstate.p2 = {
+    ...survivorEstate.p2,
+    name: survivorEstate.p2.name || 'Taylor',
+    dob: survivorEstate.p2.dob || Math.max((survivorEstate.p1.dob || 1965) - 2, 1900),
+    retireYear: survivorEstate.p2.retireYear || survivorEstate.p1.retireYear || survivorEstate.assumptions.retireYear || 2030,
+    rrsp: Math.max(survivorEstate.p2.rrsp || 0, 220000),
+    tfsa: Math.max(survivorEstate.p2.tfsa || 0, 90000),
+    cpp65_monthly: Math.max(survivorEstate.p2.cpp65_monthly || 0, 900),
+    cpp70_monthly: Math.max(survivorEstate.p2.cpp70_monthly || 0, 1280),
+    oas_monthly: Math.max(survivorEstate.p2.oas_monthly || 0, 742),
+    cppSurv_o65_mo: Math.max(survivorEstate.p2.cppSurv_o65_mo || 0, 550)
+  };
+  survivorEstate.inheritance = Math.max(survivorEstate.inheritance || 0, 250000);
+  survivorEstate.downsize = { year: (survivorEstate.assumptions.retireYear || survivorEstate.p1.retireYear || 2030) + 12, netProceeds: 350000 };
+  survivorEstate.assumptions.p1DiesInSurvivor = (survivorEstate.assumptions.retireYear || survivorEstate.p1.retireYear || 2030) + 8;
+
+  const thinData = cloneOptimizerFixturePlan(basePlan, 'Optimizer fixture - thin data stop');
+  thinData.p1 = {
+    ...thinData.p1,
+    salary: 0,
+    annualRrspContrib: 0,
+    annualTfsaContrib: 0,
+    rrsp: 0,
+    tfsa: 0,
+    lif: 0,
+    nonreg: 0,
+    nonregAcb: 0,
+    cpp65_monthly: 0,
+    cpp70_monthly: 0,
+    oas_monthly: 0
+  };
+  thinData.p2 = {
+    ...thinData.p2,
+    name: '',
+    retireYear: 0,
+    rrsp: 0,
+    tfsa: 0,
+    lif: 0,
+    nonreg: 0,
+    nonregAcb: 0,
+    cpp65_monthly: 0,
+    cpp70_monthly: 0,
+    oas_monthly: 0
+  };
+
+  return [
+    {
+      id: 'coupleStaggeredFixture',
+      label: 'Couple, staggered retirement',
+      plan: coupleStaggered,
+      expectedStopAssertions: OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS,
+      publicOutputBlocked: true,
+      detail: 'Synthetic couple fixture with staggered retirement and survivor-sensitive context.'
+    },
+    {
+      id: 'registeredHeavyFixture',
+      label: 'Registered-heavy assets',
+      plan: registeredHeavy,
+      expectedStopAssertions: OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS,
+      publicOutputBlocked: true,
+      detail: 'Synthetic registered-heavy fixture for tax-context and minimum-withdrawal stop assertions.'
+    },
+    {
+      id: 'taxableHeavyFixture',
+      label: 'Taxable-heavy assets',
+      plan: taxableHeavy,
+      expectedStopAssertions: OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS,
+      publicOutputBlocked: true,
+      detail: 'Synthetic taxable-heavy fixture for capital-gains and non-registered evidence assertions.'
+    },
+    {
+      id: 'survivorEstateFixture',
+      label: 'Survivor and estate constraint',
+      plan: survivorEstate,
+      expectedStopAssertions: OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS,
+      publicOutputBlocked: true,
+      detail: 'Synthetic survivor and estate fixture for stop behavior around fragile wording.'
+    },
+    {
+      id: 'thinDataFixture',
+      label: 'Thin data plan',
+      plan: thinData,
+      expectedStopAssertions: OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS,
+      publicOutputBlocked: true,
+      detail: 'Synthetic sparse-input fixture proving missing evidence remains a stop condition.'
+    }
+  ];
+}
+
+export function selectOptimizerFixtureStopAssertionRows(
+  fixtures: OptimizerFixtureCoveragePlan[]
+): OptimizerFixtureStopAssertionRow[] {
+  const fixtureById = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
+  const requiredIds: OptimizerFixtureCoveragePlanId[] = [
+    'coupleStaggeredFixture',
+    'registeredHeavyFixture',
+    'taxableHeavyFixture',
+    'survivorEstateFixture',
+    'thinDataFixture'
+  ];
+  const hasAllFixtures = requiredIds.every((id) => fixtureById.has(id));
+  const couple = fixtureById.get('coupleStaggeredFixture')?.plan;
+  const registered = fixtureById.get('registeredHeavyFixture')?.plan;
+  const taxable = fixtureById.get('taxableHeavyFixture')?.plan;
+  const survivor = fixtureById.get('survivorEstateFixture')?.plan;
+  const thin = fixtureById.get('thinDataFixture')?.plan;
+  const registeredTotal = (registered?.p1.rrsp || 0) + (registered?.p1.lif || 0) + (registered?.p2.rrsp || 0) + (registered?.p2.lif || 0);
+  const registeredNonReg = (registered?.p1.nonreg || 0) + (registered?.p2.nonreg || 0);
+  const taxableTotal = (taxable?.p1.nonreg || 0) + (taxable?.p2.nonreg || 0);
+  const taxableRegistered = (taxable?.p1.rrsp || 0) + (taxable?.p2.rrsp || 0);
+  const thinAssets = (thin?.p1.rrsp || 0) + (thin?.p1.tfsa || 0) + (thin?.p1.nonreg || 0) + (thin?.p2.rrsp || 0) + (thin?.p2.tfsa || 0) + (thin?.p2.nonreg || 0);
+  const allPublicOutputsBlocked = fixtures.every(
+    (fixture) =>
+      fixture.publicOutputBlocked &&
+      OPTIMIZER_FIXTURE_REQUIRED_ASSERTIONS.every((assertion) => fixture.expectedStopAssertions.includes(assertion))
+  );
+
+  return [
+    {
+      id: 'fixtureCount',
+      status: hasAllFixtures ? 'pass' : 'fail',
+      detail: hasAllFixtures ? 'All planned optimizer synthetic fixtures are present.' : 'One or more planned optimizer synthetic fixtures are missing.'
+    },
+    {
+      id: 'coupleStaggeredFixture',
+      status: couple && !p2LooksBlank(couple.p2) && couple.p1.retireYear !== couple.p2.retireYear ? 'pass' : 'fail',
+      detail: 'Staggered couple fixture has two people and different retirement dates.'
+    },
+    {
+      id: 'registeredHeavyFixture',
+      status: registeredTotal > registeredNonReg * 10 ? 'pass' : 'fail',
+      detail: 'Registered-heavy fixture has registered assets dominating taxable assets.'
+    },
+    {
+      id: 'taxableHeavyFixture',
+      status: taxableTotal > taxableRegistered * 5 ? 'pass' : 'fail',
+      detail: 'Taxable-heavy fixture has taxable assets dominating registered assets.'
+    },
+    {
+      id: 'survivorEstateFixture',
+      status: survivor && !p2LooksBlank(survivor.p2) && Boolean(survivor.assumptions.p1DiesInSurvivor) && (survivor.inheritance || 0) > 0 ? 'pass' : 'fail',
+      detail: 'Survivor and estate fixture has a second person, survivor timing, and estate context.'
+    },
+    {
+      id: 'thinDataFixture',
+      status: thin && thinAssets === 0 && !thin.p1.cpp65_monthly && !thin.p1.cpp70_monthly ? 'pass' : 'fail',
+      detail: 'Thin-data fixture removes core account and benefit evidence.'
+    },
+    {
+      id: 'blockedOutputs',
+      status: allPublicOutputsBlocked ? 'pass' : 'fail',
+      detail: 'Every fixture carries no-output assertions for saved files, CSV, reports, final instructions, and tax-bracket wording.'
+    }
+  ];
 }
 
 export function selectOptimizerCsvReportGate({

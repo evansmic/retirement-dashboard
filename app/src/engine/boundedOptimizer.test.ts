@@ -5,7 +5,9 @@ import { createPlanFile, extractPlanPayload } from '../data/planFile';
 import type { SimulationResult, V2PlanPayload } from '../types/plan';
 import {
   buildBoundedOptimizerCandidates,
+  createOptimizerFixtureCoveragePlans,
   runBoundedOptimizer,
+  selectOptimizerFixtureStopAssertionRows,
   selectOptimizerExperimentalDraftExampleMatrix,
   selectOptimizerAnnualSequencingPrepContract,
   selectOptimizerCapacityObjective,
@@ -2513,6 +2515,60 @@ describe('bounded optimizer runner', () => {
     });
     expect(calls).toHaveLength(18);
     expect(createPlanFile(readyPlan()).plan).not.toHaveProperty('boundedOptimizer');
+  });
+
+  it('builds synthetic optimizer fixtures and focused stop assertions without opening public output', () => {
+    const fixtures = createOptimizerFixtureCoveragePlans(readyPlan());
+    const rows = selectOptimizerFixtureStopAssertionRows(fixtures);
+
+    expect(fixtures.map((fixture) => fixture.id)).toEqual([
+      'coupleStaggeredFixture',
+      'registeredHeavyFixture',
+      'taxableHeavyFixture',
+      'survivorEstateFixture',
+      'thinDataFixture'
+    ]);
+    expect(rows.map((row) => row.status)).toEqual(['pass', 'pass', 'pass', 'pass', 'pass', 'pass', 'pass']);
+    expect(fixtures.every((fixture) => fixture.publicOutputBlocked)).toBe(true);
+    expect(fixtures[0].expectedStopAssertions).toEqual([
+      'optimizerStopsWhenContextMissing',
+      'reviewOnlyWordingVisible',
+      'noSavedOutput',
+      'noCsvOutput',
+      'noReportOutput',
+      'noFinalInstructions',
+      'noTaxBracketWording'
+    ]);
+    const couple = fixtures.find((fixture) => fixture.id === 'coupleStaggeredFixture')?.plan;
+    const registered = fixtures.find((fixture) => fixture.id === 'registeredHeavyFixture')?.plan;
+    const taxable = fixtures.find((fixture) => fixture.id === 'taxableHeavyFixture')?.plan;
+    const survivor = fixtures.find((fixture) => fixture.id === 'survivorEstateFixture')?.plan;
+    const thin = fixtures.find((fixture) => fixture.id === 'thinDataFixture')?.plan;
+
+    expect(couple?.p1.retireYear).not.toBe(couple?.p2.retireYear);
+    expect(registered?.p1.rrsp).toBeGreaterThan(800000);
+    expect(taxable?.p1.nonreg).toBeGreaterThan(800000);
+    expect(survivor?.assumptions.p1DiesInSurvivor).toBeGreaterThan(0);
+    expect(thin?.p1.rrsp).toBe(0);
+
+    fixtures.forEach((fixture) => {
+      const saved = createPlanFile({
+        ...fixture.plan,
+        fixtureCoverageImplementationPlan: {
+          status: 'readyToImplementFixturesPublicClosed',
+          decision: 'implementSyntheticFixturesBeforePublicRelease'
+        },
+        publicSafetyValidation: {
+          status: 'notPublicReady',
+          decision: 'keepPublicOptimizerClosed'
+        }
+      });
+      const serialized = JSON.stringify(saved);
+      expect(saved.plan).not.toHaveProperty('fixtureCoverageImplementationPlan');
+      expect(saved.plan).not.toHaveProperty('publicSafetyValidation');
+      expect(serialized).not.toContain('implementSyntheticFixturesBeforePublicRelease');
+      expect(serialized).not.toContain('keepPublicOptimizerClosed');
+    });
   });
 
   it('adds bridge-year evidence for the benefit timing check', () => {

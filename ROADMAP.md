@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3468-S3487 is complete. The optimizer now has in-memory synthetic fixture builders and focused stop-condition assertion rows for staggered-couple, registered-heavy, taxable-heavy, survivor/estate, and thin-data coverage gaps. Tests prove the fixture shapes, shared no-output assertions, and `.plan.json` stripping behavior while public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-50 sprints.
+
+Current package doc: [`docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md`](docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md).
+
 S3448-S3467 is complete. The optimizer now has a fixture coverage implementation plan that names five synthetic fixture builders, shared no-output assertions, stop-condition assertions, and implementation batches for closing coverage gaps while public output remains closed. Results Details shows the plan without opening public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, or `.plan.json` sequencing output. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-60 sprints.
 
 Current package doc: [`docs/sprint_3448_3467_fixture_coverage_implementation_planning.md`](docs/sprint_3448_3467_fixture_coverage_implementation_planning.md).
