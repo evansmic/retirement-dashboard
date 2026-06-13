@@ -3011,6 +3011,21 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-prototype-source-panel {
+  border-left: 3px solid #6f5f96;
+  padding-left: 12px;
+}
+
+.optimizer-timeline-checkpoint-panel {
+  border-left: 3px solid #557f7a;
+  padding-left: 12px;
+}
+
+.prototype-shape-checkpoint-panel {
+  border-left: 3px solid #8a7351;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

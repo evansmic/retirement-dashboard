@@ -40,6 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2728-S2747 is complete. The first 100-sprint optimizer timeline checkpoint found no material change to the S2628 baseline: internal tester prototype remains 80-120 sprints from S2628, feature-complete beta remains 180-260 sprints from S2628, and public-ready optimizer remains 300-450 sprints from S2628. The next material estimate checkpoint is S2828-S2847. The tester-only surface now also records that prototype shape and source mapping are ready only for a future non-generative static mock, while generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md`](docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md).
+
+S2708-S2727 is complete. The tester-only surface now maps the internal-only prototype row fields to existing runtime candidate data sources, with missing-source behavior and blocked inferences. Year, account label, amount label, review reason, quality flag, and boundary note each have a declared source, while exact account order, tax-bracket targets, final withdrawal instructions, saved sequencing fields, CSV columns, and report rows must not be inferred. This remains static source mapping only and does not generate annual instruction rows.
+
+Current package doc: [`docs/sprint_2708_2727_annual_instruction_prototype_row_source_mapping.md`](docs/sprint_2708_2727_annual_instruction_prototype_row_source_mapping.md).
+
 S2688-S2707 is complete. The tester-only surface now includes an internal-only annual instruction prototype shape boundary with allowed row fields for year, account label, amount label, review reason, quality flag, and boundary note. The same section excludes exact tax-bracket commands, final annual instructions, saved sequencing, CSV output, report output, production UI, and saved schema changes. This is a static contract only; it does not calculate, generate, persist, download, print, publish, or promote annual instruction rows.
 
 Current package doc: [`docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md`](docs/sprint_2688_2707_annual_instruction_prototype_shape_boundary.md).

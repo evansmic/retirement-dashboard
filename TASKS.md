@@ -6,15 +6,77 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of S2628-S2647 planning, the working estimate is:
+As of the S2728-S2747 checkpoint, the working estimate remains:
 
 - Internal tester optimizer prototype: 80-120 sprints from S2628.
 - Feature-complete app optimizer beta: 180-260 sprints from S2628.
 - Public-ready optimizer for real planning use: 300-450 sprints from S2628.
 
-Reassess this materially every 100 sprints, with the next checkpoint at S2728-S2747.
+Material change at S2728-S2747: no.
 
-## Latest Package — S2688-S2707: Annual Instruction Prototype Shape Boundary
+Reassess this materially every 100 sprints, with the next checkpoint at S2828-S2847.
+
+## Latest Package — S2728-S2747: Optimizer Timeline Reassessment And Prototype Shape Checkpoint
+
+**Status:** Complete 2026-06-12.
+
+Goal: reassess the optimizer timeline estimate after 100 sprints and checkpoint whether the annual instruction prototype shape/source mapping is ready for a future non-generative static row mock. The tester-only surface now shows the unchanged timeline estimate and a prototype-shape checkpoint while keeping generated rows and all output promotion blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, or timeline approval logic.
+
+Package doc: [`docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md`](docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md).
+
+### S2728-S2747 Completed Path
+
+- **S2728-S2732 — Timeline reassessment batch.** Rechecked the S2628 baseline and found no material change to the internal tester, beta, or public-ready estimates.
+- **S2733-S2737 — Prototype shape checkpoint batch.** Marked the shape and source mapping ready for a future non-generative static mock only.
+- **S2738-S2742 — Blocked-output batch.** Kept generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+- **S2743-S2747 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2728-S2747 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Optimizer timeline estimates remain visible.
+- Material estimate change is recorded as no.
+- Next material checkpoint is updated to S2828-S2847.
+- Prototype shape checkpoint is visible.
+- Future work is limited to a non-generative static mock.
+- Generated rows, saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2708-S2727: Annual Instruction Prototype Row Source Mapping
+
+**Status:** Complete 2026-06-08.
+
+Goal: map each internal-only prototype row field to existing runtime candidate data while still not generating annual instruction rows. The tester-only surface now shows source mapping, missing-source behavior, and blocked inferences for the prototype shape.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, or generated instruction rows.
+
+Package doc: [`docs/sprint_2708_2727_annual_instruction_prototype_row_source_mapping.md`](docs/sprint_2708_2727_annual_instruction_prototype_row_source_mapping.md).
+
+### S2708-S2727 Completed Path
+
+- **S2708-S2712 — Source mapping batch.** Added static source mapping for year, account label, amount label, review reason, quality flag, and boundary note.
+- **S2713-S2717 — Missing-source behavior batch.** Added missing-source fallbacks that require review instead of inference.
+- **S2718-S2722 — Blocked inference batch.** Blocked exact account order, tax-bracket targets, final withdrawal instructions, saved sequencing fields, CSV columns, and report rows.
+- **S2723-S2727 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2708-S2727 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Prototype row source mapping is visible.
+- Missing-source behavior avoids inference.
+- Blocked inferences are visible.
+- Mapping remains static and non-generative.
+- No annual instruction rows are created.
+- Saved output, CSV output, report output, and production UI promotion remain deferred.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2688-S2707: Annual Instruction Prototype Shape Boundary
 
 **Status:** Complete 2026-06-08.
 

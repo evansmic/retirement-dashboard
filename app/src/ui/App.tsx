@@ -357,6 +357,90 @@ const ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_EXCLUSIONS = [
   'No production UI promotion.',
   'No saved schema changes.'
 ];
+const ANNUAL_INSTRUCTION_PROTOTYPE_SOURCE_MAPPING = [
+  {
+    field: 'Year',
+    source: 'Candidate display row label and year.',
+    missing: 'Do not create a row when the year is missing.'
+  },
+  {
+    field: 'Account label',
+    source: 'Annual account total label or candidate display row context.',
+    missing: 'Use Account review needed rather than inferring an account.'
+  },
+  {
+    field: 'Amount label',
+    source: 'Candidate display row total amount after normal display formatting.',
+    missing: 'Use Amount review needed rather than estimating a value.'
+  },
+  {
+    field: 'Review reason',
+    source: 'Candidate repair preview and readiness review notes.',
+    missing: 'Use Review context needed rather than inventing a reason.'
+  },
+  {
+    field: 'Quality flag',
+    source: 'Candidate quality label and readiness status.',
+    missing: 'Use Review first rather than promoting the row.'
+  },
+  {
+    field: 'Boundary note',
+    source: 'Tester-only surface boundary and blocked-output labels.',
+    missing: 'Use Not final and not saved.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_PROTOTYPE_BLOCKED_INFERENCES = [
+  'Do not infer exact account order.',
+  'Do not infer tax-bracket targets.',
+  'Do not infer final withdrawal instructions.',
+  'Do not infer saved sequencing fields.',
+  'Do not infer CSV columns.',
+  'Do not infer report rows.'
+];
+const OPTIMIZER_TIMELINE_REASSESSMENT_ROWS = [
+  {
+    label: 'Internal tester prototype',
+    estimate: '80-120 sprints from S2628',
+    status: 'No material change',
+    note: 'The prototype shape and source mapping are now clearer, but generated rows and tester evidence are still missing.'
+  },
+  {
+    label: 'Feature-complete beta',
+    estimate: '180-260 sprints from S2628',
+    status: 'No material change',
+    note: 'Saved output, CSV, reports, production UI, and broader scenario evidence remain substantial work.'
+  },
+  {
+    label: 'Public-ready optimizer',
+    estimate: '300-450 sprints from S2628',
+    status: 'No material change',
+    note: 'Public use still needs stronger accuracy, explainability, coverage, validation, and release controls.'
+  }
+];
+
+const PROTOTYPE_SHAPE_CHECKPOINT_ROWS = [
+  {
+    label: 'Shape readiness',
+    status: 'Ready for non-generative mock',
+    detail: 'Prototype fields and source mapping are clear enough to mock static internal rows next.'
+  },
+  {
+    label: 'Still missing',
+    status: 'Needs review',
+    detail: 'Real tester observations, scenario coverage, and performance notes are still missing before generated rows.'
+  },
+  {
+    label: 'Next allowed step',
+    status: 'Static mock only',
+    detail: 'A future package may show a non-generative internal row mock from fixed labels.'
+  },
+  {
+    label: 'Still blocked',
+    status: 'Blocked',
+    detail: 'Generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.'
+  }
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4860,6 +4944,42 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {ANNUAL_INSTRUCTION_PROTOTYPE_SHAPE_EXCLUSIONS.map((exclusion) => (
               <li key={exclusion}>{exclusion}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-prototype-source-panel">
+          <h3>Prototype source mapping</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_PROTOTYPE_SOURCE_MAPPING.map((mapping) => (
+              <li key={mapping.field}>
+                <strong>{mapping.field}:</strong> {mapping.source} Missing source: {mapping.missing}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Blocked inferences:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_PROTOTYPE_BLOCKED_INFERENCES.map((inference) => (
+              <li key={inference}>{inference}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel optimizer-timeline-checkpoint-panel">
+          <h3>Optimizer timeline checkpoint</h3>
+          <ul className="compact-list">
+            {OPTIMIZER_TIMELINE_REASSESSMENT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.estimate}. {row.note}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel prototype-shape-checkpoint-panel">
+          <h3>Prototype shape checkpoint</h3>
+          <ul className="compact-list">
+            {PROTOTYPE_SHAPE_CHECKPOINT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
             ))}
           </ul>
         </section>

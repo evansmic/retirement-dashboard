@@ -200,6 +200,76 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.annual-prototype-shape-panel');
   });
 
+  it('keeps annual instruction prototype source mapping static and non-generative', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_PROTOTYPE_SOURCE_MAPPING');
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_PROTOTYPE_BLOCKED_INFERENCES');
+    expect(testerSurface).toContain('Prototype source mapping');
+    expect(appSource).toContain('Candidate display row label and year.');
+    expect(appSource).toContain('Annual account total label or candidate display row context.');
+    expect(appSource).toContain('Candidate display row total amount after normal display formatting.');
+    expect(appSource).toContain('Candidate repair preview and readiness review notes.');
+    expect(appSource).toContain('Candidate quality label and readiness status.');
+    expect(appSource).toContain('Missing source:');
+    expect(appSource).toContain('Do not infer exact account order.');
+    expect(appSource).toContain('Do not infer tax-bracket targets.');
+    expect(appSource).toContain('Do not infer final withdrawal instructions.');
+    expect(testerSurface).not.toContain('mapCandidateToInstruction');
+    expect(testerSurface).not.toContain('deriveAccountOrder');
+    expect(testerSurface).not.toContain('inferTaxBracket');
+    expect(testerSurface).not.toContain('createInstructionRow');
+    expect(testerSurface).not.toContain('instructionRow =');
+    expect(testerSurface).not.toContain('annualInstructionOutput');
+    expect(stylesSource).toContain('.annual-prototype-source-panel');
+  });
+
+  it('keeps optimizer timeline reassessment static and non-authorizing', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('OPTIMIZER_TIMELINE_REASSESSMENT_ROWS');
+    expect(testerSurface).toContain('Optimizer timeline checkpoint');
+    expect(appSource).toContain('Internal tester prototype');
+    expect(appSource).toContain('80-120 sprints from S2628');
+    expect(appSource).toContain('Feature-complete beta');
+    expect(appSource).toContain('180-260 sprints from S2628');
+    expect(appSource).toContain('Public-ready optimizer');
+    expect(appSource).toContain('300-450 sprints from S2628');
+    expect(appSource).toContain('No material change');
+    expect(testerSurface).not.toContain('updateTimelineEstimate');
+    expect(testerSurface).not.toContain('approvePublicReady');
+    expect(testerSurface).not.toContain('startPrototype');
+    expect(testerSurface).not.toContain('unlockBeta');
+    expect(testerSurface).not.toContain('changeEstimate');
+    expect(testerSurface).not.toContain('saveTimeline');
+    expect(stylesSource).toContain('.optimizer-timeline-checkpoint-panel');
+  });
+
+  it('keeps prototype shape checkpoint non-generative', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('PROTOTYPE_SHAPE_CHECKPOINT_ROWS');
+    expect(testerSurface).toContain('Prototype shape checkpoint');
+    expect(appSource).toContain('Ready for non-generative mock');
+    expect(appSource).toContain('Static mock only');
+    expect(appSource).toContain(
+      'Generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.'
+    );
+    expect(testerSurface).not.toContain('generateMockRows');
+    expect(testerSurface).not.toContain('createStaticRows');
+    expect(testerSurface).not.toContain('applyMock');
+    expect(testerSurface).not.toContain('saveMock');
+    expect(testerSurface).not.toContain('exportMockCsv');
+    expect(testerSurface).not.toContain('promoteMock');
+    expect(stylesSource).toContain('.prototype-shape-checkpoint-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
