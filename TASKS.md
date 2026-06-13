@@ -6,17 +6,87 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S2828-S2847 checkpoint, the working estimate remains:
+As of the S2948-S2967 correction package, the remaining-work estimate is:
 
-- Internal tester optimizer prototype: 80-120 sprints from S2628.
-- Feature-complete app optimizer beta: 180-260 sprints from S2628.
-- Public-ready optimizer for real planning use: 300-450 sprints from S2628.
+- Internal tester optimizer prototype: 20-60 sprints remaining.
+- Feature-complete app optimizer beta: 100-180 sprints remaining.
+- Public-ready optimizer for real planning use: 180-300 sprints remaining.
 
-Material change at S2828-S2847: no.
+Material change at S2948-S2967: yes. The old "from S2628" estimate was stale and should have been converted to a remaining-work estimate.
 
-Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
+Update the remaining-sprint estimate after every 20-sprint package.
 
-## Latest Package — S2908-S2927: Annual Instruction Static Mock Surface Final Preflight Gate
+## Latest Package — S2948-S2967: Tester-Only Static Mock Surface Implementation Slice
+
+**Status:** Complete 2026-06-13.
+
+Goal: correct the stale optimizer timeline estimate and implement a small tester-only hand-written static mock annual review surface inside Results Details. The tester-only surface now shows corrected remaining sprint estimates and three static synthetic annual review rows for made-up scenario comprehension testing while keeping calculations, generated account order, tax-bracket targets, saved sequencing, CSV output, report output, production UI, final instructions, schema changes, and `.plan.json` generation blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 20-60 sprints remaining.
+- Feature-complete app optimizer beta: 100-180 sprints remaining.
+- Public-ready optimizer for real planning use: 180-300 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, generated account order, tax-bracket targets, generated instruction rows, calculated static row amounts, saved static row output, CSV static row output, report static row output, or public release.
+
+Package doc: [`docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md`](docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md).
+
+### S2948-S2967 Completed Path
+
+- **S2948-S2952 — Timeline correction batch.** Replaced the stale "from S2628" public-ready estimate with a remaining-work estimate and committed to updating estimates after every package.
+- **S2953-S2957 — Static surface implementation batch.** Added a tester-only static annual review surface with three hand-written synthetic rows.
+- **S2958-S2962 — Output boundary batch.** Kept calculations, generated account order, tax-bracket targets, saved sequencing, CSV output, report output, production UI, final instructions, and schema changes blocked.
+- **S2963-S2967 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2948-S2967 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Remaining sprint estimate is visible and corrected.
+- Static mock annual review rows are visible.
+- Static rows are hand-written synthetic examples only.
+- Static rows are not calculated, generated, saved, exported, printed, or promoted.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2928-S2947: Optimizer Timeline Reassessment And Static Mock Implementation Decision Gate
+
+**Status:** Complete 2026-06-13.
+
+Correction: S2948-S2967 supersedes the "no material estimate change" wording below. The estimate is now tracked as remaining work after every package.
+
+Goal: perform the next 100-sprint material timeline reassessment and decide whether a future tester-only hand-written static mock surface implementation package may proceed. The tester-only surface now shows the third optimizer timeline checkpoint with no material estimate change and a static mock implementation decision gate that allows a later implementation package only while keeping implementation in this package, calculations, generated account order, tax-bracket targets, saved sequencing, CSV output, report output, production UI, final instructions, schema changes, and `.plan.json` generation blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation in this package, rendered static mock rows in this package, rendered fixture rows, fixture calculations, fixture export, copy generation, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2928_2947_optimizer_timeline_reassessment_and_static_mock_implementation_decision_gate.md`](docs/sprint_2928_2947_optimizer_timeline_reassessment_and_static_mock_implementation_decision_gate.md).
+
+### S2928-S2947 Completed Path
+
+- **S2928-S2932 — Timeline reassessment batch.** Rechecked the S2628 baseline and found no material change to the internal tester, beta, or public-ready estimates.
+- **S2933-S2937 — Implementation decision batch.** Added a decision gate that allows a future tester-only hand-written static mock surface implementation package.
+- **S2938-S2942 — Blocked-output batch.** Kept implementation in this package, calculated values, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, and schema changes blocked.
+- **S2943-S2947 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2928-S2947 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Third optimizer timeline checkpoint is visible.
+- Material estimate change is recorded as no.
+- Next material checkpoint is updated to S3028-S3047.
+- Static mock implementation decision gate is visible.
+- Gate allows a future implementation package only.
+- No implementation or rendered static mock rows are added in this package.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2908-S2927: Annual Instruction Static Mock Surface Final Preflight Gate
 
 **Status:** Complete 2026-06-13.
 

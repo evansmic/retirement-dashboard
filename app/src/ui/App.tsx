@@ -753,6 +753,104 @@ const STATIC_MOCK_SURFACE_PREFLIGHT_BLOCKERS = [
   'No production UI promotion in this package.',
   'No schema changes in this package.'
 ];
+
+const OPTIMIZER_TIMELINE_THIRD_REASSESSMENT_ROWS = [
+  {
+    label: 'Internal tester prototype',
+    estimate: '20-60 sprints remaining',
+    status: 'Revised remaining estimate',
+    note: 'The tester-only surface is ready for a hand-written static implementation package, but generated rows and confidence evidence are still missing.'
+  },
+  {
+    label: 'Feature-complete beta',
+    estimate: '100-180 sprints remaining',
+    status: 'Revised remaining estimate',
+    note: 'Saved sequencing, CSV output, reports, production UI, broader scenario coverage, and explainability remain substantial work.'
+  },
+  {
+    label: 'Public-ready optimizer',
+    estimate: '180-300 sprints remaining',
+    status: 'Revised remaining estimate',
+    note: 'Public use still needs stronger accuracy validation, real-planning safeguards, release controls, and confidence evidence.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_ROWS = [
+  {
+    label: 'Decision',
+    status: 'Proceed next',
+    detail: 'The next package may implement a tester-only hand-written static mock surface inside Results Details.'
+  },
+  {
+    label: 'Allowed scope',
+    status: 'Static tester surface only',
+    detail: 'The implementation must use fixed synthetic copy, stay local to the tiny tester surface, and remain removable before production UI work.'
+  },
+  {
+    label: 'Evidence basis',
+    status: 'Contracts ready',
+    detail: 'Boundary, copy, fixture, placement, layout, removal, and preflight contracts are clear enough for a limited implementation slice.'
+  },
+  {
+    label: 'Approval limit',
+    status: 'No generated instructions',
+    detail: 'This decision does not approve calculated values, generated account order, saved sequencing, CSV output, report output, production UI, or schema changes.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_BLOCKERS = [
+  'No implementation in this package.',
+  'No calculated annual withdrawal amounts.',
+  'No generated account order.',
+  'No tax-bracket targets.',
+  'No saved sequencing output.',
+  'No CSV output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No schema changes.'
+];
+
+const TESTER_STATIC_SURFACE_EXAMPLE_ROWS = [
+  {
+    year: 'Example year 1',
+    accountLabel: 'RRSP review',
+    amountLabel: 'Example amount to review',
+    reason: 'Bridge funding review',
+    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
+  },
+  {
+    year: 'Example year 2',
+    accountLabel: 'TFSA review',
+    amountLabel: 'Example amount to review',
+    reason: 'Tax context review',
+    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
+  },
+  {
+    year: 'Example year 3',
+    accountLabel: 'Taxable review',
+    amountLabel: 'Example amount to review',
+    reason: 'Account-order review',
+    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
+  }
+];
+
+const TESTER_STATIC_SURFACE_REVIEW_PROMPTS = [
+  'Can testers tell these are example review rows, not instructions?',
+  'Does the account label feel clear without sounding like an order?',
+  'Does the boundary note make the row safe to inspect without saving or exporting it?'
+];
+
+const TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS = [
+  'Hand-written synthetic examples only.',
+  'No calculated annual withdrawal amounts.',
+  'No generated account order.',
+  'No tax-bracket targets.',
+  'No saved sequencing output.',
+  'No CSV output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No schema changes.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5441,6 +5539,63 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {STATIC_MOCK_SURFACE_PREFLIGHT_BLOCKERS.map((blocker) => (
               <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel optimizer-third-timeline-checkpoint-panel">
+          <h3>Optimizer timeline checkpoint three</h3>
+          <ul className="compact-list">
+            {OPTIMIZER_TIMELINE_THIRD_REASSESSMENT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.estimate}. {row.note}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Next material checkpoint: S3028-S3047.</p>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-implementation-decision-panel">
+          <h3>Static mock implementation decision gate</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked by implementation decision:</p>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel tester-static-surface-example-panel">
+          <h3>Static mock annual review rows</h3>
+          <p className="table-note">
+            These rows are hand-written examples for made-up scenario testing. They are not calculated, saved,
+            exported, final, or instructions.
+          </p>
+          <div className="tester-static-row-grid" aria-label="Static mock annual review rows">
+            {TESTER_STATIC_SURFACE_EXAMPLE_ROWS.map((row) => (
+              <article className="tester-static-row" key={`${row.year}-${row.accountLabel}`}>
+                <span>{row.year}</span>
+                <strong>{row.accountLabel}</strong>
+                <span>{row.amountLabel}</span>
+                <span>{row.reason}</span>
+                <em>{row.boundary}</em>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">Review prompts:</p>
+          <ul className="compact-list">
+            {TESTER_STATIC_SURFACE_REVIEW_PROMPTS.map((prompt) => (
+              <li key={prompt}>{prompt}</li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked for this mock surface:</p>
+          <ul className="compact-list">
+            {TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS.map((limit) => (
+              <li key={limit}>{limit}</li>
             ))}
           </ul>
         </section>

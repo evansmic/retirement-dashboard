@@ -546,6 +546,91 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-preflight-panel');
   });
 
+  it('keeps third optimizer timeline checkpoint static', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('OPTIMIZER_TIMELINE_THIRD_REASSESSMENT_ROWS');
+    expect(testerSurface).toContain('Optimizer timeline checkpoint three');
+    expect(appSource).toContain('Internal tester prototype');
+    expect(appSource).toContain('20-60 sprints remaining');
+    expect(appSource).toContain('Feature-complete beta');
+    expect(appSource).toContain('100-180 sprints remaining');
+    expect(appSource).toContain('Public-ready optimizer');
+    expect(appSource).toContain('180-300 sprints remaining');
+    expect(appSource).toContain('Revised remaining estimate');
+    expect(appSource).toContain('Next material checkpoint: S3028-S3047.');
+    expect(testerSurface).not.toContain('updateThirdTimelineEstimate');
+    expect(testerSurface).not.toContain('approveStaticImplementationTimeline');
+    expect(testerSurface).not.toContain('unlockPublicOptimizer');
+    expect(testerSurface).not.toContain('saveThirdTimelineCheckpoint');
+    expect(stylesSource).toContain('.optimizer-third-timeline-checkpoint-panel');
+  });
+
+  it('keeps static mock implementation decision from generating outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_ROWS');
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_BLOCKERS');
+    expect(testerSurface).toContain('Static mock implementation decision gate');
+    expect(appSource).toContain('Decision');
+    expect(appSource).toContain('Proceed next');
+    expect(appSource).toContain('Allowed scope');
+    expect(appSource).toContain('Static tester surface only');
+    expect(appSource).toContain('Evidence basis');
+    expect(appSource).toContain('Contracts ready');
+    expect(appSource).toContain('Approval limit');
+    expect(appSource).toContain('No generated instructions');
+    expect(appSource).toContain('Still blocked by implementation decision:');
+    expect(appSource).toContain('No implementation in this package.');
+    expect(appSource).toContain('No calculated annual withdrawal amounts.');
+    expect(appSource).toContain('No generated account order.');
+    expect(appSource).toContain('No saved sequencing output.');
+    expect(appSource).toContain('No schema changes.');
+    expect(testerSurface).not.toContain('STATIC_MOCK_SURFACE_ROWS');
+    expect(testerSurface).not.toContain('staticMockRows.map');
+    expect(testerSurface).not.toContain('renderStaticMockSurface');
+    expect(testerSurface).not.toContain('createStaticMockSurface');
+    expect(testerSurface).not.toContain('generateStaticMockSurface');
+    expect(testerSurface).not.toContain('saveStaticMockSurface');
+    expect(testerSurface).not.toContain('exportStaticMockSurfaceCsv');
+    expect(testerSurface).not.toContain('promoteStaticMockSurface');
+    expect(stylesSource).toContain('.static-mock-surface-implementation-decision-panel');
+  });
+
+  it('renders tester-only static mock rows without calculations or outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('TESTER_STATIC_SURFACE_EXAMPLE_ROWS');
+    expect(appSource).toContain('TESTER_STATIC_SURFACE_REVIEW_PROMPTS');
+    expect(appSource).toContain('TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS');
+    expect(testerSurface).toContain('Static mock annual review rows');
+    expect(testerSurface).toContain('These rows are hand-written examples for made-up scenario testing.');
+    expect(appSource).toContain('Example year 1');
+    expect(appSource).toContain('RRSP review');
+    expect(appSource).toContain('Example year 2');
+    expect(appSource).toContain('TFSA review');
+    expect(appSource).toContain('Example year 3');
+    expect(appSource).toContain('Taxable review');
+    expect(appSource).toContain('Made-up scenario test. Not saved. Not final. Not an instruction.');
+    expect(appSource).toContain('Can testers tell these are example review rows, not instructions?');
+    expect(appSource).toContain('Still blocked for this mock surface:');
+    expect(testerSurface).not.toContain('calculateStaticSurfaceAmount');
+    expect(testerSurface).not.toContain('deriveStaticSurfaceOrder');
+    expect(testerSurface).not.toContain('generateStaticSurfaceRows');
+    expect(testerSurface).not.toContain('saveStaticSurfaceRows');
+    expect(testerSurface).not.toContain('exportStaticSurfaceCsv');
+    expect(testerSurface).not.toContain('promoteStaticSurfaceRows');
+    expect(stylesSource).toContain('.tester-static-surface-example-panel');
+    expect(stylesSource).toContain('.tester-static-row-grid');
+    expect(stylesSource).toContain('.tester-static-row');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

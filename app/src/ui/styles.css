@@ -3076,6 +3076,48 @@ button.secondary,
   padding-left: 12px;
 }
 
+.optimizer-third-timeline-checkpoint-panel {
+  border-left: 3px solid #5c6b4f;
+  padding-left: 12px;
+}
+
+.static-mock-surface-implementation-decision-panel {
+  border-left: 3px solid #4f7a7f;
+  padding-left: 12px;
+}
+
+.tester-static-surface-example-panel {
+  border-left: 3px solid #7a4f7f;
+  padding-left: 12px;
+}
+
+.tester-static-row-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.tester-static-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.7fr) minmax(100px, 1fr) minmax(130px, 1.1fr) minmax(130px, 1.1fr) minmax(180px, 1.5fr);
+  gap: 8px;
+  align-items: start;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.tester-static-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tester-static-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,
@@ -3110,6 +3152,7 @@ button.secondary,
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 
+  .tester-static-row,
   .chart-grid {
     grid-template-columns: 1fr;
   }

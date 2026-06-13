@@ -40,6 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2948-S2967 is complete. The stale "from S2628" optimizer timeline has been corrected to remaining-work estimates and will now be updated after every 20-sprint package. Current remaining estimate: internal tester optimizer prototype 20-60 sprints, feature-complete app optimizer beta 100-180 sprints, and public-ready optimizer for real planning use 180-300 sprints. The tester-only Details surface now also includes three hand-written synthetic static annual review rows for made-up scenario comprehension testing only, while calculations, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md`](docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md).
+
+S2928-S2947 is complete, but its no-material-change timeline language was superseded by the S2948-S2967 correction. The tester-only surface includes a static mock implementation decision gate that allows a future tester-only hand-written static mock surface implementation package only, while implementation in that package, calculated values, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remained blocked.
+
+Current package doc: [`docs/sprint_2928_2947_optimizer_timeline_reassessment_and_static_mock_implementation_decision_gate.md`](docs/sprint_2928_2947_optimizer_timeline_reassessment_and_static_mock_implementation_decision_gate.md).
+
 S2908-S2927 is complete. The tester-only surface now includes a final preflight gate for future static mock surface implementation planning. Placement, layout, and removal contracts are clear enough to plan a later implementation package only, while implementation in this package, rendered mock rows, calculated values, generated account order, saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md`](docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md).
