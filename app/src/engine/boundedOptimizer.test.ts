@@ -1422,6 +1422,40 @@ describe('bounded optimizer runner', () => {
     });
     expect(JSON.stringify(summary.betaSavedSequencingAdapter).toLowerCase()).not.toContain('stay under');
     expect(JSON.stringify(summary.betaSavedSequencingAdapter).toLowerCase()).not.toContain('withdraw from');
+    expect(summary.continuationContract).toMatchObject({
+      status: 'featureCompleteBeta',
+      betaReadySurfaces: [
+        'boundedCandidateSearch',
+        'runtimeAnnualDraftRows',
+        'betaSavedSequencingAdapter',
+        'testerOnlyDetailsSurface'
+      ],
+      blockedPublicOutputs: [
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'productionUi',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'realDataTesterDistribution'
+      ],
+      verificationPlan: {
+        focusedCommands: [
+          'npm run test:focused',
+          'npm run build'
+        ],
+        fullSuiteStatus: 'useFocusedUntilHangResolved'
+      },
+      boundary: expect.stringContaining('does not unlock saved schema changes')
+    });
+    expect(summary.continuationContract.nextPackages.map((item) => item.id)).toEqual([
+      'contractConsolidation',
+      'schemaDecision',
+      'exportReportGate',
+      'publicSafetyValidation'
+    ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

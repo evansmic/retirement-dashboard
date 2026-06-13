@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3348-S3367 is complete. The optimizer now has a compact engine-owned continuation contract that identifies beta-ready surfaces, blocked public outputs, next public-readiness packages, and the focused verification path for the current low-storage machine. Results Details shows the continuation contract so future work can continue from a manageable summary rather than the full checkpoint archive. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-110 sprints.
+
+Current package doc: [`docs/sprint_3348_3367_optimizer_contract_consolidation.md`](docs/sprint_3348_3367_optimizer_contract_consolidation.md).
+
 S3328-S3347 is complete. The bounded optimizer now emits an engine-owned beta saved sequencing adapter from runtime annual account sequence review evidence, and Results Details shows the internal beta rows with allowed fields, excluded fields, quality status, and boundary copy. Feature-complete app optimizer beta is functionally present for internal saved-sequencing review, while saved schema changes, engine output schema changes for public consumers, `.plan.json` sequencing output, CSV output, report output, production UI, final annual instructions, tax-bracket wording, broad tester distribution, and public release remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-110 sprints.
 
 Current package doc: [`docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md`](docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md).

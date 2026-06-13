@@ -6719,6 +6719,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.continuationContract ? (
+        <section className={`optimizer-continuation-contract continuation-${summary.continuationContract.status}`}>
+          <div>
+            <p className="eyebrow">Continuation contract</p>
+            <h3>Beta complete, public gates still closed</h3>
+            <p>{summary.continuationContract.summary}</p>
+          </div>
+          <div className="optimizer-continuation-grid">
+            <article>
+              <span>Beta-ready surfaces</span>
+              <strong>{summary.continuationContract.betaReadySurfaces.length}</strong>
+              <p>{summary.continuationContract.betaReadySurfaces.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked public outputs</span>
+              <strong>{summary.continuationContract.blockedPublicOutputs.length}</strong>
+              <p>{summary.continuationContract.blockedPublicOutputs.join(', ')}</p>
+            </article>
+            <article>
+              <span>Verification</span>
+              <strong>Focused</strong>
+              <p>{summary.continuationContract.verificationPlan.storageNote}</p>
+            </article>
+          </div>
+          <div className="optimizer-continuation-packages">
+            {summary.continuationContract.nextPackages.map((item) => (
+              <article className={`optimizer-continuation-package package-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.purpose}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.continuationContract.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

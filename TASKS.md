@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3328-S3347 package, the remaining-work estimate is:
+As of the S3348-S3367 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 10-110 sprints remaining.
 
-Material change at S3328-S3347: yes. The first beta saved sequencing adapter is implemented as an internal review payload, so feature-complete app optimizer beta is functionally present. Public-ready work remains gated behind schema, export, report, production UI, final-instruction, tax wording, validation, and safety packages.
+Material change at S3348-S3367: no. Feature-complete beta remains present; this package consolidates continuation context and verification workflow so public-ready work can continue without micro-sprint sprawl.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3328-S3347: Beta Saved Sequencing Adapter Implementation
+## Latest Package — S3348-S3367: Optimizer Contract Consolidation
+
+**Status:** Complete 2026-06-13.
+
+Goal: create one compact continuation contract for the optimizer. The bounded optimizer now emits `continuationContract` with beta-ready surfaces, blocked public outputs, next package order, and focused verification commands. Results Details renders the contract so the next sprint can proceed from one manageable summary. Added `npm run test:focused` because the full `npm test` run has hung after early passing suites on the current low-storage Mac.
+
+Package doc: [`docs/sprint_3348_3367_optimizer_contract_consolidation.md`](docs/sprint_3348_3367_optimizer_contract_consolidation.md).
+
+### S3348-S3367 Completed Path
+
+- Added engine-owned optimizer continuation contract types and selector.
+- Surfaced beta-ready and public-blocked outputs in Results Details.
+- Added focused verification workflow for optimizer/UI/build work.
+- Documented the current full-suite hang and limited-disk context.
+- Kept public output gates closed.
+
+### S3348-S3367 Definition Of Done
+
+- `continuationContract` is present in bounded optimizer summaries.
+- Contract lists beta-ready surfaces and blocked public outputs.
+- Contract lists next packages: contract consolidation, schema decision, export/report gate, public safety validation.
+- `npm run test:focused` exists.
+- Focused tests and production build pass before commit.
+
+## Next Package — Schema And Save Decision
+
+Goal: decide whether beta sequencing should remain runtime-only, be stored in a saved beta packet, be exposed through engine output, or wait until public-ready validation is stronger. This should include a clear no-write default, explicit privacy/local-first rules, and tests proving existing `.plan.json` behavior remains unchanged.
+
+## Previous Package — S3328-S3347: Beta Saved Sequencing Adapter Implementation
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +67,6 @@ Package doc: [`docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementatio
 - Allowed and excluded fields are explicit.
 - Saved schema changes, engine output schema changes, `.plan.json` sequencing output, CSV output, report output, production UI, final annual instructions, and tax-bracket wording remain blocked.
 - Focused optimizer tests and UI structure tests pass before commit.
-
-## Next Package — Optimizer Contract Consolidation
-
-Goal: replace the sprawling optimizer sprint trail with a compact contract for the next phase. The contract should identify beta-ready surfaces, still-blocked public outputs, candidate generation responsibilities, scoring responsibilities, annual sequencing responsibilities, validation gates, public-safety stop conditions, and release criteria. This should be one substantial package, not a sequence of micro-doc sprints.
 
 ## Previous Package — S3308-S3327: Beta Saved Sequencing Gate Repair
 

@@ -3329,6 +3329,55 @@ button.secondary,
   font-style: normal;
 }
 
+.optimizer-continuation-contract {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #3d725f;
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.optimizer-continuation-grid,
+.optimizer-continuation-packages {
+  display: grid;
+  gap: 10px;
+}
+
+.optimizer-continuation-grid {
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+}
+
+.optimizer-continuation-packages {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.optimizer-continuation-grid article,
+.optimizer-continuation-package {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.optimizer-continuation-grid article > *,
+.optimizer-continuation-package > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.optimizer-continuation-grid span,
+.optimizer-continuation-package span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
 .annual-sequence-review-row {
   display: grid;
   grid-template-columns: minmax(64px, 0.4fr) minmax(110px, 0.8fr) minmax(100px, 0.65fr) minmax(110px, 0.75fr) minmax(130px, 0.9fr) minmax(150px, 1fr) minmax(190px, 1.35fr) minmax(170px, 1.1fr) minmax(190px, 1.3fr) minmax(210px, 1.45fr);
@@ -3439,6 +3488,8 @@ button.secondary,
   .annual-sequence-beta-adapter-summary,
   .annual-sequence-beta-adapter-fields,
   .annual-sequence-beta-adapter-row,
+  .optimizer-continuation-grid,
+  .optimizer-continuation-packages,
   .chart-grid {
     grid-template-columns: 1fr;
   }

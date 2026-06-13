@@ -630,6 +630,40 @@ export type OptimizerBetaSavedSequencingAdapter = {
   nextStep: string;
 };
 
+export type OptimizerContinuationContract = {
+  status: 'featureCompleteBeta' | 'publicReadinessBlocked';
+  betaReadySurfaces: Array<
+    | 'boundedCandidateSearch'
+    | 'runtimeAnnualDraftRows'
+    | 'betaSavedSequencingAdapter'
+    | 'testerOnlyDetailsSurface'
+  >;
+  blockedPublicOutputs: Array<
+    | 'savedPlanSchemaChanges'
+    | 'engineOutputSchemaChanges'
+    | 'planJsonSequencingOutput'
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+    | 'productionUi'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
+    | 'realDataTesterDistribution'
+  >;
+  nextPackages: Array<{
+    id: 'contractConsolidation' | 'schemaDecision' | 'exportReportGate' | 'publicSafetyValidation';
+    label: string;
+    purpose: string;
+    status: 'current' | 'next' | 'later';
+  }>;
+  verificationPlan: {
+    focusedCommands: string[];
+    fullSuiteStatus: 'useFocusedUntilHangResolved';
+    storageNote: string;
+  };
+  summary: string;
+  boundary: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrixItem = {
   id: string;
   label: string;
@@ -1476,6 +1510,7 @@ export type BoundedOptimizerSummary = {
   experimentalAccountOrderDraft: OptimizerExperimentalAccountOrderDraft;
   experimentalAnnualInstructionDraft: OptimizerExperimentalAnnualInstructionDraft;
   betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
+  continuationContract: OptimizerContinuationContract;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -4872,6 +4907,74 @@ export function selectOptimizerBetaSavedSequencingAdapter(
   };
 }
 
+export function selectOptimizerContinuationContract({
+  betaSavedSequencingAdapter
+}: {
+  betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
+}): OptimizerContinuationContract {
+  const betaReady = betaSavedSequencingAdapter.status === 'readyForBetaReview';
+  return {
+    status: betaReady ? 'featureCompleteBeta' : 'publicReadinessBlocked',
+    betaReadySurfaces: [
+      'boundedCandidateSearch',
+      'runtimeAnnualDraftRows',
+      'betaSavedSequencingAdapter',
+      'testerOnlyDetailsSurface'
+    ],
+    blockedPublicOutputs: [
+      'savedPlanSchemaChanges',
+      'engineOutputSchemaChanges',
+      'planJsonSequencingOutput',
+      'csvSequencingOutput',
+      'reportSequencingOutput',
+      'productionUi',
+      'finalAnnualInstructions',
+      'taxBracketWording',
+      'realDataTesterDistribution'
+    ],
+    nextPackages: [
+      {
+        id: 'contractConsolidation',
+        label: 'Optimizer contract consolidation',
+        purpose: 'Keep one compact source of truth for beta-ready surfaces, blocked public outputs, and next public-readiness gates.',
+        status: 'current'
+      },
+      {
+        id: 'schemaDecision',
+        label: 'Schema and save decision',
+        purpose: 'Decide whether beta sequencing belongs in saved files, engine output, both, or neither before writing plan files.',
+        status: 'next'
+      },
+      {
+        id: 'exportReportGate',
+        label: 'CSV and report gate',
+        purpose: 'Plan export/report rows only after saved-shape and wording boundaries are stable.',
+        status: 'later'
+      },
+      {
+        id: 'publicSafetyValidation',
+        label: 'Public safety validation',
+        purpose: 'Validate real-planning wording, stop conditions, public fixtures, and unsupported-case behavior before release.',
+        status: 'later'
+      }
+    ],
+    verificationPlan: {
+      focusedCommands: [
+        'npm run test:focused',
+        'npm run build'
+      ],
+      fullSuiteStatus: 'useFocusedUntilHangResolved',
+      storageNote:
+        'The current machine has limited free disk space, and full npm test has hung after early passing suites; use focused tests plus build until the hang is isolated.'
+    },
+    summary: betaReady
+      ? 'Feature-complete optimizer beta is present for internal review; public-ready output remains gated.'
+      : 'Optimizer beta still needs review before public-readiness work can begin.',
+    boundary:
+      'This contract consolidates continuation state only. It does not unlock saved schema changes, engine output schema changes, .plan.json sequencing output, CSV output, report output, production UI, final annual instructions, tax-bracket wording, or real-data tester distribution.'
+  };
+}
+
 function selectOptimizerSyntheticTesterPacketReadinessMatrix(
   examples: Array<{
     id: string;
@@ -7738,6 +7841,7 @@ export function runBoundedOptimizer(
     summary: suggestedRow ? summaryById[suggestedRow.id] : null
   });
   const betaSavedSequencingAdapter = selectOptimizerBetaSavedSequencingAdapter(experimentalAnnualInstructionDraft);
+  const continuationContract = selectOptimizerContinuationContract({ betaSavedSequencingAdapter });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -7771,6 +7875,7 @@ export function runBoundedOptimizer(
     experimentalAccountOrderDraft,
     experimentalAnnualInstructionDraft,
     betaSavedSequencingAdapter,
+    continuationContract,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
