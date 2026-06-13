@@ -6,17 +6,483 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3028-S3047 package, the remaining-work estimate is:
+As of the S3308-S3327 package, the remaining-work estimate is:
 
-- Internal tester optimizer prototype: 0-20 sprints remaining.
-- Feature-complete app optimizer beta: 60-140 sprints remaining.
-- Public-ready optimizer for real planning use: 140-260 sprints remaining.
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-10 sprints remaining.
+- Public-ready optimizer for real planning use: 10-120 sprints remaining.
 
-Material change at S3028-S3047: no. The estimate tightened by one package because the controlled tester handoff decision is now explicit in the tester-only surface.
+Material change at S3308-S3327: no. Feature-complete beta remains one implementation package away; public-ready range tightened by one package because the saved implementation gate now treats preserved constraint context as usable beta review evidence.
 
 Update the remaining-sprint estimate after every 20-sprint package.
 
-## Latest Package — S3028-S3047: Runtime Draft Tester Handoff Decision Gate
+## Latest Package — S3308-S3327: Beta Saved Sequencing Gate Repair
+
+**Status:** Complete 2026-06-13.
+
+Goal: repair the saved sequencing implementation gate so preserved constraint context travels with beta review rows instead of automatically blocking saved-shape planning. Constraint context is now treated as preserved review evidence when present, while missing constraint context still remains a repair target. This makes the beta saved sequencing adapter implementation path viable without writing saved files, migrating schema, exporting CSV, printing reports, promoting production UI, creating final instructions, adding tax-bracket wording, or generating `.plan.json` files.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-10 sprints remaining.
+- Public-ready optimizer for real planning use: 10-120 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, repair targets, application gate, beta output readiness gate, saved shape decision gate, and saved implementation decision gate, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, report sequence adapters, saved schema migration, or saved file writes.
+
+Package doc: [`docs/sprint_3308_3327_beta_saved_sequencing_gate_repair.md`](docs/sprint_3308_3327_beta_saved_sequencing_gate_repair.md).
+
+### S3308-S3327 Completed Path
+
+- **S3308-S3312 — Constraint evidence batch.** Changed present constraint context from blocking evidence to preserved beta review evidence.
+- **S3313-S3317 — Repair-target batch.** Kept missing constraint context as a repair target.
+- **S3318-S3322 — Saved gate batch.** Allowed preserved constraint context to support beta saved-shape planning without creating saved output.
+- **S3323-S3327 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3308-S3327 Definition Of Done
+
+- Present constraint context is preserved as review evidence.
+- Missing constraint context remains a repair target.
+- The saved sequencing implementation gate can become ready to implement when other row evidence is ready.
+- The package does not change saved schema, engine output schema, saved files, CSV output, report output, production UI, final instructions, tax-bracket wording, or `.plan.json` generation.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3288-S3307: Beta Saved Sequencing Output Implementation Decision
+
+**Status:** Complete 2026-06-13.
+
+Goal: decide whether beta saved sequencing output implementation can start from the saved-shape decision gate. Results Details now shows a saved implementation decision gate with implementation decision, allowed beta fields, fields needing repair, and excluded fields. The decision is review-only and does not write saved files, migrate schema, export CSV, print reports, promote production UI, create final instructions, add tax-bracket wording, or generate `.plan.json` files.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-10 sprints remaining.
+- Public-ready optimizer for real planning use: 10-130 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, repair targets, application gate, beta output readiness gate, saved shape decision gate, and saved implementation decision gate, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, report sequence adapters, saved schema migration, or saved file writes.
+
+Package doc: [`docs/sprint_3288_3307_beta_saved_sequencing_output_implementation_decision.md`](docs/sprint_3288_3307_beta_saved_sequencing_output_implementation_decision.md).
+
+### S3288-S3307 Completed Path
+
+- **S3288-S3292 — Decision status batch.** Added ready-to-implement, hold-for-repair, and blocked statuses for saved sequencing implementation.
+- **S3293-S3297 — Field count batch.** Added allowed beta field, review-before-shape field, and excluded field counts.
+- **S3298-S3302 — Boundary batch.** Added boundary copy that keeps saved writes, migrations, CSV, reports, production UI, final instructions, and tax-bracket wording blocked.
+- **S3303-S3307 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3288-S3307 Definition Of Done
+
+- Results Details shows a beta saved sequencing implementation decision gate.
+- The gate identifies whether implementation is ready, held for repair, or blocked.
+- The gate shows allowed beta fields, fields needing repair, and excluded fields.
+- The gate does not change saved schema, engine output schema, saved files, CSV output, report output, production UI, final instructions, tax-bracket wording, or `.plan.json` generation.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3268-S3287: Saved Sequencing Output Shape Decision Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the field-level decision gate for a future beta saved sequencing output shape without changing saved schema. Results Details now shows which fields may be allowed in a future beta shape, which need review before shape work, and which stay excluded. The gate keeps saved sequencing output, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, and `.plan.json` generation blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-20 sprints remaining.
+- Public-ready optimizer for real planning use: 20-140 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, repair targets, application gate, beta output readiness gate, and saved shape decision gate, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, report sequence adapters, saved schema migration, or saved file writes.
+
+Package doc: [`docs/sprint_3268_3287_saved_sequencing_output_shape_decision_gate.md`](docs/sprint_3268_3287_saved_sequencing_output_shape_decision_gate.md).
+
+### S3268-S3287 Completed Path
+
+- **S3268-S3272 — Shape field batch.** Added candidate saved-shape fields for year, account label, review amount, source evidence, tax context, constraint context, and quality status.
+- **S3273-S3277 — Exclusion batch.** Excluded final instruction and tax-bracket target fields from the beta saved shape.
+- **S3278-S3282 — Boundary batch.** Added field source and boundary copy that keeps saved schema changes blocked.
+- **S3283-S3287 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3268-S3287 Definition Of Done
+
+- Results Details shows a saved sequencing output shape decision gate.
+- The gate identifies fields that may be allowed in a future beta shape.
+- The gate identifies fields that need review before shape work.
+- The gate excludes final instruction and tax-bracket target fields.
+- The gate does not change saved schema, engine output schema, saved files, CSV output, report output, production UI, final instructions, tax-bracket wording, or `.plan.json` generation.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3248-S3267: Runtime Annual Account Sequencing Beta Output Readiness Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: add a review-only readiness gate for annual account sequencing beta outputs. Results Details now shows saved sequencing output, CSV sequencing output, report sequencing rows, production UI, final annual instructions, and tax-bracket wording as gated output paths with status, required evidence, and blocked-until copy. The gate does not create saved output, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-30 sprints remaining.
+- Public-ready optimizer for real planning use: 30-150 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, repair targets, application gate, and beta output readiness gate, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3248_3267_runtime_annual_account_sequencing_beta_output_readiness_gate.md`](docs/sprint_3248_3267_runtime_annual_account_sequencing_beta_output_readiness_gate.md).
+
+### S3248-S3267 Completed Path
+
+- **S3248-S3252 — Output path batch.** Added saved sequencing, CSV sequencing, report sequencing, production UI, final instruction, and tax-bracket wording output paths.
+- **S3253-S3257 — Readiness status batch.** Added ready-to-plan, needs-repair-first, and blocked statuses.
+- **S3258-S3262 — Required evidence batch.** Added required evidence and blocked-until copy for each output path.
+- **S3263-S3267 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3248-S3267 Definition Of Done
+
+- Results Details shows a beta output readiness gate for annual account sequencing.
+- The gate includes saved sequencing output, CSV sequencing output, report sequencing rows, production UI, final annual instructions, and tax-bracket wording.
+- Each output path shows status, required evidence, and blocked-until copy.
+- The gate does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3228-S3247: Runtime Annual Account Sequencing Repair Application Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: add a review-only application gate for runtime annual account sequence repair targets. Results Details now shows whether each repair bucket can be applied from current visible evidence, needs review before applying, or is waiting for rows. The gate explains evidence use and blocked outputs without creating saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-40 sprints remaining.
+- Public-ready optimizer for real planning use: 40-160 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, repair targets, and application gate, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3228_3247_runtime_annual_account_sequencing_repair_application_gate.md`](docs/sprint_3228_3247_runtime_annual_account_sequencing_repair_application_gate.md).
+
+### S3228-S3247 Completed Path
+
+- **S3228-S3232 — Application status batch.** Added apply-from-current-evidence, review-before-applying, and waiting-for-rows statuses.
+- **S3233-S3237 — Evidence-use batch.** Added evidence-use copy for each repair bucket.
+- **S3238-S3242 — Blocked-output batch.** Added blocked-output copy that keeps application inside the review surface.
+- **S3243-S3247 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3228-S3247 Definition Of Done
+
+- Runtime annual account sequence repair targets roll up into a visible application gate.
+- The gate shows apply-from-current-evidence, review-before-applying, or waiting-for-rows status.
+- The gate explains evidence use and blocked outputs for each target.
+- The gate does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3208-S3227: Runtime Annual Account Sequencing Repair Targeting
+
+**Status:** Complete 2026-06-13.
+
+Goal: turn runtime annual account sequence quality evidence into concrete repair target buckets. Results Details now shows source evidence, account-order evidence, tax context, constraint context, and output-boundary targets with row counts, priority labels, and next-step copy. The targeting is review-only and does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-50 sprints remaining.
+- Public-ready optimizer for real planning use: 50-170 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, summary, and repair targets, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3208_3227_runtime_annual_account_sequencing_repair_targeting.md`](docs/sprint_3208_3227_runtime_annual_account_sequencing_repair_targeting.md).
+
+### S3208-S3227 Completed Path
+
+- **S3208-S3212 — Repair bucket batch.** Added source evidence, account-order evidence, tax context, constraint context, and output-boundary repair target buckets.
+- **S3213-S3217 — Priority batch.** Added per-bucket row counts and priority labels so the next cleanup target is visible.
+- **S3218-S3222 — Display batch.** Rendered repair targets beside the sequence quality summary in Results Details.
+- **S3223-S3227 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3208-S3227 Definition Of Done
+
+- Runtime annual account sequence review rows roll up into visible repair target buckets.
+- Repair targets show source evidence, account-order evidence, tax context, constraint context, and output boundary categories.
+- Repair targets show row counts, priority labels, and next-step copy.
+- Repair targets do not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3188-S3207: Runtime Annual Account Sequencing Quality Summary
+
+**Status:** Complete 2026-06-13.
+
+Goal: roll row-level annual account sequencing quality scoring into a compact summary. Results Details now shows ready/review/blocked row counts, average score, next repair target, and blocked-output status for runtime annual account sequence review rows. The summary is explanatory and does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-60 sprints remaining.
+- Public-ready optimizer for real planning use: 60-180 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons and summary, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3188_3207_runtime_annual_account_sequencing_quality_summary.md`](docs/sprint_3188_3207_runtime_annual_account_sequencing_quality_summary.md).
+
+### S3188-S3207 Completed Path
+
+- **S3188-S3192 — Summary helper batch.** Added quality summary rollup for ready, review, and blocked rows plus average score.
+- **S3193-S3197 — Repair target batch.** Added next repair target detection from row-level quality reasons.
+- **S3198-S3202 — Display batch.** Rendered quality summary metrics and blocked-output status above sequence review rows.
+- **S3203-S3207 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3188-S3207 Definition Of Done
+
+- Runtime annual account sequence review rows roll up into a visible quality summary.
+- The summary shows ready, review, and blocked row counts.
+- The summary shows average score.
+- The summary shows the next repair target.
+- The summary does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3168-S3187: Runtime Annual Account Sequencing Quality Scoring
+
+**Status:** Complete 2026-06-13.
+
+Goal: add quality scoring to runtime annual account sequence review rows. Results Details now shows a beta-review quality label, 0-6 quality score, and source/account-order/tax/constraint/boundary reasons for each sequence review row. Scoring is explanatory and does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, schema changes, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-70 sprints remaining.
+- Public-ready optimizer for real planning use: 70-190 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring outside visible row reasons, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3168_3187_runtime_annual_account_sequencing_quality_scoring.md`](docs/sprint_3168_3187_runtime_annual_account_sequencing_quality_scoring.md).
+
+### S3168-S3187 Completed Path
+
+- **S3168-S3172 — Quality helper batch.** Added row scoring for source evidence, annual totals, account-order evidence, tax context, constraint context, and output boundary clarity.
+- **S3173-S3177 — Display batch.** Rendered quality labels, 0-6 scores, and row-level reasons beside sequence review rows.
+- **S3178-S3182 — Output boundary batch.** Kept scoring explanatory only and blocked saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket wording, and schemas.
+- **S3183-S3187 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3168-S3187 Definition Of Done
+
+- Runtime annual account sequence review rows show quality labels.
+- Runtime annual account sequence review rows show 0-6 scores.
+- Runtime annual account sequence review rows show quality reasons.
+- Scoring does not unlock saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3148-S3167: Runtime Annual Account Sequencing Adapter Implementation Slice
+
+**Status:** Complete 2026-06-13.
+
+Goal: implement the first runtime annual account sequence adapter from existing experimental annual draft rows. Results Details now renders review rows with year, account label, review amount, source evidence, readiness cue, tax context, constraint context, and boundary status. The adapter is UI-local and review-only; it does not change engine output schema, saved schema, CSV columns, report rows, production UI, final instructions, tax-bracket wording, or `.plan.json` generation.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 0-80 sprints remaining.
+- Public-ready optimizer for real planning use: 80-200 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, saved sequence adapters, exported sequence adapters, or report sequence adapters.
+
+Package doc: [`docs/sprint_3148_3167_runtime_annual_account_sequencing_adapter_implementation_slice.md`](docs/sprint_3148_3167_runtime_annual_account_sequencing_adapter_implementation_slice.md).
+
+### S3148-S3167 Completed Path
+
+- **S3148-S3152 — Adapter helper batch.** Added a UI-local adapter that maps existing experimental annual draft rows into sequence review rows.
+- **S3153-S3157 — Review row display batch.** Rendered year, account label, review amount, source evidence, readiness cue, tax context, constraint context, and boundary status.
+- **S3158-S3162 — Output boundary batch.** Kept engine output schema, saved schema, CSV columns, report rows, production UI, final instructions, tax-bracket wording, and `.plan.json` generation blocked.
+- **S3163-S3167 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3148-S3167 Definition Of Done
+
+- Results Details renders runtime annual account sequence review rows.
+- Review rows are adapted from existing experimental annual draft rows.
+- Review rows preserve source evidence, readiness cue, tax context, constraint context, and boundary status.
+- No saved row shape, CSV columns, report rows, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes are added.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3128-S3147: Runtime Annual Account Sequencing Source Adapter Planning
+
+**Status:** Complete 2026-06-13.
+
+Goal: map the runtime annual account sequence shape fields to existing runtime draft sources before implementation. Results Details now includes a source adapter plan that maps each field to current runtime draft data, defines missing-source fallback wording, and keeps the future adapter read-only against existing runtime evidence. Adapter implementation, saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 10-90 sprints remaining.
+- Public-ready optimizer for real planning use: 90-210 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, or annual account sequencing adapter implementation.
+
+Package doc: [`docs/sprint_3128_3147_runtime_annual_account_sequencing_source_adapter_planning.md`](docs/sprint_3128_3147_runtime_annual_account_sequencing_source_adapter_planning.md).
+
+### S3128-S3147 Completed Path
+
+- **S3128-S3132 — Source mapping batch.** Mapped each sequence row field to existing runtime draft fields, annual account totals, tax context, readiness evidence, and output boundaries.
+- **S3133-S3137 — Missing-source batch.** Added fallback wording for missing year, account, amount, source evidence, readiness cue, tax context, constraint context, and boundary status.
+- **S3138-S3142 — Adapter rule batch.** Added adapter rules that require read-only use of current runtime draft data, explicit source fields, missing-source preservation, and no new calculations or account order.
+- **S3143-S3147 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3128-S3147 Definition Of Done
+
+- Results Details shows the runtime annual account sequencing source adapter plan.
+- The plan maps each shape field to existing runtime draft sources.
+- The plan defines missing-source fallback wording.
+- No annual account sequencing adapter implementation is added.
+- No saved row shape, CSV columns, report rows, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes are added.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3108-S3127: Runtime Annual Account Sequencing Shape Contract
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the exact runtime-only row shape for annual account sequencing before implementation. Results Details now includes a shape contract with fields for year, account label, review amount, source evidence, readiness cue, tax context, constraint context, and boundary status. Shape rules keep rows account-year scoped, traceable to runtime evidence, explanatory rather than prescriptive, and visibly runtime-only. Saved sequencing rows, CSV columns, report rows, production UI, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` generation remain excluded.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 20-100 sprints remaining.
+- Public-ready optimizer for real planning use: 100-220 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, or annual account sequencing implementation.
+
+Package doc: [`docs/sprint_3108_3127_runtime_annual_account_sequencing_shape_contract.md`](docs/sprint_3108_3127_runtime_annual_account_sequencing_shape_contract.md).
+
+### S3108-S3127 Completed Path
+
+- **S3108-S3112 — Shape field batch.** Defined runtime-only sequence fields for year, account label, review amount, source evidence, readiness cue, tax context, constraint context, and boundary status.
+- **S3113-S3117 — Shape rule batch.** Added rules for account-year row scope, evidence traceability, explanatory tax context, non-advisory constraint context, and visible boundary status.
+- **S3118-S3122 — Exclusion batch.** Excluded saved sequencing rows, CSV columns, report rows, production UI, final instruction wording, tax-bracket wording, schema changes, and `.plan.json` generation.
+- **S3123-S3127 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3108-S3127 Definition Of Done
+
+- Results Details shows the runtime annual account sequence shape contract.
+- The contract defines row fields, row rules, and exclusions.
+- No annual account sequencing implementation is added.
+- No saved row shape, CSV columns, report rows, production UI, final instructions, tax-bracket wording, saved schema changes, or engine output schema changes are added.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3088-S3107: Annual Account Sequencing Beta Implementation Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the first feature-complete beta implementation gate after the controlled tester handoff. Results Details now includes an annual account sequencing beta gate with implementation decision rows, source requirements, and output gates. Gated beta work may start on runtime annual account sequencing, but saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked until runtime sequencing quality is stable.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 30-110 sprints remaining.
+- Public-ready optimizer for real planning use: 110-230 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, beta unlock controls, or annual account sequencing implementation.
+
+Package doc: [`docs/sprint_3088_3107_annual_account_sequencing_beta_implementation_gate.md`](docs/sprint_3088_3107_annual_account_sequencing_beta_implementation_gate.md).
+
+### S3088-S3107 Completed Path
+
+- **S3088-S3092 — Beta decision batch.** Added the annual account sequencing implementation decision and primary beta objective.
+- **S3093-S3097 — Source requirement batch.** Added source requirements for selected-candidate rows, annual account totals, account-order positions, tax context, readiness evidence, and estate/survivor hooks.
+- **S3098-S3102 — Output gate batch.** Added gates for runtime sequencing first, then saved sequencing, CSV output, report output, production UI, final instructions, and tax-bracket instructions.
+- **S3103-S3107 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3088-S3107 Definition Of Done
+
+- Results Details shows the annual account sequencing beta gate.
+- The gate defines source requirements.
+- The gate defines output gates.
+- No annual account sequencing implementation is added.
+- No in-app feedback form, automatic triage, issue creation, beta unlock, save, CSV, report, or production promotion path is added.
+- No saved schema or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3068-S3087: Post-Handoff Feedback Triage And Beta Path Reset
+
+**Status:** Complete 2026-06-13.
+
+Goal: define how controlled tester feedback will be read and how the optimizer work moves from tester prototype to feature-complete beta. Results Details now includes post-handoff feedback triage rows, beta path rows, and beta blockers. The next build path is annual account sequencing first, then saved/CSV output only after row quality, account order, tax context, and boundary wording are stable. Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 40-120 sprints remaining.
+- Public-ready optimizer for real planning use: 120-240 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, feedback forms, automatic triage, or beta unlock controls.
+
+Package doc: [`docs/sprint_3068_3087_post_handoff_feedback_triage_and_beta_path_reset.md`](docs/sprint_3068_3087_post_handoff_feedback_triage_and_beta_path_reset.md).
+
+### S3068-S3087 Completed Path
+
+- **S3068-S3072 — Feedback bucket batch.** Added triage categories for copy clarification, context improvement, model-evidence repair, and beta-blocking feedback.
+- **S3073-S3077 — Beta path batch.** Added the next build path: annual account sequencing first, then saved and CSV outputs after quality gates.
+- **S3078-S3082 — Blocker batch.** Added beta blockers for unclear purpose, missing evidence, final-sounding rows, export expectations, real-data use, and public-ready interpretation.
+- **S3083-S3087 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3068-S3087 Definition Of Done
+
+- Results Details shows post-handoff feedback triage.
+- Results Details shows the beta path reset.
+- Results Details shows beta blockers.
+- No in-app feedback form, automatic triage, issue creation, beta unlock, save, CSV, report, or production promotion path is added.
+- No saved schema or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3048-S3067: Controlled Tester Handoff Packet And Review Checklist
+
+**Status:** Complete 2026-06-13.
+
+Goal: turn the runtime draft handoff decision into a concise tester packet. Results Details now tells testers who should test, what to open, what to review, what to ignore, what feedback is useful, and when to stop. This makes the internal tester optimizer prototype ready for a very small synthetic-scenario tester group. Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0 sprints remaining.
+- Feature-complete app optimizer beta: 50-130 sprints remaining.
+- Public-ready optimizer for real planning use: 130-250 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, real-data tester scenarios, downloadable tester packets, or feedback forms.
+
+Package doc: [`docs/sprint_3048_3067_controlled_tester_handoff_packet_and_review_checklist.md`](docs/sprint_3048_3067_controlled_tester_handoff_packet_and_review_checklist.md).
+
+### S3048-S3067 Completed Path
+
+- **S3048-S3052 — Packet row batch.** Added who-should-test, what-to-open, what-to-review, what-to-ignore, and useful-feedback rows.
+- **S3053-S3057 — Review checklist batch.** Added the checklist testers should follow when reviewing runtime draft rows in Results Details.
+- **S3058-S3062 — Stop-condition batch.** Added clear stop conditions for real personal data, final-instruction interpretation, export expectations, tax-bracket interpretation, and public-ready confusion.
+- **S3063-S3067 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3048-S3067 Definition Of Done
+
+- Results Details shows a controlled tester handoff packet.
+- The packet says who should test, what to open, what to review, what to ignore, and what feedback is useful.
+- The packet includes stop conditions for unsafe or confusing tester use.
+- No in-app feedback form, download, export, save, or email path is added.
+- No saved schema or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3028-S3047: Runtime Draft Tester Handoff Decision Gate
 
 **Status:** Complete 2026-06-13.
 

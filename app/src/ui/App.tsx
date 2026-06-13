@@ -874,6 +874,609 @@ const RUNTIME_DRAFT_TESTER_HANDOFF_BLOCKERS = [
   'No .plan.json generation.'
 ];
 
+const CONTROLLED_TESTER_HANDOFF_PACKET_ROWS = [
+  {
+    label: 'Who should test',
+    detail: 'A very small group that already knows the planner is under development and will use made-up scenarios only.'
+  },
+  {
+    label: 'What to open',
+    detail: 'Use a synthetic example, open Results, then review the Details view where the tester-only runtime draft surface appears.'
+  },
+  {
+    label: 'What to review',
+    detail: 'Check whether the annual draft rows, readiness labels, source labels, and tax context feel clear and plausible.'
+  },
+  {
+    label: 'What to ignore',
+    detail: 'Do not review this as a real retirement plan, final instruction set, tax strategy, export, report, or saved sequencing output.'
+  },
+  {
+    label: 'Useful feedback',
+    detail: 'Send confusing words, missing context, surprising row order, unclear amounts, and any line that sounds too final.'
+  }
+];
+
+const CONTROLLED_TESTER_REVIEW_CHECKLIST = [
+  'Use only synthetic household examples.',
+  'Open Results Details and find the tester-only surface.',
+  'Confirm the draft rows look unfinished and review-only.',
+  'Flag any row that sounds like an instruction.',
+  'Flag any missing account, tax, estate, survivor, or spending context.',
+  'Stop testing if the scenario uses real personal data.'
+];
+
+const CONTROLLED_TESTER_STOP_CONDITIONS = [
+  'A tester wants to use real personal data.',
+  'A tester treats the rows as final account instructions.',
+  'A tester expects save, CSV, report, or print output for the draft rows.',
+  'A tester reads the tax context as tax-bracket guidance.',
+  'The surface creates confusion about whether the optimizer is public-ready.'
+];
+
+const POST_HANDOFF_FEEDBACK_TRIAGE_ROWS = [
+  {
+    label: 'Clarify copy',
+    detail: 'Labels, status wording, source wording, and boundary notes that are confusing but do not change optimizer behavior.'
+  },
+  {
+    label: 'Improve context',
+    detail: 'Missing account, tax, survivor, estate, or spending context that would help testers understand why a row appears.'
+  },
+  {
+    label: 'Repair model evidence',
+    detail: 'Rows that look surprising because source evidence, account-order evidence, or tax context is incomplete.'
+  },
+  {
+    label: 'Block beta',
+    detail: 'Any feedback showing testers mistake draft rows for final instructions, real-data planning, tax-bracket guidance, saved output, CSV output, or report output.'
+  }
+];
+
+const POST_HANDOFF_BETA_PATH_ROWS = [
+  {
+    label: 'Next build track',
+    status: 'Feature-complete beta path',
+    detail: 'Move from tester-only draft review toward account-level annual sequencing, saved sequencing output, CSV output, and report integration.'
+  },
+  {
+    label: 'First beta capability',
+    status: 'Annual account sequencing',
+    detail: 'Turn runtime draft rows into a checked annual account sequence with clear amounts, source evidence, and review flags.'
+  },
+  {
+    label: 'Second beta capability',
+    status: 'Saved and CSV outputs',
+    detail: 'Add saved sequencing and CSV export only after row quality, account order, tax context, and boundary wording are stable.'
+  },
+  {
+    label: 'Release posture',
+    status: 'Tester-only until beta checks pass',
+    detail: 'Keep production UI, public use, final instructions, and tax-bracket instructions blocked until the beta path is verified.'
+  }
+];
+
+const POST_HANDOFF_BETA_BLOCKERS = [
+  'Unclear row purpose.',
+  'Missing account-order evidence.',
+  'Missing tax context.',
+  'Rows that sound like final instructions.',
+  'Tester expectation of save, CSV, report, or print output.',
+  'Any real-data tester use.',
+  'Any public-ready interpretation.'
+];
+
+const ANNUAL_ACCOUNT_SEQUENCING_GATE_ROWS = [
+  {
+    label: 'Implementation decision',
+    status: 'Proceed to gated beta work',
+    detail: 'The next optimizer work may start annual account sequencing only as a checked beta path, not as saved or final instructions.'
+  },
+  {
+    label: 'Primary beta objective',
+    status: 'Account-level annual sequence',
+    detail: 'Create reviewable annual rows that identify account, year, amount, source evidence, readiness cue, and boundary status.'
+  },
+  {
+    label: 'Quality threshold',
+    status: 'Evidence before outputs',
+    detail: 'Rows need account-order evidence, tax context, survivor/estate constraint hooks, and clear non-final wording before outputs expand.'
+  },
+  {
+    label: 'Output posture',
+    status: 'Runtime first',
+    detail: 'Saved sequencing, CSV, report, and production UI remain blocked until runtime sequencing passes focused quality checks.'
+  }
+];
+
+const ANNUAL_ACCOUNT_SEQUENCING_SOURCE_REQUIREMENTS = [
+  'Selected candidate annual withdrawal rows.',
+  'Annual account totals by year and account.',
+  'Draft account-order positions.',
+  'Tax context rows with effective tax and OAS recovery context.',
+  'Readiness summary, blockers, and watch items.',
+  'Estate and survivor constraint evidence when present.'
+];
+
+const ANNUAL_ACCOUNT_SEQUENCING_OUTPUT_GATES = [
+  'Runtime annual sequencing rows first.',
+  'Saved sequencing output only after runtime row quality is stable.',
+  'CSV sequencing output only after saved sequencing shape is stable.',
+  'Report output only after CSV and saved output labels are stable.',
+  'Production UI only after tester-only and beta checks pass.',
+  'Final annual instructions only after public-ready safeguards are complete.',
+  'Tax-bracket instructions remain blocked.'
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_FIELDS = [
+  {
+    field: 'year',
+    purpose: 'Identifies the planning year for the runtime sequence row.',
+    source: 'Selected candidate annual row year.'
+  },
+  {
+    field: 'accountLabel',
+    purpose: 'Shows the account being reviewed without turning the row into an instruction.',
+    source: 'Runtime draft row label and account source.'
+  },
+  {
+    field: 'reviewAmount',
+    purpose: 'Shows the annual amount under review for that account and year.',
+    source: 'Selected candidate withdrawal amount.'
+  },
+  {
+    field: 'sourceEvidence',
+    purpose: 'Explains which runtime field produced the row.',
+    source: 'Withdrawal field label, annual account total, and candidate source field.'
+  },
+  {
+    field: 'readinessCue',
+    purpose: 'Flags whether the row is ready for review or needs evidence repair.',
+    source: 'Existing account-order and tax-context readiness cues.'
+  },
+  {
+    field: 'taxContext',
+    purpose: 'Adds compact tax context without tax-bracket instructions.',
+    source: 'Effective tax, OAS recovery, and annual tax context rows.'
+  },
+  {
+    field: 'constraintContext',
+    purpose: 'Notes estate, survivor, floor, or shortfall context when those constraints affect review.',
+    source: 'Readiness summary, harm checks, survivor review, estate pressure, and minimum floor checks.'
+  },
+  {
+    field: 'boundaryStatus',
+    purpose: 'States whether the row is shown only in this review surface, blocked from output, or eligible for future beta review.',
+    source: 'Runtime output boundary and beta output gates.'
+  }
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_RULES = [
+  'One row represents one account in one planning year.',
+  'Rows stay review-only until sequencing quality checks pass.',
+  'Amounts must be traceable to runtime candidate evidence.',
+  'Tax context must explain, not prescribe.',
+  'Constraint context must identify review needs without advice language.',
+  'Boundary status must stay visible beside the row.'
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_EXCLUSIONS = [
+  'No saved sequencing row shape.',
+  'No CSV sequencing columns.',
+  'No printable report row.',
+  'No production UI component.',
+  'No final annual instruction wording.',
+  'No tax-bracket target wording.',
+  'No saved schema or engine output schema changes.'
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SOURCE_ADAPTER_ROWS = [
+  {
+    field: 'year',
+    source: 'experimentalAnnualInstructionDraft.rows.year',
+    missing: 'Do not create a sequence row when year is missing.'
+  },
+  {
+    field: 'accountLabel',
+    source: 'experimentalAnnualInstructionDraft.rows.label and account',
+    missing: 'Use Account review needed rather than inferring an account.'
+  },
+  {
+    field: 'reviewAmount',
+    source: 'experimentalAnnualInstructionDraft.rows.amount',
+    missing: 'Use Amount review needed rather than estimating a value.'
+  },
+  {
+    field: 'sourceEvidence',
+    source: 'source.withdrawalFieldLabel, source.withdrawalField, annualAccountTotals',
+    missing: 'Use Source evidence needed rather than inventing a source.'
+  },
+  {
+    field: 'readinessCue',
+    source: 'runtimeDraftRowStatus, source.accountOrderPosition, taxContext.effectiveTaxRatePct',
+    missing: 'Use Review first until account-order and tax context are present.'
+  },
+  {
+    field: 'taxContext',
+    source: 'taxContext.effectiveTaxRatePct, taxContext.oasRecoveryStatus, taxContextRows',
+    missing: 'Use Tax context review without adding tax-bracket language.'
+  },
+  {
+    field: 'constraintContext',
+    source: 'readinessSummary, harmChecks, confidence rows, survivor and estate checks',
+    missing: 'Use Constraint review needed rather than implying the row is complete.'
+  },
+  {
+    field: 'boundaryStatus',
+    source: 'runtimeDraftGeneratorScope.blockedOutputs and annual account sequencing output gates',
+    missing: 'Use Review surface only and keep saved/exported outputs blocked.'
+  }
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_RULES = [
+  'Read only existing runtime draft data.',
+  'Prefer explicit source fields over inferred labels.',
+  'Preserve missing-source states as review cues.',
+  'Do not calculate new withdrawal amounts.',
+  'Do not create account order beyond existing draft positions.',
+  'Do not create saved, CSV, report, or production output fields.'
+];
+
+const RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_BLOCKERS = [
+  'No saved or exported sequence adapter in this package.',
+  'No new engine output shape.',
+  'No saved schema shape.',
+  'No CSV column map.',
+  'No report row map.',
+  'No production UI row map.',
+  'No final instruction generator.'
+];
+
+type RuntimeAnnualSequenceReviewRow = {
+  key: string;
+  year: number;
+  accountLabel: string;
+  reviewAmount: string;
+  sourceEvidence: string;
+  readinessCue: string;
+  readinessTone: 'ready' | 'review' | 'watch';
+  qualityLabel: 'Ready for beta review' | 'Ready with context' | 'Review before beta';
+  qualityScore: number;
+  qualityReasons: string[];
+  taxContext: string;
+  constraintContext: string;
+  boundaryStatus: string;
+};
+
+type RuntimeAnnualSequenceQualitySummary = {
+  readyCount: number;
+  reviewCount: number;
+  blockCount: number;
+  averageScore: number;
+  nextRepairTarget: string;
+  outputStatus: string;
+};
+
+type RuntimeAnnualSequenceRepairTarget = {
+  label: string;
+  count: number;
+  priority: 'Now' | 'Watch' | 'Clear';
+  nextStep: string;
+};
+
+type RuntimeAnnualSequenceRepairApplicationGate = {
+  label: string;
+  status: 'Apply from current evidence' | 'Review before applying' | 'Waiting for rows';
+  evidenceUse: string;
+  blockedOutput: string;
+};
+
+type RuntimeAnnualSequenceBetaOutputGate = {
+  label: string;
+  status: 'Ready to plan' | 'Needs repair first' | 'Blocked';
+  requiredEvidence: string;
+  blockedUntil: string;
+};
+
+type RuntimeAnnualSequenceSavedShapeDecision = {
+  field: string;
+  decision: 'Allow in beta shape' | 'Review before shape' | 'Exclude from beta shape';
+  source: string;
+  boundary: string;
+};
+
+type RuntimeAnnualSequenceSavedImplementationDecision = {
+  label: string;
+  status: 'Ready to implement' | 'Hold for repair' | 'Blocked';
+  detail: string;
+  boundary: string;
+};
+
+function runtimeAnnualSequenceQuality(
+  row: BoundedOptimizerSummary['experimentalAnnualInstructionDraft']['rows'][number],
+  annualTotal: BoundedOptimizerSummary['experimentalAnnualInstructionDraft']['annualAccountTotals'][number] | undefined,
+  constraintContext: string
+): Pick<RuntimeAnnualSequenceReviewRow, 'qualityLabel' | 'qualityReasons' | 'qualityScore'> {
+  const qualityReasons = [
+    row.source.withdrawalFieldLabel ? 'Source evidence present' : 'Source evidence review needed',
+    annualTotal ? 'Annual account total present' : 'Annual account total review needed',
+    row.source.accountOrderPosition === null ? 'Account-order evidence review needed' : 'Account-order evidence present',
+    row.taxContext.effectiveTaxRatePct === null ? 'Tax context review needed' : 'Tax context present',
+    constraintContext ? 'Constraint context preserved' : 'Constraint context review needed',
+    'Output boundary visible'
+  ];
+  const qualityScore = qualityReasons.filter((reason) => (
+    reason.includes('present') || reason.includes('visible') || reason.includes('preserved')
+  )).length;
+  const qualityLabel =
+    qualityScore >= 5
+      ? 'Ready for beta review'
+      : qualityScore >= 4
+        ? 'Ready with context'
+        : 'Review before beta';
+
+  return { qualityLabel, qualityReasons, qualityScore };
+}
+
+function summarizeRuntimeAnnualSequenceQuality(rows: RuntimeAnnualSequenceReviewRow[]): RuntimeAnnualSequenceQualitySummary {
+  const readyCount = rows.filter((row) => row.qualityLabel === 'Ready for beta review').length;
+  const reviewCount = rows.filter((row) => row.qualityLabel === 'Ready with context').length;
+  const blockCount = rows.filter((row) => row.qualityLabel === 'Review before beta').length;
+  const averageScore = rows.length
+    ? Math.round((rows.reduce((total, row) => total + row.qualityScore, 0) / rows.length) * 10) / 10
+    : 0;
+  const firstRepairReason = rows
+    .flatMap((row) => row.qualityReasons)
+    .find((reason) => reason.includes('review needed'));
+  const nextRepairTarget = firstRepairReason || 'Keep reviewing source and boundary clarity before outputs expand.';
+
+  return {
+    readyCount,
+    reviewCount,
+    blockCount,
+    averageScore,
+    nextRepairTarget,
+    outputStatus: 'Saved sequencing, CSV, reports, production UI, and final instructions remain blocked.'
+  };
+}
+
+function summarizeRuntimeAnnualSequenceRepairTargets(
+  rows: RuntimeAnnualSequenceReviewRow[]
+): RuntimeAnnualSequenceRepairTarget[] {
+  const targetRules: Array<{
+    label: string;
+    match: (reason: string) => boolean;
+    nextStep: string;
+  }> = [
+    {
+      label: 'Source evidence',
+      match: (reason) => reason.includes('Source evidence review'),
+      nextStep: 'Confirm each row can be traced to a current annual draft source.'
+    },
+    {
+      label: 'Account-order evidence',
+      match: (reason) => reason.includes('Account-order evidence review'),
+      nextStep: 'Repair missing draft account-order evidence before saving or exporting rows.'
+    },
+    {
+      label: 'Tax context',
+      match: (reason) => reason.includes('Tax context review'),
+      nextStep: 'Add enough annual tax context for review before tax-bracket wording is considered.'
+    },
+    {
+      label: 'Constraint context',
+      match: (reason) => reason.includes('Constraint context review'),
+      nextStep: 'Check estate, survivor, expense-floor, and harm-check context before any output expands.'
+    },
+    {
+      label: 'Output boundary',
+      match: (reason) => reason.includes('Output boundary review'),
+      nextStep: 'Keep save, CSV, report, production UI, and final instructions blocked until boundary copy is clear.'
+    }
+  ];
+
+  return targetRules.map((rule) => {
+    const count = rows.filter((row) => row.qualityReasons.some(rule.match)).length;
+    return {
+      label: rule.label,
+      count,
+      priority: count > 0 ? 'Now' : rows.length ? 'Clear' : 'Watch',
+      nextStep: count > 0 ? rule.nextStep : 'No current repair target from visible review rows.'
+    };
+  });
+}
+
+function summarizeRuntimeAnnualSequenceRepairApplicationGate(
+  targets: RuntimeAnnualSequenceRepairTarget[]
+): RuntimeAnnualSequenceRepairApplicationGate[] {
+  return targets.map((target) => {
+    if (target.priority === 'Watch') {
+      return {
+        label: target.label,
+        status: 'Waiting for rows',
+        evidenceUse: 'Do not apply until runtime annual account sequence review rows are available.',
+        blockedOutput: 'Saved sequencing, CSV, reports, production UI, final instructions, and tax-bracket wording stay blocked.'
+      };
+    }
+    if (target.count > 0) {
+      return {
+        label: target.label,
+        status: 'Review before applying',
+        evidenceUse: target.nextStep,
+        blockedOutput: 'Use the repair target only inside this review surface; do not save, export, print, or finalize it.'
+      };
+    }
+    return {
+      label: target.label,
+      status: 'Apply from current evidence',
+      evidenceUse: 'Current visible review rows have enough evidence for this review bucket.',
+      blockedOutput: 'Keep application limited to the review surface until saved and exported sequencing are explicitly opened.'
+    };
+  });
+}
+
+function summarizeRuntimeAnnualSequenceBetaOutputGate(
+  rows: RuntimeAnnualSequenceReviewRow[],
+  applicationGate: RuntimeAnnualSequenceRepairApplicationGate[]
+): RuntimeAnnualSequenceBetaOutputGate[] {
+  const hasRows = rows.length > 0;
+  const needsRepair = applicationGate.some((gate) => gate.status === 'Review before applying' || gate.status === 'Waiting for rows');
+  const allRowsReady = hasRows && rows.every((row) => row.qualityLabel === 'Ready for beta review');
+  const reviewGateStatus: RuntimeAnnualSequenceBetaOutputGate['status'] =
+    allRowsReady && !needsRepair ? 'Ready to plan' : hasRows ? 'Needs repair first' : 'Blocked';
+  const reviewBlockedUntil =
+    reviewGateStatus === 'Ready to plan'
+      ? 'Requires a separate implementation package before any saved or exported output is opened.'
+      : 'Requires ready rows, clear repair application gates, and no review-needed quality reasons.';
+
+  return [
+    {
+      label: 'Saved sequencing output',
+      status: reviewGateStatus,
+      requiredEvidence: 'Ready review rows, stable account labels, traceable amounts, and clear boundary copy.',
+      blockedUntil: reviewBlockedUntil
+    },
+    {
+      label: 'CSV sequencing output',
+      status: reviewGateStatus,
+      requiredEvidence: 'Saved sequencing shape decision, column labels, row ordering, and export guard copy.',
+      blockedUntil: 'Blocked until saved sequencing output is explicitly planned and verified.'
+    },
+    {
+      label: 'Report sequencing rows',
+      status: reviewGateStatus,
+      requiredEvidence: 'Printable row labels, annual account totals, tax context, and report boundary copy.',
+      blockedUntil: 'Blocked until saved sequencing and CSV boundaries are stable.'
+    },
+    {
+      label: 'Production UI',
+      status: reviewGateStatus,
+      requiredEvidence: 'Tester review confidence, accessible layout, compact copy, and output-action boundaries.',
+      blockedUntil: 'Blocked until beta output behavior is stable with synthetic scenarios.'
+    },
+    {
+      label: 'Final annual instructions',
+      status: 'Blocked',
+      requiredEvidence: 'Public-ready validation, final wording review, and real-plan safety checks.',
+      blockedUntil: 'Blocked beyond beta; do not create final instructions from the current review surface.'
+    },
+    {
+      label: 'Tax-bracket wording',
+      status: 'Blocked',
+      requiredEvidence: 'Validated tax context, bracket treatment, and wording review for Ontario 2026 assumptions.',
+      blockedUntil: 'Blocked beyond beta; do not add tax-bracket instructions from current review rows.'
+    }
+  ];
+}
+
+function summarizeRuntimeAnnualSequenceSavedShapeDecision(
+  rows: RuntimeAnnualSequenceReviewRow[],
+  betaOutputGate: RuntimeAnnualSequenceBetaOutputGate[]
+): RuntimeAnnualSequenceSavedShapeDecision[] {
+  const savedOutputGate = betaOutputGate.find((gate) => gate.label === 'Saved sequencing output');
+  const canPlanSavedShape = savedOutputGate?.status === 'Ready to plan';
+  const rowDecision: RuntimeAnnualSequenceSavedShapeDecision['decision'] =
+    rows.length && canPlanSavedShape ? 'Allow in beta shape' : 'Review before shape';
+
+  return [
+    {
+      field: 'year',
+      decision: rowDecision,
+      source: 'Runtime annual account sequence review row year.',
+      boundary: 'Beta shape may store the reviewed year only after saved sequencing is explicitly opened.'
+    },
+    {
+      field: 'accountLabel',
+      decision: rowDecision,
+      source: 'Runtime annual account sequence review row account label.',
+      boundary: 'Beta shape may store the reviewed account label without inferring a new account order.'
+    },
+    {
+      field: 'reviewAmount',
+      decision: rowDecision,
+      source: 'Runtime annual account sequence review amount.',
+      boundary: 'Beta shape may store the traceable review amount without creating new withdrawal calculations.'
+    },
+    {
+      field: 'sourceEvidence',
+      decision: rowDecision,
+      source: 'Source evidence and quality reasons visible in the review row.',
+      boundary: 'Beta shape must preserve source evidence so saved rows can be audited later.'
+    },
+    {
+      field: 'taxContext',
+      decision: rowDecision,
+      source: 'Visible tax context from the review row.',
+      boundary: 'Beta shape may store explanatory tax context only; no tax-bracket instructions.'
+    },
+    {
+      field: 'constraintContext',
+      decision: rowDecision,
+      source: 'Visible estate, survivor, floor, and harm-check context from the review row.',
+      boundary: 'Beta shape may store review context only; no advice-like final instruction.'
+    },
+    {
+      field: 'qualityStatus',
+      decision: rowDecision,
+      source: 'Quality label, score, and repair target status.',
+      boundary: 'Beta shape may store quality status to keep saved rows clearly marked as review material.'
+    },
+    {
+      field: 'finalInstruction',
+      decision: 'Exclude from beta shape',
+      source: 'No source in the current review surface.',
+      boundary: 'Final annual instructions stay blocked beyond beta.'
+    },
+    {
+      field: 'taxBracketTarget',
+      decision: 'Exclude from beta shape',
+      source: 'No validated tax-bracket target source in the current review surface.',
+      boundary: 'Tax-bracket wording and tax-bracket targets stay blocked.'
+    }
+  ];
+}
+
+function summarizeRuntimeAnnualSequenceSavedImplementationDecision(
+  shapeDecision: RuntimeAnnualSequenceSavedShapeDecision[]
+): RuntimeAnnualSequenceSavedImplementationDecision[] {
+  const allowedCount = shapeDecision.filter((decision) => decision.decision === 'Allow in beta shape').length;
+  const reviewCount = shapeDecision.filter((decision) => decision.decision === 'Review before shape').length;
+  const excludedCount = shapeDecision.filter((decision) => decision.decision === 'Exclude from beta shape').length;
+  const decisionStatus: RuntimeAnnualSequenceSavedImplementationDecision['status'] =
+    allowedCount >= 7 && reviewCount === 0 ? 'Ready to implement' : reviewCount > 0 ? 'Hold for repair' : 'Blocked';
+  const decisionDetail =
+    decisionStatus === 'Ready to implement'
+      ? 'A beta saved sequencing adapter can be implemented in a separate package using the allowed fields only.'
+      : 'Do not implement saved sequencing until review-before-shape fields are repaired or explicitly deferred.';
+
+  return [
+    {
+      label: 'Implementation decision',
+      status: decisionStatus,
+      detail: decisionDetail,
+      boundary: 'This decision does not write saved files, migrate schema, export CSV, print reports, or finalize instructions.'
+    },
+    {
+      label: 'Allowed beta fields',
+      status: allowedCount ? decisionStatus : 'Blocked',
+      detail: `${allowedCount} fields are currently allowed for a future beta saved shape.`,
+      boundary: 'Allowed fields must stay local, review-marked, and traceable to runtime sequence review rows.'
+    },
+    {
+      label: 'Fields needing repair',
+      status: reviewCount ? 'Hold for repair' : 'Ready to implement',
+      detail: `${reviewCount} fields need review before saved-shape implementation.`,
+      boundary: 'Repair fields before saved output writes are planned.'
+    },
+    {
+      label: 'Excluded fields',
+      status: excludedCount ? 'Blocked' : decisionStatus,
+      detail: `${excludedCount} fields remain excluded from beta saved sequencing.`,
+      boundary: 'Final instructions and tax-bracket targets remain outside beta saved sequencing.'
+    }
+  ];
+}
+
 function runtimeDraftRowStatus(row: BoundedOptimizerSummary['experimentalAnnualInstructionDraft']['rows'][number]): {
   label: string;
   tone: 'ready' | 'review' | 'watch';
@@ -905,6 +1508,43 @@ function runtimeDraftRowStatus(row: BoundedOptimizerSummary['experimentalAnnualI
     tone: 'ready',
     detail: 'Single-account draft row with account-order and tax context.'
   };
+}
+
+function createRuntimeAnnualSequenceReviewRows(
+  draft: BoundedOptimizerSummary['experimentalAnnualInstructionDraft'] | null | undefined
+): RuntimeAnnualSequenceReviewRow[] {
+  if (!draft) return [];
+  return draft.rows.slice(0, 6).map((row) => {
+    const rowStatus = runtimeDraftRowStatus(row);
+    const annualTotal = draft.annualAccountTotals.find((total) => (
+      total.year === row.year && total.accounts.some((account) => account.account === row.account)
+    ));
+    const taxContext =
+      row.taxContext.effectiveTaxRatePct === null
+        ? 'Tax context review'
+        : `${formatPercent(row.taxContext.effectiveTaxRatePct / 100)} effective tax context; OAS recovery ${row.taxContext.oasRecoveryStatus}`;
+    const constraintReview = draft.harmChecks.find((check) => check.status === 'block' || check.status === 'watch');
+    const reviewItem = draft.readinessSummary.reviewItems[0];
+    const constraintContext =
+      constraintReview?.detail || reviewItem || 'No extra constraint context flagged for this draft row.';
+    const quality = runtimeAnnualSequenceQuality(row, annualTotal, constraintContext);
+
+    return {
+      key: `${row.year}-${row.account}-${row.source.withdrawalField}`,
+      year: row.year,
+      accountLabel: row.label || 'Account review needed',
+      reviewAmount: formatMoney(row.amount),
+      sourceEvidence: `${row.source.withdrawalFieldLabel}; ${annualTotal ? formatMoney(annualTotal.totalAmount) : 'annual total review needed'}`,
+      readinessCue: rowStatus.label,
+      readinessTone: rowStatus.tone,
+      qualityLabel: quality.qualityLabel,
+      qualityReasons: quality.qualityReasons,
+      qualityScore: quality.qualityScore,
+      taxContext,
+      constraintContext,
+      boundaryStatus: 'Shown only in this review surface; save, CSV, report, and final instruction outputs stay blocked.'
+    };
+  });
 }
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
@@ -5269,6 +5909,13 @@ function TinyTesterSurfacePanel({
   const prompts = summary?.testerSurfaceMatrix.testerPacketReadiness.packetContract.reviewPrompts || [];
   const runtimeDraftScope = summary?.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope || null;
   const runtimeDraftRows = summary?.experimentalAnnualInstructionDraft.rows || [];
+  const sequenceReviewRows = createRuntimeAnnualSequenceReviewRows(summary?.experimentalAnnualInstructionDraft);
+  const sequenceQualitySummary = summarizeRuntimeAnnualSequenceQuality(sequenceReviewRows);
+  const sequenceRepairTargets = summarizeRuntimeAnnualSequenceRepairTargets(sequenceReviewRows);
+  const sequenceRepairApplicationGate = summarizeRuntimeAnnualSequenceRepairApplicationGate(sequenceRepairTargets);
+  const sequenceBetaOutputGate = summarizeRuntimeAnnualSequenceBetaOutputGate(sequenceReviewRows, sequenceRepairApplicationGate);
+  const sequenceSavedShapeDecision = summarizeRuntimeAnnualSequenceSavedShapeDecision(sequenceReviewRows, sequenceBetaOutputGate);
+  const sequenceSavedImplementationDecision = summarizeRuntimeAnnualSequenceSavedImplementationDecision(sequenceSavedShapeDecision);
   const dataSourceLabel = surface?.preflightChecklist.dataSource ? 'Current tester packet' : 'Preparing';
   const approvalLabel =
     approval?.approval === 'approveTinyTesterSurface'
@@ -5719,6 +6366,202 @@ function TinyTesterSurfacePanel({
               <li key={blocker}>{blocker}</li>
             ))}
           </ul>
+        </section>
+        <section className="tester-surface-subpanel controlled-tester-handoff-packet-panel">
+          <h3>Controlled tester handoff packet</h3>
+          <ul className="compact-list">
+            {CONTROLLED_TESTER_HANDOFF_PACKET_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Tester review checklist:</p>
+          <ul className="compact-list">
+            {CONTROLLED_TESTER_REVIEW_CHECKLIST.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="table-note">Stop the test if:</p>
+          <ul className="compact-list">
+            {CONTROLLED_TESTER_STOP_CONDITIONS.map((condition) => (
+              <li key={condition}>{condition}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel post-handoff-feedback-triage-panel">
+          <h3>Post-handoff feedback triage</h3>
+          <ul className="compact-list">
+            {POST_HANDOFF_FEEDBACK_TRIAGE_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Beta path reset:</p>
+          <ul className="compact-list">
+            {POST_HANDOFF_BETA_PATH_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Beta blockers:</p>
+          <ul className="compact-list">
+            {POST_HANDOFF_BETA_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-account-sequencing-gate-panel">
+          <h3>Annual account sequencing beta gate</h3>
+          <ul className="compact-list">
+            {ANNUAL_ACCOUNT_SEQUENCING_GATE_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Source requirements:</p>
+          <ul className="compact-list">
+            {ANNUAL_ACCOUNT_SEQUENCING_SOURCE_REQUIREMENTS.map((requirement) => (
+              <li key={requirement}>{requirement}</li>
+            ))}
+          </ul>
+          <p className="table-note">Output gates:</p>
+          <ul className="compact-list">
+            {ANNUAL_ACCOUNT_SEQUENCING_OUTPUT_GATES.map((gate) => (
+              <li key={gate}>{gate}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel runtime-annual-account-sequence-shape-panel">
+          <h3>Runtime annual account sequence shape</h3>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_FIELDS.map((field) => (
+              <li key={field.field}>
+                <strong>{field.field}:</strong> {field.purpose} Source: {field.source}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Shape rules:</p>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_RULES.map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+          </ul>
+          <p className="table-note">Excluded from this shape:</p>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_EXCLUSIONS.map((exclusion) => (
+              <li key={exclusion}>{exclusion}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel runtime-annual-account-sequence-adapter-panel">
+          <h3>Runtime annual account sequence source adapter</h3>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SOURCE_ADAPTER_ROWS.map((row) => (
+              <li key={row.field}>
+                <strong>{row.field}:</strong> Source: {row.source} Missing source: {row.missing}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Adapter rules:</p>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_RULES.map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked for the adapter:</p>
+          <ul className="compact-list">
+            {RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel runtime-annual-account-sequence-review-panel">
+          <h3>Runtime annual account sequence review rows</h3>
+          <p className="table-note">
+            These rows adapt existing draft evidence for review. They are not saved, exported, printed, final, or instructions.
+          </p>
+          <div className="annual-sequence-quality-summary" aria-label="Runtime annual account sequence quality summary">
+            <Metric label="Ready rows" value={String(sequenceQualitySummary.readyCount)} />
+            <Metric label="Review rows" value={String(sequenceQualitySummary.reviewCount)} />
+            <Metric label="Blocked rows" value={String(sequenceQualitySummary.blockCount)} />
+            <Metric label="Average score" value={`${sequenceQualitySummary.averageScore}/6`} />
+          </div>
+          <p className="table-note">Next repair target: {sequenceQualitySummary.nextRepairTarget}</p>
+          <p className="table-note">{sequenceQualitySummary.outputStatus}</p>
+          <div className="annual-sequence-repair-targets" aria-label="Runtime annual account sequence repair targets">
+            {sequenceRepairTargets.map((target) => (
+              <article className={`annual-sequence-repair-target annual-sequence-repair-target-${target.priority.toLowerCase()}`} key={target.label}>
+                <span>{target.priority}</span>
+                <strong>{target.label}</strong>
+                <span>{target.count} row{target.count === 1 ? '' : 's'}</span>
+                <em>{target.nextStep}</em>
+              </article>
+            ))}
+          </div>
+          <div className="annual-sequence-application-gate" aria-label="Runtime annual account sequence repair application gate">
+            {sequenceRepairApplicationGate.map((gate) => (
+              <article className="annual-sequence-application-gate-row" key={gate.label}>
+                <strong>{gate.label}</strong>
+                <span>{gate.status}</span>
+                <em>{gate.evidenceUse}</em>
+                <em>{gate.blockedOutput}</em>
+              </article>
+            ))}
+          </div>
+          <div className="annual-sequence-beta-output-gate" aria-label="Runtime annual account sequence beta output readiness gate">
+            {sequenceBetaOutputGate.map((gate) => (
+              <article className={`annual-sequence-beta-output-row annual-sequence-beta-output-row-${gate.status.toLowerCase().replace(/\s+/g, '-')}`} key={gate.label}>
+                <strong>{gate.label}</strong>
+                <span>{gate.status}</span>
+                <em>{gate.requiredEvidence}</em>
+                <em>{gate.blockedUntil}</em>
+              </article>
+            ))}
+          </div>
+          <div className="annual-sequence-saved-shape-decision" aria-label="Runtime annual account sequence saved shape decision gate">
+            {sequenceSavedShapeDecision.map((decision) => (
+              <article className={`annual-sequence-saved-shape-row annual-sequence-saved-shape-row-${decision.decision.toLowerCase().replace(/\s+/g, '-')}`} key={decision.field}>
+                <strong>{decision.field}</strong>
+                <span>{decision.decision}</span>
+                <em>{decision.source}</em>
+                <em>{decision.boundary}</em>
+              </article>
+            ))}
+          </div>
+          <div className="annual-sequence-saved-implementation-decision" aria-label="Runtime annual account sequence saved implementation decision gate">
+            {sequenceSavedImplementationDecision.map((decision) => (
+              <article className={`annual-sequence-saved-implementation-row annual-sequence-saved-implementation-row-${decision.status.toLowerCase().replace(/\s+/g, '-')}`} key={decision.label}>
+                <strong>{decision.label}</strong>
+                <span>{decision.status}</span>
+                <em>{decision.detail}</em>
+                <em>{decision.boundary}</em>
+              </article>
+            ))}
+          </div>
+          <div className="annual-sequence-review-grid" aria-label="Runtime annual account sequence review rows">
+            {sequenceReviewRows.length ? (
+              sequenceReviewRows.map((row) => (
+                <article className={`annual-sequence-review-row annual-sequence-review-row-${row.readinessTone}`} key={row.key}>
+                  <span>{row.year}</span>
+                  <strong>{row.accountLabel}</strong>
+                  <span>{row.reviewAmount}</span>
+                  <span className={`runtime-draft-status runtime-draft-status-${row.readinessTone}`}>{row.readinessCue}</span>
+                  <span>{row.qualityLabel} ({row.qualityScore}/6)</span>
+                  <em>{row.sourceEvidence}</em>
+                  <em>{row.qualityReasons.join('; ')}</em>
+                  <em>{row.taxContext}</em>
+                  <em>{row.constraintContext}</em>
+                  <em>{row.boundaryStatus}</em>
+                </article>
+              ))
+            ) : (
+              <p className="table-note">{loading ? 'Preparing sequence review rows.' : 'No sequence review rows are available yet.'}</p>
+            )}
+          </div>
         </section>
         <section className="tester-surface-subpanel">
           <h3>Tester questions</h3>

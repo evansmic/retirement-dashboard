@@ -3101,6 +3101,206 @@ button.secondary,
   padding-left: 12px;
 }
 
+.controlled-tester-handoff-packet-panel {
+  border-left: 3px solid #507367;
+  padding-left: 12px;
+}
+
+.post-handoff-feedback-triage-panel {
+  border-left: 3px solid #735f50;
+  padding-left: 12px;
+}
+
+.annual-account-sequencing-gate-panel {
+  border-left: 3px solid #506173;
+  padding-left: 12px;
+}
+
+.runtime-annual-account-sequence-shape-panel {
+  border-left: 3px solid #637350;
+  padding-left: 12px;
+}
+
+.runtime-annual-account-sequence-adapter-panel {
+  border-left: 3px solid #73506a;
+  padding-left: 12px;
+}
+
+.runtime-annual-account-sequence-review-panel {
+  border-left: 3px solid #50735f;
+  padding-left: 12px;
+}
+
+.annual-sequence-review-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.annual-sequence-quality-summary {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+}
+
+.annual-sequence-repair-targets {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(5, minmax(130px, 1fr));
+}
+
+.annual-sequence-repair-target {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-repair-target > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-repair-target span:first-child {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.annual-sequence-repair-target em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.annual-sequence-application-gate {
+  display: grid;
+  gap: 8px;
+}
+
+.annual-sequence-application-gate-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(170px, 0.9fr) minmax(220px, 1.4fr) minmax(250px, 1.6fr);
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-application-gate-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-application-gate-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.annual-sequence-beta-output-gate {
+  display: grid;
+  gap: 8px;
+}
+
+.annual-sequence-beta-output-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(120px, 0.7fr) minmax(240px, 1.4fr) minmax(260px, 1.5fr);
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-beta-output-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-beta-output-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.annual-sequence-saved-shape-decision {
+  display: grid;
+  gap: 8px;
+}
+
+.annual-sequence-saved-shape-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(150px, 0.8fr) minmax(230px, 1.3fr) minmax(260px, 1.5fr);
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-saved-shape-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-saved-shape-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.annual-sequence-saved-implementation-decision {
+  display: grid;
+  gap: 8px;
+}
+
+.annual-sequence-saved-implementation-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(130px, 0.7fr) minmax(250px, 1.4fr) minmax(260px, 1.5fr);
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-saved-implementation-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-saved-implementation-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.annual-sequence-review-row {
+  display: grid;
+  grid-template-columns: minmax(64px, 0.4fr) minmax(110px, 0.8fr) minmax(100px, 0.65fr) minmax(110px, 0.75fr) minmax(130px, 0.9fr) minmax(150px, 1fr) minmax(190px, 1.35fr) minmax(170px, 1.1fr) minmax(190px, 1.3fr) minmax(210px, 1.45fr);
+  gap: 8px;
+  align-items: start;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.annual-sequence-review-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.annual-sequence-review-row em {
+  color: var(--muted);
+  font-style: normal;
+}
+
 .runtime-draft-row-grid {
   display: grid;
   gap: 8px;
@@ -3179,6 +3379,13 @@ button.secondary,
   }
 
   .runtime-draft-row,
+  .annual-sequence-review-row,
+  .annual-sequence-quality-summary,
+  .annual-sequence-repair-targets,
+  .annual-sequence-application-gate-row,
+  .annual-sequence-beta-output-row,
+  .annual-sequence-saved-shape-row,
+  .annual-sequence-saved-implementation-row,
   .chart-grid {
     grid-template-columns: 1fr;
   }

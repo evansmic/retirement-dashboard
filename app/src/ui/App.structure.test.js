@@ -697,6 +697,398 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.runtime-draft-tester-handoff-panel');
   });
 
+  it('shows a controlled tester packet without collecting or exporting feedback', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('CONTROLLED_TESTER_HANDOFF_PACKET_ROWS');
+    expect(appSource).toContain('CONTROLLED_TESTER_REVIEW_CHECKLIST');
+    expect(appSource).toContain('CONTROLLED_TESTER_STOP_CONDITIONS');
+    expect(testerSurface).toContain('Controlled tester handoff packet');
+    expect(testerSurface).toContain('Tester review checklist:');
+    expect(testerSurface).toContain('Stop the test if:');
+    expect(appSource).toContain('Who should test');
+    expect(appSource).toContain('A very small group that already knows the planner is under development and will use made-up scenarios only.');
+    expect(appSource).toContain('Use a synthetic example, open Results, then review the Details view where the tester-only runtime draft surface appears.');
+    expect(appSource).toContain('Do not review this as a real retirement plan, final instruction set, tax strategy, export, report, or saved sequencing output.');
+    expect(appSource).toContain('Use only synthetic household examples.');
+    expect(appSource).toContain('Flag any row that sounds like an instruction.');
+    expect(appSource).toContain('Stop testing if the scenario uses real personal data.');
+    expect(appSource).toContain('A tester expects save, CSV, report, or print output for the draft rows.');
+    expect(appSource).toContain('The surface creates confusion about whether the optimizer is public-ready.');
+    expect(testerSurface).not.toContain('testerFeedbackForm');
+    expect(testerSurface).not.toContain('submitControlledTesterFeedback');
+    expect(testerSurface).not.toContain('downloadTesterPacket');
+    expect(testerSurface).not.toContain('exportTesterFeedbackCsv');
+    expect(testerSurface).not.toContain('saveTesterHandoffPacket');
+    expect(testerSurface).not.toContain('emailTesterPacket');
+    expect(stylesSource).toContain('.controlled-tester-handoff-packet-panel');
+  });
+
+  it('shows post-handoff triage and beta path reset without automation', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('POST_HANDOFF_FEEDBACK_TRIAGE_ROWS');
+    expect(appSource).toContain('POST_HANDOFF_BETA_PATH_ROWS');
+    expect(appSource).toContain('POST_HANDOFF_BETA_BLOCKERS');
+    expect(testerSurface).toContain('Post-handoff feedback triage');
+    expect(testerSurface).toContain('Beta path reset:');
+    expect(testerSurface).toContain('Beta blockers:');
+    expect(appSource).toContain('Clarify copy');
+    expect(appSource).toContain('Improve context');
+    expect(appSource).toContain('Repair model evidence');
+    expect(appSource).toContain('Block beta');
+    expect(appSource).toContain('Feature-complete beta path');
+    expect(appSource).toContain('Annual account sequencing');
+    expect(appSource).toContain('Saved and CSV outputs');
+    expect(appSource).toContain('Tester-only until beta checks pass');
+    expect(appSource).toContain('Rows that sound like final instructions.');
+    expect(appSource).toContain('Tester expectation of save, CSV, report, or print output.');
+    expect(appSource).toContain('Any real-data tester use.');
+    expect(testerSurface).not.toContain('createFeedbackIssue');
+    expect(testerSurface).not.toContain('submitFeedbackTriage');
+    expect(testerSurface).not.toContain('unlockBetaPath');
+    expect(testerSurface).not.toContain('generateSavedSequencingOutput');
+    expect(testerSurface).not.toContain('exportBetaSequencingCsv');
+    expect(testerSurface).not.toContain('promoteProductionOptimizer');
+    expect(stylesSource).toContain('.post-handoff-feedback-triage-panel');
+  });
+
+  it('defines the annual account sequencing beta gate without outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_ACCOUNT_SEQUENCING_GATE_ROWS');
+    expect(appSource).toContain('ANNUAL_ACCOUNT_SEQUENCING_SOURCE_REQUIREMENTS');
+    expect(appSource).toContain('ANNUAL_ACCOUNT_SEQUENCING_OUTPUT_GATES');
+    expect(testerSurface).toContain('Annual account sequencing beta gate');
+    expect(testerSurface).toContain('Source requirements:');
+    expect(testerSurface).toContain('Output gates:');
+    expect(appSource).toContain('Proceed to gated beta work');
+    expect(appSource).toContain('Account-level annual sequence');
+    expect(appSource).toContain('Evidence before outputs');
+    expect(appSource).toContain('Runtime first');
+    expect(appSource).toContain('Selected candidate annual withdrawal rows.');
+    expect(appSource).toContain('Annual account totals by year and account.');
+    expect(appSource).toContain('Draft account-order positions.');
+    expect(appSource).toContain('Estate and survivor constraint evidence when present.');
+    expect(appSource).toContain('Runtime annual sequencing rows first.');
+    expect(appSource).toContain('Saved sequencing output only after runtime row quality is stable.');
+    expect(appSource).toContain('CSV sequencing output only after saved sequencing shape is stable.');
+    expect(appSource).toContain('Production UI only after tester-only and beta checks pass.');
+    expect(appSource).toContain('Tax-bracket instructions remain blocked.');
+    expect(testerSurface).not.toContain('buildAnnualAccountSequence');
+    expect(testerSurface).not.toContain('saveAnnualAccountSequence');
+    expect(testerSurface).not.toContain('exportAnnualAccountSequenceCsv');
+    expect(testerSurface).not.toContain('renderAnnualSequenceReport');
+    expect(testerSurface).not.toContain('promoteAnnualSequenceProductionUi');
+    expect(testerSurface).not.toContain('createTaxBracketSequenceInstructions');
+    expect(stylesSource).toContain('.annual-account-sequencing-gate-panel');
+  });
+
+  it('defines the runtime annual account sequence row shape without implementation', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_FIELDS');
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_RULES');
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SHAPE_EXCLUSIONS');
+    expect(testerSurface).toContain('Runtime annual account sequence shape');
+    expect(testerSurface).toContain('Shape rules:');
+    expect(testerSurface).toContain('Excluded from this shape:');
+    expect(appSource).toContain('year');
+    expect(appSource).toContain('accountLabel');
+    expect(appSource).toContain('reviewAmount');
+    expect(appSource).toContain('sourceEvidence');
+    expect(appSource).toContain('readinessCue');
+    expect(appSource).toContain('taxContext');
+    expect(appSource).toContain('constraintContext');
+    expect(appSource).toContain('boundaryStatus');
+    expect(appSource).toContain('One row represents one account in one planning year.');
+    expect(appSource).toContain('Amounts must be traceable to runtime candidate evidence.');
+    expect(appSource).toContain('Tax context must explain, not prescribe.');
+    expect(appSource).toContain('Boundary status must stay visible beside the row.');
+    expect(appSource).toContain('No saved sequencing row shape.');
+    expect(appSource).toContain('No CSV sequencing columns.');
+    expect(appSource).toContain('No printable report row.');
+    expect(appSource).toContain('No saved schema or engine output schema changes.');
+    expect(testerSurface).not.toContain('runtimeAnnualAccountSequenceRows.map');
+    expect(testerSurface).not.toContain('buildRuntimeAnnualAccountSequence');
+    expect(testerSurface).not.toContain('persistAnnualAccountSequenceShape');
+    expect(testerSurface).not.toContain('annualSequenceCsvColumns');
+    expect(testerSurface).not.toContain('annualSequenceReportRow');
+    expect(testerSurface).not.toContain('finalAnnualInstructionRow');
+    expect(stylesSource).toContain('.runtime-annual-account-sequence-shape-panel');
+  });
+
+  it('maps runtime sequence shape fields to existing sources without saved or exported adapters', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_SOURCE_ADAPTER_ROWS');
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_RULES');
+    expect(appSource).toContain('RUNTIME_ANNUAL_ACCOUNT_SEQUENCE_ADAPTER_BLOCKERS');
+    expect(testerSurface).toContain('Runtime annual account sequence source adapter');
+    expect(testerSurface).toContain('Adapter rules:');
+    expect(testerSurface).toContain('Still blocked for the adapter:');
+    expect(appSource).toContain('experimentalAnnualInstructionDraft.rows.year');
+    expect(appSource).toContain('experimentalAnnualInstructionDraft.rows.label and account');
+    expect(appSource).toContain('experimentalAnnualInstructionDraft.rows.amount');
+    expect(appSource).toContain('source.withdrawalFieldLabel, source.withdrawalField, annualAccountTotals');
+    expect(appSource).toContain('runtimeDraftRowStatus, source.accountOrderPosition, taxContext.effectiveTaxRatePct');
+    expect(appSource).toContain('taxContext.effectiveTaxRatePct, taxContext.oasRecoveryStatus, taxContextRows');
+    expect(appSource).toContain('readinessSummary, harmChecks, confidence rows, survivor and estate checks');
+    expect(appSource).toContain('runtimeDraftGeneratorScope.blockedOutputs and annual account sequencing output gates');
+    expect(appSource).toContain('Use Account review needed rather than inferring an account.');
+    expect(appSource).toContain('Use Tax context review without adding tax-bracket language.');
+    expect(appSource).toContain('Read only existing runtime draft data.');
+    expect(appSource).toContain('Do not calculate new withdrawal amounts.');
+    expect(appSource).toContain('No saved or exported sequence adapter in this package.');
+    expect(appSource).toContain('No new engine output shape.');
+    expect(appSource).toContain('No CSV column map.');
+    expect(testerSurface).not.toContain('buildAnnualAccountSequenceRows');
+    expect(testerSurface).not.toContain('writeAnnualAccountSequenceOutput');
+    expect(testerSurface).not.toContain('annualAccountSequenceSavedSchema');
+    expect(testerSurface).not.toContain('annualAccountSequenceCsvMap');
+    expect(testerSurface).not.toContain('annualAccountSequenceReportMap');
+    expect(stylesSource).toContain('.runtime-annual-account-sequence-adapter-panel');
+  });
+
+  it('renders runtime annual account sequence review rows without saved outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceReviewRow');
+    expect(appSource).toContain('createRuntimeAnnualSequenceReviewRows');
+    expect(testerSurface).toContain('sequenceReviewRows');
+    expect(testerSurface).toContain('Runtime annual account sequence review rows');
+    expect(testerSurface).toContain('These rows adapt existing draft evidence for review.');
+    expect(testerSurface).toContain('annual-sequence-review-grid');
+    expect(testerSurface).toContain('annual-sequence-review-row');
+    expect(appSource).toContain('Shown only in this review surface; save, CSV, report, and final instruction outputs stay blocked.');
+    expect(appSource).toContain('No extra constraint context flagged for this draft row.');
+    expect(appSource).toContain('annual total review needed');
+    expect(appSource).toContain('Preparing sequence review rows.');
+    expect(testerSurface).not.toContain('saveSequenceReviewRows');
+    expect(testerSurface).not.toContain('exportSequenceReviewRowsCsv');
+    expect(testerSurface).not.toContain('printSequenceReviewRows');
+    expect(testerSurface).not.toContain('promoteSequenceReviewRows');
+    expect(testerSurface).not.toContain('finalizeSequenceReviewRows');
+    expect(stylesSource).toContain('.runtime-annual-account-sequence-review-panel');
+    expect(stylesSource).toContain('.annual-sequence-review-grid');
+    expect(stylesSource).toContain('.annual-sequence-review-row');
+  });
+
+  it('scores runtime annual account sequence review rows without unlocking outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('runtimeAnnualSequenceQuality');
+    expect(appSource).toContain('qualityLabel');
+    expect(appSource).toContain('qualityScore');
+    expect(appSource).toContain('qualityReasons');
+    expect(appSource).toContain('Ready for beta review');
+    expect(appSource).toContain('Ready with context');
+    expect(appSource).toContain('Review before beta');
+    expect(appSource).toContain('Source evidence present');
+    expect(appSource).toContain('Annual account total present');
+    expect(appSource).toContain('Account-order evidence review needed');
+    expect(appSource).toContain('Tax context review needed');
+    expect(appSource).toContain('Output boundary visible');
+    expect(testerSurface).toContain('row.qualityLabel');
+    expect(testerSurface).toContain('row.qualityScore');
+    expect(testerSurface).toContain('row.qualityReasons.join');
+    expect(testerSurface).not.toContain('approveSequenceQuality');
+    expect(testerSurface).not.toContain('unlockSavedSequencing');
+    expect(testerSurface).not.toContain('unlockSequenceCsv');
+    expect(testerSurface).not.toContain('unlockSequenceReport');
+    expect(testerSurface).not.toContain('promoteSequenceQuality');
+  });
+
+  it('summarizes runtime annual account sequence quality without unlocking outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceQualitySummary');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceQuality');
+    expect(appSource).toContain('readyCount');
+    expect(appSource).toContain('reviewCount');
+    expect(appSource).toContain('blockCount');
+    expect(appSource).toContain('averageScore');
+    expect(appSource).toContain('nextRepairTarget');
+    expect(appSource).toContain('Keep reviewing source and boundary clarity before outputs expand.');
+    expect(appSource).toContain('Saved sequencing, CSV, reports, production UI, and final instructions remain blocked.');
+    expect(testerSurface).toContain('sequenceQualitySummary');
+    expect(testerSurface).toContain('Runtime annual account sequence quality summary');
+    expect(testerSurface).toContain('Ready rows');
+    expect(testerSurface).toContain('Review rows');
+    expect(testerSurface).toContain('Blocked rows');
+    expect(testerSurface).toContain('Average score');
+    expect(testerSurface).toContain('Next repair target:');
+    expect(testerSurface).not.toContain('approveQualitySummary');
+    expect(testerSurface).not.toContain('unlockSavedSequencingFromSummary');
+    expect(testerSurface).not.toContain('exportQualitySummaryCsv');
+    expect(testerSurface).not.toContain('promoteQualitySummary');
+    expect(stylesSource).toContain('.annual-sequence-quality-summary');
+  });
+
+  it('summarizes runtime annual account sequence repair targets without unlocking outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceRepairTarget');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceRepairTargets');
+    expect(appSource).toContain('Source evidence');
+    expect(appSource).toContain('Account-order evidence');
+    expect(appSource).toContain('Tax context');
+    expect(appSource).toContain('Constraint context');
+    expect(appSource).toContain('Output boundary');
+    expect(appSource).toContain('Confirm each row can be traced to a current annual draft source.');
+    expect(appSource).toContain('Repair missing draft account-order evidence before saving or exporting rows.');
+    expect(appSource).toContain('Add enough annual tax context for review before tax-bracket wording is considered.');
+    expect(appSource).toContain('Constraint context preserved');
+    expect(appSource).toContain('Constraint context review needed');
+    expect(appSource).toContain('Check estate, survivor, expense-floor, and harm-check context before any output expands.');
+    expect(appSource).toContain('Keep save, CSV, report, production UI, and final instructions blocked until boundary copy is clear.');
+    expect(testerSurface).toContain('sequenceRepairTargets');
+    expect(testerSurface).toContain('Runtime annual account sequence repair targets');
+    expect(testerSurface).toContain('target.priority');
+    expect(testerSurface).toContain('target.nextStep');
+    expect(testerSurface).not.toContain('approveRepairTargets');
+    expect(testerSurface).not.toContain('unlockSavedSequencingFromRepairTargets');
+    expect(testerSurface).not.toContain('exportRepairTargetsCsv');
+    expect(testerSurface).not.toContain('promoteRepairTargets');
+    expect(stylesSource).toContain('.annual-sequence-repair-targets');
+    expect(stylesSource).toContain('.annual-sequence-repair-target');
+  });
+
+  it('adds runtime annual account sequence repair application gates without unlocking outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceRepairApplicationGate');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceRepairApplicationGate');
+    expect(appSource).toContain('Apply from current evidence');
+    expect(appSource).toContain('Review before applying');
+    expect(appSource).toContain('Waiting for rows');
+    expect(appSource).toContain('Do not apply until runtime annual account sequence review rows are available.');
+    expect(appSource).toContain('Use the repair target only inside this review surface; do not save, export, print, or finalize it.');
+    expect(appSource).toContain('Keep application limited to the review surface until saved and exported sequencing are explicitly opened.');
+    expect(testerSurface).toContain('sequenceRepairApplicationGate');
+    expect(testerSurface).toContain('Runtime annual account sequence repair application gate');
+    expect(testerSurface).toContain('gate.status');
+    expect(testerSurface).toContain('gate.evidenceUse');
+    expect(testerSurface).toContain('gate.blockedOutput');
+    expect(testerSurface).not.toContain('applySequenceRepairsToSavedOutput');
+    expect(testerSurface).not.toContain('exportSequenceRepairApplicationCsv');
+    expect(testerSurface).not.toContain('printSequenceRepairApplication');
+    expect(testerSurface).not.toContain('finalizeSequenceRepairApplication');
+    expect(stylesSource).toContain('.annual-sequence-application-gate');
+    expect(stylesSource).toContain('.annual-sequence-application-gate-row');
+  });
+
+  it('adds beta output readiness gates without unlocking outputs', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceBetaOutputGate');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceBetaOutputGate');
+    expect(appSource).toContain('Ready to plan');
+    expect(appSource).toContain('Needs repair first');
+    expect(appSource).toContain('Saved sequencing output');
+    expect(appSource).toContain('CSV sequencing output');
+    expect(appSource).toContain('Report sequencing rows');
+    expect(appSource).toContain('Production UI');
+    expect(appSource).toContain('Final annual instructions');
+    expect(appSource).toContain('Tax-bracket wording');
+    expect(appSource).toContain('Requires a separate implementation package before any saved or exported output is opened.');
+    expect(appSource).toContain('Blocked beyond beta; do not create final instructions from the current review surface.');
+    expect(appSource).toContain('Blocked beyond beta; do not add tax-bracket instructions from current review rows.');
+    expect(testerSurface).toContain('sequenceBetaOutputGate');
+    expect(testerSurface).toContain('Runtime annual account sequence beta output readiness gate');
+    expect(testerSurface).toContain('gate.requiredEvidence');
+    expect(testerSurface).toContain('gate.blockedUntil');
+    expect(testerSurface).not.toContain('unlockBetaSequencingOutput');
+    expect(testerSurface).not.toContain('saveSequenceBetaOutput');
+    expect(testerSurface).not.toContain('exportSequenceBetaCsv');
+    expect(testerSurface).not.toContain('printSequenceBetaReport');
+    expect(testerSurface).not.toContain('promoteSequenceBetaUi');
+    expect(stylesSource).toContain('.annual-sequence-beta-output-gate');
+    expect(stylesSource).toContain('.annual-sequence-beta-output-row');
+  });
+
+  it('adds saved sequencing shape decisions without changing saved schema', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceSavedShapeDecision');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceSavedShapeDecision');
+    expect(appSource).toContain('Allow in beta shape');
+    expect(appSource).toContain('Review before shape');
+    expect(appSource).toContain('Exclude from beta shape');
+    expect(appSource).toContain('year');
+    expect(appSource).toContain('accountLabel');
+    expect(appSource).toContain('reviewAmount');
+    expect(appSource).toContain('sourceEvidence');
+    expect(appSource).toContain('qualityStatus');
+    expect(appSource).toContain('finalInstruction');
+    expect(appSource).toContain('taxBracketTarget');
+    expect(appSource).toContain('Beta shape may store the reviewed year only after saved sequencing is explicitly opened.');
+    expect(appSource).toContain('Final annual instructions stay blocked beyond beta.');
+    expect(appSource).toContain('Tax-bracket wording and tax-bracket targets stay blocked.');
+    expect(testerSurface).toContain('sequenceSavedShapeDecision');
+    expect(testerSurface).toContain('Runtime annual account sequence saved shape decision gate');
+    expect(testerSurface).toContain('decision.source');
+    expect(testerSurface).toContain('decision.boundary');
+    expect(testerSurface).not.toContain('writeSavedSequencingShape');
+    expect(testerSurface).not.toContain('migrateSavedSequencingShape');
+    expect(testerSurface).not.toContain('persistSequenceSavedShape');
+    expect(testerSurface).not.toContain('exportSavedShapeCsv');
+    expect(stylesSource).toContain('.annual-sequence-saved-shape-decision');
+    expect(stylesSource).toContain('.annual-sequence-saved-shape-row');
+  });
+
+  it('adds saved sequencing implementation decisions without writing saved output', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RuntimeAnnualSequenceSavedImplementationDecision');
+    expect(appSource).toContain('summarizeRuntimeAnnualSequenceSavedImplementationDecision');
+    expect(appSource).toContain('Ready to implement');
+    expect(appSource).toContain('Hold for repair');
+    expect(appSource).toContain('Implementation decision');
+    expect(appSource).toContain('Allowed beta fields');
+    expect(appSource).toContain('Fields needing repair');
+    expect(appSource).toContain('Excluded fields');
+    expect(appSource).toContain('A beta saved sequencing adapter can be implemented in a separate package using the allowed fields only.');
+    expect(appSource).toContain('Do not implement saved sequencing until review-before-shape fields are repaired or explicitly deferred.');
+    expect(appSource).toContain('This decision does not write saved files, migrate schema, export CSV, print reports, or finalize instructions.');
+    expect(testerSurface).toContain('sequenceSavedImplementationDecision');
+    expect(testerSurface).toContain('Runtime annual account sequence saved implementation decision gate');
+    expect(testerSurface).toContain('decision.detail');
+    expect(testerSurface).toContain('decision.boundary');
+    expect(testerSurface).not.toContain('writeBetaSavedSequencing');
+    expect(testerSurface).not.toContain('saveBetaSequencingRows');
+    expect(testerSurface).not.toContain('migrateBetaSavedSequencing');
+    expect(testerSurface).not.toContain('exportBetaSavedSequencingCsv');
+    expect(stylesSource).toContain('.annual-sequence-saved-implementation-decision');
+    expect(stylesSource).toContain('.annual-sequence-saved-implementation-row');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
