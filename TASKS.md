@@ -6,17 +6,49 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S2988-S3007 package, the remaining-work estimate is:
+As of the S3008-S3027 package, the remaining-work estimate is:
 
-- Internal tester optimizer prototype: 0-40 sprints remaining.
-- Feature-complete app optimizer beta: 80-160 sprints remaining.
-- Public-ready optimizer for real planning use: 160-280 sprints remaining.
+- Internal tester optimizer prototype: 0-30 sprints remaining.
+- Feature-complete app optimizer beta: 70-150 sprints remaining.
+- Public-ready optimizer for real planning use: 150-270 sprints remaining.
 
-Material change at S2988-S3007: no. The estimate tightened by one package because runtime draft rows now render in the tester-only surface.
+Material change at S3008-S3027: no. The estimate tightened by one package because displayed runtime draft rows now include row-level readiness cues.
 
 Update the remaining-sprint estimate after every 20-sprint package.
 
-## Latest Package — S2988-S3007: Runtime Annual Draft Rows Surface Integration
+## Latest Package — S3008-S3027: Runtime Annual Draft Row Quality And Tester Readiness
+
+**Status:** Complete 2026-06-13.
+
+Goal: add row-level quality and readiness cues directly beside displayed runtime annual draft rows. Results Details now labels each runtime draft row as ready for review, ready with context, review first, or needs tax review based on existing account-order and tax-context evidence. Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0-30 sprints remaining.
+- Feature-complete app optimizer beta: 70-150 sprints remaining.
+- Public-ready optimizer for real planning use: 150-270 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, or public release.
+
+Package doc: [`docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md`](docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md).
+
+### S3008-S3027 Completed Path
+
+- **S3008-S3012 — Row cue batch.** Added row-level readiness labels derived from account-order and tax-context evidence.
+- **S3013-S3017 — Display batch.** Rendered readiness labels beside runtime annual draft rows in Results Details.
+- **S3018-S3022 — Boundary batch.** Kept saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+- **S3023-S3027 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3008-S3027 Definition Of Done
+
+- Runtime annual draft rows include row-level readiness cues.
+- Cues are derived from existing runtime row evidence only.
+- No saved schema or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2988-S3007: Runtime Annual Draft Rows Surface Integration
 
 **Status:** Complete 2026-06-13.
 

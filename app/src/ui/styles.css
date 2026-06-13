@@ -3103,7 +3103,7 @@ button.secondary,
 
 .runtime-draft-row {
   display: grid;
-  grid-template-columns: minmax(88px, 0.7fr) minmax(100px, 1fr) minmax(130px, 1.1fr) minmax(130px, 1.1fr) minmax(180px, 1.5fr);
+  grid-template-columns: minmax(72px, 0.6fr) minmax(100px, 1fr) minmax(110px, 0.9fr) minmax(110px, 0.9fr) minmax(130px, 1fr) minmax(170px, 1.4fr);
   gap: 8px;
   align-items: start;
   min-width: 0;
@@ -3121,6 +3121,22 @@ button.secondary,
 .runtime-draft-row em {
   color: var(--muted);
   font-style: normal;
+}
+
+.runtime-draft-status {
+  font-weight: 750;
+}
+
+.runtime-draft-status-ready {
+  color: #2f6f55;
+}
+
+.runtime-draft-status-review {
+  color: #9a5f18;
+}
+
+.runtime-draft-status-watch {
+  color: #855c24;
 }
 
 @media (max-width: 920px) {

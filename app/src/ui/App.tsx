@@ -827,6 +827,39 @@ const TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS = [
   'No production UI promotion.',
   'No schema changes.'
 ];
+
+function runtimeDraftRowStatus(row: BoundedOptimizerSummary['experimentalAnnualInstructionDraft']['rows'][number]): {
+  label: string;
+  tone: 'ready' | 'review' | 'watch';
+  detail: string;
+} {
+  if (row.source.accountOrderPosition === null) {
+    return {
+      label: 'Review first',
+      tone: 'review',
+      detail: 'Account-order evidence is missing for this draft row.'
+    };
+  }
+  if (row.taxContext.effectiveTaxRatePct === null) {
+    return {
+      label: 'Needs tax review',
+      tone: 'watch',
+      detail: 'Tax context is incomplete for this draft row.'
+    };
+  }
+  if (row.grouping.yearWithdrawalCount > 1) {
+    return {
+      label: 'Ready with context',
+      tone: 'ready',
+      detail: `Row ${row.grouping.yearAccountIndex} of ${row.grouping.yearWithdrawalCount} for this year.`
+    };
+  }
+  return {
+    label: 'Ready for review',
+    tone: 'ready',
+    detail: 'Single-account draft row with account-order and tax context.'
+  };
+}
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5564,15 +5597,19 @@ function TinyTesterSurfacePanel({
           </p>
           <div className="runtime-draft-row-grid" aria-label="Runtime annual draft rows">
             {runtimeDraftRows.length ? (
-              runtimeDraftRows.slice(0, 6).map((row) => (
-                <article className="runtime-draft-row" key={`${row.year}-${row.account}-${row.source.withdrawalField}`}>
-                  <span>{row.year}</span>
-                  <strong>{row.label}</strong>
-                  <span>{formatMoney(row.amount)}</span>
-                  <span>{row.source.withdrawalFieldLabel}</span>
-                  <em>{row.taxContext.effectiveTaxRatePct === null ? 'Tax context review' : `${formatPercent(row.taxContext.effectiveTaxRatePct / 100)} effective tax context`}</em>
-                </article>
-              ))
+              runtimeDraftRows.slice(0, 6).map((row) => {
+                const rowStatus = runtimeDraftRowStatus(row);
+                return (
+                  <article className={`runtime-draft-row runtime-draft-row-${rowStatus.tone}`} key={`${row.year}-${row.account}-${row.source.withdrawalField}`}>
+                    <span>{row.year}</span>
+                    <strong>{row.label}</strong>
+                    <span className={`runtime-draft-status runtime-draft-status-${rowStatus.tone}`}>{rowStatus.label}</span>
+                    <span>{formatMoney(row.amount)}</span>
+                    <span>{row.source.withdrawalFieldLabel}</span>
+                    <em title={rowStatus.detail}>{row.taxContext.effectiveTaxRatePct === null ? 'Tax context review' : `${formatPercent(row.taxContext.effectiveTaxRatePct / 100)} effective tax context`}</em>
+                  </article>
+                );
+              })
             ) : (
               <p className="table-note">{loading ? 'Preparing runtime draft rows.' : 'No runtime draft rows are available yet.'}</p>
             )}

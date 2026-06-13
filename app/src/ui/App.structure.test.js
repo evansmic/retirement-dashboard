@@ -608,10 +608,16 @@ describe('Results overview structure', () => {
 
     expect(appSource).toContain('TESTER_RUNTIME_DRAFT_REVIEW_PROMPTS');
     expect(appSource).toContain('TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS');
+    expect(appSource).toContain('runtimeDraftRowStatus');
+    expect(appSource).toContain('Ready with context');
+    expect(appSource).toContain('Ready for review');
+    expect(appSource).toContain('Review first');
+    expect(appSource).toContain('Needs tax review');
     expect(testerSurface).toContain('runtimeDraftRows');
     expect(testerSurface).toContain('Runtime annual draft rows');
     expect(testerSurface).toContain('These rows come from the runtime experimental draft for made-up scenario testing.');
     expect(testerSurface).toContain('runtimeDraftRows.slice(0, 6).map');
+    expect(testerSurface).toContain('runtime-draft-status');
     expect(testerSurface).toContain('row.source.withdrawalFieldLabel');
     expect(testerSurface).toContain('row.taxContext.effectiveTaxRatePct');
     expect(appSource).toContain('Can testers tell these runtime rows are review material, not instructions?');
@@ -626,6 +632,9 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.runtime-annual-draft-rows-panel');
     expect(stylesSource).toContain('.runtime-draft-row-grid');
     expect(stylesSource).toContain('.runtime-draft-row');
+    expect(stylesSource).toContain('.runtime-draft-status-ready');
+    expect(stylesSource).toContain('.runtime-draft-status-review');
+    expect(stylesSource).toContain('.runtime-draft-status-watch');
   });
 
   it('shows runtime draft generator scope without save or export actions', () => {

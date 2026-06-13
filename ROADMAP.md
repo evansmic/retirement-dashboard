@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3008-S3027 is complete. Runtime annual draft rows in Results Details now include row-level readiness cues derived from existing account-order and tax-context evidence: ready for review, ready with context, review first, or needs tax review. Current remaining estimate: internal tester optimizer prototype 0-30 sprints, feature-complete app optimizer beta 70-150 sprints, and public-ready optimizer for real planning use 150-270 sprints. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md`](docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md).
+
 S2988-S3007 is complete. Results Details now renders runtime-only annual draft rows from the existing experimental annual instruction draft instead of relying on hand-written static example rows. The tester-only surface shows year, account label, review amount, source field label, and compact tax context while keeping saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation blocked. Current remaining estimate: internal tester optimizer prototype 0-40 sprints, feature-complete app optimizer beta 80-160 sprints, and public-ready optimizer for real planning use 160-280 sprints.
 
 Current package doc: [`docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md`](docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md).
