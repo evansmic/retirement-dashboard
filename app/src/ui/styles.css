@@ -3031,6 +3031,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-static-mock-copy-panel {
+  border-left: 3px solid #6f7f4f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

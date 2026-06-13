@@ -299,6 +299,36 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.annual-static-mock-boundary-panel');
   });
 
+  it('keeps static mock copy contract non-instructional', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_CONTRACT_ROWS');
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_PHRASES');
+    expect(testerSurface).toContain('Static mock copy contract');
+    expect(appSource).toContain('Label wording');
+    expect(appSource).toContain('Amount wording');
+    expect(appSource).toContain('Reason wording');
+    expect(appSource).toContain('Boundary wording');
+    expect(appSource).toContain('Avoid exact account-order commands such as draw this account first.');
+    expect(appSource).toContain('Avoid calculated withdrawal amounts, tax-target amounts, or annual spend instructions.');
+    expect(appSource).toContain('Avoid final rationale that tells the household what to do.');
+    expect(appSource).toContain('Avoid advice-like wording such as recommended withdrawal, best order, or tax strategy.');
+    expect(appSource).toContain('Allowed copy phrases:');
+    expect(appSource).toContain('Made-up scenario test');
+    expect(appSource).toContain('Not an instruction');
+    expect(testerSurface).not.toContain('STATIC_MOCK_COPY_ROWS');
+    expect(testerSurface).not.toContain('copyRows.map');
+    expect(testerSurface).not.toContain('generateCopyContract');
+    expect(testerSurface).not.toContain('createMockCopy');
+    expect(testerSurface).not.toContain('calculateCopyAmount');
+    expect(testerSurface).not.toContain('saveMockCopy');
+    expect(testerSurface).not.toContain('exportMockCopyCsv');
+    expect(testerSurface).not.toContain('promoteMockCopy');
+    expect(stylesSource).toContain('.annual-static-mock-copy-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

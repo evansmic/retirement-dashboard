@@ -475,6 +475,38 @@ const ANNUAL_INSTRUCTION_STATIC_MOCK_BLOCKED_PATHS = [
   'No production UI promotion.',
   'No saved schema changes.'
 ];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_CONTRACT_ROWS = [
+  {
+    label: 'Label wording',
+    required: 'Use plain account-category labels, such as RRSP review, TFSA review, taxable review, cash review, or benefit timing review.',
+    avoid: 'Avoid exact account-order commands such as draw this account first.'
+  },
+  {
+    label: 'Amount wording',
+    required: 'Use placeholder copy such as amount to review or fixed example amount.',
+    avoid: 'Avoid calculated withdrawal amounts, tax-target amounts, or annual spend instructions.'
+  },
+  {
+    label: 'Reason wording',
+    required: 'Use review reasons such as bridge funding review, tax context review, survivor review, or account-order review.',
+    avoid: 'Avoid final rationale that tells the household what to do.'
+  },
+  {
+    label: 'Boundary wording',
+    required: 'Say made-up scenario test, not saved, not final, and not an instruction.',
+    avoid: 'Avoid advice-like wording such as recommended withdrawal, best order, or tax strategy.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_PHRASES = [
+  'Review only',
+  'Made-up scenario test',
+  'Not saved',
+  'Not final',
+  'Not an instruction',
+  'Needs context before use'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5030,6 +5062,22 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {ANNUAL_INSTRUCTION_STATIC_MOCK_BLOCKED_PATHS.map((path) => (
               <li key={path}>{path}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-static-mock-copy-panel">
+          <h3>Static mock copy contract</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_CONTRACT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> Required: {row.required} Avoid: {row.avoid}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Allowed copy phrases:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_PHRASES.map((phrase) => (
+              <li key={phrase}>{phrase}</li>
             ))}
           </ul>
         </section>

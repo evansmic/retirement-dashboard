@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2768-S2787 is complete. The tester-only surface now includes a static mock copy contract for future annual instruction row mock work. The contract defines required wording, wording to avoid, and allowed copy phrases for labels, amounts, review reasons, and boundary notes. It keeps static mock rows, calculated amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation blocked.
+
+Current package doc: [`docs/sprint_2768_2787_annual_instruction_static_mock_copy_contract.md`](docs/sprint_2768_2787_annual_instruction_static_mock_copy_contract.md).
+
 S2748-S2767 is complete. The tester-only surface now includes a static mock boundary for future annual instruction row mock work. The boundary allows only fixed-label, hand-written, non-generative comprehension testing for made-up scenarios. Calculated annual withdrawal amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md`](docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md).
