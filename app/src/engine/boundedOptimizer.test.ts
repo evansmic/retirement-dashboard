@@ -1459,8 +1459,8 @@ describe('bounded optimizer runner', () => {
     expect(summary.continuationContract.nextPackages.map((item) => item.status)).toEqual([
       'later',
       'later',
-      'current',
-      'next'
+      'later',
+      'current'
     ]);
     expect(summary.schemaSaveDecision).toMatchObject({
       status: 'runtimeOnly',
@@ -1471,6 +1471,7 @@ describe('bounded optimizer runner', () => {
         'continuationContract',
         'schemaSaveDecision',
         'csvReportGate',
+        'publicSafetyValidation',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1522,6 +1523,48 @@ describe('bounded optimizer runner', () => {
       'publicScenarioCoverage'
     ]);
     expect(summary.csvReportGate.requiredEvidence.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked'
+    ]);
+    expect(summary.publicSafetyValidation).toMatchObject({
+      status: 'notPublicReady',
+      decision: 'keepPublicOptimizerClosed',
+      sourceCsvReportGateStatus: 'readyForGateReview',
+      stopConditions: [
+        'missingTaxContext',
+        'missingConstraintContext',
+        'ambiguousAccountEvidence',
+        'unsupportedHouseholdShape',
+        'testerMistakesReviewForInstruction',
+        'exportOrReportExpectation'
+      ],
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('keeps the optimizer closed for public use')
+    });
+    expect(summary.publicSafetyValidation.safetyRows.map((item) => item.id)).toEqual([
+      'reviewOnlyWording',
+      'stopConditions',
+      'unsupportedCaseHandling',
+      'scenarioCoverage',
+      'realDataTesterDistribution',
+      'publicReleaseControls'
+    ]);
+    expect(summary.publicSafetyValidation.safetyRows.map((item) => item.status)).toEqual([
       'ready',
       'ready',
       'blocked',

@@ -6821,6 +6821,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.publicSafetyValidation ? (
+        <section className={`optimizer-public-safety-validation public-safety-${summary.publicSafetyValidation.status}`}>
+          <div>
+            <p className="eyebrow">Public safety validation</p>
+            <h3>Public optimizer remains closed</h3>
+            <p>{summary.publicSafetyValidation.summary}</p>
+          </div>
+          <div className="optimizer-public-safety-grid">
+            {summary.publicSafetyValidation.safetyRows.map((item) => (
+              <article className={`public-safety-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Stop conditions</span>
+              <strong>{summary.publicSafetyValidation.stopConditions.length}</strong>
+              <p>{summary.publicSafetyValidation.stopConditions.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.publicSafetyValidation.blockedOutputs.length}</strong>
+              <p>{summary.publicSafetyValidation.blockedOutputs.join(', ')}</p>
+            </article>
+            <article>
+              <span>Decision</span>
+              <strong>{summary.publicSafetyValidation.decision}</strong>
+              <p>{summary.publicSafetyValidation.nextStep}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.publicSafetyValidation.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

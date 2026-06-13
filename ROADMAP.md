@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3408-S3427 is complete. The optimizer now has a public safety validation packet that keeps public optimizer release closed while naming review-only wording, stop conditions, unsupported-case gaps, scenario coverage gaps, real-data tester limits, and release-control requirements. Results Details shows the validation without opening production UI, CSV sequencing output, report sequencing output, final instructions, tax-bracket wording, schema changes, or `.plan.json` sequencing output. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-80 sprints.
+
+Current package doc: [`docs/sprint_3408_3427_public_safety_validation.md`](docs/sprint_3408_3427_public_safety_validation.md).
+
 S3388-S3407 is complete. The optimizer now has a CSV/report gate that depends on the saved-file no-write decision and beta sequencing row evidence, while CSV column contracts, report row contracts, wording safety, and public scenario coverage remain blocked. Results Details shows the gate without opening CSV sequencing output, report sequencing output, final instructions, tax-bracket wording, production UI, schema changes, or `.plan.json` sequencing output. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-90 sprints.
 
 Current package doc: [`docs/sprint_3388_3407_csv_and_report_gate.md`](docs/sprint_3388_3407_csv_and_report_gate.md).

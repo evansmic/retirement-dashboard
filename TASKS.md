@@ -6,17 +6,48 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3388-S3407 package, the remaining-work estimate is:
+As of the S3408-S3427 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-90 sprints remaining.
+- Public-ready optimizer for real planning use: 10-80 sprints remaining.
 
-Material change at S3388-S3407: yes. Feature-complete beta remains present, and the public-ready path is narrower because CSV/report output now has an explicit gate with required evidence and blocked output contracts.
+Material change at S3408-S3427: yes. Feature-complete beta remains present, and the public-ready path is narrower because public safety validation now has explicit stop conditions, blocked release controls, and scenario/unsupported-case gaps.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3388-S3407: CSV And Report Gate
+## Latest Package — S3408-S3427: Public Safety Validation
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the minimum public safety validation boundary before any public optimizer output opens. The bounded optimizer now emits `publicSafetyValidation` with `keepPublicOptimizerClosed`, review-only wording evidence, stop-condition evidence, unsupported-case gaps, scenario coverage gaps, real-data tester limits, and release-control blockers. Results Details renders the validation while production UI, exports, reports, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed.
+
+Package doc: [`docs/sprint_3408_3427_public_safety_validation.md`](docs/sprint_3408_3427_public_safety_validation.md).
+
+### S3408-S3427 Completed Path
+
+- Added engine-owned public safety validation types and selector.
+- Marked public optimizer release closed.
+- Added safety rows for review-only wording, stop conditions, unsupported-case handling, scenario coverage, real-data tester distribution, and release controls.
+- Added explicit stop conditions for missing context, ambiguous evidence, unsupported household shapes, tester confusion, and export/report expectations.
+- Surfaced the validation in Results Details.
+- Extended plan-file tests to keep public safety validation out of `.plan.json` output.
+
+### S3408-S3427 Definition Of Done
+
+- `publicSafetyValidation` is present in bounded optimizer summaries.
+- Decision is `keepPublicOptimizerClosed`.
+- Stop conditions are explicit.
+- Unsupported-case handling, broader scenario coverage, real-data tester distribution, and public release controls remain blocked.
+- Production UI, exports, reports, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove public safety validation is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Unsupported Cases And Scenario Coverage
+
+Goal: define the concrete unsupported-case matrix and broader fixture coverage needed before a public optimizer release decision can be revisited. This should remain a planning/validation package, not a release or export implementation package.
+
+## Previous Package — S3388-S3407: CSV And Report Gate
 
 **Status:** Complete 2026-06-13.
 
@@ -41,10 +72,6 @@ Package doc: [`docs/sprint_3388_3407_csv_and_report_gate.md`](docs/sprint_3388_3
 - Final annual instructions, tax-bracket wording, production UI, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove the gate is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Public Safety Validation
-
-Goal: validate real-planning wording, stop conditions, unsupported-case behavior, and broader scenario coverage before any public optimizer output opens. This should keep exports, reports, production UI, final instructions, and tax-bracket wording blocked while defining the minimum safety evidence for public readiness.
 
 ## Previous Package — S3368-S3387: Schema And Save Decision
 

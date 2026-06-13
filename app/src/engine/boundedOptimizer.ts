@@ -681,6 +681,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'continuationContract'
     | 'schemaSaveDecision'
     | 'csvReportGate'
+    | 'publicSafetyValidation'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -737,6 +738,47 @@ export type OptimizerCsvReportGate = {
     | 'finalAnnualInstructions'
     | 'taxBracketWording'
     | 'productionUi'
+    | 'savedPlanSchemaChanges'
+    | 'engineOutputSchemaChanges'
+    | 'planJsonSequencingOutput'
+  >;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPublicSafetyValidation = {
+  status: 'notPublicReady' | 'blocked';
+  decision: 'keepPublicOptimizerClosed';
+  sourceCsvReportGateStatus: OptimizerCsvReportGate['status'];
+  safetyRows: Array<{
+    id:
+      | 'reviewOnlyWording'
+      | 'stopConditions'
+      | 'unsupportedCaseHandling'
+      | 'scenarioCoverage'
+      | 'realDataTesterDistribution'
+      | 'publicReleaseControls';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  stopConditions: Array<
+    | 'missingTaxContext'
+    | 'missingConstraintContext'
+    | 'ambiguousAccountEvidence'
+    | 'unsupportedHouseholdShape'
+    | 'testerMistakesReviewForInstruction'
+    | 'exportOrReportExpectation'
+  >;
+  blockedOutputs: Array<
+    | 'publicOptimizerRelease'
+    | 'realDataTesterDistribution'
+    | 'productionUi'
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
     | 'savedPlanSchemaChanges'
     | 'engineOutputSchemaChanges'
     | 'planJsonSequencingOutput'
@@ -1595,6 +1637,7 @@ export type BoundedOptimizerSummary = {
   continuationContract: OptimizerContinuationContract;
   schemaSaveDecision: OptimizerSchemaSaveDecision;
   csvReportGate: OptimizerCsvReportGate;
+  publicSafetyValidation: OptimizerPublicSafetyValidation;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5033,13 +5076,13 @@ export function selectOptimizerContinuationContract({
         id: 'exportReportGate',
         label: 'CSV and report gate',
         purpose: 'Plan export/report rows only after saved-shape and wording boundaries are stable.',
-        status: 'current'
+        status: 'later'
       },
       {
         id: 'publicSafetyValidation',
         label: 'Public safety validation',
         purpose: 'Validate real-planning wording, stop conditions, public fixtures, and unsupported-case behavior before release.',
-        status: 'next'
+        status: 'current'
       }
     ],
     verificationPlan: {
@@ -5056,6 +5099,89 @@ export function selectOptimizerContinuationContract({
       : 'Optimizer beta still needs review before public-readiness work can begin.',
     boundary:
       'This contract consolidates continuation state only. It does not unlock saved schema changes, engine output schema changes, .plan.json sequencing output, CSV output, report output, production UI, final annual instructions, tax-bracket wording, or real-data tester distribution.'
+  };
+}
+
+export function selectOptimizerPublicSafetyValidation({
+  csvReportGate
+}: {
+  csvReportGate: OptimizerCsvReportGate;
+}): OptimizerPublicSafetyValidation {
+  const gateReadyForReview = csvReportGate.status === 'readyForGateReview';
+  return {
+    status: gateReadyForReview ? 'notPublicReady' : 'blocked',
+    decision: 'keepPublicOptimizerClosed',
+    sourceCsvReportGateStatus: csvReportGate.status,
+    safetyRows: [
+      {
+        id: 'reviewOnlyWording',
+        label: 'Review-only wording',
+        status: gateReadyForReview ? 'ready' : 'blocked',
+        detail: gateReadyForReview
+          ? 'Current optimizer language frames beta sequencing as review evidence, not final instructions or tax advice.'
+          : 'Review-only wording waits for upstream beta and export/report gates.'
+      },
+      {
+        id: 'stopConditions',
+        label: 'Stop conditions',
+        status: gateReadyForReview ? 'ready' : 'blocked',
+        detail: gateReadyForReview
+          ? 'Missing context, unsupported household shapes, and tester confusion remain explicit stop conditions.'
+          : 'Stop conditions wait for upstream gate evidence.'
+      },
+      {
+        id: 'unsupportedCaseHandling',
+        label: 'Unsupported-case handling',
+        status: 'blocked',
+        detail: 'Public use still needs clear behavior for unsupported account, household, tax, survivor, and estate cases.'
+      },
+      {
+        id: 'scenarioCoverage',
+        label: 'Scenario coverage',
+        status: 'blocked',
+        detail: 'Public readiness needs broader fixtures and real-planning edge-case coverage beyond synthetic beta scenarios.'
+      },
+      {
+        id: 'realDataTesterDistribution',
+        label: 'Real-data tester distribution',
+        status: 'blocked',
+        detail: 'Real financial data should not be used until wording, stop conditions, and unsupported-case behavior are validated.'
+      },
+      {
+        id: 'publicReleaseControls',
+        label: 'Public release controls',
+        status: 'blocked',
+        detail: 'Production UI, exports, reports, final instructions, and tax-bracket wording require explicit release controls.'
+      }
+    ],
+    stopConditions: [
+      'missingTaxContext',
+      'missingConstraintContext',
+      'ambiguousAccountEvidence',
+      'unsupportedHouseholdShape',
+      'testerMistakesReviewForInstruction',
+      'exportOrReportExpectation'
+    ],
+    blockedOutputs: [
+      'publicOptimizerRelease',
+      'realDataTesterDistribution',
+      'productionUi',
+      'csvSequencingOutput',
+      'reportSequencingOutput',
+      'finalAnnualInstructions',
+      'taxBracketWording',
+      'savedPlanSchemaChanges',
+      'engineOutputSchemaChanges',
+      'planJsonSequencingOutput'
+    ],
+    summary:
+      gateReadyForReview
+        ? 'Public safety validation is framed, but the optimizer is not public-ready.'
+        : 'Public safety validation is blocked until upstream gates are ready for review.',
+    boundary:
+      'This validation keeps the optimizer closed for public use. It does not open real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Use these safety rows to plan unsupported-case handling and broader scenario coverage before any public optimizer release decision.'
   };
 }
 
@@ -5177,6 +5303,7 @@ export function selectOptimizerSchemaSaveDecision({
       'continuationContract',
       'schemaSaveDecision',
       'csvReportGate',
+      'publicSafetyValidation',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -8077,6 +8204,7 @@ export function runBoundedOptimizer(
   const continuationContract = selectOptimizerContinuationContract({ betaSavedSequencingAdapter });
   const schemaSaveDecision = selectOptimizerSchemaSaveDecision({ betaSavedSequencingAdapter, continuationContract });
   const csvReportGate = selectOptimizerCsvReportGate({ betaSavedSequencingAdapter, schemaSaveDecision });
+  const publicSafetyValidation = selectOptimizerPublicSafetyValidation({ csvReportGate });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -8113,6 +8241,7 @@ export function runBoundedOptimizer(
     continuationContract,
     schemaSaveDecision,
     csvReportGate,
+    publicSafetyValidation,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
