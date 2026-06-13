@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3328-S3347 is complete. The bounded optimizer now emits an engine-owned beta saved sequencing adapter from runtime annual account sequence review evidence, and Results Details shows the internal beta rows with allowed fields, excluded fields, quality status, and boundary copy. Feature-complete app optimizer beta is functionally present for internal saved-sequencing review, while saved schema changes, engine output schema changes for public consumers, `.plan.json` sequencing output, CSV output, report output, production UI, final annual instructions, tax-bracket wording, broad tester distribution, and public release remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-110 sprints.
+
+Current package doc: [`docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md`](docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md).
+
 S3308-S3327 is complete. The beta saved sequencing gate now treats present constraint context as preserved beta review evidence instead of an automatic blocker, while missing constraint context remains a repair target. This makes the saved sequencing implementation gate viable for the next adapter package while saved sequencing writes, CSV output, reports, production UI, final instructions, tax-bracket wording, saved schema changes, engine output schema changes, and `.plan.json` generation remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0-10 sprints, and public-ready optimizer for real planning use 10-120 sprints.
 
 Current package doc: [`docs/sprint_3308_3327_beta_saved_sequencing_gate_repair.md`](docs/sprint_3308_3327_beta_saved_sequencing_gate_repair.md).

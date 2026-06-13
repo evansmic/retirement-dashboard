@@ -1395,6 +1395,33 @@ describe('bounded optimizer runner', () => {
     });
     expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.boundary).toContain('not saved');
     expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.nextStep).toContain('runtime-only annual draft rows');
+    expect(summary.betaSavedSequencingAdapter).toMatchObject({
+      status: 'readyForBetaReview',
+      audience: 'internalBetaOnly',
+      sourceDraftStatus: 'draftReady',
+      allowedFields: ['year', 'accountLabel', 'reviewAmount', 'sourceEvidence', 'taxContext', 'constraintContext', 'qualityStatus'],
+      excludedFields: ['finalInstruction', 'taxBracketTarget', 'csvColumn', 'reportRow', 'productionUiAction'],
+      blockedOutputs: [
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonGeneration',
+        'csvOutput',
+        'reportOutput',
+        'productionUi',
+        'finalAnnualInstructions',
+        'taxBracketWording'
+      ],
+      boundary: expect.stringContaining('does not change saved schema')
+    });
+    expect(summary.betaSavedSequencingAdapter.rows[0]).toMatchObject({
+      year: 2032,
+      accountLabel: 'Registered accounts',
+      reviewAmount: 26000,
+      qualityStatus: 'readyForBetaReview',
+      boundaryStatus: expect.stringContaining('Internal beta review row only')
+    });
+    expect(JSON.stringify(summary.betaSavedSequencingAdapter).toLowerCase()).not.toContain('stay under');
+    expect(JSON.stringify(summary.betaSavedSequencingAdapter).toLowerCase()).not.toContain('withdraw from');
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

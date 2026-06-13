@@ -5916,6 +5916,7 @@ function TinyTesterSurfacePanel({
   const sequenceBetaOutputGate = summarizeRuntimeAnnualSequenceBetaOutputGate(sequenceReviewRows, sequenceRepairApplicationGate);
   const sequenceSavedShapeDecision = summarizeRuntimeAnnualSequenceSavedShapeDecision(sequenceReviewRows, sequenceBetaOutputGate);
   const sequenceSavedImplementationDecision = summarizeRuntimeAnnualSequenceSavedImplementationDecision(sequenceSavedShapeDecision);
+  const betaSavedSequencingAdapter = summary?.betaSavedSequencingAdapter || null;
   const dataSourceLabel = surface?.preflightChecklist.dataSource ? 'Current tester packet' : 'Preparing';
   const approvalLabel =
     approval?.approval === 'approveTinyTesterSurface'
@@ -6541,6 +6542,32 @@ function TinyTesterSurfacePanel({
                 <em>{decision.boundary}</em>
               </article>
             ))}
+          </div>
+          <div className="annual-sequence-beta-saved-adapter" aria-label="Beta saved sequencing adapter">
+            <article className={`annual-sequence-beta-adapter-summary annual-sequence-beta-adapter-summary-${(betaSavedSequencingAdapter?.status || 'blocked').toLowerCase()}`}>
+              <strong>Beta saved sequencing adapter</strong>
+              <span>{betaSavedSequencingAdapter?.status || 'blocked'}</span>
+              <em>{betaSavedSequencingAdapter?.summary || 'Beta saved sequencing adapter is waiting for runtime annual sequence rows.'}</em>
+              <em>{betaSavedSequencingAdapter?.boundary || 'No saved schema, CSV, report, production UI, final instruction, or tax-bracket output is open.'}</em>
+            </article>
+            <div className="annual-sequence-beta-adapter-fields">
+              <span>Allowed fields: {(betaSavedSequencingAdapter?.allowedFields || []).join(', ') || 'none'}</span>
+              <span>Excluded fields: {(betaSavedSequencingAdapter?.excludedFields || []).join(', ') || 'final and export fields'}</span>
+            </div>
+            <div className="annual-sequence-beta-adapter-grid">
+              {(betaSavedSequencingAdapter?.rows || []).slice(0, 6).map((row) => (
+                <article className={`annual-sequence-beta-adapter-row annual-sequence-beta-adapter-row-${row.qualityStatus.toLowerCase()}`} key={`${row.year}-${row.accountLabel}-${row.reviewAmount}`}>
+                  <span>{row.year}</span>
+                  <strong>{row.accountLabel}</strong>
+                  <span>{formatMoney(row.reviewAmount)}</span>
+                  <span>{row.qualityStatus} ({row.qualityScore}/6)</span>
+                  <em>{row.sourceEvidence}</em>
+                  <em>{row.taxContext}</em>
+                  <em>{row.constraintContext}</em>
+                  <em>{row.boundaryStatus}</em>
+                </article>
+              ))}
+            </div>
           </div>
           <div className="annual-sequence-review-grid" aria-label="Runtime annual account sequence review rows">
             {sequenceReviewRows.length ? (

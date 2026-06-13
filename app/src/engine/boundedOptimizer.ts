@@ -585,6 +585,51 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   nextStep: string;
 };
 
+export type OptimizerBetaSavedSequencingRow = {
+  year: number;
+  accountLabel: string;
+  reviewAmount: number;
+  sourceEvidence: string;
+  taxContext: string;
+  constraintContext: string;
+  qualityStatus: 'readyForBetaReview' | 'readyWithContext' | 'reviewBeforeSave';
+  qualityScore: number;
+  qualityReasons: string[];
+  boundaryStatus: string;
+};
+
+export type OptimizerBetaSavedSequencingAdapter = {
+  status: 'readyForBetaReview' | 'reviewFirst' | 'blocked';
+  audience: 'internalBetaOnly';
+  sourceDraftStatus: OptimizerExperimentalAnnualInstructionDraft['status'];
+  sourceCandidateId: BoundedOptimizerCandidateId | null;
+  sourceCandidateLabel: string;
+  rows: OptimizerBetaSavedSequencingRow[];
+  allowedFields: Array<
+    | 'year'
+    | 'accountLabel'
+    | 'reviewAmount'
+    | 'sourceEvidence'
+    | 'taxContext'
+    | 'constraintContext'
+    | 'qualityStatus'
+  >;
+  excludedFields: Array<'finalInstruction' | 'taxBracketTarget' | 'csvColumn' | 'reportRow' | 'productionUiAction'>;
+  blockedOutputs: Array<
+    | 'savedPlanSchemaChanges'
+    | 'engineOutputSchemaChanges'
+    | 'planJsonGeneration'
+    | 'csvOutput'
+    | 'reportOutput'
+    | 'productionUi'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
+  >;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrixItem = {
   id: string;
   label: string;
@@ -1430,6 +1475,7 @@ export type BoundedOptimizerSummary = {
   annualSequencingInputAdapter: OptimizerAnnualSequencingInputAdapter;
   experimentalAccountOrderDraft: OptimizerExperimentalAccountOrderDraft;
   experimentalAnnualInstructionDraft: OptimizerExperimentalAnnualInstructionDraft;
+  betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -4728,6 +4774,104 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   };
 }
 
+function buildBetaSavedSequencingQuality({
+  row,
+  annualTotal,
+  constraintContext
+}: {
+  row: OptimizerExperimentalAnnualInstructionDraftRow;
+  annualTotal: OptimizerExperimentalAnnualAccountTotal | undefined;
+  constraintContext: string;
+}): Pick<OptimizerBetaSavedSequencingRow, 'qualityStatus' | 'qualityScore' | 'qualityReasons'> {
+  const qualityReasons = [
+    row.source.withdrawalFieldLabel ? 'Source evidence present' : 'Source evidence review needed',
+    annualTotal ? 'Annual account total present' : 'Annual account total review needed',
+    row.source.accountOrderPosition === null ? 'Account-order evidence review needed' : 'Account-order evidence present',
+    row.taxContext.effectiveTaxRatePct === null ? 'Tax context review needed' : 'Tax context present',
+    constraintContext ? 'Constraint context preserved' : 'Constraint context review needed',
+    'Output boundary visible'
+  ];
+  const qualityScore = qualityReasons.filter((reason) =>
+    reason.includes('present') || reason.includes('preserved') || reason.includes('visible')
+  ).length;
+  const qualityStatus: OptimizerBetaSavedSequencingRow['qualityStatus'] =
+    qualityScore >= 5 ? 'readyForBetaReview' : qualityScore >= 4 ? 'readyWithContext' : 'reviewBeforeSave';
+  return { qualityStatus, qualityScore, qualityReasons };
+}
+
+export function selectOptimizerBetaSavedSequencingAdapter(
+  draft: OptimizerExperimentalAnnualInstructionDraft
+): OptimizerBetaSavedSequencingAdapter {
+  const rows = draft.rows.slice(0, 12).map((row) => {
+    const annualTotal = draft.annualAccountTotals.find((total) =>
+      total.year === row.year && total.accounts.some((account) => account.account === row.account)
+    );
+    const constraintContext =
+      draft.harmChecks.find((check) => check.status === 'block' || check.status === 'watch')?.detail ||
+      draft.readinessSummary.reviewItems[0] ||
+      'Constraint context preserved for beta review.';
+    const quality = buildBetaSavedSequencingQuality({ row, annualTotal, constraintContext });
+    const taxContext =
+      row.taxContext.effectiveTaxRatePct === null
+        ? 'Tax context review needed; do not create tax-bracket wording.'
+        : `${row.taxContext.effectiveTaxRatePct}% effective tax context; OAS recovery ${row.taxContext.oasRecoveryStatus}.`;
+
+    return {
+      year: row.year,
+      accountLabel: row.label || 'Account review needed',
+      reviewAmount: Math.round(row.amount),
+      sourceEvidence: `${row.source.withdrawalFieldLabel}; ${
+        annualTotal ? `annual account total ${Math.round(annualTotal.totalAmount)}` : 'annual total review needed'
+      }`,
+      taxContext,
+      constraintContext,
+      ...quality,
+      boundaryStatus: 'Internal beta review row only; not saved to plan files, exported, reported, public, final, or tax-bracket wording.'
+    };
+  });
+  const needsRepair = rows.some((row) => row.qualityStatus === 'reviewBeforeSave');
+  const hasRows = rows.length > 0;
+  const status: OptimizerBetaSavedSequencingAdapter['status'] =
+    draft.status === 'draftReady' && hasRows && !needsRepair
+      ? 'readyForBetaReview'
+      : hasRows
+        ? 'reviewFirst'
+        : 'blocked';
+
+  return {
+    status,
+    audience: 'internalBetaOnly',
+    sourceDraftStatus: draft.status,
+    sourceCandidateId: draft.sourceCandidateId,
+    sourceCandidateLabel: draft.sourceCandidateLabel,
+    rows,
+    allowedFields: ['year', 'accountLabel', 'reviewAmount', 'sourceEvidence', 'taxContext', 'constraintContext', 'qualityStatus'],
+    excludedFields: ['finalInstruction', 'taxBracketTarget', 'csvColumn', 'reportRow', 'productionUiAction'],
+    blockedOutputs: [
+      'savedPlanSchemaChanges',
+      'engineOutputSchemaChanges',
+      'planJsonGeneration',
+      'csvOutput',
+      'reportOutput',
+      'productionUi',
+      'finalAnnualInstructions',
+      'taxBracketWording'
+    ],
+    summary:
+      status === 'readyForBetaReview'
+        ? 'Beta saved sequencing adapter rows are ready for internal beta review from current runtime evidence.'
+        : status === 'reviewFirst'
+          ? 'Beta saved sequencing adapter rows exist, but review-before-save evidence remains.'
+          : 'Beta saved sequencing adapter is blocked until runtime annual draft rows exist.',
+    boundary:
+      'This adapter creates an internal beta review payload only. It does not change saved schema, engine output schema, .plan.json generation, CSV output, reports, production UI, final annual instructions, or tax-bracket wording.',
+    nextStep:
+      status === 'readyForBetaReview'
+        ? 'Use the adapter in internal beta review, then plan CSV/report/schema work as separate public-readiness gates.'
+        : 'Repair row quality and source evidence before treating beta saved sequencing as feature-complete.'
+  };
+}
+
 function selectOptimizerSyntheticTesterPacketReadinessMatrix(
   examples: Array<{
     id: string;
@@ -7593,6 +7737,7 @@ export function runBoundedOptimizer(
     accountOrderDraft: experimentalAccountOrderDraft,
     summary: suggestedRow ? summaryById[suggestedRow.id] : null
   });
+  const betaSavedSequencingAdapter = selectOptimizerBetaSavedSequencingAdapter(experimentalAnnualInstructionDraft);
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -7625,6 +7770,7 @@ export function runBoundedOptimizer(
     annualSequencingInputAdapter,
     experimentalAccountOrderDraft,
     experimentalAnnualInstructionDraft,
+    betaSavedSequencingAdapter,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3308-S3327 package, the remaining-work estimate is:
+As of the S3328-S3347 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
-- Feature-complete app optimizer beta: 0-10 sprints remaining.
-- Public-ready optimizer for real planning use: 10-120 sprints remaining.
+- Feature-complete app optimizer beta: 0 sprints remaining.
+- Public-ready optimizer for real planning use: 10-110 sprints remaining.
 
-Material change at S3308-S3327: no. Feature-complete beta remains one implementation package away; public-ready range tightened by one package because the saved implementation gate now treats preserved constraint context as usable beta review evidence.
+Material change at S3328-S3347: yes. The first beta saved sequencing adapter is implemented as an internal review payload, so feature-complete app optimizer beta is functionally present. Public-ready work remains gated behind schema, export, report, production UI, final-instruction, tax wording, validation, and safety packages.
 
-Update the remaining-sprint estimate after every 20-sprint package.
+Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3308-S3327: Beta Saved Sequencing Gate Repair
+## Latest Package — S3328-S3347: Beta Saved Sequencing Adapter Implementation
+
+**Status:** Complete 2026-06-13.
+
+Goal: implement the first internal beta saved sequencing adapter from runtime annual account sequence review evidence. The bounded optimizer now emits `betaSavedSequencingAdapter` with review rows, allowed fields, excluded fields, blocked outputs, and boundary copy. Results Details renders the adapter in the tester-only surface. This creates a beta review payload only; it does not change saved schema, engine output schema for public consumers, `.plan.json` generation, CSV output, report output, production UI, final instructions, or tax-bracket wording.
+
+Package doc: [`docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md`](docs/sprint_3328_3347_beta_saved_sequencing_adapter_implementation.md).
+
+### S3328-S3347 Completed Path
+
+- Added engine-owned beta saved sequencing adapter types and selector.
+- Built beta rows from current runtime annual draft evidence only.
+- Kept final instructions, tax-bracket targets, CSV fields, report rows, and production UI actions excluded.
+- Rendered the adapter in Results Details as internal beta review material.
+- Added focused optimizer tests for the adapter shape and non-advisory boundary.
+
+### S3328-S3347 Definition Of Done
+
+- `betaSavedSequencingAdapter` is present in bounded optimizer summaries.
+- Adapter rows preserve source evidence, tax context, constraint context, quality status, and boundary status.
+- Allowed and excluded fields are explicit.
+- Saved schema changes, engine output schema changes, `.plan.json` sequencing output, CSV output, report output, production UI, final annual instructions, and tax-bracket wording remain blocked.
+- Focused optimizer tests and UI structure tests pass before commit.
+
+## Next Package — Optimizer Contract Consolidation
+
+Goal: replace the sprawling optimizer sprint trail with a compact contract for the next phase. The contract should identify beta-ready surfaces, still-blocked public outputs, candidate generation responsibilities, scoring responsibilities, annual sequencing responsibilities, validation gates, public-safety stop conditions, and release criteria. This should be one substantial package, not a sequence of micro-doc sprints.
+
+## Previous Package — S3308-S3327: Beta Saved Sequencing Gate Repair
 
 **Status:** Complete 2026-06-13.
 
