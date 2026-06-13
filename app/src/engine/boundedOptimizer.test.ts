@@ -1456,6 +1456,30 @@ describe('bounded optimizer runner', () => {
       'exportReportGate',
       'publicSafetyValidation'
     ]);
+    expect(summary.schemaSaveDecision).toMatchObject({
+      status: 'runtimeOnly',
+      decision: 'doNotSaveBetaSequencingYet',
+      allowedSavedKeys: [],
+      forbiddenSavedKeys: expect.arrayContaining([
+        'betaSavedSequencingAdapter',
+        'continuationContract',
+        'schemaSaveDecision',
+        'annualAccountInstructions',
+        'finalAnnualInstructions',
+        'taxBracketTargets'
+      ]),
+      blockedOutputs: [
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'productionUi',
+        'finalAnnualInstructions',
+        'taxBracketWording'
+      ],
+      boundary: expect.stringContaining('keeps beta sequencing out of saved .plan.json files')
+    });
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

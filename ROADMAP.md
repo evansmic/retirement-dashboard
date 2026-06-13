@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3368-S3387 is complete. The optimizer now has an explicit schema/save decision: beta sequencing remains runtime-only, allowed saved sequencing keys are empty, and `.plan.json` files stay limited to clean editable planning inputs. Results Details shows the decision beside the continuation contract, and plan-file tests prove beta sequencing packets, continuation state, and schema/save decisions are stripped from saved files. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-100 sprints.
+
+Current package doc: [`docs/sprint_3368_3387_schema_and_save_decision.md`](docs/sprint_3368_3387_schema_and_save_decision.md).
+
 S3348-S3367 is complete. The optimizer now has a compact engine-owned continuation contract that identifies beta-ready surfaces, blocked public outputs, next public-readiness packages, and the focused verification path for the current low-storage machine. Results Details shows the continuation contract so future work can continue from a manageable summary rather than the full checkpoint archive. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-110 sprints.
 
 Current package doc: [`docs/sprint_3348_3367_optimizer_contract_consolidation.md`](docs/sprint_3348_3367_optimizer_contract_consolidation.md).

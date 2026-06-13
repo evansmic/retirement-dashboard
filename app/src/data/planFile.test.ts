@@ -170,6 +170,19 @@ describe('plan file adapters', () => {
           forbiddenSavedKeys: ['testerPacketExportGuard']
         }
       },
+      betaSavedSequencingAdapter: {
+        status: 'readyForBetaReview',
+        rows: [{ year: 2030, accountLabel: 'Registered accounts', reviewAmount: 10000 }]
+      },
+      continuationContract: {
+        status: 'featureCompleteBeta',
+        blockedPublicOutputs: ['planJsonSequencingOutput']
+      },
+      schemaSaveDecision: {
+        status: 'runtimeOnly',
+        decision: 'doNotSaveBetaSequencingYet',
+        forbiddenSavedKeys: ['betaSavedSequencingAdapter', 'continuationContract', 'schemaSaveDecision']
+      },
       boundedOptimizer: {
         status: 'ready'
       },
@@ -189,6 +202,9 @@ describe('plan file adapters', () => {
     expect(saved.plan).not.toHaveProperty('annualSequencingInputAdapter');
     expect(saved.plan).not.toHaveProperty('experimentalAccountOrderDraft');
     expect(saved.plan).not.toHaveProperty('experimentalAnnualInstructionDraft');
+    expect(saved.plan).not.toHaveProperty('betaSavedSequencingAdapter');
+    expect(saved.plan).not.toHaveProperty('continuationContract');
+    expect(saved.plan).not.toHaveProperty('schemaSaveDecision');
     expect(saved.plan).not.toHaveProperty('boundedOptimizer');
     expect(saved.plan).not.toHaveProperty('optimizerOutput');
     expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
@@ -197,6 +213,10 @@ describe('plan file adapters', () => {
     expect(serialized).not.toContain('annualSequencingInputAdapter');
     expect(serialized).not.toContain('experimentalAccountOrderDraft');
     expect(serialized).not.toContain('experimentalAnnualInstructionDraft');
+    expect(serialized).not.toContain('betaSavedSequencingAdapter');
+    expect(serialized).not.toContain('continuationContract');
+    expect(serialized).not.toContain('schemaSaveDecision');
+    expect(serialized).not.toContain('doNotSaveBetaSequencingYet');
     expect(serialized).not.toContain('testerPacketBoundary');
     expect(serialized).not.toContain('testerPacketExportGuard');
     expect(serialized).not.toContain('accountOrder');

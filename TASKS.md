@@ -6,17 +6,46 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3348-S3367 package, the remaining-work estimate is:
+As of the S3368-S3387 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-110 sprints remaining.
+- Public-ready optimizer for real planning use: 10-100 sprints remaining.
 
-Material change at S3348-S3367: no. Feature-complete beta remains present; this package consolidates continuation context and verification workflow so public-ready work can continue without micro-sprint sprawl.
+Material change at S3368-S3387: yes. Feature-complete beta remains present, and the public-ready path is narrower because saved-file behavior now has an explicit no-write decision with plan-file test coverage.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3348-S3367: Optimizer Contract Consolidation
+## Latest Package — S3368-S3387: Schema And Save Decision
+
+**Status:** Complete 2026-06-13.
+
+Goal: make the beta optimizer saved-file boundary explicit before continuing toward public-ready optimizer output. The bounded optimizer now emits `schemaSaveDecision` with `doNotSaveBetaSequencingYet`, empty allowed saved keys, forbidden runtime optimizer keys, local-first and privacy rules, and blocked public outputs. Results Details renders the decision, and plan-file tests prove beta sequencing packets, continuation state, and schema/save decisions are stripped from `.plan.json` output.
+
+Package doc: [`docs/sprint_3368_3387_schema_and_save_decision.md`](docs/sprint_3368_3387_schema_and_save_decision.md).
+
+### S3368-S3387 Completed Path
+
+- Added engine-owned optimizer schema/save decision types and selector.
+- Kept beta sequencing runtime-only with no allowed saved sequencing keys.
+- Surfaced the decision in Results Details beside the continuation contract.
+- Extended plan-file tests to guard `.plan.json` output against optimizer runtime packets.
+- Kept CSV output, reports, production UI, final annual instructions, and tax-bracket wording blocked.
+
+### S3368-S3387 Definition Of Done
+
+- `schemaSaveDecision` is present in bounded optimizer summaries.
+- Decision is `doNotSaveBetaSequencingYet`.
+- Allowed saved optimizer sequencing keys are empty.
+- Runtime optimizer packets are listed as forbidden saved keys.
+- Plan-file tests prove optimizer runtime packets are not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — CSV And Report Gate
+
+Goal: decide the public-readiness gate for CSV/report sequencing output now that saved plan files remain clean. This should define what export/report evidence would be required, keep final advice-like wording and tax-bracket instructions blocked, and avoid adding CSV/report rows until wording and schema boundaries are stable.
+
+## Previous Package — S3348-S3367: Optimizer Contract Consolidation
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +68,6 @@ Package doc: [`docs/sprint_3348_3367_optimizer_contract_consolidation.md`](docs/
 - Contract lists next packages: contract consolidation, schema decision, export/report gate, public safety validation.
 - `npm run test:focused` exists.
 - Focused tests and production build pass before commit.
-
-## Next Package — Schema And Save Decision
-
-Goal: decide whether beta sequencing should remain runtime-only, be stored in a saved beta packet, be exposed through engine output, or wait until public-ready validation is stronger. This should include a clear no-write default, explicit privacy/local-first rules, and tests proving existing `.plan.json` behavior remains unchanged.
 
 ## Previous Package — S3328-S3347: Beta Saved Sequencing Adapter Implementation
 

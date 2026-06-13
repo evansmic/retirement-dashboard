@@ -6756,6 +6756,34 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.schemaSaveDecision ? (
+        <section className={`optimizer-schema-save-decision schema-save-${summary.schemaSaveDecision.status}`}>
+          <div>
+            <p className="eyebrow">Schema and save decision</p>
+            <h3>Keep beta sequencing in review</h3>
+            <p>{summary.schemaSaveDecision.summary}</p>
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Decision</span>
+              <strong>{summary.schemaSaveDecision.decision}</strong>
+              <p>{summary.schemaSaveDecision.reason}</p>
+            </article>
+            <article>
+              <span>Saved keys allowed</span>
+              <strong>{summary.schemaSaveDecision.allowedSavedKeys.length}</strong>
+              <p>{summary.schemaSaveDecision.localFirstRule}</p>
+            </article>
+            <article>
+              <span>Forbidden runtime keys</span>
+              <strong>{summary.schemaSaveDecision.forbiddenSavedKeys.length}</strong>
+              <p>{summary.schemaSaveDecision.forbiddenSavedKeys.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.schemaSaveDecision.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

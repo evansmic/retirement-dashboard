@@ -664,6 +664,46 @@ export type OptimizerContinuationContract = {
   boundary: string;
 };
 
+export type OptimizerSchemaSaveDecision = {
+  status: 'runtimeOnly' | 'blocked';
+  decision: 'doNotSaveBetaSequencingYet';
+  reason: string;
+  allowedSavedKeys: [];
+  forbiddenSavedKeys: Array<
+    | 'capacityObjective'
+    | 'capacityReportReadiness'
+    | 'capacityExportGuard'
+    | 'annualSequencingPrepContract'
+    | 'annualSequencingInputAdapter'
+    | 'experimentalAccountOrderDraft'
+    | 'experimentalAnnualInstructionDraft'
+    | 'betaSavedSequencingAdapter'
+    | 'continuationContract'
+    | 'schemaSaveDecision'
+    | 'boundedOptimizer'
+    | 'optimizerOutput'
+    | 'annualAccountInstructions'
+    | 'annualSequencingOutput'
+    | 'finalAnnualInstructions'
+    | 'taxBracketTargets'
+  >;
+  blockedOutputs: Array<
+    | 'savedPlanSchemaChanges'
+    | 'engineOutputSchemaChanges'
+    | 'planJsonSequencingOutput'
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+    | 'productionUi'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
+  >;
+  localFirstRule: string;
+  privacyRule: string;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrixItem = {
   id: string;
   label: string;
@@ -1511,6 +1551,7 @@ export type BoundedOptimizerSummary = {
   experimentalAnnualInstructionDraft: OptimizerExperimentalAnnualInstructionDraft;
   betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
   continuationContract: OptimizerContinuationContract;
+  schemaSaveDecision: OptimizerSchemaSaveDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -4975,6 +5016,64 @@ export function selectOptimizerContinuationContract({
   };
 }
 
+export function selectOptimizerSchemaSaveDecision({
+  betaSavedSequencingAdapter,
+  continuationContract
+}: {
+  betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
+  continuationContract: OptimizerContinuationContract;
+}): OptimizerSchemaSaveDecision {
+  const readyForRuntimeReview =
+    betaSavedSequencingAdapter.status === 'readyForBetaReview' && continuationContract.status === 'featureCompleteBeta';
+  return {
+    status: readyForRuntimeReview ? 'runtimeOnly' : 'blocked',
+    decision: 'doNotSaveBetaSequencingYet',
+    reason: readyForRuntimeReview
+      ? 'Beta sequencing is ready for internal runtime review, but saved plan files should remain clean until the public schema and wording gates pass.'
+      : 'Beta sequencing does not have enough runtime review evidence to consider saved-file shape work.',
+    allowedSavedKeys: [],
+    forbiddenSavedKeys: [
+      'capacityObjective',
+      'capacityReportReadiness',
+      'capacityExportGuard',
+      'annualSequencingPrepContract',
+      'annualSequencingInputAdapter',
+      'experimentalAccountOrderDraft',
+      'experimentalAnnualInstructionDraft',
+      'betaSavedSequencingAdapter',
+      'continuationContract',
+      'schemaSaveDecision',
+      'boundedOptimizer',
+      'optimizerOutput',
+      'annualAccountInstructions',
+      'annualSequencingOutput',
+      'finalAnnualInstructions',
+      'taxBracketTargets'
+    ],
+    blockedOutputs: [
+      'savedPlanSchemaChanges',
+      'engineOutputSchemaChanges',
+      'planJsonSequencingOutput',
+      'csvSequencingOutput',
+      'reportSequencingOutput',
+      'productionUi',
+      'finalAnnualInstructions',
+      'taxBracketWording'
+    ],
+    localFirstRule:
+      'Local .plan.json save/load remains limited to clean editable planning inputs; optimizer sequencing review packets are recomputed at runtime.',
+    privacyRule:
+      'Do not persist beta review rows, candidate evidence, final-style annual instructions, or tax-bracket wording into user plan files.',
+    summary: readyForRuntimeReview
+      ? 'Schema/save decision is runtime-only: beta sequencing can be reviewed internally, but plan files stay unchanged.'
+      : 'Schema/save decision remains blocked until beta sequencing runtime evidence is ready.',
+    boundary:
+      'This decision keeps beta sequencing out of saved .plan.json files, saved schema migrations, engine output schema changes, CSV output, reports, production UI, final annual instructions, and tax-bracket wording.',
+    nextStep:
+      'Implement the CSV/report gate only after the no-write saved-file boundary is verified by plan-file tests and public wording remains blocked.'
+  };
+}
+
 function selectOptimizerSyntheticTesterPacketReadinessMatrix(
   examples: Array<{
     id: string;
@@ -7842,6 +7941,7 @@ export function runBoundedOptimizer(
   });
   const betaSavedSequencingAdapter = selectOptimizerBetaSavedSequencingAdapter(experimentalAnnualInstructionDraft);
   const continuationContract = selectOptimizerContinuationContract({ betaSavedSequencingAdapter });
+  const schemaSaveDecision = selectOptimizerSchemaSaveDecision({ betaSavedSequencingAdapter, continuationContract });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -7876,6 +7976,7 @@ export function runBoundedOptimizer(
     experimentalAnnualInstructionDraft,
     betaSavedSequencingAdapter,
     continuationContract,
+    schemaSaveDecision,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
