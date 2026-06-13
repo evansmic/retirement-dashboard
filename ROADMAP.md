@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3488-S3507 is complete. The optimizer now rolls fixture assertion results back into the unsupported-case coverage matrix. Staggered-couple, registered-heavy, taxable-heavy, survivor/estate, and thin-data gaps become verified synthetic coverage when assertions pass, while prior synthetic beta rows remain clearly distinct from public readiness. Public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-40 sprints.
+
+Current package doc: [`docs/sprint_3488_3507_fixture_matrix_rollup.md`](docs/sprint_3488_3507_fixture_matrix_rollup.md).
+
 S3468-S3487 is complete. The optimizer now has in-memory synthetic fixture builders and focused stop-condition assertion rows for staggered-couple, registered-heavy, taxable-heavy, survivor/estate, and thin-data coverage gaps. Tests prove the fixture shapes, shared no-output assertions, and `.plan.json` stripping behavior while public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-50 sprints.
 
 Current package doc: [`docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md`](docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md).

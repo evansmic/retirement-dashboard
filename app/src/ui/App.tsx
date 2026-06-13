@@ -6925,6 +6925,45 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.fixtureMatrixRollup ? (
+        <section className={`optimizer-fixture-matrix-rollup fixture-rollup-${summary.fixtureMatrixRollup.status}`}>
+          <div>
+            <p className="eyebrow">Fixture matrix rollup</p>
+            <h3>Synthetic coverage verified, public output closed</h3>
+            <p>{summary.fixtureMatrixRollup.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.fixtureMatrixRollup.coverageRows.map((item) => (
+              <article className={`fixture-rollup-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.evidence}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Assertions passed</span>
+              <strong>
+                {summary.fixtureMatrixRollup.assertionSummary.passed}/{summary.fixtureMatrixRollup.assertionSummary.total}
+              </strong>
+              <p>{summary.fixtureMatrixRollup.nextStep}</p>
+            </article>
+            <article>
+              <span>Decision</span>
+              <strong>{summary.fixtureMatrixRollup.decision}</strong>
+              <p>Public optimizer output stays closed.</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.fixtureMatrixRollup.blockedOutputs.length}</strong>
+              <p>{summary.fixtureMatrixRollup.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.fixtureMatrixRollup.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

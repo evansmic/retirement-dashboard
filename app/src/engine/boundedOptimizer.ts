@@ -684,6 +684,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'publicSafetyValidation'
     | 'unsupportedCaseCoverage'
     | 'fixtureCoverageImplementationPlan'
+    | 'fixtureMatrixRollup'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -910,6 +911,26 @@ export type OptimizerFixtureStopAssertionRow = {
     | 'blockedOutputs';
   status: 'pass' | 'fail';
   detail: string;
+};
+
+export type OptimizerFixtureMatrixRollup = {
+  status: 'syntheticCoverageVerifiedPublicClosed' | 'blocked';
+  decision: 'keepPublicClosedAfterSyntheticRollup';
+  sourceCoverageStatus: OptimizerUnsupportedCaseCoverage['status'];
+  assertionSummary: {
+    passed: number;
+    total: number;
+  };
+  coverageRows: Array<{
+    id: OptimizerUnsupportedCaseCoverage['fixtureCoverageRows'][number]['id'];
+    label: string;
+    status: 'verifiedSynthetic' | 'coveredByPriorSyntheticBeta' | 'plannedOnly';
+    evidence: string;
+  }>;
+  blockedOutputs: OptimizerUnsupportedCaseCoverage['blockedOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
 };
 
 export type OptimizerExperimentalDraftExampleMatrixItem = {
@@ -1764,6 +1785,7 @@ export type BoundedOptimizerSummary = {
   publicSafetyValidation: OptimizerPublicSafetyValidation;
   unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
   fixtureCoverageImplementationPlan: OptimizerFixtureCoverageImplementationPlan;
+  fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5792,6 +5814,76 @@ export function selectOptimizerFixtureStopAssertionRows(
   ];
 }
 
+export function selectOptimizerFixtureMatrixRollup({
+  unsupportedCaseCoverage,
+  assertionRows
+}: {
+  unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
+  assertionRows: OptimizerFixtureStopAssertionRow[];
+}): OptimizerFixtureMatrixRollup {
+  const passed = assertionRows.filter((row) => row.status === 'pass').length;
+  const total = assertionRows.length;
+  const allAssertionsPass = total > 0 && passed === total;
+  const fixtureStatusByCoverageId: Partial<Record<OptimizerUnsupportedCaseCoverage['fixtureCoverageRows'][number]['id'], OptimizerFixtureStopAssertionRow['id']>> = {
+    coupleStaggeredRetirement: 'coupleStaggeredFixture',
+    registeredHeavy: 'registeredHeavyFixture',
+    taxableHeavy: 'taxableHeavyFixture',
+    survivorEstateConstraint: 'survivorEstateFixture',
+    thinDataPlan: 'thinDataFixture'
+  };
+  const assertionStatus = new Map(assertionRows.map((row) => [row.id, row.status]));
+  const coverageRows: OptimizerFixtureMatrixRollup['coverageRows'] = unsupportedCaseCoverage.fixtureCoverageRows.map((row) => {
+    const assertionId = fixtureStatusByCoverageId[row.id];
+    if (assertionId && assertionStatus.get(assertionId) === 'pass' && assertionStatus.get('blockedOutputs') === 'pass') {
+      return {
+        id: row.id,
+        label: row.label,
+        status: 'verifiedSynthetic',
+        evidence: `Synthetic fixture ${assertionId} passes shape and no-output assertions.`
+      };
+    }
+    if (row.status === 'coveredBySyntheticBeta') {
+      return {
+        id: row.id,
+        label: row.label,
+        status: 'coveredByPriorSyntheticBeta',
+        evidence: row.detail
+      };
+    }
+    return {
+      id: row.id,
+      label: row.label,
+      status: 'plannedOnly',
+      evidence: row.detail
+    };
+  });
+  const verifiedCount = coverageRows.filter((row) => row.status === 'verifiedSynthetic').length;
+  const status: OptimizerFixtureMatrixRollup['status'] =
+    unsupportedCaseCoverage.status === 'coveragePlannedPublicClosed' && allAssertionsPass
+      ? 'syntheticCoverageVerifiedPublicClosed'
+      : 'blocked';
+
+  return {
+    status,
+    decision: 'keepPublicClosedAfterSyntheticRollup',
+    sourceCoverageStatus: unsupportedCaseCoverage.status,
+    assertionSummary: {
+      passed,
+      total
+    },
+    coverageRows,
+    blockedOutputs: unsupportedCaseCoverage.blockedOutputs,
+    summary:
+      status === 'syntheticCoverageVerifiedPublicClosed'
+        ? `${verifiedCount} fixture coverage gaps now have verified synthetic coverage; public optimizer output remains closed.`
+        : 'Fixture matrix rollup waits for all synthetic fixture assertions to pass.',
+    boundary:
+      'This rollup updates synthetic coverage evidence only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Use the verified synthetic coverage rollup to plan remaining release-control validation before public optimizer output is reconsidered.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -5913,6 +6005,7 @@ export function selectOptimizerSchemaSaveDecision({
       'publicSafetyValidation',
       'unsupportedCaseCoverage',
       'fixtureCoverageImplementationPlan',
+      'fixtureMatrixRollup',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -8816,6 +8909,12 @@ export function runBoundedOptimizer(
   const publicSafetyValidation = selectOptimizerPublicSafetyValidation({ csvReportGate });
   const unsupportedCaseCoverage = selectOptimizerUnsupportedCaseCoverage({ publicSafetyValidation });
   const fixtureCoverageImplementationPlan = selectOptimizerFixtureCoverageImplementationPlan({ unsupportedCaseCoverage });
+  const optimizerFixtureCoveragePlans = createOptimizerFixtureCoveragePlans(plan);
+  const fixtureStopAssertionRows = selectOptimizerFixtureStopAssertionRows(optimizerFixtureCoveragePlans);
+  const fixtureMatrixRollup = selectOptimizerFixtureMatrixRollup({
+    unsupportedCaseCoverage,
+    assertionRows: fixtureStopAssertionRows
+  });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -8855,6 +8954,7 @@ export function runBoundedOptimizer(
     publicSafetyValidation,
     unsupportedCaseCoverage,
     fixtureCoverageImplementationPlan,
+    fixtureMatrixRollup,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

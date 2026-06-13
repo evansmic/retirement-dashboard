@@ -7,6 +7,7 @@ import {
   buildBoundedOptimizerCandidates,
   createOptimizerFixtureCoveragePlans,
   runBoundedOptimizer,
+  selectOptimizerFixtureMatrixRollup,
   selectOptimizerFixtureStopAssertionRows,
   selectOptimizerExperimentalDraftExampleMatrix,
   selectOptimizerAnnualSequencingPrepContract,
@@ -1476,6 +1477,7 @@ describe('bounded optimizer runner', () => {
         'publicSafetyValidation',
         'unsupportedCaseCoverage',
         'fixtureCoverageImplementationPlan',
+        'fixtureMatrixRollup',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1667,6 +1669,37 @@ describe('bounded optimizer runner', () => {
       'next',
       'later',
       'later'
+    ]);
+    expect(summary.fixtureMatrixRollup).toMatchObject({
+      status: 'syntheticCoverageVerifiedPublicClosed',
+      decision: 'keepPublicClosedAfterSyntheticRollup',
+      sourceCoverageStatus: 'coveragePlannedPublicClosed',
+      assertionSummary: {
+        passed: 7,
+        total: 7
+      },
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('updates synthetic coverage evidence only')
+    });
+    expect(summary.fixtureMatrixRollup.coverageRows.map((item) => item.status)).toEqual([
+      'coveredByPriorSyntheticBeta',
+      'verifiedSynthetic',
+      'coveredByPriorSyntheticBeta',
+      'verifiedSynthetic',
+      'verifiedSynthetic',
+      'verifiedSynthetic',
+      'verifiedSynthetic'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
@@ -2569,6 +2602,34 @@ describe('bounded optimizer runner', () => {
       expect(serialized).not.toContain('implementSyntheticFixturesBeforePublicRelease');
       expect(serialized).not.toContain('keepPublicOptimizerClosed');
     });
+  });
+
+  it('rolls fixture assertions into coverage status without opening public output', () => {
+    const summary = runBoundedOptimizer(readyPlan(), (candidatePlan, config) => {
+      if (config.withdrawalOrder === 'registered-first') return result(170000, 80000, null, { registeredDraw: 26000, tfsaDraw: 5000 });
+      return candidatePlan.spending.gogo === readyPlan().spending.gogo ? result(100000, 90000, null) : result(90000, 95000, null);
+    });
+    const fixtures = createOptimizerFixtureCoveragePlans(readyPlan());
+    const rows = selectOptimizerFixtureStopAssertionRows(fixtures);
+    const failedRows = rows.map((row) => (row.id === 'thinDataFixture' ? { ...row, status: 'fail' as const } : row));
+    const failedRollup = selectOptimizerFixtureMatrixRollup({
+      unsupportedCaseCoverage: summary.unsupportedCaseCoverage,
+      assertionRows: failedRows
+    });
+
+    expect(summary.fixtureMatrixRollup.coverageRows.filter((row) => row.status === 'verifiedSynthetic')).toHaveLength(5);
+    expect(failedRollup).toMatchObject({
+      status: 'blocked',
+      decision: 'keepPublicClosedAfterSyntheticRollup',
+      assertionSummary: {
+        passed: 6,
+        total: 7
+      }
+    });
+    expect(failedRollup.coverageRows.find((row) => row.id === 'thinDataPlan')).toMatchObject({
+      status: 'plannedOnly'
+    });
+    expect(failedRollup.blockedOutputs).toContain('publicOptimizerRelease');
   });
 
   it('adds bridge-year evidence for the benefit timing check', () => {

@@ -6,17 +6,47 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3468-S3487 package, the remaining-work estimate is:
+As of the S3488-S3507 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-50 sprints remaining.
+- Public-ready optimizer for real planning use: 10-40 sprints remaining.
 
-Material change at S3468-S3487: yes. Feature-complete beta remains present, and the public-ready path is narrower because the synthetic fixture builders and stop-condition assertion rows now exist in code.
+Material change at S3488-S3507: yes. Feature-complete beta remains present, and the public-ready path is narrower because fixture assertion results now roll back into the coverage matrix as verified synthetic coverage.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3468-S3487: Fixture Builders And Stop Assertions
+## Latest Package — S3488-S3507: Fixture Matrix Rollup
+
+**Status:** Complete 2026-06-13.
+
+Goal: connect fixture assertion results back into the unsupported-case coverage matrix so coverage can move from planned gaps to verified synthetic coverage without opening public output. The bounded optimizer now emits `fixtureMatrixRollup` with assertion summary, per-fixture coverage status, blocked outputs, and public-closed boundary copy.
+
+Package doc: [`docs/sprint_3488_3507_fixture_matrix_rollup.md`](docs/sprint_3488_3507_fixture_matrix_rollup.md).
+
+### S3488-S3507 Completed Path
+
+- Added engine-owned fixture matrix rollup types and selector.
+- Connected fixture assertion rows to unsupported-case fixture coverage rows.
+- Marked five fixture gaps as verified synthetic coverage when assertions pass.
+- Kept prior synthetic beta coverage distinct from public-ready coverage.
+- Added failure-path tests proving failed fixture assertions keep rows planned only.
+- Extended plan-file tests to keep fixture matrix rollup out of `.plan.json` output.
+
+### S3488-S3507 Definition Of Done
+
+- `fixtureMatrixRollup` is present in bounded optimizer summaries.
+- Assertion summary records passed and total assertion rows.
+- Fixture coverage rows distinguish verified synthetic, prior synthetic beta, and planned-only coverage.
+- Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove fixture matrix rollup is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Release-Control Validation
+
+Goal: define the final release-control checks needed before any public optimizer output can be reconsidered, still without opening production UI, exports, reports, final instructions, tax-bracket wording, or saved schema changes.
+
+## Previous Package — S3468-S3487: Fixture Builders And Stop Assertions
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +69,6 @@ Package doc: [`docs/sprint_3468_3487_fixture_builders_and_stop_assertions.md`](d
 - Every fixture carries no-output assertions for saved files, CSV, reports, final instructions, and tax-bracket wording.
 - Plan-file tests prove fixture metadata is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Fixture Matrix Rollup
-
-Goal: connect fixture assertion results back into the unsupported-case coverage matrix so coverage can move from planned gaps to verified synthetic coverage without opening public output.
 
 ## Previous Package — S3448-S3467: Fixture Coverage Implementation Planning
 
