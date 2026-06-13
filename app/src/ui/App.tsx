@@ -507,6 +507,42 @@ const ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_PHRASES = [
   'Not an instruction',
   'Needs context before use'
 ];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_FIELDS = [
+  {
+    label: 'Fixture year',
+    rule: 'Use a clearly made-up year label from a synthetic scenario.',
+    blocked: 'Do not read or calculate the year from a real plan.'
+  },
+  {
+    label: 'Fixture account label',
+    rule: 'Use a plain review label such as RRSP review, TFSA review, taxable review, cash review, or benefit timing review.',
+    blocked: 'Do not create an exact account order.'
+  },
+  {
+    label: 'Fixture amount label',
+    rule: 'Use placeholder wording or one hand-written example amount.',
+    blocked: 'Do not calculate annual withdrawal amounts.'
+  },
+  {
+    label: 'Fixture review reason',
+    rule: 'Use a review reason from the copy contract, such as bridge funding review or tax context review.',
+    blocked: 'Do not create final rationale or instructions.'
+  },
+  {
+    label: 'Fixture boundary note',
+    rule: 'Say the row is a made-up scenario test, not saved, not final, and not an instruction.',
+    blocked: 'Do not imply production readiness.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_RULES = [
+  'Fixture data must be hand-written.',
+  'Fixture data must be synthetic.',
+  'Fixture data must be removable before production UI work.',
+  'Fixture data must not be saved, exported, printed, or added to reports.',
+  'Fixture data must not change saved plan schema or engine output schema.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5078,6 +5114,22 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {ANNUAL_INSTRUCTION_STATIC_MOCK_COPY_PHRASES.map((phrase) => (
               <li key={phrase}>{phrase}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-static-mock-fixture-panel">
+          <h3>Static mock fixture boundary</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_FIELDS.map((field) => (
+              <li key={field.label}>
+                <strong>{field.label}:</strong> Rule: {field.rule} Blocked: {field.blocked}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Fixture rules:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_RULES.map((rule) => (
+              <li key={rule}>{rule}</li>
             ))}
           </ul>
         </section>

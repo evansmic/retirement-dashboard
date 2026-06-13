@@ -329,6 +329,35 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.annual-static-mock-copy-panel');
   });
 
+  it('keeps static mock fixture boundary non-rendering', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_FIELDS');
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_RULES');
+    expect(testerSurface).toContain('Static mock fixture boundary');
+    expect(appSource).toContain('Fixture year');
+    expect(appSource).toContain('Fixture account label');
+    expect(appSource).toContain('Fixture amount label');
+    expect(appSource).toContain('Fixture review reason');
+    expect(appSource).toContain('Fixture boundary note');
+    expect(appSource).toContain('Fixture data must be hand-written.');
+    expect(appSource).toContain('Fixture data must be synthetic.');
+    expect(appSource).toContain('Fixture data must not be saved, exported, printed, or added to reports.');
+    expect(appSource).toContain('Fixture data must not change saved plan schema or engine output schema.');
+    expect(testerSurface).not.toContain('STATIC_MOCK_FIXTURE_ROWS');
+    expect(testerSurface).not.toContain('fixtureRows.map');
+    expect(testerSurface).not.toContain('renderFixtureRow');
+    expect(testerSurface).not.toContain('createFixtureRow');
+    expect(testerSurface).not.toContain('generateFixtureRow');
+    expect(testerSurface).not.toContain('calculateFixtureAmount');
+    expect(testerSurface).not.toContain('saveFixture');
+    expect(testerSurface).not.toContain('exportFixtureCsv');
+    expect(testerSurface).not.toContain('promoteFixture');
+    expect(stylesSource).toContain('.annual-static-mock-fixture-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

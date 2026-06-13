@@ -16,7 +16,37 @@ Material change at S2728-S2747: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2828-S2847.
 
-## Latest Package — S2768-S2787: Annual Instruction Static Mock Copy Contract
+## Latest Package — S2788-S2807: Annual Instruction Static Mock Row Fixture Boundary
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the fixture boundary for a future hand-written annual instruction static mock row before any fixture rows are implemented. The tester-only surface now shows fixture fields and fixture rules while keeping rendered fixture rows, calculations, generated rows, saved output, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, or timeline approval logic.
+
+Package doc: [`docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md`](docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md).
+
+### S2788-S2807 Completed Path
+
+- **S2788-S2792 — Fixture field batch.** Added static fixture field boundaries for year, account label, amount label, review reason, and boundary note.
+- **S2793-S2797 — Fixture rule batch.** Added rules requiring future fixture data to be hand-written, synthetic, removable, non-saved, non-exported, non-printed, and schema-neutral.
+- **S2798-S2802 — Source guard batch.** Added structure checks that block rendered fixture rows, fixture row creation, fixture generation, fixture calculations, saved fixture output, CSV export, and promotion paths.
+- **S2803-S2807 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2788-S2807 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock fixture boundary is visible.
+- Fixture fields and fixture rules are visible.
+- Fixture boundary remains static and non-rendering.
+- No static mock rows or fixture rows are implemented.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2768-S2787: Annual Instruction Static Mock Copy Contract
 
 **Status:** Complete 2026-06-13.
 

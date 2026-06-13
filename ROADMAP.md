@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2788-S2807 is complete. The tester-only surface now includes a static mock fixture boundary for future annual instruction row mock work. The boundary defines fixture fields and rules for hand-written, synthetic, removable, non-saved, non-exported, non-printed, schema-neutral fixture data. It keeps rendered fixture rows, calculated amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation blocked.
+
+Current package doc: [`docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md`](docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md).
+
 S2768-S2787 is complete. The tester-only surface now includes a static mock copy contract for future annual instruction row mock work. The contract defines required wording, wording to avoid, and allowed copy phrases for labels, amounts, review reasons, and boundary notes. It keeps static mock rows, calculated amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation blocked.
 
 Current package doc: [`docs/sprint_2768_2787_annual_instruction_static_mock_copy_contract.md`](docs/sprint_2768_2787_annual_instruction_static_mock_copy_contract.md).

@@ -3036,6 +3036,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-static-mock-fixture-panel {
+  border-left: 3px solid #7f6f4f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,
