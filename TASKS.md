@@ -16,7 +16,37 @@ Material change at S2728-S2747: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2828-S2847.
 
-## Latest Package — S2728-S2747: Optimizer Timeline Reassessment And Prototype Shape Checkpoint
+## Latest Package — S2748-S2767: Annual Instruction Non-Generative Row Mock Boundary
+
+**Status:** Complete 2026-06-12.
+
+Goal: define what a future annual instruction static row mock may and may not do before any mock rows are implemented. The tester-only surface now shows a static mock boundary that allows only fixed-label comprehension testing and keeps calculated amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, or timeline approval logic.
+
+Package doc: [`docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md`](docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md).
+
+### S2748-S2767 Completed Path
+
+- **S2748-S2752 — Allowed mock boundary batch.** Added fixed-label, static-copy, comprehension-test boundaries for a future mock.
+- **S2753-S2757 — Blocked path batch.** Kept calculated annual amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, report output, production UI, and saved schema changes blocked.
+- **S2758-S2762 — Source guard batch.** Added structure checks that block static mock rows, generated mock rows, derived mock rows, mock calculations, saved mock output, CSV export, and promotion paths.
+- **S2763-S2767 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2748-S2767 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock boundary is visible.
+- Future mock scope is limited to fixed-label comprehension testing.
+- Calculated annual withdrawal amounts remain blocked.
+- Generated account order and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- No static mock rows are implemented.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2728-S2747: Optimizer Timeline Reassessment And Prototype Shape Checkpoint
 
 **Status:** Complete 2026-06-12.
 

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2748-S2767 is complete. The tester-only surface now includes a static mock boundary for future annual instruction row mock work. The boundary allows only fixed-label, hand-written, non-generative comprehension testing for made-up scenarios. Calculated annual withdrawal amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md`](docs/sprint_2748_2767_annual_instruction_non_generative_row_mock_boundary.md).
+
 S2728-S2747 is complete. The first 100-sprint optimizer timeline checkpoint found no material change to the S2628 baseline: internal tester prototype remains 80-120 sprints from S2628, feature-complete beta remains 180-260 sprints from S2628, and public-ready optimizer remains 300-450 sprints from S2628. The next material estimate checkpoint is S2828-S2847. The tester-only surface now also records that prototype shape and source mapping are ready only for a future non-generative static mock, while generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md`](docs/sprint_2728_2747_optimizer_timeline_reassessment_and_prototype_shape_checkpoint.md).

@@ -441,6 +441,40 @@ const PROTOTYPE_SHAPE_CHECKPOINT_ROWS = [
     detail: 'Generated rows, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.'
   }
 ];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_BOUNDARY_ROWS = [
+  {
+    label: 'Allowed content',
+    status: 'Fixed labels only',
+    detail: 'A future mock may use fixed example labels to test whether the row shape is understandable.'
+  },
+  {
+    label: 'Allowed source',
+    status: 'Static tester copy',
+    detail: 'A future mock may be written by hand for made-up scenarios, not derived from optimizer calculations.'
+  },
+  {
+    label: 'Allowed purpose',
+    status: 'Comprehension test',
+    detail: 'A future mock may test labels, ordering language, review reasons, and boundary copy.'
+  },
+  {
+    label: 'Review trigger',
+    status: 'Manual review only',
+    detail: 'Any confusing mock row should become copy or context cleanup, not an instruction-generation approval.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_BLOCKED_PATHS = [
+  'No calculated annual withdrawal amounts.',
+  'No generated account order.',
+  'No tax-bracket targets.',
+  'No saved sequencing output.',
+  'No CSV output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No saved schema changes.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -4980,6 +5014,22 @@ function TinyTesterSurfacePanel({
               <li key={row.label}>
                 <strong>{row.label} ({row.status}):</strong> {row.detail}
               </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-static-mock-boundary-panel">
+          <h3>Static mock boundary</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_BOUNDARY_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked for the mock:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_BLOCKED_PATHS.map((path) => (
+              <li key={path}>{path}</li>
             ))}
           </ul>
         </section>

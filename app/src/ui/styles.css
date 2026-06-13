@@ -3026,6 +3026,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-static-mock-boundary-panel {
+  border-left: 3px solid #4f7f62;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

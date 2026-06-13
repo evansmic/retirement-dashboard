@@ -270,6 +270,35 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.prototype-shape-checkpoint-panel');
   });
 
+  it('keeps static mock boundary fixed-label only', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_BOUNDARY_ROWS');
+    expect(appSource).toContain('ANNUAL_INSTRUCTION_STATIC_MOCK_BLOCKED_PATHS');
+    expect(testerSurface).toContain('Static mock boundary');
+    expect(appSource).toContain('Allowed content');
+    expect(appSource).toContain('Fixed labels only');
+    expect(appSource).toContain('Allowed source');
+    expect(appSource).toContain('Static tester copy');
+    expect(appSource).toContain('Allowed purpose');
+    expect(appSource).toContain('Comprehension test');
+    expect(appSource).toContain('Still blocked for the mock:');
+    expect(appSource).toContain('No calculated annual withdrawal amounts.');
+    expect(appSource).toContain('No generated account order.');
+    expect(appSource).toContain('No tax-bracket targets.');
+    expect(testerSurface).not.toContain('STATIC_MOCK_ROWS');
+    expect(testerSurface).not.toContain('mockRows.map');
+    expect(testerSurface).not.toContain('generateStaticMock');
+    expect(testerSurface).not.toContain('deriveMock');
+    expect(testerSurface).not.toContain('calculateMockAmount');
+    expect(testerSurface).not.toContain('saveStaticMock');
+    expect(testerSurface).not.toContain('exportStaticMockCsv');
+    expect(testerSurface).not.toContain('promoteStaticMock');
+    expect(stylesSource).toContain('.annual-static-mock-boundary-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
