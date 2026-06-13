@@ -16,7 +16,36 @@ Material change at S2728-S2747: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2828-S2847.
 
-## Latest Package — S2788-S2807: Annual Instruction Static Mock Row Fixture Boundary
+## Latest Package — S2808-S2827: Annual Instruction Static Mock Fixture Approval Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: decide whether the boundary, copy contract, and fixture contract are sufficient to allow future planning for a hand-written static mock row surface. The tester-only surface now shows an approval gate that allows only static surface planning while keeping rendered rows, calculations, generated account order, tax-bracket targets, saved output, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, or timeline approval logic.
+
+Package doc: [`docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md`](docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md).
+
+### S2808-S2827 Completed Path
+
+- **S2808-S2812 — Readiness decision batch.** Added readiness rows showing that the boundary, copy contract, and fixture contract are clear enough for future static mock surface planning.
+- **S2813-S2817 — Allowed next-step batch.** Limited the next step to planning where a hand-written static mock could appear inside the tester-only surface.
+- **S2818-S2822 — Approval limit batch.** Kept rendered rows, calculated values, generated account order, saved output, CSV output, reports, production UI, and schema changes explicitly unapproved.
+- **S2823-S2827 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2808-S2827 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock approval gate is visible.
+- Gate allows future static surface planning only.
+- Gate does not approve rendered static mock rows.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2788-S2807: Annual Instruction Static Mock Row Fixture Boundary
 
 **Status:** Complete 2026-06-13.
 

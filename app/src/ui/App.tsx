@@ -543,6 +543,41 @@ const ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_RULES = [
   'Fixture data must not be saved, exported, printed, or added to reports.',
   'Fixture data must not change saved plan schema or engine output schema.'
 ];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_GATE_ROWS = [
+  {
+    label: 'Boundary readiness',
+    status: 'Ready for static mock planning',
+    detail: 'The boundary, copy contract, and fixture contract are clear enough to plan a future hand-written mock surface.'
+  },
+  {
+    label: 'Allowed next step',
+    status: 'Plan static surface only',
+    detail: 'A future package may plan where a hand-written static mock could appear inside the tester-only surface.'
+  },
+  {
+    label: 'Still missing',
+    status: 'Needs implementation plan',
+    detail: 'The exact fixture rows, layout, tester questions, and removal path still need separate review.'
+  },
+  {
+    label: 'Approval limit',
+    status: 'No output approval',
+    detail: 'This gate does not approve rendered rows, calculated values, generated account order, saved output, CSV output, reports, production UI, or schema changes.'
+  }
+];
+
+const ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_BLOCKERS = [
+  'No rendered static mock rows in this package.',
+  'No calculated annual withdrawal amounts.',
+  'No generated account order.',
+  'No tax-bracket targets.',
+  'No saved sequencing output.',
+  'No CSV output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No saved schema changes.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5130,6 +5165,22 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {ANNUAL_INSTRUCTION_STATIC_MOCK_FIXTURE_RULES.map((rule) => (
               <li key={rule}>{rule}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel annual-static-mock-approval-panel">
+          <h3>Static mock approval gate</h3>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_GATE_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked after this gate:</p>
+          <ul className="compact-list">
+            {ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
             ))}
           </ul>
         </section>

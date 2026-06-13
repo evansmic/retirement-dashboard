@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2808-S2827 is complete. The tester-only surface now includes a static mock fixture approval gate for future annual instruction row mock work. The gate says the boundary, copy contract, and fixture contract are clear enough for future static surface planning only. It does not approve rendered static mock rows, calculated values, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, or `.plan.json` generation.
+
+Current package doc: [`docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md`](docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md).
+
 S2788-S2807 is complete. The tester-only surface now includes a static mock fixture boundary for future annual instruction row mock work. The boundary defines fixture fields and rules for hand-written, synthetic, removable, non-saved, non-exported, non-printed, schema-neutral fixture data. It keeps rendered fixture rows, calculated amounts, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation blocked.
 
 Current package doc: [`docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md`](docs/sprint_2788_2807_annual_instruction_static_mock_row_fixture_boundary.md).

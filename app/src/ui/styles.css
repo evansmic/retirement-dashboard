@@ -3041,6 +3041,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.annual-static-mock-approval-panel {
+  border-left: 3px solid #7f4f62;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,
