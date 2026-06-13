@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2908-S2927 is complete. The tester-only surface now includes a final preflight gate for future static mock surface implementation planning. Placement, layout, and removal contracts are clear enough to plan a later implementation package only, while implementation in this package, rendered mock rows, calculated values, generated account order, saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md`](docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md).
+
 S2888-S2907 is complete. The tester-only surface now includes a static mock surface removal contract for future annual instruction row mock work. The contract requires future mock surface code to stay grouped for removal in one scoped change and keeps future mock content out of shared selectors, saved schema, engine output, reports, CSV, production routes, release controls, rendered rows, calculated values, generated account order, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation.
 
 Current package doc: [`docs/sprint_2888_2907_annual_instruction_static_mock_surface_removal_contract.md`](docs/sprint_2888_2907_annual_instruction_static_mock_surface_removal_contract.md).

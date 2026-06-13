@@ -16,7 +16,36 @@ Material change at S2828-S2847: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
 
-## Latest Package — S2888-S2907: Annual Instruction Static Mock Surface Removal Contract
+## Latest Package — S2908-S2927: Annual Instruction Static Mock Surface Final Preflight Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: decide whether placement, layout, and removal contracts are sufficient to allow future tester-only hand-written static mock surface implementation planning. The tester-only surface now shows a final preflight gate with contract readiness, the allowed next step, implementation limits, and output limits while keeping rendered rows, calculations, generated account order, saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schemas, and `.plan.json` generation blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, timeline approval logic, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md`](docs/sprint_2908_2927_annual_instruction_static_mock_surface_final_preflight_gate.md).
+
+### S2908-S2927 Completed Path
+
+- **S2908-S2912 — Contract readiness batch.** Added final preflight rows for contract readiness, allowed next step, implementation limit, and output limit.
+- **S2913-S2917 — Blocked implementation batch.** Blocked implementation, rendered rows, calculated values, generated account order, saved sequencing, CSV output, report output, production UI, and schema changes.
+- **S2918-S2922 — Source guard batch.** Added structure checks that block implementation flags, row maps, render/create/save/export/promote paths, and schema dependencies.
+- **S2923-S2927 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2908-S2927 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock surface final preflight is visible.
+- Gate allows future implementation package planning only.
+- No implementation or rendered static mock rows are added in this package.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2888-S2907: Annual Instruction Static Mock Surface Removal Contract
 
 **Status:** Complete 2026-06-13.
 

@@ -516,6 +516,36 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-removal-panel');
   });
 
+  it('keeps static mock surface preflight from implementing rows', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_PREFLIGHT_GATE_ROWS');
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_PREFLIGHT_BLOCKERS');
+    expect(testerSurface).toContain('Static mock surface final preflight');
+    expect(appSource).toContain('Contract readiness');
+    expect(appSource).toContain('Ready for implementation planning');
+    expect(appSource).toContain('Allowed next step');
+    expect(appSource).toContain('Implementation package only');
+    expect(appSource).toContain('Implementation limit');
+    expect(appSource).toContain('Static and removable');
+    expect(appSource).toContain('Output limit');
+    expect(appSource).toContain('No optimizer output');
+    expect(appSource).toContain('Still blocked by preflight:');
+    expect(appSource).toContain('No implementation in this package.');
+    expect(appSource).toContain('No rendered static mock rows in this package.');
+    expect(appSource).toContain('No schema changes in this package.');
+    expect(testerSurface).not.toContain('IMPLEMENT_STATIC_MOCK_SURFACE');
+    expect(testerSurface).not.toContain('staticMockRows.map');
+    expect(testerSurface).not.toContain('renderStaticMockSurface');
+    expect(testerSurface).not.toContain('createStaticMockSurface');
+    expect(testerSurface).not.toContain('saveStaticMockSurface');
+    expect(testerSurface).not.toContain('exportStaticMockSurfaceCsv');
+    expect(testerSurface).not.toContain('promoteStaticMockSurface');
+    expect(stylesSource).toContain('.static-mock-surface-preflight-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

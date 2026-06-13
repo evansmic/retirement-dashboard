@@ -718,6 +718,41 @@ const STATIC_MOCK_SURFACE_REMOVAL_BLOCKERS = [
   'No CSV dependency.',
   'No production route dependency.'
 ];
+
+const STATIC_MOCK_SURFACE_PREFLIGHT_GATE_ROWS = [
+  {
+    label: 'Contract readiness',
+    status: 'Ready for implementation planning',
+    detail: 'Placement, layout, and removal contracts are clear enough to plan a future hand-written static mock surface implementation.'
+  },
+  {
+    label: 'Allowed next step',
+    status: 'Implementation package only',
+    detail: 'A future package may implement a tester-only hand-written static mock surface if it follows the existing contracts.'
+  },
+  {
+    label: 'Implementation limit',
+    status: 'Static and removable',
+    detail: 'Any future implementation must stay local to the tester-only Details surface and remain removable before production UI work.'
+  },
+  {
+    label: 'Output limit',
+    status: 'No optimizer output',
+    detail: 'This gate does not approve calculations, generated sequencing, saved output, CSV output, reports, production UI, or schema changes.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_PREFLIGHT_BLOCKERS = [
+  'No implementation in this package.',
+  'No rendered static mock rows in this package.',
+  'No calculated values in this package.',
+  'No generated account order in this package.',
+  'No saved sequencing output in this package.',
+  'No CSV output in this package.',
+  'No report output in this package.',
+  'No production UI promotion in this package.',
+  'No schema changes in this package.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5389,6 +5424,22 @@ function TinyTesterSurfacePanel({
           <p className="table-note">Removal blockers:</p>
           <ul className="compact-list">
             {STATIC_MOCK_SURFACE_REMOVAL_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-preflight-panel">
+          <h3>Static mock surface final preflight</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_PREFLIGHT_GATE_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked by preflight:</p>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_PREFLIGHT_BLOCKERS.map((blocker) => (
               <li key={blocker}>{blocker}</li>
             ))}
           </ul>
