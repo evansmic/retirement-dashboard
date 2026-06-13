@@ -183,6 +183,11 @@ describe('plan file adapters', () => {
         decision: 'doNotSaveBetaSequencingYet',
         forbiddenSavedKeys: ['betaSavedSequencingAdapter', 'continuationContract', 'schemaSaveDecision']
       },
+      csvReportGate: {
+        status: 'readyForGateReview',
+        decision: 'keepCsvAndReportSequencingBlocked',
+        blockedOutputs: ['csvSequencingOutput', 'reportSequencingOutput']
+      },
       boundedOptimizer: {
         status: 'ready'
       },
@@ -205,6 +210,7 @@ describe('plan file adapters', () => {
     expect(saved.plan).not.toHaveProperty('betaSavedSequencingAdapter');
     expect(saved.plan).not.toHaveProperty('continuationContract');
     expect(saved.plan).not.toHaveProperty('schemaSaveDecision');
+    expect(saved.plan).not.toHaveProperty('csvReportGate');
     expect(saved.plan).not.toHaveProperty('boundedOptimizer');
     expect(saved.plan).not.toHaveProperty('optimizerOutput');
     expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
@@ -217,6 +223,8 @@ describe('plan file adapters', () => {
     expect(serialized).not.toContain('continuationContract');
     expect(serialized).not.toContain('schemaSaveDecision');
     expect(serialized).not.toContain('doNotSaveBetaSequencingYet');
+    expect(serialized).not.toContain('csvReportGate');
+    expect(serialized).not.toContain('keepCsvAndReportSequencingBlocked');
     expect(serialized).not.toContain('testerPacketBoundary');
     expect(serialized).not.toContain('testerPacketExportGuard');
     expect(serialized).not.toContain('accountOrder');

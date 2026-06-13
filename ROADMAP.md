@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3388-S3407 is complete. The optimizer now has a CSV/report gate that depends on the saved-file no-write decision and beta sequencing row evidence, while CSV column contracts, report row contracts, wording safety, and public scenario coverage remain blocked. Results Details shows the gate without opening CSV sequencing output, report sequencing output, final instructions, tax-bracket wording, production UI, schema changes, or `.plan.json` sequencing output. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-90 sprints.
+
+Current package doc: [`docs/sprint_3388_3407_csv_and_report_gate.md`](docs/sprint_3388_3407_csv_and_report_gate.md).
+
 S3368-S3387 is complete. The optimizer now has an explicit schema/save decision: beta sequencing remains runtime-only, allowed saved sequencing keys are empty, and `.plan.json` files stay limited to clean editable planning inputs. Results Details shows the decision beside the continuation contract, and plan-file tests prove beta sequencing packets, continuation state, and schema/save decisions are stripped from saved files. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-100 sprints.
 
 Current package doc: [`docs/sprint_3368_3387_schema_and_save_decision.md`](docs/sprint_3368_3387_schema_and_save_decision.md).

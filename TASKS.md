@@ -6,17 +6,47 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3368-S3387 package, the remaining-work estimate is:
+As of the S3388-S3407 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-100 sprints remaining.
+- Public-ready optimizer for real planning use: 10-90 sprints remaining.
 
-Material change at S3368-S3387: yes. Feature-complete beta remains present, and the public-ready path is narrower because saved-file behavior now has an explicit no-write decision with plan-file test coverage.
+Material change at S3388-S3407: yes. Feature-complete beta remains present, and the public-ready path is narrower because CSV/report output now has an explicit gate with required evidence and blocked output contracts.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3368-S3387: Schema And Save Decision
+## Latest Package — S3388-S3407: CSV And Report Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the public-readiness gate for CSV/report sequencing output now that saved plan files remain clean. The bounded optimizer now emits `csvReportGate` with saved-boundary evidence, row-evidence evidence, blocked CSV/report contract rows, excluded final/advice-like fields, and blocked public outputs. Results Details renders the gate without adding CSV sequencing columns, printable report sequencing rows, saved plan fields, production UI, final annual instructions, or tax-bracket wording.
+
+Package doc: [`docs/sprint_3388_3407_csv_and_report_gate.md`](docs/sprint_3388_3407_csv_and_report_gate.md).
+
+### S3388-S3407 Completed Path
+
+- Added engine-owned optimizer CSV/report gate types and selector.
+- Required the no-write saved-file decision before CSV/report planning can be reviewed.
+- Required beta sequencing row evidence before CSV/report planning can be reviewed.
+- Kept CSV column contract, report row contract, wording safety, and public scenario coverage blocked.
+- Surfaced the gate in Results Details beside continuation and save decisions.
+- Extended plan-file tests to keep the gate out of `.plan.json` output.
+
+### S3388-S3407 Definition Of Done
+
+- `csvReportGate` is present in bounded optimizer summaries.
+- Gate lists required evidence for saved boundary, row evidence, CSV contract, report contract, wording safety, and public scenario coverage.
+- CSV sequencing output and report sequencing output remain blocked.
+- Final annual instructions, tax-bracket wording, production UI, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove the gate is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Public Safety Validation
+
+Goal: validate real-planning wording, stop conditions, unsupported-case behavior, and broader scenario coverage before any public optimizer output opens. This should keep exports, reports, production UI, final instructions, and tax-bracket wording blocked while defining the minimum safety evidence for public readiness.
+
+## Previous Package — S3368-S3387: Schema And Save Decision
 
 **Status:** Complete 2026-06-13.
 
@@ -40,10 +70,6 @@ Package doc: [`docs/sprint_3368_3387_schema_and_save_decision.md`](docs/sprint_3
 - Runtime optimizer packets are listed as forbidden saved keys.
 - Plan-file tests prove optimizer runtime packets are not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — CSV And Report Gate
-
-Goal: decide the public-readiness gate for CSV/report sequencing output now that saved plan files remain clean. This should define what export/report evidence would be required, keep final advice-like wording and tax-bracket instructions blocked, and avoid adding CSV/report rows until wording and schema boundaries are stable.
 
 ## Previous Package — S3348-S3367: Optimizer Contract Consolidation
 

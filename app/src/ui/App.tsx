@@ -6784,6 +6784,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.csvReportGate ? (
+        <section className={`optimizer-csv-report-gate csv-report-${summary.csvReportGate.status}`}>
+          <div>
+            <p className="eyebrow">CSV and report gate</p>
+            <h3>Exports stay closed while contracts are reviewed</h3>
+            <p>{summary.csvReportGate.summary}</p>
+          </div>
+          <div className="optimizer-csv-report-grid">
+            {summary.csvReportGate.requiredEvidence.map((item) => (
+              <article className={`csv-report-evidence-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Allowed future fields</span>
+              <strong>{summary.csvReportGate.allowedFutureFields.length}</strong>
+              <p>{summary.csvReportGate.allowedFutureFields.join(', ')}</p>
+            </article>
+            <article>
+              <span>Excluded fields</span>
+              <strong>{summary.csvReportGate.excludedFields.length}</strong>
+              <p>{summary.csvReportGate.excludedFields.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.csvReportGate.blockedOutputs.length}</strong>
+              <p>{summary.csvReportGate.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.csvReportGate.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

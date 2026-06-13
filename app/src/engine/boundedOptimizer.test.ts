@@ -1456,6 +1456,12 @@ describe('bounded optimizer runner', () => {
       'exportReportGate',
       'publicSafetyValidation'
     ]);
+    expect(summary.continuationContract.nextPackages.map((item) => item.status)).toEqual([
+      'later',
+      'later',
+      'current',
+      'next'
+    ]);
     expect(summary.schemaSaveDecision).toMatchObject({
       status: 'runtimeOnly',
       decision: 'doNotSaveBetaSequencingYet',
@@ -1464,6 +1470,7 @@ describe('bounded optimizer runner', () => {
         'betaSavedSequencingAdapter',
         'continuationContract',
         'schemaSaveDecision',
+        'csvReportGate',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1480,6 +1487,48 @@ describe('bounded optimizer runner', () => {
       ],
       boundary: expect.stringContaining('keeps beta sequencing out of saved .plan.json files')
     });
+    expect(summary.csvReportGate).toMatchObject({
+      status: 'readyForGateReview',
+      decision: 'keepCsvAndReportSequencingBlocked',
+      sourceAdapterStatus: 'readyForBetaReview',
+      sourceSaveDecisionStatus: 'runtimeOnly',
+      allowedFutureFields: ['year', 'accountLabel', 'reviewAmount', 'sourceEvidence', 'taxContext', 'constraintContext', 'qualityStatus'],
+      excludedFields: [
+        'finalInstruction',
+        'taxBracketTarget',
+        'taxBracketWording',
+        'productionUiAction',
+        'savedPlanField',
+        'adviceLikeCommand'
+      ],
+      blockedOutputs: [
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'productionUi',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('does not add CSV sequencing columns')
+    });
+    expect(summary.csvReportGate.requiredEvidence.map((item) => item.id)).toEqual([
+      'savedBoundaryVerified',
+      'rowEvidenceReady',
+      'csvColumnContract',
+      'reportRowContract',
+      'wordingSafety',
+      'publicScenarioCoverage'
+    ]);
+    expect(summary.csvReportGate.requiredEvidence.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked'
+    ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

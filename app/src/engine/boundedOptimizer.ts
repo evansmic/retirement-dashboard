@@ -680,6 +680,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'betaSavedSequencingAdapter'
     | 'continuationContract'
     | 'schemaSaveDecision'
+    | 'csvReportGate'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -699,6 +700,47 @@ export type OptimizerSchemaSaveDecision = {
   >;
   localFirstRule: string;
   privacyRule: string;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerCsvReportGate = {
+  status: 'readyForGateReview' | 'blocked';
+  decision: 'keepCsvAndReportSequencingBlocked';
+  sourceAdapterStatus: OptimizerBetaSavedSequencingAdapter['status'];
+  sourceSaveDecisionStatus: OptimizerSchemaSaveDecision['status'];
+  requiredEvidence: Array<{
+    id:
+      | 'savedBoundaryVerified'
+      | 'rowEvidenceReady'
+      | 'csvColumnContract'
+      | 'reportRowContract'
+      | 'wordingSafety'
+      | 'publicScenarioCoverage';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  allowedFutureFields: OptimizerBetaSavedSequencingAdapter['allowedFields'];
+  excludedFields: Array<
+    | 'finalInstruction'
+    | 'taxBracketTarget'
+    | 'taxBracketWording'
+    | 'productionUiAction'
+    | 'savedPlanField'
+    | 'adviceLikeCommand'
+  >;
+  blockedOutputs: Array<
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
+    | 'productionUi'
+    | 'savedPlanSchemaChanges'
+    | 'engineOutputSchemaChanges'
+    | 'planJsonSequencingOutput'
+  >;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1552,6 +1594,7 @@ export type BoundedOptimizerSummary = {
   betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
   continuationContract: OptimizerContinuationContract;
   schemaSaveDecision: OptimizerSchemaSaveDecision;
+  csvReportGate: OptimizerCsvReportGate;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -4978,25 +5021,25 @@ export function selectOptimizerContinuationContract({
         id: 'contractConsolidation',
         label: 'Optimizer contract consolidation',
         purpose: 'Keep one compact source of truth for beta-ready surfaces, blocked public outputs, and next public-readiness gates.',
-        status: 'current'
+        status: 'later'
       },
       {
         id: 'schemaDecision',
         label: 'Schema and save decision',
         purpose: 'Decide whether beta sequencing belongs in saved files, engine output, both, or neither before writing plan files.',
-        status: 'next'
+        status: 'later'
       },
       {
         id: 'exportReportGate',
         label: 'CSV and report gate',
         purpose: 'Plan export/report rows only after saved-shape and wording boundaries are stable.',
-        status: 'later'
+        status: 'current'
       },
       {
         id: 'publicSafetyValidation',
         label: 'Public safety validation',
         purpose: 'Validate real-planning wording, stop conditions, public fixtures, and unsupported-case behavior before release.',
-        status: 'later'
+        status: 'next'
       }
     ],
     verificationPlan: {
@@ -5013,6 +5056,96 @@ export function selectOptimizerContinuationContract({
       : 'Optimizer beta still needs review before public-readiness work can begin.',
     boundary:
       'This contract consolidates continuation state only. It does not unlock saved schema changes, engine output schema changes, .plan.json sequencing output, CSV output, report output, production UI, final annual instructions, tax-bracket wording, or real-data tester distribution.'
+  };
+}
+
+export function selectOptimizerCsvReportGate({
+  betaSavedSequencingAdapter,
+  schemaSaveDecision
+}: {
+  betaSavedSequencingAdapter: OptimizerBetaSavedSequencingAdapter;
+  schemaSaveDecision: OptimizerSchemaSaveDecision;
+}): OptimizerCsvReportGate {
+  const savedBoundaryReady =
+    schemaSaveDecision.status === 'runtimeOnly' &&
+    schemaSaveDecision.decision === 'doNotSaveBetaSequencingYet' &&
+    schemaSaveDecision.allowedSavedKeys.length === 0;
+  const rowEvidenceReady = betaSavedSequencingAdapter.status === 'readyForBetaReview' && betaSavedSequencingAdapter.rows.length > 0;
+  const status: OptimizerCsvReportGate['status'] = savedBoundaryReady && rowEvidenceReady ? 'readyForGateReview' : 'blocked';
+  return {
+    status,
+    decision: 'keepCsvAndReportSequencingBlocked',
+    sourceAdapterStatus: betaSavedSequencingAdapter.status,
+    sourceSaveDecisionStatus: schemaSaveDecision.status,
+    requiredEvidence: [
+      {
+        id: 'savedBoundaryVerified',
+        label: 'Saved boundary verified',
+        status: savedBoundaryReady ? 'ready' : 'blocked',
+        detail: savedBoundaryReady
+          ? 'Plan-file behavior keeps beta sequencing packets out of editable saved files.'
+          : 'CSV/report planning waits until saved-file behavior is explicitly no-write.'
+      },
+      {
+        id: 'rowEvidenceReady',
+        label: 'Row evidence ready',
+        status: rowEvidenceReady ? 'ready' : 'blocked',
+        detail: rowEvidenceReady
+          ? 'Beta sequencing review rows have source evidence, tax context, constraint context, and quality status.'
+          : 'CSV/report planning waits for beta sequencing rows with complete review evidence.'
+      },
+      {
+        id: 'csvColumnContract',
+        label: 'CSV column contract',
+        status: 'blocked',
+        detail: 'CSV column names, ordering, null handling, and non-advisory wording still need a separate contract.'
+      },
+      {
+        id: 'reportRowContract',
+        label: 'Report row contract',
+        status: 'blocked',
+        detail: 'Printable report placement, labels, summaries, and explanatory copy still need a separate contract.'
+      },
+      {
+        id: 'wordingSafety',
+        label: 'Wording safety',
+        status: 'blocked',
+        detail: 'Final-style instructions, tax-bracket wording, and advice-like commands remain blocked.'
+      },
+      {
+        id: 'publicScenarioCoverage',
+        label: 'Public scenario coverage',
+        status: 'blocked',
+        detail: 'Real-planning release needs unsupported-case handling and broader scenario validation before exports open.'
+      }
+    ],
+    allowedFutureFields: betaSavedSequencingAdapter.allowedFields,
+    excludedFields: [
+      'finalInstruction',
+      'taxBracketTarget',
+      'taxBracketWording',
+      'productionUiAction',
+      'savedPlanField',
+      'adviceLikeCommand'
+    ],
+    blockedOutputs: [
+      'csvSequencingOutput',
+      'reportSequencingOutput',
+      'finalAnnualInstructions',
+      'taxBracketWording',
+      'productionUi',
+      'savedPlanSchemaChanges',
+      'engineOutputSchemaChanges',
+      'planJsonSequencingOutput'
+    ],
+    summary:
+      status === 'readyForGateReview'
+        ? 'CSV/report gate is ready for review, but sequencing export and printable rows remain closed.'
+        : 'CSV/report gate is blocked until saved-boundary and row evidence are ready.',
+    boundary:
+      'This gate plans export/report readiness only. It does not add CSV sequencing columns, report sequencing rows, saved plan fields, production UI, final annual instructions, tax-bracket wording, or advice-like commands.',
+    nextStep:
+      'Use this gate to define CSV column and report row contracts before any export or printable sequencing implementation.'
   };
 }
 
@@ -5043,6 +5176,7 @@ export function selectOptimizerSchemaSaveDecision({
       'betaSavedSequencingAdapter',
       'continuationContract',
       'schemaSaveDecision',
+      'csvReportGate',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -7942,6 +8076,7 @@ export function runBoundedOptimizer(
   const betaSavedSequencingAdapter = selectOptimizerBetaSavedSequencingAdapter(experimentalAnnualInstructionDraft);
   const continuationContract = selectOptimizerContinuationContract({ betaSavedSequencingAdapter });
   const schemaSaveDecision = selectOptimizerSchemaSaveDecision({ betaSavedSequencingAdapter, continuationContract });
+  const csvReportGate = selectOptimizerCsvReportGate({ betaSavedSequencingAdapter, schemaSaveDecision });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -7977,6 +8112,7 @@ export function runBoundedOptimizer(
     betaSavedSequencingAdapter,
     continuationContract,
     schemaSaveDecision,
+    csvReportGate,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
