@@ -461,6 +461,33 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-placement-panel');
   });
 
+  it('keeps static mock surface layout contractual only', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_LAYOUT_CONTRACT_ROWS');
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_LAYOUT_BLOCKERS');
+    expect(testerSurface).toContain('Static mock surface layout contract');
+    expect(appSource).toContain('Header area');
+    expect(appSource).toContain('Fixture list area');
+    expect(appSource).toContain('Review prompt area');
+    expect(appSource).toContain('Removal note area');
+    expect(appSource).toContain('Layout blockers:');
+    expect(appSource).toContain('No row table in this package.');
+    expect(appSource).toContain('No cards for mock rows in this package.');
+    expect(appSource).toContain('No save, CSV, print, report, or production actions in this package.');
+    expect(testerSurface).not.toContain('mockRowTable');
+    expect(testerSurface).not.toContain('mockRowCards');
+    expect(testerSurface).not.toContain('layoutRows.map');
+    expect(testerSurface).not.toContain('renderMockLayout');
+    expect(testerSurface).not.toContain('createMockLayout');
+    expect(testerSurface).not.toContain('saveMockLayout');
+    expect(testerSurface).not.toContain('exportMockLayoutCsv');
+    expect(testerSurface).not.toContain('promoteMockLayout');
+    expect(stylesSource).toContain('.static-mock-surface-layout-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

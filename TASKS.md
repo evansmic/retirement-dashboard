@@ -16,7 +16,37 @@ Material change at S2828-S2847: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
 
-## Latest Package — S2848-S2867: Annual Instruction Static Mock Surface Placement Boundary
+## Latest Package — S2868-S2887: Annual Instruction Static Mock Surface Layout Contract
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the static layout contract for a future hand-written mock surface inside Results Details before any rows are rendered. The tester-only surface now shows the layout areas, layout blockers, and non-rendering constraints while keeping row tables, row cards, calculations, generated account order, save/CSV/print/report/production actions, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, timeline approval logic, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2868_2887_annual_instruction_static_mock_surface_layout_contract.md`](docs/sprint_2868_2887_annual_instruction_static_mock_surface_layout_contract.md).
+
+### S2868-S2887 Completed Path
+
+- **S2868-S2872 — Layout area batch.** Added layout contract areas for header, fixture list, review prompts, and removal notes.
+- **S2873-S2877 — Layout blocker batch.** Blocked row tables, mock-row cards, calculated values, generated account order, save/CSV/print/report/production actions, and schema changes.
+- **S2878-S2882 — Source guard batch.** Added structure checks that block layout row maps, mock layout renderers, creation paths, save/export paths, and promotion paths.
+- **S2883-S2887 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2868-S2887 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock surface layout contract is visible.
+- Header, fixture list, review prompt, and removal note layout areas are visible.
+- Row tables and row cards remain blocked.
+- No static mock rows or fixture rows are rendered.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2848-S2867: Annual Instruction Static Mock Surface Placement Boundary
 
 **Status:** Complete 2026-06-13.
 

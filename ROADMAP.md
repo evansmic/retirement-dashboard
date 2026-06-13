@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2868-S2887 is complete. The tester-only surface now includes a static mock surface layout contract for future annual instruction row mock work. The contract defines header, fixture-list, review-prompt, and removal-note areas, while row tables, mock-row cards, calculated values, generated account order, save/CSV/print/report/production actions, schema changes, rendered rows, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2868_2887_annual_instruction_static_mock_surface_layout_contract.md`](docs/sprint_2868_2887_annual_instruction_static_mock_surface_layout_contract.md).
+
 S2848-S2867 is complete. The tester-only surface now includes a static mock surface placement boundary for future annual instruction row mock work. Future placement is limited to the existing tester-only Details surface, near boundary evidence. Placement in Overview, Save and print, printable reports, CSV output, saved plan files, production UI, rendered rows, calculated values, generated account order, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md`](docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md).

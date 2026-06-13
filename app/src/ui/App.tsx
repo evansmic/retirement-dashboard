@@ -654,6 +654,38 @@ const STATIC_MOCK_SURFACE_PLACEMENT_EXCLUSIONS = [
   'Do not place static mock rows in saved plan files.',
   'Do not place static mock rows in production UI.'
 ];
+
+const STATIC_MOCK_SURFACE_LAYOUT_CONTRACT_ROWS = [
+  {
+    label: 'Header area',
+    rule: 'Use a short tester-only heading and a plain boundary sentence before any future fixture content.',
+    blocked: 'Do not present the surface as a plan, recommendation, or result.'
+  },
+  {
+    label: 'Fixture list area',
+    rule: 'Reserve space for future hand-written fixture rows with stable labels and compact wrapping.',
+    blocked: 'Do not render fixture rows in this package.'
+  },
+  {
+    label: 'Review prompt area',
+    rule: 'Keep tester questions near the fixture area so feedback stays about comprehension.',
+    blocked: 'Do not collect, save, score, or submit feedback.'
+  },
+  {
+    label: 'Removal note area',
+    rule: 'Include a reminder that fixture content must be removable before production UI work.',
+    blocked: 'Do not add production promotion or release controls.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_LAYOUT_BLOCKERS = [
+  'No row table in this package.',
+  'No cards for mock rows in this package.',
+  'No calculated values in this package.',
+  'No generated account order in this package.',
+  'No save, CSV, print, report, or production actions in this package.',
+  'No schema changes in this package.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5294,6 +5326,22 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {STATIC_MOCK_SURFACE_PLACEMENT_EXCLUSIONS.map((exclusion) => (
               <li key={exclusion}>{exclusion}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-layout-panel">
+          <h3>Static mock surface layout contract</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_LAYOUT_CONTRACT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label}:</strong> Rule: {row.rule} Blocked: {row.blocked}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Layout blockers:</p>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_LAYOUT_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
             ))}
           </ul>
         </section>
