@@ -682,6 +682,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'schemaSaveDecision'
     | 'csvReportGate'
     | 'publicSafetyValidation'
+    | 'unsupportedCaseCoverage'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -783,6 +784,43 @@ export type OptimizerPublicSafetyValidation = {
     | 'engineOutputSchemaChanges'
     | 'planJsonSequencingOutput'
   >;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerUnsupportedCaseCoverage = {
+  status: 'coveragePlannedPublicClosed' | 'blocked';
+  decision: 'defineCoverageBeforePublicRelease';
+  sourcePublicSafetyStatus: OptimizerPublicSafetyValidation['status'];
+  unsupportedCaseRows: Array<{
+    id:
+      | 'householdShape'
+      | 'accountEvidence'
+      | 'taxContext'
+      | 'constraintContext'
+      | 'survivorEstate'
+      | 'benefitTiming'
+      | 'cashFlowStress';
+    label: string;
+    status: 'needsFixture' | 'needsRule';
+    stopCondition: OptimizerPublicSafetyValidation['stopConditions'][number];
+    detail: string;
+  }>;
+  fixtureCoverageRows: Array<{
+    id:
+      | 'singleRetired'
+      | 'coupleStaggeredRetirement'
+      | 'dbPensionHousehold'
+      | 'registeredHeavy'
+      | 'taxableHeavy'
+      | 'survivorEstateConstraint'
+      | 'thinDataPlan';
+    label: string;
+    status: 'coveredBySyntheticBeta' | 'needsFixture';
+    detail: string;
+  }>;
+  blockedOutputs: OptimizerPublicSafetyValidation['blockedOutputs'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1638,6 +1676,7 @@ export type BoundedOptimizerSummary = {
   schemaSaveDecision: OptimizerSchemaSaveDecision;
   csvReportGate: OptimizerCsvReportGate;
   publicSafetyValidation: OptimizerPublicSafetyValidation;
+  unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5185,6 +5224,124 @@ export function selectOptimizerPublicSafetyValidation({
   };
 }
 
+export function selectOptimizerUnsupportedCaseCoverage({
+  publicSafetyValidation
+}: {
+  publicSafetyValidation: OptimizerPublicSafetyValidation;
+}): OptimizerUnsupportedCaseCoverage {
+  const safetyFramed = publicSafetyValidation.status === 'notPublicReady';
+  const blockedOutputs = publicSafetyValidation.blockedOutputs;
+  return {
+    status: safetyFramed ? 'coveragePlannedPublicClosed' : 'blocked',
+    decision: 'defineCoverageBeforePublicRelease',
+    sourcePublicSafetyStatus: publicSafetyValidation.status,
+    unsupportedCaseRows: [
+      {
+        id: 'householdShape',
+        label: 'Household shape',
+        status: 'needsRule',
+        stopCondition: 'unsupportedHouseholdShape',
+        detail: 'Define when single, couple, survivor, age-gap, and missing-spouse plans should stop instead of showing optimizer review.'
+      },
+      {
+        id: 'accountEvidence',
+        label: 'Account evidence',
+        status: 'needsFixture',
+        stopCondition: 'ambiguousAccountEvidence',
+        detail: 'Cover missing balances, inactive accounts, conflicting account labels, and thin account data before public output.'
+      },
+      {
+        id: 'taxContext',
+        label: 'Tax context',
+        status: 'needsFixture',
+        stopCondition: 'missingTaxContext',
+        detail: 'Cover missing or unclear taxable income, OAS recovery, effective tax, and registered withdrawal context.'
+      },
+      {
+        id: 'constraintContext',
+        label: 'Constraint context',
+        status: 'needsFixture',
+        stopCondition: 'missingConstraintContext',
+        detail: 'Cover estate goals, minimum spending floors, survivor constraints, liquidity needs, and debt constraints.'
+      },
+      {
+        id: 'survivorEstate',
+        label: 'Survivor and estate',
+        status: 'needsRule',
+        stopCondition: 'unsupportedHouseholdShape',
+        detail: 'Define stop behavior for survivor-sensitive plans where annual sequencing could be misunderstood as final guidance.'
+      },
+      {
+        id: 'benefitTiming',
+        label: 'Benefit timing',
+        status: 'needsFixture',
+        stopCondition: 'ambiguousAccountEvidence',
+        detail: 'Cover CPP/OAS already-started, delayed, unavailable, or inconsistent benefit evidence before public optimizer use.'
+      },
+      {
+        id: 'cashFlowStress',
+        label: 'Cash-flow stress',
+        status: 'needsRule',
+        stopCondition: 'exportOrReportExpectation',
+        detail: 'Define when shortfall, depletion, or high tax-pressure plans should stop before export/report expectations form.'
+      }
+    ],
+    fixtureCoverageRows: [
+      {
+        id: 'singleRetired',
+        label: 'Single retired',
+        status: 'coveredBySyntheticBeta',
+        detail: 'Synthetic beta scenarios cover basic single-plan review shape, but not enough for public release.'
+      },
+      {
+        id: 'coupleStaggeredRetirement',
+        label: 'Couple, staggered retirement',
+        status: 'needsFixture',
+        detail: 'Needs coverage for two retirement dates, spouse age gap, income overlap, and survivor-sensitive wording.'
+      },
+      {
+        id: 'dbPensionHousehold',
+        label: 'DB pension household',
+        status: 'coveredBySyntheticBeta',
+        detail: 'Synthetic beta scenarios cover basic DB pension review shape, but pension/survivor edge cases still need fixtures.'
+      },
+      {
+        id: 'registeredHeavy',
+        label: 'Registered-heavy assets',
+        status: 'needsFixture',
+        detail: 'Needs coverage for RRSP/RRIF/LIF-heavy plans where tax context and minimum withdrawals can dominate sequencing.'
+      },
+      {
+        id: 'taxableHeavy',
+        label: 'Taxable-heavy assets',
+        status: 'needsFixture',
+        detail: 'Needs coverage for taxable account evidence, capital gains context, ACB gaps, and non-registered draw review.'
+      },
+      {
+        id: 'survivorEstateConstraint',
+        label: 'Survivor and estate constraint',
+        status: 'needsFixture',
+        detail: 'Needs coverage for estate-intent preservation, survivor spending, rollover assumptions, and stop conditions.'
+      },
+      {
+        id: 'thinDataPlan',
+        label: 'Thin data plan',
+        status: 'needsFixture',
+        detail: 'Needs coverage for plans with missing or placeholder values so the optimizer stops instead of filling gaps.'
+      }
+    ],
+    blockedOutputs,
+    summary:
+      safetyFramed
+        ? 'Unsupported-case and scenario coverage is planned, but public optimizer output remains closed.'
+        : 'Unsupported-case coverage waits for public safety validation.',
+    boundary:
+      'This coverage matrix is planning evidence only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Use this matrix to build fixture coverage and stop-condition rules before any public optimizer release decision is revisited.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -5304,6 +5461,7 @@ export function selectOptimizerSchemaSaveDecision({
       'schemaSaveDecision',
       'csvReportGate',
       'publicSafetyValidation',
+      'unsupportedCaseCoverage',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -8205,6 +8363,7 @@ export function runBoundedOptimizer(
   const schemaSaveDecision = selectOptimizerSchemaSaveDecision({ betaSavedSequencingAdapter, continuationContract });
   const csvReportGate = selectOptimizerCsvReportGate({ betaSavedSequencingAdapter, schemaSaveDecision });
   const publicSafetyValidation = selectOptimizerPublicSafetyValidation({ csvReportGate });
+  const unsupportedCaseCoverage = selectOptimizerUnsupportedCaseCoverage({ publicSafetyValidation });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -8242,6 +8401,7 @@ export function runBoundedOptimizer(
     schemaSaveDecision,
     csvReportGate,
     publicSafetyValidation,
+    unsupportedCaseCoverage,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

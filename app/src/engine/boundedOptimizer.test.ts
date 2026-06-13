@@ -1472,6 +1472,7 @@ describe('bounded optimizer runner', () => {
         'schemaSaveDecision',
         'csvReportGate',
         'publicSafetyValidation',
+        'unsupportedCaseCoverage',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1571,6 +1572,51 @@ describe('bounded optimizer runner', () => {
       'blocked',
       'blocked',
       'blocked'
+    ]);
+    expect(summary.unsupportedCaseCoverage).toMatchObject({
+      status: 'coveragePlannedPublicClosed',
+      decision: 'defineCoverageBeforePublicRelease',
+      sourcePublicSafetyStatus: 'notPublicReady',
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('planning evidence only')
+    });
+    expect(summary.unsupportedCaseCoverage.unsupportedCaseRows.map((item) => item.id)).toEqual([
+      'householdShape',
+      'accountEvidence',
+      'taxContext',
+      'constraintContext',
+      'survivorEstate',
+      'benefitTiming',
+      'cashFlowStress'
+    ]);
+    expect(summary.unsupportedCaseCoverage.fixtureCoverageRows.map((item) => item.id)).toEqual([
+      'singleRetired',
+      'coupleStaggeredRetirement',
+      'dbPensionHousehold',
+      'registeredHeavy',
+      'taxableHeavy',
+      'survivorEstateConstraint',
+      'thinDataPlan'
+    ]);
+    expect(summary.unsupportedCaseCoverage.fixtureCoverageRows.map((item) => item.status)).toEqual([
+      'coveredBySyntheticBeta',
+      'needsFixture',
+      'coveredBySyntheticBeta',
+      'needsFixture',
+      'needsFixture',
+      'needsFixture',
+      'needsFixture'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',

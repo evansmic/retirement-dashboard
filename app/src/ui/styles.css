@@ -3369,11 +3369,23 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-unsupported-case-coverage {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #4f6f8f;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
 .optimizer-csv-report-grid,
-.optimizer-public-safety-grid {
+.optimizer-public-safety-grid,
+.optimizer-unsupported-case-grid,
+.optimizer-fixture-coverage-grid {
   display: grid;
   gap: 10px;
 }
@@ -3391,6 +3403,11 @@ button.secondary,
   grid-template-columns: repeat(3, minmax(150px, 1fr));
 }
 
+.optimizer-unsupported-case-grid,
+.optimizer-fixture-coverage-grid {
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+}
+
 .optimizer-continuation-packages {
   grid-template-columns: repeat(4, minmax(150px, 1fr));
 }
@@ -3399,7 +3416,9 @@ button.secondary,
 .optimizer-continuation-package,
 .optimizer-schema-save-grid article,
 .optimizer-csv-report-grid article,
-.optimizer-public-safety-grid article {
+.optimizer-public-safety-grid article,
+.optimizer-unsupported-case-grid article,
+.optimizer-fixture-coverage-grid article {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -3413,7 +3432,9 @@ button.secondary,
 .optimizer-continuation-package > *,
 .optimizer-schema-save-grid article > *,
 .optimizer-csv-report-grid article > *,
-.optimizer-public-safety-grid article > * {
+.optimizer-public-safety-grid article > *,
+.optimizer-unsupported-case-grid article > *,
+.optimizer-fixture-coverage-grid article > * {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -3422,7 +3443,9 @@ button.secondary,
 .optimizer-continuation-package span,
 .optimizer-schema-save-grid span,
 .optimizer-csv-report-grid span,
-.optimizer-public-safety-grid span {
+.optimizer-public-safety-grid span,
+.optimizer-unsupported-case-grid span,
+.optimizer-fixture-coverage-grid span {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 750;
@@ -3544,6 +3567,8 @@ button.secondary,
   .optimizer-schema-save-grid,
   .optimizer-csv-report-grid,
   .optimizer-public-safety-grid,
+  .optimizer-unsupported-case-grid,
+  .optimizer-fixture-coverage-grid,
   .chart-grid {
     grid-template-columns: 1fr;
   }

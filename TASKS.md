@@ -6,17 +6,46 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3408-S3427 package, the remaining-work estimate is:
+As of the S3428-S3447 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-80 sprints remaining.
+- Public-ready optimizer for real planning use: 10-70 sprints remaining.
 
-Material change at S3408-S3427: yes. Feature-complete beta remains present, and the public-ready path is narrower because public safety validation now has explicit stop conditions, blocked release controls, and scenario/unsupported-case gaps.
+Material change at S3428-S3447: yes. Feature-complete beta remains present, and the public-ready path is narrower because unsupported-case and fixture coverage gaps are now explicit and testable.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3408-S3427: Public Safety Validation
+## Latest Package — S3428-S3447: Unsupported Cases And Scenario Coverage
+
+**Status:** Complete 2026-06-13.
+
+Goal: turn public safety blockers into a concrete unsupported-case and scenario coverage matrix before any public optimizer release decision is revisited. The bounded optimizer now emits `unsupportedCaseCoverage` with unsupported-case rows, fixture coverage rows, stop-condition mapping, and blocked public outputs. Results Details renders the matrix while public release, real-data tester distribution, production UI, exports, reports, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed.
+
+Package doc: [`docs/sprint_3428_3447_unsupported_cases_and_scenario_coverage.md`](docs/sprint_3428_3447_unsupported_cases_and_scenario_coverage.md).
+
+### S3428-S3447 Completed Path
+
+- Added engine-owned unsupported-case coverage types and selector.
+- Added unsupported-case rows for household shape, account evidence, tax context, constraint context, survivor/estate behavior, benefit timing, and cash-flow stress.
+- Added fixture coverage rows for single retired, staggered couple retirement, DB pension household, registered-heavy, taxable-heavy, survivor/estate constraint, and thin-data plans.
+- Surfaced the coverage matrix in Results Details.
+- Extended plan-file tests to keep unsupported-case coverage out of `.plan.json` output.
+
+### S3428-S3447 Definition Of Done
+
+- `unsupportedCaseCoverage` is present in bounded optimizer summaries.
+- Unsupported-case rows map to concrete stop conditions.
+- Fixture coverage rows separate synthetic beta coverage from fixture gaps.
+- Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove unsupported-case coverage is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Fixture Coverage Implementation Planning
+
+Goal: define concrete synthetic fixtures and stop-condition assertions needed to start closing the coverage gaps without opening public output.
+
+## Previous Package — S3408-S3427: Public Safety Validation
 
 **Status:** Complete 2026-06-13.
 
@@ -42,10 +71,6 @@ Package doc: [`docs/sprint_3408_3427_public_safety_validation.md`](docs/sprint_3
 - Production UI, exports, reports, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove public safety validation is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Unsupported Cases And Scenario Coverage
-
-Goal: define the concrete unsupported-case matrix and broader fixture coverage needed before a public optimizer release decision can be revisited. This should remain a planning/validation package, not a release or export implementation package.
 
 ## Previous Package — S3388-S3407: CSV And Report Gate
 

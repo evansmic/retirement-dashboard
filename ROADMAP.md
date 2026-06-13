@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3428-S3447 is complete. The optimizer now has an unsupported-case and scenario coverage matrix that names household-shape, account-evidence, tax-context, constraint-context, survivor/estate, benefit-timing, and cash-flow-stress gaps, plus fixture coverage gaps for staggered couples, registered-heavy plans, taxable-heavy plans, survivor/estate constraints, and thin-data plans. Results Details shows the matrix while public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-70 sprints.
+
+Current package doc: [`docs/sprint_3428_3447_unsupported_cases_and_scenario_coverage.md`](docs/sprint_3428_3447_unsupported_cases_and_scenario_coverage.md).
+
 S3408-S3427 is complete. The optimizer now has a public safety validation packet that keeps public optimizer release closed while naming review-only wording, stop conditions, unsupported-case gaps, scenario coverage gaps, real-data tester limits, and release-control requirements. Results Details shows the validation without opening production UI, CSV sequencing output, report sequencing output, final instructions, tax-bracket wording, schema changes, or `.plan.json` sequencing output. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-80 sprints.
 
 Current package doc: [`docs/sprint_3408_3427_public_safety_validation.md`](docs/sprint_3408_3427_public_safety_validation.md).

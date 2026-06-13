@@ -6858,6 +6858,35 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.unsupportedCaseCoverage ? (
+        <section className={`optimizer-unsupported-case-coverage unsupported-coverage-${summary.unsupportedCaseCoverage.status}`}>
+          <div>
+            <p className="eyebrow">Unsupported cases and scenario coverage</p>
+            <h3>Coverage matrix before release decisions</h3>
+            <p>{summary.unsupportedCaseCoverage.summary}</p>
+          </div>
+          <div className="optimizer-unsupported-case-grid">
+            {summary.unsupportedCaseCoverage.unsupportedCaseRows.map((item) => (
+              <article className={`unsupported-case-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-fixture-coverage-grid">
+            {summary.unsupportedCaseCoverage.fixtureCoverageRows.map((item) => (
+              <article className={`fixture-coverage-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.unsupportedCaseCoverage.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>
