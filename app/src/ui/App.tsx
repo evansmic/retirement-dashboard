@@ -6887,6 +6887,44 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.fixtureCoverageImplementationPlan ? (
+        <section className={`optimizer-fixture-implementation-plan fixture-plan-${summary.fixtureCoverageImplementationPlan.status}`}>
+          <div>
+            <p className="eyebrow">Fixture coverage implementation</p>
+            <h3>Synthetic fixtures before public release</h3>
+            <p>{summary.fixtureCoverageImplementationPlan.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.fixtureCoverageImplementationPlan.fixtureImplementationRows.map((item) => (
+              <article className={`fixture-plan-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.fixtureCoverageImplementationPlan.stopConditionAssertionRows.map((item) => (
+              <article className={`fixture-assertion-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            {summary.fixtureCoverageImplementationPlan.implementationBatches.map((item) => (
+              <article className={`fixture-batch-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <p className="table-note">{summary.fixtureCoverageImplementationPlan.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

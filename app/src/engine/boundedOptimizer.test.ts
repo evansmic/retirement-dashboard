@@ -1473,6 +1473,7 @@ describe('bounded optimizer runner', () => {
         'csvReportGate',
         'publicSafetyValidation',
         'unsupportedCaseCoverage',
+        'fixtureCoverageImplementationPlan',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1617,6 +1618,53 @@ describe('bounded optimizer runner', () => {
       'needsFixture',
       'needsFixture',
       'needsFixture'
+    ]);
+    expect(summary.fixtureCoverageImplementationPlan).toMatchObject({
+      status: 'readyToImplementFixturesPublicClosed',
+      decision: 'implementSyntheticFixturesBeforePublicRelease',
+      sourceCoverageStatus: 'coveragePlannedPublicClosed',
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('synthetic fixtures and stop-condition assertions only')
+    });
+    expect(summary.fixtureCoverageImplementationPlan.fixtureImplementationRows.map((item) => item.id)).toEqual([
+      'coupleStaggeredFixture',
+      'registeredHeavyFixture',
+      'taxableHeavyFixture',
+      'survivorEstateFixture',
+      'thinDataFixture'
+    ]);
+    expect(summary.fixtureCoverageImplementationPlan.fixtureImplementationRows[0].requiredAssertions).toEqual([
+      'optimizerStopsWhenContextMissing',
+      'reviewOnlyWordingVisible',
+      'noSavedOutput',
+      'noCsvOutput',
+      'noReportOutput',
+      'noFinalInstructions',
+      'noTaxBracketWording'
+    ]);
+    expect(summary.fixtureCoverageImplementationPlan.stopConditionAssertionRows.map((item) => item.id)).toEqual([
+      'missingContextStop',
+      'ambiguousEvidenceStop',
+      'unsupportedHouseholdStop',
+      'testerConfusionStop',
+      'exportExpectationStop'
+    ]);
+    expect(summary.fixtureCoverageImplementationPlan.implementationBatches.map((item) => item.status)).toEqual([
+      'next',
+      'next',
+      'later',
+      'later'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',

@@ -6,17 +6,47 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3428-S3447 package, the remaining-work estimate is:
+As of the S3448-S3467 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-70 sprints remaining.
+- Public-ready optimizer for real planning use: 10-60 sprints remaining.
 
-Material change at S3428-S3447: yes. Feature-complete beta remains present, and the public-ready path is narrower because unsupported-case and fixture coverage gaps are now explicit and testable.
+Material change at S3448-S3467: yes. Feature-complete beta remains present, and the public-ready path is narrower because fixture builders, shared no-output assertions, and stop-condition assertion batches are now explicitly scoped.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3428-S3447: Unsupported Cases And Scenario Coverage
+## Latest Package — S3448-S3467: Fixture Coverage Implementation Planning
+
+**Status:** Complete 2026-06-13.
+
+Goal: define concrete synthetic fixtures and stop-condition assertions needed to start closing coverage gaps without opening public output. The bounded optimizer now emits `fixtureCoverageImplementationPlan` with five fixture rows, shared required assertions, stop-condition assertion rows, implementation batches, and blocked public outputs. Results Details renders the plan while public release, real-data tester distribution, production UI, exports, reports, final annual instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed.
+
+Package doc: [`docs/sprint_3448_3467_fixture_coverage_implementation_planning.md`](docs/sprint_3448_3467_fixture_coverage_implementation_planning.md).
+
+### S3448-S3467 Completed Path
+
+- Added engine-owned fixture coverage implementation plan types and selector.
+- Defined synthetic fixture rows for staggered couples, registered-heavy plans, taxable-heavy plans, survivor/estate constraints, and thin-data plans.
+- Defined shared no-output assertions for saved files, CSV, reports, final instructions, and tax-bracket wording.
+- Defined stop-condition assertion rows for missing context, ambiguous evidence, unsupported household shape, tester confusion, and export/report expectations.
+- Surfaced the implementation plan in Results Details.
+- Extended plan-file tests to keep fixture implementation planning out of `.plan.json` output.
+
+### S3448-S3467 Definition Of Done
+
+- `fixtureCoverageImplementationPlan` is present in bounded optimizer summaries.
+- Fixture rows and assertion rows are explicit.
+- Implementation batches separate fixture builders, stop assertions, matrix rollup, and verification.
+- Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove fixture implementation planning is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Fixture Builders And Stop Assertions
+
+Goal: implement the synthetic fixture builders and focused stop-condition assertions named by the fixture coverage implementation plan while public output remains closed.
+
+## Previous Package — S3428-S3447: Unsupported Cases And Scenario Coverage
 
 **Status:** Complete 2026-06-13.
 
@@ -40,10 +70,6 @@ Package doc: [`docs/sprint_3428_3447_unsupported_cases_and_scenario_coverage.md`
 - Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove unsupported-case coverage is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Fixture Coverage Implementation Planning
-
-Goal: define concrete synthetic fixtures and stop-condition assertions needed to start closing the coverage gaps without opening public output.
 
 ## Previous Package — S3408-S3427: Public Safety Validation
 

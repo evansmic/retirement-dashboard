@@ -3379,13 +3379,24 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-fixture-implementation-plan {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #5c6f4f;
+  border-radius: 8px;
+  background: #fbfff8;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
 .optimizer-csv-report-grid,
 .optimizer-public-safety-grid,
 .optimizer-unsupported-case-grid,
-.optimizer-fixture-coverage-grid {
+.optimizer-fixture-coverage-grid,
+.optimizer-fixture-plan-grid {
   display: grid;
   gap: 10px;
 }
@@ -3404,7 +3415,8 @@ button.secondary,
 }
 
 .optimizer-unsupported-case-grid,
-.optimizer-fixture-coverage-grid {
+.optimizer-fixture-coverage-grid,
+.optimizer-fixture-plan-grid {
   grid-template-columns: repeat(3, minmax(150px, 1fr));
 }
 
@@ -3418,7 +3430,8 @@ button.secondary,
 .optimizer-csv-report-grid article,
 .optimizer-public-safety-grid article,
 .optimizer-unsupported-case-grid article,
-.optimizer-fixture-coverage-grid article {
+.optimizer-fixture-coverage-grid article,
+.optimizer-fixture-plan-grid article {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -3434,7 +3447,8 @@ button.secondary,
 .optimizer-csv-report-grid article > *,
 .optimizer-public-safety-grid article > *,
 .optimizer-unsupported-case-grid article > *,
-.optimizer-fixture-coverage-grid article > * {
+.optimizer-fixture-coverage-grid article > *,
+.optimizer-fixture-plan-grid article > * {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -3445,7 +3459,8 @@ button.secondary,
 .optimizer-csv-report-grid span,
 .optimizer-public-safety-grid span,
 .optimizer-unsupported-case-grid span,
-.optimizer-fixture-coverage-grid span {
+.optimizer-fixture-coverage-grid span,
+.optimizer-fixture-plan-grid span {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 750;
@@ -3569,6 +3584,7 @@ button.secondary,
   .optimizer-public-safety-grid,
   .optimizer-unsupported-case-grid,
   .optimizer-fixture-coverage-grid,
+  .optimizer-fixture-plan-grid,
   .chart-grid {
     grid-template-columns: 1fr;
   }

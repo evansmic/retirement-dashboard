@@ -683,6 +683,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'csvReportGate'
     | 'publicSafetyValidation'
     | 'unsupportedCaseCoverage'
+    | 'fixtureCoverageImplementationPlan'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -821,6 +822,53 @@ export type OptimizerUnsupportedCaseCoverage = {
     detail: string;
   }>;
   blockedOutputs: OptimizerPublicSafetyValidation['blockedOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerFixtureCoverageImplementationPlan = {
+  status: 'readyToImplementFixturesPublicClosed' | 'blocked';
+  decision: 'implementSyntheticFixturesBeforePublicRelease';
+  sourceCoverageStatus: OptimizerUnsupportedCaseCoverage['status'];
+  fixtureImplementationRows: Array<{
+    id:
+      | 'coupleStaggeredFixture'
+      | 'registeredHeavyFixture'
+      | 'taxableHeavyFixture'
+      | 'survivorEstateFixture'
+      | 'thinDataFixture';
+    label: string;
+    status: 'readyToImplement';
+    requiredAssertions: Array<
+      | 'optimizerStopsWhenContextMissing'
+      | 'reviewOnlyWordingVisible'
+      | 'noSavedOutput'
+      | 'noCsvOutput'
+      | 'noReportOutput'
+      | 'noFinalInstructions'
+      | 'noTaxBracketWording'
+    >;
+    detail: string;
+  }>;
+  stopConditionAssertionRows: Array<{
+    id:
+      | 'missingContextStop'
+      | 'ambiguousEvidenceStop'
+      | 'unsupportedHouseholdStop'
+      | 'testerConfusionStop'
+      | 'exportExpectationStop';
+    label: string;
+    status: 'readyToAssert';
+    detail: string;
+  }>;
+  implementationBatches: Array<{
+    id: 'fixtureBuilders' | 'stopAssertions' | 'matrixRollup' | 'docsAndVerification';
+    label: string;
+    status: 'next' | 'later';
+    detail: string;
+  }>;
+  blockedOutputs: OptimizerUnsupportedCaseCoverage['blockedOutputs'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1677,6 +1725,7 @@ export type BoundedOptimizerSummary = {
   csvReportGate: OptimizerCsvReportGate;
   publicSafetyValidation: OptimizerPublicSafetyValidation;
   unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
+  fixtureCoverageImplementationPlan: OptimizerFixtureCoverageImplementationPlan;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5342,6 +5391,132 @@ export function selectOptimizerUnsupportedCaseCoverage({
   };
 }
 
+export function selectOptimizerFixtureCoverageImplementationPlan({
+  unsupportedCaseCoverage
+}: {
+  unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
+}): OptimizerFixtureCoverageImplementationPlan {
+  const coverageReady = unsupportedCaseCoverage.status === 'coveragePlannedPublicClosed';
+  const sharedAssertions: OptimizerFixtureCoverageImplementationPlan['fixtureImplementationRows'][number]['requiredAssertions'] = [
+    'optimizerStopsWhenContextMissing',
+    'reviewOnlyWordingVisible',
+    'noSavedOutput',
+    'noCsvOutput',
+    'noReportOutput',
+    'noFinalInstructions',
+    'noTaxBracketWording'
+  ];
+  return {
+    status: coverageReady ? 'readyToImplementFixturesPublicClosed' : 'blocked',
+    decision: 'implementSyntheticFixturesBeforePublicRelease',
+    sourceCoverageStatus: unsupportedCaseCoverage.status,
+    fixtureImplementationRows: [
+      {
+        id: 'coupleStaggeredFixture',
+        label: 'Couple, staggered retirement',
+        status: 'readyToImplement',
+        requiredAssertions: sharedAssertions,
+        detail: 'Build a synthetic couple with different retirement dates, spouse age gap, income overlap, and survivor-sensitive wording checks.'
+      },
+      {
+        id: 'registeredHeavyFixture',
+        label: 'Registered-heavy assets',
+        status: 'readyToImplement',
+        requiredAssertions: sharedAssertions,
+        detail: 'Build a synthetic RRSP/RRIF/LIF-heavy plan with tax-context and minimum-withdrawal stop assertions.'
+      },
+      {
+        id: 'taxableHeavyFixture',
+        label: 'Taxable-heavy assets',
+        status: 'readyToImplement',
+        requiredAssertions: sharedAssertions,
+        detail: 'Build a synthetic taxable-heavy plan with capital gains, ACB, and non-registered evidence assertions.'
+      },
+      {
+        id: 'survivorEstateFixture',
+        label: 'Survivor and estate constraint',
+        status: 'readyToImplement',
+        requiredAssertions: sharedAssertions,
+        detail: 'Build a synthetic plan with estate intent, survivor spending sensitivity, and stop behavior for fragile wording.'
+      },
+      {
+        id: 'thinDataFixture',
+        label: 'Thin data plan',
+        status: 'readyToImplement',
+        requiredAssertions: sharedAssertions,
+        detail: 'Build a sparse-input fixture proving the optimizer stops rather than inferring missing evidence.'
+      }
+    ],
+    stopConditionAssertionRows: [
+      {
+        id: 'missingContextStop',
+        label: 'Missing context stop',
+        status: 'readyToAssert',
+        detail: 'Assert missing tax or constraint context blocks public-style optimizer output.'
+      },
+      {
+        id: 'ambiguousEvidenceStop',
+        label: 'Ambiguous evidence stop',
+        status: 'readyToAssert',
+        detail: 'Assert ambiguous account or benefit evidence blocks fixture promotion.'
+      },
+      {
+        id: 'unsupportedHouseholdStop',
+        label: 'Unsupported household stop',
+        status: 'readyToAssert',
+        detail: 'Assert unsupported household shapes stop before annual sequencing review appears public-ready.'
+      },
+      {
+        id: 'testerConfusionStop',
+        label: 'Tester confusion stop',
+        status: 'readyToAssert',
+        detail: 'Assert copy that could be mistaken for instructions keeps public release blocked.'
+      },
+      {
+        id: 'exportExpectationStop',
+        label: 'Export expectation stop',
+        status: 'readyToAssert',
+        detail: 'Assert any CSV/report expectation keeps export and printable sequencing output closed.'
+      }
+    ],
+    implementationBatches: [
+      {
+        id: 'fixtureBuilders',
+        label: 'Fixture builders',
+        status: 'next',
+        detail: 'Add synthetic fixture builders for the five coverage gaps.'
+      },
+      {
+        id: 'stopAssertions',
+        label: 'Stop assertions',
+        status: 'next',
+        detail: 'Add focused assertions that missing or ambiguous evidence blocks public-style optimizer output.'
+      },
+      {
+        id: 'matrixRollup',
+        label: 'Matrix rollup',
+        status: 'later',
+        detail: 'Roll fixture outcomes back into the coverage matrix once builders and assertions exist.'
+      },
+      {
+        id: 'docsAndVerification',
+        label: 'Docs and verification',
+        status: 'later',
+        detail: 'Document fixture scope and run focused verification without invoking the known hanging full suite.'
+      }
+    ],
+    blockedOutputs: unsupportedCaseCoverage.blockedOutputs,
+    summary:
+      coverageReady
+        ? 'Fixture coverage implementation can start with synthetic fixtures, while public optimizer output remains closed.'
+        : 'Fixture coverage implementation waits for unsupported-case coverage planning.',
+    boundary:
+      'This implementation plan authorizes synthetic fixtures and stop-condition assertions only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Implement fixture builders and stop assertions as the next substantial package before revisiting coverage status.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -5462,6 +5637,7 @@ export function selectOptimizerSchemaSaveDecision({
       'csvReportGate',
       'publicSafetyValidation',
       'unsupportedCaseCoverage',
+      'fixtureCoverageImplementationPlan',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -8364,6 +8540,7 @@ export function runBoundedOptimizer(
   const csvReportGate = selectOptimizerCsvReportGate({ betaSavedSequencingAdapter, schemaSaveDecision });
   const publicSafetyValidation = selectOptimizerPublicSafetyValidation({ csvReportGate });
   const unsupportedCaseCoverage = selectOptimizerUnsupportedCaseCoverage({ publicSafetyValidation });
+  const fixtureCoverageImplementationPlan = selectOptimizerFixtureCoverageImplementationPlan({ unsupportedCaseCoverage });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -8402,6 +8579,7 @@ export function runBoundedOptimizer(
     csvReportGate,
     publicSafetyValidation,
     unsupportedCaseCoverage,
+    fixtureCoverageImplementationPlan,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`
