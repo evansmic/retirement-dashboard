@@ -828,6 +828,52 @@ const TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS = [
   'No schema changes.'
 ];
 
+const RUNTIME_DRAFT_TESTER_HANDOFF_DECISION_ROWS = [
+  {
+    label: 'Decision',
+    status: 'Ready for small controlled handoff',
+    detail: 'The current runtime draft surface can be shown to a very small tester group using made-up scenarios only.'
+  },
+  {
+    label: 'Review purpose',
+    status: 'Clarity and plausibility only',
+    detail: 'Testers should look for confusing labels, missing context, surprising rows, and places where the draft sounds too final.'
+  },
+  {
+    label: 'Surface evidence',
+    status: 'Ready with guardrails',
+    detail: 'Runtime rows, readiness cues, source labels, tax context, disabled actions, and blocked-output copy are visible in Results Details.'
+  },
+  {
+    label: 'Scenario posture',
+    status: 'Limited synthetic review',
+    detail: 'Use only made-up household examples. Do not ask testers to enter real personal data or rely on the output for decisions.'
+  },
+  {
+    label: 'Owner decision',
+    status: 'Ship only when invited',
+    detail: 'Tester distribution stays paused until the owner chooses to send the controlled handoff packet.'
+  }
+];
+
+const RUNTIME_DRAFT_TESTER_HANDOFF_STEPS = [
+  'Use made-up scenarios only.',
+  'Ask whether the runtime rows are clear, plausible, and visibly unfinished.',
+  'Ask what context is missing before these rows could become real instructions.',
+  'Treat any row that feels like a final recommendation as a blocker.'
+];
+
+const RUNTIME_DRAFT_TESTER_HANDOFF_BLOCKERS = [
+  'No saved sequencing output.',
+  'No CSV output.',
+  'No report output.',
+  'No production UI promotion.',
+  'No final annual instructions.',
+  'No tax-bracket instructions.',
+  'No schema changes.',
+  'No .plan.json generation.'
+];
+
 function runtimeDraftRowStatus(row: BoundedOptimizerSummary['experimentalAnnualInstructionDraft']['rows'][number]): {
   label: string;
   tone: 'ready' | 'review' | 'watch';
@@ -5649,6 +5695,28 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {(runtimeDraftScope?.blockedOutputs || []).map((output) => (
               <li key={output}>{blockedOutputLabels[output] || output}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel runtime-draft-tester-handoff-panel">
+          <h3>Runtime draft tester handoff decision</h3>
+          <ul className="compact-list">
+            {RUNTIME_DRAFT_TESTER_HANDOFF_DECISION_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Limited handoff steps:</p>
+          <ul className="compact-list">
+            {RUNTIME_DRAFT_TESTER_HANDOFF_STEPS.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked for tester handoff:</p>
+          <ul className="compact-list">
+            {RUNTIME_DRAFT_TESTER_HANDOFF_BLOCKERS.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
             ))}
           </ul>
         </section>

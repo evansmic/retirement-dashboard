@@ -662,6 +662,41 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.runtime-draft-generator-scope-panel');
   });
 
+  it('keeps runtime draft tester handoff controlled and synthetic-only', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('RUNTIME_DRAFT_TESTER_HANDOFF_DECISION_ROWS');
+    expect(appSource).toContain('RUNTIME_DRAFT_TESTER_HANDOFF_STEPS');
+    expect(appSource).toContain('RUNTIME_DRAFT_TESTER_HANDOFF_BLOCKERS');
+    expect(testerSurface).toContain('Runtime draft tester handoff decision');
+    expect(appSource).toContain('Ready for small controlled handoff');
+    expect(appSource).toContain('Clarity and plausibility only');
+    expect(appSource).toContain('Ready with guardrails');
+    expect(appSource).toContain('Limited synthetic review');
+    expect(appSource).toContain('Ship only when invited');
+    expect(appSource).toContain('Use made-up scenarios only.');
+    expect(appSource).toContain('Treat any row that feels like a final recommendation as a blocker.');
+    expect(testerSurface).toContain('Limited handoff steps:');
+    expect(testerSurface).toContain('Still blocked for tester handoff:');
+    expect(appSource).toContain('No saved sequencing output.');
+    expect(appSource).toContain('No CSV output.');
+    expect(appSource).toContain('No report output.');
+    expect(appSource).toContain('No production UI promotion.');
+    expect(appSource).toContain('No final annual instructions.');
+    expect(appSource).toContain('No tax-bracket instructions.');
+    expect(appSource).toContain('No schema changes.');
+    expect(appSource).toContain('No .plan.json generation.');
+    expect(testerSurface).not.toContain('collectTesterFeedback');
+    expect(testerSurface).not.toContain('submitTesterFeedback');
+    expect(testerSurface).not.toContain('saveRuntimeDraftHandoff');
+    expect(testerSurface).not.toContain('exportRuntimeDraftHandoffCsv');
+    expect(testerSurface).not.toContain('promoteRuntimeDraftHandoff');
+    expect(testerSurface).not.toContain('unlockProductionUi');
+    expect(stylesSource).toContain('.runtime-draft-tester-handoff-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

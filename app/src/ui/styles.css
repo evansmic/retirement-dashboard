@@ -3096,6 +3096,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.runtime-draft-tester-handoff-panel {
+  border-left: 3px solid #6f7350;
+  padding-left: 12px;
+}
+
 .runtime-draft-row-grid {
   display: grid;
   gap: 8px;

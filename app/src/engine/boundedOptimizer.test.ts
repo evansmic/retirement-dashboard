@@ -431,6 +431,23 @@ describe('bounded optimizer runner', () => {
             boundary: 'Runtime-only.',
             nextStep: 'Use synthetic scenarios.'
           },
+          runtimeDraftGeneratorScope: {
+            status: 'readyForRuntimeDraft',
+            allowedSources: ['selectedCandidateAnnualRows', 'annualAccountTotals', 'accountOrderDraft', 'taxContextRows', 'readinessSummary'],
+            rows: [],
+            blockedOutputs: [
+              'savedSequencingOutput',
+              'csvSequencingOutput',
+              'reportOutput',
+              'productionUi',
+              'taxBracketInstructions',
+              'finalAnnualInstructions',
+              'schemaChanges'
+            ],
+            summary: 'Runtime annual draft generation is ready for synthetic scenario review.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
+          },
           blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
           summary: 'Draft ready.',
           boundary: 'Runtime-only.',
@@ -536,6 +553,23 @@ describe('bounded optimizer runner', () => {
             reviewItems: ['Survivor review'],
             boundary: 'Runtime-only.',
             nextStep: 'Review watch items.'
+          },
+          runtimeDraftGeneratorScope: {
+            status: 'reviewFirst',
+            allowedSources: ['selectedCandidateAnnualRows', 'annualAccountTotals', 'accountOrderDraft', 'taxContextRows', 'readinessSummary'],
+            rows: [],
+            blockedOutputs: [
+              'savedSequencingOutput',
+              'csvSequencingOutput',
+              'reportOutput',
+              'productionUi',
+              'taxBracketInstructions',
+              'finalAnnualInstructions',
+              'schemaChanges'
+            ],
+            summary: 'Runtime annual draft generation needs review before broader tester presentation.',
+            boundary: 'Runtime-only.',
+            nextStep: 'Review.'
           },
           blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
           summary: 'Draft review.',
@@ -1328,6 +1362,39 @@ describe('bounded optimizer runner', () => {
     expect(summary.experimentalAnnualInstructionDraft.readinessSummary.watchCount).toBe(0);
     expect(summary.experimentalAnnualInstructionDraft.readinessSummary.nextStep).toContain('synthetic scenarios');
     expect(summary.experimentalAnnualInstructionDraft.boundary).toContain('not saved');
+    expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope).toMatchObject({
+      status: 'readyForRuntimeDraft',
+      allowedSources: [
+        'selectedCandidateAnnualRows',
+        'annualAccountTotals',
+        'accountOrderDraft',
+        'taxContextRows',
+        'readinessSummary'
+      ],
+      blockedOutputs: expect.arrayContaining([
+        'savedSequencingOutput',
+        'csvSequencingOutput',
+        'reportOutput',
+        'productionUi',
+        'taxBracketInstructions',
+        'finalAnnualInstructions',
+        'schemaChanges'
+      ]),
+      summary: expect.stringContaining('Runtime annual draft generation is ready')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.rows.map((row) => row.id)).toEqual([
+      'sourceRows',
+      'annualTotals',
+      'accountOrder',
+      'taxContext',
+      'outputBoundary'
+    ]);
+    expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.rows.find((row) => row.id === 'outputBoundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('does not save sequencing')
+    });
+    expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.boundary).toContain('not saved');
+    expect(summary.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope.nextStep).toContain('runtime-only annual draft rows');
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

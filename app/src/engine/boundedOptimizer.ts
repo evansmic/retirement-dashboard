@@ -545,6 +545,21 @@ export type OptimizerExperimentalDraftReadinessSummary = {
   nextStep: string;
 };
 
+export type OptimizerRuntimeAnnualInstructionDraftGeneratorScope = {
+  status: 'readyForRuntimeDraft' | 'reviewFirst' | 'blocked';
+  allowedSources: Array<'selectedCandidateAnnualRows' | 'annualAccountTotals' | 'accountOrderDraft' | 'taxContextRows' | 'readinessSummary'>;
+  rows: Array<{
+    id: 'sourceRows' | 'annualTotals' | 'accountOrder' | 'taxContext' | 'outputBoundary';
+    label: string;
+    status: 'ready' | 'review' | 'blocked';
+    detail: string;
+  }>;
+  blockedOutputs: Array<'savedSequencingOutput' | 'csvSequencingOutput' | 'reportOutput' | 'productionUi' | 'taxBracketInstructions' | 'finalAnnualInstructions' | 'schemaChanges'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalAnnualInstructionDraft = {
   status: 'draftReady' | 'needsInputs' | 'blocked';
   audience: 'syntheticTesterOnly';
@@ -563,6 +578,7 @@ export type OptimizerExperimentalAnnualInstructionDraft = {
   confidence: OptimizerExperimentalDraftConfidence;
   harmChecks: OptimizerExperimentalDraftHarmCheckRow[];
   readinessSummary: OptimizerExperimentalDraftReadinessSummary;
+  runtimeDraftGeneratorScope: OptimizerRuntimeAnnualInstructionDraftGeneratorScope;
   blockedOutputs: Array<'savedInstructionOutput' | 'csvInstructionOutput' | 'reportInstructionOutput' | 'taxBracketInstructions' | 'productionUi'>;
   summary: string;
   boundary: string;
@@ -3950,6 +3966,98 @@ function buildExperimentalDraftReadinessSummary({
   };
 }
 
+function buildRuntimeAnnualInstructionDraftGeneratorScope({
+  status,
+  rows,
+  annualAccountTotals,
+  accountOrderDraft,
+  taxContextRows,
+  readinessSummary
+}: {
+  status: OptimizerExperimentalAnnualInstructionDraft['status'];
+  rows: OptimizerExperimentalAnnualInstructionDraftRow[];
+  annualAccountTotals: OptimizerExperimentalAnnualAccountTotal[];
+  accountOrderDraft: OptimizerExperimentalAccountOrderDraft;
+  taxContextRows: OptimizerExperimentalDraftTaxContextRow[];
+  readinessSummary: OptimizerExperimentalDraftReadinessSummary;
+}): OptimizerRuntimeAnnualInstructionDraftGeneratorScope {
+  const hasDraftRows = rows.length > 0;
+  const hasAnnualTotals = annualAccountTotals.length > 0;
+  const orderReady = accountOrderDraft.status === 'draftReady' && accountOrderDraft.rows.some((row) => row.status === 'included');
+  const taxContextReady = taxContextRows.some((row) => row.id === 'afterTaxSpending' && row.status !== 'blocked');
+  const blocked = status === 'blocked' || !hasDraftRows;
+  const review = !blocked && (readinessSummary.status !== 'readyForTesterReview' || !hasAnnualTotals || !orderReady || !taxContextReady);
+  const scopeStatus: OptimizerRuntimeAnnualInstructionDraftGeneratorScope['status'] = blocked
+    ? 'blocked'
+    : review
+      ? 'reviewFirst'
+      : 'readyForRuntimeDraft';
+  const scopeRows: OptimizerRuntimeAnnualInstructionDraftGeneratorScope['rows'] = [
+    {
+      id: 'sourceRows',
+      label: 'Selected-candidate annual rows',
+      status: hasDraftRows ? 'ready' : 'blocked',
+      detail: hasDraftRows
+        ? `${rows.length} runtime draft row${rows.length === 1 ? '' : 's'} are available from the selected candidate.`
+        : 'Runtime draft generator waits for selected-candidate annual withdrawal rows.'
+    },
+    {
+      id: 'annualTotals',
+      label: 'Annual account totals',
+      status: hasAnnualTotals ? 'ready' : 'blocked',
+      detail: hasAnnualTotals
+        ? `${annualAccountTotals.length} annual total${annualAccountTotals.length === 1 ? '' : 's'} can group account-level review rows.`
+        : 'Annual totals are required before a runtime annual draft can be shown.'
+    },
+    {
+      id: 'accountOrder',
+      label: 'Account-order evidence',
+      status: orderReady ? 'ready' : 'review',
+      detail: orderReady
+        ? 'Runtime draft rows can cite draft account-order positions from the selected candidate.'
+        : 'Account-order evidence needs review before draft rows can be treated as ready.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context',
+      status: taxContextReady ? 'ready' : 'review',
+      detail: taxContextReady
+        ? 'Runtime draft rows can show compact tax context without issuing tax-bracket instructions.'
+        : 'Tax context remains partial and needs review before widening tester presentation.'
+    },
+    {
+      id: 'outputBoundary',
+      label: 'Output boundary',
+      status: 'blocked',
+      detail: 'Runtime draft generation does not save sequencing, export CSV, change reports, promote production UI, change schemas, or create final instructions.'
+    }
+  ];
+
+  return {
+    status: scopeStatus,
+    allowedSources: ['selectedCandidateAnnualRows', 'annualAccountTotals', 'accountOrderDraft', 'taxContextRows', 'readinessSummary'],
+    rows: scopeRows,
+    blockedOutputs: [
+      'savedSequencingOutput',
+      'csvSequencingOutput',
+      'reportOutput',
+      'productionUi',
+      'taxBracketInstructions',
+      'finalAnnualInstructions',
+      'schemaChanges'
+    ],
+    summary:
+      scopeStatus === 'readyForRuntimeDraft'
+        ? 'Runtime annual draft generation is ready for synthetic scenario review.'
+        : scopeStatus === 'reviewFirst'
+          ? 'Runtime annual draft generation needs review before broader tester presentation.'
+          : 'Runtime annual draft generation is blocked until source rows are available.',
+    boundary:
+      'Runtime draft generator scope is not saved, exported, printed, promoted to production UI, framed as tax-bracket instructions, or added to saved schemas.',
+    nextStep: 'Use this scope to move from static mock rows toward runtime-only annual draft rows for synthetic scenarios.'
+  };
+}
+
 function buildExperimentalAnnualAccountTotals(
   rows: OptimizerExperimentalAnnualInstructionDraftRow[]
 ): OptimizerExperimentalAnnualAccountTotal[] {
@@ -4581,6 +4689,14 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
   });
   const testerPacketBoundary = buildExperimentalTesterPacketBoundary(presentationReadiness);
   const testerPacketExportGuard = buildExperimentalTesterPacketExportGuard(testerPacketBoundary);
+  const runtimeDraftGeneratorScope = buildRuntimeAnnualInstructionDraftGeneratorScope({
+    status,
+    rows,
+    annualAccountTotals,
+    accountOrderDraft,
+    taxContextRows,
+    readinessSummary
+  });
 
   return {
     status,
@@ -4600,6 +4716,7 @@ export function selectOptimizerExperimentalAnnualInstructionDraft({
     confidence,
     harmChecks,
     readinessSummary,
+    runtimeDraftGeneratorScope,
     blockedOutputs: ['savedInstructionOutput', 'csvInstructionOutput', 'reportInstructionOutput', 'taxBracketInstructions', 'productionUi'],
     summary:
       status === 'draftReady'

@@ -6,17 +6,50 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3008-S3027 package, the remaining-work estimate is:
+As of the S3028-S3047 package, the remaining-work estimate is:
 
-- Internal tester optimizer prototype: 0-30 sprints remaining.
-- Feature-complete app optimizer beta: 70-150 sprints remaining.
-- Public-ready optimizer for real planning use: 150-270 sprints remaining.
+- Internal tester optimizer prototype: 0-20 sprints remaining.
+- Feature-complete app optimizer beta: 60-140 sprints remaining.
+- Public-ready optimizer for real planning use: 140-260 sprints remaining.
 
-Material change at S3008-S3027: no. The estimate tightened by one package because displayed runtime draft rows now include row-level readiness cues.
+Material change at S3028-S3047: no. The estimate tightened by one package because the controlled tester handoff decision is now explicit in the tester-only surface.
 
 Update the remaining-sprint estimate after every 20-sprint package.
 
-## Latest Package — S3008-S3027: Runtime Annual Draft Row Quality And Tester Readiness
+## Latest Package — S3028-S3047: Runtime Draft Tester Handoff Decision Gate
+
+**Status:** Complete 2026-06-13.
+
+Goal: decide whether the current runtime annual draft row surface is ready for small controlled tester review. Results Details now includes a runtime draft tester handoff decision gate that allows a very small handoff using made-up scenarios only, with review limited to clarity, plausibility, missing context, and whether anything sounds too final. Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0-20 sprints remaining.
+- Feature-complete app optimizer beta: 60-140 sprints remaining.
+- Public-ready optimizer for real planning use: 140-260 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, public release, broad tester distribution, or real-data tester scenarios.
+
+Package doc: [`docs/sprint_3028_3047_runtime_draft_tester_handoff_decision_gate.md`](docs/sprint_3028_3047_runtime_draft_tester_handoff_decision_gate.md).
+
+### S3028-S3047 Completed Path
+
+- **S3028-S3032 — Decision row batch.** Added a controlled handoff decision with purpose, surface evidence, scenario posture, and owner-decision boundaries.
+- **S3033-S3037 — Handoff step batch.** Added limited handoff steps focused on synthetic scenarios, clarity, plausibility, missing context, and final-sounding rows.
+- **S3038-S3042 — Output boundary batch.** Kept saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation blocked.
+- **S3043-S3047 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S3028-S3047 Definition Of Done
+
+- Results Details shows the runtime draft tester handoff decision.
+- The handoff is limited to a very small group using made-up scenarios only.
+- Tester purpose is clarity, plausibility, missing context, and final-sounding language review only.
+- No saved schema or engine output schema changes.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S3008-S3027: Runtime Annual Draft Row Quality And Tester Readiness
 
 **Status:** Complete 2026-06-13.
 

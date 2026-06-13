@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3028-S3047 is complete. Results Details now includes a runtime draft tester handoff decision gate. The gate says the current runtime annual draft row surface is ready for a very small controlled handoff using made-up scenarios only, with tester review limited to clarity, plausibility, missing context, and whether anything sounds too final. Current remaining estimate: internal tester optimizer prototype 0-20 sprints, feature-complete app optimizer beta 60-140 sprints, and public-ready optimizer for real planning use 140-260 sprints. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_3028_3047_runtime_draft_tester_handoff_decision_gate.md`](docs/sprint_3028_3047_runtime_draft_tester_handoff_decision_gate.md).
+
 S3008-S3027 is complete. Runtime annual draft rows in Results Details now include row-level readiness cues derived from existing account-order and tax-context evidence: ready for review, ready with context, review first, or needs tax review. Current remaining estimate: internal tester optimizer prototype 0-30 sprints, feature-complete app optimizer beta 70-150 sprints, and public-ready optimizer for real planning use 150-270 sprints. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md`](docs/sprint_3008_3027_runtime_annual_draft_row_quality_and_tester_readiness.md).
