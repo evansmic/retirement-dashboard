@@ -6,17 +6,47 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S2728-S2747 checkpoint, the working estimate remains:
+As of the S2828-S2847 checkpoint, the working estimate remains:
 
 - Internal tester optimizer prototype: 80-120 sprints from S2628.
 - Feature-complete app optimizer beta: 180-260 sprints from S2628.
 - Public-ready optimizer for real planning use: 300-450 sprints from S2628.
 
-Material change at S2728-S2747: no.
+Material change at S2828-S2847: no.
 
-Reassess this materially every 100 sprints, with the next checkpoint at S2828-S2847.
+Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
 
-## Latest Package — S2808-S2827: Annual Instruction Static Mock Fixture Approval Gate
+## Latest Package — S2828-S2847: Optimizer Timeline Reassessment And Static Mock Surface Planning Checkpoint
+
+**Status:** Complete 2026-06-13.
+
+Goal: reassess the optimizer timeline at the next 100-sprint checkpoint and decide whether future static mock surface planning can proceed. The tester-only surface now shows a second timeline checkpoint with no material estimate change and a static mock surface planning checkpoint that allows planning only while keeping rendered mock rows, calculations, generated account order, saved output, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, timeline approval logic, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md`](docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md).
+
+### S2828-S2847 Completed Path
+
+- **S2828-S2832 — Timeline reassessment batch.** Rechecked the S2628 baseline and found no material change to the internal tester, beta, or public-ready estimates.
+- **S2833-S2837 — Static mock surface planning checkpoint batch.** Marked the boundary, copy contract, fixture boundary, and approval gate ready for future static surface planning only.
+- **S2838-S2842 — Blocked-output batch.** Kept rendered rows, calculated values, generated account order, saved output, CSV output, reports, production UI, and schema changes blocked.
+- **S2843-S2847 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2828-S2847 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Second optimizer timeline checkpoint is visible.
+- Material estimate change is recorded as no.
+- Next material checkpoint is updated to S2928-S2947.
+- Static mock surface planning checkpoint is visible.
+- Future work is limited to static surface planning only.
+- Rendered mock rows, calculated values, generated account order, saved output, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2808-S2827: Annual Instruction Static Mock Fixture Approval Gate
 
 **Status:** Complete 2026-06-13.
 

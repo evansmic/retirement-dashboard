@@ -3046,6 +3046,16 @@ button.secondary,
   padding-left: 12px;
 }
 
+.optimizer-second-timeline-checkpoint-panel {
+  border-left: 3px solid #4f6f7f;
+  padding-left: 12px;
+}
+
+.static-mock-surface-planning-panel {
+  border-left: 3px solid #7f624f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2828-S2847 is complete. The second 100-sprint optimizer timeline checkpoint found no material change to the S2628 baseline: internal tester prototype remains 80-120 sprints from S2628, feature-complete beta remains 180-260 sprints from S2628, and public-ready optimizer remains 300-450 sprints from S2628. The next material estimate checkpoint is S2928-S2947. The tester-only surface now also records that the static mock boundary, copy contract, fixture boundary, and approval gate are ready for future static surface planning only, while rendered mock rows, calculated values, generated account order, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md`](docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md).
+
 S2808-S2827 is complete. The tester-only surface now includes a static mock fixture approval gate for future annual instruction row mock work. The gate says the boundary, copy contract, and fixture contract are clear enough for future static surface planning only. It does not approve rendered static mock rows, calculated values, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, or `.plan.json` generation.
 
 Current package doc: [`docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md`](docs/sprint_2808_2827_annual_instruction_static_mock_fixture_approval_gate.md).

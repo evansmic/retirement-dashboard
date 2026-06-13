@@ -387,6 +387,52 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.annual-static-mock-approval-panel');
   });
 
+  it('keeps second optimizer timeline checkpoint static', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('OPTIMIZER_TIMELINE_SECOND_REASSESSMENT_ROWS');
+    expect(testerSurface).toContain('Optimizer timeline checkpoint two');
+    expect(appSource).toContain('Internal tester prototype');
+    expect(appSource).toContain('80-120 sprints from S2628');
+    expect(appSource).toContain('Feature-complete beta');
+    expect(appSource).toContain('180-260 sprints from S2628');
+    expect(appSource).toContain('Public-ready optimizer');
+    expect(appSource).toContain('300-450 sprints from S2628');
+    expect(appSource).toContain('Next material checkpoint: S2928-S2947.');
+    expect(testerSurface).not.toContain('updateSecondTimelineEstimate');
+    expect(testerSurface).not.toContain('approveBetaTimeline');
+    expect(testerSurface).not.toContain('approvePublicTimeline');
+    expect(testerSurface).not.toContain('unlockRenderedRows');
+    expect(testerSurface).not.toContain('saveTimelineCheckpoint');
+    expect(stylesSource).toContain('.optimizer-second-timeline-checkpoint-panel');
+  });
+
+  it('keeps static mock surface planning checkpoint non-rendering', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_PLANNING_CHECKPOINT_ROWS');
+    expect(testerSurface).toContain('Static mock surface planning checkpoint');
+    expect(appSource).toContain('Planning readiness');
+    expect(appSource).toContain('Ready to plan surface');
+    expect(appSource).toContain('Allowed next step');
+    expect(appSource).toContain('Plan only');
+    expect(appSource).toContain('The exact rows, layout, removal path, and tester prompts still need a separate package before rendering.');
+    expect(appSource).toContain('Rendered mock rows, calculated values, generated account order, saved output, CSV output, reports, production UI, and schema changes remain blocked.');
+    expect(testerSurface).not.toContain('STATIC_MOCK_SURFACE_ROWS');
+    expect(testerSurface).not.toContain('surfaceRows.map');
+    expect(testerSurface).not.toContain('renderMockSurface');
+    expect(testerSurface).not.toContain('createMockSurface');
+    expect(testerSurface).not.toContain('generateSurfaceRows');
+    expect(testerSurface).not.toContain('saveMockSurface');
+    expect(testerSurface).not.toContain('exportMockSurfaceCsv');
+    expect(testerSurface).not.toContain('promoteMockSurface');
+    expect(stylesSource).toContain('.static-mock-surface-planning-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

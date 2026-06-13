@@ -578,6 +578,50 @@ const ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_BLOCKERS = [
   'No production UI promotion.',
   'No saved schema changes.'
 ];
+
+const OPTIMIZER_TIMELINE_SECOND_REASSESSMENT_ROWS = [
+  {
+    label: 'Internal tester prototype',
+    estimate: '80-120 sprints from S2628',
+    status: 'No material change',
+    note: 'Static mock planning is clearer, but rendered rows, generated sequencing, and tester evidence are still missing.'
+  },
+  {
+    label: 'Feature-complete beta',
+    estimate: '180-260 sprints from S2628',
+    status: 'No material change',
+    note: 'Saved output, CSV output, reports, production UI, scenario coverage, and explainability work remain substantial.'
+  },
+  {
+    label: 'Public-ready optimizer',
+    estimate: '300-450 sprints from S2628',
+    status: 'No material change',
+    note: 'Public use still needs stronger accuracy, validation, release controls, and real-planning safeguards.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_PLANNING_CHECKPOINT_ROWS = [
+  {
+    label: 'Planning readiness',
+    status: 'Ready to plan surface',
+    detail: 'The boundary, copy contract, fixture boundary, and approval gate are ready for a future static surface plan.'
+  },
+  {
+    label: 'Allowed next step',
+    status: 'Plan only',
+    detail: 'A future package may define where hand-written static mock rows could appear in the tester-only surface.'
+  },
+  {
+    label: 'Still missing',
+    status: 'Needs separate implementation',
+    detail: 'The exact rows, layout, removal path, and tester prompts still need a separate package before rendering.'
+  },
+  {
+    label: 'Still blocked',
+    status: 'Blocked',
+    detail: 'Rendered mock rows, calculated values, generated account order, saved output, CSV output, reports, production UI, and schema changes remain blocked.'
+  }
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5181,6 +5225,27 @@ function TinyTesterSurfacePanel({
           <ul className="compact-list">
             {ANNUAL_INSTRUCTION_STATIC_MOCK_APPROVAL_BLOCKERS.map((blocker) => (
               <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel optimizer-second-timeline-checkpoint-panel">
+          <h3>Optimizer timeline checkpoint two</h3>
+          <ul className="compact-list">
+            {OPTIMIZER_TIMELINE_SECOND_REASSESSMENT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.estimate}. {row.note}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Next material checkpoint: S2928-S2947.</p>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-planning-panel">
+          <h3>Static mock surface planning checkpoint</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_PLANNING_CHECKPOINT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
             ))}
           </ul>
         </section>
