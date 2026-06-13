@@ -601,34 +601,56 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-implementation-decision-panel');
   });
 
-  it('renders tester-only static mock rows without calculations or outputs', () => {
+  it('renders runtime annual draft rows without save or export outputs', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
     const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
 
-    expect(appSource).toContain('TESTER_STATIC_SURFACE_EXAMPLE_ROWS');
-    expect(appSource).toContain('TESTER_STATIC_SURFACE_REVIEW_PROMPTS');
-    expect(appSource).toContain('TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS');
-    expect(testerSurface).toContain('Static mock annual review rows');
-    expect(testerSurface).toContain('These rows are hand-written examples for made-up scenario testing.');
-    expect(appSource).toContain('Example year 1');
-    expect(appSource).toContain('RRSP review');
-    expect(appSource).toContain('Example year 2');
-    expect(appSource).toContain('TFSA review');
-    expect(appSource).toContain('Example year 3');
-    expect(appSource).toContain('Taxable review');
-    expect(appSource).toContain('Made-up scenario test. Not saved. Not final. Not an instruction.');
-    expect(appSource).toContain('Can testers tell these are example review rows, not instructions?');
-    expect(appSource).toContain('Still blocked for this mock surface:');
+    expect(appSource).toContain('TESTER_RUNTIME_DRAFT_REVIEW_PROMPTS');
+    expect(appSource).toContain('TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS');
+    expect(testerSurface).toContain('runtimeDraftRows');
+    expect(testerSurface).toContain('Runtime annual draft rows');
+    expect(testerSurface).toContain('These rows come from the runtime experimental draft for made-up scenario testing.');
+    expect(testerSurface).toContain('runtimeDraftRows.slice(0, 6).map');
+    expect(testerSurface).toContain('row.source.withdrawalFieldLabel');
+    expect(testerSurface).toContain('row.taxContext.effectiveTaxRatePct');
+    expect(appSource).toContain('Can testers tell these runtime rows are review material, not instructions?');
+    expect(appSource).toContain('Does the tax context help explain the row without becoming tax-bracket guidance?');
+    expect(appSource).toContain('Still blocked for runtime draft rows:');
     expect(testerSurface).not.toContain('calculateStaticSurfaceAmount');
     expect(testerSurface).not.toContain('deriveStaticSurfaceOrder');
-    expect(testerSurface).not.toContain('generateStaticSurfaceRows');
-    expect(testerSurface).not.toContain('saveStaticSurfaceRows');
-    expect(testerSurface).not.toContain('exportStaticSurfaceCsv');
-    expect(testerSurface).not.toContain('promoteStaticSurfaceRows');
-    expect(stylesSource).toContain('.tester-static-surface-example-panel');
-    expect(stylesSource).toContain('.tester-static-row-grid');
-    expect(stylesSource).toContain('.tester-static-row');
+    expect(testerSurface).not.toContain('generateFinalAnnualInstructions');
+    expect(testerSurface).not.toContain('saveRuntimeDraftRows');
+    expect(testerSurface).not.toContain('exportRuntimeDraftRowsCsv');
+    expect(testerSurface).not.toContain('promoteRuntimeDraftRows');
+    expect(stylesSource).toContain('.runtime-annual-draft-rows-panel');
+    expect(stylesSource).toContain('.runtime-draft-row-grid');
+    expect(stylesSource).toContain('.runtime-draft-row');
+  });
+
+  it('shows runtime draft generator scope without save or export actions', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(testerSurface).toContain('runtimeDraftGeneratorScope');
+    expect(testerSurface).toContain('Runtime draft generator scope');
+    expect(testerSurface).toContain('Allowed runtime sources:');
+    expect(testerSurface).toContain('Still blocked for runtime drafts:');
+    expect(appSource).toContain('Selected option annual rows');
+    expect(appSource).toContain('Annual account totals');
+    expect(appSource).toContain('Draft account-order evidence');
+    expect(appSource).toContain('Annual tax context rows');
+    expect(appSource).toContain('Draft readiness summary');
+    expect(appSource).toContain('Saved sequencing output');
+    expect(appSource).toContain('CSV sequencing output');
+    expect(appSource).toContain('Schema changes');
+    expect(testerSurface).not.toContain('saveRuntimeDraft');
+    expect(testerSurface).not.toContain('exportRuntimeDraftCsv');
+    expect(testerSurface).not.toContain('promoteRuntimeDraft');
+    expect(testerSurface).not.toContain('createFinalAnnualInstructions');
+    expect(testerSurface).not.toContain('createTaxBracketInstructions');
+    expect(stylesSource).toContain('.runtime-draft-generator-scope-panel');
   });
 
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {

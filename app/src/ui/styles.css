@@ -3086,17 +3086,22 @@ button.secondary,
   padding-left: 12px;
 }
 
-.tester-static-surface-example-panel {
+.runtime-annual-draft-rows-panel {
   border-left: 3px solid #7a4f7f;
   padding-left: 12px;
 }
 
-.tester-static-row-grid {
+.runtime-draft-generator-scope-panel {
+  border-left: 3px solid #4f6f7a;
+  padding-left: 12px;
+}
+
+.runtime-draft-row-grid {
   display: grid;
   gap: 8px;
 }
 
-.tester-static-row {
+.runtime-draft-row {
   display: grid;
   grid-template-columns: minmax(88px, 0.7fr) minmax(100px, 1fr) minmax(130px, 1.1fr) minmax(130px, 1.1fr) minmax(180px, 1.5fr);
   gap: 8px;
@@ -3108,12 +3113,12 @@ button.secondary,
   padding: 10px;
 }
 
-.tester-static-row > * {
+.runtime-draft-row > * {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.tester-static-row em {
+.runtime-draft-row em {
   color: var(--muted);
   font-style: normal;
 }
@@ -3152,7 +3157,7 @@ button.secondary,
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 
-  .tester-static-row,
+  .runtime-draft-row,
   .chart-grid {
     grid-template-columns: 1fr;
   }

@@ -810,38 +810,14 @@ const STATIC_MOCK_SURFACE_IMPLEMENTATION_DECISION_BLOCKERS = [
   'No schema changes.'
 ];
 
-const TESTER_STATIC_SURFACE_EXAMPLE_ROWS = [
-  {
-    year: 'Example year 1',
-    accountLabel: 'RRSP review',
-    amountLabel: 'Example amount to review',
-    reason: 'Bridge funding review',
-    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
-  },
-  {
-    year: 'Example year 2',
-    accountLabel: 'TFSA review',
-    amountLabel: 'Example amount to review',
-    reason: 'Tax context review',
-    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
-  },
-  {
-    year: 'Example year 3',
-    accountLabel: 'Taxable review',
-    amountLabel: 'Example amount to review',
-    reason: 'Account-order review',
-    boundary: 'Made-up scenario test. Not saved. Not final. Not an instruction.'
-  }
-];
-
-const TESTER_STATIC_SURFACE_REVIEW_PROMPTS = [
-  'Can testers tell these are example review rows, not instructions?',
+const TESTER_RUNTIME_DRAFT_REVIEW_PROMPTS = [
+  'Can testers tell these runtime rows are review material, not instructions?',
   'Does the account label feel clear without sounding like an order?',
-  'Does the boundary note make the row safe to inspect without saving or exporting it?'
+  'Does the tax context help explain the row without becoming tax-bracket guidance?'
 ];
 
-const TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS = [
-  'Hand-written synthetic examples only.',
+const TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS = [
+  'Runtime synthetic scenario review only.',
   'No calculated annual withdrawal amounts.',
   'No generated account order.',
   'No tax-bracket targets.',
@@ -5212,6 +5188,8 @@ function TinyTesterSurfacePanel({
   const candidateRows = firstItem?.candidateDisplayRows || [];
   const disabledActions = surface?.copyAndActionBoundary.disabledActionLabels || [];
   const prompts = summary?.testerSurfaceMatrix.testerPacketReadiness.packetContract.reviewPrompts || [];
+  const runtimeDraftScope = summary?.experimentalAnnualInstructionDraft.runtimeDraftGeneratorScope || null;
+  const runtimeDraftRows = summary?.experimentalAnnualInstructionDraft.rows || [];
   const dataSourceLabel = surface?.preflightChecklist.dataSource ? 'Current tester packet' : 'Preparing';
   const approvalLabel =
     approval?.approval === 'approveTinyTesterSurface'
@@ -5223,10 +5201,19 @@ function TinyTesterSurfacePanel({
     savedSequencingOutput: 'Saved sequencing output',
     csvSequencingOutput: 'CSV sequencing output',
     reportOutput: 'Report output',
+    productionUi: 'Production UI',
     productionUiPromotion: 'Production UI promotion',
     finalAnnualInstructions: 'Final annual instructions',
     taxBracketInstructions: 'Tax-bracket instructions',
-    savedSchemaChanges: 'Saved schema changes'
+    savedSchemaChanges: 'Saved schema changes',
+    schemaChanges: 'Schema changes'
+  };
+  const runtimeSourceLabels: Record<string, string> = {
+    selectedCandidateAnnualRows: 'Selected option annual rows',
+    annualAccountTotals: 'Annual account totals',
+    accountOrderDraft: 'Draft account-order evidence',
+    taxContextRows: 'Annual tax context rows',
+    readinessSummary: 'Draft readiness summary'
   };
 
   return (
@@ -5569,33 +5556,62 @@ function TinyTesterSurfacePanel({
             ))}
           </ul>
         </section>
-        <section className="tester-surface-subpanel tester-static-surface-example-panel">
-          <h3>Static mock annual review rows</h3>
+        <section className="tester-surface-subpanel runtime-annual-draft-rows-panel">
+          <h3>Runtime annual draft rows</h3>
           <p className="table-note">
-            These rows are hand-written examples for made-up scenario testing. They are not calculated, saved,
-            exported, final, or instructions.
+            These rows come from the runtime experimental draft for made-up scenario testing. They are not saved,
+            exported, final, tax-bracket guidance, or instructions.
           </p>
-          <div className="tester-static-row-grid" aria-label="Static mock annual review rows">
-            {TESTER_STATIC_SURFACE_EXAMPLE_ROWS.map((row) => (
-              <article className="tester-static-row" key={`${row.year}-${row.accountLabel}`}>
-                <span>{row.year}</span>
-                <strong>{row.accountLabel}</strong>
-                <span>{row.amountLabel}</span>
-                <span>{row.reason}</span>
-                <em>{row.boundary}</em>
-              </article>
-            ))}
+          <div className="runtime-draft-row-grid" aria-label="Runtime annual draft rows">
+            {runtimeDraftRows.length ? (
+              runtimeDraftRows.slice(0, 6).map((row) => (
+                <article className="runtime-draft-row" key={`${row.year}-${row.account}-${row.source.withdrawalField}`}>
+                  <span>{row.year}</span>
+                  <strong>{row.label}</strong>
+                  <span>{formatMoney(row.amount)}</span>
+                  <span>{row.source.withdrawalFieldLabel}</span>
+                  <em>{row.taxContext.effectiveTaxRatePct === null ? 'Tax context review' : `${formatPercent(row.taxContext.effectiveTaxRatePct / 100)} effective tax context`}</em>
+                </article>
+              ))
+            ) : (
+              <p className="table-note">{loading ? 'Preparing runtime draft rows.' : 'No runtime draft rows are available yet.'}</p>
+            )}
           </div>
           <p className="table-note">Review prompts:</p>
           <ul className="compact-list">
-            {TESTER_STATIC_SURFACE_REVIEW_PROMPTS.map((prompt) => (
+            {TESTER_RUNTIME_DRAFT_REVIEW_PROMPTS.map((prompt) => (
               <li key={prompt}>{prompt}</li>
             ))}
           </ul>
-          <p className="table-note">Still blocked for this mock surface:</p>
+          <p className="table-note">Still blocked for runtime draft rows:</p>
           <ul className="compact-list">
-            {TESTER_STATIC_SURFACE_IMPLEMENTATION_LIMITS.map((limit) => (
+            {TESTER_RUNTIME_DRAFT_OUTPUT_LIMITS.map((limit) => (
               <li key={limit}>{limit}</li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel runtime-draft-generator-scope-panel">
+          <h3>Runtime draft generator scope</h3>
+          <p className="table-note">
+            {runtimeDraftScope?.summary || 'Runtime annual draft generation is waiting for source evidence.'}
+          </p>
+          <ul className="compact-list">
+            {(runtimeDraftScope?.rows || []).map((row) => (
+              <li key={row.id}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Allowed runtime sources:</p>
+          <ul className="compact-list">
+            {(runtimeDraftScope?.allowedSources || []).map((source) => (
+              <li key={source}>{runtimeSourceLabels[source] || source}</li>
+            ))}
+          </ul>
+          <p className="table-note">Still blocked for runtime drafts:</p>
+          <ul className="compact-list">
+            {(runtimeDraftScope?.blockedOutputs || []).map((output) => (
+              <li key={output}>{blockedOutputLabels[output] || output}</li>
             ))}
           </ul>
         </section>

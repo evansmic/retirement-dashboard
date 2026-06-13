@@ -6,17 +6,82 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S2948-S2967 correction package, the remaining-work estimate is:
+As of the S2988-S3007 package, the remaining-work estimate is:
 
-- Internal tester optimizer prototype: 20-60 sprints remaining.
-- Feature-complete app optimizer beta: 100-180 sprints remaining.
-- Public-ready optimizer for real planning use: 180-300 sprints remaining.
+- Internal tester optimizer prototype: 0-40 sprints remaining.
+- Feature-complete app optimizer beta: 80-160 sprints remaining.
+- Public-ready optimizer for real planning use: 160-280 sprints remaining.
 
-Material change at S2948-S2967: yes. The old "from S2628" estimate was stale and should have been converted to a remaining-work estimate.
+Material change at S2988-S3007: no. The estimate tightened by one package because runtime draft rows now render in the tester-only surface.
 
 Update the remaining-sprint estimate after every 20-sprint package.
 
-## Latest Package — S2948-S2967: Tester-Only Static Mock Surface Implementation Slice
+## Latest Package — S2988-S3007: Runtime Annual Draft Rows Surface Integration
+
+**Status:** Complete 2026-06-13.
+
+Goal: replace the hand-written static annual review rows with runtime-only annual draft row display for synthetic scenarios. Results Details now renders up to six rows from `experimentalAnnualInstructionDraft.rows`, including year, account label, review amount, source field label, and compact tax context. Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 0-40 sprints remaining.
+- Feature-complete app optimizer beta: 80-160 sprints remaining.
+- Public-ready optimizer for real planning use: 160-280 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft row output, CSV draft row output, report draft row output, or public release.
+
+Package doc: [`docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md`](docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md).
+
+### S2988-S3007 Completed Path
+
+- **S2988-S2992 — Runtime row source batch.** Replaced hand-written static rows with rows from the existing runtime-only experimental annual instruction draft.
+- **S2993-S2997 — Row display batch.** Rendered year, account label, amount, source field label, and compact tax context in the tester-only Details surface.
+- **S2998-S3002 — Output boundary batch.** Kept saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, and schema changes blocked.
+- **S3003-S3007 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2988-S3007 Definition Of Done
+
+- Runtime annual draft rows are visible in Results Details tester-only surface.
+- Static hand-written example rows are no longer the primary row surface.
+- Row display uses existing runtime-only draft rows and does not create new saved schema or engine output schema.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and `.plan.json` generation remain blocked.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2968-S2987: Runtime Annual Instruction Draft Generator Decision And Scope Tightening
+
+**Status:** Complete 2026-06-13.
+
+Goal: move from hand-written static mock rows toward runtime-only annual instruction draft generation for synthetic scenarios. The existing experimental annual instruction draft now includes a runtime draft generator scope with allowed sources, readiness rows, blocked outputs, boundary copy, and next step. Results Details also shows this scope inside the tester-only surface. Calculations, final instructions, saved sequencing, CSV output, report output, production UI, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Remaining sprint estimate after this package:
+
+- Internal tester optimizer prototype: 10-50 sprints remaining.
+- Feature-complete app optimizer beta: 90-170 sprints remaining.
+- Public-ready optimizer for real planning use: 170-290 sprints remaining.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, in-app feedback collection, feedback scoring, approval/unlock logic for generated rows, issue creation, cleanup task creation, model repair automation, new account-order algorithms, annual withdrawal calculation changes, tax-bracket targets, saved draft output, CSV draft output, report draft output, or public release.
+
+Package doc: [`docs/sprint_2968_2987_runtime_annual_instruction_draft_generator_scope.md`](docs/sprint_2968_2987_runtime_annual_instruction_draft_generator_scope.md).
+
+### S2968-S2987 Completed Path
+
+- **S2968-S2972 — Runtime source scope batch.** Added runtime draft generator scope to the existing experimental annual instruction draft object.
+- **S2973-S2977 — Readiness row batch.** Added source rows, annual totals, account-order evidence, tax context, and output boundary checks.
+- **S2978-S2982 — Tester surface batch.** Exposed the runtime draft generator scope in Results Details inside the tester-only panel.
+- **S2983-S2987 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2968-S2987 Definition Of Done
+
+- Runtime annual draft generator scope is attached to existing runtime-only experimental draft output.
+- Scope declares allowed sources and blocked outputs.
+- Scope is visible in the tester-only Details surface.
+- No saved schema or engine output schema changes.
+- No saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, or `.plan.json` generation.
+- Remaining sprint estimate is updated after the package.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2948-S2967: Tester-Only Static Mock Surface Implementation Slice
 
 **Status:** Complete 2026-06-13.
 

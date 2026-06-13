@@ -40,6 +40,14 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2988-S3007 is complete. Results Details now renders runtime-only annual draft rows from the existing experimental annual instruction draft instead of relying on hand-written static example rows. The tester-only surface shows year, account label, review amount, source field label, and compact tax context while keeping saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation blocked. Current remaining estimate: internal tester optimizer prototype 0-40 sprints, feature-complete app optimizer beta 80-160 sprints, and public-ready optimizer for real planning use 160-280 sprints.
+
+Current package doc: [`docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md`](docs/sprint_2988_3007_runtime_annual_draft_rows_surface_integration.md).
+
+S2968-S2987 is complete. The existing runtime-only experimental annual instruction draft now includes a runtime draft generator scope with allowed sources, readiness rows, blocked outputs, boundary copy, and next step. Results Details shows this scope inside the tester-only panel so the app is moving from hand-written static mock rows toward runtime annual draft generation without changing saved schema or engine output schema. Current remaining estimate: internal tester optimizer prototype 10-50 sprints, feature-complete app optimizer beta 90-170 sprints, and public-ready optimizer for real planning use 170-290 sprints. Saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2968_2987_runtime_annual_instruction_draft_generator_scope.md`](docs/sprint_2968_2987_runtime_annual_instruction_draft_generator_scope.md).
+
 S2948-S2967 is complete. The stale "from S2628" optimizer timeline has been corrected to remaining-work estimates and will now be updated after every 20-sprint package. Current remaining estimate: internal tester optimizer prototype 20-60 sprints, feature-complete app optimizer beta 100-180 sprints, and public-ready optimizer for real planning use 180-300 sprints. The tester-only Details surface now also includes three hand-written synthetic static annual review rows for made-up scenario comprehension testing only, while calculations, generated account order, tax-bracket targets, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md`](docs/sprint_2948_2967_tester_only_static_mock_surface_implementation_slice.md).
