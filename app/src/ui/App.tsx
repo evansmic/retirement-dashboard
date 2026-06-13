@@ -622,6 +622,38 @@ const STATIC_MOCK_SURFACE_PLANNING_CHECKPOINT_ROWS = [
     detail: 'Rendered mock rows, calculated values, generated account order, saved output, CSV output, reports, production UI, and schema changes remain blocked.'
   }
 ];
+
+const STATIC_MOCK_SURFACE_PLACEMENT_ROWS = [
+  {
+    label: 'Allowed location',
+    status: 'Details tester surface',
+    detail: 'A future hand-written static mock may be planned only inside the existing tester-only Details surface.'
+  },
+  {
+    label: 'Allowed neighborhood',
+    status: 'Near boundary evidence',
+    detail: 'A future placement may sit after the static mock approval gate and before tester questions.'
+  },
+  {
+    label: 'Required framing',
+    status: 'Test material only',
+    detail: 'The placement must stay grouped with boundary, copy, fixture, and approval notes.'
+  },
+  {
+    label: 'Review dependency',
+    status: 'Separate implementation package',
+    detail: 'Exact rows, layout, and removal path must be reviewed before anything is rendered.'
+  }
+];
+
+const STATIC_MOCK_SURFACE_PLACEMENT_EXCLUSIONS = [
+  'Do not place static mock rows in Overview.',
+  'Do not place static mock rows in Save and print.',
+  'Do not place static mock rows in printable reports.',
+  'Do not place static mock rows in CSV output.',
+  'Do not place static mock rows in saved plan files.',
+  'Do not place static mock rows in production UI.'
+];
 const ONTARIO_TAX_SCOPE_NOTE = 'This preview uses Ontario 2026 tax assumptions.';
 const STALE_PREVIEW_ERROR_MESSAGE = 'A new version of the planner is available. Refresh this page, then open Results again.';
 
@@ -5246,6 +5278,22 @@ function TinyTesterSurfacePanel({
               <li key={row.label}>
                 <strong>{row.label} ({row.status}):</strong> {row.detail}
               </li>
+            ))}
+          </ul>
+        </section>
+        <section className="tester-surface-subpanel static-mock-surface-placement-panel">
+          <h3>Static mock surface placement boundary</h3>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_PLACEMENT_ROWS.map((row) => (
+              <li key={row.label}>
+                <strong>{row.label} ({row.status}):</strong> {row.detail}
+              </li>
+            ))}
+          </ul>
+          <p className="table-note">Placement exclusions:</p>
+          <ul className="compact-list">
+            {STATIC_MOCK_SURFACE_PLACEMENT_EXCLUSIONS.map((exclusion) => (
+              <li key={exclusion}>{exclusion}</li>
             ))}
           </ul>
         </section>

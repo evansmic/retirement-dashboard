@@ -16,7 +16,37 @@ Material change at S2828-S2847: no.
 
 Reassess this materially every 100 sprints, with the next checkpoint at S2928-S2947.
 
-## Latest Package — S2828-S2847: Optimizer Timeline Reassessment And Static Mock Surface Planning Checkpoint
+## Latest Package — S2848-S2867: Annual Instruction Static Mock Surface Placement Boundary
+
+**Status:** Complete 2026-06-13.
+
+Goal: define where a future hand-written static mock surface could appear inside Results Details before any rows are rendered. The tester-only surface now shows an allowed placement boundary and placement exclusions while keeping Overview, Save and print, reports, CSV output, saved plan files, production UI, rendered rows, calculations, generated account order, final instructions, tax-bracket instructions, and schema changes blocked.
+
+Non-scope: saved plan schema changes, engine output schema changes, persisted optimizer output, printable report output changes, CSV output changes, `.plan.json` files, production UI promotion, final advice-like copy, tax-bracket instructions, exportable sequencing output, final annual instructions, new optimizer behavior, in-app feedback collection, feedback scoring, approval/unlock logic for rendered rows, issue creation, cleanup task creation, model repair automation, annual instruction calculations, annual instruction prototype implementation, mapping functions, generated instruction rows, static row mock implementation, static mock rows, rendered fixture rows, fixture calculations, fixture export, copy generation, timeline approval logic, or changed public-readiness estimates.
+
+Package doc: [`docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md`](docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md).
+
+### S2848-S2867 Completed Path
+
+- **S2848-S2852 — Allowed placement batch.** Added static placement boundaries limiting future mock surface planning to the existing tester-only Details surface.
+- **S2853-S2857 — Placement exclusion batch.** Blocked placement in Overview, Save and print, printable reports, CSV output, saved plan files, and production UI.
+- **S2858-S2862 — Source guard batch.** Added structure checks that block placement rendering, overview rows, report rows, CSV rows, saved rows, and promotion paths.
+- **S2863-S2867 — Verification and closeout.** Ran UI structure checks, focused optimizer tests, plan-file tests, production build, file guards, and browser verification.
+
+### S2848-S2867 Definition Of Done
+
+- Tiny tester surface remains Details-only and tester-only.
+- Static mock surface placement boundary is visible.
+- Future placement is limited to the tester-only Details surface.
+- Placement in Overview, Save and print, printable reports, CSV output, saved plan files, and production UI remains blocked.
+- No static mock rows or fixture rows are rendered.
+- Calculated annual withdrawal amounts, generated account order, and tax-bracket targets remain blocked.
+- Saved sequencing, CSV output, report output, production UI, final instructions, tax-bracket instructions, and schema changes remain blocked.
+- Saved plan schema remains unchanged.
+- No `.plan.json` files are created or persisted.
+- Focused optimizer tests, UI structure tests, plan-file tests, browser checks, and production build pass.
+
+## Previous Package — S2828-S2847: Optimizer Timeline Reassessment And Static Mock Surface Planning Checkpoint
 
 **Status:** Complete 2026-06-13.
 

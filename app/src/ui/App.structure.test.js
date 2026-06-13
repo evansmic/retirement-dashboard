@@ -433,6 +433,34 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.static-mock-surface-planning-panel');
   });
 
+  it('keeps static mock surface placement limited to Details planning', () => {
+    const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
+    const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');
+    const testerSurface = appSource.slice(testerSurfaceStart, testerSurfaceEnd);
+
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_PLACEMENT_ROWS');
+    expect(appSource).toContain('STATIC_MOCK_SURFACE_PLACEMENT_EXCLUSIONS');
+    expect(testerSurface).toContain('Static mock surface placement boundary');
+    expect(appSource).toContain('Allowed location');
+    expect(appSource).toContain('Details tester surface');
+    expect(appSource).toContain('Allowed neighborhood');
+    expect(appSource).toContain('Near boundary evidence');
+    expect(appSource).toContain('Placement exclusions:');
+    expect(appSource).toContain('Do not place static mock rows in Overview.');
+    expect(appSource).toContain('Do not place static mock rows in Save and print.');
+    expect(appSource).toContain('Do not place static mock rows in printable reports.');
+    expect(appSource).toContain('Do not place static mock rows in CSV output.');
+    expect(appSource).toContain('Do not place static mock rows in saved plan files.');
+    expect(testerSurface).not.toContain('renderPlacementRows');
+    expect(testerSurface).not.toContain('placeMockRows');
+    expect(testerSurface).not.toContain('overviewMockRows');
+    expect(testerSurface).not.toContain('reportMockRows');
+    expect(testerSurface).not.toContain('csvMockRows');
+    expect(testerSurface).not.toContain('savedMockRows');
+    expect(testerSurface).not.toContain('promoteMockPlacement');
+    expect(stylesSource).toContain('.static-mock-surface-placement-panel');
+  });
+
   it('keeps the tiny tester surface hardened for copy, actions, and narrow screens', () => {
     const testerSurfaceStart = appSource.indexOf('function TinyTesterSurfacePanel');
     const testerSurfaceEnd = appSource.indexOf('function BoundedOptimizerPanel');

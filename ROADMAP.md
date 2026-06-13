@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S2848-S2867 is complete. The tester-only surface now includes a static mock surface placement boundary for future annual instruction row mock work. Future placement is limited to the existing tester-only Details surface, near boundary evidence. Placement in Overview, Save and print, printable reports, CSV output, saved plan files, production UI, rendered rows, calculated values, generated account order, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
+
+Current package doc: [`docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md`](docs/sprint_2848_2867_annual_instruction_static_mock_surface_placement_boundary.md).
+
 S2828-S2847 is complete. The second 100-sprint optimizer timeline checkpoint found no material change to the S2628 baseline: internal tester prototype remains 80-120 sprints from S2628, feature-complete beta remains 180-260 sprints from S2628, and public-ready optimizer remains 300-450 sprints from S2628. The next material estimate checkpoint is S2928-S2947. The tester-only surface now also records that the static mock boundary, copy contract, fixture boundary, and approval gate are ready for future static surface planning only, while rendered mock rows, calculated values, generated account order, saved sequencing, CSV output, reports, production UI, final instructions, tax-bracket instructions, saved schema changes, and `.plan.json` generation remain blocked.
 
 Current package doc: [`docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md`](docs/sprint_2828_2847_optimizer_timeline_reassessment_and_static_mock_surface_planning_checkpoint.md).

@@ -3056,6 +3056,11 @@ button.secondary,
   padding-left: 12px;
 }
 
+.static-mock-surface-placement-panel {
+  border-left: 3px solid #624f7f;
+  padding-left: 12px;
+}
+
 @media (max-width: 920px) {
   .workspace-layout,
   .page-grid,
