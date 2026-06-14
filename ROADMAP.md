@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3548-S3567 is complete. The planner now has a retirement answer layer that turns existing result evidence into answer rows for retirement timing, spending capacity, income direction, next moves, and risk review before the final graphical redesign is chosen. Overview shows the answer layer with visualization hints and data-sheet handoffs, while full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
+
+Current package doc: [`docs/sprint_3548_3567_retirement_answer_layer.md`](docs/sprint_3548_3567_retirement_answer_layer.md).
+
 S3528-S3547 is complete. The optimizer now has a final public-readiness decision that treats feature-complete beta evidence, verified synthetic fixture coverage, and release-control validation as ready while keeping real-data pilot execution, public optimizer output, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, `.plan.json` sequencing output, and full-suite recovery blocked. Results Details shows the decision and allows only narrow private pilot requirements planning as the next scoped step. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
 
 Current package doc: [`docs/sprint_3528_3547_final_public_readiness_decision.md`](docs/sprint_3528_3547_final_public_readiness_decision.md).

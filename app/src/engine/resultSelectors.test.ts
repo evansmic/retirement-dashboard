@@ -175,6 +175,7 @@ import {
   selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
+  selectRetirementAnswerLayer,
   selectRetirementAnswerSummary,
   selectScenarioCards,
   selectScenarioChoiceCards,
@@ -733,6 +734,48 @@ describe('result selectors', () => {
     expect(spending.planningEstimateDetail).toContain("today's dollars");
     expect(spending.planningEstimateDetail).toContain('not a guarantee');
     expect(spending.reviewActions.find((action) => action.id === 'spendMore')).toBeTruthy();
+  });
+
+  it('builds an answer layer before choosing graphical redesign patterns', () => {
+    const answer = selectRetirementAnswerSummary(fixture, planFixture);
+    const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
+    const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const layer = selectRetirementAnswerLayer({
+      retirementAnswer: answer,
+      spendingCapacity: spending,
+      recommendedPath: recommended,
+      stressSummary: selectStressTestSummary(fixture),
+      taxSummary: selectTaxSummaryMetrics(fixture),
+      accountStory: selectAccountDrawdownStory(fixture),
+      incomeRows: selectIncomeSourceRows(fixture)
+    });
+
+    expect(layer.status).toBe('review');
+    expect(layer.rows.map((row) => row.id)).toEqual([
+      'retireTiming',
+      'spendingCapacity',
+      'incomeDirection',
+      'nextMoves',
+      'riskReview'
+    ]);
+    expect(layer.rows.map((row) => row.visualizationHint)).toEqual([
+      'verdictCard',
+      'spendingBand',
+      'fundingFlow',
+      'actionStack',
+      'riskTimeline'
+    ]);
+    expect(layer.rows.find((row) => row.id === 'incomeDirection')).toMatchObject({
+      answer: expect.stringContaining('not an instruction'),
+      dataSheet: 'incomeSources'
+    });
+    expect(layer.visualizationPrinciple).toContain('Choose visuals after the answer contract is stable');
+    expect(layer.blockedVisualizationWork).toEqual([
+      'fullUiRedesign',
+      'publicOptimizerOutput',
+      'savedRecommendations',
+      'finalAdviceLanguage'
+    ]);
   });
 
   it('derives covered monthly capacity from the runtime floor without saving the answer', () => {

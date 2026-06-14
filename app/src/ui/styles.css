@@ -1456,6 +1456,7 @@ button.secondary,
 
 .retirement-answer-panel,
 .spending-capacity-panel,
+.retirement-answer-layer,
 .review-first-panel,
 .overview-highlights-panel,
 .bounded-optimizer-panel,
@@ -1742,6 +1743,110 @@ button.secondary,
 
 .spending-capacity-needsReduction,
 .spending-capacity-tight {
+  border-color: #d8b676;
+  background: #fff9ee;
+}
+
+.retirement-answer-layer {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #cad3dd;
+  border-radius: var(--radius);
+  background: #f8fafc;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.retirement-answer-layer h3,
+.retirement-answer-layer p {
+  margin: 0;
+}
+
+.retirement-answer-layer-lede {
+  display: grid;
+  gap: 8px;
+  max-width: 920px;
+}
+
+.retirement-answer-layer-lede h3 {
+  color: var(--ink);
+  font-size: 1.22rem;
+}
+
+.retirement-answer-layer-lede p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.retirement-answer-layer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.answer-layer-row {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #9fb2c1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.answer-layer-row span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.answer-layer-row strong {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.answer-layer-row p,
+.answer-layer-row small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.answer-layer-row div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.answer-layer-row em {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fbfcfa;
+  color: var(--green-dark);
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 750;
+  padding: 3px 7px;
+}
+
+.answer-layer-row-ready {
+  border-left-color: var(--green);
+}
+
+.answer-layer-row-review {
+  border-left-color: #d8b676;
+}
+
+.answer-layer-row-blocked {
+  border-left-color: #d79b92;
+}
+
+.answer-layer-blocked {
+  border-color: #d79b92;
+  background: #fff4f1;
+}
+
+.answer-layer-review {
   border-color: #d8b676;
   background: #fff9ee;
 }
@@ -3576,6 +3681,7 @@ button.secondary,
   .retirement-answer-grid,
   .retirement-actions > div,
   .spending-capacity-grid,
+  .retirement-answer-layer-grid,
   .estate-intent-grid,
   .overview-highlight-grid,
   .details-card-grid,

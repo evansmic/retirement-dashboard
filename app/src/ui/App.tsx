@@ -46,6 +46,7 @@ import {
   selectProjectionMilestones,
   selectRecommendedPath,
   selectReconciliationDiagnostics,
+  selectRetirementAnswerLayer,
   selectFeedbackReviewPackage,
   selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
@@ -4398,6 +4399,15 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const retirementAnswerLayer = selectRetirementAnswerLayer({
+    retirementAnswer,
+    spendingCapacity,
+    recommendedPath,
+    stressSummary: stressTestSummary,
+    taxSummary,
+    accountStory: accountDrawdownStory,
+    incomeRows: incomeSourceRows
+  });
   const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
   const spendingPathBridge = selectSpendingPathBridgeSummary(plan);
   const discretionaryRoomBridge = selectDiscretionaryRoomBridgeSummary(minimumExpenseCoverage, spendingCapacity);
@@ -4653,6 +4663,7 @@ function ResultsHandoffPanel({
               spendingCapacity={spendingCapacity}
             />
             <SpendingCapacityPanel loading={loading} summary={spendingCapacity} />
+            <RetirementAnswerLayerPanel loading={loading} layer={retirementAnswerLayer} />
             <ReviewTheseFirstPanel
               actions={retirementAnswer.actions}
               loading={loading}
@@ -4911,6 +4922,48 @@ function SpendingCapacityPanel({
           </div>
         </section>
       </div>
+    </section>
+  );
+}
+
+function RetirementAnswerLayerPanel({
+  layer,
+  loading
+}: {
+  layer: ReturnType<typeof selectRetirementAnswerLayer>;
+  loading: boolean;
+}) {
+  const visualLabels: Record<ReturnType<typeof selectRetirementAnswerLayer>['rows'][number]['visualizationHint'], string> = {
+    verdictCard: 'Verdict card',
+    spendingBand: 'Spending band',
+    fundingFlow: 'Funding flow',
+    actionStack: 'Action stack',
+    riskTimeline: 'Risk timeline'
+  };
+
+  return (
+    <section className={`retirement-answer-layer answer-layer-${layer.status}`}>
+      <div className="retirement-answer-layer-lede">
+        <p className="eyebrow">Retirement answer layer</p>
+        <h3>{loading ? 'Mapping retirement answers' : layer.headline}</h3>
+        <p>{layer.detail}</p>
+      </div>
+      <div className="retirement-answer-layer-grid">
+        {layer.rows.map((row) => (
+          <article className={`answer-layer-row answer-layer-row-${row.status}`} key={row.id}>
+            <span>{row.status}</span>
+            <strong>{row.question}</strong>
+            <p>{row.answer}</p>
+            <small>{row.evidence}</small>
+            <div>
+              <em>{visualLabels[row.visualizationHint]}</em>
+              <em>{resultsSectionTitle(row.dataSheet)} data</em>
+            </div>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{layer.visualizationPrinciple}</p>
+      <p className="table-note">Still deferred: {layer.blockedVisualizationWork.join(', ')}.</p>
     </section>
   );
 }

@@ -1214,6 +1214,7 @@ describe('Results overview structure', () => {
     expect(renderedPanels).toEqual([
       'RetirementAnswerPanel',
       'SpendingCapacityPanel',
+      'RetirementAnswerLayerPanel',
       'ReviewTheseFirstPanel',
       'OverviewHighlightsPanel'
     ]);
@@ -1225,6 +1226,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('spending-hero-metric');
     expect(appSource).toContain('Estimated after-tax monthly spending');
     expect(appSource).toContain('per year, today&apos;s dollars');
+    expect(appSource).toContain('Retirement answer layer');
+    expect(appSource).toContain('Mapping retirement answers');
+    expect(appSource).toContain('Verdict card');
+    expect(appSource).toContain('Funding flow');
+    expect(appSource).toContain('data');
   });
 
   it('keeps first-results mobile layout guarded without adding Overview density', () => {
@@ -1234,6 +1240,8 @@ describe('Results overview structure', () => {
     expect(stylesSource).toContain('.retirement-answer-hero');
     expect(stylesSource).toContain('.spending-hero-metric');
     expect(stylesSource).toContain('.spending-capacity-panel');
+    expect(stylesSource).toContain('.retirement-answer-layer');
+    expect(stylesSource).toContain('.retirement-answer-layer-grid');
     expect(stylesSource).toContain('.review-first-panel');
     expect(stylesSource).toContain('.overview-highlights-panel');
     expect(stylesSource).toContain('.bounded-optimizer-panel');

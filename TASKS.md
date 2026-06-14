@@ -6,17 +6,44 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3528-S3547 package, the remaining-work estimate is:
+As of the S3548-S3567 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 0-20 sprints remaining.
 
-Material change at S3528-S3547: yes. Feature-complete beta remains present, and the current final decision keeps the public optimizer closed while allowing a narrow private pilot requirements package to be scoped next.
+Material change at S3548-S3567: yes. The next product path now prioritizes a retirement answer layer before graphical UI redesign, so visualization decisions can follow stable answer objects rather than drive them.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3528-S3547: Final Public-Readiness Decision
+## Latest Package — S3548-S3567: Retirement Answer Layer
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the retirement answers the planner should provide before choosing the final graphical redesign. The results selector layer now emits `retirementAnswerLayer` evidence for retirement timing, spending capacity, income direction, next moves, and risk review, with visualization hints and data-sheet handoffs.
+
+Package doc: [`docs/sprint_3548_3567_retirement_answer_layer.md`](docs/sprint_3548_3567_retirement_answer_layer.md).
+
+### S3548-S3567 Completed Path
+
+- Added `RetirementAnswerLayer`, `RetirementAnswerLayerRow`, and `selectRetirementAnswerLayer`.
+- Reused existing answer, spending, recommended path, stress, tax, account, and income-source evidence.
+- Added answer rows for retirement timing, spending capacity, income direction, next moves, and risk review.
+- Added future visualization hints for verdict cards, spending bands, funding flows, action stacks, and risk timelines.
+- Surfaced the answer layer in Overview without starting the full UI redesign.
+
+### S3548-S3567 Definition Of Done
+
+- `retirementAnswerLayer` rows are present in Overview.
+- Rows distinguish answer question, status, answer, evidence, future visualization hint, and data-sheet handoff.
+- Full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked.
+- Result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
+
+## Next Package — Retirement Answer Evidence Deepening
+
+Goal: deepen the answer layer with explicit evidence for benefit timing, withdrawal-family direction, estate/survivor sensitivity, and tax-pressure tradeoffs before returning to graphical UI implementation.
+
+## Previous Package — S3528-S3547: Final Public-Readiness Decision
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +66,6 @@ Package doc: [`docs/sprint_3528_3547_final_public_readiness_decision.md`](docs/s
 - Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove final public-readiness decisions are not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Private Pilot Requirements And Full-Suite Recovery
-
-Goal: define opt-in wording, privacy boundaries, stop conditions, tester limits, anonymized feedback expectations, and the full-suite recovery requirement before any real-data pilot or public optimizer output is reconsidered.
 
 ## Previous Package — S3508-S3527: Release-Control Validation
 

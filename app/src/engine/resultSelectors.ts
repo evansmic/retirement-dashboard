@@ -6,7 +6,7 @@ import {
   selectStressTestRows as selectStressTestRowsFromStressModule,
   selectStressTestSummary as selectStressTestSummaryFromStressModule
 } from './stressSelectors';
-import type { StressSeverity } from './stressSelectors';
+import type { StressSeverity, StressTestSummary } from './stressSelectors';
 import { runSimulationSafely, type SimulationConfig } from './runSimulation';
 export type {
   SpendingStressId,
@@ -728,6 +728,27 @@ export type SpendingCapacitySummary = {
     detail: string;
     detailArea: ResultsWorkspaceSection;
   }>;
+};
+
+export type RetirementAnswerLayerStatus = 'ready' | 'review' | 'blocked';
+
+export type RetirementAnswerLayerRow = {
+  id: 'retireTiming' | 'spendingCapacity' | 'incomeDirection' | 'nextMoves' | 'riskReview';
+  question: string;
+  status: RetirementAnswerLayerStatus;
+  answer: string;
+  evidence: string;
+  visualizationHint: 'verdictCard' | 'spendingBand' | 'fundingFlow' | 'actionStack' | 'riskTimeline';
+  dataSheet: ResultsWorkspaceSection;
+};
+
+export type RetirementAnswerLayer = {
+  status: RetirementAnswerLayerStatus;
+  headline: string;
+  detail: string;
+  rows: RetirementAnswerLayerRow[];
+  visualizationPrinciple: string;
+  blockedVisualizationWork: Array<'fullUiRedesign' | 'publicOptimizerOutput' | 'savedRecommendations' | 'finalAdviceLanguage'>;
 };
 
 export type MonthlyCapacityStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
@@ -3039,6 +3060,119 @@ export function selectSpendingCapacitySummary(
     estateTarget,
     estateTradeoff,
     reviewActions: reviewActions.slice(0, 4)
+  };
+}
+
+export function selectRetirementAnswerLayer({
+  retirementAnswer,
+  spendingCapacity,
+  recommendedPath,
+  stressSummary,
+  taxSummary,
+  accountStory,
+  incomeRows
+}: {
+  retirementAnswer: RetirementAnswerSummary;
+  spendingCapacity: SpendingCapacitySummary;
+  recommendedPath: RecommendedPathSummary;
+  stressSummary: StressTestSummary;
+  taxSummary: TaxSummaryMetrics;
+  accountStory: AccountDrawdownStorySummary;
+  incomeRows: IncomeSourceRow[];
+}): RetirementAnswerLayer {
+  const incomeLeaders = [...incomeRows]
+    .filter((row) => row.firstYearAmount > 0)
+    .sort((a, b) => b.firstYearAmount - a.firstYearAmount)
+    .slice(0, 2);
+  const incomeEvidence = incomeLeaders.length
+    ? incomeLeaders.map((row) => `${row.label}: ${moneyText(row.firstYearAmount)}`).join('; ')
+    : 'Income-source rows need more result evidence.';
+  const blocked = retirementAnswer.status === 'cannotTell' || recommendedPath.recommendedCandidateId === null;
+  const review =
+    !blocked &&
+    (retirementAnswer.status === 'notReady' ||
+      retirementAnswer.status === 'tight' ||
+      retirementAnswer.status === 'onTrackReview' ||
+      spendingCapacity.status === 'needsReduction' ||
+      spendingCapacity.status === 'tight' ||
+      stressSummary.status !== 'ok' ||
+      recommendedPath.confidence.level !== 'higher');
+  const status: RetirementAnswerLayerStatus = blocked ? 'blocked' : review ? 'review' : 'ready';
+  const topAction = retirementAnswer.actions.find((action) => action.id !== 'report') || retirementAnswer.actions[0] || null;
+  const taxEvidence =
+    taxSummary.lifetimeTax > 0
+      ? `Lifetime tax ${moneyText(taxSummary.lifetimeTax)}; peak tax ${moneyText(taxSummary.peakTax)}${taxSummary.peakTaxYear ? ` in ${taxSummary.peakTaxYear}` : ''}.`
+      : 'Tax evidence needs result rows.';
+
+  const rows: RetirementAnswerLayerRow[] = [
+    {
+      id: 'retireTiming',
+      question: 'Can I retire, and through what horizon?',
+      status: retirementAnswer.status === 'cannotTell' ? 'blocked' : retirementAnswer.status === 'notReady' || retirementAnswer.status === 'tight' ? 'review' : 'ready',
+      answer: retirementAnswer.headline,
+      evidence: retirementAnswer.fundedThroughYear
+        ? `Funded-through year ${retirementAnswer.fundedThroughYear}; projected money left ${moneyText(retirementAnswer.projectedMoneyLeft)}.`
+        : 'Funded-through evidence is not available yet.',
+      visualizationHint: 'verdictCard',
+      dataSheet: 'annualDetail'
+    },
+    {
+      id: 'spendingCapacity',
+      question: 'How much spending does the plan appear to support?',
+      status:
+        spendingCapacity.status === 'cannotTell'
+          ? 'blocked'
+          : spendingCapacity.status === 'needsReduction' || spendingCapacity.status === 'tight'
+            ? 'review'
+            : 'ready',
+      answer: spendingCapacity.headline,
+      evidence: `${spendingCapacity.planningEstimateLabel}: ${moneyText(spendingCapacity.estimatedSustainableAnnualSpending)} per year; projected money left ${moneyText(spendingCapacity.projectedMoneyLeft)}.`,
+      visualizationHint: 'spendingBand',
+      dataSheet: 'stressTests'
+    },
+    {
+      id: 'incomeDirection',
+      question: 'Where does retirement income appear to come from?',
+      status: incomeLeaders.length ? 'ready' : 'review',
+      answer: `${recommendedPath.recommendedLabel} is the current review path, not an instruction.`,
+      evidence: `${incomeEvidence} ${taxEvidence}`,
+      visualizationHint: 'fundingFlow',
+      dataSheet: 'incomeSources'
+    },
+    {
+      id: 'nextMoves',
+      question: 'What should be reviewed next?',
+      status: topAction ? 'ready' : 'review',
+      answer: topAction ? topAction.label : 'Review actions need more evidence.',
+      evidence: topAction ? topAction.detail : recommendedPath.headline,
+      visualizationHint: 'actionStack',
+      dataSheet: topAction?.detailArea ?? 'details'
+    },
+    {
+      id: 'riskReview',
+      question: 'What could make the answer fragile?',
+      status: stressSummary.status === 'ok' && accountStory.status === 'ok' ? 'ready' : 'review',
+      answer: stressSummary.headline,
+      evidence: `${stressSummary.fundedYears}/${stressSummary.totalYears} stress years funded; ${accountStory.headline}`,
+      visualizationHint: 'riskTimeline',
+      dataSheet: 'stressTests'
+    }
+  ];
+
+  return {
+    status,
+    headline:
+      status === 'blocked'
+        ? 'The retirement answer layer needs blockers cleared before visualization choices matter.'
+        : status === 'review'
+          ? 'The planner has the core retirement answers, with review items still visible.'
+          : 'The planner has a coherent answer layer ready to guide future visualization.',
+    detail:
+      'This layer defines the answer objects first: retirement timing, spending capacity, income direction, next moves, and risk review. Graphs should be chosen later to explain these answers, with data sheets available for inspection.',
+    rows,
+    visualizationPrinciple:
+      'Choose visuals after the answer contract is stable: verdict cards for viability, spending bands for capacity, funding flows for income sources, action stacks for next moves, and timelines for risk.',
+    blockedVisualizationWork: ['fullUiRedesign', 'publicOptimizerOutput', 'savedRecommendations', 'finalAdviceLanguage']
   };
 }
 
