@@ -7366,6 +7366,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.fullSuiteRecoveryPlan ? (
+        <section className={`optimizer-full-suite-recovery full-suite-${summary.fullSuiteRecoveryPlan.status}`}>
+          <div>
+            <p className="eyebrow">Full-suite recovery</p>
+            <h3>Low-storage verification path defined</h3>
+            <p>{summary.fullSuiteRecoveryPlan.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.fullSuiteRecoveryPlan.recoveryRows.map((item) => (
+              <article className={`full-suite-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Primary command</span>
+              <strong>{summary.fullSuiteRecoveryPlan.command}</strong>
+              <p>Runs test files in low-storage batches.</p>
+            </article>
+            <article>
+              <span>Fallback command</span>
+              <strong>{summary.fullSuiteRecoveryPlan.fallbackCommand}</strong>
+              <p>Use after the batch-one runner passes if a faster grouped run is safe.</p>
+            </article>
+            <article>
+              <span>Blocked until</span>
+              <strong>{summary.fullSuiteRecoveryPlan.blockedUntil.length}</strong>
+              <p>{summary.fullSuiteRecoveryPlan.blockedUntil.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.fullSuiteRecoveryPlan.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

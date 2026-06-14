@@ -689,6 +689,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'finalPublicReadinessDecision'
     | 'publicOptimizerReleaseNarrowing'
     | 'privatePilotRequirements'
+    | 'fullSuiteRecoveryPlan'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1030,6 +1031,24 @@ export type OptimizerPrivatePilotRequirements = {
     publicSharing: 'blocked';
   };
   blockedOutputs: OptimizerPublicReleaseNarrowing['blockedUntil'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerFullSuiteRecoveryPlan = {
+  status: 'lowStorageRunnerDefinedKnownBlocker' | 'blocked';
+  decision: 'replaceSingleFullSuiteWithLowStorageRunner';
+  sourcePrivatePilotStatus: OptimizerPrivatePilotRequirements['status'];
+  command: 'npm run test:full:low-storage';
+  fallbackCommand: 'TEST_BATCH_SIZE=2 npm run test:full:low-storage';
+  recoveryRows: Array<{
+    id: 'testDiscovery' | 'batchRunner' | 'longPoleIsolation' | 'focusedStillRequired' | 'buildStillRequired' | 'publicReleaseGate';
+    label: string;
+    status: 'ready' | 'required' | 'blocked';
+    detail: string;
+  }>;
+  blockedUntil: Array<'lowStorageRunnerPasses' | 'productionBuildPasses' | 'publicCopyReview' | 'outputContractDecision'>;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1892,6 +1911,7 @@ export type BoundedOptimizerSummary = {
   finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
   publicOptimizerReleaseNarrowing: OptimizerPublicReleaseNarrowing;
   privatePilotRequirements: OptimizerPrivatePilotRequirements;
+  fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6286,6 +6306,67 @@ export function selectOptimizerPrivatePilotRequirements({
   };
 }
 
+export function selectOptimizerFullSuiteRecoveryPlan({
+  privatePilotRequirements
+}: {
+  privatePilotRequirements: OptimizerPrivatePilotRequirements;
+}): OptimizerFullSuiteRecoveryPlan {
+  const runnerReady = privatePilotRequirements.status === 'requirementsDefinedPublicClosed';
+  return {
+    status: runnerReady ? 'lowStorageRunnerDefinedKnownBlocker' : 'blocked',
+    decision: 'replaceSingleFullSuiteWithLowStorageRunner',
+    sourcePrivatePilotStatus: privatePilotRequirements.status,
+    command: 'npm run test:full:low-storage',
+    fallbackCommand: 'TEST_BATCH_SIZE=2 npm run test:full:low-storage',
+    recoveryRows: [
+      {
+        id: 'testDiscovery',
+        label: 'Test discovery',
+        status: runnerReady ? 'ready' : 'blocked',
+        detail: 'The low-storage runner discovers test files from the repo and skips node_modules, dist, and .git.'
+      },
+      {
+        id: 'batchRunner',
+        label: 'Batch runner',
+        status: runnerReady ? 'ready' : 'blocked',
+        detail: 'Vitest runs in small batches, defaulting to one test file per process to avoid the known full-suite hang on the low-storage machine.'
+      },
+      {
+        id: 'longPoleIsolation',
+        label: 'Long-pole isolation',
+        status: 'required',
+        detail: 'The low-storage runner isolates the unresolved long pole to app/src/engine/examplePlanOptimizerReadiness.test.ts; app/src/engine/stressSelectors.test.ts passes directly but needs enough timeout headroom.'
+      },
+      {
+        id: 'focusedStillRequired',
+        label: 'Focused checks',
+        status: 'required',
+        detail: 'Keep npm run test:focused for fast optimizer/UI structure verification during package work.'
+      },
+      {
+        id: 'buildStillRequired',
+        label: 'Production build',
+        status: 'required',
+        detail: 'Production build remains required because the low-storage runner only verifies tests.'
+      },
+      {
+        id: 'publicReleaseGate',
+        label: 'Public release gate',
+        status: 'blocked',
+        detail: 'Public optimizer output stays closed until the low-storage runner and production build pass consistently, then copy and output contracts are reviewed.'
+      }
+    ],
+    blockedUntil: ['lowStorageRunnerPasses', 'productionBuildPasses', 'publicCopyReview', 'outputContractDecision'],
+    summary: runnerReady
+      ? 'Full-suite recovery now has a low-storage replacement command and isolates the remaining long-pole test batch.'
+      : 'Full-suite recovery waits for private pilot requirements.',
+    boundary:
+      'This recovery plan adds a verification runner only. It does not open public optimizer release, production UI, exports, reports, final instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Repair or split app/src/engine/examplePlanOptimizerReadiness.test.ts, keep enough timeout headroom for stressSelectors, then rerun npm run test:full:low-storage with the production build.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6412,6 +6493,7 @@ export function selectOptimizerSchemaSaveDecision({
       'finalPublicReadinessDecision',
       'publicOptimizerReleaseNarrowing',
       'privatePilotRequirements',
+      'fullSuiteRecoveryPlan',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9331,6 +9413,7 @@ export function runBoundedOptimizer(
   const privatePilotRequirements = selectOptimizerPrivatePilotRequirements({
     releaseNarrowing: publicOptimizerReleaseNarrowing
   });
+  const fullSuiteRecoveryPlan = selectOptimizerFullSuiteRecoveryPlan({ privatePilotRequirements });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9375,6 +9458,7 @@ export function runBoundedOptimizer(
     finalPublicReadinessDecision,
     publicOptimizerReleaseNarrowing,
     privatePilotRequirements,
+    fullSuiteRecoveryPlan,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

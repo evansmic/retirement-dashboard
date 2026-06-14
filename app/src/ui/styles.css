@@ -3792,6 +3792,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-full-suite-recovery {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #5d6980;
+  border-radius: 8px;
+  background: #fbfbff;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
@@ -3862,6 +3872,18 @@ button.secondary,
 }
 
 .private-pilot-row-blocked {
+  border-left: 4px solid #d79b92;
+}
+
+.full-suite-row-ready {
+  border-left: 4px solid var(--green);
+}
+
+.full-suite-row-required {
+  border-left: 4px solid var(--amber);
+}
+
+.full-suite-row-blocked {
   border-left: 4px solid #d79b92;
 }
 

@@ -1482,6 +1482,7 @@ describe('bounded optimizer runner', () => {
         'finalPublicReadinessDecision',
         'publicOptimizerReleaseNarrowing',
         'privatePilotRequirements',
+        'fullSuiteRecoveryPlan',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1838,6 +1839,31 @@ describe('bounded optimizer runner', () => {
       'answerUsefulness',
       'comparisonUsefulness',
       'missingContextLogged'
+    ]);
+    expect(summary.fullSuiteRecoveryPlan).toMatchObject({
+      status: 'lowStorageRunnerDefinedKnownBlocker',
+      decision: 'replaceSingleFullSuiteWithLowStorageRunner',
+      sourcePrivatePilotStatus: 'requirementsDefinedPublicClosed',
+      command: 'npm run test:full:low-storage',
+      fallbackCommand: 'TEST_BATCH_SIZE=2 npm run test:full:low-storage',
+      blockedUntil: ['lowStorageRunnerPasses', 'productionBuildPasses', 'publicCopyReview', 'outputContractDecision'],
+      boundary: expect.stringContaining('adds a verification runner only')
+    });
+    expect(summary.fullSuiteRecoveryPlan.recoveryRows.map((item) => item.id)).toEqual([
+      'testDiscovery',
+      'batchRunner',
+      'longPoleIsolation',
+      'focusedStillRequired',
+      'buildStillRequired',
+      'publicReleaseGate'
+    ]);
+    expect(summary.fullSuiteRecoveryPlan.recoveryRows.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'required',
+      'required',
+      'required',
+      'blocked'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',

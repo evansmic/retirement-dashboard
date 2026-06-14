@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3668-S3687 package, the remaining-work estimate is:
+As of the S3688-S3707 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 0-5 sprints remaining.
 
-Material change at S3668-S3687: yes. Private pilot requirements are now defined, leaving full-suite recovery plus public copy/output-contract decisions before public optimizer output can be reconsidered.
+Material change at S3688-S3707: yes. Full-suite recovery now has a low-storage replacement runner and has isolated the remaining long pole to `examplePlanOptimizerReadiness.test.ts`; launch hardening tightened, but public-ready optimizer remains gated until the long pole is repaired or split.
 
 ## Objective Estimate Tracker
 
@@ -22,15 +22,45 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-5 sprints | Tightened at S3668-S3687 | Closed for public release | Recover full-suite reliability and make public copy/output-contract decisions before reconsidering public output. |
+| Public-ready optimizer | 0-5 sprints | Unchanged at S3688-S3707 | Closed for public release | Repair or split the isolated full-suite long pole, then make public copy/output-contract decisions before reconsidering public output. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
-| Launch hardening | 10-30 sprints | Unchanged at S3568-S3587 | Pending | Recover full test-suite reliability, performance, copy/legal review, and release checklist. |
+| Launch hardening | 5-20 sprints | Tightened at S3688-S3707 | Pending | Finish full-suite recovery, performance review, copy/legal review, and release checklist. |
 
 Current drift note: the project previously spent too many packages on guardrails and checkpoints. Going forward, each package should either ship visible answer/comparison capability, reduce a public-release blocker, or make a deliberate product decision that narrows the estimates above.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3668-S3687: Private Pilot Requirements
+## Latest Package — S3688-S3707: Full-Suite Recovery Plan
+
+**Status:** Complete 2026-06-14.
+
+Goal: recover or replace the deferred full `npm test` path on the current low-storage machine. The repo now has `npm run test:full:low-storage`, a low-storage batch runner with per-batch timeout diagnostics. The bounded optimizer emits `fullSuiteRecoveryPlan`, which records the replacement command, required focused/build checks, and the isolated long pole.
+
+Package doc: [`docs/sprint_3688_3707_full_suite_recovery_plan.md`](docs/sprint_3688_3707_full_suite_recovery_plan.md).
+
+### S3688-S3707 Completed Path
+
+- Added `scripts/run_full_suite_low_storage.mjs`.
+- Added `npm run test:full:low-storage`.
+- Added per-batch timeout diagnostics via `TEST_BATCH_TIMEOUT_MS`.
+- Added `OptimizerFullSuiteRecoveryPlan` and recovery rows.
+- Rendered full-suite recovery in Results Details.
+- Confirmed the new runner advances through most batches and isolates the unresolved long pole to `app/src/engine/examplePlanOptimizerReadiness.test.ts`.
+
+### S3688-S3707 Definition Of Done
+
+- `npm run test:full:low-storage` exists and discovers test files dynamically.
+- The runner executes test files in low-storage batches and reports timeout batches instead of hanging indefinitely.
+- Details shows the full-suite recovery plan.
+- The isolated long-pole test is named for the next repair package.
+- Public optimizer output remains closed until the runner and production build pass consistently.
+- Focused optimizer tests, UI structure tests, targeted slow tests, script syntax check, and production build pass before commit.
+
+## Next Package — Full-Suite Long-Pole Repair
+
+Goal: repair or split `app/src/engine/examplePlanOptimizerReadiness.test.ts` so `npm run test:full:low-storage` can pass on the current low-storage machine.
+
+## Previous Package — S3668-S3687: Private Pilot Requirements
 
 **Status:** Complete 2026-06-14.
 
@@ -55,10 +85,6 @@ Package doc: [`docs/sprint_3668_3687_private_pilot_requirements.md`](docs/sprint
 - Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes remain closed.
 - Private pilot requirements are not persisted into `.plan.json`.
 - Focused optimizer tests, UI structure tests, result selector tests, and production build pass before commit.
-
-## Next Package — Full-Suite Recovery Plan
-
-Goal: recover or replace the deferred full `npm test` path on the current low-storage machine so the final public-output decision is not blocked by unreliable verification.
 
 ## Previous Package — S3648-S3667: Public Optimizer Release Narrowing
 

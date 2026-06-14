@@ -5,6 +5,8 @@ const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
 const boundedOptimizerSource = readFileSync(new URL('../engine/boundedOptimizer.ts', import.meta.url), 'utf8');
 const resultSelectorsSource = readFileSync(new URL('../engine/resultSelectors.ts', import.meta.url), 'utf8');
 const stylesSource = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
+const packageSource = readFileSync(new URL('../../../package.json', import.meta.url), 'utf8');
+const lowStorageRunnerSource = readFileSync(new URL('../../../scripts/run_full_suite_low_storage.mjs', import.meta.url), 'utf8');
 
 describe('Results overview structure', () => {
   it('keeps audit-style evidence reachable from Details instead of the Overview flow', () => {
@@ -1309,6 +1311,18 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('privateOptInOnly');
     expect(boundedOptimizerSource).toContain('explicitOptInOnly');
     expect(boundedOptimizerSource).toContain('does not collect tester data');
+    expect(appSource).toContain('Full-suite recovery');
+    expect(appSource).toContain('Low-storage verification path defined');
+    expect(appSource).toContain('summary.fullSuiteRecoveryPlan');
+    expect(appSource).toContain('optimizer-full-suite-recovery');
+    expect(appSource).toContain('full-suite-row-');
+    expect(boundedOptimizerSource).toContain('replaceSingleFullSuiteWithLowStorageRunner');
+    expect(boundedOptimizerSource).toContain('npm run test:full:low-storage');
+    expect(boundedOptimizerSource).toContain('TEST_BATCH_SIZE=2 npm run test:full:low-storage');
+    expect(packageSource).toContain('"test:full:low-storage": "node scripts/run_full_suite_low_storage.mjs"');
+    expect(lowStorageRunnerSource).toContain('TEST_BATCH_SIZE');
+    expect(lowStorageRunnerSource).toContain('vitestBin');
+    expect(lowStorageRunnerSource).toContain('Low-storage full-suite runner passed.');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');
