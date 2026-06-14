@@ -405,6 +405,7 @@ export type AssumptionLabComparisonSlot = {
   firstShortfallYear: number | null;
   endPortfolio: number;
   lifetimeTax: number;
+  firstYearSpendingDelta: number;
   detail: string;
 };
 
@@ -3239,6 +3240,7 @@ export function selectAssumptionLabSummary({
   const survivorYear = n(plan?.assumptions?.p1DiesInSurvivor);
   const isCouple = !personLooksBlank(plan?.p2);
   const candidateById = new Map(recommendedPath.candidateRows.map((row) => [row.id, row]));
+  const scenarioComparisonById = new Map(scenarioComparisonRows.map((row) => [row.id, row]));
   const current = candidateById.get('baseline') || null;
   const optimal = recommendedPath.recommendedCandidateId ? candidateById.get(recommendedPath.recommendedCandidateId) || null : null;
   const alternatives = recommendedPath.candidateRows
@@ -3268,6 +3270,7 @@ export function selectAssumptionLabSummary({
       firstShortfallYear: row?.firstShortfallYear ?? null,
       endPortfolio: row?.endPortfolio ?? 0,
       lifetimeTax: row?.lifetimeTax ?? 0,
+      firstYearSpendingDelta: row?.id && row.id !== 'baseline' ? scenarioComparisonById.get(row.id)?.firstYearSpendingDelta ?? 0 : 0,
       detail: row
         ? row.recommended
           ? 'Optimal from the currently compared assumption set, for review before relying on it.'

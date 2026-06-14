@@ -827,7 +827,11 @@ describe('result selectors', () => {
     ]);
     expect(lab.comparisonSlots.find((slot) => slot.id === 'optimalReviewPath')).toMatchObject({
       status: 'selected',
+      firstYearSpendingDelta: 0,
       detail: expect.stringContaining('Optimal from the currently compared assumption set')
+    });
+    expect(lab.comparisonSlots.find((slot) => slot.sourceCandidateId === 'spendLessGogo')).toMatchObject({
+      firstYearSpendingDelta: -7000
     });
     expect(lab.boundary).toContain('temporary working-copy assumptions');
     expect(lab.nextStep).toContain('saved named scenarios');

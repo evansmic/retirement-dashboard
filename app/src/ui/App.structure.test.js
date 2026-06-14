@@ -1682,6 +1682,10 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Pending adjustment');
     expect(appSource).toContain('Applied preview');
     expect(appSource).toContain('comparisonDelta');
+    expect(appSource).toContain('spendingDelta');
+    expect(appSource).toContain('Annual spend delta');
+    expect(appSource).toContain('Monthly spend delta');
+    expect(appSource).toContain('monthly after-tax spend vs current');
     expect(appSource).toContain('Apply');
     expect(appSource).toContain('Reset');
     expect(appSource).toContain('Rerunning preview');

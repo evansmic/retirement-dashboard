@@ -9587,6 +9587,13 @@ function AssumptionLabPanel({
     return `${endDirection}${formatMoney(Math.abs(endDelta))} ending portfolio, ${taxDirection}${formatMoney(Math.abs(taxDelta))} lifetime tax vs current`;
   }
 
+  function spendingDelta(slot: ReturnType<typeof selectAssumptionLabSummary>['comparisonSlots'][number]): string {
+    if (slot.id === 'currentPlan' || slot.status === 'blocked') return 'Current first-year after-tax spending';
+    const annualDelta = slot.firstYearSpendingDelta;
+    const monthlyDelta = annualDelta / 12;
+    return `${formatSignedMoney(annualDelta)} annual, ${formatSignedMoney(monthlyDelta)} monthly after-tax spend vs current`;
+  }
+
   const hasPendingDraft = Boolean(activeDraft);
   const pendingMatchesApplied =
     Boolean(activeDraft && appliedDraft) &&
@@ -9671,6 +9678,14 @@ function AssumptionLabPanel({
             </div>
             <dl className="mini-ledger">
               <div>
+                <dt>Annual spend delta</dt>
+                <dd>{slot.id === 'currentPlan' ? '-' : formatSignedMoney(slot.firstYearSpendingDelta)}</dd>
+              </div>
+              <div>
+                <dt>Monthly spend delta</dt>
+                <dd>{slot.id === 'currentPlan' ? '-' : formatSignedMoney(slot.firstYearSpendingDelta / 12)}</dd>
+              </div>
+              <div>
                 <dt>Funded through</dt>
                 <dd>{slot.fundedThroughYear || '-'}</dd>
               </div>
@@ -9687,6 +9702,7 @@ function AssumptionLabPanel({
                 <dd>{formatMoney(slot.lifetimeTax)}</dd>
               </div>
             </dl>
+            <small>{spendingDelta(slot)}</small>
             <small>{comparisonDelta(slot)}</small>
             <p>{slot.detail}</p>
           </article>
