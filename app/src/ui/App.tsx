@@ -7320,6 +7320,52 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.privatePilotRequirements ? (
+        <section className={`optimizer-private-pilot-requirements private-pilot-${summary.privatePilotRequirements.status}`}>
+          <div>
+            <p className="eyebrow">Private pilot requirements</p>
+            <h3>Private opt-in pilot requirements defined</h3>
+            <p>{summary.privatePilotRequirements.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.privatePilotRequirements.requirementRows.map((item) => (
+              <article className={`private-pilot-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.privatePilotRequirements.evidenceRows.map((item) => (
+              <article className="private-pilot-evidence-row" key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Tester audience</span>
+              <strong>{summary.privatePilotRequirements.testerLimit.audience}</strong>
+              <p>Maximum households: {summary.privatePilotRequirements.testerLimit.maxHouseholds}</p>
+            </article>
+            <article>
+              <span>Real data</span>
+              <strong>{summary.privatePilotRequirements.testerLimit.realDataAllowed}</strong>
+              <p>Public sharing: {summary.privatePilotRequirements.testerLimit.publicSharing}</p>
+            </article>
+            <article>
+              <span>Blocked until</span>
+              <strong>{summary.privatePilotRequirements.blockedOutputs.length}</strong>
+              <p>{summary.privatePilotRequirements.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.privatePilotRequirements.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

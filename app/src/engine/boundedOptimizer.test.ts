@@ -1481,6 +1481,7 @@ describe('bounded optimizer runner', () => {
         'releaseControlValidation',
         'finalPublicReadinessDecision',
         'publicOptimizerReleaseNarrowing',
+        'privatePilotRequirements',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1804,6 +1805,39 @@ describe('bounded optimizer runner', () => {
       'next',
       'blocked',
       'blocked'
+    ]);
+    expect(summary.privatePilotRequirements).toMatchObject({
+      status: 'requirementsDefinedPublicClosed',
+      decision: 'definePrivatePilotBeforePublicOutput',
+      sourceReleaseNarrowingStatus: 'privatePilotPathReadyPublicClosed',
+      testerLimit: {
+        audience: 'privateOptInOnly',
+        maxHouseholds: 5,
+        realDataAllowed: 'explicitOptInOnly',
+        publicSharing: 'blocked'
+      },
+      boundary: expect.stringContaining('defines pilot requirements only')
+    });
+    expect(summary.privatePilotRequirements.requirementRows.map((item) => item.id)).toEqual([
+      'optInCopy',
+      'privacyBoundary',
+      'stopConditions',
+      'testerLimits',
+      'evidenceCriteria'
+    ]);
+    expect(summary.privatePilotRequirements.requirementRows.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'ready',
+      'ready',
+      'ready'
+    ]);
+    expect(summary.privatePilotRequirements.evidenceRows.map((item) => item.id)).toEqual([
+      'understandsReviewOnly',
+      'noInstructionConfusion',
+      'answerUsefulness',
+      'comparisonUsefulness',
+      'missingContextLogged'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',

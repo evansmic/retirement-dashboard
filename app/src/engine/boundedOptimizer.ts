@@ -688,6 +688,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'releaseControlValidation'
     | 'finalPublicReadinessDecision'
     | 'publicOptimizerReleaseNarrowing'
+    | 'privatePilotRequirements'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1001,6 +1002,34 @@ export type OptimizerPublicReleaseNarrowing = {
   }>;
   readyEvidence: Array<'featureCompleteBeta' | 'syntheticFixtureCoverage' | 'releaseControlsDefined' | 'retirementAnswerLayer' | 'assumptionLabBetaScope'>;
   blockedUntil: Array<'privatePilotEvidence' | 'fullSuiteRecovery' | 'publicCopyReview' | 'outputContractDecision'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPrivatePilotRequirements = {
+  status: 'requirementsDefinedPublicClosed' | 'blocked';
+  decision: 'definePrivatePilotBeforePublicOutput';
+  sourceReleaseNarrowingStatus: OptimizerPublicReleaseNarrowing['status'];
+  requirementRows: Array<{
+    id: 'optInCopy' | 'privacyBoundary' | 'stopConditions' | 'testerLimits' | 'evidenceCriteria';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  evidenceRows: Array<{
+    id: 'understandsReviewOnly' | 'noInstructionConfusion' | 'answerUsefulness' | 'comparisonUsefulness' | 'missingContextLogged';
+    label: string;
+    status: 'required';
+    detail: string;
+  }>;
+  testerLimit: {
+    audience: 'privateOptInOnly';
+    maxHouseholds: number;
+    realDataAllowed: 'explicitOptInOnly';
+    publicSharing: 'blocked';
+  };
+  blockedOutputs: OptimizerPublicReleaseNarrowing['blockedUntil'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1862,6 +1891,7 @@ export type BoundedOptimizerSummary = {
   releaseControlValidation: OptimizerReleaseControlValidation;
   finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
   publicOptimizerReleaseNarrowing: OptimizerPublicReleaseNarrowing;
+  privatePilotRequirements: OptimizerPrivatePilotRequirements;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6165,6 +6195,97 @@ export function selectOptimizerPublicReleaseNarrowing({
   };
 }
 
+export function selectOptimizerPrivatePilotRequirements({
+  releaseNarrowing
+}: {
+  releaseNarrowing: OptimizerPublicReleaseNarrowing;
+}): OptimizerPrivatePilotRequirements {
+  const requirementsReady = releaseNarrowing.status === 'privatePilotPathReadyPublicClosed';
+  return {
+    status: requirementsReady ? 'requirementsDefinedPublicClosed' : 'blocked',
+    decision: 'definePrivatePilotBeforePublicOutput',
+    sourceReleaseNarrowingStatus: releaseNarrowing.status,
+    requirementRows: [
+      {
+        id: 'optInCopy',
+        label: 'Opt-in copy',
+        status: requirementsReady ? 'ready' : 'blocked',
+        detail: 'Tester must explicitly acknowledge they are using private beta software, may enter real data only by choice, and should not treat output as advice.'
+      },
+      {
+        id: 'privacyBoundary',
+        label: 'Privacy boundary',
+        status: requirementsReady ? 'ready' : 'blocked',
+        detail: 'Pilot data stays local by default; any shared screenshots, exports, or notes must be intentionally provided by the tester.'
+      },
+      {
+        id: 'stopConditions',
+        label: 'Stop conditions',
+        status: requirementsReady ? 'ready' : 'blocked',
+        detail: 'Stop if a tester sees an instruction, cannot tell what is review-only, expects public-grade output, or hits missing tax/account context.'
+      },
+      {
+        id: 'testerLimits',
+        label: 'Tester limits',
+        status: requirementsReady ? 'ready' : 'blocked',
+        detail: 'Pilot is limited to a small private opt-in group before any public optimizer output, production UI, export, or report work resumes.'
+      },
+      {
+        id: 'evidenceCriteria',
+        label: 'Evidence criteria',
+        status: requirementsReady ? 'ready' : 'blocked',
+        detail: 'Collect only decision evidence: review-only comprehension, usefulness of answers/comparisons, confusion signals, and missing context.'
+      }
+    ],
+    evidenceRows: [
+      {
+        id: 'understandsReviewOnly',
+        label: 'Review-only comprehension',
+        status: 'required',
+        detail: 'Tester can explain that optimizer rows are comparison evidence, not a financial plan or instruction set.'
+      },
+      {
+        id: 'noInstructionConfusion',
+        label: 'No instruction confusion',
+        status: 'required',
+        detail: 'Tester does not mistake optimal review path, annual rows, or tax wording for actions to follow.'
+      },
+      {
+        id: 'answerUsefulness',
+        label: 'Answer usefulness',
+        status: 'required',
+        detail: 'Tester can identify whether retirement timing, spending capacity, tax pressure, and risk review answer their question.'
+      },
+      {
+        id: 'comparisonUsefulness',
+        label: 'Comparison usefulness',
+        status: 'required',
+        detail: 'Tester can use current-plan deltas and assumption lab output to understand trade-offs without needing saved scenarios.'
+      },
+      {
+        id: 'missingContextLogged',
+        label: 'Missing context logged',
+        status: 'required',
+        detail: 'Any missing tax, account, survivor, estate, benefit, or cash-flow context is recorded as a blocker or follow-up.'
+      }
+    ],
+    testerLimit: {
+      audience: 'privateOptInOnly',
+      maxHouseholds: 5,
+      realDataAllowed: 'explicitOptInOnly',
+      publicSharing: 'blocked'
+    },
+    blockedOutputs: releaseNarrowing.blockedUntil,
+    summary: requirementsReady
+      ? 'Private pilot requirements are defined while public optimizer output remains closed.'
+      : 'Private pilot requirements wait for release narrowing.',
+    boundary:
+      'This defines pilot requirements only. It does not collect tester data, distribute real-data pilots, open public optimizer release, add production UI, create exports or reports, create final annual instructions, add tax-bracket wording, change saved schema, or write optimizer output to .plan.json.',
+    nextStep:
+      'Use these requirements to run a small private opt-in pilot only after the tester instructions, feedback template, and full-suite recovery plan are ready.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6290,6 +6411,7 @@ export function selectOptimizerSchemaSaveDecision({
       'releaseControlValidation',
       'finalPublicReadinessDecision',
       'publicOptimizerReleaseNarrowing',
+      'privatePilotRequirements',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9206,6 +9328,9 @@ export function runBoundedOptimizer(
     releaseControlValidation
   });
   const publicOptimizerReleaseNarrowing = selectOptimizerPublicReleaseNarrowing({ finalPublicReadinessDecision });
+  const privatePilotRequirements = selectOptimizerPrivatePilotRequirements({
+    releaseNarrowing: publicOptimizerReleaseNarrowing
+  });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9249,6 +9374,7 @@ export function runBoundedOptimizer(
     releaseControlValidation,
     finalPublicReadinessDecision,
     publicOptimizerReleaseNarrowing,
+    privatePilotRequirements,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

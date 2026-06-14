@@ -1300,6 +1300,15 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('privatePilotEvidence');
     expect(boundedOptimizerSource).toContain('fullSuiteRecovery');
     expect(boundedOptimizerSource).toContain('outputContractDecision');
+    expect(appSource).toContain('Private pilot requirements');
+    expect(appSource).toContain('Private opt-in pilot requirements defined');
+    expect(appSource).toContain('summary.privatePilotRequirements');
+    expect(appSource).toContain('optimizer-private-pilot-requirements');
+    expect(appSource).toContain('private-pilot-row-');
+    expect(boundedOptimizerSource).toContain('definePrivatePilotBeforePublicOutput');
+    expect(boundedOptimizerSource).toContain('privateOptInOnly');
+    expect(boundedOptimizerSource).toContain('explicitOptInOnly');
+    expect(boundedOptimizerSource).toContain('does not collect tester data');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');

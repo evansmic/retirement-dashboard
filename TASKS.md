@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3648-S3667 package, the remaining-work estimate is:
+As of the S3668-S3687 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-10 sprints remaining.
+- Public-ready optimizer for real planning use: 0-5 sprints remaining.
 
-Material change at S3648-S3667: yes. The public-ready optimizer path tightened because release narrowing now reduces the remaining decision path to private pilot requirements, full-suite recovery, public copy review, and output-contract decisions.
+Material change at S3668-S3687: yes. Private pilot requirements are now defined, leaving full-suite recovery plus public copy/output-contract decisions before public optimizer output can be reconsidered.
 
 ## Objective Estimate Tracker
 
@@ -22,7 +22,7 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-10 sprints | Tightened at S3648-S3667 | Closed for public release | Implement private pilot requirements and full-suite recovery before reconsidering public output. |
+| Public-ready optimizer | 0-5 sprints | Tightened at S3668-S3687 | Closed for public release | Recover full-suite reliability and make public copy/output-contract decisions before reconsidering public output. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
 | Launch hardening | 10-30 sprints | Unchanged at S3568-S3587 | Pending | Recover full test-suite reliability, performance, copy/legal review, and release checklist. |
 
@@ -30,7 +30,37 @@ Current drift note: the project previously spent too many packages on guardrails
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3648-S3667: Public Optimizer Release Narrowing
+## Latest Package — S3668-S3687: Private Pilot Requirements
+
+**Status:** Complete 2026-06-14.
+
+Goal: implement the private pilot requirements named by release narrowing. The bounded optimizer now emits `privatePilotRequirements` with opt-in copy requirements, privacy boundaries, stop conditions, tester limits, and evidence rows for deciding whether public output can later be reconsidered.
+
+Package doc: [`docs/sprint_3668_3687_private_pilot_requirements.md`](docs/sprint_3668_3687_private_pilot_requirements.md).
+
+### S3668-S3687 Completed Path
+
+- Added `OptimizerPrivatePilotRequirements` and requirement/evidence rows.
+- Defined opt-in copy, privacy boundary, stop condition, tester-limit, and evidence criteria requirements.
+- Limited private pilot scope to a maximum of five private opt-in households.
+- Required explicit opt-in before any real data is used.
+- Rendered private pilot requirements in Results Details.
+- Kept pilot requirements out of saved plan files.
+
+### S3668-S3687 Definition Of Done
+
+- Details shows the private pilot requirements packet.
+- Private pilot requirements name opt-in, privacy, stop-condition, tester-limit, and evidence criteria.
+- Real-data use remains explicit opt-in only, public sharing remains blocked, and no tester data is collected by this package.
+- Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes remain closed.
+- Private pilot requirements are not persisted into `.plan.json`.
+- Focused optimizer tests, UI structure tests, result selector tests, and production build pass before commit.
+
+## Next Package — Full-Suite Recovery Plan
+
+Goal: recover or replace the deferred full `npm test` path on the current low-storage machine so the final public-output decision is not blocked by unreliable verification.
+
+## Previous Package — S3648-S3667: Public Optimizer Release Narrowing
 
 **Status:** Complete 2026-06-14.
 
@@ -54,10 +84,6 @@ Package doc: [`docs/sprint_3648_3667_public_optimizer_release_narrowing.md`](doc
 - Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes remain closed.
 - Release narrowing is not persisted into `.plan.json`.
 - Focused optimizer tests, UI structure tests, result selector tests, and production build pass before commit.
-
-## Next Package — Private Pilot Requirements
-
-Goal: implement the private pilot requirements named by release narrowing: opt-in copy, privacy boundaries, stop conditions, tester limits, and evidence rows for deciding whether public output can later be reconsidered.
 
 ## Previous Package — S3628-S3647: Assumption Lab Scenario Decision
 
