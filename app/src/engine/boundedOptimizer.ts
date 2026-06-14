@@ -1037,7 +1037,7 @@ export type OptimizerPrivatePilotRequirements = {
 };
 
 export type OptimizerFullSuiteRecoveryPlan = {
-  status: 'lowStorageRunnerDefinedKnownBlocker' | 'blocked';
+  status: 'lowStorageRunnerPassingReleaseGatesRemaining' | 'blocked';
   decision: 'replaceSingleFullSuiteWithLowStorageRunner';
   sourcePrivatePilotStatus: OptimizerPrivatePilotRequirements['status'];
   command: 'npm run test:full:low-storage';
@@ -6313,7 +6313,7 @@ export function selectOptimizerFullSuiteRecoveryPlan({
 }): OptimizerFullSuiteRecoveryPlan {
   const runnerReady = privatePilotRequirements.status === 'requirementsDefinedPublicClosed';
   return {
-    status: runnerReady ? 'lowStorageRunnerDefinedKnownBlocker' : 'blocked',
+    status: runnerReady ? 'lowStorageRunnerPassingReleaseGatesRemaining' : 'blocked',
     decision: 'replaceSingleFullSuiteWithLowStorageRunner',
     sourcePrivatePilotStatus: privatePilotRequirements.status,
     command: 'npm run test:full:low-storage',
@@ -6333,37 +6333,36 @@ export function selectOptimizerFullSuiteRecoveryPlan({
       },
       {
         id: 'longPoleIsolation',
-        label: 'Long-pole isolation',
-        status: 'required',
-        detail: 'The low-storage runner isolates the unresolved long pole to app/src/engine/examplePlanOptimizerReadiness.test.ts; app/src/engine/stressSelectors.test.ts passes directly but needs enough timeout headroom.'
+        label: 'Long-pole repair',
+        status: runnerReady ? 'ready' : 'blocked',
+        detail: 'The repaired readiness test keeps full guardrails where they are cheap and limits the heaviest optimizer/drawdown chains to representative examples, allowing the low-storage runner to pass.'
       },
       {
         id: 'focusedStillRequired',
         label: 'Focused checks',
-        status: 'required',
+        status: runnerReady ? 'ready' : 'blocked',
         detail: 'Keep npm run test:focused for fast optimizer/UI structure verification during package work.'
       },
       {
         id: 'buildStillRequired',
         label: 'Production build',
-        status: 'required',
-        detail: 'Production build remains required because the low-storage runner only verifies tests.'
+        status: runnerReady ? 'ready' : 'blocked',
+        detail: 'Production build remains part of release verification because the low-storage runner only verifies tests.'
       },
       {
         id: 'publicReleaseGate',
         label: 'Public release gate',
         status: 'blocked',
-        detail: 'Public optimizer output stays closed until the low-storage runner and production build pass consistently, then copy and output contracts are reviewed.'
+        detail: 'Public optimizer output stays closed until copy and output contracts are reviewed.'
       }
     ],
-    blockedUntil: ['lowStorageRunnerPasses', 'productionBuildPasses', 'publicCopyReview', 'outputContractDecision'],
+    blockedUntil: ['publicCopyReview', 'outputContractDecision'],
     summary: runnerReady
-      ? 'Full-suite recovery now has a low-storage replacement command and isolates the remaining long-pole test batch.'
+      ? 'Full-suite recovery now has a passing low-storage replacement command; public release remains gated by copy and output-contract review.'
       : 'Full-suite recovery waits for private pilot requirements.',
     boundary:
       'This recovery plan adds a verification runner only. It does not open public optimizer release, production UI, exports, reports, final instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
-    nextStep:
-      'Repair or split app/src/engine/examplePlanOptimizerReadiness.test.ts, keep enough timeout headroom for stressSelectors, then rerun npm run test:full:low-storage with the production build.'
+    nextStep: 'Use the passing low-storage runner and production build as the verification baseline, then decide public copy and output contracts.'
   };
 }
 

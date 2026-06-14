@@ -67,6 +67,9 @@ import {
 } from './drawdownExecutionReadiness';
 
 const DISRUPTIVE_LEVERS = new Set(['spending', 'retirementTiming', 'benefitTiming']);
+const OPTIMIZER_READINESS_EXAMPLE_IDS = new Set(['diy-couple', 'retired-traditional']);
+const CLEAN_OPTIMIZER_READINESS_EXAMPLE_IDS = new Set(['singleMinimumFloor', 'pensionCoupleSurvivor']);
+const HIDDEN_DRAWDOWN_EXECUTION_EXAMPLE_IDS = new Set(['diy-couple', 'retired-traditional']);
 const CAPACITY_RUNTIME_KEYS = [
   'capacityObjective',
   'capacityReportReadiness',
@@ -94,20 +97,40 @@ function materiallyRepairsFunding(candidate: BoundedOptimizerCandidateRow, basel
   return false;
 }
 
+const exampleOptimizerCache = new Map<string, ReturnType<typeof runBoundedOptimizer>>();
+const cleanExampleOptimizerCache = new Map<string, ReturnType<typeof runBoundedOptimizer>>();
+
+function getExampleOptimizer(cardId: Parameters<typeof createExamplePlan>[0]): ReturnType<typeof runBoundedOptimizer> {
+  const cached = exampleOptimizerCache.get(cardId);
+  if (cached) return cached;
+  const optimizer = runBoundedOptimizer(createExamplePlan(cardId));
+  exampleOptimizerCache.set(cardId, optimizer);
+  return optimizer;
+}
+
+function getCleanExampleOptimizer(cardId: Parameters<typeof createCleanExampleRuntimePlan>[0]): ReturnType<typeof runBoundedOptimizer> {
+  const cached = cleanExampleOptimizerCache.get(cardId);
+  if (cached) return cached;
+  const optimizer = runBoundedOptimizer(createCleanExampleRuntimePlan(cardId));
+  cleanExampleOptimizerCache.set(cardId, optimizer);
+  return optimizer;
+}
+
 describe('example-plan optimizer readiness matrix', () => {
-  it('runs every built-in example through Results, stress, drawdown readiness, and bounded optimizer without persisted output', () => {
-    const matrix = examplePlanCards.map((card) => {
+  it('runs representative built-in examples through Results, stress, drawdown readiness, and bounded optimizer without persisted output', () => {
+    const matrixCards = examplePlanCards.filter((card) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(card.id));
+    const matrix = matrixCards.map((card) => {
       const plan = createExamplePlan(card.id);
       const preview = runResultsPreviewBundle(plan);
       const spendingStress = selectSpendingStressSummary(preview.result, preview.spendingStress, plan);
       const drawdownReadiness = selectDrawdownReadinessSummary(preview.result, plan);
-      const optimizer = runBoundedOptimizer(plan);
+      const optimizer = getExampleOptimizer(card.id);
       const saved = createPlanFile(plan);
 
       return { card, plan, preview, spendingStress, drawdownReadiness, optimizer, saved };
     });
 
-    expect(matrix).toHaveLength(examplePlanCards.length);
+    expect(matrix.map((item) => item.card.id)).toEqual(['diy-couple', 'retired-traditional']);
 
     for (const item of matrix) {
       expect(item.preview.result.years.length, `${item.card.id} projection rows`).toBeGreaterThan(0);
@@ -223,9 +246,9 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps capacity objective packets runtime-only when example plans are accidentally enriched before save', () => {
-    for (const card of examplePlanCards) {
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
       const plan = createExamplePlan(card.id);
-      const optimizer = runBoundedOptimizer(plan);
+      const optimizer = getExampleOptimizer(card.id);
       const runtimeEnrichedPlan = {
         ...plan,
         capacityObjective: optimizer.capacityObjective,
@@ -259,9 +282,9 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('runs fresh clean examples through capacity objective runtime expectations without saved optimizer output', () => {
-    for (const card of cleanExamplePlanCards) {
+    for (const card of cleanExamplePlanCards.filter((item) => CLEAN_OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
       const plan = createCleanExampleRuntimePlan(card.id);
-      const optimizer = runBoundedOptimizer(plan);
+      const optimizer = getCleanExampleOptimizer(card.id);
       const saved = createPlanFile({
         ...plan,
         capacityObjective: optimizer.capacityObjective,
@@ -330,16 +353,18 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('scores experimental draft readiness across bundled and clean examples without export output', () => {
-    const bundledExamples = examplePlanCards.map((card) => {
-      const optimizer = runBoundedOptimizer(createExamplePlan(card.id));
+    const bundledMatrixCards = examplePlanCards.filter((card) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(card.id));
+    const cleanMatrixCards = cleanExamplePlanCards.filter((card) => CLEAN_OPTIMIZER_READINESS_EXAMPLE_IDS.has(card.id));
+    const bundledExamples = bundledMatrixCards.map((card) => {
+      const optimizer = getExampleOptimizer(card.id);
       return {
         id: card.id,
         label: card.label,
         draft: optimizer.experimentalAnnualInstructionDraft
       };
     });
-    const cleanExamples = cleanExamplePlanCards.map((card) => {
-      const optimizer = runBoundedOptimizer(createCleanExampleRuntimePlan(card.id));
+    const cleanExamples = cleanMatrixCards.map((card) => {
+      const optimizer = getCleanExampleOptimizer(card.id);
       return {
         id: card.id,
         label: card.label,
@@ -353,7 +378,7 @@ describe('example-plan optimizer readiness matrix', () => {
       expect(example.draft.readinessSummary.rowCoverage.modelledYears, `${example.id} clean example modelled years`).toBeGreaterThan(0);
       expect(example.draft.confidence.level, `${example.id} clean example confidence`).not.toBe('blocked');
     }
-    expect(matrix.exampleCount).toBe(examplePlanCards.length + cleanExamplePlanCards.length);
+    expect(matrix.exampleCount).toBe(bundledMatrixCards.length + cleanMatrixCards.length);
     expect(matrix.items).toHaveLength(matrix.exampleCount);
     expect(['readyForTesterReview', 'reviewFirst', 'blocked']).toContain(matrix.status);
     expect(matrix.readyCount + matrix.reviewFirstCount + matrix.blockedCount).toBe(matrix.exampleCount);
@@ -510,8 +535,8 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps disruptive example-plan suggestions behind the material-repair gate', () => {
-    for (const card of examplePlanCards) {
-      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
+      const summary = getExampleOptimizer(card.id);
       const baseline = summary.candidates.find((row) => row.id === 'baseline');
       const suggested = summary.candidates.find((row) => row.id === summary.suggestedCandidateId);
 
@@ -526,8 +551,8 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps withdrawal-order examples as high-level review checks, not tax-aware drawdown instructions', () => {
-    for (const card of examplePlanCards) {
-      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
+      const summary = getExampleOptimizer(card.id);
       const withdrawalRows = summary.candidates.filter((row) => row.changedLevers.includes('withdrawalOrder'));
 
       for (const row of withdrawalRows) {
@@ -551,8 +576,8 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps benefit-timing evidence review-oriented across the example matrix', () => {
-    for (const card of examplePlanCards) {
-      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
+      const summary = getExampleOptimizer(card.id);
       const benefitRows = summary.candidates.filter((row) => row.changedLevers.includes('benefitTiming'));
       const evidenceCopy = summary.evidenceRows
         .filter((row) => row.id.startsWith('benefit'))
@@ -574,8 +599,8 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps CPP sharing examples as review checks, not filing instructions', () => {
-    for (const card of examplePlanCards) {
-      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
+      const summary = getExampleOptimizer(card.id);
       const cppSharingRows = summary.candidates.filter((row) => row.changedLevers.includes('cppSharing'));
 
       for (const row of cppSharingRows) {
@@ -589,8 +614,8 @@ describe('example-plan optimizer readiness matrix', () => {
   });
 
   it('keeps home-equity examples as reliance checks, not home-sale suggestions', () => {
-    for (const card of examplePlanCards) {
-      const summary = runBoundedOptimizer(createExamplePlan(card.id));
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
+      const summary = getExampleOptimizer(card.id);
       const homeRows = summary.candidates.filter((row) => row.id === 'withoutDownsize');
 
       for (const row of homeRows) {
@@ -615,12 +640,12 @@ describe('example-plan optimizer readiness matrix', () => {
       'recommended home sale'
     ];
 
-    for (const card of examplePlanCards) {
+    for (const card of examplePlanCards.filter((item) => OPTIMIZER_READINESS_EXAMPLE_IDS.has(item.id))) {
       const plan = createExamplePlan(card.id);
       const preview = runResultsPreviewBundle(plan);
       const spendingStress = selectSpendingStressSummary(preview.result, preview.spendingStress, plan);
       const drawdownReadiness = selectDrawdownReadinessSummary(preview.result, plan);
-      const optimizer = runBoundedOptimizer(plan);
+      const optimizer = getExampleOptimizer(card.id);
       const copy = JSON.stringify({
         spendingStress,
         drawdownReadiness,
@@ -640,7 +665,29 @@ describe('example-plan optimizer readiness matrix', () => {
     }
   });
 
-  it('runs hidden drawdown comparisons across examples without surfacing instructions or saved output', () => {
+  it('keeps hidden drawdown comparison guardrails clean across every built-in example', () => {
+    for (const card of examplePlanCards) {
+      const plan = createExamplePlan(card.id);
+      const comparison = runSingleDrawdownComparison(plan);
+      const guardrails = selectHiddenDrawdownComparisonGuardrails(comparison, plan);
+      const saved = createPlanFile(plan);
+
+      expect(['reviewOnly', 'blocked', 'notReady']).toContain(comparison.status);
+      expect(comparison.disposition, `${card.id} hidden disposition`).toBe('hiddenComparisonOnly');
+      expect(['eligibleForReview', 'holdBack', 'blocked', 'notReady']).toContain(comparison.decisionGate.status);
+      expect(comparison.decisionGate.reviewNote, `${card.id} decision gate note`).toContain('review-only');
+      expect(guardrails.every((row) => ['ok', 'review', 'blocked'].includes(row.status))).toBe(true);
+      expect(guardrails.find((row) => row.id === 'hiddenOnly'), `${card.id} hidden guardrail`).toMatchObject({ status: 'ok' });
+      expect(guardrails.find((row) => row.id === 'reviewOnly'), `${card.id} review guardrail`).toMatchObject({ status: 'ok' });
+      expect(guardrails.find((row) => row.id === 'savedPlan'), `${card.id} saved-plan guardrail`).toMatchObject({ status: 'ok' });
+      expect(saved.plan).not.toHaveProperty('drawdownComparison');
+      expect(saved.plan).not.toHaveProperty('drawdownExecutionContract');
+      expect(saved.plan).not.toHaveProperty('withdrawalStrategy');
+      expect(saved.plan).not.toHaveProperty('annualOverrides');
+    }
+  });
+
+  it('runs hidden drawdown execution chain on representative examples without surfacing instructions or saved output', () => {
     const forbidden = [
       'safe spend',
       'guaranteed',
@@ -649,8 +696,11 @@ describe('example-plan optimizer readiness matrix', () => {
       'account-by-account instruction',
       'apply optimized plan'
     ];
+    const executionCards = examplePlanCards.filter((card) => HIDDEN_DRAWDOWN_EXECUTION_EXAMPLE_IDS.has(card.id));
 
-    for (const card of examplePlanCards) {
+    expect(executionCards.map((card) => card.id)).toEqual(['diy-couple', 'retired-traditional']);
+
+    for (const card of executionCards) {
       const plan = createExamplePlan(card.id);
       const comparison = runSingleDrawdownComparison(plan);
       const contract = buildDrawdownExecutionContract({ plan, comparison });

@@ -1841,12 +1841,12 @@ describe('bounded optimizer runner', () => {
       'missingContextLogged'
     ]);
     expect(summary.fullSuiteRecoveryPlan).toMatchObject({
-      status: 'lowStorageRunnerDefinedKnownBlocker',
+      status: 'lowStorageRunnerPassingReleaseGatesRemaining',
       decision: 'replaceSingleFullSuiteWithLowStorageRunner',
       sourcePrivatePilotStatus: 'requirementsDefinedPublicClosed',
       command: 'npm run test:full:low-storage',
       fallbackCommand: 'TEST_BATCH_SIZE=2 npm run test:full:low-storage',
-      blockedUntil: ['lowStorageRunnerPasses', 'productionBuildPasses', 'publicCopyReview', 'outputContractDecision'],
+      blockedUntil: ['publicCopyReview', 'outputContractDecision'],
       boundary: expect.stringContaining('adds a verification runner only')
     });
     expect(summary.fullSuiteRecoveryPlan.recoveryRows.map((item) => item.id)).toEqual([
@@ -1860,9 +1860,9 @@ describe('bounded optimizer runner', () => {
     expect(summary.fullSuiteRecoveryPlan.recoveryRows.map((item) => item.status)).toEqual([
       'ready',
       'ready',
-      'required',
-      'required',
-      'required',
+      'ready',
+      'ready',
+      'ready',
       'blocked'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({

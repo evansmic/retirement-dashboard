@@ -1312,7 +1312,7 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('explicitOptInOnly');
     expect(boundedOptimizerSource).toContain('does not collect tester data');
     expect(appSource).toContain('Full-suite recovery');
-    expect(appSource).toContain('Low-storage verification path defined');
+    expect(appSource).toContain('Low-storage verification baseline passing');
     expect(appSource).toContain('summary.fullSuiteRecoveryPlan');
     expect(appSource).toContain('optimizer-full-suite-recovery');
     expect(appSource).toContain('full-suite-row-');

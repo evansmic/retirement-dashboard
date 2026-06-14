@@ -7370,7 +7370,7 @@ function BoundedOptimizerPanel({
         <section className={`optimizer-full-suite-recovery full-suite-${summary.fullSuiteRecoveryPlan.status}`}>
           <div>
             <p className="eyebrow">Full-suite recovery</p>
-            <h3>Low-storage verification path defined</h3>
+            <h3>Low-storage verification baseline passing</h3>
             <p>{summary.fullSuiteRecoveryPlan.summary}</p>
           </div>
           <div className="optimizer-fixture-plan-grid">
