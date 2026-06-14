@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3628-S3647 package, the remaining-work estimate is:
+As of the S3648-S3667 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-20 sprints remaining.
+- Public-ready optimizer for real planning use: 0-10 sprints remaining.
 
-Material change at S3628-S3647: yes. The live assumption lab beta scope is complete: the product decision is to keep one temporary applied adjustment at a time and defer named multi-assumption scenarios until pilot evidence shows they are needed.
+Material change at S3648-S3667: yes. The public-ready optimizer path tightened because release narrowing now reduces the remaining decision path to private pilot requirements, full-suite recovery, public copy review, and output-contract decisions.
 
 ## Objective Estimate Tracker
 
@@ -22,7 +22,7 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-20 sprints | Unchanged at S3568-S3587 | Closed for public release | Decide when private pilot evidence is sufficient to open public optimizer outputs. |
+| Public-ready optimizer | 0-10 sprints | Tightened at S3648-S3667 | Closed for public release | Implement private pilot requirements and full-suite recovery before reconsidering public output. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
 | Launch hardening | 10-30 sprints | Unchanged at S3568-S3587 | Pending | Recover full test-suite reliability, performance, copy/legal review, and release checklist. |
 
@@ -30,7 +30,36 @@ Current drift note: the project previously spent too many packages on guardrails
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3628-S3647: Assumption Lab Scenario Decision
+## Latest Package — S3648-S3667: Public Optimizer Release Narrowing
+
+**Status:** Complete 2026-06-14.
+
+Goal: use the completed beta optimizer, answer layer, and closed assumption lab scope to narrow the remaining public-ready optimizer blockers into a concrete release decision path. The bounded optimizer now emits `publicOptimizerReleaseNarrowing`, which reduces the remaining path to private pilot requirements, full-suite recovery, public copy review, and output-contract decisions while keeping public output closed.
+
+Package doc: [`docs/sprint_3648_3667_public_optimizer_release_narrowing.md`](docs/sprint_3648_3667_public_optimizer_release_narrowing.md).
+
+### S3648-S3667 Completed Path
+
+- Added `OptimizerPublicReleaseNarrowing` and release-path rows.
+- Connected release narrowing to the final public-readiness decision.
+- Marked ready evidence from feature-complete beta, synthetic fixtures, release controls, retirement answers, and assumption lab beta scope.
+- Narrowed blockers to private pilot evidence, full-suite recovery, public copy review, and output-contract decisions.
+- Rendered release narrowing in Results Details.
+- Kept release narrowing out of saved plan files.
+
+### S3648-S3667 Definition Of Done
+
+- Details shows the public optimizer release narrowing packet.
+- The release path names ready evidence and blocked-until items.
+- Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes remain closed.
+- Release narrowing is not persisted into `.plan.json`.
+- Focused optimizer tests, UI structure tests, result selector tests, and production build pass before commit.
+
+## Next Package — Private Pilot Requirements
+
+Goal: implement the private pilot requirements named by release narrowing: opt-in copy, privacy boundaries, stop conditions, tester limits, and evidence rows for deciding whether public output can later be reconsidered.
+
+## Previous Package — S3628-S3647: Assumption Lab Scenario Decision
 
 **Status:** Complete 2026-06-14.
 
@@ -55,10 +84,6 @@ Package doc: [`docs/sprint_3628_3647_assumption_lab_scenario_decision.md`](docs/
 - Scenario output and applied assumptions are not persisted into `.plan.json`.
 - The optimal review path remains comparison language, not final advice or account instructions.
 - Preview scenario tests, result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
-
-## Next Package — Public Optimizer Release Narrowing
-
-Goal: use the completed beta optimizer, answer layer, and closed assumption lab scope to narrow the remaining public-ready optimizer blockers into a concrete release decision path.
 
 ## Previous Package — S3608-S3627: Assumption Lab Comparison Polish
 

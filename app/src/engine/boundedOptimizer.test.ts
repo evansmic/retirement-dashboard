@@ -1480,6 +1480,7 @@ describe('bounded optimizer runner', () => {
         'fixtureMatrixRollup',
         'releaseControlValidation',
         'finalPublicReadinessDecision',
+        'publicOptimizerReleaseNarrowing',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1773,6 +1774,34 @@ describe('bounded optimizer runner', () => {
       'ready',
       'ready',
       'blocked',
+      'blocked',
+      'blocked'
+    ]);
+    expect(summary.publicOptimizerReleaseNarrowing).toMatchObject({
+      status: 'privatePilotPathReadyPublicClosed',
+      decision: 'narrowToPrivatePilotAndReleaseControls',
+      sourceFinalDecisionStatus: 'publicClosedPrivatePilotPlanningAllowed',
+      readyEvidence: [
+        'featureCompleteBeta',
+        'syntheticFixtureCoverage',
+        'releaseControlsDefined',
+        'retirementAnswerLayer',
+        'assumptionLabBetaScope'
+      ],
+      blockedUntil: ['privatePilotEvidence', 'fullSuiteRecovery', 'publicCopyReview', 'outputContractDecision'],
+      boundary: expect.stringContaining('narrows the release path only')
+    });
+    expect(summary.publicOptimizerReleaseNarrowing.releasePathRows.map((item) => item.id)).toEqual([
+      'betaAnswerSurface',
+      'assumptionLabScope',
+      'privatePilotRequirements',
+      'fullSuiteRecovery',
+      'publicOutputDecision'
+    ]);
+    expect(summary.publicOptimizerReleaseNarrowing.releasePathRows.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'next',
       'blocked',
       'blocked'
     ]);

@@ -1291,6 +1291,15 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('summary.goalReview.goalModePreview');
     expect(boundedOptimizerSource).toContain('Same candidates, different review lens.');
     expect(appSource).toContain('Feedback package index');
+    expect(appSource).toContain('Public optimizer release narrowing');
+    expect(appSource).toContain('Release path narrowed, public output still closed');
+    expect(appSource).toContain('summary.publicOptimizerReleaseNarrowing');
+    expect(appSource).toContain('optimizer-public-release-narrowing');
+    expect(appSource).toContain('release-narrowing-row-');
+    expect(boundedOptimizerSource).toContain('narrowToPrivatePilotAndReleaseControls');
+    expect(boundedOptimizerSource).toContain('privatePilotEvidence');
+    expect(boundedOptimizerSource).toContain('fullSuiteRecovery');
+    expect(boundedOptimizerSource).toContain('outputContractDecision');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');

@@ -687,6 +687,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'fixtureMatrixRollup'
     | 'releaseControlValidation'
     | 'finalPublicReadinessDecision'
+    | 'publicOptimizerReleaseNarrowing'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -978,6 +979,28 @@ export type OptimizerFinalPublicReadinessDecision = {
   }>;
   privatePilotPlanningStatus: 'allowedPublicClosed' | 'blocked';
   blockedOutputs: OptimizerReleaseControlValidation['blockedOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPublicReleaseNarrowing = {
+  status: 'privatePilotPathReadyPublicClosed' | 'blocked';
+  decision: 'narrowToPrivatePilotAndReleaseControls';
+  sourceFinalDecisionStatus: OptimizerFinalPublicReadinessDecision['status'];
+  releasePathRows: Array<{
+    id:
+      | 'betaAnswerSurface'
+      | 'assumptionLabScope'
+      | 'privatePilotRequirements'
+      | 'fullSuiteRecovery'
+      | 'publicOutputDecision';
+    label: string;
+    status: 'ready' | 'next' | 'blocked';
+    detail: string;
+  }>;
+  readyEvidence: Array<'featureCompleteBeta' | 'syntheticFixtureCoverage' | 'releaseControlsDefined' | 'retirementAnswerLayer' | 'assumptionLabBetaScope'>;
+  blockedUntil: Array<'privatePilotEvidence' | 'fullSuiteRecovery' | 'publicCopyReview' | 'outputContractDecision'>;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1838,6 +1861,7 @@ export type BoundedOptimizerSummary = {
   fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
   releaseControlValidation: OptimizerReleaseControlValidation;
   finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
+  publicOptimizerReleaseNarrowing: OptimizerPublicReleaseNarrowing;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6079,6 +6103,68 @@ export function selectOptimizerFinalPublicReadinessDecision({
   };
 }
 
+export function selectOptimizerPublicReleaseNarrowing({
+  finalPublicReadinessDecision
+}: {
+  finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
+}): OptimizerPublicReleaseNarrowing {
+  const pathReady = finalPublicReadinessDecision.status === 'publicClosedPrivatePilotPlanningAllowed';
+  return {
+    status: pathReady ? 'privatePilotPathReadyPublicClosed' : 'blocked',
+    decision: 'narrowToPrivatePilotAndReleaseControls',
+    sourceFinalDecisionStatus: finalPublicReadinessDecision.status,
+    releasePathRows: [
+      {
+        id: 'betaAnswerSurface',
+        label: 'Beta answer surface',
+        status: pathReady ? 'ready' : 'blocked',
+        detail: pathReady
+          ? 'Feature-complete beta, synthetic fixture coverage, release controls, retirement answers, and assumption comparisons are enough to narrow the release path.'
+          : 'Release narrowing waits for final public-readiness evidence.'
+      },
+      {
+        id: 'assumptionLabScope',
+        label: 'Assumption lab scope',
+        status: 'ready',
+        detail: 'The lab is closed for beta scope: one temporary applied assumption at a time, with named scenario packages deferred.'
+      },
+      {
+        id: 'privatePilotRequirements',
+        label: 'Private pilot requirements',
+        status: pathReady ? 'next' : 'blocked',
+        detail: 'Define opt-in wording, privacy copy, stop conditions, tester limits, and evidence needed from real-data pilots.'
+      },
+      {
+        id: 'fullSuiteRecovery',
+        label: 'Full-suite recovery',
+        status: 'blocked',
+        detail: 'Resolve the full npm test hang or low-storage constraint before any public optimizer output is reconsidered.'
+      },
+      {
+        id: 'publicOutputDecision',
+        label: 'Public output decision',
+        status: 'blocked',
+        detail: 'Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes stay closed.'
+      }
+    ],
+    readyEvidence: [
+      'featureCompleteBeta',
+      'syntheticFixtureCoverage',
+      'releaseControlsDefined',
+      'retirementAnswerLayer',
+      'assumptionLabBetaScope'
+    ],
+    blockedUntil: ['privatePilotEvidence', 'fullSuiteRecovery', 'publicCopyReview', 'outputContractDecision'],
+    summary: pathReady
+      ? 'The public optimizer release path is narrowed to private pilot evidence and full-suite recovery before public output can be reconsidered.'
+      : 'Public optimizer release narrowing waits for final public-readiness evidence.',
+    boundary:
+      'This narrows the release path only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Implement private pilot requirements planning: opt-in copy, privacy boundaries, stop conditions, tester limits, and evidence rows for deciding whether public output can be reconsidered.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6203,6 +6289,7 @@ export function selectOptimizerSchemaSaveDecision({
       'fixtureMatrixRollup',
       'releaseControlValidation',
       'finalPublicReadinessDecision',
+      'publicOptimizerReleaseNarrowing',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9118,6 +9205,7 @@ export function runBoundedOptimizer(
     fixtureMatrixRollup,
     releaseControlValidation
   });
+  const publicOptimizerReleaseNarrowing = selectOptimizerPublicReleaseNarrowing({ finalPublicReadinessDecision });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9160,6 +9248,7 @@ export function runBoundedOptimizer(
     fixtureMatrixRollup,
     releaseControlValidation,
     finalPublicReadinessDecision,
+    publicOptimizerReleaseNarrowing,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

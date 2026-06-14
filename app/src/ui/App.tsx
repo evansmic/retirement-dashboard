@@ -7281,6 +7281,45 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.publicOptimizerReleaseNarrowing ? (
+        <section
+          className={`optimizer-public-release-narrowing release-narrowing-${summary.publicOptimizerReleaseNarrowing.status}`}
+        >
+          <div>
+            <p className="eyebrow">Public optimizer release narrowing</p>
+            <h3>Release path narrowed, public output still closed</h3>
+            <p>{summary.publicOptimizerReleaseNarrowing.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.publicOptimizerReleaseNarrowing.releasePathRows.map((item) => (
+              <article className={`release-narrowing-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Decision</span>
+              <strong>{summary.publicOptimizerReleaseNarrowing.decision}</strong>
+              <p>{summary.publicOptimizerReleaseNarrowing.nextStep}</p>
+            </article>
+            <article>
+              <span>Ready evidence</span>
+              <strong>{summary.publicOptimizerReleaseNarrowing.readyEvidence.length}</strong>
+              <p>{summary.publicOptimizerReleaseNarrowing.readyEvidence.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked until</span>
+              <strong>{summary.publicOptimizerReleaseNarrowing.blockedUntil.length}</strong>
+              <p>{summary.publicOptimizerReleaseNarrowing.blockedUntil.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.publicOptimizerReleaseNarrowing.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

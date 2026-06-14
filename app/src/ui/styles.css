@@ -3772,6 +3772,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-public-release-narrowing {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green-dark);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
@@ -3822,6 +3832,18 @@ button.secondary,
   border-radius: 8px;
   background: #ffffff;
   padding: 10px;
+}
+
+.release-narrowing-row-ready {
+  border-left: 4px solid var(--green);
+}
+
+.release-narrowing-row-next {
+  border-left: 4px solid var(--amber);
+}
+
+.release-narrowing-row-blocked {
+  border-left: 4px solid #d79b92;
 }
 
 .optimizer-continuation-grid article > *,
