@@ -7507,6 +7507,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.limitedPublicBetaDecision ? (
+        <section className={`optimizer-limited-beta-decision limited-beta-${summary.limitedPublicBetaDecision.status}`}>
+          <div>
+            <p className="eyebrow">Limited public beta decision</p>
+            <h3>Public optimizer stays closed</h3>
+            <p>{summary.limitedPublicBetaDecision.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.limitedPublicBetaDecision.decisionRows.map((item) => (
+              <article className={`limited-beta-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Candidate beta surface</span>
+              <strong>{summary.limitedPublicBetaDecision.candidateBetaSurface.length}</strong>
+              <p>{summary.limitedPublicBetaDecision.candidateBetaSurface.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked public outputs</span>
+              <strong>{summary.limitedPublicBetaDecision.blockedPublicOutputs.length}</strong>
+              <p>{summary.limitedPublicBetaDecision.blockedPublicOutputs.join(', ')}</p>
+            </article>
+            <article>
+              <span>Remaining public-ready work</span>
+              <strong>{summary.limitedPublicBetaDecision.remainingPublicReadySprints}</strong>
+              <p>{summary.limitedPublicBetaDecision.finalPublicReadyStatus}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.limitedPublicBetaDecision.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

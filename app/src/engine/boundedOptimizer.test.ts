@@ -1485,6 +1485,7 @@ describe('bounded optimizer runner', () => {
         'fullSuiteRecoveryPlan',
         'publicOptimizerOutputContract',
         'privatePilotReleaseDecision',
+        'limitedPublicBetaDecision',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1959,6 +1960,38 @@ describe('bounded optimizer runner', () => {
       'fullPublicRelease'
     ]);
     expect(summary.privatePilotReleaseDecision.releaseRows.map((item) => item.status)).toEqual(['next', 'ready', 'blocked', 'blocked']);
+    expect(summary.limitedPublicBetaDecision).toMatchObject({
+      status: 'publicClosedPilotEvidenceRequired',
+      decision: 'doNotOpenLimitedPublicBetaYet',
+      sourcePrivatePilotReleaseStatus: 'readyForPilotReviewPublicClosed',
+      candidateBetaSurface: ['overviewAnswerRows', 'detailsReviewDirection', 'assumptionComparisonDeltas', 'privatePilotCopyOnly'],
+      blockedPublicOutputs: [
+        'savedOptimizerOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'productionUiPromotion',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'accountLevelWithdrawalInstructions'
+      ],
+      finalPublicReadyStatus: 'closedPendingPilotEvidence',
+      remainingPublicReadySprints: 0,
+      boundary: expect.stringContaining('closes public-ready optimizer planning only')
+    });
+    expect(summary.limitedPublicBetaDecision.decisionRows.map((item) => item.id)).toEqual([
+      'pilotEvidence',
+      'copySafety',
+      'runtimeSurface',
+      'savedOutputs',
+      'releaseChoice'
+    ]);
+    expect(summary.limitedPublicBetaDecision.decisionRows.map((item) => item.status)).toEqual([
+      'missing',
+      'ready',
+      'ready',
+      'blocked',
+      'blocked'
+    ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

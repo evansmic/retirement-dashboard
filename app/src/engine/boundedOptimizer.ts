@@ -692,6 +692,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'fullSuiteRecoveryPlan'
     | 'publicOptimizerOutputContract'
     | 'privatePilotReleaseDecision'
+    | 'limitedPublicBetaDecision'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1124,6 +1125,30 @@ export type OptimizerPrivatePilotReleaseDecision = {
   };
   blockedOutputs: OptimizerPublicOutputContractDecision['blockedOutputs'];
   releaseDecision: 'readyForLimitedPublicBetaDecisionNotRelease' | 'blocked';
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerLimitedPublicBetaDecision = {
+  status: 'publicClosedPilotEvidenceRequired' | 'blocked';
+  decision: 'doNotOpenLimitedPublicBetaYet';
+  sourcePrivatePilotReleaseStatus: OptimizerPrivatePilotReleaseDecision['status'];
+  decisionRows: Array<{
+    id: 'pilotEvidence' | 'copySafety' | 'runtimeSurface' | 'savedOutputs' | 'releaseChoice';
+    label: string;
+    status: 'ready' | 'missing' | 'blocked';
+    detail: string;
+  }>;
+  candidateBetaSurface: Array<
+    | 'overviewAnswerRows'
+    | 'detailsReviewDirection'
+    | 'assumptionComparisonDeltas'
+    | 'privatePilotCopyOnly'
+  >;
+  blockedPublicOutputs: OptimizerPrivatePilotReleaseDecision['blockedOutputs'];
+  finalPublicReadyStatus: 'closedPendingPilotEvidence';
+  remainingPublicReadySprints: 0;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1989,6 +2014,7 @@ export type BoundedOptimizerSummary = {
   fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
   publicOptimizerOutputContract: OptimizerPublicOutputContractDecision;
   privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
+  limitedPublicBetaDecision: OptimizerLimitedPublicBetaDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6656,6 +6682,61 @@ export function selectOptimizerPrivatePilotReleaseDecision({
   };
 }
 
+export function selectOptimizerLimitedPublicBetaDecision({
+  privatePilotReleaseDecision
+}: {
+  privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
+}): OptimizerLimitedPublicBetaDecision {
+  const gateReady = privatePilotReleaseDecision.status === 'readyForPilotReviewPublicClosed';
+  return {
+    status: gateReady ? 'publicClosedPilotEvidenceRequired' : 'blocked',
+    decision: 'doNotOpenLimitedPublicBetaYet',
+    sourcePrivatePilotReleaseStatus: privatePilotReleaseDecision.status,
+    decisionRows: [
+      {
+        id: 'pilotEvidence',
+        label: 'Pilot evidence',
+        status: 'missing',
+        detail: 'No opt-in household pilot evidence has been run in this package, so limited public beta cannot open.'
+      },
+      {
+        id: 'copySafety',
+        label: 'Copy safety',
+        status: gateReady ? 'ready' : 'blocked',
+        detail: 'Copy and stop-condition contracts are defined for pilot review, but they are not yet validated by real households.'
+      },
+      {
+        id: 'runtimeSurface',
+        label: 'Runtime surface',
+        status: gateReady ? 'ready' : 'blocked',
+        detail: 'A future beta surface may show answer rows, review direction, and assumption comparison deltas as runtime-only evidence.'
+      },
+      {
+        id: 'savedOutputs',
+        label: 'Saved outputs',
+        status: 'blocked',
+        detail: 'Saved optimizer output, exports, reports, final instructions, tax-bracket wording, and account instructions remain blocked.'
+      },
+      {
+        id: 'releaseChoice',
+        label: 'Release choice',
+        status: 'blocked',
+        detail: 'The final choice is keep public output closed until pilot evidence is collected and reviewed.'
+      }
+    ],
+    candidateBetaSurface: ['overviewAnswerRows', 'detailsReviewDirection', 'assumptionComparisonDeltas', 'privatePilotCopyOnly'],
+    blockedPublicOutputs: privatePilotReleaseDecision.blockedOutputs,
+    finalPublicReadyStatus: 'closedPendingPilotEvidence',
+    remainingPublicReadySprints: 0,
+    summary:
+      'Limited public beta should not open yet. The optimizer beta is fully scoped, but public release waits for private pilot evidence.',
+    boundary:
+      'This final decision closes public-ready optimizer planning only. It does not open public optimizer release, run pilots, collect tester data, promote production UI, save optimizer output, create CSV/report sequencing, create final annual instructions, add tax-bracket wording, add account-level withdrawal instructions, change saved schema, change engine output schema, or write optimizer output to .plan.json.',
+    nextStep:
+      'Either run the private opt-in pilot against the defined gate, or keep public optimizer output closed while continuing launch hardening and answer-layer work.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6785,6 +6866,7 @@ export function selectOptimizerSchemaSaveDecision({
       'fullSuiteRecoveryPlan',
       'publicOptimizerOutputContract',
       'privatePilotReleaseDecision',
+      'limitedPublicBetaDecision',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9709,6 +9791,7 @@ export function runBoundedOptimizer(
   const privatePilotReleaseDecision = selectOptimizerPrivatePilotReleaseDecision({
     publicOutputContract: publicOptimizerOutputContract
   });
+  const limitedPublicBetaDecision = selectOptimizerLimitedPublicBetaDecision({ privatePilotReleaseDecision });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9756,6 +9839,7 @@ export function runBoundedOptimizer(
     fullSuiteRecoveryPlan,
     publicOptimizerOutputContract,
     privatePilotReleaseDecision,
+    limitedPublicBetaDecision,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

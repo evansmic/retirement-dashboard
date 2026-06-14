@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3748-S3767 package, the remaining-work estimate is:
+As of the S3768-S3787 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-1 sprints remaining.
+- Public-ready optimizer for real planning use: 0 sprints remaining for planning; public release remains closed pending pilot evidence.
 
-Material change at S3748-S3767: yes. The private pilot copy review and release/no-release decision gate is now explicit: three clean opt-in household reviews are required, zero unresolved stop conditions are allowed, and public release remains closed.
+Material change at S3768-S3787: yes. The limited public beta/no-release decision is made: do not open public optimizer output yet. The beta surface is scoped, but public release remains closed until private pilot evidence exists.
 
 ## Objective Estimate Tracker
 
@@ -22,15 +22,40 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-1 sprints | Tightened at S3748-S3767 | Closed for public release | Use pilot evidence to choose no public release or a limited public beta surface. |
+| Public-ready optimizer | 0 sprints for planning | Closed at S3768-S3787 | Closed for public release | Do not open public optimizer output until private pilot evidence clears the defined gate. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
-| Launch hardening | 5-15 sprints | Unchanged at S3748-S3767 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
+| Launch hardening | 5-15 sprints | Unchanged at S3768-S3787 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
 
 Current drift note: the project previously spent too many packages on guardrails and checkpoints. Going forward, each package should either ship visible answer/comparison capability, reduce a public-release blocker, or make a deliberate product decision that narrows the estimates above.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3748-S3767: Private Pilot Copy Review And Release Decision
+## Latest Package — S3768-S3787: Limited Public Beta Or No-Release Decision
+
+**Status:** Complete 2026-06-14.
+
+Goal: make the final current public-ready optimizer decision. The bounded optimizer now emits `limitedPublicBetaDecision`, which chooses not to open limited public beta yet because no opt-in household pilot evidence has been collected. It records the smallest future candidate beta surface, the blocked public outputs, and `remainingPublicReadySprints: 0` for planning while public release remains closed pending pilot evidence.
+
+Package doc: [`docs/sprint_3768_3787_limited_public_beta_decision.md`](docs/sprint_3768_3787_limited_public_beta_decision.md).
+
+### S3768-S3787 Completed Path
+
+- Added `OptimizerLimitedPublicBetaDecision` and `selectOptimizerLimitedPublicBetaDecision`.
+- Chose `doNotOpenLimitedPublicBetaYet`.
+- Recorded that pilot evidence is missing and public optimizer output stays closed.
+- Identified the smallest future candidate beta surface: Overview answer rows, Details review direction, assumption comparison deltas, and private-pilot copy only.
+- Kept saved optimizer output, CSV/report sequencing, production UI promotion, final annual instructions, tax-bracket wording, and account-level withdrawal instructions blocked.
+- Rendered the final decision in Results Details.
+- Kept the final decision packet out of saved plan files.
+
+### S3768-S3787 Definition Of Done
+
+- Details shows the limited public beta/no-release decision.
+- The decision distinguishes scoped runtime surface from blocked public outputs.
+- The tracker records public-ready optimizer planning as complete while public release remains closed.
+- Focused optimizer/UI structure tests and production build pass before commit.
+
+## Previous Package — S3748-S3767: Private Pilot Copy Review And Release Decision
 
 **Status:** Complete 2026-06-14.
 
@@ -129,9 +154,9 @@ Package doc: [`docs/sprint_3688_3707_full_suite_recovery_plan.md`](docs/sprint_3
 - Public optimizer output remains closed until the runner and production build pass consistently.
 - Focused optimizer tests, UI structure tests, targeted slow tests, script syntax check, and production build pass before commit.
 
-## Next Package — Limited Public Beta Or No-Release Decision
+## Next Package — Launch Hardening And Private Pilot Execution
 
-Goal: use the release-decision gate to choose one path: keep public optimizer output closed, or define the smallest limited public beta surface that can ship without saved optimizer output, final instructions, tax-bracket wording, or account-level withdrawal instructions.
+Goal: keep public optimizer output closed while preparing the actual private opt-in pilot and launch hardening checklist: run pilot reviews only with explicit opt-in, repeat low-storage verification, review copy/legal language, and decide later whether evidence supports a limited public beta.
 
 ## Previous Package — S3668-S3687: Private Pilot Requirements
 

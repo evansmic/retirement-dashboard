@@ -1341,6 +1341,14 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('readyForLimitedPublicBetaDecisionNotRelease');
     expect(boundedOptimizerSource).toContain('unresolvedStopConditionsAllowed');
     expect(boundedOptimizerSource).toContain('release-decision gate only');
+    expect(appSource).toContain('Limited public beta decision');
+    expect(appSource).toContain('Public optimizer stays closed');
+    expect(appSource).toContain('summary.limitedPublicBetaDecision');
+    expect(appSource).toContain('optimizer-limited-beta-decision');
+    expect(appSource).toContain('limited-beta-row-');
+    expect(boundedOptimizerSource).toContain('doNotOpenLimitedPublicBetaYet');
+    expect(boundedOptimizerSource).toContain('closedPendingPilotEvidence');
+    expect(boundedOptimizerSource).toContain('closes public-ready optimizer planning only');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');

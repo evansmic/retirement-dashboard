@@ -3822,6 +3822,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-limited-beta-decision {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #8b6f4a;
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
@@ -3927,6 +3937,18 @@ button.secondary,
 
 .private-release-row-blocked,
 .private-release-row-stop {
+  border-left: 4px solid #d79b92;
+}
+
+.limited-beta-row-ready {
+  border-left: 4px solid var(--green);
+}
+
+.limited-beta-row-missing {
+  border-left: 4px solid var(--amber);
+}
+
+.limited-beta-row-blocked {
   border-left: 4px solid #d79b92;
 }
 
