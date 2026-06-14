@@ -1332,6 +1332,15 @@ describe('Results overview structure', () => {
     expect(boundedOptimizerSource).toContain('readyForPrivatePilotCopyReviewNotPublicRelease');
     expect(boundedOptimizerSource).toContain('review-direction runtime evidence only');
     expect(boundedOptimizerSource).toContain('accountLevelWithdrawalInstructions');
+    expect(appSource).toContain('Private pilot release decision');
+    expect(appSource).toContain('Release decision stays evidence-gated');
+    expect(appSource).toContain('summary.privatePilotReleaseDecision');
+    expect(appSource).toContain('optimizer-private-release-decision');
+    expect(appSource).toContain('private-release-row-');
+    expect(boundedOptimizerSource).toContain('usePilotEvidenceBeforeLimitedPublicBeta');
+    expect(boundedOptimizerSource).toContain('readyForLimitedPublicBetaDecisionNotRelease');
+    expect(boundedOptimizerSource).toContain('unresolvedStopConditionsAllowed');
+    expect(boundedOptimizerSource).toContain('release-decision gate only');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');

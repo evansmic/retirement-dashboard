@@ -7449,6 +7449,64 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.privatePilotReleaseDecision ? (
+        <section className={`optimizer-private-release-decision private-release-${summary.privatePilotReleaseDecision.status}`}>
+          <div>
+            <p className="eyebrow">Private pilot release decision</p>
+            <h3>Release decision stays evidence-gated</h3>
+            <p>{summary.privatePilotReleaseDecision.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.privatePilotReleaseDecision.evidenceRows.map((item) => (
+              <article className={`private-release-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.privatePilotReleaseDecision.stopRows.map((item) => (
+              <article className="private-release-row-stop" key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            {summary.privatePilotReleaseDecision.releaseRows.map((item) => (
+              <article className={`private-release-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Households</span>
+              <strong>
+                {summary.privatePilotReleaseDecision.decisionThreshold.minimumPrivateHouseholds}-
+                {summary.privatePilotReleaseDecision.decisionThreshold.maximumPrivateHouseholds}
+              </strong>
+              <p>Required clean reviews: {summary.privatePilotReleaseDecision.decisionThreshold.requiredCleanReviews}</p>
+            </article>
+            <article>
+              <span>Stop conditions allowed</span>
+              <strong>{summary.privatePilotReleaseDecision.decisionThreshold.unresolvedStopConditionsAllowed}</strong>
+              <p>{summary.privatePilotReleaseDecision.blockedOutputs.join(', ')}</p>
+            </article>
+            <article>
+              <span>Release decision</span>
+              <strong>{summary.privatePilotReleaseDecision.releaseDecision}</strong>
+              <p>{summary.privatePilotReleaseDecision.nextStep}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.privatePilotReleaseDecision.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>

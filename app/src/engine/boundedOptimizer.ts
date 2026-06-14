@@ -691,6 +691,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'privatePilotRequirements'
     | 'fullSuiteRecoveryPlan'
     | 'publicOptimizerOutputContract'
+    | 'privatePilotReleaseDecision'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1088,6 +1089,41 @@ export type OptimizerPublicOutputContractDecision = {
     | 'accountLevelWithdrawalInstructions'
   >;
   releaseDecision: 'readyForPrivatePilotCopyReviewNotPublicRelease' | 'blocked';
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPrivatePilotReleaseDecision = {
+  status: 'readyForPilotReviewPublicClosed' | 'blocked';
+  decision: 'usePilotEvidenceBeforeLimitedPublicBeta';
+  sourceOutputContractStatus: OptimizerPublicOutputContractDecision['status'];
+  evidenceRows: Array<{
+    id: 'reviewOnlyComprehension' | 'answerUsefulness' | 'comparisonUsefulness' | 'missingContext' | 'verificationBaseline';
+    label: string;
+    status: 'required' | 'ready' | 'blocked';
+    detail: string;
+  }>;
+  stopRows: Array<{
+    id: 'instructionConfusion' | 'adviceExpectation' | 'taxBracketExpectation' | 'savedOutputExpectation' | 'missingContextBlocks';
+    label: string;
+    status: 'stop';
+    detail: string;
+  }>;
+  releaseRows: Array<{
+    id: 'privatePilotReview' | 'copyContract' | 'limitedPublicBeta' | 'fullPublicRelease';
+    label: string;
+    status: 'ready' | 'next' | 'blocked';
+    detail: string;
+  }>;
+  decisionThreshold: {
+    minimumPrivateHouseholds: number;
+    maximumPrivateHouseholds: number;
+    requiredCleanReviews: number;
+    unresolvedStopConditionsAllowed: number;
+  };
+  blockedOutputs: OptimizerPublicOutputContractDecision['blockedOutputs'];
+  releaseDecision: 'readyForLimitedPublicBetaDecisionNotRelease' | 'blocked';
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1952,6 +1988,7 @@ export type BoundedOptimizerSummary = {
   privatePilotRequirements: OptimizerPrivatePilotRequirements;
   fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
   publicOptimizerOutputContract: OptimizerPublicOutputContractDecision;
+  privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6501,6 +6538,124 @@ export function selectOptimizerPublicOutputContractDecision({
   };
 }
 
+export function selectOptimizerPrivatePilotReleaseDecision({
+  publicOutputContract
+}: {
+  publicOutputContract: OptimizerPublicOutputContractDecision;
+}): OptimizerPrivatePilotReleaseDecision {
+  const reviewReady = publicOutputContract.status === 'publicReviewContractReadyReleaseClosed';
+  return {
+    status: reviewReady ? 'readyForPilotReviewPublicClosed' : 'blocked',
+    decision: 'usePilotEvidenceBeforeLimitedPublicBeta',
+    sourceOutputContractStatus: publicOutputContract.status,
+    evidenceRows: [
+      {
+        id: 'reviewOnlyComprehension',
+        label: 'Review-only comprehension',
+        status: reviewReady ? 'required' : 'blocked',
+        detail: 'Tester can explain that optimizer output is a comparison surface and not a financial plan, instruction set, or action checklist.'
+      },
+      {
+        id: 'answerUsefulness',
+        label: 'Answer usefulness',
+        status: reviewReady ? 'required' : 'blocked',
+        detail: 'Tester can answer what changed for retirement timing, spending capacity, benefit timing, tax pressure, and risk review.'
+      },
+      {
+        id: 'comparisonUsefulness',
+        label: 'Comparison usefulness',
+        status: reviewReady ? 'required' : 'blocked',
+        detail: 'Tester can use side-by-side deltas, including after-tax spending capacity, without asking for saved scenario packages.'
+      },
+      {
+        id: 'missingContext',
+        label: 'Missing context',
+        status: reviewReady ? 'required' : 'blocked',
+        detail: 'Any missing tax, account, survivor, estate, benefit, cash-flow, or housing context is logged before release is reconsidered.'
+      },
+      {
+        id: 'verificationBaseline',
+        label: 'Verification baseline',
+        status: reviewReady ? 'ready' : 'blocked',
+        detail: 'Focused tests, production build, and the low-storage full-suite runner are the required verification baseline before any release decision.'
+      }
+    ],
+    stopRows: [
+      {
+        id: 'instructionConfusion',
+        label: 'Instruction confusion',
+        status: 'stop',
+        detail: 'Stop if a tester treats the review direction, annual rows, or comparison deltas as steps to follow.'
+      },
+      {
+        id: 'adviceExpectation',
+        label: 'Advice expectation',
+        status: 'stop',
+        detail: 'Stop if a tester expects the output to be a final recommendation, guarantee, or personalized financial advice.'
+      },
+      {
+        id: 'taxBracketExpectation',
+        label: 'Tax-bracket expectation',
+        status: 'stop',
+        detail: 'Stop if a tester expects tax-bracket targets, exact withdrawal amounts, or account-by-account annual instructions.'
+      },
+      {
+        id: 'savedOutputExpectation',
+        label: 'Saved-output expectation',
+        status: 'stop',
+        detail: 'Stop if a tester expects optimizer output, sequencing output, or candidate decisions to be saved, exported, or printed.'
+      },
+      {
+        id: 'missingContextBlocks',
+        label: 'Missing context blocks answer',
+        status: 'stop',
+        detail: 'Stop if missing spouse, pension, tax, account, housing, survivor, or estate context changes the answer materially.'
+      }
+    ],
+    releaseRows: [
+      {
+        id: 'privatePilotReview',
+        label: 'Private pilot review',
+        status: reviewReady ? 'next' : 'blocked',
+        detail: 'Run opt-in household review against the output contract before any public optimizer surface is reconsidered.'
+      },
+      {
+        id: 'copyContract',
+        label: 'Copy contract',
+        status: reviewReady ? 'ready' : 'blocked',
+        detail: 'Review-direction copy and blocked final-instruction wording are defined.'
+      },
+      {
+        id: 'limitedPublicBeta',
+        label: 'Limited public beta',
+        status: reviewReady ? 'blocked' : 'blocked',
+        detail: 'Limited public beta remains blocked until pilot evidence clears the stop conditions and the release decision is made.'
+      },
+      {
+        id: 'fullPublicRelease',
+        label: 'Full public release',
+        status: 'blocked',
+        detail: 'Full public release remains blocked beyond the limited beta decision.'
+      }
+    ],
+    decisionThreshold: {
+      minimumPrivateHouseholds: 3,
+      maximumPrivateHouseholds: 5,
+      requiredCleanReviews: 3,
+      unresolvedStopConditionsAllowed: 0
+    },
+    blockedOutputs: publicOutputContract.blockedOutputs,
+    releaseDecision: reviewReady ? 'readyForLimitedPublicBetaDecisionNotRelease' : 'blocked',
+    summary: reviewReady
+      ? 'Private pilot copy review can decide whether a limited public beta is safe to consider, but public release remains closed.'
+      : 'Private pilot release decision waits for the public output contract.',
+    boundary:
+      'This is a release-decision gate only. It does not run the pilot, collect tester data, open public optimizer release, promote production UI, save optimizer output, create CSV/report sequencing, create final annual instructions, add tax-bracket wording, add account-level withdrawal instructions, change saved schema, change engine output schema, or write optimizer output to .plan.json.',
+    nextStep:
+      'Run three to five opt-in private household reviews, require at least three clean reviews, and stop release if any instruction, advice, tax-bracket, saved-output, or missing-context confusion remains unresolved.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6629,6 +6784,7 @@ export function selectOptimizerSchemaSaveDecision({
       'privatePilotRequirements',
       'fullSuiteRecoveryPlan',
       'publicOptimizerOutputContract',
+      'privatePilotReleaseDecision',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9550,6 +9706,9 @@ export function runBoundedOptimizer(
   });
   const fullSuiteRecoveryPlan = selectOptimizerFullSuiteRecoveryPlan({ privatePilotRequirements });
   const publicOptimizerOutputContract = selectOptimizerPublicOutputContractDecision({ fullSuiteRecoveryPlan });
+  const privatePilotReleaseDecision = selectOptimizerPrivatePilotReleaseDecision({
+    publicOutputContract: publicOptimizerOutputContract
+  });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9596,6 +9755,7 @@ export function runBoundedOptimizer(
     privatePilotRequirements,
     fullSuiteRecoveryPlan,
     publicOptimizerOutputContract,
+    privatePilotReleaseDecision,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

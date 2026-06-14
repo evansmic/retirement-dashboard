@@ -3812,6 +3812,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-private-release-decision {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #7f5b63;
+  border-radius: 8px;
+  background: #fffbfc;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
@@ -3903,6 +3913,20 @@ button.secondary,
 }
 
 .public-output-row-blocked {
+  border-left: 4px solid #d79b92;
+}
+
+.private-release-row-ready {
+  border-left: 4px solid var(--green);
+}
+
+.private-release-row-required,
+.private-release-row-next {
+  border-left: 4px solid var(--amber);
+}
+
+.private-release-row-blocked,
+.private-release-row-stop {
   border-left: 4px solid #d79b92;
 }
 

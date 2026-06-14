@@ -1484,6 +1484,7 @@ describe('bounded optimizer runner', () => {
         'privatePilotRequirements',
         'fullSuiteRecoveryPlan',
         'publicOptimizerOutputContract',
+        'privatePilotReleaseDecision',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1914,6 +1915,50 @@ describe('bounded optimizer runner', () => {
       status: 'blocked',
       detail: expect.stringContaining('do this')
     });
+    expect(summary.privatePilotReleaseDecision).toMatchObject({
+      status: 'readyForPilotReviewPublicClosed',
+      decision: 'usePilotEvidenceBeforeLimitedPublicBeta',
+      sourceOutputContractStatus: 'publicReviewContractReadyReleaseClosed',
+      releaseDecision: 'readyForLimitedPublicBetaDecisionNotRelease',
+      decisionThreshold: {
+        minimumPrivateHouseholds: 3,
+        maximumPrivateHouseholds: 5,
+        requiredCleanReviews: 3,
+        unresolvedStopConditionsAllowed: 0
+      },
+      blockedOutputs: [
+        'savedOptimizerOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'productionUiPromotion',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'accountLevelWithdrawalInstructions'
+      ],
+      boundary: expect.stringContaining('release-decision gate only')
+    });
+    expect(summary.privatePilotReleaseDecision.evidenceRows.map((item) => item.id)).toEqual([
+      'reviewOnlyComprehension',
+      'answerUsefulness',
+      'comparisonUsefulness',
+      'missingContext',
+      'verificationBaseline'
+    ]);
+    expect(summary.privatePilotReleaseDecision.stopRows.map((item) => item.id)).toEqual([
+      'instructionConfusion',
+      'adviceExpectation',
+      'taxBracketExpectation',
+      'savedOutputExpectation',
+      'missingContextBlocks'
+    ]);
+    expect(summary.privatePilotReleaseDecision.stopRows.every((item) => item.status === 'stop')).toBe(true);
+    expect(summary.privatePilotReleaseDecision.releaseRows.map((item) => item.id)).toEqual([
+      'privatePilotReview',
+      'copyContract',
+      'limitedPublicBeta',
+      'fullPublicRelease'
+    ]);
+    expect(summary.privatePilotReleaseDecision.releaseRows.map((item) => item.status)).toEqual(['next', 'ready', 'blocked', 'blocked']);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

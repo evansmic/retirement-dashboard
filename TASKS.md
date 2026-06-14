@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3728-S3747 package, the remaining-work estimate is:
+As of the S3748-S3767 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-2 sprints remaining.
+- Public-ready optimizer for real planning use: 0-1 sprints remaining.
 
-Material change at S3728-S3747: yes. Public optimizer copy and output-contract decisions are now explicit: review-direction runtime evidence is allowed for private pilot review, while saved/export/final-instruction outputs remain blocked.
+Material change at S3748-S3767: yes. The private pilot copy review and release/no-release decision gate is now explicit: three clean opt-in household reviews are required, zero unresolved stop conditions are allowed, and public release remains closed.
 
 ## Objective Estimate Tracker
 
@@ -22,15 +22,39 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-2 sprints | Tightened at S3728-S3747 | Closed for public release | Run private pilot copy review against the output contract, then make the public release/no-release decision. |
+| Public-ready optimizer | 0-1 sprints | Tightened at S3748-S3767 | Closed for public release | Use pilot evidence to choose no public release or a limited public beta surface. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
-| Launch hardening | 5-15 sprints | Unchanged at S3728-S3747 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
+| Launch hardening | 5-15 sprints | Unchanged at S3748-S3767 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
 
 Current drift note: the project previously spent too many packages on guardrails and checkpoints. Going forward, each package should either ship visible answer/comparison capability, reduce a public-release blocker, or make a deliberate product decision that narrows the estimates above.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3728-S3747: Public Optimizer Copy And Output Contract Decision
+## Latest Package — S3748-S3767: Private Pilot Copy Review And Release Decision
+
+**Status:** Complete 2026-06-14.
+
+Goal: define the final private pilot evidence threshold and release/no-release decision path. The bounded optimizer now emits `privatePilotReleaseDecision`, which requires three to five opt-in private household reviews, at least three clean reviews, zero unresolved stop conditions, and keeps public release closed until a final limited-beta/no-release decision is made.
+
+Package doc: [`docs/sprint_3748_3767_private_pilot_release_decision.md`](docs/sprint_3748_3767_private_pilot_release_decision.md).
+
+### S3748-S3767 Completed Path
+
+- Added `OptimizerPrivatePilotReleaseDecision` and `selectOptimizerPrivatePilotReleaseDecision`.
+- Defined required pilot evidence for review-only comprehension, answer usefulness, comparison usefulness, missing context, and verification baseline.
+- Defined stop conditions for instruction confusion, advice expectation, tax-bracket expectation, saved-output expectation, and missing context that materially blocks the answer.
+- Set the decision threshold to three to five opt-in private households, at least three clean reviews, and zero unresolved stop conditions.
+- Rendered the release decision gate in Results Details.
+- Kept the release decision gate out of saved plan files.
+
+### S3748-S3767 Definition Of Done
+
+- Details shows the private pilot release decision gate.
+- The gate distinguishes required evidence, stop conditions, release rows, and decision threshold.
+- Public release remains closed; only a future limited public beta/no-release decision is now scoped.
+- Focused optimizer/UI structure tests and production build pass before commit.
+
+## Previous Package — S3728-S3747: Public Optimizer Copy And Output Contract Decision
 
 **Status:** Complete 2026-06-14.
 
@@ -105,9 +129,9 @@ Package doc: [`docs/sprint_3688_3707_full_suite_recovery_plan.md`](docs/sprint_3
 - Public optimizer output remains closed until the runner and production build pass consistently.
 - Focused optimizer tests, UI structure tests, targeted slow tests, script syntax check, and production build pass before commit.
 
-## Next Package — Private Pilot Copy Review And Release Decision
+## Next Package — Limited Public Beta Or No-Release Decision
 
-Goal: use the private pilot requirements and output contract to define the final release/no-release decision path: what evidence from opt-in household review is enough, what confusion stops release, and whether the public optimizer remains closed or can move to a limited public beta surface.
+Goal: use the release-decision gate to choose one path: keep public optimizer output closed, or define the smallest limited public beta surface that can ship without saved optimizer output, final instructions, tax-bracket wording, or account-level withdrawal instructions.
 
 ## Previous Package — S3668-S3687: Private Pilot Requirements
 
