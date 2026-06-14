@@ -833,6 +833,24 @@ describe('result selectors', () => {
     expect(lab.comparisonSlots.find((slot) => slot.sourceCandidateId === 'spendLessGogo')).toMatchObject({
       firstYearSpendingDelta: -7000
     });
+    expect(lab.scenarioDecision).toMatchObject({
+      status: 'singleAdjustmentSelected',
+      headline: expect.stringContaining('one temporary adjustment')
+    });
+    expect(lab.scenarioDecision.rows.map((row) => row.id)).toEqual([
+      'betaScope',
+      'namedScenarios',
+      'saveBoundary',
+      'redesignSignal'
+    ]);
+    expect(lab.scenarioDecision.rows.find((row) => row.id === 'namedScenarios')).toMatchObject({
+      status: 'deferred',
+      decision: expect.stringContaining('Defer named multi-assumption')
+    });
+    expect(lab.scenarioDecision.rows.find((row) => row.id === 'saveBoundary')).toMatchObject({
+      status: 'blocked',
+      decision: expect.stringContaining('Do not write scenario results')
+    });
     expect(lab.boundary).toContain('temporary working-copy assumptions');
     expect(lab.nextStep).toContain('saved named scenarios');
   });

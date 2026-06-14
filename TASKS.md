@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3608-S3627 package, the remaining-work estimate is:
+As of the S3628-S3647 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 0-20 sprints remaining.
 
-Material change at S3608-S3627: yes. The live assumption lab estimate tightened again because Details now has explicit apply/reset behavior, pending/applied assumption summaries, and clearer side-by-side comparison deltas.
+Material change at S3628-S3647: yes. The live assumption lab beta scope is complete: the product decision is to keep one temporary applied adjustment at a time and defer named multi-assumption scenarios until pilot evidence shows they are needed.
 
 ## Objective Estimate Tracker
 
@@ -21,7 +21,7 @@ Update this tracker after each substantial package. The point is not to force da
 | Objective | Current estimate | Last movement | Status | Decision pressure |
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
-| Live assumption lab | 0-10 sprints | Tightened at S3608-S3627 | In progress | Decide whether named multi-assumption scenarios are needed before the graphical redesign, or keep the lab as temporary comparison only. |
+| Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
 | Public-ready optimizer | 0-20 sprints | Unchanged at S3568-S3587 | Closed for public release | Decide when private pilot evidence is sufficient to open public optimizer outputs. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
 | Launch hardening | 10-30 sprints | Unchanged at S3568-S3587 | Pending | Recover full test-suite reliability, performance, copy/legal review, and release checklist. |
@@ -30,7 +30,37 @@ Current drift note: the project previously spent too many packages on guardrails
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3608-S3627: Assumption Lab Comparison Polish
+## Latest Package — S3628-S3647: Assumption Lab Scenario Decision
+
+**Status:** Complete 2026-06-14.
+
+Goal: make the scenario-scope decision explicit before the graphical redesign. The assumption lab now states that beta keeps one temporary applied adjustment at a time, defers named multi-assumption scenarios, keeps scenario results out of saved plan files, and uses tester behaviour as a future visualization signal.
+
+Package doc: [`docs/sprint_3628_3647_assumption_lab_scenario_decision.md`](docs/sprint_3628_3647_assumption_lab_scenario_decision.md).
+
+### S3628-S3647 Completed Path
+
+- Added `AssumptionLabScenarioDecision` and decision rows to the selector contract.
+- Selected single applied adjustment as the beta assumption-lab scope.
+- Deferred named multi-assumption scenario sets until pilot evidence proves demand.
+- Kept saved plan files clean of scenario results and applied assumption state.
+- Added scenario-scope decision rendering in Details.
+- Added result selector and UI structure guards for the decision.
+
+### S3628-S3647 Definition Of Done
+
+- Details shows the scenario-scope decision beside the assumption lab.
+- The beta decision selects one temporary applied adjustment at a time.
+- Named multi-assumption scenarios remain deferred.
+- Scenario output and applied assumptions are not persisted into `.plan.json`.
+- The optimal review path remains comparison language, not final advice or account instructions.
+- Preview scenario tests, result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
+
+## Next Package — Public Optimizer Release Narrowing
+
+Goal: use the completed beta optimizer, answer layer, and closed assumption lab scope to narrow the remaining public-ready optimizer blockers into a concrete release decision path.
+
+## Previous Package — S3608-S3627: Assumption Lab Comparison Polish
 
 **Status:** Complete 2026-06-14.
 
@@ -56,10 +86,6 @@ Package doc: [`docs/sprint_3608_3627_assumption_lab_comparison_polish.md`](docs/
 - Scenario output is not persisted into `.plan.json`.
 - The optimal review path remains comparison language, not final advice.
 - Preview scenario tests, result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
-
-## Next Package — Assumption Lab Scenario Decision
-
-Goal: decide whether the lab should support named multi-assumption scenarios before the graphical redesign, or stay as a single temporary adjustment surface that informs the optimal plan from a given assumption set.
 
 ## Previous Package — S3588-S3607: Live Assumption Rerun Queue
 

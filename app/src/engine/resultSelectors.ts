@@ -409,6 +409,22 @@ export type AssumptionLabComparisonSlot = {
   detail: string;
 };
 
+export type AssumptionLabScenarioDecisionRow = {
+  id: 'betaScope' | 'namedScenarios' | 'saveBoundary' | 'redesignSignal';
+  label: string;
+  status: 'selected' | 'deferred' | 'blocked' | 'watch';
+  decision: string;
+  reason: string;
+};
+
+export type AssumptionLabScenarioDecision = {
+  status: 'singleAdjustmentSelected' | 'needsPilotEvidence' | 'blocked';
+  headline: string;
+  detail: string;
+  rows: AssumptionLabScenarioDecisionRow[];
+  nextReviewTrigger: string;
+};
+
 export type AssumptionLabSummary = {
   status: 'readyForScenarioControls' | 'needsInputs' | 'blocked';
   headline: string;
@@ -417,6 +433,7 @@ export type AssumptionLabSummary = {
   candidateSetLabel: string;
   controlRows: AssumptionLabControl[];
   comparisonSlots: AssumptionLabComparisonSlot[];
+  scenarioDecision: AssumptionLabScenarioDecision;
   progressLabel: string;
   boundary: string;
   nextStep: string;
@@ -3254,6 +3271,8 @@ export function selectAssumptionLabSummary({
   const fallbackStartYear = retireYear || 2030;
   const status: AssumptionLabSummary['status'] =
     scenarioStatus === 'blocked' ? 'blocked' : comparisonAvailable ? 'readyForScenarioControls' : 'needsInputs';
+  const scenarioDecisionStatus: AssumptionLabScenarioDecision['status'] =
+    status === 'blocked' ? 'blocked' : comparisonAvailable ? 'singleAdjustmentSelected' : 'needsPilotEvidence';
 
   function slot(
     id: AssumptionLabComparisonSlot['id'],
@@ -3377,6 +3396,49 @@ export function selectAssumptionLabSummary({
       slot('comparisonA', alternatives[0] || null, 'Comparison A', false),
       slot('comparisonB', alternatives[1] || null, 'Comparison B', false)
     ],
+    scenarioDecision: {
+      status: scenarioDecisionStatus,
+      headline:
+        scenarioDecisionStatus === 'singleAdjustmentSelected'
+          ? 'Beta keeps the lab to one temporary adjustment at a time.'
+          : scenarioDecisionStatus === 'needsPilotEvidence'
+            ? 'Named scenarios need pilot evidence before becoming product scope.'
+            : 'Scenario decisions wait for runnable recommendation evidence.',
+      detail:
+        'The lab should answer how the optimal plan changes under one assumption before adding saved scenario management. Named multi-assumption scenarios are useful only if testers need to compare packages of assumptions, not just inspect sensitivity.',
+      rows: [
+        {
+          id: 'betaScope',
+          label: 'Beta scope',
+          status: scenarioDecisionStatus === 'blocked' ? 'blocked' : 'selected',
+          decision: 'Use one applied assumption at a time.',
+          reason: 'This keeps the optimizer answer legible while the planner learns which retirement questions users actually compare.'
+        },
+        {
+          id: 'namedScenarios',
+          label: 'Named scenarios',
+          status: 'deferred',
+          decision: 'Defer named multi-assumption scenario sets.',
+          reason: 'Saved scenario management adds UI, persistence, and explanation cost before pilot evidence proves it is needed.'
+        },
+        {
+          id: 'saveBoundary',
+          label: 'Save boundary',
+          status: 'blocked',
+          decision: 'Do not write scenario results or applied assumptions into plan files.',
+          reason: 'The local plan file remains clean editable inputs; comparison output stays runtime-only.'
+        },
+        {
+          id: 'redesignSignal',
+          label: 'Redesign signal',
+          status: 'watch',
+          decision: 'Use lab behaviour to choose later graphics.',
+          reason: 'If testers repeatedly compare spending, tax, and ending-portfolio deltas, those become stronger candidates for first-screen visuals.'
+        }
+      ],
+      nextReviewTrigger:
+        'Revisit named scenarios only after beta testers ask to save or compare assumption packages such as early-retirement-plus-downsize or delay-benefits-plus-higher-spending.'
+    },
     progressLabel: 'Apply an assumption, show progress while rerunning, then refresh the side-by-side comparison set.',
     boundary:
       'This lab adjusts temporary working-copy assumptions only. It does not mutate saved plan inputs, persist scenario output, create account instructions, or turn the optimal review path into personal financial advice.',

@@ -1686,6 +1686,12 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Annual spend delta');
     expect(appSource).toContain('Monthly spend delta');
     expect(appSource).toContain('monthly after-tax spend vs current');
+    expect(appSource).toContain('Scenario scope decision');
+    expect(appSource).toContain('lab.scenarioDecision');
+    expect(appSource).toContain('assumption-scenario-decision');
+    expect(appSource).toContain('assumption-decision-grid');
+    expect(appSource).toContain('decision-row-');
+    expect(appSource).toContain('nextReviewTrigger');
     expect(appSource).toContain('Apply');
     expect(appSource).toContain('Reset');
     expect(appSource).toContain('Rerunning preview');

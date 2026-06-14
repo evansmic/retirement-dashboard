@@ -2519,6 +2519,61 @@ button.secondary,
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.assumption-scenario-decision {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 14px;
+}
+
+.assumption-scenario-decision h4 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.assumption-scenario-decision p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.assumption-decision-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.assumption-decision-row {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid #9fb2c1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+  overflow-wrap: anywhere;
+}
+
+.assumption-decision-row span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.assumption-decision-row strong {
+  color: var(--ink);
+}
+
+.assumption-decision-row small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .assumption-control,
 .assumption-comparison {
   display: grid;
@@ -2594,13 +2649,20 @@ button.secondary,
 
 .control-ready,
 .comparison-ready,
-.comparison-selected {
+.comparison-selected,
+.decision-row-selected {
   border-left-color: var(--green);
 }
 
 .control-review,
-.comparison-blocked {
+.comparison-blocked,
+.decision-row-deferred,
+.decision-row-watch {
   border-left-color: var(--amber);
+}
+
+.decision-row-blocked {
+  border-left-color: #d79b92;
 }
 
 .control-notApplicable {
@@ -2614,6 +2676,10 @@ button.secondary,
 
   .assumption-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .assumption-decision-grid {
+    grid-template-columns: 1fr;
   }
 }
 

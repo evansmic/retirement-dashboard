@@ -9708,6 +9708,24 @@ function AssumptionLabPanel({
           </article>
         ))}
       </div>
+      <div className={`assumption-scenario-decision decision-${lab.scenarioDecision.status}`}>
+        <div>
+          <p className="eyebrow">Scenario scope decision</p>
+          <h4>{lab.scenarioDecision.headline}</h4>
+          <p>{lab.scenarioDecision.detail}</p>
+        </div>
+        <div className="assumption-decision-grid">
+          {lab.scenarioDecision.rows.map((row) => (
+            <article className={`assumption-decision-row decision-row-${row.status}`} key={row.id}>
+              <span>{row.status}</span>
+              <strong>{row.label}</strong>
+              <p>{row.decision}</p>
+              <small>{row.reason}</small>
+            </article>
+          ))}
+        </div>
+        <p className="table-note">{lab.scenarioDecision.nextReviewTrigger}</p>
+      </div>
       <p className="table-note">{lab.boundary}</p>
       <p className="table-note">{lab.nextStep}</p>
     </section>
