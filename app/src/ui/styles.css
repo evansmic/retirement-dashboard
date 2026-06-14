@@ -3399,6 +3399,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-release-control-validation {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #6f5d47;
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,

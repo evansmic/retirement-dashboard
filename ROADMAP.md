@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3508-S3527 is complete. The optimizer now has release-control validation that treats verified synthetic fixture coverage as ready evidence while keeping real-data opt-in, production UI, export/report output, final wording, schema migration, and full-suite recovery blocked. Results Details shows the controls while public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-30 sprints.
+
+Current package doc: [`docs/sprint_3508_3527_release_control_validation.md`](docs/sprint_3508_3527_release_control_validation.md).
+
 S3488-S3507 is complete. The optimizer now rolls fixture assertion results back into the unsupported-case coverage matrix. Staggered-couple, registered-heavy, taxable-heavy, survivor/estate, and thin-data gaps become verified synthetic coverage when assertions pass, while prior synthetic beta rows remain clearly distinct from public readiness. Public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 10-40 sprints.
 
 Current package doc: [`docs/sprint_3488_3507_fixture_matrix_rollup.md`](docs/sprint_3488_3507_fixture_matrix_rollup.md).

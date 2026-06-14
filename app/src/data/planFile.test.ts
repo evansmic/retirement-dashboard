@@ -208,6 +208,11 @@ describe('plan file adapters', () => {
         decision: 'keepPublicClosedAfterSyntheticRollup',
         assertionSummary: { passed: 7, total: 7 }
       },
+      releaseControlValidation: {
+        status: 'releaseControlsDefinedPublicClosed',
+        decision: 'keepPublicReleaseClosed',
+        releaseControlRows: [{ id: 'productionUiFlag', status: 'blocked' }]
+      },
       boundedOptimizer: {
         status: 'ready'
       },
@@ -235,6 +240,7 @@ describe('plan file adapters', () => {
     expect(saved.plan).not.toHaveProperty('unsupportedCaseCoverage');
     expect(saved.plan).not.toHaveProperty('fixtureCoverageImplementationPlan');
     expect(saved.plan).not.toHaveProperty('fixtureMatrixRollup');
+    expect(saved.plan).not.toHaveProperty('releaseControlValidation');
     expect(saved.plan).not.toHaveProperty('boundedOptimizer');
     expect(saved.plan).not.toHaveProperty('optimizerOutput');
     expect(saved.plan).not.toHaveProperty('annualAccountInstructions');
@@ -257,6 +263,8 @@ describe('plan file adapters', () => {
     expect(serialized).not.toContain('implementSyntheticFixturesBeforePublicRelease');
     expect(serialized).not.toContain('fixtureMatrixRollup');
     expect(serialized).not.toContain('keepPublicClosedAfterSyntheticRollup');
+    expect(serialized).not.toContain('releaseControlValidation');
+    expect(serialized).not.toContain('keepPublicReleaseClosed');
     expect(serialized).not.toContain('testerPacketBoundary');
     expect(serialized).not.toContain('testerPacketExportGuard');
     expect(serialized).not.toContain('accountOrder');

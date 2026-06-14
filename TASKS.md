@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3488-S3507 package, the remaining-work estimate is:
+As of the S3508-S3527 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 10-40 sprints remaining.
+- Public-ready optimizer for real planning use: 0-30 sprints remaining.
 
-Material change at S3488-S3507: yes. Feature-complete beta remains present, and the public-ready path is narrower because fixture assertion results now roll back into the coverage matrix as verified synthetic coverage.
+Material change at S3508-S3527: yes. Feature-complete beta remains present, and the public-ready path is narrower because final release controls are now explicit and test-covered.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3488-S3507: Fixture Matrix Rollup
+## Latest Package — S3508-S3527: Release-Control Validation
+
+**Status:** Complete 2026-06-13.
+
+Goal: define final release-control checks needed before any public optimizer output can be reconsidered. The bounded optimizer now emits `releaseControlValidation` with fixture coverage ready evidence and blocked controls for real-data opt-in, production UI, export/report output, final wording, schema migration, and full-suite recovery. Results Details renders the controls while public output remains closed.
+
+Package doc: [`docs/sprint_3508_3527_release_control_validation.md`](docs/sprint_3508_3527_release_control_validation.md).
+
+### S3508-S3527 Completed Path
+
+- Added engine-owned release-control validation types and selector.
+- Marked verified synthetic fixture coverage as ready evidence.
+- Kept real-data opt-in, production UI flagging, export/report output, final wording, schema migration, and full-suite recovery blocked.
+- Surfaced release controls in Results Details.
+- Extended plan-file tests to keep release-control validation out of `.plan.json` output.
+
+### S3508-S3527 Definition Of Done
+
+- `releaseControlValidation` is present in bounded optimizer summaries.
+- Release-control rows distinguish ready fixture evidence from blocked release controls.
+- Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove release-control validation is not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Final Public-Readiness Decision
+
+Goal: use the completed beta, fixture coverage, and release-control evidence to decide whether the public optimizer remains closed, moves to a narrow private real-data pilot, or needs additional validation first.
+
+## Previous Package — S3488-S3507: Fixture Matrix Rollup
 
 **Status:** Complete 2026-06-13.
 
@@ -41,10 +69,6 @@ Package doc: [`docs/sprint_3488_3507_fixture_matrix_rollup.md`](docs/sprint_3488
 - Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove fixture matrix rollup is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Release-Control Validation
-
-Goal: define the final release-control checks needed before any public optimizer output can be reconsidered, still without opening production UI, exports, reports, final instructions, tax-bracket wording, or saved schema changes.
 
 ## Previous Package — S3468-S3487: Fixture Builders And Stop Assertions
 

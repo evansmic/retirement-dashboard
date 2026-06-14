@@ -1478,6 +1478,7 @@ describe('bounded optimizer runner', () => {
         'unsupportedCaseCoverage',
         'fixtureCoverageImplementationPlan',
         'fixtureMatrixRollup',
+        'releaseControlValidation',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1700,6 +1701,42 @@ describe('bounded optimizer runner', () => {
       'verifiedSynthetic',
       'verifiedSynthetic',
       'verifiedSynthetic'
+    ]);
+    expect(summary.releaseControlValidation).toMatchObject({
+      status: 'releaseControlsDefinedPublicClosed',
+      decision: 'keepPublicReleaseClosed',
+      sourceFixtureRollupStatus: 'syntheticCoverageVerifiedPublicClosed',
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('defines release controls only')
+    });
+    expect(summary.releaseControlValidation.releaseControlRows.map((item) => item.id)).toEqual([
+      'fixtureCoverage',
+      'realDataOptIn',
+      'productionUiFlag',
+      'exportReportLock',
+      'finalWordingLock',
+      'schemaMigrationLock',
+      'fullSuiteRecovery'
+    ]);
+    expect(summary.releaseControlValidation.releaseControlRows.map((item) => item.status)).toEqual([
+      'ready',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked'
     ]);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',

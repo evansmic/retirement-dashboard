@@ -685,6 +685,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'unsupportedCaseCoverage'
     | 'fixtureCoverageImplementationPlan'
     | 'fixtureMatrixRollup'
+    | 'releaseControlValidation'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -928,6 +929,29 @@ export type OptimizerFixtureMatrixRollup = {
     evidence: string;
   }>;
   blockedOutputs: OptimizerUnsupportedCaseCoverage['blockedOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerReleaseControlValidation = {
+  status: 'releaseControlsDefinedPublicClosed' | 'blocked';
+  decision: 'keepPublicReleaseClosed';
+  sourceFixtureRollupStatus: OptimizerFixtureMatrixRollup['status'];
+  releaseControlRows: Array<{
+    id:
+      | 'fixtureCoverage'
+      | 'realDataOptIn'
+      | 'productionUiFlag'
+      | 'exportReportLock'
+      | 'finalWordingLock'
+      | 'schemaMigrationLock'
+      | 'fullSuiteRecovery';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  blockedOutputs: OptimizerFixtureMatrixRollup['blockedOutputs'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1786,6 +1810,7 @@ export type BoundedOptimizerSummary = {
   unsupportedCaseCoverage: OptimizerUnsupportedCaseCoverage;
   fixtureCoverageImplementationPlan: OptimizerFixtureCoverageImplementationPlan;
   fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
+  releaseControlValidation: OptimizerReleaseControlValidation;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5884,6 +5909,73 @@ export function selectOptimizerFixtureMatrixRollup({
   };
 }
 
+export function selectOptimizerReleaseControlValidation({
+  fixtureMatrixRollup
+}: {
+  fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
+}): OptimizerReleaseControlValidation {
+  const fixtureCoverageReady = fixtureMatrixRollup.status === 'syntheticCoverageVerifiedPublicClosed';
+  return {
+    status: fixtureCoverageReady ? 'releaseControlsDefinedPublicClosed' : 'blocked',
+    decision: 'keepPublicReleaseClosed',
+    sourceFixtureRollupStatus: fixtureMatrixRollup.status,
+    releaseControlRows: [
+      {
+        id: 'fixtureCoverage',
+        label: 'Fixture coverage',
+        status: fixtureCoverageReady ? 'ready' : 'blocked',
+        detail: fixtureCoverageReady
+          ? 'Synthetic fixture coverage is verified and still separate from public readiness.'
+          : 'Release controls wait for verified synthetic fixture coverage.'
+      },
+      {
+        id: 'realDataOptIn',
+        label: 'Real-data opt-in',
+        status: 'blocked',
+        detail: 'No real-data tester distribution is allowed until explicit opt-in, privacy copy, and stop behavior are reviewed.'
+      },
+      {
+        id: 'productionUiFlag',
+        label: 'Production UI flag',
+        status: 'blocked',
+        detail: 'No production UI surface or feature flag may expose optimizer sequencing without a release decision.'
+      },
+      {
+        id: 'exportReportLock',
+        label: 'Export/report lock',
+        status: 'blocked',
+        detail: 'CSV sequencing output and report sequencing rows remain locked behind separate output contracts.'
+      },
+      {
+        id: 'finalWordingLock',
+        label: 'Final wording lock',
+        status: 'blocked',
+        detail: 'Final annual instructions, tax-bracket wording, and advice-like commands remain locked.'
+      },
+      {
+        id: 'schemaMigrationLock',
+        label: 'Schema migration lock',
+        status: 'blocked',
+        detail: 'Saved schema changes, engine output schema changes, and .plan.json sequencing output remain locked.'
+      },
+      {
+        id: 'fullSuiteRecovery',
+        label: 'Full-suite recovery',
+        status: 'blocked',
+        detail: 'Public release cannot be reconsidered until the known full npm test hang or low-storage constraint is resolved.'
+      }
+    ],
+    blockedOutputs: fixtureMatrixRollup.blockedOutputs,
+    summary: fixtureCoverageReady
+      ? 'Release controls are defined, and public optimizer release remains closed.'
+      : 'Release-control validation waits for fixture matrix rollup.',
+    boundary:
+      'This validation defines release controls only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Use these release controls to plan the final public-readiness decision package after full-suite recovery and explicit output contracts.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6006,6 +6098,7 @@ export function selectOptimizerSchemaSaveDecision({
       'unsupportedCaseCoverage',
       'fixtureCoverageImplementationPlan',
       'fixtureMatrixRollup',
+      'releaseControlValidation',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -8915,6 +9008,7 @@ export function runBoundedOptimizer(
     unsupportedCaseCoverage,
     assertionRows: fixtureStopAssertionRows
   });
+  const releaseControlValidation = selectOptimizerReleaseControlValidation({ fixtureMatrixRollup });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -8955,6 +9049,7 @@ export function runBoundedOptimizer(
     unsupportedCaseCoverage,
     fixtureCoverageImplementationPlan,
     fixtureMatrixRollup,
+    releaseControlValidation,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

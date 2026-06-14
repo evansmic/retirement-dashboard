@@ -6964,6 +6964,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.releaseControlValidation ? (
+        <section className={`optimizer-release-control-validation release-control-${summary.releaseControlValidation.status}`}>
+          <div>
+            <p className="eyebrow">Release-control validation</p>
+            <h3>Release controls defined, output closed</h3>
+            <p>{summary.releaseControlValidation.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.releaseControlValidation.releaseControlRows.map((item) => (
+              <article className={`release-control-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Decision</span>
+              <strong>{summary.releaseControlValidation.decision}</strong>
+              <p>{summary.releaseControlValidation.nextStep}</p>
+            </article>
+            <article>
+              <span>Source rollup</span>
+              <strong>{summary.releaseControlValidation.sourceFixtureRollupStatus}</strong>
+              <p>Fixture coverage remains synthetic evidence only.</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.releaseControlValidation.blockedOutputs.length}</strong>
+              <p>{summary.releaseControlValidation.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.releaseControlValidation.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>
