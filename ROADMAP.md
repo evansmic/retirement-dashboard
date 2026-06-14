@@ -40,9 +40,15 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3588-S3607 is complete. Details assumption-lab controls now rerun local preview working copies with progress feedback and refresh the optimal review path plus side-by-side comparison slots. Retirement age, early spending, residence sale date, and survivor year adjust a working-copy plan; CPP/OAS timing and investment return use runtime config overrides. The main editable plan is unchanged, scenario output is not persisted, and final advice/account-instruction language remains blocked. Current remaining estimate: retirement answer layer 0-10 sprints, live assumption lab 5-20 sprints, public-ready optimizer 0-20 sprints, graphical UI redesign 20-60 sprints, launch hardening 10-30 sprints.
+
+Current package doc: [`docs/sprint_3588_3607_live_assumption_rerun_queue.md`](docs/sprint_3588_3607_live_assumption_rerun_queue.md).
+
 S3568-S3587 is complete. Details now has an assumption-lab contract that exposes slider-ready controls for retirement age, CPP/OAS timing, investment return, early spending, residence sale date, and survivor year. It also shows side-by-side comparison slots for the current plan, the optimal review path from the current compared assumption set, and two alternatives. Live plan mutation, scenario persistence, account instructions, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
 
 Current package doc: [`docs/sprint_3568_3587_assumption_lab_contract.md`](docs/sprint_3568_3587_assumption_lab_contract.md).
+
+Objective estimate tracker: retirement answer layer 0-10 sprints, live assumption lab 5-20 sprints, public-ready optimizer 0-20 sprints, graphical UI redesign 20-60 sprints, launch hardening 10-30 sprints. Current drift note: continue shipping visible answer/comparison capability and avoid checkpoint-only packages unless they close a release blocker or force a product decision.
 
 S3548-S3567 is complete. The planner now has a retirement answer layer that turns existing result evidence into answer rows for retirement timing, spending capacity, income direction, next moves, and risk review before the final graphical redesign is chosen. Overview shows the answer layer with visualization hints and data-sheet handoffs, while full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
 

@@ -6,17 +6,60 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3568-S3587 package, the remaining-work estimate is:
+As of the S3588-S3607 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 0-20 sprints remaining.
 
-Material change at S3568-S3587: yes. Details now has an assumption-lab contract for slider-ready controls, side-by-side comparison slots, and the optimal review path from the current compared assumption set.
+Material change at S3588-S3607: yes. The live assumption lab estimate tightened because Details controls now rerun local preview working copies and refresh the optimal review path without saving scenario output.
+
+## Objective Estimate Tracker
+
+Update this tracker after each substantial package. The point is not to force dates; it is to make drift visible and keep the work biased toward shippable product decisions instead of endless guardrail/checkpoint work.
+
+| Objective | Current estimate | Last movement | Status | Decision pressure |
+| --- | ---: | --- | --- | --- |
+| Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
+| Live assumption lab | 5-20 sprints | Tightened at S3588-S3607 | In progress | Improve apply/debounce behavior, adjusted-assumption summaries, and comparison readability. |
+| Public-ready optimizer | 0-20 sprints | Unchanged at S3568-S3587 | Closed for public release | Decide when private pilot evidence is sufficient to open public optimizer outputs. |
+| Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
+| Launch hardening | 10-30 sprints | Unchanged at S3568-S3587 | Pending | Recover full test-suite reliability, performance, copy/legal review, and release checklist. |
+
+Current drift note: the project previously spent too many packages on guardrails and checkpoints. Going forward, each package should either ship visible answer/comparison capability, reduce a public-release blocker, or make a deliberate product decision that narrows the estimates above.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3568-S3587: Assumption Lab Contract
+## Latest Package — S3588-S3607: Live Assumption Rerun Queue
+
+**Status:** Complete 2026-06-13.
+
+Goal: turn the assumption lab from a static contract into a local preview loop. Details controls now adjust a working copy, show progress while rerunning, and refresh the optimal review path and comparison slots without saving scenario output.
+
+Package doc: [`docs/sprint_3588_3607_live_assumption_rerun_queue.md`](docs/sprint_3588_3607_live_assumption_rerun_queue.md).
+
+### S3588-S3607 Completed Path
+
+- Added runtime preview config overrides to `runResultsPreviewBundle`.
+- Added local assumption-lab preview state in Results.
+- Added working-copy adjustments for retirement age, early spending, residence sale date, and survivor year.
+- Added config-only overrides for CPP/OAS timing and investment return.
+- Enabled assumption lab controls and progress feedback.
+- Refreshed comparison slots from the adjusted preview after rerun.
+
+### S3588-S3607 Definition Of Done
+
+- Details controls rerun local preview working copies.
+- The main editable plan remains unchanged.
+- Scenario output is not persisted into `.plan.json`.
+- The optimal review path remains comparison language, not final advice.
+- Preview scenario tests, result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
+
+## Next Package — Assumption Lab Comparison Polish
+
+Goal: improve the live assumption lab comparison experience: add debouncing or explicit apply controls, show the adjusted assumption summary, and make the two alternatives clearer against the optimal review path.
+
+## Previous Package — S3568-S3587: Assumption Lab Contract
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +82,6 @@ Package doc: [`docs/sprint_3568_3587_assumption_lab_contract.md`](docs/sprint_35
 - Comparison slots show current plan, optimal review path, and two alternatives.
 - Live plan mutation, scenario persistence, account instructions, and final advice language remain blocked.
 - Result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
-
-## Next Package — Live Assumption Rerun Queue
-
-Goal: wire Details assumption controls to a local rerun queue with progress feedback. Adjusted assumptions should rerun the projection, refresh the optimal review path, and update the two comparison slots without saving scenario output into `.plan.json`.
 
 ## Previous Package — S3548-S3567: Retirement Answer Layer
 

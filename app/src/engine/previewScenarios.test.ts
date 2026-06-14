@@ -176,6 +176,34 @@ describe('preview scenario runner', () => {
     expect(calls[6].config.p1Dies).toBe(2035);
   });
 
+  it('applies runtime preview config overrides without mutating plan assumptions', () => {
+    const plan = testPlan();
+    const calls: Array<{ plan: V2PlanPayload; config: SimulationConfig }> = [];
+    const runner: PreviewSimulationRunner = (nextPlan, config) => {
+      calls.push({ plan: nextPlan, config });
+      return fakeResult(2026 + calls.length);
+    };
+
+    runResultsPreviewBundle(plan, runner, {
+      cppAgeF: 68,
+      cppAgeM: 68,
+      oasAgeF: 68,
+      oasAgeM: 68,
+      returnRate: 0.0375
+    });
+
+    expect(calls[0].config).toMatchObject({
+      cppAgeF: 68,
+      cppAgeM: 68,
+      oasAgeF: 68,
+      oasAgeM: 68,
+      returnRate: 0.0375
+    });
+    expect(calls[3].config).toMatchObject({ cppAgeF: 70, cppAgeM: 70, oasAgeF: 70, oasAgeM: 70 });
+    expect(plan.assumptions.returnRate).not.toBe(0.0375);
+    expect(plan.p1.cpp65_monthly).toBe(1200);
+  });
+
   it('does not run higher-spending stress when the baseline already has a shortfall', () => {
     const plan = testPlan();
     const calls: Array<{ plan: V2PlanPayload; config: SimulationConfig }> = [];

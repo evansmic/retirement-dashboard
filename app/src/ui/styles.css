@@ -2532,6 +2532,27 @@ button.secondary,
   accent-color: var(--green);
 }
 
+.assumption-progress {
+  display: grid;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.assumption-progress span {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), #9bc7b3);
+}
+
+.assumption-progress strong {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
 .control-ready,
 .comparison-ready,
 .comparison-selected {

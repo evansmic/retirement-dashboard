@@ -1675,6 +1675,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Optimal plan from this set');
     expect(appSource).toContain('Preparing assumption controls');
     expect(appSource).toContain('lab.boundary');
+    expect(appSource).toContain('AssumptionLabPreviewState');
+    expect(appSource).toContain('applyAssumptionLabDraft');
+    expect(appSource).toContain('assumptionLabConfigOverrides');
+    expect(appSource).toContain('Rerunning preview');
+    expect(appSource).toContain('assumption-progress');
   });
 
   it('shows drawdown readiness in Details without optimizer execution language', () => {

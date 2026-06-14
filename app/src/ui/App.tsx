@@ -130,7 +130,7 @@ import type {
   TaxAwareDrawdownV1ReentryReview,
   TaxAwareDrawdownV1ReviewCopyGuard
 } from '../engine/drawdownExecutionReadiness';
-import type { PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
+import type { PreviewConfigOverrides, PreviewScenarioResults, SpendingStressResults } from '../engine/previewScenarios';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -228,6 +228,24 @@ type BridgePreview = {
   v1DrawdownRecommendedPlanCloseout: TaxAwareDrawdownV1RecommendedPlanCloseout | null;
   error: string;
   loading: boolean;
+};
+
+type AssumptionLabDraft = {
+  controlId: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]['id'];
+  label: string;
+  value: number;
+};
+
+type AssumptionLabPreviewState = {
+  draft: AssumptionLabDraft | null;
+  adjustedPlan: V2PlanPayload | null;
+  preview: {
+    result: SimulationResult;
+    scenarios: PreviewScenarioResults;
+    survivor: SimulationResult | null;
+  } | null;
+  loading: boolean;
+  error: string;
 };
 
 const SHOW_CHECKPOINT_REVIEW_PANELS = false;
@@ -1561,6 +1579,38 @@ function previewErrorMessage(err: unknown): string {
 
 function isStalePreviewError(message: string): boolean {
   return message === STALE_PREVIEW_ERROR_MESSAGE;
+}
+
+function applyAssumptionLabDraft(plan: V2PlanPayload, draft: AssumptionLabDraft): V2PlanPayload {
+  const adjusted = extractPlanPayload(plan);
+  if (draft.controlId === 'retirementYear') {
+    const currentYear = adjusted.assumptions.retireYear || adjusted.p1.retireYear || 0;
+    const nextYear = adjusted.p1.dob ? Math.round(adjusted.p1.dob + draft.value) : currentYear;
+    const delta = nextYear && currentYear ? nextYear - currentYear : 0;
+    if (nextYear) {
+      adjusted.assumptions.retireYear = nextYear;
+      adjusted.p1.retireYear = nextYear;
+      if (!p2LooksBlank(adjusted.p2) && adjusted.p2.retireYear) adjusted.p2.retireYear += delta;
+    }
+  } else if (draft.controlId === 'earlySpending') {
+    adjusted.spending.gogo = Math.max(0, Math.round(draft.value));
+  } else if (draft.controlId === 'residenceSaleYear') {
+    adjusted.downsize = { ...(adjusted.downsize || {}), year: Math.round(draft.value) };
+  } else if (draft.controlId === 'survivorYear') {
+    adjusted.assumptions.p1DiesInSurvivor = Math.round(draft.value);
+  }
+  return adjusted;
+}
+
+function assumptionLabConfigOverrides(draft: AssumptionLabDraft): PreviewConfigOverrides {
+  if (draft.controlId === 'cppOasStartAge') {
+    const age = Math.round(draft.value);
+    return { cppAgeF: age, cppAgeM: age, oasAgeF: age, oasAgeM: age };
+  }
+  if (draft.controlId === 'returnRate') {
+    return { returnRate: draft.value / 100 };
+  }
+  return {};
 }
 
 const intakeSteps: Array<{ id: IntakeStepId; label: string; helper: string }> = [
@@ -4359,6 +4409,13 @@ function ResultsHandoffPanel({
   title: string;
   validation: PlanValidationResult | null;
 }) {
+  const [assumptionLabPreview, setAssumptionLabPreview] = useState<AssumptionLabPreviewState>({
+    draft: null,
+    adjustedPlan: null,
+    preview: null,
+    loading: false,
+    error: ''
+  });
   const hasBlockers = Boolean(validation && !validation.canGenerate);
   const overview = selectOverviewMetrics(result);
   const projectionMilestones = selectProjectionMilestones(result);
@@ -4400,10 +4457,22 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const labRecommendedPath =
+    assumptionLabPreview.preview && assumptionLabPreview.adjustedPlan
+      ? selectRecommendedPath(
+          assumptionLabPreview.preview.result,
+          assumptionLabPreview.preview.scenarios,
+          assumptionLabPreview.preview.survivor,
+          assumptionLabPreview.adjustedPlan
+        )
+      : recommendedPath;
+  const labScenarioComparisonRows = assumptionLabPreview.preview
+    ? selectScenarioComparisonRows(assumptionLabPreview.preview.result, assumptionLabPreview.preview.scenarios)
+    : scenarioComparisonRows;
   const assumptionLab = selectAssumptionLabSummary({
-    plan,
-    recommendedPath,
-    scenarioComparisonRows
+    plan: assumptionLabPreview.adjustedPlan || plan,
+    recommendedPath: labRecommendedPath,
+    scenarioComparisonRows: labScenarioComparisonRows
   });
   const retirementAnswerLayer = selectRetirementAnswerLayer({
     retirementAnswer,
@@ -4469,6 +4538,62 @@ function ResultsHandoffPanel({
     a.remove();
     URL.revokeObjectURL(url);
   }
+
+  useEffect(() => {
+    setAssumptionLabPreview({
+      draft: null,
+      adjustedPlan: null,
+      preview: null,
+      loading: false,
+      error: ''
+    });
+  }, [plan]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const draft = assumptionLabPreview.draft;
+    if (!draft) return;
+    const adjustedPlan = applyAssumptionLabDraft(plan, draft);
+    setAssumptionLabPreview((current) => ({
+      ...current,
+      adjustedPlan,
+      preview: null,
+      loading: true,
+      error: ''
+    }));
+    import('../engine/previewScenarios')
+      .then(({ runResultsPreviewBundle }) => {
+        const nextPreview = runResultsPreviewBundle(adjustedPlan, undefined, assumptionLabConfigOverrides(draft));
+        if (cancelled) return;
+        setAssumptionLabPreview((current) => ({
+          ...current,
+          adjustedPlan,
+          preview: {
+            result: nextPreview.result,
+            scenarios: nextPreview.scenarios,
+            survivor: nextPreview.survivor
+          },
+          loading: false,
+          error: ''
+        }));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAssumptionLabPreview((current) => ({
+          ...current,
+          loading: false,
+          error: previewErrorMessage(err)
+        }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [assumptionLabPreview.draft, plan]);
+
+  function updateAssumptionLabDraft(draft: AssumptionLabDraft) {
+    setAssumptionLabPreview((current) => ({ ...current, draft }));
+  }
+
   const reconciliationWarning = result && reconciliation.status === 'warning';
   const implementedSections: ResultsWorkspaceSection[] = [
     'overview',
@@ -4588,6 +4713,10 @@ function ResultsHandoffPanel({
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             assumptionLab={assumptionLab}
+            assumptionLabDraft={assumptionLabPreview.draft}
+            assumptionLabError={assumptionLabPreview.error}
+            assumptionLabLoading={assumptionLabPreview.loading}
+            onAssumptionLabChange={updateAssumptionLabDraft}
             discretionaryRoomBridge={discretionaryRoomBridge}
             minimumExpenseCoverage={minimumExpenseCoverage}
             spendingPathBridge={spendingPathBridge}
@@ -5325,6 +5454,10 @@ function DetailsResultsPanel({
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
   assumptionLab,
+  assumptionLabDraft,
+  assumptionLabError,
+  assumptionLabLoading,
+  onAssumptionLabChange,
   discretionaryRoomBridge,
   minimumExpenseCoverage,
   spendingPathBridge,
@@ -5406,6 +5539,10 @@ function DetailsResultsPanel({
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   assumptionLab: ReturnType<typeof selectAssumptionLabSummary>;
+  assumptionLabDraft: AssumptionLabDraft | null;
+  assumptionLabError: string;
+  assumptionLabLoading: boolean;
+  onAssumptionLabChange: (draft: AssumptionLabDraft) => void;
   discretionaryRoomBridge: ReturnType<typeof selectDiscretionaryRoomBridgeSummary>;
   minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
   spendingPathBridge: ReturnType<typeof selectSpendingPathBridgeSummary>;
@@ -5530,7 +5667,14 @@ function DetailsResultsPanel({
         <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       ) : null}
       <div className="result-section-label">Scenario evidence</div>
-      <AssumptionLabPanel lab={assumptionLab} loading={loading} />
+      <AssumptionLabPanel
+        activeDraft={assumptionLabDraft}
+        error={assumptionLabError}
+        lab={assumptionLab}
+        loading={loading}
+        onChange={onAssumptionLabChange}
+        rerunning={assumptionLabLoading}
+      />
       <BenefitTimingReadinessPanel
         boundedOptimizer={boundedOptimizer}
         scenarioAssumptionRows={scenarioAssumptionRows}
@@ -9350,11 +9494,19 @@ function ScenarioCardsPanel({ cards }: { cards: ReturnType<typeof selectScenario
 }
 
 function AssumptionLabPanel({
+  activeDraft,
+  error,
   lab,
-  loading
+  loading,
+  onChange,
+  rerunning
 }: {
+  activeDraft: AssumptionLabDraft | null;
+  error: string;
   lab: ReturnType<typeof selectAssumptionLabSummary>;
   loading: boolean;
+  onChange: (draft: AssumptionLabDraft) => void;
+  rerunning: boolean;
 }) {
   function controlValue(control: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]): string {
     if (control.currentValue === null) return control.status === 'notApplicable' ? 'Not used' : 'Needs input';
@@ -9374,8 +9526,15 @@ function AssumptionLabPanel({
       <div className="summary-grid">
         <Metric label="Optimal plan from this set" value={lab.optimalPlanLabel} />
         <Metric label="Candidate set" value={lab.candidateSetLabel} />
-        <Metric label="Rerun behavior" value={lab.progressLabel} />
+        <Metric label="Rerun status" value={rerunning ? 'Rerunning preview' : activeDraft ? 'Preview updated' : 'Ready'} />
       </div>
+      {rerunning ? (
+        <div className="assumption-progress" role="status" aria-live="polite">
+          <span style={{ width: '66%' }} />
+          <strong>{lab.progressLabel}</strong>
+        </div>
+      ) : null}
+      {error ? <p className="table-note bad-value">{error}</p> : null}
       <div className="assumption-control-grid">
         {lab.controlRows.map((control) => (
           <article className={`assumption-control control-${control.status}`} key={control.id}>
@@ -9385,13 +9544,19 @@ function AssumptionLabPanel({
             </div>
             <input
               aria-label={control.label}
-              disabled
+              disabled={control.status === 'notApplicable' || loading || rerunning}
               max={control.max}
               min={control.min}
               step={control.step}
               type="range"
               value={control.currentValue ?? control.min}
-              readOnly
+              onChange={(event) =>
+                onChange({
+                  controlId: control.id,
+                  label: control.label,
+                  value: Number(event.target.value)
+                })
+              }
             />
             <small>{controlValue(control)}</small>
             <p>{control.detail}</p>

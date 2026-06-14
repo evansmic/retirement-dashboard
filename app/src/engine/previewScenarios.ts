@@ -18,6 +18,10 @@ export type ResultsPreviewBundle = {
 
 export type PreviewSimulationRunner = (plan: V2PlanPayload, config: SimulationConfig) => SimulationResult;
 
+export type PreviewConfigOverrides = Partial<
+  Pick<SimulationConfig, 'cppAgeF' | 'cppAgeM' | 'oasAgeF' | 'oasAgeM' | 'returnRate' | 'p1Dies'>
+>;
+
 export type PreviewRunnerBoundary = {
   runnerInjection: boolean;
   baselineUsesExplicitPlan: boolean;
@@ -89,9 +93,10 @@ export function shouldRunSurvivorPreview(plan: V2PlanPayload): boolean {
 
 export function runResultsPreviewBundle(
   plan: V2PlanPayload,
-  runner: PreviewSimulationRunner = runSimulationSafely
+  runner: PreviewSimulationRunner = runSimulationSafely,
+  configOverrides: PreviewConfigOverrides = {}
 ): ResultsPreviewBundle {
-  const baselineConfig = buildBaselinePreviewConfig(plan);
+  const baselineConfig = { ...buildBaselinePreviewConfig(plan), ...configOverrides };
   const result = runner(plan, baselineConfig);
   const scenarios: PreviewScenarioResults = {
     retireLater: runner(createRetireLaterPlan(plan), baselineConfig),
