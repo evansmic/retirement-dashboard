@@ -3374,11 +3374,11 @@ export function selectAssumptionLabSummary({
       slot('comparisonA', alternatives[0] || null, 'Comparison A', false),
       slot('comparisonB', alternatives[1] || null, 'Comparison B', false)
     ],
-    progressLabel: 'Show progress while rerunning assumptions; comparison results do not need to update instantly.',
+    progressLabel: 'Apply an assumption, show progress while rerunning, then refresh the side-by-side comparison set.',
     boundary:
-      'This lab defines assumption controls and comparison slots only. It does not yet mutate plan inputs from Results, persist scenario output, create account instructions, or turn the optimal review path into personal financial advice.',
+      'This lab adjusts temporary working-copy assumptions only. It does not mutate saved plan inputs, persist scenario output, create account instructions, or turn the optimal review path into personal financial advice.',
     nextStep:
-      'Wire these controls to a rerun queue with progress feedback, then update the side-by-side comparison slots after each completed run.'
+      'Polish multi-scenario comparison labels and decide which assumption combinations deserve saved named scenarios later.'
   };
 }
 

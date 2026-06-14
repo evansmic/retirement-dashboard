@@ -1678,7 +1678,15 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('AssumptionLabPreviewState');
     expect(appSource).toContain('applyAssumptionLabDraft');
     expect(appSource).toContain('assumptionLabConfigOverrides');
+    expect(appSource).toContain('appliedDraft');
+    expect(appSource).toContain('Pending adjustment');
+    expect(appSource).toContain('Applied preview');
+    expect(appSource).toContain('comparisonDelta');
+    expect(appSource).toContain('Apply');
+    expect(appSource).toContain('Reset');
     expect(appSource).toContain('Rerunning preview');
+    expect(appSource).toContain('Pending apply');
+    expect(appSource).toContain('assumption-apply-strip');
     expect(appSource).toContain('assumption-progress');
   });
 

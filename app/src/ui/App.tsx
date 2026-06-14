@@ -238,6 +238,7 @@ type AssumptionLabDraft = {
 
 type AssumptionLabPreviewState = {
   draft: AssumptionLabDraft | null;
+  appliedDraft: AssumptionLabDraft | null;
   adjustedPlan: V2PlanPayload | null;
   preview: {
     result: SimulationResult;
@@ -4411,6 +4412,7 @@ function ResultsHandoffPanel({
 }) {
   const [assumptionLabPreview, setAssumptionLabPreview] = useState<AssumptionLabPreviewState>({
     draft: null,
+    appliedDraft: null,
     adjustedPlan: null,
     preview: null,
     loading: false,
@@ -4542,6 +4544,7 @@ function ResultsHandoffPanel({
   useEffect(() => {
     setAssumptionLabPreview({
       draft: null,
+      appliedDraft: null,
       adjustedPlan: null,
       preview: null,
       loading: false,
@@ -4551,7 +4554,7 @@ function ResultsHandoffPanel({
 
   useEffect(() => {
     let cancelled = false;
-    const draft = assumptionLabPreview.draft;
+    const draft = assumptionLabPreview.appliedDraft;
     if (!draft) return;
     const adjustedPlan = applyAssumptionLabDraft(plan, draft);
     setAssumptionLabPreview((current) => ({
@@ -4588,10 +4591,29 @@ function ResultsHandoffPanel({
     return () => {
       cancelled = true;
     };
-  }, [assumptionLabPreview.draft, plan]);
+  }, [assumptionLabPreview.appliedDraft, plan]);
 
   function updateAssumptionLabDraft(draft: AssumptionLabDraft) {
     setAssumptionLabPreview((current) => ({ ...current, draft }));
+  }
+
+  function applyAssumptionLabDraftChange() {
+    setAssumptionLabPreview((current) => ({
+      ...current,
+      appliedDraft: current.draft,
+      error: ''
+    }));
+  }
+
+  function resetAssumptionLabDraftChange() {
+    setAssumptionLabPreview({
+      draft: null,
+      appliedDraft: null,
+      adjustedPlan: null,
+      preview: null,
+      loading: false,
+      error: ''
+    });
   }
 
   const reconciliationWarning = result && reconciliation.status === 'warning';
@@ -4713,10 +4735,13 @@ function ResultsHandoffPanel({
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
             assumptionLab={assumptionLab}
+            assumptionLabAppliedDraft={assumptionLabPreview.appliedDraft}
             assumptionLabDraft={assumptionLabPreview.draft}
             assumptionLabError={assumptionLabPreview.error}
             assumptionLabLoading={assumptionLabPreview.loading}
+            onAssumptionLabApply={applyAssumptionLabDraftChange}
             onAssumptionLabChange={updateAssumptionLabDraft}
+            onAssumptionLabReset={resetAssumptionLabDraftChange}
             discretionaryRoomBridge={discretionaryRoomBridge}
             minimumExpenseCoverage={minimumExpenseCoverage}
             spendingPathBridge={spendingPathBridge}
@@ -5454,10 +5479,13 @@ function DetailsResultsPanel({
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
   assumptionLab,
+  assumptionLabAppliedDraft,
   assumptionLabDraft,
   assumptionLabError,
   assumptionLabLoading,
+  onAssumptionLabApply,
   onAssumptionLabChange,
+  onAssumptionLabReset,
   discretionaryRoomBridge,
   minimumExpenseCoverage,
   spendingPathBridge,
@@ -5539,10 +5567,13 @@ function DetailsResultsPanel({
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
   assumptionLab: ReturnType<typeof selectAssumptionLabSummary>;
+  assumptionLabAppliedDraft: AssumptionLabDraft | null;
   assumptionLabDraft: AssumptionLabDraft | null;
   assumptionLabError: string;
   assumptionLabLoading: boolean;
+  onAssumptionLabApply: () => void;
   onAssumptionLabChange: (draft: AssumptionLabDraft) => void;
+  onAssumptionLabReset: () => void;
   discretionaryRoomBridge: ReturnType<typeof selectDiscretionaryRoomBridgeSummary>;
   minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
   spendingPathBridge: ReturnType<typeof selectSpendingPathBridgeSummary>;
@@ -5668,11 +5699,14 @@ function DetailsResultsPanel({
       ) : null}
       <div className="result-section-label">Scenario evidence</div>
       <AssumptionLabPanel
+        appliedDraft={assumptionLabAppliedDraft}
         activeDraft={assumptionLabDraft}
         error={assumptionLabError}
         lab={assumptionLab}
         loading={loading}
+        onApply={onAssumptionLabApply}
         onChange={onAssumptionLabChange}
+        onReset={onAssumptionLabReset}
         rerunning={assumptionLabLoading}
       />
       <BenefitTimingReadinessPanel
@@ -9494,27 +9528,71 @@ function ScenarioCardsPanel({ cards }: { cards: ReturnType<typeof selectScenario
 }
 
 function AssumptionLabPanel({
+  appliedDraft,
   activeDraft,
   error,
   lab,
   loading,
+  onApply,
   onChange,
+  onReset,
   rerunning
 }: {
+  appliedDraft: AssumptionLabDraft | null;
   activeDraft: AssumptionLabDraft | null;
   error: string;
   lab: ReturnType<typeof selectAssumptionLabSummary>;
   loading: boolean;
+  onApply: () => void;
   onChange: (draft: AssumptionLabDraft) => void;
+  onReset: () => void;
   rerunning: boolean;
 }) {
   function controlValue(control: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]): string {
-    if (control.currentValue === null) return control.status === 'notApplicable' ? 'Not used' : 'Needs input';
-    if (control.unit === 'dollars') return formatMoney(control.currentValue);
-    if (control.unit === 'percent') return `${control.currentValue.toFixed(2)}%`;
-    if (control.unit === 'age') return `Age ${Math.round(control.currentValue)}`;
-    return String(Math.round(control.currentValue));
+    const value = controlInputValue(control);
+    if (control.currentValue === null && activeDraft?.controlId !== control.id) {
+      return control.status === 'notApplicable' ? 'Not used' : 'Needs input';
+    }
+    return assumptionValueLabel(control.unit, value);
   }
+
+  function controlInputValue(control: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]): number {
+    if (activeDraft?.controlId === control.id) return activeDraft.value;
+    return control.currentValue ?? control.min;
+  }
+
+  function assumptionValueLabel(
+    unit: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]['unit'],
+    value: number
+  ): string {
+    if (unit === 'dollars') return formatMoney(value);
+    if (unit === 'percent') return `${value.toFixed(2)}%`;
+    if (unit === 'age') return `Age ${Math.round(value)}`;
+    return String(Math.round(value));
+  }
+
+  function draftLabel(draft: AssumptionLabDraft | null): string {
+    if (!draft) return 'No adjustment selected';
+    const control = lab.controlRows.find((row) => row.id === draft.controlId);
+    return `${draft.label}: ${assumptionValueLabel(control?.unit || 'year', draft.value)}`;
+  }
+
+  function comparisonDelta(slot: ReturnType<typeof selectAssumptionLabSummary>['comparisonSlots'][number]): string {
+    const current = lab.comparisonSlots.find((row) => row.id === 'currentPlan');
+    if (!current || slot.id === 'currentPlan' || slot.status === 'blocked') return 'Baseline comparison';
+    const endDelta = slot.endPortfolio - current.endPortfolio;
+    const taxDelta = slot.lifetimeTax - current.lifetimeTax;
+    const endDirection = endDelta >= 0 ? '+' : '-';
+    const taxDirection = taxDelta >= 0 ? '+' : '-';
+    return `${endDirection}${formatMoney(Math.abs(endDelta))} ending portfolio, ${taxDirection}${formatMoney(Math.abs(taxDelta))} lifetime tax vs current`;
+  }
+
+  const hasPendingDraft = Boolean(activeDraft);
+  const pendingMatchesApplied =
+    Boolean(activeDraft && appliedDraft) &&
+    activeDraft?.controlId === appliedDraft?.controlId &&
+    activeDraft?.value === appliedDraft?.value;
+  const canApply = hasPendingDraft && !pendingMatchesApplied && !rerunning && !loading;
 
   return (
     <section className={`assumption-lab-panel assumption-lab-${lab.status}`}>
@@ -9526,7 +9604,28 @@ function AssumptionLabPanel({
       <div className="summary-grid">
         <Metric label="Optimal plan from this set" value={lab.optimalPlanLabel} />
         <Metric label="Candidate set" value={lab.candidateSetLabel} />
-        <Metric label="Rerun status" value={rerunning ? 'Rerunning preview' : activeDraft ? 'Preview updated' : 'Ready'} />
+        <Metric
+          label="Rerun status"
+          value={rerunning ? 'Rerunning preview' : appliedDraft ? 'Preview updated' : activeDraft ? 'Pending apply' : 'Ready'}
+        />
+      </div>
+      <div className="assumption-apply-strip">
+        <div>
+          <small>Pending adjustment</small>
+          <strong>{draftLabel(activeDraft)}</strong>
+        </div>
+        <div>
+          <small>Applied preview</small>
+          <strong>{draftLabel(appliedDraft)}</strong>
+        </div>
+        <div className="assumption-actions">
+          <button className="secondary" disabled={!canApply} type="button" onClick={onApply}>
+            Apply
+          </button>
+          <button className="secondary" disabled={!activeDraft && !appliedDraft} type="button" onClick={onReset}>
+            Reset
+          </button>
+        </div>
       </div>
       {rerunning ? (
         <div className="assumption-progress" role="status" aria-live="polite">
@@ -9549,7 +9648,7 @@ function AssumptionLabPanel({
               min={control.min}
               step={control.step}
               type="range"
-              value={control.currentValue ?? control.min}
+              value={controlInputValue(control)}
               onChange={(event) =>
                 onChange({
                   controlId: control.id,
@@ -9566,8 +9665,10 @@ function AssumptionLabPanel({
       <div className="assumption-comparison-grid">
         {lab.comparisonSlots.map((slot) => (
           <article className={`assumption-comparison comparison-${slot.status}`} key={slot.id}>
-            <span>{slot.status}</span>
-            <strong>{slot.label}</strong>
+            <div className="assumption-comparison-head">
+              <span>{slot.status}</span>
+              <strong>{slot.label}</strong>
+            </div>
             <dl className="mini-ledger">
               <div>
                 <dt>Funded through</dt>
@@ -9586,6 +9687,7 @@ function AssumptionLabPanel({
                 <dd>{formatMoney(slot.lifetimeTax)}</dd>
               </div>
             </dl>
+            <small>{comparisonDelta(slot)}</small>
             <p>{slot.detail}</p>
           </article>
         ))}

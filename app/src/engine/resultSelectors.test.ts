@@ -829,8 +829,8 @@ describe('result selectors', () => {
       status: 'selected',
       detail: expect.stringContaining('Optimal from the currently compared assumption set')
     });
-    expect(lab.boundary).toContain('does not yet mutate plan inputs from Results');
-    expect(lab.nextStep).toContain('rerun queue');
+    expect(lab.boundary).toContain('temporary working-copy assumptions');
+    expect(lab.nextStep).toContain('saved named scenarios');
   });
 
   it('derives covered monthly capacity from the runtime floor without saving the answer', () => {
