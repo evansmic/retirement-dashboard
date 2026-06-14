@@ -690,6 +690,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'publicOptimizerReleaseNarrowing'
     | 'privatePilotRequirements'
     | 'fullSuiteRecoveryPlan'
+    | 'publicOptimizerOutputContract'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1002,7 +1003,7 @@ export type OptimizerPublicReleaseNarrowing = {
     detail: string;
   }>;
   readyEvidence: Array<'featureCompleteBeta' | 'syntheticFixtureCoverage' | 'releaseControlsDefined' | 'retirementAnswerLayer' | 'assumptionLabBetaScope'>;
-  blockedUntil: Array<'privatePilotEvidence' | 'fullSuiteRecovery' | 'publicCopyReview' | 'outputContractDecision'>;
+  blockedUntil: Array<'privatePilotEvidence' | 'publicCopyReview' | 'outputContractDecision'>;
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1049,6 +1050,44 @@ export type OptimizerFullSuiteRecoveryPlan = {
     detail: string;
   }>;
   blockedUntil: Array<'lowStorageRunnerPasses' | 'productionBuildPasses' | 'publicCopyReview' | 'outputContractDecision'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPublicOutputContractDecision = {
+  status: 'publicReviewContractReadyReleaseClosed' | 'blocked';
+  decision: 'allowReviewDirectionOnlyKeepFinalOutputsBlocked';
+  sourceFullSuiteStatus: OptimizerFullSuiteRecoveryPlan['status'];
+  copyRows: Array<{
+    id: 'headline' | 'direction' | 'comparison' | 'blockedTerms';
+    label: string;
+    status: 'allowed' | 'blocked';
+    detail: string;
+  }>;
+  outputRows: Array<{
+    id: 'answerRows' | 'comparisonDeltas' | 'annualInstructionRows' | 'savedOutput' | 'exportsReports';
+    label: string;
+    status: 'allowedRuntime' | 'blocked';
+    detail: string;
+  }>;
+  allowedRuntimeFields: Array<
+    | 'retirementAnswerRows'
+    | 'optimizerOptionGroups'
+    | 'candidateComparisonDeltas'
+    | 'assumptionLabComparisonSlots'
+    | 'reviewOnlyEvidenceRows'
+  >;
+  blockedOutputs: Array<
+    | 'savedOptimizerOutput'
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+    | 'productionUiPromotion'
+    | 'finalAnnualInstructions'
+    | 'taxBracketWording'
+    | 'accountLevelWithdrawalInstructions'
+  >;
+  releaseDecision: 'readyForPrivatePilotCopyReviewNotPublicRelease' | 'blocked';
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1912,6 +1951,7 @@ export type BoundedOptimizerSummary = {
   publicOptimizerReleaseNarrowing: OptimizerPublicReleaseNarrowing;
   privatePilotRequirements: OptimizerPrivatePilotRequirements;
   fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
+  publicOptimizerOutputContract: OptimizerPublicOutputContractDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -6181,20 +6221,20 @@ export function selectOptimizerPublicReleaseNarrowing({
       {
         id: 'privatePilotRequirements',
         label: 'Private pilot requirements',
-        status: pathReady ? 'next' : 'blocked',
-        detail: 'Define opt-in wording, privacy copy, stop conditions, tester limits, and evidence needed from real-data pilots.'
+        status: pathReady ? 'ready' : 'blocked',
+        detail: 'Opt-in wording, privacy copy, stop conditions, tester limits, and evidence criteria are defined in the private pilot packet.'
       },
       {
         id: 'fullSuiteRecovery',
         label: 'Full-suite recovery',
-        status: 'blocked',
-        detail: 'Resolve the full npm test hang or low-storage constraint before any public optimizer output is reconsidered.'
+        status: pathReady ? 'ready' : 'blocked',
+        detail: 'Full-suite recovery is tracked in the dedicated low-storage verification packet and now has a passing baseline.'
       },
       {
         id: 'publicOutputDecision',
         label: 'Public output decision',
-        status: 'blocked',
-        detail: 'Public optimizer output, production UI, exports, reports, final instructions, tax-bracket wording, and schema changes stay closed.'
+        status: pathReady ? 'next' : 'blocked',
+        detail: 'Public copy and output-contract decisions are the next gate before private pilot copy review can use real household data.'
       }
     ],
     readyEvidence: [
@@ -6204,14 +6244,14 @@ export function selectOptimizerPublicReleaseNarrowing({
       'retirementAnswerLayer',
       'assumptionLabBetaScope'
     ],
-    blockedUntil: ['privatePilotEvidence', 'fullSuiteRecovery', 'publicCopyReview', 'outputContractDecision'],
+    blockedUntil: ['privatePilotEvidence', 'publicCopyReview', 'outputContractDecision'],
     summary: pathReady
-      ? 'The public optimizer release path is narrowed to private pilot evidence and full-suite recovery before public output can be reconsidered.'
+      ? 'The public optimizer release path is narrowed to private pilot evidence plus public copy and output-contract decisions before public output can be reconsidered.'
       : 'Public optimizer release narrowing waits for final public-readiness evidence.',
     boundary:
       'This narrows the release path only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
     nextStep:
-      'Implement private pilot requirements planning: opt-in copy, privacy boundaries, stop conditions, tester limits, and evidence rows for deciding whether public output can be reconsidered.'
+      'Decide public optimizer copy and output contracts, then use the private pilot requirements for opt-in copy review before public output is reconsidered.'
   };
 }
 
@@ -6366,6 +6406,101 @@ export function selectOptimizerFullSuiteRecoveryPlan({
   };
 }
 
+export function selectOptimizerPublicOutputContractDecision({
+  fullSuiteRecoveryPlan
+}: {
+  fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
+}): OptimizerPublicOutputContractDecision {
+  const contractReady = fullSuiteRecoveryPlan.status === 'lowStorageRunnerPassingReleaseGatesRemaining';
+  return {
+    status: contractReady ? 'publicReviewContractReadyReleaseClosed' : 'blocked',
+    decision: 'allowReviewDirectionOnlyKeepFinalOutputsBlocked',
+    sourceFullSuiteStatus: fullSuiteRecoveryPlan.status,
+    copyRows: [
+      {
+        id: 'headline',
+        label: 'Headline copy',
+        status: contractReady ? 'allowed' : 'blocked',
+        detail: 'Allowed copy may say first option to review, review direction, or trade-off to compare; it must not say final recommendation.'
+      },
+      {
+        id: 'direction',
+        label: 'Direction copy',
+        status: contractReady ? 'allowed' : 'blocked',
+        detail: 'Allowed direction copy can explain retirement timing, spending capacity, benefit timing, tax pressure, and risk-review evidence.'
+      },
+      {
+        id: 'comparison',
+        label: 'Comparison copy',
+        status: contractReady ? 'allowed' : 'blocked',
+        detail: 'Allowed comparison copy can show deltas for after-tax spending capacity, ending portfolio, tax, and shortfall years.'
+      },
+      {
+        id: 'blockedTerms',
+        label: 'Blocked terms',
+        status: 'blocked',
+        detail: 'Do not use final plan, guaranteed, optimal drawdown, do this, tax-bracket target, withdrawal instruction, or apply optimized plan.'
+      }
+    ],
+    outputRows: [
+      {
+        id: 'answerRows',
+        label: 'Answer rows',
+        status: contractReady ? 'allowedRuntime' : 'blocked',
+        detail: 'Retirement answer rows and optimizer option groups may be shown as runtime review evidence.'
+      },
+      {
+        id: 'comparisonDeltas',
+        label: 'Comparison deltas',
+        status: contractReady ? 'allowedRuntime' : 'blocked',
+        detail: 'Scenario and candidate deltas may be shown for comparison only, including monthly or annual after-tax capacity.'
+      },
+      {
+        id: 'annualInstructionRows',
+        label: 'Annual instructions',
+        status: 'blocked',
+        detail: 'Annual account-level withdrawal rows remain internal draft evidence and cannot become consumer instructions.'
+      },
+      {
+        id: 'savedOutput',
+        label: 'Saved output',
+        status: 'blocked',
+        detail: 'Optimizer recommendations, sequencing output, and public-output contract packets stay out of saved .plan.json files.'
+      },
+      {
+        id: 'exportsReports',
+        label: 'Exports and reports',
+        status: 'blocked',
+        detail: 'CSV sequencing output, report sequencing output, tax-bracket wording, and final annual instructions remain closed.'
+      }
+    ],
+    allowedRuntimeFields: [
+      'retirementAnswerRows',
+      'optimizerOptionGroups',
+      'candidateComparisonDeltas',
+      'assumptionLabComparisonSlots',
+      'reviewOnlyEvidenceRows'
+    ],
+    blockedOutputs: [
+      'savedOptimizerOutput',
+      'csvSequencingOutput',
+      'reportSequencingOutput',
+      'productionUiPromotion',
+      'finalAnnualInstructions',
+      'taxBracketWording',
+      'accountLevelWithdrawalInstructions'
+    ],
+    releaseDecision: contractReady ? 'readyForPrivatePilotCopyReviewNotPublicRelease' : 'blocked',
+    summary: contractReady
+      ? 'Public optimizer copy and output contract are narrowed to review-direction runtime evidence; public release remains closed.'
+      : 'Public optimizer output contract waits for full-suite recovery.',
+    boundary:
+      'This contract decision allows review-direction runtime evidence only. It does not open public optimizer release, production UI promotion, saved optimizer output, CSV sequencing, report sequencing, final annual instructions, tax-bracket wording, account-level withdrawal instructions, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Run private pilot copy review against this contract and treat any final-instruction confusion, tax-bracket expectation, or saved-output expectation as a release blocker.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6493,6 +6628,7 @@ export function selectOptimizerSchemaSaveDecision({
       'publicOptimizerReleaseNarrowing',
       'privatePilotRequirements',
       'fullSuiteRecoveryPlan',
+      'publicOptimizerOutputContract',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9413,6 +9549,7 @@ export function runBoundedOptimizer(
     releaseNarrowing: publicOptimizerReleaseNarrowing
   });
   const fullSuiteRecoveryPlan = selectOptimizerFullSuiteRecoveryPlan({ privatePilotRequirements });
+  const publicOptimizerOutputContract = selectOptimizerPublicOutputContractDecision({ fullSuiteRecoveryPlan });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9458,6 +9595,7 @@ export function runBoundedOptimizer(
     publicOptimizerReleaseNarrowing,
     privatePilotRequirements,
     fullSuiteRecoveryPlan,
+    publicOptimizerOutputContract,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

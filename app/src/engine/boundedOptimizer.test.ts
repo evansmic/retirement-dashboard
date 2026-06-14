@@ -1483,6 +1483,7 @@ describe('bounded optimizer runner', () => {
         'publicOptimizerReleaseNarrowing',
         'privatePilotRequirements',
         'fullSuiteRecoveryPlan',
+        'publicOptimizerOutputContract',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1790,7 +1791,7 @@ describe('bounded optimizer runner', () => {
         'retirementAnswerLayer',
         'assumptionLabBetaScope'
       ],
-      blockedUntil: ['privatePilotEvidence', 'fullSuiteRecovery', 'publicCopyReview', 'outputContractDecision'],
+      blockedUntil: ['privatePilotEvidence', 'publicCopyReview', 'outputContractDecision'],
       boundary: expect.stringContaining('narrows the release path only')
     });
     expect(summary.publicOptimizerReleaseNarrowing.releasePathRows.map((item) => item.id)).toEqual([
@@ -1803,9 +1804,9 @@ describe('bounded optimizer runner', () => {
     expect(summary.publicOptimizerReleaseNarrowing.releasePathRows.map((item) => item.status)).toEqual([
       'ready',
       'ready',
-      'next',
-      'blocked',
-      'blocked'
+      'ready',
+      'ready',
+      'next'
     ]);
     expect(summary.privatePilotRequirements).toMatchObject({
       status: 'requirementsDefinedPublicClosed',
@@ -1865,6 +1866,54 @@ describe('bounded optimizer runner', () => {
       'ready',
       'blocked'
     ]);
+    expect(summary.publicOptimizerOutputContract).toMatchObject({
+      status: 'publicReviewContractReadyReleaseClosed',
+      decision: 'allowReviewDirectionOnlyKeepFinalOutputsBlocked',
+      sourceFullSuiteStatus: 'lowStorageRunnerPassingReleaseGatesRemaining',
+      releaseDecision: 'readyForPrivatePilotCopyReviewNotPublicRelease',
+      allowedRuntimeFields: [
+        'retirementAnswerRows',
+        'optimizerOptionGroups',
+        'candidateComparisonDeltas',
+        'assumptionLabComparisonSlots',
+        'reviewOnlyEvidenceRows'
+      ],
+      blockedOutputs: [
+        'savedOptimizerOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'productionUiPromotion',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'accountLevelWithdrawalInstructions'
+      ],
+      boundary: expect.stringContaining('review-direction runtime evidence only')
+    });
+    expect(summary.publicOptimizerOutputContract.copyRows.map((item) => item.id)).toEqual([
+      'headline',
+      'direction',
+      'comparison',
+      'blockedTerms'
+    ]);
+    expect(summary.publicOptimizerOutputContract.copyRows.map((item) => item.status)).toEqual(['allowed', 'allowed', 'allowed', 'blocked']);
+    expect(summary.publicOptimizerOutputContract.outputRows.map((item) => item.id)).toEqual([
+      'answerRows',
+      'comparisonDeltas',
+      'annualInstructionRows',
+      'savedOutput',
+      'exportsReports'
+    ]);
+    expect(summary.publicOptimizerOutputContract.outputRows.map((item) => item.status)).toEqual([
+      'allowedRuntime',
+      'allowedRuntime',
+      'blocked',
+      'blocked',
+      'blocked'
+    ]);
+    expect(summary.publicOptimizerOutputContract.copyRows.find((item) => item.id === 'blockedTerms')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('do this')
+    });
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

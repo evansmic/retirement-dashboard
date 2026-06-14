@@ -6,13 +6,13 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3708-S3727 package, the remaining-work estimate is:
+As of the S3728-S3747 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-3 sprints remaining.
+- Public-ready optimizer for real planning use: 0-2 sprints remaining.
 
-Material change at S3708-S3727: yes. The low-storage full-suite runner now passes after repairing the `examplePlanOptimizerReadiness.test.ts` long pole; public-ready optimizer is narrowed to copy and output-contract decisions.
+Material change at S3728-S3747: yes. Public optimizer copy and output-contract decisions are now explicit: review-direction runtime evidence is allowed for private pilot review, while saved/export/final-instruction outputs remain blocked.
 
 ## Objective Estimate Tracker
 
@@ -22,15 +22,41 @@ Update this tracker after each substantial package. The point is not to force da
 | --- | ---: | --- | --- | --- |
 | Retirement answer layer | 0-10 sprints | Tightened at S3548-S3567 | In progress | Deepen benefit timing, withdrawal direction, survivor/estate, and tax-pressure evidence only where it changes the answer. |
 | Live assumption lab | 0 sprints | Closed at S3628-S3647 | Complete for beta scope | Named multi-assumption scenarios stay deferred until pilot evidence shows users need saved assumption packages. |
-| Public-ready optimizer | 0-3 sprints | Tightened at S3708-S3727 | Closed for public release | Make public copy/output-contract decisions before reconsidering public output. |
+| Public-ready optimizer | 0-2 sprints | Tightened at S3728-S3747 | Closed for public release | Run private pilot copy review against the output contract, then make the public release/no-release decision. |
 | Graphical UI redesign | 20-60 sprints | Deferred by product decision at S3548-S3567 | Deferred | Choose visuals after answer objects and live comparisons prove what users need to understand. |
-| Launch hardening | 5-15 sprints | Tightened at S3708-S3727 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
+| Launch hardening | 5-15 sprints | Unchanged at S3728-S3747 | Pending | Finish performance review, copy/legal review, release checklist, and repeat low-storage verification before release. |
 
 Current drift note: the project previously spent too many packages on guardrails and checkpoints. Going forward, each package should either ship visible answer/comparison capability, reduce a public-release blocker, or make a deliberate product decision that narrows the estimates above.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3708-S3727: Full-Suite Long-Pole Repair
+## Latest Package — S3728-S3747: Public Optimizer Copy And Output Contract Decision
+
+**Status:** Complete 2026-06-14.
+
+Goal: decide what public optimizer language and output shapes are allowed before real household pilot review. The bounded optimizer now emits `publicOptimizerOutputContract`, which allows review-direction runtime evidence while keeping saved optimizer output, CSV/report sequencing, final annual instructions, tax-bracket wording, account-level withdrawal instructions, production UI promotion, schema changes, and `.plan.json` sequencing output blocked.
+
+Package doc: [`docs/sprint_3728_3747_public_optimizer_output_contract.md`](docs/sprint_3728_3747_public_optimizer_output_contract.md).
+
+### S3728-S3747 Completed Path
+
+- Added `OptimizerPublicOutputContractDecision` and `selectOptimizerPublicOutputContractDecision`.
+- Defined allowed copy for review direction, answer evidence, and comparison deltas.
+- Defined blocked terms including final plan, guaranteed, optimal drawdown, tax-bracket targets, withdrawal instructions, and apply optimized plan.
+- Defined allowed runtime fields for answer rows, option groups, candidate deltas, assumption-lab comparison slots, and review evidence.
+- Kept saved optimizer output, CSV/report sequencing, production UI promotion, final annual instructions, tax-bracket wording, and account-level instructions blocked.
+- Rendered the output contract in Results Details.
+- Updated release narrowing so private pilot requirements and full-suite recovery are ready, with public output decision now the active gate.
+
+### S3728-S3747 Definition Of Done
+
+- Details shows the public optimizer output contract.
+- The contract distinguishes allowed runtime evidence from blocked saved/export/final-instruction outputs.
+- The contract is forbidden from saved plan files.
+- Focused optimizer/UI structure tests and production build pass before commit.
+- Public optimizer release remains closed pending private pilot copy review and final release/no-release decision.
+
+## Previous Package — S3708-S3727: Full-Suite Long-Pole Repair
 
 **Status:** Complete 2026-06-14.
 
@@ -79,9 +105,9 @@ Package doc: [`docs/sprint_3688_3707_full_suite_recovery_plan.md`](docs/sprint_3
 - Public optimizer output remains closed until the runner and production build pass consistently.
 - Focused optimizer tests, UI structure tests, targeted slow tests, script syntax check, and production build pass before commit.
 
-## Next Package — Public Optimizer Copy And Output Contract Decision
+## Next Package — Private Pilot Copy Review And Release Decision
 
-Goal: decide whether the public optimizer can surface recommendations from the current answer objects, and if so define the exact consumer-facing copy, output contract, blocked final-instruction language, and saved/export boundaries before any public release path opens.
+Goal: use the private pilot requirements and output contract to define the final release/no-release decision path: what evidence from opt-in household review is enough, what confusion stops release, and whether the public optimizer remains closed or can move to a limited public beta surface.
 
 ## Previous Package — S3668-S3687: Private Pilot Requirements
 

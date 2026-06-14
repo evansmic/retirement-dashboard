@@ -1323,6 +1323,15 @@ describe('Results overview structure', () => {
     expect(lowStorageRunnerSource).toContain('TEST_BATCH_SIZE');
     expect(lowStorageRunnerSource).toContain('vitestBin');
     expect(lowStorageRunnerSource).toContain('Low-storage full-suite runner passed.');
+    expect(appSource).toContain('Public optimizer contract');
+    expect(appSource).toContain('Review-direction output contract defined');
+    expect(appSource).toContain('summary.publicOptimizerOutputContract');
+    expect(appSource).toContain('optimizer-public-output-contract');
+    expect(appSource).toContain('public-output-row-');
+    expect(boundedOptimizerSource).toContain('allowReviewDirectionOnlyKeepFinalOutputsBlocked');
+    expect(boundedOptimizerSource).toContain('readyForPrivatePilotCopyReviewNotPublicRelease');
+    expect(boundedOptimizerSource).toContain('review-direction runtime evidence only');
+    expect(boundedOptimizerSource).toContain('accountLevelWithdrawalInstructions');
     expect(boundedOptimizerSource).toContain('Optimizer feedback package is indexed for review.');
     expect(boundedOptimizerSource).toContain('runtime review support only');
     expect(boundedOptimizerSource).toContain('annual sequencing architecture');

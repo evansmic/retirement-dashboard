@@ -3802,6 +3802,16 @@ button.secondary,
   padding: 16px;
 }
 
+.optimizer-public-output-contract {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #6f5b8d;
+  border-radius: 8px;
+  background: #fcfbff;
+  padding: 16px;
+}
+
 .optimizer-continuation-grid,
 .optimizer-continuation-packages,
 .optimizer-schema-save-grid,
@@ -3884,6 +3894,15 @@ button.secondary,
 }
 
 .full-suite-row-blocked {
+  border-left: 4px solid #d79b92;
+}
+
+.public-output-row-allowed,
+.public-output-row-allowedRuntime {
+  border-left: 4px solid var(--green);
+}
+
+.public-output-row-blocked {
   border-left: 4px solid #d79b92;
 }
 

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3728-S3747 is complete. Public optimizer copy and output-contract decisions are now explicit: review-direction runtime evidence is allowed for private pilot review, while saved optimizer output, CSV/report sequencing, production UI promotion, final annual instructions, tax-bracket wording, account-level withdrawal instructions, schema changes, and `.plan.json` sequencing output remain blocked. Current remaining estimate: retirement answer layer 0-10 sprints, live assumption lab 0 sprints, public-ready optimizer 0-2 sprints, graphical UI redesign 20-60 sprints, launch hardening 5-15 sprints.
+
+Current package doc: [`docs/sprint_3728_3747_public_optimizer_output_contract.md`](docs/sprint_3728_3747_public_optimizer_output_contract.md).
+
 S3708-S3727 is complete. Full-suite recovery now has a passing low-storage baseline: `npm run test:full:low-storage` passes after repairing the `app/src/engine/examplePlanOptimizerReadiness.test.ts` long pole. The readiness test keeps cheap hidden-comparison guardrails exhaustive, limits expensive optimizer/drawdown chains to representative examples, and caches repeated bounded optimizer setup. Current remaining estimate: retirement answer layer 0-10 sprints, live assumption lab 0 sprints, public-ready optimizer 0-3 sprints, graphical UI redesign 20-60 sprints, launch hardening 5-15 sprints.
 
 Current package doc: [`docs/sprint_3708_3727_full_suite_long_pole_repair.md`](docs/sprint_3708_3727_full_suite_long_pole_repair.md).
@@ -72,7 +76,7 @@ S3568-S3587 is complete. Details now has an assumption-lab contract that exposes
 
 Current package doc: [`docs/sprint_3568_3587_assumption_lab_contract.md`](docs/sprint_3568_3587_assumption_lab_contract.md).
 
-Objective estimate tracker: retirement answer layer 0-10 sprints, live assumption lab 0 sprints, public-ready optimizer 0-3 sprints, graphical UI redesign 20-60 sprints, launch hardening 5-15 sprints. Current drift note: continue shipping visible answer/comparison capability and avoid checkpoint-only packages unless they close a release blocker or force a product decision.
+Objective estimate tracker: retirement answer layer 0-10 sprints, live assumption lab 0 sprints, public-ready optimizer 0-2 sprints, graphical UI redesign 20-60 sprints, launch hardening 5-15 sprints. Current drift note: continue shipping visible answer/comparison capability and avoid checkpoint-only packages unless they close a release blocker or force a product decision.
 
 S3548-S3567 is complete. The planner now has a retirement answer layer that turns existing result evidence into answer rows for retirement timing, spending capacity, income direction, next moves, and risk review before the final graphical redesign is chosen. Overview shows the answer layer with visualization hints and data-sheet handoffs, while full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
 

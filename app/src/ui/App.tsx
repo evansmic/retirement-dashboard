@@ -7403,6 +7403,52 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.publicOptimizerOutputContract ? (
+        <section className={`optimizer-public-output-contract public-output-${summary.publicOptimizerOutputContract.status}`}>
+          <div>
+            <p className="eyebrow">Public optimizer contract</p>
+            <h3>Review-direction output contract defined</h3>
+            <p>{summary.publicOptimizerOutputContract.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.publicOptimizerOutputContract.copyRows.map((item) => (
+              <article className={`public-output-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            {summary.publicOptimizerOutputContract.outputRows.map((item) => (
+              <article className={`public-output-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Allowed runtime fields</span>
+              <strong>{summary.publicOptimizerOutputContract.allowedRuntimeFields.length}</strong>
+              <p>{summary.publicOptimizerOutputContract.allowedRuntimeFields.join(', ')}</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.publicOptimizerOutputContract.blockedOutputs.length}</strong>
+              <p>{summary.publicOptimizerOutputContract.blockedOutputs.join(', ')}</p>
+            </article>
+            <article>
+              <span>Release decision</span>
+              <strong>{summary.publicOptimizerOutputContract.releaseDecision}</strong>
+              <p>{summary.publicOptimizerOutputContract.nextStep}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.publicOptimizerOutputContract.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>
