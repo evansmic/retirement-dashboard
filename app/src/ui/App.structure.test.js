@@ -1656,11 +1656,14 @@ describe('Results overview structure', () => {
     const detailsStart = appSource.indexOf('function DetailsResultsPanel');
     const detailsEnd = appSource.indexOf('function CompactDrawdownReviewSummaryPanel');
     const detailsPanel = appSource.slice(detailsStart, detailsEnd);
+    const labIndex = detailsPanel.indexOf('<AssumptionLabPanel');
     const benefitIndex = detailsPanel.indexOf('<BenefitTimingReadinessPanel');
     const stressIndex = detailsPanel.indexOf('<SpendingStressPanel');
     const scenarioGateIndex = detailsPanel.indexOf('SHOW_SCENARIO_RESEARCH_PANELS');
     const scenarioResearchBranch = detailsPanel.slice(scenarioGateIndex);
 
+    expect(labIndex).toBeGreaterThan(0);
+    expect(benefitIndex).toBeGreaterThan(labIndex);
     expect(benefitIndex).toBeGreaterThan(0);
     expect(stressIndex).toBeGreaterThan(benefitIndex);
     expect(scenarioGateIndex).toBeGreaterThan(stressIndex);
@@ -1668,6 +1671,10 @@ describe('Results overview structure', () => {
     expect(scenarioResearchBranch).toContain('<ScenarioComparisonPanel');
     expect(detailsPanel.slice(0, scenarioGateIndex)).not.toContain('<ScenarioAssumptionsPanel');
     expect(detailsPanel.slice(0, scenarioGateIndex)).not.toContain('<ScenarioComparisonPanel');
+    expect(appSource).toContain('Assumption lab');
+    expect(appSource).toContain('Optimal plan from this set');
+    expect(appSource).toContain('Preparing assumption controls');
+    expect(appSource).toContain('lab.boundary');
   });
 
   it('shows drawdown readiness in Details without optimizer execution language', () => {
@@ -1812,6 +1819,7 @@ describe('Results overview structure', () => {
     expect(detailsPanel).toContain('<FirstYearMoneyFlowPanel');
     expect(detailsPanel).toContain('<DecisionChecklistPanel');
     expect(detailsPanel).toContain('<CompactTaxPressurePanel');
+    expect(detailsPanel).toContain('<AssumptionLabPanel');
     expect(detailsPanel).toContain('<BenefitTimingReadinessPanel');
     expect(detailsPanel).toContain('<SpendingStressPanel');
     expect(detailsPanel).toContain('<BoundedOptimizerPanel loading={loading} summary={boundedOptimizer} variant="compact" />');

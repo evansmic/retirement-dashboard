@@ -6,6 +6,7 @@ import {
   selectAccountDrawdownReviewRows,
   selectAccountDrawdownStory,
   selectAccountSummaryRows,
+  selectAssumptionLabSummary,
   selectAnnualDetailRows,
   selectAnnualDetailSummary,
   selectCashFlowReconciliation,
@@ -776,6 +777,60 @@ describe('result selectors', () => {
       'savedRecommendations',
       'finalAdviceLanguage'
     ]);
+  });
+
+  it('defines slider-ready assumption controls and side-by-side optimal plan comparisons', () => {
+    const recommended = selectRecommendedPath(
+      fixture,
+      {
+        retireLater: withRows([{ bal_total: 550000 }, { bal_total: 580000 }]),
+        spendLessGogo: withRows([{ spending: 63000, totalAftaxYear: 63000, bal_total: 520000 }, { bal_total: 540000 }]),
+        delayBenefits: withRows([{ cpp_f: 0, oas_f: 0 }, { bal_total: 510000 }])
+      },
+      null,
+      planFixture
+    );
+    const scenarioRows = selectScenarioComparisonRows(fixture, {
+      retireLater: withRows([{ bal_total: 550000 }, { bal_total: 580000 }]),
+      spendLessGogo: withRows([{ spending: 63000, totalAftaxYear: 63000, bal_total: 520000 }, { bal_total: 540000 }]),
+      delayBenefits: withRows([{ cpp_f: 0, oas_f: 0 }, { bal_total: 510000 }])
+    });
+    const lab = selectAssumptionLabSummary({
+      plan: planFixture,
+      recommendedPath: recommended,
+      scenarioComparisonRows: scenarioRows
+    });
+
+    expect(lab.status).toBe('readyForScenarioControls');
+    expect(lab.controlRows.map((row) => row.id)).toEqual([
+      'retirementYear',
+      'cppOasStartAge',
+      'returnRate',
+      'earlySpending',
+      'residenceSaleYear',
+      'survivorYear'
+    ]);
+    expect(lab.controlRows.find((row) => row.id === 'retirementYear')).toMatchObject({
+      inputKind: 'slider',
+      unit: 'age',
+      currentValue: 66
+    });
+    expect(lab.controlRows.find((row) => row.id === 'returnRate')).toMatchObject({
+      inputKind: 'slider',
+      unit: 'percent'
+    });
+    expect(lab.comparisonSlots.map((slot) => slot.id)).toEqual([
+      'currentPlan',
+      'optimalReviewPath',
+      'comparisonA',
+      'comparisonB'
+    ]);
+    expect(lab.comparisonSlots.find((slot) => slot.id === 'optimalReviewPath')).toMatchObject({
+      status: 'selected',
+      detail: expect.stringContaining('Optimal from the currently compared assumption set')
+    });
+    expect(lab.boundary).toContain('does not yet mutate plan inputs from Results');
+    expect(lab.nextStep).toContain('rerun queue');
   });
 
   it('derives covered monthly capacity from the runtime floor without saving the answer', () => {

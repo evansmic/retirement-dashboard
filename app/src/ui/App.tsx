@@ -25,6 +25,7 @@ import {
   selectAccountDrawdownReviewRows,
   selectAccountDrawdownStory,
   selectAccountSummaryRows,
+  selectAssumptionLabSummary,
   selectAnnualDetailRows,
   selectAnnualDetailSummary,
   selectCashFlowReconciliation,
@@ -4399,6 +4400,11 @@ function ResultsHandoffPanel({
   const recommendedPath = selectRecommendedPath(result, scenarios, survivor, plan, validation);
   const retirementAnswer = selectRetirementAnswerSummary(result, plan, validation, survivor);
   const spendingCapacity = selectSpendingCapacitySummary(result, scenarios, plan, retirementAnswer);
+  const assumptionLab = selectAssumptionLabSummary({
+    plan,
+    recommendedPath,
+    scenarioComparisonRows
+  });
   const retirementAnswerLayer = selectRetirementAnswerLayer({
     retirementAnswer,
     spendingCapacity,
@@ -4581,6 +4587,7 @@ function ResultsHandoffPanel({
             checkpointReviewBoard={checkpointReviewBoard}
             feedbackReviewPackage={feedbackReviewPackage}
             releaseReadinessCheckpoint={releaseReadinessCheckpoint}
+            assumptionLab={assumptionLab}
             discretionaryRoomBridge={discretionaryRoomBridge}
             minimumExpenseCoverage={minimumExpenseCoverage}
             spendingPathBridge={spendingPathBridge}
@@ -5317,6 +5324,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard,
   feedbackReviewPackage,
   releaseReadinessCheckpoint,
+  assumptionLab,
   discretionaryRoomBridge,
   minimumExpenseCoverage,
   spendingPathBridge,
@@ -5397,6 +5405,7 @@ function DetailsResultsPanel({
   checkpointReviewBoard: ReturnType<typeof selectCheckpointReviewBoard>;
   feedbackReviewPackage: ReturnType<typeof selectFeedbackReviewPackage>;
   releaseReadinessCheckpoint: ReturnType<typeof selectReleaseReadinessCheckpoint>;
+  assumptionLab: ReturnType<typeof selectAssumptionLabSummary>;
   discretionaryRoomBridge: ReturnType<typeof selectDiscretionaryRoomBridgeSummary>;
   minimumExpenseCoverage: ReturnType<typeof selectMinimumExpenseCoverageSummary>;
   spendingPathBridge: ReturnType<typeof selectSpendingPathBridgeSummary>;
@@ -5521,6 +5530,7 @@ function DetailsResultsPanel({
         <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       ) : null}
       <div className="result-section-label">Scenario evidence</div>
+      <AssumptionLabPanel lab={assumptionLab} loading={loading} />
       <BenefitTimingReadinessPanel
         boundedOptimizer={boundedOptimizer}
         scenarioAssumptionRows={scenarioAssumptionRows}
@@ -9335,6 +9345,88 @@ function ScenarioCardsPanel({ cards }: { cards: ReturnType<typeof selectScenario
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function AssumptionLabPanel({
+  lab,
+  loading
+}: {
+  lab: ReturnType<typeof selectAssumptionLabSummary>;
+  loading: boolean;
+}) {
+  function controlValue(control: ReturnType<typeof selectAssumptionLabSummary>['controlRows'][number]): string {
+    if (control.currentValue === null) return control.status === 'notApplicable' ? 'Not used' : 'Needs input';
+    if (control.unit === 'dollars') return formatMoney(control.currentValue);
+    if (control.unit === 'percent') return `${control.currentValue.toFixed(2)}%`;
+    if (control.unit === 'age') return `Age ${Math.round(control.currentValue)}`;
+    return String(Math.round(control.currentValue));
+  }
+
+  return (
+    <section className={`assumption-lab-panel assumption-lab-${lab.status}`}>
+      <div className="assumption-lab-lede">
+        <p className="eyebrow">Assumption lab</p>
+        <h3>{loading ? 'Preparing assumption controls' : lab.headline}</h3>
+        <p>{lab.detail}</p>
+      </div>
+      <div className="summary-grid">
+        <Metric label="Optimal plan from this set" value={lab.optimalPlanLabel} />
+        <Metric label="Candidate set" value={lab.candidateSetLabel} />
+        <Metric label="Rerun behavior" value={lab.progressLabel} />
+      </div>
+      <div className="assumption-control-grid">
+        {lab.controlRows.map((control) => (
+          <article className={`assumption-control control-${control.status}`} key={control.id}>
+            <div>
+              <span>{control.status}</span>
+              <strong>{control.label}</strong>
+            </div>
+            <input
+              aria-label={control.label}
+              disabled
+              max={control.max}
+              min={control.min}
+              step={control.step}
+              type="range"
+              value={control.currentValue ?? control.min}
+              readOnly
+            />
+            <small>{controlValue(control)}</small>
+            <p>{control.detail}</p>
+          </article>
+        ))}
+      </div>
+      <div className="assumption-comparison-grid">
+        {lab.comparisonSlots.map((slot) => (
+          <article className={`assumption-comparison comparison-${slot.status}`} key={slot.id}>
+            <span>{slot.status}</span>
+            <strong>{slot.label}</strong>
+            <dl className="mini-ledger">
+              <div>
+                <dt>Funded through</dt>
+                <dd>{slot.fundedThroughYear || '-'}</dd>
+              </div>
+              <div>
+                <dt>First shortfall</dt>
+                <dd>{slot.firstShortfallYear || '-'}</dd>
+              </div>
+              <div>
+                <dt>End portfolio</dt>
+                <dd>{formatMoney(slot.endPortfolio)}</dd>
+              </div>
+              <div>
+                <dt>Lifetime tax</dt>
+                <dd>{formatMoney(slot.lifetimeTax)}</dd>
+              </div>
+            </dl>
+            <p>{slot.detail}</p>
+          </article>
+        ))}
+      </div>
+      <p className="table-note">{lab.boundary}</p>
+      <p className="table-note">{lab.nextStep}</p>
     </section>
   );
 }

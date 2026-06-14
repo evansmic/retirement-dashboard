@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3568-S3587 is complete. Details now has an assumption-lab contract that exposes slider-ready controls for retirement age, CPP/OAS timing, investment return, early spending, residence sale date, and survivor year. It also shows side-by-side comparison slots for the current plan, the optimal review path from the current compared assumption set, and two alternatives. Live plan mutation, scenario persistence, account instructions, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
+
+Current package doc: [`docs/sprint_3568_3587_assumption_lab_contract.md`](docs/sprint_3568_3587_assumption_lab_contract.md).
+
 S3548-S3567 is complete. The planner now has a retirement answer layer that turns existing result evidence into answer rows for retirement timing, spending capacity, income direction, next moves, and risk review before the final graphical redesign is chosen. Overview shows the answer layer with visualization hints and data-sheet handoffs, while full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
 
 Current package doc: [`docs/sprint_3548_3567_retirement_answer_layer.md`](docs/sprint_3548_3567_retirement_answer_layer.md).

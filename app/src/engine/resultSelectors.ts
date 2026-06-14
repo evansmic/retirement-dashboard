@@ -377,6 +377,50 @@ export type ScenarioComparisonRow = {
   status: 'improves' | 'mixed' | 'worse' | 'notAvailable';
 };
 
+export type AssumptionLabControl = {
+  id:
+    | 'retirementYear'
+    | 'cppOasStartAge'
+    | 'returnRate'
+    | 'earlySpending'
+    | 'residenceSaleYear'
+    | 'survivorYear';
+  label: string;
+  status: 'ready' | 'review' | 'notApplicable';
+  inputKind: 'slider' | 'stepper';
+  currentValue: number | null;
+  min: number;
+  max: number;
+  step: number;
+  unit: 'year' | 'age' | 'percent' | 'dollars';
+  detail: string;
+};
+
+export type AssumptionLabComparisonSlot = {
+  id: 'currentPlan' | 'optimalReviewPath' | 'comparisonA' | 'comparisonB';
+  label: string;
+  sourceCandidateId: RecommendedCandidateId | null;
+  status: 'selected' | 'ready' | 'blocked';
+  fundedThroughYear: number | null;
+  firstShortfallYear: number | null;
+  endPortfolio: number;
+  lifetimeTax: number;
+  detail: string;
+};
+
+export type AssumptionLabSummary = {
+  status: 'readyForScenarioControls' | 'needsInputs' | 'blocked';
+  headline: string;
+  detail: string;
+  optimalPlanLabel: string;
+  candidateSetLabel: string;
+  controlRows: AssumptionLabControl[];
+  comparisonSlots: AssumptionLabComparisonSlot[];
+  progressLabel: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type SurvivorViewSummary = {
   status: 'single' | 'ready' | 'needsInput';
   headline: string;
@@ -3173,6 +3217,168 @@ export function selectRetirementAnswerLayer({
     visualizationPrinciple:
       'Choose visuals after the answer contract is stable: verdict cards for viability, spending bands for capacity, funding flows for income sources, action stacks for next moves, and timelines for risk.',
     blockedVisualizationWork: ['fullUiRedesign', 'publicOptimizerOutput', 'savedRecommendations', 'finalAdviceLanguage']
+  };
+}
+
+export function selectAssumptionLabSummary({
+  plan,
+  recommendedPath,
+  scenarioComparisonRows
+}: {
+  plan: V2PlanPayload | null | undefined;
+  recommendedPath: RecommendedPathSummary;
+  scenarioComparisonRows: ScenarioComparisonRow[];
+}): AssumptionLabSummary {
+  const retireYear = n(plan?.assumptions?.retireYear) || n(plan?.p1?.retireYear);
+  const p1BirthYear = n(plan?.p1?.dob);
+  const p1RetirementAge = retireYear && p1BirthYear ? retireYear - p1BirthYear : null;
+  const earlySpending = n(plan?.spending?.gogo);
+  const returnPct = n(plan?.assumptions?.returnRate) * 100;
+  const downsizeYear = n(plan?.downsize?.year);
+  const hasResidenceSale = downsizeYear > 0 || n(plan?.downsize?.netProceeds) > 0;
+  const survivorYear = n(plan?.assumptions?.p1DiesInSurvivor);
+  const isCouple = !personLooksBlank(plan?.p2);
+  const candidateById = new Map(recommendedPath.candidateRows.map((row) => [row.id, row]));
+  const current = candidateById.get('baseline') || null;
+  const optimal = recommendedPath.recommendedCandidateId ? candidateById.get(recommendedPath.recommendedCandidateId) || null : null;
+  const alternatives = recommendedPath.candidateRows
+    .filter((row) => !row.blocked && row.id !== 'baseline' && row.id !== optimal?.id)
+    .slice(0, 2);
+  const scenarioStatus =
+    recommendedPath.recommendedCandidateId && recommendedPath.candidateRows.some((row) => !row.blocked)
+      ? 'readyForScenarioControls'
+      : 'blocked';
+  const comparisonAvailable = scenarioComparisonRows.some((row) => row.status !== 'notAvailable');
+  const fallbackStartYear = retireYear || 2030;
+  const status: AssumptionLabSummary['status'] =
+    scenarioStatus === 'blocked' ? 'blocked' : comparisonAvailable ? 'readyForScenarioControls' : 'needsInputs';
+
+  function slot(
+    id: AssumptionLabComparisonSlot['id'],
+    row: RecommendedCandidateRow | null,
+    fallbackLabel: string,
+    selected: boolean
+  ): AssumptionLabComparisonSlot {
+    return {
+      id,
+      label: row?.label || fallbackLabel,
+      sourceCandidateId: row?.id ?? null,
+      status: row ? (selected ? 'selected' : 'ready') : 'blocked',
+      fundedThroughYear: row?.fundedThroughYear ?? null,
+      firstShortfallYear: row?.firstShortfallYear ?? null,
+      endPortfolio: row?.endPortfolio ?? 0,
+      lifetimeTax: row?.lifetimeTax ?? 0,
+      detail: row
+        ? row.recommended
+          ? 'Optimal from the currently compared assumption set, for review before relying on it.'
+          : 'Available side-by-side comparison under the current assumption set.'
+        : 'Comparison slot waits for a runnable scenario.'
+    };
+  }
+
+  const controlRows: AssumptionLabControl[] = [
+    {
+      id: 'retirementYear',
+      label: 'Retirement age',
+      status: p1RetirementAge ? 'ready' : 'review',
+      inputKind: 'slider',
+      currentValue: p1RetirementAge,
+      min: Math.max(55, (p1RetirementAge || 65) - 5),
+      max: Math.min(75, (p1RetirementAge || 65) + 5),
+      step: 1,
+      unit: 'age',
+      detail: 'Adjust the household retirement age and rerun the projection before comparing the optimal review path.'
+    },
+    {
+      id: 'cppOasStartAge',
+      label: 'CPP/OAS timing',
+      status: 'ready',
+      inputKind: 'slider',
+      currentValue: 65,
+      min: 60,
+      max: 70,
+      step: 1,
+      unit: 'age',
+      detail: 'Compare earlier or delayed public-benefit timing where the model has enough CPP/OAS evidence.'
+    },
+    {
+      id: 'returnRate',
+      label: 'Investment return',
+      status: returnPct > 0 ? 'ready' : 'review',
+      inputKind: 'slider',
+      currentValue: returnPct || null,
+      min: 1,
+      max: 8,
+      step: 0.25,
+      unit: 'percent',
+      detail: 'Stress long-term return assumptions before treating an optimal path as durable.'
+    },
+    {
+      id: 'earlySpending',
+      label: 'Early spending',
+      status: earlySpending > 0 ? 'ready' : 'review',
+      inputKind: 'slider',
+      currentValue: earlySpending || null,
+      min: Math.max(0, Math.round((earlySpending || 60000) * 0.75)),
+      max: Math.round((earlySpending || 60000) * 1.25),
+      step: 1000,
+      unit: 'dollars',
+      detail: 'Compare lifestyle spending changes against funded years, taxes, and projected money left.'
+    },
+    {
+      id: 'residenceSaleYear',
+      label: 'Residence sale date',
+      status: hasResidenceSale ? 'ready' : 'notApplicable',
+      inputKind: 'stepper',
+      currentValue: downsizeYear || null,
+      min: fallbackStartYear,
+      max: fallbackStartYear + 25,
+      step: 1,
+      unit: 'year',
+      detail: hasResidenceSale
+        ? 'Move the residence sale date to compare liquidity, taxes, spending room, and estate impact.'
+        : 'Add a downsize year and net proceeds before residence-sale timing becomes a comparison control.'
+    },
+    {
+      id: 'survivorYear',
+      label: 'Survivor year',
+      status: isCouple ? 'ready' : 'notApplicable',
+      inputKind: 'stepper',
+      currentValue: survivorYear || null,
+      min: fallbackStartYear,
+      max: fallbackStartYear + 35,
+      step: 1,
+      unit: 'year',
+      detail: isCouple
+        ? 'Move the survivor year to compare household resilience under the same assumption set.'
+        : 'Single-person plans do not need a survivor-year control.'
+    }
+  ];
+
+  return {
+    status,
+    headline:
+      status === 'readyForScenarioControls'
+        ? 'Assumption lab is ready for slider-driven comparisons.'
+        : status === 'needsInputs'
+          ? 'Assumption lab needs runnable comparison scenarios.'
+          : 'Assumption lab waits for a valid recommendation set.',
+    detail:
+      'Use adjustable assumptions to rerun the model, then compare the current plan, the optimal review path, and two side-by-side alternatives from the available scenario set.',
+    optimalPlanLabel: recommendedPath.recommendedLabel,
+    candidateSetLabel: 'Current assumptions plus built-in retirement, spending, and benefit-timing scenarios',
+    controlRows,
+    comparisonSlots: [
+      slot('currentPlan', current, 'Current plan', recommendedPath.recommendedCandidateId === 'baseline'),
+      slot('optimalReviewPath', optimal, 'Optimal review path', true),
+      slot('comparisonA', alternatives[0] || null, 'Comparison A', false),
+      slot('comparisonB', alternatives[1] || null, 'Comparison B', false)
+    ],
+    progressLabel: 'Show progress while rerunning assumptions; comparison results do not need to update instantly.',
+    boundary:
+      'This lab defines assumption controls and comparison slots only. It does not yet mutate plan inputs from Results, persist scenario output, create account instructions, or turn the optimal review path into personal financial advice.',
+    nextStep:
+      'Wire these controls to a rerun queue with progress feedback, then update the side-by-side comparison slots after each completed run.'
   };
 }
 

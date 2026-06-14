@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3548-S3567 package, the remaining-work estimate is:
+As of the S3568-S3587 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
 - Public-ready optimizer for real planning use: 0-20 sprints remaining.
 
-Material change at S3548-S3567: yes. The next product path now prioritizes a retirement answer layer before graphical UI redesign, so visualization decisions can follow stable answer objects rather than drive them.
+Material change at S3568-S3587: yes. Details now has an assumption-lab contract for slider-ready controls, side-by-side comparison slots, and the optimal review path from the current compared assumption set.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3548-S3567: Retirement Answer Layer
+## Latest Package — S3568-S3587: Assumption Lab Contract
+
+**Status:** Complete 2026-06-13.
+
+Goal: define the Details assumption lab before wiring live reruns. The results selector layer now emits slider-ready controls for retirement age, CPP/OAS timing, investment return, early spending, residence sale date, and survivor year, plus side-by-side comparison slots for the current plan, optimal review path, and two alternatives.
+
+Package doc: [`docs/sprint_3568_3587_assumption_lab_contract.md`](docs/sprint_3568_3587_assumption_lab_contract.md).
+
+### S3568-S3587 Completed Path
+
+- Added `AssumptionLabSummary`, `AssumptionLabControl`, `AssumptionLabComparisonSlot`, and `selectAssumptionLabSummary`.
+- Defined slider-ready controls for retirement age, CPP/OAS timing, investment return, early spending, residence sale date, and survivor year.
+- Added side-by-side comparison slots for current plan, optimal review path, comparison A, and comparison B.
+- Surfaced the assumption lab in Details above existing scenario evidence.
+- Kept detailed scenario tables behind the research flag.
+
+### S3568-S3587 Definition Of Done
+
+- `assumptionLab` rows are present in Details.
+- Controls distinguish label, current value, range, step, unit, status, and purpose.
+- Comparison slots show current plan, optimal review path, and two alternatives.
+- Live plan mutation, scenario persistence, account instructions, and final advice language remain blocked.
+- Result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
+
+## Next Package — Live Assumption Rerun Queue
+
+Goal: wire Details assumption controls to a local rerun queue with progress feedback. Adjusted assumptions should rerun the projection, refresh the optimal review path, and update the two comparison slots without saving scenario output into `.plan.json`.
+
+## Previous Package — S3548-S3567: Retirement Answer Layer
 
 **Status:** Complete 2026-06-13.
 
@@ -38,10 +66,6 @@ Package doc: [`docs/sprint_3548_3567_retirement_answer_layer.md`](docs/sprint_35
 - Rows distinguish answer question, status, answer, evidence, future visualization hint, and data-sheet handoff.
 - Full UI redesign, public optimizer output, saved recommendations, and final advice language remain blocked.
 - Result selector tests, UI structure tests, focused optimizer tests, and production build pass before commit.
-
-## Next Package — Retirement Answer Evidence Deepening
-
-Goal: deepen the answer layer with explicit evidence for benefit timing, withdrawal-family direction, estate/survivor sensitivity, and tax-pressure tradeoffs before returning to graphical UI implementation.
 
 ## Previous Package — S3528-S3547: Final Public-Readiness Decision
 
