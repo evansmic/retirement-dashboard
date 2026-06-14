@@ -686,6 +686,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'fixtureCoverageImplementationPlan'
     | 'fixtureMatrixRollup'
     | 'releaseControlValidation'
+    | 'finalPublicReadinessDecision'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -952,6 +953,31 @@ export type OptimizerReleaseControlValidation = {
     detail: string;
   }>;
   blockedOutputs: OptimizerFixtureMatrixRollup['blockedOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerFinalPublicReadinessDecision = {
+  status: 'publicClosedPrivatePilotPlanningAllowed' | 'blocked';
+  decision: 'keepPublicOptimizerClosed';
+  sourceContinuationStatus: OptimizerContinuationContract['status'];
+  sourceFixtureRollupStatus: OptimizerFixtureMatrixRollup['status'];
+  sourceReleaseControlStatus: OptimizerReleaseControlValidation['status'];
+  decisionRows: Array<{
+    id:
+      | 'betaComplete'
+      | 'fixtureCoverageVerified'
+      | 'releaseControlsDefined'
+      | 'realDataPilot'
+      | 'publicOutput'
+      | 'fullSuiteRecovery';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  privatePilotPlanningStatus: 'allowedPublicClosed' | 'blocked';
+  blockedOutputs: OptimizerReleaseControlValidation['blockedOutputs'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -1811,6 +1837,7 @@ export type BoundedOptimizerSummary = {
   fixtureCoverageImplementationPlan: OptimizerFixtureCoverageImplementationPlan;
   fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
   releaseControlValidation: OptimizerReleaseControlValidation;
+  finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -5976,6 +6003,82 @@ export function selectOptimizerReleaseControlValidation({
   };
 }
 
+export function selectOptimizerFinalPublicReadinessDecision({
+  continuationContract,
+  fixtureMatrixRollup,
+  releaseControlValidation
+}: {
+  continuationContract: OptimizerContinuationContract;
+  fixtureMatrixRollup: OptimizerFixtureMatrixRollup;
+  releaseControlValidation: OptimizerReleaseControlValidation;
+}): OptimizerFinalPublicReadinessDecision {
+  const betaComplete = continuationContract.status === 'featureCompleteBeta';
+  const fixtureCoverageVerified = fixtureMatrixRollup.status === 'syntheticCoverageVerifiedPublicClosed';
+  const releaseControlsDefined = releaseControlValidation.status === 'releaseControlsDefinedPublicClosed';
+  const planningAllowed = betaComplete && fixtureCoverageVerified && releaseControlsDefined;
+
+  return {
+    status: planningAllowed ? 'publicClosedPrivatePilotPlanningAllowed' : 'blocked',
+    decision: 'keepPublicOptimizerClosed',
+    sourceContinuationStatus: continuationContract.status,
+    sourceFixtureRollupStatus: fixtureMatrixRollup.status,
+    sourceReleaseControlStatus: releaseControlValidation.status,
+    decisionRows: [
+      {
+        id: 'betaComplete',
+        label: 'Feature-complete beta',
+        status: betaComplete ? 'ready' : 'blocked',
+        detail: betaComplete
+          ? 'The beta sequencing surface is complete for internal runtime review.'
+          : 'Public-readiness decision waits for the beta sequencing surface to complete.'
+      },
+      {
+        id: 'fixtureCoverageVerified',
+        label: 'Synthetic fixture coverage',
+        status: fixtureCoverageVerified ? 'ready' : 'blocked',
+        detail: fixtureCoverageVerified
+          ? 'Fixture assertions verify the planned synthetic coverage gaps while public output stays closed.'
+          : 'Public-readiness decision waits for verified synthetic fixture coverage.'
+      },
+      {
+        id: 'releaseControlsDefined',
+        label: 'Release controls',
+        status: releaseControlsDefined ? 'ready' : 'blocked',
+        detail: releaseControlsDefined
+          ? 'Release controls are named and test-covered, with public release still closed.'
+          : 'Public-readiness decision waits for release-control validation.'
+      },
+      {
+        id: 'realDataPilot',
+        label: 'Real-data pilot',
+        status: 'blocked',
+        detail: 'A private real-data pilot still needs opt-in language, privacy copy, stop behavior, and tester limits.'
+      },
+      {
+        id: 'publicOutput',
+        label: 'Public output',
+        status: 'blocked',
+        detail: 'Public optimizer output, production UI, CSV/report sequencing, final instructions, and tax-bracket wording remain closed.'
+      },
+      {
+        id: 'fullSuiteRecovery',
+        label: 'Full-suite recovery',
+        status: 'blocked',
+        detail: 'The full npm test hang or low-storage constraint must be resolved before public release is reconsidered.'
+      }
+    ],
+    privatePilotPlanningStatus: planningAllowed ? 'allowedPublicClosed' : 'blocked',
+    blockedOutputs: releaseControlValidation.blockedOutputs,
+    summary: planningAllowed
+      ? 'Final public-readiness decision keeps public optimizer output closed while allowing a narrow private pilot plan to be scoped next.'
+      : 'Final public-readiness decision waits for beta, fixture, and release-control evidence.',
+    boundary:
+      'This decision is a release posture only. It does not open public optimizer release, real-data tester distribution, production UI, CSV sequencing output, report sequencing output, final annual instructions, tax-bracket wording, saved schema changes, engine output schema changes, or .plan.json sequencing output.',
+    nextStep:
+      'Plan private real-data pilot requirements, including opt-in wording, privacy boundaries, stop conditions, tester limits, and full-suite recovery before reconsidering public output.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -6099,6 +6202,7 @@ export function selectOptimizerSchemaSaveDecision({
       'fixtureCoverageImplementationPlan',
       'fixtureMatrixRollup',
       'releaseControlValidation',
+      'finalPublicReadinessDecision',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -9009,6 +9113,11 @@ export function runBoundedOptimizer(
     assertionRows: fixtureStopAssertionRows
   });
   const releaseControlValidation = selectOptimizerReleaseControlValidation({ fixtureMatrixRollup });
+  const finalPublicReadinessDecision = selectOptimizerFinalPublicReadinessDecision({
+    continuationContract,
+    fixtureMatrixRollup,
+    releaseControlValidation
+  });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -9050,6 +9159,7 @@ export function runBoundedOptimizer(
     fixtureCoverageImplementationPlan,
     fixtureMatrixRollup,
     releaseControlValidation,
+    finalPublicReadinessDecision,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

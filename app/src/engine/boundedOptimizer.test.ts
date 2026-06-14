@@ -1479,6 +1479,7 @@ describe('bounded optimizer runner', () => {
         'fixtureCoverageImplementationPlan',
         'fixtureMatrixRollup',
         'releaseControlValidation',
+        'finalPublicReadinessDecision',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -1734,6 +1735,43 @@ describe('bounded optimizer runner', () => {
       'blocked',
       'blocked',
       'blocked',
+      'blocked',
+      'blocked',
+      'blocked'
+    ]);
+    expect(summary.finalPublicReadinessDecision).toMatchObject({
+      status: 'publicClosedPrivatePilotPlanningAllowed',
+      decision: 'keepPublicOptimizerClosed',
+      sourceContinuationStatus: 'featureCompleteBeta',
+      sourceFixtureRollupStatus: 'syntheticCoverageVerifiedPublicClosed',
+      sourceReleaseControlStatus: 'releaseControlsDefinedPublicClosed',
+      privatePilotPlanningStatus: 'allowedPublicClosed',
+      blockedOutputs: [
+        'publicOptimizerRelease',
+        'realDataTesterDistribution',
+        'productionUi',
+        'csvSequencingOutput',
+        'reportSequencingOutput',
+        'finalAnnualInstructions',
+        'taxBracketWording',
+        'savedPlanSchemaChanges',
+        'engineOutputSchemaChanges',
+        'planJsonSequencingOutput'
+      ],
+      boundary: expect.stringContaining('release posture only')
+    });
+    expect(summary.finalPublicReadinessDecision.decisionRows.map((item) => item.id)).toEqual([
+      'betaComplete',
+      'fixtureCoverageVerified',
+      'releaseControlsDefined',
+      'realDataPilot',
+      'publicOutput',
+      'fullSuiteRecovery'
+    ]);
+    expect(summary.finalPublicReadinessDecision.decisionRows.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'ready',
       'blocked',
       'blocked',
       'blocked'

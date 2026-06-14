@@ -6,17 +6,45 @@ Product direction doc: [`docs/canadian_retirement_decision_engine.md`](docs/cana
 
 ## Optimizer Timeline Baseline
 
-As of the S3508-S3527 package, the remaining-work estimate is:
+As of the S3528-S3547 package, the remaining-work estimate is:
 
 - Internal tester optimizer prototype: 0 sprints remaining.
 - Feature-complete app optimizer beta: 0 sprints remaining.
-- Public-ready optimizer for real planning use: 0-30 sprints remaining.
+- Public-ready optimizer for real planning use: 0-20 sprints remaining.
 
-Material change at S3508-S3527: yes. Feature-complete beta remains present, and the public-ready path is narrower because final release controls are now explicit and test-covered.
+Material change at S3528-S3547: yes. Feature-complete beta remains present, and the current final decision keeps the public optimizer closed while allowing a narrow private pilot requirements package to be scoped next.
 
 Going forward, keep sprint packages substantial and coherent. Avoid one-doc-per-micro-step unless there is a genuine release, safety, or architecture gate that needs its own record.
 
-## Latest Package — S3508-S3527: Release-Control Validation
+## Latest Package — S3528-S3547: Final Public-Readiness Decision
+
+**Status:** Complete 2026-06-13.
+
+Goal: use the completed beta, verified synthetic fixture coverage, and release-control evidence to decide the current public-readiness posture. The bounded optimizer now emits `finalPublicReadinessDecision`, keeps public optimizer output closed, and allows only narrow private pilot requirements planning as the next scoped step.
+
+Package doc: [`docs/sprint_3528_3547_final_public_readiness_decision.md`](docs/sprint_3528_3547_final_public_readiness_decision.md).
+
+### S3528-S3547 Completed Path
+
+- Added engine-owned final public-readiness decision types and selector.
+- Marked feature-complete beta evidence, verified synthetic fixture coverage, and release-control validation as ready.
+- Kept real-data pilot execution, public output, production UI, export/report output, final wording, schema migration, and full-suite recovery blocked.
+- Surfaced the final public-readiness decision in Results Details.
+- Extended plan-file tests to keep final public-readiness decisions out of `.plan.json` output.
+
+### S3528-S3547 Definition Of Done
+
+- `finalPublicReadinessDecision` is present in bounded optimizer summaries.
+- Decision rows distinguish ready beta/fixture/release-control evidence from blocked pilot/public/full-suite work.
+- Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
+- Plan-file tests prove final public-readiness decisions are not serialized into `.plan.json`.
+- Focused tests, plan-file tests, and production build pass before commit.
+
+## Next Package — Private Pilot Requirements And Full-Suite Recovery
+
+Goal: define opt-in wording, privacy boundaries, stop conditions, tester limits, anonymized feedback expectations, and the full-suite recovery requirement before any real-data pilot or public optimizer output is reconsidered.
+
+## Previous Package — S3508-S3527: Release-Control Validation
 
 **Status:** Complete 2026-06-13.
 
@@ -39,10 +67,6 @@ Package doc: [`docs/sprint_3508_3527_release_control_validation.md`](docs/sprint
 - Public release, real-data tester distribution, production UI, exports, reports, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain blocked.
 - Plan-file tests prove release-control validation is not serialized into `.plan.json`.
 - Focused tests, plan-file tests, and production build pass before commit.
-
-## Next Package — Final Public-Readiness Decision
-
-Goal: use the completed beta, fixture coverage, and release-control evidence to decide whether the public optimizer remains closed, moves to a narrow private real-data pilot, or needs additional validation first.
 
 ## Previous Package — S3488-S3507: Fixture Matrix Rollup
 

@@ -40,6 +40,10 @@ Key Sprint 0 docs:
 
 ## Active Next Step
 
+S3528-S3547 is complete. The optimizer now has a final public-readiness decision that treats feature-complete beta evidence, verified synthetic fixture coverage, and release-control validation as ready while keeping real-data pilot execution, public optimizer output, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, `.plan.json` sequencing output, and full-suite recovery blocked. Results Details shows the decision and allows only narrow private pilot requirements planning as the next scoped step. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-20 sprints.
+
+Current package doc: [`docs/sprint_3528_3547_final_public_readiness_decision.md`](docs/sprint_3528_3547_final_public_readiness_decision.md).
+
 S3508-S3527 is complete. The optimizer now has release-control validation that treats verified synthetic fixture coverage as ready evidence while keeping real-data opt-in, production UI, export/report output, final wording, schema migration, and full-suite recovery blocked. Results Details shows the controls while public release, real-data tester distribution, production UI, CSV/report sequencing, final instructions, tax-bracket wording, schema changes, and `.plan.json` sequencing output remain closed. Current remaining estimate: internal tester optimizer prototype 0 sprints, feature-complete app optimizer beta 0 sprints, and public-ready optimizer for real planning use 0-30 sprints.
 
 Current package doc: [`docs/sprint_3508_3527_release_control_validation.md`](docs/sprint_3508_3527_release_control_validation.md).

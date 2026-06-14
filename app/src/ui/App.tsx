@@ -7001,6 +7001,45 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.finalPublicReadinessDecision ? (
+        <section
+          className={`optimizer-final-public-decision final-public-${summary.finalPublicReadinessDecision.status}`}
+        >
+          <div>
+            <p className="eyebrow">Final public-readiness decision</p>
+            <h3>Public optimizer remains closed</h3>
+            <p>{summary.finalPublicReadinessDecision.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.finalPublicReadinessDecision.decisionRows.map((item) => (
+              <article className={`final-public-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Decision</span>
+              <strong>{summary.finalPublicReadinessDecision.decision}</strong>
+              <p>{summary.finalPublicReadinessDecision.nextStep}</p>
+            </article>
+            <article>
+              <span>Private pilot planning</span>
+              <strong>{summary.finalPublicReadinessDecision.privatePilotPlanningStatus}</strong>
+              <p>Planning may continue only while public output remains closed.</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.finalPublicReadinessDecision.blockedOutputs.length}</strong>
+              <p>{summary.finalPublicReadinessDecision.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.finalPublicReadinessDecision.boundary}</p>
+        </section>
+      ) : null}
+
       <ul className="compact-list">
         {(summary?.reviewNotes || ['This is a planning review only. It does not change your saved plan.']).slice(0, 3).map((note) => (
           <li key={note}>{note}</li>
