@@ -1055,12 +1055,28 @@ export type RetirementSupportingGraphic = {
   visualLanguage: string;
 };
 
+export type RetirementDetailToggle = {
+  id: Extract<RetirementAnswerLayerRow['id'], 'accountPath' | 'goalsOutflows'>;
+  title: string;
+  toggleLabel: string;
+  defaultMode: 'summary';
+  expandedMode: 'dataSheet';
+  sheet: ResultsWorkspaceSection;
+  printableExport: 'masterDetailCsv' | 'accountDetailSheet';
+  masterDetailAlignment: string;
+  keyFields: string[];
+  evidenceToggleLabel: string;
+  caveat: string;
+  visualLanguage: string;
+};
+
 export type RetirementPresentationPlan = {
   status: RetirementAnswerLayerStatus;
   headline: string;
   modules: RetirementPresentationModule[];
   firstReadCards: RetirementFirstReadCard[];
   supportingGraphics: RetirementSupportingGraphic[];
+  detailToggles: RetirementDetailToggle[];
   firstScreenModuleIds: RetirementAnswerLayerRow['id'][];
   supportingModuleIds: RetirementAnswerLayerRow['id'][];
   detailToggleModuleIds: RetirementAnswerLayerRow['id'][];
@@ -3777,6 +3793,52 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       visualLanguage: graphic.visualLanguage
     }];
   });
+  const detailToggleLabels: Record<
+    RetirementDetailToggle['id'],
+    Pick<RetirementDetailToggle, 'toggleLabel' | 'printableExport' | 'masterDetailAlignment' | 'visualLanguage'>
+  > = {
+    accountPath: {
+      toggleLabel: 'Show account path sheet',
+      printableExport: 'accountDetailSheet',
+      masterDetailAlignment:
+        'Account balances should reconcile to annual detail and master-detail account columns before any withdrawal-order language is shown.',
+      visualLanguage:
+        'Use a compact account stack summary first, then expand to registered, TFSA, taxable, cash, debt, and total-balance rows.'
+    },
+    goalsOutflows: {
+      toggleLabel: 'Show spending and goals sheet',
+      printableExport: 'masterDetailCsv',
+      masterDetailAlignment:
+        'Lifestyle spending, additional expenses, vacations, debt payments, and one-time outflows should match the downloadable master-detail CSV.',
+      visualLanguage:
+        'Use a summary outflow stack first, then expand to base spending, additional expenses, total spending, debt payments, and goal rows.'
+    }
+  };
+  const detailToggles: RetirementDetailToggle[] = detailToggleModuleIds.flatMap((id) => {
+    if (id !== 'accountPath' && id !== 'goalsOutflows') return [];
+    const row = rowById.get(id);
+    if (!row) return [];
+    const evidence = row.evidenceRefs[0];
+    const labels = detailToggleLabels[id];
+    const keyFields = Array.from(new Set(row.evidenceRefs.flatMap((ref) => ref.fields))).slice(0, 8);
+    return [{
+      id,
+      title: row.question,
+      toggleLabel: labels.toggleLabel,
+      defaultMode: 'summary',
+      expandedMode: 'dataSheet',
+      sheet: evidence?.dataSheet ?? row.dataSheet,
+      printableExport: labels.printableExport,
+      masterDetailAlignment: labels.masterDetailAlignment,
+      keyFields,
+      evidenceToggleLabel: evidence ? `${evidence.label} (${evidence.dataSheet})` : `${row.dataSheet} sheet`,
+      caveat:
+        id === 'accountPath'
+          ? 'This explains account trajectory only; it does not create annual withdrawal instructions or account-level commands.'
+          : 'This explains planned outflows only; it does not approve spending changes or turn goals into advice.',
+      visualLanguage: labels.visualLanguage
+    }];
+  });
 
   return {
     status: layer.status,
@@ -3805,6 +3867,7 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
     }),
     firstReadCards,
     supportingGraphics,
+    detailToggles,
     firstScreenModuleIds,
     supportingModuleIds,
     detailToggleModuleIds,

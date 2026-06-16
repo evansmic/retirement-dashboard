@@ -892,6 +892,30 @@ describe('result selectors', () => {
           visualLanguage: expect.stringContaining('estate trade-off caveats')
         })
       ],
+      detailToggles: [
+        expect.objectContaining({
+          id: 'accountPath',
+          toggleLabel: 'Show account path sheet',
+          defaultMode: 'summary',
+          expandedMode: 'dataSheet',
+          sheet: 'accounts',
+          printableExport: 'accountDetailSheet',
+          masterDetailAlignment: expect.stringContaining('master-detail account columns'),
+          keyFields: expect.arrayContaining(['rrspBalance', 'tfsaBalance', 'cashBalance']),
+          caveat: expect.stringContaining('does not create annual withdrawal instructions')
+        }),
+        expect.objectContaining({
+          id: 'goalsOutflows',
+          toggleLabel: 'Show spending and goals sheet',
+          defaultMode: 'summary',
+          expandedMode: 'dataSheet',
+          sheet: 'cashFlow',
+          printableExport: 'masterDetailCsv',
+          masterDetailAlignment: expect.stringContaining('downloadable master-detail CSV'),
+          keyFields: expect.arrayContaining(['baseSpending', 'additionalExpenses', 'totalSpending']),
+          caveat: expect.stringContaining('does not approve spending changes')
+        })
+      ],
       firstScreenModuleIds: ['retireTiming', 'spendingCapacity', 'nextMoves'],
       supportingModuleIds: ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'],
       detailToggleModuleIds: ['accountPath', 'goalsOutflows'],

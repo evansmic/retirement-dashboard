@@ -5289,6 +5289,34 @@ function RetirementAnswerLayerPanel({
             </article>
           ))}
         </div>
+        <div className="retirement-detail-toggle-grid">
+          {presentationPlan.detailToggles.map((toggle) => (
+            <article className="retirement-detail-toggle" key={toggle.id}>
+              <span>{toggle.toggleLabel}</span>
+              <strong>{toggle.title}</strong>
+              <p>{toggle.visualLanguage}</p>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Sheet</dt>
+                  <dd>{toggle.sheet}</dd>
+                </div>
+                <div>
+                  <dt>Export</dt>
+                  <dd>{toggle.printableExport}</dd>
+                </div>
+                <div>
+                  <dt>Key fields</dt>
+                  <dd>{toggle.keyFields.join(', ')}</dd>
+                </div>
+                <div>
+                  <dt>Alignment</dt>
+                  <dd>{toggle.masterDetailAlignment}</dd>
+                </div>
+              </dl>
+              <small>{toggle.caveat}</small>
+            </article>
+          ))}
+        </div>
         <div className="retirement-presentation-grid">
           {presentationPlan.modules.slice(0, 6).map((module) => (
             <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>
