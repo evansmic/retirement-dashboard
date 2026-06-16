@@ -6113,9 +6113,7 @@ function SequencingEvidenceReviewPanel({ boundedOptimizer }: { boundedOptimizer:
     ? `${sourceYears[0]}${sourceYears.length > 1 ? `-${sourceYears[sourceYears.length - 1]}` : ''}`
     : 'Waiting';
   const visibleRows = rows.slice(0, 5);
-  const qualityRepairReasons = Array.from(
-    new Set(rows.flatMap((row) => (row.qualityStatus === 'reviewBeforeSave' ? row.qualityReasons : [])))
-  ).slice(0, 4);
+  const qualityRepairReasons = adapter?.repairSummary.reasons.slice(0, 4) || [];
   const stopReasons = [
     !adapter ? 'Optimizer sequencing evidence has not loaded yet.' : '',
     adapter?.status === 'blocked' ? 'The optimizer sequencing adapter is blocked.' : '',

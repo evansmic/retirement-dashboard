@@ -1932,7 +1932,7 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('visibleRows = rows.slice(0, 5)');
     expect(appSource).toContain('Stop conditions still apply.');
     expect(appSource).toContain('Quality repair summary.');
-    expect(appSource).toContain('qualityRepairReasons');
+    expect(appSource).toContain('repairSummary.reasons');
     expect(appSource).toContain('need quality repair before wider use.');
     expect(appSource).toContain('CSV sequencing output remains closed.');
     expect(appSource).toContain('Report sequencing output remains closed.');

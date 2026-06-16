@@ -1416,6 +1416,12 @@ describe('bounded optimizer runner', () => {
       ],
       boundary: expect.stringContaining('does not change saved schema')
     });
+    expect(summary.betaSavedSequencingAdapter.repairSummary).toMatchObject({
+      status: 'none',
+      reviewRowCount: 0,
+      reasons: [],
+      detail: expect.stringContaining('No review-row quality repairs')
+    });
     expect(summary.betaSavedSequencingAdapter.rows[0]).toMatchObject({
       year: 2032,
       accountLabel: 'Registered accounts',

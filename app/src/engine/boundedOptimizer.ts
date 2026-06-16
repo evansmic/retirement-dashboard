@@ -605,6 +605,12 @@ export type OptimizerBetaSavedSequencingAdapter = {
   sourceCandidateId: BoundedOptimizerCandidateId | null;
   sourceCandidateLabel: string;
   rows: OptimizerBetaSavedSequencingRow[];
+  repairSummary: {
+    status: 'none' | 'repairNeeded';
+    reviewRowCount: number;
+    reasons: string[];
+    detail: string;
+  };
   allowedFields: Array<
     | 'year'
     | 'accountLabel'
@@ -5396,6 +5402,9 @@ export function selectOptimizerBetaSavedSequencingAdapter(
   });
   const needsRepair = rows.some((row) => row.qualityStatus === 'reviewBeforeSave');
   const hasRows = rows.length > 0;
+  const repairReasons = Array.from(
+    new Set(rows.flatMap((row) => (row.qualityStatus === 'reviewBeforeSave' ? row.qualityReasons : [])))
+  );
   const status: OptimizerBetaSavedSequencingAdapter['status'] =
     draft.status === 'draftReady' && hasRows && !needsRepair
       ? 'readyForBetaReview'
@@ -5410,6 +5419,14 @@ export function selectOptimizerBetaSavedSequencingAdapter(
     sourceCandidateId: draft.sourceCandidateId,
     sourceCandidateLabel: draft.sourceCandidateLabel,
     rows,
+    repairSummary: {
+      status: repairReasons.length ? 'repairNeeded' : 'none',
+      reviewRowCount: rows.filter((row) => row.qualityStatus === 'reviewBeforeSave').length,
+      reasons: repairReasons,
+      detail: repairReasons.length
+        ? 'Review-row quality repairs are required before this adapter can support wider beta use.'
+        : 'No review-row quality repairs are visible in the beta sequencing adapter.'
+    },
     allowedFields: ['year', 'accountLabel', 'reviewAmount', 'sourceEvidence', 'taxContext', 'constraintContext', 'qualityStatus'],
     excludedFields: ['finalInstruction', 'taxBracketTarget', 'csvColumn', 'reportRow', 'productionUiAction'],
     blockedOutputs: [

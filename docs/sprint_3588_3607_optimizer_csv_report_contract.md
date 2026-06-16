@@ -25,7 +25,7 @@ Move back from answer-layer presentation work into optimizer annual sequencing r
 - Added a compact Sequencing Evidence Check in Details to show row count, quality mix, source years, and closed public-output status.
 - Added a capped internal review table for the first five sequencing evidence rows.
 - Added stop-condition copy for blocked adapters, review-before-use rows, closed CSV output, closed report output, and closed final annual instructions.
-- Added a capped quality-repair summary from review-row quality reasons.
+- Added an optimizer-owned quality-repair summary from review-row quality reasons.
 
 ## Boundary
 
@@ -43,4 +43,4 @@ This package plans output shape only. It does not:
 
 Use this contract to enrich the runtime master-detail selector with internal beta sequencing review fields when the optimizer evidence is available, while keeping those fields out of public exports until the CSV/report gate is explicitly opened.
 
-The app now passes optimizer beta sequencing review rows into internal review-only master-detail rows and shows a compact evidence check with a capped table, stop-condition copy, and quality-repair summary. The next package should either commit this coherent set or run the longer focused tests if local process stability allows.
+The app now passes optimizer beta sequencing review rows into internal review-only master-detail rows and shows a compact evidence check with a capped table, stop-condition copy, and optimizer-owned quality-repair summary. The next package should either commit this coherent set or continue by adding an explicit "ready for internal review / hold" decision row from the same adapter evidence.
