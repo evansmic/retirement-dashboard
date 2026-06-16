@@ -41,6 +41,7 @@ import {
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
   selectMasterDetailRows,
+  selectMasterDetailScheduleContract,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -4431,6 +4432,7 @@ function ResultsHandoffPanel({
   const annualDetailRows = selectAnnualDetailRows(result);
   const masterDetailRowsForDownload = selectMasterDetailRows(result, plan);
   const masterDetailRows = selectMasterDetailRows(result, plan, betaSequencingRowsForMasterDetail(optimizer));
+  const masterDetailScheduleContract = selectMasterDetailScheduleContract(masterDetailRows, masterDetailRowsForDownload);
   const annualDetailSummary = selectAnnualDetailSummary(result);
   const portfolioChartSeries = selectPortfolioChartSeries(result);
   const spendingTaxChartSeries = selectSpendingTaxChartSeries(result);
@@ -4790,6 +4792,7 @@ function ResultsHandoffPanel({
             annualDetailRows={annualDetailRows}
             hasUnsavedChanges={hasUnsavedChanges}
             masterDetailRows={masterDetailRowsForDownload}
+            masterDetailScheduleContract={masterDetailScheduleContract}
             onDownloadAnnualCsv={downloadAnnualDetailCsv}
             onDownloadMasterDetailCsv={downloadMasterDetailCsv}
             onDownload={onDownload}
@@ -11026,6 +11029,7 @@ function ExportSavePanel({
   annualDetailRows,
   hasUnsavedChanges,
   masterDetailRows,
+  masterDetailScheduleContract,
   onDownloadAnnualCsv,
   onDownloadMasterDetailCsv,
   onDownload,
@@ -11037,6 +11041,7 @@ function ExportSavePanel({
   annualDetailRows: ReturnType<typeof selectAnnualDetailRows>;
   hasUnsavedChanges: boolean;
   masterDetailRows: ReturnType<typeof selectMasterDetailRows>;
+  masterDetailScheduleContract: ReturnType<typeof selectMasterDetailScheduleContract>;
   onDownloadAnnualCsv: () => void;
   onDownloadMasterDetailCsv: () => void;
   onDownload: () => void;
@@ -11083,6 +11088,27 @@ function ExportSavePanel({
           Only the editable plan backup is meant to be reopened by this planner. These local downloads do not create an
           account or upload your plan.
         </p>
+      </section>
+
+      <section className={`result-card master-detail-schedule-contract master-detail-schedule-${masterDetailScheduleContract.status}`}>
+        <p className="eyebrow">Master-detail schedule contract</p>
+        <h3>Public download stays clean; sequencing evidence stays internal.</h3>
+        <p>{masterDetailScheduleContract.summary}</p>
+        <div className="summary-grid">
+          <Metric label="Internal rows" value={String(masterDetailScheduleContract.rowCount)} />
+          <Metric label="Download rows" value={String(masterDetailScheduleContract.publicDownloadRowCount)} />
+          <Metric label="Sequencing years" value={String(masterDetailScheduleContract.internalSequencingYearCount)} />
+          <Metric label="Download status" value={masterDetailScheduleContract.downloadableStatus} />
+        </div>
+        <dl className="mini-ledger">
+          {masterDetailScheduleContract.columns.map((column) => (
+            <div key={column.id}>
+              <dt>{column.label}</dt>
+              <dd>{column.status === 'publicExport' ? 'Public CSV' : 'Internal review only'}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="table-note">{masterDetailScheduleContract.boundary}</p>
       </section>
 
       <div className="result-overview-grid">

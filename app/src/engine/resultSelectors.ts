@@ -274,6 +274,51 @@ export type MasterDetailSequencingReviewRow = {
   boundaryStatus: string;
 };
 
+export type MasterDetailScheduleContract = {
+  status: 'internalReviewReady' | 'holdForSequencingRepair' | 'publicExportOnly' | 'blocked';
+  rowCount: number;
+  publicDownloadRowCount: number;
+  internalSequencingYearCount: number;
+  printableReportStatus: 'currentReportOnly';
+  downloadableStatus: 'publicCleanCsvOnly';
+  columns: Array<{
+    id:
+      | 'year'
+      | 'spending'
+      | 'incomeAndInflows'
+      | 'portfolioWithdrawals'
+      | 'tax'
+      | 'netWorth'
+      | 'sequencingReview';
+    label: string;
+    status: 'publicExport' | 'internalReviewOnly';
+    detail: string;
+  }>;
+  scheduleRows: Array<{
+    year: number;
+    spending: number;
+    incomeAndInflows: number;
+    portfolioWithdrawals: number;
+    tax: number;
+    netWorth: number;
+    sequencingReviewAmount: number | null;
+    sequencingAccountLabels: string;
+    sequencingQualityStatus: string;
+    boundaryStatus: string;
+  }>;
+  blockedOutputs: Array<
+    | 'finalAnnualInstructions'
+    | 'accountLevelWithdrawalCommands'
+    | 'taxBracketWording'
+    | 'savedSequencingOutput'
+    | 'csvSequencingOutput'
+    | 'reportSequencingOutput'
+  >;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type AnnualDetailSummary = {
   firstYear: number | null;
   finalYear: number | null;
@@ -9882,6 +9927,112 @@ export function selectMasterDetailRows(
       betaSequencingBoundaryStatus: sequencingRows.map((reviewRow) => reviewRow.boundaryStatus).join('; ')
     };
   });
+}
+
+export function selectMasterDetailScheduleContract(
+  internalRows: MasterDetailRow[],
+  publicDownloadRows: MasterDetailRow[] = internalRows
+): MasterDetailScheduleContract {
+  const internalSequencingRows = internalRows.filter((row) => row.betaSequencingReviewAmount !== null);
+  const internalSequencingYearCount = new Set(internalSequencingRows.map((row) => row.year)).size;
+  const hasRepairRows = internalRows.some((row) => row.betaSequencingQualityStatus.includes('reviewBeforeSave'));
+  const status: MasterDetailScheduleContract['status'] =
+    internalRows.length === 0
+      ? 'blocked'
+      : hasRepairRows
+        ? 'holdForSequencingRepair'
+        : internalSequencingRows.length > 0
+          ? 'internalReviewReady'
+          : 'publicExportOnly';
+
+  return {
+    status,
+    rowCount: internalRows.length,
+    publicDownloadRowCount: publicDownloadRows.length,
+    internalSequencingYearCount,
+    printableReportStatus: 'currentReportOnly',
+    downloadableStatus: 'publicCleanCsvOnly',
+    columns: [
+      {
+        id: 'year',
+        label: 'Year',
+        status: 'publicExport',
+        detail: 'Available in the current public master-detail CSV.'
+      },
+      {
+        id: 'spending',
+        label: 'Spending and outflows',
+        status: 'publicExport',
+        detail: 'Shows base spending, additional expenses, total spending, shortfall, and surplus.'
+      },
+      {
+        id: 'incomeAndInflows',
+        label: 'Income and inflows',
+        status: 'publicExport',
+        detail: 'Shows salary, pensions, benefits, other inflows, and total income/inflows.'
+      },
+      {
+        id: 'portfolioWithdrawals',
+        label: 'Portfolio withdrawals',
+        status: 'publicExport',
+        detail: 'Shows registered, TFSA, non-registered, cash, and total portfolio withdrawals.'
+      },
+      {
+        id: 'tax',
+        label: 'Tax',
+        status: 'publicExport',
+        detail: 'Shows taxable income, total tax, OAS clawback, and estate tax evidence.'
+      },
+      {
+        id: 'netWorth',
+        label: 'Net worth and estate',
+        status: 'publicExport',
+        detail: 'Shows account balances, debt, net worth, and estate-before-tax evidence.'
+      },
+      {
+        id: 'sequencingReview',
+        label: 'Sequencing review evidence',
+        status: 'internalReviewOnly',
+        detail: 'Available only in the internal review schedule until CSV/report sequencing gates open.'
+      }
+    ],
+    scheduleRows: internalRows.map((row) => ({
+      year: row.year,
+      spending: row.totalSpending,
+      incomeAndInflows: row.totalIncomeAndInflows,
+      portfolioWithdrawals: row.totalPortfolioWithdrawals,
+      tax: row.totalTax,
+      netWorth: row.netWorth,
+      sequencingReviewAmount: row.betaSequencingReviewAmount,
+      sequencingAccountLabels: row.betaSequencingAccountLabel,
+      sequencingQualityStatus: row.betaSequencingQualityStatus,
+      boundaryStatus: row.betaSequencingBoundaryStatus || 'Public-clean master-detail row; no internal sequencing evidence attached.'
+    })),
+    blockedOutputs: [
+      'finalAnnualInstructions',
+      'accountLevelWithdrawalCommands',
+      'taxBracketWording',
+      'savedSequencingOutput',
+      'csvSequencingOutput',
+      'reportSequencingOutput'
+    ],
+    summary:
+      status === 'internalReviewReady'
+        ? 'Internal master-detail schedule rows can support beta sequencing review while public downloads stay clean.'
+        : status === 'holdForSequencingRepair'
+          ? 'Internal master-detail schedule rows exist, but sequencing evidence needs repair before wider review.'
+          : status === 'publicExportOnly'
+            ? 'Public master-detail schedule rows are available without internal sequencing evidence.'
+            : 'Master-detail schedule rows are blocked until simulation rows are available.',
+    boundary:
+      'The public master-detail CSV remains the clean spending, income, withdrawal, tax, balance, debt, and estate ledger. Sequencing review evidence is internal-only and does not create final annual instructions, account withdrawal commands, saved sequencing output, CSV sequencing output, or report sequencing output.',
+    nextStep:
+      status === 'internalReviewReady'
+        ? 'Use the internal schedule contract to review whether printable/downloadable sequencing rows should be opened by a later gate.'
+        : status === 'holdForSequencingRepair'
+          ? 'Repair sequencing review rows before reconsidering printable or downloadable sequencing output.'
+          : 'Keep the public master-detail CSV as the downloadable ledger until sequencing evidence is ready.'
+  };
 }
 
 export function selectAnnualDetailSummary(result: SimulationResult | null | undefined): AnnualDetailSummary {

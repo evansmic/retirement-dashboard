@@ -21,6 +21,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMasterDetailRows,
+  selectMasterDetailScheduleContract,
   selectMinimumExpenseCoverageSummary,
   selectMonthlyCapacityFundingTraceImplementationAudit,
   selectMonthlyCapacityFundingTraceImplementationCloseout,
@@ -857,6 +858,7 @@ describe('result selectors', () => {
   });
 
   it('can attach internal beta sequencing review evidence to master-detail rows without requiring public export', () => {
+    const publicRows = selectMasterDetailRows(fixture, planFixture);
     const rows = selectMasterDetailRows(fixture, planFixture, [
       {
         year: 2028,
@@ -886,6 +888,54 @@ describe('result selectors', () => {
       betaSequencingQualityStatus: 'readyForBetaReview; readyWithContext'
     });
     expect(rows[0].betaSequencingBoundaryStatus).toContain('not exported');
+    expect(publicRows[0].betaSequencingReviewAmount).toBeNull();
+    expect(publicRows[0].betaSequencingAccountLabel).toBe('');
+  });
+
+  it('builds an internal master-detail schedule contract while public downloads stay clean', () => {
+    const publicRows = selectMasterDetailRows(fixture, planFixture);
+    const internalRows = selectMasterDetailRows(fixture, planFixture, [
+      {
+        year: 2028,
+        accountLabel: 'Registered accounts',
+        reviewAmount: 12500,
+        sourceEvidence: 'registered withdrawal fields; annual account total 12500',
+        taxContext: 'Tax context for review only',
+        constraintContext: 'Minimum floor context',
+        qualityStatus: 'readyForBetaReview',
+        boundaryStatus: 'Internal beta review row only; not exported.'
+      }
+    ]);
+    const contract = selectMasterDetailScheduleContract(internalRows, publicRows);
+
+    expect(contract).toMatchObject({
+      status: 'internalReviewReady',
+      rowCount: internalRows.length,
+      publicDownloadRowCount: publicRows.length,
+      internalSequencingYearCount: 1,
+      printableReportStatus: 'currentReportOnly',
+      downloadableStatus: 'publicCleanCsvOnly',
+      summary: expect.stringContaining('public downloads stay clean'),
+      boundary: expect.stringContaining('does not create final annual instructions')
+    });
+    expect(contract.columns.find((column) => column.id === 'sequencingReview')).toMatchObject({
+      status: 'internalReviewOnly',
+      detail: expect.stringContaining('internal review schedule')
+    });
+    expect(contract.scheduleRows[0]).toMatchObject({
+      year: 2028,
+      sequencingReviewAmount: 12500,
+      sequencingAccountLabels: 'Registered accounts',
+      sequencingQualityStatus: 'readyForBetaReview'
+    });
+    expect(contract.blockedOutputs).toEqual([
+      'finalAnnualInstructions',
+      'accountLevelWithdrawalCommands',
+      'taxBracketWording',
+      'savedSequencingOutput',
+      'csvSequencingOutput',
+      'reportSequencingOutput'
+    ]);
   });
 
   it('defines slider-ready assumption controls and side-by-side optimal plan comparisons', () => {

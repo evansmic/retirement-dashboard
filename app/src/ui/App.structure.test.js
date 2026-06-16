@@ -1917,6 +1917,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Open printable report');
     expect(appSource).toContain('Download year-by-year CSV');
     expect(appSource).toContain('Download master-detail CSV');
+    expect(appSource).toContain('Master-detail schedule contract');
+    expect(appSource).toContain('Public download stays clean; sequencing evidence stays internal.');
+    expect(appSource).toContain('masterDetailScheduleContract');
+    expect(appSource).toContain('selectMasterDetailScheduleContract(masterDetailRows, masterDetailRowsForDownload)');
+    expect(appSource).toContain('Internal review only');
     expect(appSource).toContain('Spend delta');
     expect(appSource).toContain('Portfolio delta');
     expect(appSource).toContain('Tax delta');
@@ -1971,6 +1976,8 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('masterDetailRowsToCsv');
     expect(appSource).toContain('betaSequencingRowsForMasterDetail');
     expect(appSource).toContain('masterDetailRowsForDownload');
+    expect(appSource).toContain('Download rows');
+    expect(appSource).toContain('Sequencing years');
     expect(appSource).toContain('text/csv;charset=utf-8');
     expect(appSource).toContain('-year-by-year.csv');
     expect(appSource).toContain('-master-detail.csv');
