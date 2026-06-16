@@ -5217,9 +5217,9 @@ function RetirementAnswerLayerPanel({
         </div>
         <div className="summary-grid">
           <Metric label="Default views" value={presentationPlan.defaultModes.join(' / ')} />
-          <Metric label="Comparison slots" value={presentationPlan.comparisonSlots.length} />
-          <Metric label="Presentation modules" value={presentationPlan.modules.length} />
-          <Metric label="First-read cards" value={presentationPlan.firstScreenModuleIds.length} />
+          <Metric label="Comparison slots" value={String(presentationPlan.comparisonSlots.length)} />
+          <Metric label="Presentation modules" value={String(presentationPlan.modules.length)} />
+          <Metric label="First-read cards" value={String(presentationPlan.firstScreenModuleIds.length)} />
         </div>
         <dl className="mini-ledger presentation-story-order">
           <div>

@@ -3601,7 +3601,7 @@ export function selectRetirementAnswerLayer({
       question: 'Which lifestyle goals and outflows are being funded?',
       status: spendingCapacity.status === 'cannotTell' ? 'blocked' : spendingCapacity.status === 'needsReduction' ? 'review' : 'ready',
       answer: spendingCapacity.planningEstimateDetail,
-      evidence: `Early retirement spending ${moneyText(spendingCapacity.earlyRetirementSpending)}; late-life spending ${moneyText(spendingCapacity.lateLifeSpending)}; annual room ${moneyText(spendingCapacity.estimatedAnnualRoom)}.`,
+      evidence: `Early retirement spending ${moneyText(spendingCapacity.earlySpending)}; late-life spending ${moneyText(spendingCapacity.lateLifeSpending)}; annual room ${moneyText(spendingCapacity.estimatedAnnualRoom)}.`,
       evidenceRefs: evidenceRef('Lifestyle and one-time outflow evidence', firstDetail, ['baseSpending', 'additionalExpenses', 'totalSpending'], 'cashFlow'),
       comparisonDeltas: comparisonDeltasFor('spending'),
       visualizationHint: 'outflowStack',
