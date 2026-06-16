@@ -1070,6 +1070,20 @@ export type RetirementDetailToggle = {
   visualLanguage: string;
 };
 
+export type RetirementPresentationModeSwitch = {
+  moduleId: RetirementAnswerLayerRow['id'];
+  availableModes: RetirementPresentationMode[];
+  defaultMode: RetirementPresentationMode;
+  cardLabel: string;
+  graphLabel: string;
+  dataSheetLabel: string;
+  status: RetirementAnswerLayerStatus;
+  runtimeOnly: true;
+  doesNotPersist: true;
+  rerunRequired: false;
+  boundary: string;
+};
+
 export type RetirementPresentationPlan = {
   status: RetirementAnswerLayerStatus;
   headline: string;
@@ -1077,6 +1091,7 @@ export type RetirementPresentationPlan = {
   firstReadCards: RetirementFirstReadCard[];
   supportingGraphics: RetirementSupportingGraphic[];
   detailToggles: RetirementDetailToggle[];
+  modeSwitches: RetirementPresentationModeSwitch[];
   firstScreenModuleIds: RetirementAnswerLayerRow['id'][];
   supportingModuleIds: RetirementAnswerLayerRow['id'][];
   detailToggleModuleIds: RetirementAnswerLayerRow['id'][];
@@ -3839,6 +3854,39 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       visualLanguage: labels.visualLanguage
     }];
   });
+  const modules: RetirementPresentationModule[] = storyOrder.flatMap((id) => {
+    const row = rowById.get(id);
+    if (!row) return [];
+    const dataSheet = row.evidenceRefs[0]?.dataSheet ?? row.dataSheet;
+    return [{
+      id: row.id,
+      answerQuestion: row.question,
+      status: row.status,
+      primaryMode: 'answerCard',
+      firstScreenRole: roleMap[row.id],
+      graphPattern: row.visualizationHint,
+      dataSheet,
+      dataSheetToggleLabel: `${dataSheet} sheet`,
+      supportedAssumptionControls: controlMap[row.id],
+      evidenceLabels: row.evidenceRefs.map((ref) => ref.label),
+      comparisonFocus: row.comparisonDeltas[0]?.focus ?? 'none',
+      purpose: purposeMap[row.visualizationHint]
+    }];
+  });
+  const modeSwitches: RetirementPresentationModeSwitch[] = modules.map((module) => ({
+    moduleId: module.id,
+    availableModes: ['answerCard', 'graph', 'dataSheet'],
+    defaultMode: module.firstScreenRole === 'detailToggle' ? 'dataSheet' : 'answerCard',
+    cardLabel: 'Answer card',
+    graphLabel: module.graphPattern,
+    dataSheetLabel: module.dataSheetToggleLabel,
+    status: module.status,
+    runtimeOnly: true,
+    doesNotPersist: true,
+    rerunRequired: false,
+    boundary:
+      'Presentation mode switching changes only the current view. It does not mutate saved plan inputs, save scenarios, rerun the optimizer, or create advice output.'
+  }));
 
   return {
     status: layer.status,
@@ -3846,28 +3894,11 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       layer.status === 'blocked'
         ? 'Presentation planning waits for a coherent retirement answer layer.'
         : 'Answer cards, graphs, and data sheets can now be planned from one contract.',
-    modules: storyOrder.flatMap((id) => {
-      const row = rowById.get(id);
-      if (!row) return [];
-      const dataSheet = row.evidenceRefs[0]?.dataSheet ?? row.dataSheet;
-      return [{
-        id: row.id,
-        answerQuestion: row.question,
-        status: row.status,
-        primaryMode: 'answerCard',
-        firstScreenRole: roleMap[row.id],
-        graphPattern: row.visualizationHint,
-        dataSheet,
-        dataSheetToggleLabel: `${dataSheet} sheet`,
-        supportedAssumptionControls: controlMap[row.id],
-        evidenceLabels: row.evidenceRefs.map((ref) => ref.label),
-        comparisonFocus: row.comparisonDeltas[0]?.focus ?? 'none',
-        purpose: purposeMap[row.visualizationHint]
-      }];
-    }),
+    modules,
     firstReadCards,
     supportingGraphics,
     detailToggles,
+    modeSwitches,
     firstScreenModuleIds,
     supportingModuleIds,
     detailToggleModuleIds,

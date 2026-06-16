@@ -1253,11 +1253,16 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('toggle.printableExport');
     expect(appSource).toContain('toggle.masterDetailAlignment');
     expect(appSource).toContain('toggle.keyFields');
+    expect(appSource).toContain('presentationPlan.modeSwitches');
+    expect(appSource).toContain('modeSwitch.availableModes');
+    expect(appSource).toContain('modeSwitch.doesNotPersist');
+    expect(appSource).toContain('modeSwitch.dataSheetLabel');
     expect(appSource).toContain('Supporting graphics');
     expect(appSource).toContain('Data-sheet toggles');
     expect(appSource).toContain('retirement-first-read-card-grid');
     expect(appSource).toContain('retirement-supporting-graphic-grid');
     expect(appSource).toContain('retirement-detail-toggle-grid');
+    expect(appSource).toContain('retirement-mode-switch-grid');
     expect(appSource).toContain('retirement-presentation-grid');
     expect(appSource).toContain('module.supportedAssumptionControls');
     expect(appSource).toContain('module.firstScreenRole');

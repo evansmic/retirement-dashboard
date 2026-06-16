@@ -5317,6 +5317,18 @@ function RetirementAnswerLayerPanel({
             </article>
           ))}
         </div>
+        <div className="retirement-mode-switch-grid">
+          {presentationPlan.modeSwitches.slice(0, 6).map((modeSwitch) => (
+            <article className="retirement-mode-switch" key={modeSwitch.moduleId}>
+              <span>{modeSwitch.moduleId}</span>
+              <strong>{modeSwitch.defaultMode}</strong>
+              <p>{modeSwitch.availableModes.join(' / ')}</p>
+              <small>
+                Graph: {modeSwitch.graphLabel}; sheet: {modeSwitch.dataSheetLabel}; saved: {modeSwitch.doesNotPersist ? 'no' : 'yes'}.
+              </small>
+            </article>
+          ))}
+        </div>
         <div className="retirement-presentation-grid">
           {presentationPlan.modules.slice(0, 6).map((module) => (
             <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>

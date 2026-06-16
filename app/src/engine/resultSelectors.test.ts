@@ -916,6 +916,32 @@ describe('result selectors', () => {
           caveat: expect.stringContaining('does not approve spending changes')
         })
       ],
+      modeSwitches: expect.arrayContaining([
+        expect.objectContaining({
+          moduleId: 'retireTiming',
+          availableModes: ['answerCard', 'graph', 'dataSheet'],
+          defaultMode: 'answerCard',
+          cardLabel: 'Answer card',
+          graphLabel: 'verdictCard',
+          dataSheetLabel: 'annualDetail sheet',
+          runtimeOnly: true,
+          doesNotPersist: true,
+          rerunRequired: false,
+          boundary: expect.stringContaining('does not mutate saved plan inputs')
+        }),
+        expect.objectContaining({
+          moduleId: 'accountPath',
+          defaultMode: 'dataSheet',
+          graphLabel: 'accountStack',
+          dataSheetLabel: 'accounts sheet'
+        }),
+        expect.objectContaining({
+          moduleId: 'goalsOutflows',
+          defaultMode: 'dataSheet',
+          graphLabel: 'outflowStack',
+          dataSheetLabel: 'cashFlow sheet'
+        })
+      ]),
       firstScreenModuleIds: ['retireTiming', 'spendingCapacity', 'nextMoves'],
       supportingModuleIds: ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'],
       detailToggleModuleIds: ['accountPath', 'goalsOutflows'],
@@ -937,6 +963,7 @@ describe('result selectors', () => {
       nextStep: expect.stringContaining('first-screen graphical patterns')
     });
     expect(presentation.modules.map((module) => module.id)).toEqual(presentation.storyOrder);
+    expect(presentation.modeSwitches.map((modeSwitch) => modeSwitch.moduleId)).toEqual(presentation.storyOrder);
     expect(presentation.modules.map((module) => module.firstScreenRole)).toEqual([
       'hero',
       'primaryAnswer',

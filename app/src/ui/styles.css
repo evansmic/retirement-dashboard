@@ -1990,6 +1990,40 @@ button.secondary,
   line-height: 1.4;
 }
 
+.retirement-mode-switch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.retirement-mode-switch {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.retirement-mode-switch span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.retirement-mode-switch strong {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.retirement-mode-switch p,
+.retirement-mode-switch small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .presentation-module {
   display: grid;
   gap: 6px;
@@ -4250,6 +4284,7 @@ button.secondary,
   .retirement-first-read-card-grid,
   .retirement-supporting-graphic-grid,
   .retirement-detail-toggle-grid,
+  .retirement-mode-switch-grid,
   .retirement-presentation-grid,
   .estate-intent-grid,
   .overview-highlight-grid,
