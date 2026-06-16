@@ -1500,6 +1500,7 @@ describe('bounded optimizer runner', () => {
         'finalPublicReadinessDecision',
         'publicOptimizerReleaseNarrowing',
         'privatePilotRequirements',
+        'privatePilotPrepPacket',
         'fullSuiteRecoveryPlan',
         'publicOptimizerOutputContract',
         'privatePilotReleaseDecision',
@@ -2014,6 +2015,43 @@ describe('bounded optimizer runner', () => {
       'fullPublicRelease'
     ]);
     expect(summary.privatePilotReleaseDecision.releaseRows.map((item) => item.status)).toEqual(['next', 'ready', 'blocked', 'blocked']);
+    expect(summary.privatePilotPrepPacket).toMatchObject({
+      status: 'readyForPrivatePilotPrep',
+      decision: 'preparePrivatePilotWithoutCollectingData',
+      sourceRequirementsStatus: 'requirementsDefinedPublicClosed',
+      sourceReleaseDecisionStatus: 'readyForPilotReviewPublicClosed',
+      testerLimit: {
+        audience: 'privateOptInOnly',
+        maxHouseholds: 5,
+        realDataAllowed: 'explicitOptInOnly',
+        publicSharing: 'blocked'
+      },
+      summary: expect.stringContaining('no tester data is collected'),
+      boundary: expect.stringContaining('does not run a pilot')
+    });
+    expect(summary.privatePilotPrepPacket.prepRows.map((item) => item.id)).toEqual([
+      'sessionScript',
+      'testerPacket',
+      'evidenceTemplate',
+      'stopChecklist',
+      'verificationBaseline'
+    ]);
+    expect(summary.privatePilotPrepPacket.prepRows.map((item) => item.status)).toEqual([
+      'ready',
+      'ready',
+      'ready',
+      'ready',
+      'ready'
+    ]);
+    expect(summary.privatePilotPrepPacket.captureFields).toEqual([
+      'reviewOnlyComprehension',
+      'answerUsefulness',
+      'comparisonUsefulness',
+      'missingContext',
+      'stopConditionSeen',
+      'recommendedNextAction'
+    ]);
+    expect(summary.privatePilotPrepPacket.blockedOutputs).toEqual(summary.privatePilotReleaseDecision.blockedOutputs);
     expect(summary.limitedPublicBetaDecision).toMatchObject({
       status: 'publicClosedPilotEvidenceRequired',
       decision: 'doNotOpenLimitedPublicBetaYet',

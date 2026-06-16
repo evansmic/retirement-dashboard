@@ -7646,6 +7646,43 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.privatePilotPrepPacket ? (
+        <section className={`optimizer-private-pilot-prep private-pilot-prep-${summary.privatePilotPrepPacket.status}`}>
+          <div>
+            <p className="eyebrow">Private pilot prep packet</p>
+            <h3>Private pilot materials can be assembled</h3>
+            <p>{summary.privatePilotPrepPacket.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.privatePilotPrepPacket.prepRows.map((item) => (
+              <article className={`private-pilot-prep-row-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Capture fields</span>
+              <strong>{summary.privatePilotPrepPacket.captureFields.length}</strong>
+              <p>{summary.privatePilotPrepPacket.captureFields.join(', ')}</p>
+            </article>
+            <article>
+              <span>Household cap</span>
+              <strong>{summary.privatePilotPrepPacket.testerLimit.maxHouseholds}</strong>
+              <p>{summary.privatePilotPrepPacket.testerLimit.realDataAllowed}</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.privatePilotPrepPacket.blockedOutputs.length}</strong>
+              <p>{summary.privatePilotPrepPacket.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.privatePilotPrepPacket.boundary}</p>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.publicOptimizerOutputContract ? (
         <section className={`optimizer-public-output-contract public-output-${summary.publicOptimizerOutputContract.status}`}>
           <div>

@@ -703,6 +703,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'finalPublicReadinessDecision'
     | 'publicOptimizerReleaseNarrowing'
     | 'privatePilotRequirements'
+    | 'privatePilotPrepPacket'
     | 'fullSuiteRecoveryPlan'
     | 'publicOptimizerOutputContract'
     | 'privatePilotReleaseDecision'
@@ -1092,6 +1093,32 @@ export type OptimizerFullSuiteRecoveryPlan = {
     detail: string;
   }>;
   blockedUntil: Array<'lowStorageRunnerPasses' | 'productionBuildPasses' | 'publicCopyReview' | 'outputContractDecision'>;
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
+export type OptimizerPrivatePilotPrepPacket = {
+  status: 'readyForPrivatePilotPrep' | 'blocked';
+  decision: 'preparePrivatePilotWithoutCollectingData';
+  sourceRequirementsStatus: OptimizerPrivatePilotRequirements['status'];
+  sourceReleaseDecisionStatus: OptimizerPrivatePilotReleaseDecision['status'];
+  prepRows: Array<{
+    id: 'sessionScript' | 'testerPacket' | 'evidenceTemplate' | 'stopChecklist' | 'verificationBaseline';
+    label: string;
+    status: 'ready' | 'blocked';
+    detail: string;
+  }>;
+  captureFields: Array<
+    | 'reviewOnlyComprehension'
+    | 'answerUsefulness'
+    | 'comparisonUsefulness'
+    | 'missingContext'
+    | 'stopConditionSeen'
+    | 'recommendedNextAction'
+  >;
+  testerLimit: OptimizerPrivatePilotRequirements['testerLimit'];
+  blockedOutputs: OptimizerPrivatePilotReleaseDecision['blockedOutputs'];
   summary: string;
   boundary: string;
   nextStep: string;
@@ -2051,6 +2078,7 @@ export type BoundedOptimizerSummary = {
   finalPublicReadinessDecision: OptimizerFinalPublicReadinessDecision;
   publicOptimizerReleaseNarrowing: OptimizerPublicReleaseNarrowing;
   privatePilotRequirements: OptimizerPrivatePilotRequirements;
+  privatePilotPrepPacket: OptimizerPrivatePilotPrepPacket;
   fullSuiteRecoveryPlan: OptimizerFullSuiteRecoveryPlan;
   publicOptimizerOutputContract: OptimizerPublicOutputContractDecision;
   privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
@@ -6768,6 +6796,73 @@ export function selectOptimizerPrivatePilotReleaseDecision({
   };
 }
 
+export function selectOptimizerPrivatePilotPrepPacket({
+  privatePilotRequirements,
+  privatePilotReleaseDecision
+}: {
+  privatePilotRequirements: OptimizerPrivatePilotRequirements;
+  privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
+}): OptimizerPrivatePilotPrepPacket {
+  const prepReady =
+    privatePilotRequirements.status === 'requirementsDefinedPublicClosed' &&
+    privatePilotReleaseDecision.status === 'readyForPilotReviewPublicClosed';
+  return {
+    status: prepReady ? 'readyForPrivatePilotPrep' : 'blocked',
+    decision: 'preparePrivatePilotWithoutCollectingData',
+    sourceRequirementsStatus: privatePilotRequirements.status,
+    sourceReleaseDecisionStatus: privatePilotReleaseDecision.status,
+    prepRows: [
+      {
+        id: 'sessionScript',
+        label: 'Session script',
+        status: prepReady ? 'ready' : 'blocked',
+        detail: 'Use a private opt-in script that frames the optimizer as review evidence and asks the tester to explain what they think it means.'
+      },
+      {
+        id: 'testerPacket',
+        label: 'Tester packet',
+        status: prepReady ? 'ready' : 'blocked',
+        detail: 'Tester packet may include the answer layer, assumption comparison deltas, internal schedule evidence, privacy copy, and stop-condition language.'
+      },
+      {
+        id: 'evidenceTemplate',
+        label: 'Evidence template',
+        status: prepReady ? 'ready' : 'blocked',
+        detail: 'Capture only comprehension, usefulness, comparison clarity, missing context, stop conditions, and recommended next action.'
+      },
+      {
+        id: 'stopChecklist',
+        label: 'Stop checklist',
+        status: prepReady ? 'ready' : 'blocked',
+        detail: 'Stop immediately for instruction confusion, advice expectation, tax-bracket expectation, saved-output expectation, or material missing context.'
+      },
+      {
+        id: 'verificationBaseline',
+        label: 'Verification baseline',
+        status: prepReady ? 'ready' : 'blocked',
+        detail: 'Use focused checks, production build, and the low-storage full-suite runner before any pilot session is scheduled.'
+      }
+    ],
+    captureFields: [
+      'reviewOnlyComprehension',
+      'answerUsefulness',
+      'comparisonUsefulness',
+      'missingContext',
+      'stopConditionSeen',
+      'recommendedNextAction'
+    ],
+    testerLimit: privatePilotRequirements.testerLimit,
+    blockedOutputs: privatePilotReleaseDecision.blockedOutputs,
+    summary: prepReady
+      ? 'Private pilot prep packet is ready to assemble, but no tester data is collected by this package.'
+      : 'Private pilot prep waits for requirements and release-decision gates.',
+    boundary:
+      'This prep packet organizes private pilot materials only. It does not run a pilot, collect tester data, store feedback, open public optimizer release, promote production UI, save optimizer output, create CSV/report sequencing, create final annual instructions, add tax-bracket wording, or add account-level withdrawal commands.',
+    nextStep:
+      'Assemble the private tester script and evidence template outside the app, then run only three to five explicit opt-in household reviews when verification is current.'
+  };
+}
+
 export function selectOptimizerLimitedPublicBetaDecision({
   privatePilotReleaseDecision
 }: {
@@ -7051,6 +7146,7 @@ export function selectOptimizerSchemaSaveDecision({
       'finalPublicReadinessDecision',
       'publicOptimizerReleaseNarrowing',
       'privatePilotRequirements',
+      'privatePilotPrepPacket',
       'fullSuiteRecoveryPlan',
       'publicOptimizerOutputContract',
       'privatePilotReleaseDecision',
@@ -9979,6 +10075,10 @@ export function runBoundedOptimizer(
   const privatePilotReleaseDecision = selectOptimizerPrivatePilotReleaseDecision({
     publicOutputContract: publicOptimizerOutputContract
   });
+  const privatePilotPrepPacket = selectOptimizerPrivatePilotPrepPacket({
+    privatePilotRequirements,
+    privatePilotReleaseDecision
+  });
   const limitedPublicBetaDecision = selectOptimizerLimitedPublicBetaDecision({ privatePilotReleaseDecision });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
@@ -10024,6 +10124,7 @@ export function runBoundedOptimizer(
     finalPublicReadinessDecision,
     publicOptimizerReleaseNarrowing,
     privatePilotRequirements,
+    privatePilotPrepPacket,
     fullSuiteRecoveryPlan,
     publicOptimizerOutputContract,
     privatePilotReleaseDecision,

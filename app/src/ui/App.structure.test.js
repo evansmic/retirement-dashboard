@@ -1305,6 +1305,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Private pilot requirements');
     expect(appSource).toContain('Private opt-in pilot requirements defined');
     expect(appSource).toContain('summary.privatePilotRequirements');
+    expect(appSource).toContain('Private pilot prep packet');
+    expect(appSource).toContain('Private pilot materials can be assembled');
+    expect(appSource).toContain('summary.privatePilotPrepPacket');
+    expect(appSource).toContain('private-pilot-prep-row-');
+    expect(appSource).toContain('Capture fields');
     expect(appSource).toContain('optimizer-private-pilot-requirements');
     expect(appSource).toContain('private-pilot-row-');
     expect(boundedOptimizerSource).toContain('definePrivatePilotBeforePublicOutput');
