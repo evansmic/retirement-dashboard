@@ -306,6 +306,19 @@ export type MasterDetailScheduleContract = {
     sequencingQualityStatus: string;
     boundaryStatus: string;
   }>;
+  reportPlacement: {
+    status: 'reviewOnlyPlanned' | 'holdForRepair' | 'blocked';
+    printableReportStatus: 'currentReportOnly';
+    sections: Array<{
+      id: 'summary' | 'annualSchedule' | 'taxAndConstraintContext' | 'qualityBoundary';
+      label: string;
+      status: 'plannedForReview' | 'blocked';
+      detail: string;
+    }>;
+    allowedSummaryFields: Array<'rowCount' | 'yearRange' | 'spending' | 'incomeAndInflows' | 'portfolioWithdrawals' | 'tax' | 'netWorth'>;
+    excludedReportFields: Array<'finalInstruction' | 'withdrawalCommand' | 'taxBracketTarget' | 'savedSequencingField'>;
+    boundary: string;
+  };
   blockedOutputs: Array<
     | 'finalAnnualInstructions'
     | 'accountLevelWithdrawalCommands'
@@ -9944,6 +9957,10 @@ export function selectMasterDetailScheduleContract(
         : internalSequencingRows.length > 0
           ? 'internalReviewReady'
           : 'publicExportOnly';
+  const reportPlacementStatus: MasterDetailScheduleContract['reportPlacement']['status'] =
+    status === 'blocked' ? 'blocked' : status === 'holdForSequencingRepair' ? 'holdForRepair' : 'reviewOnlyPlanned';
+  const reportSectionStatus: 'plannedForReview' | 'blocked' =
+    reportPlacementStatus === 'reviewOnlyPlanned' ? 'plannedForReview' : 'blocked';
 
   return {
     status,
@@ -10008,6 +10025,48 @@ export function selectMasterDetailScheduleContract(
       sequencingQualityStatus: row.betaSequencingQualityStatus,
       boundaryStatus: row.betaSequencingBoundaryStatus || 'Public-clean master-detail row; no internal sequencing evidence attached.'
     })),
+    reportPlacement: {
+      status: reportPlacementStatus,
+      printableReportStatus: 'currentReportOnly',
+      sections: [
+        {
+          id: 'summary',
+          label: 'Schedule summary',
+          status: reportSectionStatus,
+          detail: 'May summarize row count, year range, and whether internal sequencing evidence is present.'
+        },
+        {
+          id: 'annualSchedule',
+          label: 'Annual master-detail schedule',
+          status: reportSectionStatus,
+          detail: 'May later place spending, inflow, withdrawal, tax, and net-worth rows in a printable schedule.'
+        },
+        {
+          id: 'taxAndConstraintContext',
+          label: 'Tax and constraint context',
+          status: reportSectionStatus,
+          detail: 'May later carry review context without tax-bracket targets or advice-like wording.'
+        },
+        {
+          id: 'qualityBoundary',
+          label: 'Quality and boundary note',
+          status: 'blocked',
+          detail: 'Report sequencing rows stay blocked until wording safety and output gates explicitly open them.'
+        }
+      ],
+      allowedSummaryFields: [
+        'rowCount',
+        'yearRange',
+        'spending',
+        'incomeAndInflows',
+        'portfolioWithdrawals',
+        'tax',
+        'netWorth'
+      ],
+      excludedReportFields: ['finalInstruction', 'withdrawalCommand', 'taxBracketTarget', 'savedSequencingField'],
+      boundary:
+        'Printable report placement is a review-only contract. The current report remains unchanged and no report sequencing rows, final instructions, withdrawal commands, tax-bracket targets, or saved sequencing fields are created.'
+    },
     blockedOutputs: [
       'finalAnnualInstructions',
       'accountLevelWithdrawalCommands',

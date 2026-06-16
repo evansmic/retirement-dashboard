@@ -11108,6 +11108,17 @@ function ExportSavePanel({
             </div>
           ))}
         </dl>
+        <div className="result-callout">
+          <strong>Printable report placement: {masterDetailScheduleContract.reportPlacement.status}.</strong>
+          <ul className="compact-list">
+            {masterDetailScheduleContract.reportPlacement.sections.map((section) => (
+              <li key={section.id}>
+                {section.label}: {section.status}
+              </li>
+            ))}
+          </ul>
+          <p>{masterDetailScheduleContract.reportPlacement.boundary}</p>
+        </div>
         <p className="table-note">{masterDetailScheduleContract.boundary}</p>
       </section>
 

@@ -1922,6 +1922,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('masterDetailScheduleContract');
     expect(appSource).toContain('selectMasterDetailScheduleContract(masterDetailRows, masterDetailRowsForDownload)');
     expect(appSource).toContain('Internal review only');
+    expect(appSource).toContain('Printable report placement');
+    expect(appSource).toContain('reportPlacement.sections');
+    expect(appSource).toContain('reportPlacement.boundary');
     expect(appSource).toContain('Spend delta');
     expect(appSource).toContain('Portfolio delta');
     expect(appSource).toContain('Tax delta');

@@ -922,6 +922,31 @@ describe('result selectors', () => {
       status: 'internalReviewOnly',
       detail: expect.stringContaining('internal review schedule')
     });
+    expect(contract.reportPlacement).toMatchObject({
+      status: 'reviewOnlyPlanned',
+      printableReportStatus: 'currentReportOnly',
+      allowedSummaryFields: [
+        'rowCount',
+        'yearRange',
+        'spending',
+        'incomeAndInflows',
+        'portfolioWithdrawals',
+        'tax',
+        'netWorth'
+      ],
+      excludedReportFields: ['finalInstruction', 'withdrawalCommand', 'taxBracketTarget', 'savedSequencingField'],
+      boundary: expect.stringContaining('current report remains unchanged')
+    });
+    expect(contract.reportPlacement.sections.map((section) => section.id)).toEqual([
+      'summary',
+      'annualSchedule',
+      'taxAndConstraintContext',
+      'qualityBoundary'
+    ]);
+    expect(contract.reportPlacement.sections.find((section) => section.id === 'qualityBoundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('Report sequencing rows stay blocked')
+    });
     expect(contract.scheduleRows[0]).toMatchObject({
       year: 2028,
       sequencingReviewAmount: 12500,
