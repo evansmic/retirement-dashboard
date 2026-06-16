@@ -1245,9 +1245,14 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Evidence toggle');
     expect(appSource).toContain('card.comparisonDelta');
     expect(appSource).toContain('card.caveat');
+    expect(appSource).toContain('presentationPlan.supportingGraphics');
+    expect(appSource).toContain('graphic.iconIntent');
+    expect(appSource).toContain('graphic.chartIntent');
+    expect(appSource).toContain('graphic.paletteToken');
     expect(appSource).toContain('Supporting graphics');
     expect(appSource).toContain('Data-sheet toggles');
     expect(appSource).toContain('retirement-first-read-card-grid');
+    expect(appSource).toContain('retirement-supporting-graphic-grid');
     expect(appSource).toContain('retirement-presentation-grid');
     expect(appSource).toContain('module.supportedAssumptionControls');
     expect(appSource).toContain('module.firstScreenRole');

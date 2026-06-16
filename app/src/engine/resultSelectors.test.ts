@@ -858,6 +858,40 @@ describe('result selectors', () => {
           evidenceToggleLabel: expect.stringContaining('stressTests')
         })
       ],
+      supportingGraphics: [
+        expect.objectContaining({
+          id: 'riskReview',
+          chartIntent: 'riskCardStack',
+          iconIntent: 'shieldAlert',
+          paletteToken: 'status-warning',
+          evidenceToggleLabel: expect.stringContaining('stressTests'),
+          visualLanguage: expect.stringContaining('calm risk cards')
+        }),
+        expect.objectContaining({
+          id: 'fundingPath',
+          chartIntent: 'incomeFlow',
+          iconIntent: 'workflow',
+          paletteToken: 'blue-500',
+          evidenceToggleLabel: expect.stringContaining('incomeSources'),
+          visualLanguage: expect.stringContaining('Sankey-style income flow')
+        }),
+        expect.objectContaining({
+          id: 'taxDrag',
+          chartIntent: 'taxSparkline',
+          iconIntent: 'receiptText',
+          paletteToken: 'amber-500',
+          evidenceToggleLabel: expect.stringContaining('taxes'),
+          caveat: expect.stringContaining('Lower tax is not automatically better')
+        }),
+        expect.objectContaining({
+          id: 'netWorthEstate',
+          chartIntent: 'netWorthTimeline',
+          iconIntent: 'lineChart',
+          paletteToken: 'green-500',
+          comparisonDelta: expect.stringContaining('$'),
+          visualLanguage: expect.stringContaining('estate trade-off caveats')
+        })
+      ],
       firstScreenModuleIds: ['retireTiming', 'spendingCapacity', 'nextMoves'],
       supportingModuleIds: ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'],
       detailToggleModuleIds: ['accountPath', 'goalsOutflows'],

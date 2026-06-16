@@ -1041,11 +1041,26 @@ export type RetirementFirstReadCard = {
   caveat: string;
 };
 
+export type RetirementSupportingGraphic = {
+  id: Extract<RetirementAnswerLayerRow['id'], 'riskReview' | 'fundingPath' | 'taxDrag' | 'netWorthEstate'>;
+  title: string;
+  chartIntent: 'riskCardStack' | 'incomeFlow' | 'taxSparkline' | 'netWorthTimeline';
+  iconIntent: 'shieldAlert' | 'workflow' | 'receiptText' | 'lineChart';
+  paletteToken: 'status-warning' | 'blue-500' | 'amber-500' | 'green-500';
+  primaryQuestion: string;
+  comparisonLabel: string;
+  comparisonDelta: string;
+  evidenceToggleLabel: string;
+  caveat: string;
+  visualLanguage: string;
+};
+
 export type RetirementPresentationPlan = {
   status: RetirementAnswerLayerStatus;
   headline: string;
   modules: RetirementPresentationModule[];
   firstReadCards: RetirementFirstReadCard[];
+  supportingGraphics: RetirementSupportingGraphic[];
   firstScreenModuleIds: RetirementAnswerLayerRow['id'][];
   supportingModuleIds: RetirementAnswerLayerRow['id'][];
   detailToggleModuleIds: RetirementAnswerLayerRow['id'][];
@@ -3708,6 +3723,60 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       caveat: comparison?.caveat ?? labels.fallbackCaveat
     }];
   });
+  const supportingGraphicLabels: Record<
+    RetirementSupportingGraphic['id'],
+    Pick<RetirementSupportingGraphic, 'chartIntent' | 'iconIntent' | 'paletteToken' | 'visualLanguage'>
+  > = {
+    riskReview: {
+      chartIntent: 'riskCardStack',
+      iconIntent: 'shieldAlert',
+      paletteToken: 'status-warning',
+      visualLanguage:
+        'Use calm risk cards with severity dots, amber/red status accents, and short action links like the brief risk panels.'
+    },
+    fundingPath: {
+      chartIntent: 'incomeFlow',
+      iconIntent: 'workflow',
+      paletteToken: 'blue-500',
+      visualLanguage:
+        'Use a Sankey-style income flow or stacked source chart with muted blue/green/amber bands and a data-sheet toggle.'
+    },
+    taxDrag: {
+      chartIntent: 'taxSparkline',
+      iconIntent: 'receiptText',
+      paletteToken: 'amber-500',
+      visualLanguage:
+        'Use a small tax timeline or sparkline with amber emphasis and restrained copy that avoids framing lower tax as automatically better.'
+    },
+    netWorthEstate: {
+      chartIntent: 'netWorthTimeline',
+      iconIntent: 'lineChart',
+      paletteToken: 'green-500',
+      visualLanguage:
+        'Use a net-worth line or portfolio band with green success accents and estate trade-off caveats visible nearby.'
+    }
+  };
+  const supportingGraphics: RetirementSupportingGraphic[] = supportingModuleIds.flatMap((id) => {
+    if (id !== 'riskReview' && id !== 'fundingPath' && id !== 'taxDrag' && id !== 'netWorthEstate') return [];
+    const row = rowById.get(id);
+    if (!row) return [];
+    const comparison = row.comparisonDeltas[0];
+    const evidence = row.evidenceRefs[0];
+    const graphic = supportingGraphicLabels[id];
+    return [{
+      id,
+      title: row.question,
+      chartIntent: graphic.chartIntent,
+      iconIntent: graphic.iconIntent,
+      paletteToken: graphic.paletteToken,
+      primaryQuestion: row.answer,
+      comparisonLabel: comparison?.label ?? 'Current plan',
+      comparisonDelta: comparisonDeltaText(comparison),
+      evidenceToggleLabel: evidence ? `${evidence.label} (${evidence.dataSheet})` : `${row.dataSheet} sheet`,
+      caveat: comparison?.caveat ?? 'Keep this as review evidence until pilot feedback confirms the graphic is useful.',
+      visualLanguage: graphic.visualLanguage
+    }];
+  });
 
   return {
     status: layer.status,
@@ -3735,6 +3804,7 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       }];
     }),
     firstReadCards,
+    supportingGraphics,
     firstScreenModuleIds,
     supportingModuleIds,
     detailToggleModuleIds,

@@ -5261,6 +5261,34 @@ function RetirementAnswerLayerPanel({
             </article>
           ))}
         </div>
+        <div className="retirement-supporting-graphic-grid">
+          {presentationPlan.supportingGraphics.map((graphic) => (
+            <article className={`supporting-graphic supporting-graphic-${graphic.paletteToken}`} key={graphic.id}>
+              <span>{graphic.iconIntent}</span>
+              <strong>{graphic.title}</strong>
+              <p>{graphic.visualLanguage}</p>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Chart intent</dt>
+                  <dd>{graphic.chartIntent}</dd>
+                </div>
+                <div>
+                  <dt>{graphic.comparisonLabel}</dt>
+                  <dd>{graphic.comparisonDelta}</dd>
+                </div>
+                <div>
+                  <dt>Evidence toggle</dt>
+                  <dd>{graphic.evidenceToggleLabel}</dd>
+                </div>
+                <div>
+                  <dt>Palette</dt>
+                  <dd>{graphic.paletteToken}</dd>
+                </div>
+              </dl>
+              <small>{graphic.caveat}</small>
+            </article>
+          ))}
+        </div>
         <div className="retirement-presentation-grid">
           {presentationPlan.modules.slice(0, 6).map((module) => (
             <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>
