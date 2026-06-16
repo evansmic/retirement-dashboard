@@ -6134,6 +6134,7 @@ function SequencingEvidenceReviewPanel({ boundedOptimizer }: { boundedOptimizer:
       <div className="summary-grid">
         <Metric label="Review rows" value={String(rows.length)} />
         <Metric label="Source years" value={sourceYearLabel} />
+        <Metric label="Review decision" value={adapter?.reviewDecision.label || 'Waiting'} />
         <Metric label="Public download" value="Closed" />
         <Metric label="Plan file" value="Unchanged" />
       </div>
@@ -6158,6 +6159,18 @@ function SequencingEvidenceReviewPanel({ boundedOptimizer }: { boundedOptimizer:
       <p className="table-note">
         {adapter?.summary || 'Sequencing review rows appear after the optimizer has enough annual account evidence.'}
       </p>
+      {adapter?.reviewDecision ? (
+        <div className="result-callout">
+          <strong>Internal review decision: {adapter.reviewDecision.label}.</strong>
+          <p>{adapter.reviewDecision.detail}</p>
+          <ul className="compact-list">
+            {adapter.reviewDecision.evidence.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p>{adapter.reviewDecision.boundary}</p>
+        </div>
+      ) : null}
       <div className="result-callout">
         <strong>{stopReasons.length ? 'Stop conditions still apply.' : 'No stop conditions are visible in this compact check.'}</strong>
         <ul className="compact-list">
@@ -7009,6 +7022,15 @@ function TinyTesterSurfacePanel({
               <em>{betaSavedSequencingAdapter?.summary || 'Beta saved sequencing adapter is waiting for runtime annual sequence rows.'}</em>
               <em>{betaSavedSequencingAdapter?.boundary || 'No saved schema, CSV, report, production UI, final instruction, or tax-bracket output is open.'}</em>
             </article>
+            {betaSavedSequencingAdapter?.reviewDecision ? (
+              <article className={`annual-sequence-beta-adapter-summary annual-sequence-beta-adapter-summary-${betaSavedSequencingAdapter.reviewDecision.status.toLowerCase()}`}>
+                <strong>Internal review decision</strong>
+                <span>{betaSavedSequencingAdapter.reviewDecision.label}</span>
+                <em>{betaSavedSequencingAdapter.reviewDecision.detail}</em>
+                <em>{betaSavedSequencingAdapter.reviewDecision.boundary}</em>
+                <em>{betaSavedSequencingAdapter.reviewDecision.nextStep}</em>
+              </article>
+            ) : null}
             <div className="annual-sequence-beta-adapter-fields">
               <span>Allowed fields: {(betaSavedSequencingAdapter?.allowedFields || []).join(', ') || 'none'}</span>
               <span>Excluded fields: {(betaSavedSequencingAdapter?.excludedFields || []).join(', ') || 'final and export fields'}</span>

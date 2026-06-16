@@ -1422,6 +1422,18 @@ describe('bounded optimizer runner', () => {
       reasons: [],
       detail: expect.stringContaining('No review-row quality repairs')
     });
+    expect(summary.betaSavedSequencingAdapter.reviewDecision).toMatchObject({
+      status: 'readyForInternalReview',
+      label: 'Ready for internal review',
+      detail: expect.stringContaining('Internal reviewers can inspect'),
+      evidence: expect.arrayContaining([
+        expect.stringContaining('internal beta sequencing review rows'),
+        expect.stringContaining('ready for beta review'),
+        expect.stringContaining('held for repair')
+      ]),
+      boundary: expect.stringContaining('does not create final annual instructions'),
+      nextStep: expect.stringContaining('CSV/report gate')
+    });
     expect(summary.betaSavedSequencingAdapter.rows[0]).toMatchObject({
       year: 2032,
       accountLabel: 'Registered accounts',

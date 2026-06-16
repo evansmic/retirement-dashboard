@@ -605,6 +605,14 @@ export type OptimizerBetaSavedSequencingAdapter = {
   sourceCandidateId: BoundedOptimizerCandidateId | null;
   sourceCandidateLabel: string;
   rows: OptimizerBetaSavedSequencingRow[];
+  reviewDecision: {
+    status: 'readyForInternalReview' | 'holdForRepair' | 'blocked';
+    label: string;
+    detail: string;
+    evidence: string[];
+    boundary: string;
+    nextStep: string;
+  };
   repairSummary: {
     status: 'none' | 'repairNeeded';
     reviewRowCount: number;
@@ -5411,6 +5419,17 @@ export function selectOptimizerBetaSavedSequencingAdapter(
       : hasRows
         ? 'reviewFirst'
         : 'blocked';
+  const reviewDecisionStatus: OptimizerBetaSavedSequencingAdapter['reviewDecision']['status'] =
+    status === 'readyForBetaReview' ? 'readyForInternalReview' : status === 'reviewFirst' ? 'holdForRepair' : 'blocked';
+  const readyForBetaReviewCount = rows.filter((row) => row.qualityStatus === 'readyForBetaReview').length;
+  const readyWithContextCount = rows.filter((row) => row.qualityStatus === 'readyWithContext').length;
+  const reviewBeforeSaveCount = rows.filter((row) => row.qualityStatus === 'reviewBeforeSave').length;
+  const reviewDecisionEvidence = [
+    `${rows.length} internal beta sequencing review row${rows.length === 1 ? '' : 's'}.`,
+    `${readyForBetaReviewCount} row${readyForBetaReviewCount === 1 ? '' : 's'} ready for beta review.`,
+    `${readyWithContextCount} row${readyWithContextCount === 1 ? '' : 's'} ready with context.`,
+    `${reviewBeforeSaveCount} row${reviewBeforeSaveCount === 1 ? '' : 's'} held for repair.`
+  ];
 
   return {
     status,
@@ -5419,6 +5438,30 @@ export function selectOptimizerBetaSavedSequencingAdapter(
     sourceCandidateId: draft.sourceCandidateId,
     sourceCandidateLabel: draft.sourceCandidateLabel,
     rows,
+    reviewDecision: {
+      status: reviewDecisionStatus,
+      label:
+        reviewDecisionStatus === 'readyForInternalReview'
+          ? 'Ready for internal review'
+          : reviewDecisionStatus === 'holdForRepair'
+            ? 'Hold for repair'
+            : 'Blocked until sequencing evidence exists',
+      detail:
+        reviewDecisionStatus === 'readyForInternalReview'
+          ? 'Internal reviewers can inspect the beta sequencing evidence rows from the current runtime adapter.'
+          : reviewDecisionStatus === 'holdForRepair'
+            ? 'Internal review should hold until review-before-save rows are repaired.'
+            : 'Internal review is blocked until runtime annual sequence rows exist.',
+      evidence: reviewDecisionEvidence,
+      boundary:
+        'This decision only opens internal evidence review. It does not create final annual instructions, saved optimizer output, CSV sequencing, report sequencing, tax-bracket wording, or account-level withdrawal commands.',
+      nextStep:
+        reviewDecisionStatus === 'readyForInternalReview'
+          ? 'Review row evidence against the CSV/report gate before any public-output work is reconsidered.'
+          : reviewDecisionStatus === 'holdForRepair'
+            ? 'Repair review-before-save rows and rerun the focused adapter checks.'
+            : 'Generate runtime annual draft rows before starting internal sequencing review.'
+    },
     repairSummary: {
       status: repairReasons.length ? 'repairNeeded' : 'none',
       reviewRowCount: rows.filter((row) => row.qualityStatus === 'reviewBeforeSave').length,

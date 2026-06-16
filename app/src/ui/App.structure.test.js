@@ -1930,6 +1930,10 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Review source');
     expect(appSource).toContain('Review amount');
     expect(appSource).toContain('visibleRows = rows.slice(0, 5)');
+    expect(appSource).toContain('Review decision');
+    expect(appSource).toContain('Internal review decision');
+    expect(appSource).toContain('reviewDecision.evidence');
+    expect(appSource).toContain('reviewDecision.boundary');
     expect(appSource).toContain('Stop conditions still apply.');
     expect(appSource).toContain('Quality repair summary.');
     expect(appSource).toContain('repairSummary.reasons');
