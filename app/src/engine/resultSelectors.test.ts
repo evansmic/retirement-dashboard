@@ -832,6 +832,32 @@ describe('result selectors', () => {
     expect(presentation).toMatchObject({
       status: 'review',
       headline: expect.stringContaining('Answer cards, graphs, and data sheets'),
+      firstReadCards: [
+        expect.objectContaining({
+          id: 'retireTiming',
+          role: 'hero',
+          supportingNumberLabel: 'Plan-through evidence',
+          comparisonLabel: 'Retire two years later',
+          comparisonDelta: expect.stringContaining('Funds through'),
+          evidenceToggleLabel: expect.stringContaining('annualDetail'),
+          caveat: expect.stringContaining('funded horizon')
+        }),
+        expect.objectContaining({
+          id: 'spendingCapacity',
+          role: 'primaryAnswer',
+          supportingNumberLabel: 'Spending estimate',
+          comparisonLabel: 'Retire two years later',
+          comparisonDelta: expect.stringContaining('/ mo'),
+          evidenceToggleLabel: expect.stringContaining('cashFlow'),
+          caveat: expect.stringContaining('household lifestyle')
+        }),
+        expect.objectContaining({
+          id: 'nextMoves',
+          role: 'primaryAnswer',
+          supportingNumberLabel: 'Review priority',
+          evidenceToggleLabel: expect.stringContaining('stressTests')
+        })
+      ],
       firstScreenModuleIds: ['retireTiming', 'spendingCapacity', 'nextMoves'],
       supportingModuleIds: ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'],
       detailToggleModuleIds: ['accountPath', 'goalsOutflows'],

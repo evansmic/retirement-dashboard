@@ -1870,6 +1870,42 @@ button.secondary,
   background: #f8fafc;
 }
 
+.retirement-first-read-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.retirement-first-read-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #9fb2c1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.retirement-first-read-card span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.retirement-first-read-card strong {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.first-read-hero {
+  border-left-color: var(--green);
+}
+
+.first-read-primaryAnswer {
+  border-left-color: #d8b676;
+}
+
 .presentation-module {
   display: grid;
   gap: 6px;
@@ -4127,6 +4163,7 @@ button.secondary,
   .retirement-actions > div,
   .spending-capacity-grid,
   .retirement-answer-layer-grid,
+  .retirement-first-read-card-grid,
   .retirement-presentation-grid,
   .estate-intent-grid,
   .overview-highlight-grid,

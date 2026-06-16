@@ -5235,6 +5235,32 @@ function RetirementAnswerLayerPanel({
             <dd>{presentationPlan.detailToggleModuleIds.join(', ')}</dd>
           </div>
         </dl>
+        <div className="retirement-first-read-card-grid">
+          {presentationPlan.firstReadCards.map((card) => (
+            <article className={`retirement-first-read-card first-read-${card.role}`} key={card.id}>
+              <span>{card.role}</span>
+              <strong>{card.headline}</strong>
+              <dl className="mini-ledger">
+                <div>
+                  <dt>{card.supportingNumberLabel}</dt>
+                  <dd>{card.supportingNumber}</dd>
+                </div>
+                <div>
+                  <dt>{card.comparisonLabel}</dt>
+                  <dd>{card.comparisonDelta}</dd>
+                </div>
+                <div>
+                  <dt>Evidence toggle</dt>
+                  <dd>{card.evidenceToggleLabel}</dd>
+                </div>
+                <div>
+                  <dt>Caveat</dt>
+                  <dd>{card.caveat}</dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
         <div className="retirement-presentation-grid">
           {presentationPlan.modules.slice(0, 6).map((module) => (
             <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>

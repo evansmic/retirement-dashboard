@@ -1238,11 +1238,16 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('presentationPlan.defaultModes');
     expect(appSource).toContain('presentationPlan.comparisonSlots');
     expect(appSource).toContain('presentationPlan.firstScreenModuleIds');
+    expect(appSource).toContain('presentationPlan.firstReadCards');
     expect(appSource).toContain('presentationPlan.supportingModuleIds');
     expect(appSource).toContain('presentationPlan.detailToggleModuleIds');
     expect(appSource).toContain('First-read cards');
+    expect(appSource).toContain('Evidence toggle');
+    expect(appSource).toContain('card.comparisonDelta');
+    expect(appSource).toContain('card.caveat');
     expect(appSource).toContain('Supporting graphics');
     expect(appSource).toContain('Data-sheet toggles');
+    expect(appSource).toContain('retirement-first-read-card-grid');
     expect(appSource).toContain('retirement-presentation-grid');
     expect(appSource).toContain('module.supportedAssumptionControls');
     expect(appSource).toContain('module.firstScreenRole');

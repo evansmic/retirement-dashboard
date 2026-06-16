@@ -1029,10 +1029,23 @@ export type RetirementPresentationModule = {
   purpose: string;
 };
 
+export type RetirementFirstReadCard = {
+  id: Extract<RetirementAnswerLayerRow['id'], 'retireTiming' | 'spendingCapacity' | 'nextMoves'>;
+  role: Extract<RetirementPresentationModule['firstScreenRole'], 'hero' | 'primaryAnswer'>;
+  headline: string;
+  supportingNumberLabel: string;
+  supportingNumber: string;
+  comparisonLabel: string;
+  comparisonDelta: string;
+  evidenceToggleLabel: string;
+  caveat: string;
+};
+
 export type RetirementPresentationPlan = {
   status: RetirementAnswerLayerStatus;
   headline: string;
   modules: RetirementPresentationModule[];
+  firstReadCards: RetirementFirstReadCard[];
   firstScreenModuleIds: RetirementAnswerLayerRow['id'][];
   supportingModuleIds: RetirementAnswerLayerRow['id'][];
   detailToggleModuleIds: RetirementAnswerLayerRow['id'][];
@@ -3653,6 +3666,48 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
     goalsOutflows: 'detailToggle'
   };
   const rowById = new Map(layer.rows.map((row) => [row.id, row]));
+  const firstReadCardLabels: Record<RetirementFirstReadCard['id'], { supportingNumberLabel: string; fallbackCaveat: string }> = {
+    retireTiming: {
+      supportingNumberLabel: 'Plan-through evidence',
+      fallbackCaveat: 'This is a projection summary, not a guarantee or instruction to retire.'
+    },
+    spendingCapacity: {
+      supportingNumberLabel: 'Spending estimate',
+      fallbackCaveat: 'Spending capacity should be reviewed against taxes, market returns, survivor needs, and estate intent.'
+    },
+    nextMoves: {
+      supportingNumberLabel: 'Review priority',
+      fallbackCaveat: 'Next moves are review prompts only and should not be treated as personal financial advice.'
+    }
+  };
+
+  function comparisonDeltaText(delta: RetirementAnswerComparisonDelta | undefined): string {
+    if (!delta) return 'No comparison delta available yet.';
+    if (delta.focus === 'tax') return signedMoneyText(delta.lifetimeTaxDelta);
+    if (delta.focus === 'estate') return signedMoneyText(delta.endPortfolioDelta);
+    if (delta.focus === 'horizon') return delta.fundedThroughYear ? `Funds through ${delta.fundedThroughYear}` : 'No horizon change';
+    return `${signedMoneyText(delta.annualAfterTaxSpendingDelta)} / yr (${signedMoneyText(delta.monthlyAfterTaxSpendingDelta)} / mo)`;
+  }
+
+  const firstReadCards: RetirementFirstReadCard[] = firstScreenModuleIds.flatMap((id) => {
+    if (id !== 'retireTiming' && id !== 'spendingCapacity' && id !== 'nextMoves') return [];
+    const row = rowById.get(id);
+    if (!row) return [];
+    const labels = firstReadCardLabels[id];
+    const evidence = row.evidenceRefs[0];
+    const comparison = row.comparisonDeltas[0];
+    return [{
+      id,
+      role: roleMap[id] as RetirementFirstReadCard['role'],
+      headline: row.answer,
+      supportingNumberLabel: labels.supportingNumberLabel,
+      supportingNumber: row.evidence,
+      comparisonLabel: comparison?.label ?? 'Current plan',
+      comparisonDelta: comparisonDeltaText(comparison),
+      evidenceToggleLabel: evidence ? `${evidence.label} (${evidence.dataSheet})` : `${row.dataSheet} sheet`,
+      caveat: comparison?.caveat ?? labels.fallbackCaveat
+    }];
+  });
 
   return {
     status: layer.status,
@@ -3679,6 +3734,7 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
         purpose: purposeMap[row.visualizationHint]
       }];
     }),
+    firstReadCards,
     firstScreenModuleIds,
     supportingModuleIds,
     detailToggleModuleIds,
