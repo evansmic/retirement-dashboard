@@ -947,6 +947,40 @@ describe('result selectors', () => {
       status: 'blocked',
       detail: expect.stringContaining('Report sequencing rows stay blocked')
     });
+    expect(contract.readinessRollup).toMatchObject({
+      status: 'readyForInternalReview',
+      availableForReview: [
+        'publicMasterDetailCsv',
+        'scheduleContract',
+        'reportPlacementContract',
+        'internalSequencingEvidence'
+      ],
+      stillBlocked: [
+        'finalAnnualInstructions',
+        'accountLevelWithdrawalCommands',
+        'taxBracketWording',
+        'savedSequencingOutput',
+        'csvSequencingOutput',
+        'reportSequencingOutput'
+      ],
+      summary: expect.stringContaining('ready for internal review evidence'),
+      boundary: expect.stringContaining('does not open final annual instructions'),
+      nextStep: expect.stringContaining('handoff')
+    });
+    expect(contract.readinessRollup.requiredBeforeOpen.map((item) => item.id)).toEqual([
+      'rowQuality',
+      'wordingSafety',
+      'publicOutputGate',
+      'savedSchemaDecision',
+      'pilotEvidence'
+    ]);
+    expect(contract.readinessRollup.requiredBeforeOpen.map((item) => item.status)).toEqual([
+      'ready',
+      'blocked',
+      'blocked',
+      'blocked',
+      'blocked'
+    ]);
     expect(contract.scheduleRows[0]).toMatchObject({
       year: 2028,
       sequencingReviewAmount: 12500,

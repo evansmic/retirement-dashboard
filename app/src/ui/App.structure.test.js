@@ -1925,6 +1925,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Printable report placement');
     expect(appSource).toContain('reportPlacement.sections');
     expect(appSource).toContain('reportPlacement.boundary');
+    expect(appSource).toContain('Annual instruction bridge');
+    expect(appSource).toContain('readinessRollup.requiredBeforeOpen');
+    expect(appSource).toContain('readinessRollup.boundary');
     expect(appSource).toContain('Spend delta');
     expect(appSource).toContain('Portfolio delta');
     expect(appSource).toContain('Tax delta');

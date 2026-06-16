@@ -11119,6 +11119,18 @@ function ExportSavePanel({
           </ul>
           <p>{masterDetailScheduleContract.reportPlacement.boundary}</p>
         </div>
+        <div className="result-callout">
+          <strong>Annual instruction bridge: {masterDetailScheduleContract.readinessRollup.status}.</strong>
+          <p>{masterDetailScheduleContract.readinessRollup.summary}</p>
+          <ul className="compact-list">
+            {masterDetailScheduleContract.readinessRollup.requiredBeforeOpen.map((item) => (
+              <li key={item.id}>
+                {item.label}: {item.status}
+              </li>
+            ))}
+          </ul>
+          <p>{masterDetailScheduleContract.readinessRollup.boundary}</p>
+        </div>
         <p className="table-note">{masterDetailScheduleContract.boundary}</p>
       </section>
 

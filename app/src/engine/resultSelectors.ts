@@ -319,6 +319,27 @@ export type MasterDetailScheduleContract = {
     excludedReportFields: Array<'finalInstruction' | 'withdrawalCommand' | 'taxBracketTarget' | 'savedSequencingField'>;
     boundary: string;
   };
+  readinessRollup: {
+    status: 'readyForInternalReview' | 'holdForRepair' | 'blocked';
+    availableForReview: Array<'publicMasterDetailCsv' | 'internalSequencingEvidence' | 'scheduleContract' | 'reportPlacementContract'>;
+    stillBlocked: Array<
+      | 'finalAnnualInstructions'
+      | 'accountLevelWithdrawalCommands'
+      | 'taxBracketWording'
+      | 'savedSequencingOutput'
+      | 'csvSequencingOutput'
+      | 'reportSequencingOutput'
+    >;
+    requiredBeforeOpen: Array<{
+      id: 'rowQuality' | 'wordingSafety' | 'publicOutputGate' | 'savedSchemaDecision' | 'pilotEvidence';
+      label: string;
+      status: 'ready' | 'blocked';
+      detail: string;
+    }>;
+    summary: string;
+    boundary: string;
+    nextStep: string;
+  };
   blockedOutputs: Array<
     | 'finalAnnualInstructions'
     | 'accountLevelWithdrawalCommands'
@@ -9961,6 +9982,22 @@ export function selectMasterDetailScheduleContract(
     status === 'blocked' ? 'blocked' : status === 'holdForSequencingRepair' ? 'holdForRepair' : 'reviewOnlyPlanned';
   const reportSectionStatus: 'plannedForReview' | 'blocked' =
     reportPlacementStatus === 'reviewOnlyPlanned' ? 'plannedForReview' : 'blocked';
+  const readinessRollupStatus: MasterDetailScheduleContract['readinessRollup']['status'] =
+    status === 'blocked' ? 'blocked' : status === 'holdForSequencingRepair' ? 'holdForRepair' : 'readyForInternalReview';
+  const availableForReview: MasterDetailScheduleContract['readinessRollup']['availableForReview'] = [
+    'publicMasterDetailCsv',
+    'scheduleContract',
+    'reportPlacementContract',
+    ...(internalSequencingRows.length > 0 ? (['internalSequencingEvidence'] as const) : [])
+  ];
+  const stillBlocked: MasterDetailScheduleContract['readinessRollup']['stillBlocked'] = [
+    'finalAnnualInstructions',
+    'accountLevelWithdrawalCommands',
+    'taxBracketWording',
+    'savedSequencingOutput',
+    'csvSequencingOutput',
+    'reportSequencingOutput'
+  ];
 
   return {
     status,
@@ -10066,6 +10103,61 @@ export function selectMasterDetailScheduleContract(
       excludedReportFields: ['finalInstruction', 'withdrawalCommand', 'taxBracketTarget', 'savedSequencingField'],
       boundary:
         'Printable report placement is a review-only contract. The current report remains unchanged and no report sequencing rows, final instructions, withdrawal commands, tax-bracket targets, or saved sequencing fields are created.'
+    },
+    readinessRollup: {
+      status: readinessRollupStatus,
+      availableForReview,
+      stillBlocked,
+      requiredBeforeOpen: [
+        {
+          id: 'rowQuality',
+          label: 'Row quality',
+          status: hasRepairRows || internalRows.length === 0 ? 'blocked' : 'ready',
+          detail: hasRepairRows
+            ? 'Repair review-before-save sequencing rows before opening any wider output.'
+            : internalRows.length > 0
+              ? 'Master-detail rows are available for internal review.'
+              : 'Simulation rows are required before schedule review can begin.'
+        },
+        {
+          id: 'wordingSafety',
+          label: 'Wording safety',
+          status: 'blocked',
+          detail: 'Final instructions, account commands, and tax-bracket targets need a separate wording safety gate.'
+        },
+        {
+          id: 'publicOutputGate',
+          label: 'Public output gate',
+          status: 'blocked',
+          detail: 'CSV sequencing output and report sequencing rows remain closed until their output gate opens.'
+        },
+        {
+          id: 'savedSchemaDecision',
+          label: 'Saved schema decision',
+          status: 'blocked',
+          detail: 'Saved sequencing fields require a separate schema decision and migration plan.'
+        },
+        {
+          id: 'pilotEvidence',
+          label: 'Pilot evidence',
+          status: 'blocked',
+          detail: 'Real household pilot evidence is required before any public annual instruction output is reconsidered.'
+        }
+      ],
+      summary:
+        readinessRollupStatus === 'readyForInternalReview'
+          ? 'The account-level annual instruction bridge is ready for internal review evidence, but not for final instructions or exports.'
+          : readinessRollupStatus === 'holdForRepair'
+            ? 'The account-level annual instruction bridge should hold until sequencing row repairs are complete.'
+            : 'The account-level annual instruction bridge is blocked until master-detail rows exist.',
+      boundary:
+        'This rollup closes the internal-review bridge only. It does not open final annual instructions, account-level withdrawal commands, saved sequencing output, CSV sequencing output, report sequencing output, tax-bracket wording, or public optimizer release.',
+      nextStep:
+        readinessRollupStatus === 'readyForInternalReview'
+          ? 'Use this rollup as the handoff before deciding whether to run private pilot prep or design the next output gate.'
+          : readinessRollupStatus === 'holdForRepair'
+            ? 'Repair sequencing evidence before treating the bridge as internally review-ready.'
+            : 'Generate master-detail schedule rows before continuing annual instruction readiness work.'
     },
     blockedOutputs: [
       'finalAnnualInstructions',
