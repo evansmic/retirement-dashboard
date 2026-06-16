@@ -708,6 +708,7 @@ export type OptimizerSchemaSaveDecision = {
     | 'publicOptimizerOutputContract'
     | 'privatePilotReleaseDecision'
     | 'limitedPublicBetaDecision'
+    | 'postPrepProductDecision'
     | 'boundedOptimizer'
     | 'optimizerOutput'
     | 'annualAccountInstructions'
@@ -1444,6 +1445,24 @@ export type OptimizerSyntheticTesterPacketReadinessMatrix = {
   nextStep: string;
 };
 
+export type OptimizerPostPrepProductDecision = {
+  status: 'readyForOwnerChoice' | 'blocked';
+  decision: 'chooseManualPilotOrGraphicalUiPlanning';
+  sourcePrepStatus: OptimizerPrivatePilotPrepPacket['status'];
+  sourceLimitedBetaStatus: OptimizerLimitedPublicBetaDecision['status'];
+  nextOptions: Array<{
+    id: 'manualPrivatePilot' | 'graphicalUiPlanning' | 'holdPublicOutput';
+    label: string;
+    status: 'ready' | 'allowed' | 'required';
+    detail: string;
+  }>;
+  recommendedNext: 'graphicalUiPlanningUntilPilotRuns' | 'manualPilotIfOwnerReady';
+  blockedOutputs: OptimizerLimitedPublicBetaDecision['blockedPublicOutputs'];
+  summary: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type OptimizerExperimentalDraftExampleMatrix = {
   status: 'readyForTesterReview' | 'reviewFirst' | 'blocked';
   exampleCount: number;
@@ -2118,6 +2137,7 @@ export type BoundedOptimizerSummary = {
   publicOptimizerOutputContract: OptimizerPublicOutputContractDecision;
   privatePilotReleaseDecision: OptimizerPrivatePilotReleaseDecision;
   limitedPublicBetaDecision: OptimizerLimitedPublicBetaDecision;
+  postPrepProductDecision: OptimizerPostPrepProductDecision;
   testerSurfaceMatrix: OptimizerExperimentalDraftExampleMatrix;
   headline: string;
   detail: string;
@@ -7064,6 +7084,53 @@ export function selectOptimizerLimitedPublicBetaDecision({
   };
 }
 
+export function selectOptimizerPostPrepProductDecision({
+  privatePilotPrepPacket,
+  limitedPublicBetaDecision
+}: {
+  privatePilotPrepPacket: OptimizerPrivatePilotPrepPacket;
+  limitedPublicBetaDecision: OptimizerLimitedPublicBetaDecision;
+}): OptimizerPostPrepProductDecision {
+  const readyForChoice =
+    privatePilotPrepPacket.status === 'readyForPrivatePilotPrep' &&
+    limitedPublicBetaDecision.status === 'publicClosedPilotEvidenceRequired';
+  return {
+    status: readyForChoice ? 'readyForOwnerChoice' : 'blocked',
+    decision: 'chooseManualPilotOrGraphicalUiPlanning',
+    sourcePrepStatus: privatePilotPrepPacket.status,
+    sourceLimitedBetaStatus: limitedPublicBetaDecision.status,
+    nextOptions: [
+      {
+        id: 'manualPrivatePilot',
+        label: 'Run manual private pilot',
+        status: readyForChoice ? 'ready' : 'required',
+        detail: 'Use the outside-app prep packet, no-data handoff, and verification checklist with three to five explicit opt-in households.'
+      },
+      {
+        id: 'graphicalUiPlanning',
+        label: 'Begin graphical UI planning',
+        status: readyForChoice ? 'allowed' : 'required',
+        detail: 'Use stable answer rows, schedule contracts, assumption comparisons, and pilot-readiness boundaries to plan visuals without opening public output.'
+      },
+      {
+        id: 'holdPublicOutput',
+        label: 'Keep public output closed',
+        status: 'required',
+        detail: 'Public optimizer release remains closed until pilot evidence clears the stop conditions and a later release decision is made.'
+      }
+    ],
+    recommendedNext: 'graphicalUiPlanningUntilPilotRuns',
+    blockedOutputs: limitedPublicBetaDecision.blockedPublicOutputs,
+    summary: readyForChoice
+      ? 'Private pilot prep is complete and public release is still closed; the owner can either run the manual pilot or begin graphical UI planning around the stable answer contracts.'
+      : 'Post-prep product decision waits for pilot prep and limited beta closure evidence.',
+    boundary:
+      'This decision checkpoint does not run the pilot, collect evidence, redesign UI, open public optimizer release, promote production UI, save optimizer output, create final annual instructions, add tax-bracket wording, or open CSV/report sequencing.',
+    nextStep:
+      'If no pilot will run immediately, start graphical UI planning from the stable answer, schedule, assumption, and pilot-readiness contracts.'
+  };
+}
+
 export function selectOptimizerCsvReportGate({
   betaSavedSequencingAdapter,
   schemaSaveDecision
@@ -7297,6 +7364,7 @@ export function selectOptimizerSchemaSaveDecision({
       'publicOptimizerOutputContract',
       'privatePilotReleaseDecision',
       'limitedPublicBetaDecision',
+      'postPrepProductDecision',
       'boundedOptimizer',
       'optimizerOutput',
       'annualAccountInstructions',
@@ -10226,6 +10294,10 @@ export function runBoundedOptimizer(
     privatePilotReleaseDecision
   });
   const limitedPublicBetaDecision = selectOptimizerLimitedPublicBetaDecision({ privatePilotReleaseDecision });
+  const postPrepProductDecision = selectOptimizerPostPrepProductDecision({
+    privatePilotPrepPacket,
+    limitedPublicBetaDecision
+  });
   const testerSurfaceMatrix = selectOptimizerExperimentalDraftExampleMatrix([
     {
       id: 'current-runtime-scenario',
@@ -10275,6 +10347,7 @@ export function runBoundedOptimizer(
     publicOptimizerOutputContract,
     privatePilotReleaseDecision,
     limitedPublicBetaDecision,
+    postPrepProductDecision,
     testerSurfaceMatrix,
     headline: suggested
       ? `${suggested.label} is the first option to review in this limited set.`

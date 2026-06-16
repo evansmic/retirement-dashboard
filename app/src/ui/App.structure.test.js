@@ -1358,6 +1358,11 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('summary.limitedPublicBetaDecision');
     expect(appSource).toContain('optimizer-limited-beta-decision');
     expect(appSource).toContain('limited-beta-row-');
+    expect(appSource).toContain('Post-prep product decision');
+    expect(appSource).toContain('Choose manual pilot or graphical UI planning');
+    expect(appSource).toContain('summary.postPrepProductDecision');
+    expect(appSource).toContain('post-prep-option-');
+    expect(appSource).toContain('Recommended next');
     expect(boundedOptimizerSource).toContain('doNotOpenLimitedPublicBetaYet');
     expect(boundedOptimizerSource).toContain('closedPendingPilotEvidence');
     expect(boundedOptimizerSource).toContain('closes public-ready optimizer planning only');

@@ -1505,6 +1505,7 @@ describe('bounded optimizer runner', () => {
         'publicOptimizerOutputContract',
         'privatePilotReleaseDecision',
         'limitedPublicBetaDecision',
+        'postPrepProductDecision',
         'annualAccountInstructions',
         'finalAnnualInstructions',
         'taxBracketTargets'
@@ -2132,6 +2133,23 @@ describe('bounded optimizer runner', () => {
       'blocked',
       'blocked'
     ]);
+    expect(summary.postPrepProductDecision).toMatchObject({
+      status: 'readyForOwnerChoice',
+      decision: 'chooseManualPilotOrGraphicalUiPlanning',
+      sourcePrepStatus: 'readyForPrivatePilotPrep',
+      sourceLimitedBetaStatus: 'publicClosedPilotEvidenceRequired',
+      recommendedNext: 'graphicalUiPlanningUntilPilotRuns',
+      summary: expect.stringContaining('manual pilot or begin graphical UI planning'),
+      boundary: expect.stringContaining('does not run the pilot'),
+      nextStep: expect.stringContaining('start graphical UI planning')
+    });
+    expect(summary.postPrepProductDecision.nextOptions.map((item) => item.id)).toEqual([
+      'manualPrivatePilot',
+      'graphicalUiPlanning',
+      'holdPublicOutput'
+    ]);
+    expect(summary.postPrepProductDecision.nextOptions.map((item) => item.status)).toEqual(['ready', 'allowed', 'required']);
+    expect(summary.postPrepProductDecision.blockedOutputs).toEqual(summary.limitedPublicBetaDecision.blockedPublicOutputs);
     expect(summary.testerSurfaceMatrix.testerPacketReadiness.dryRunPayload.items[0]).toMatchObject({
       exampleId: 'current-runtime-scenario',
       exampleLabel: 'Current runtime scenario',

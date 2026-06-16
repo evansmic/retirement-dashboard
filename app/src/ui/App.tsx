@@ -8040,6 +8040,38 @@ function BoundedOptimizerPanel({
         </section>
       ) : null}
 
+      {!isCompact && summary?.postPrepProductDecision ? (
+        <section className={`optimizer-post-prep-decision post-prep-${summary.postPrepProductDecision.status}`}>
+          <div>
+            <p className="eyebrow">Post-prep product decision</p>
+            <h3>Choose manual pilot or graphical UI planning</h3>
+            <p>{summary.postPrepProductDecision.summary}</p>
+          </div>
+          <div className="optimizer-fixture-plan-grid">
+            {summary.postPrepProductDecision.nextOptions.map((item) => (
+              <article className={`post-prep-option-${item.status}`} key={item.id}>
+                <span>{item.status}</span>
+                <strong>{item.label}</strong>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="optimizer-schema-save-grid">
+            <article>
+              <span>Recommended next</span>
+              <strong>{summary.postPrepProductDecision.recommendedNext}</strong>
+              <p>{summary.postPrepProductDecision.nextStep}</p>
+            </article>
+            <article>
+              <span>Blocked outputs</span>
+              <strong>{summary.postPrepProductDecision.blockedOutputs.length}</strong>
+              <p>{summary.postPrepProductDecision.blockedOutputs.join(', ')}</p>
+            </article>
+          </div>
+          <p className="table-note">{summary.postPrepProductDecision.boundary}</p>
+        </section>
+      ) : null}
+
       {!isCompact && summary?.feedbackPackageIndex ? (
         <section className="optimizer-guardrail-panel">
           <div>
