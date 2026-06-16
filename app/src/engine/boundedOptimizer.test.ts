@@ -2051,6 +2051,24 @@ describe('bounded optimizer runner', () => {
       'stopConditionSeen',
       'recommendedNextAction'
     ]);
+    expect(summary.privatePilotPrepPacket.feedbackHandoff).toMatchObject({
+      status: 'readyOutsideApp',
+      acceptedEvidence: ['manualNotes', 'anonymizedQuotes', 'ownerSummary', 'stopConditionTally'],
+      excludedData: ['inAppForm', 'storedPlanData', 'automaticTelemetry', 'uploadedScreenshots', 'savedFeedbackFields'],
+      storageRule: 'outsideAppOnly',
+      passSignal: expect.stringContaining('At least three opt-in households'),
+      failSignal: expect.stringContaining('keeps public optimizer output closed'),
+      boundary: expect.stringContaining('does not collect')
+    });
+    expect(summary.privatePilotPrepPacket.feedbackHandoff.worksheetSections.map((item) => item.id)).toEqual([
+      'consent',
+      'comprehension',
+      'usefulness',
+      'comparison',
+      'missingContext',
+      'stopCondition',
+      'nextAction'
+    ]);
     expect(summary.privatePilotPrepPacket.blockedOutputs).toEqual(summary.privatePilotReleaseDecision.blockedOutputs);
     expect(summary.limitedPublicBetaDecision).toMatchObject({
       status: 'publicClosedPilotEvidenceRequired',

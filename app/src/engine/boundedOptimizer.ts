@@ -1117,6 +1117,20 @@ export type OptimizerPrivatePilotPrepPacket = {
     | 'stopConditionSeen'
     | 'recommendedNextAction'
   >;
+  feedbackHandoff: {
+    status: 'readyOutsideApp' | 'blocked';
+    worksheetSections: Array<{
+      id: 'consent' | 'comprehension' | 'usefulness' | 'comparison' | 'missingContext' | 'stopCondition' | 'nextAction';
+      label: string;
+      detail: string;
+    }>;
+    acceptedEvidence: Array<'manualNotes' | 'anonymizedQuotes' | 'ownerSummary' | 'stopConditionTally'>;
+    excludedData: Array<'inAppForm' | 'storedPlanData' | 'automaticTelemetry' | 'uploadedScreenshots' | 'savedFeedbackFields'>;
+    storageRule: 'outsideAppOnly';
+    passSignal: string;
+    failSignal: string;
+    boundary: string;
+  };
   testerLimit: OptimizerPrivatePilotRequirements['testerLimit'];
   blockedOutputs: OptimizerPrivatePilotReleaseDecision['blockedOutputs'];
   summary: string;
@@ -6851,6 +6865,55 @@ export function selectOptimizerPrivatePilotPrepPacket({
       'stopConditionSeen',
       'recommendedNextAction'
     ],
+    feedbackHandoff: {
+      status: prepReady ? 'readyOutsideApp' : 'blocked',
+      worksheetSections: [
+        {
+          id: 'consent',
+          label: 'Consent and scope',
+          detail: 'Confirm the tester opted in, understands local-first use, and knows output is review evidence only.'
+        },
+        {
+          id: 'comprehension',
+          label: 'Review-only comprehension',
+          detail: 'Ask the tester to explain what the optimizer answer means and whether anything sounds like an instruction.'
+        },
+        {
+          id: 'usefulness',
+          label: 'Answer usefulness',
+          detail: 'Record whether retirement timing, spending capacity, tax pressure, and risk review answered the core question.'
+        },
+        {
+          id: 'comparison',
+          label: 'Comparison clarity',
+          detail: 'Record whether side-by-side deltas and assumption lab changes are useful without saved scenario packages.'
+        },
+        {
+          id: 'missingContext',
+          label: 'Missing context',
+          detail: 'Log any missing tax, account, survivor, estate, benefit, cash-flow, or housing context.'
+        },
+        {
+          id: 'stopCondition',
+          label: 'Stop condition',
+          detail: 'Mark any instruction, advice, tax-bracket, saved-output, or material missing-context confusion.'
+        },
+        {
+          id: 'nextAction',
+          label: 'Next action',
+          detail: 'Choose hold public output closed, repair copy/context, or consider a later limited beta decision.'
+        }
+      ],
+      acceptedEvidence: ['manualNotes', 'anonymizedQuotes', 'ownerSummary', 'stopConditionTally'],
+      excludedData: ['inAppForm', 'storedPlanData', 'automaticTelemetry', 'uploadedScreenshots', 'savedFeedbackFields'],
+      storageRule: 'outsideAppOnly',
+      passSignal:
+        'At least three opt-in households understand review-only output, find the answer/comparison useful, and hit zero unresolved stop conditions.',
+      failSignal:
+        'Any unresolved instruction, advice, tax-bracket, saved-output, or material missing-context confusion keeps public optimizer output closed.',
+      boundary:
+        'Feedback handoff is a manual outside-app artifact only. The planner does not collect, persist, upload, score, or summarize pilot feedback.'
+    },
     testerLimit: privatePilotRequirements.testerLimit,
     blockedOutputs: privatePilotReleaseDecision.blockedOutputs,
     summary: prepReady

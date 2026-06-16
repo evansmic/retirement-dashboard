@@ -7679,6 +7679,19 @@ function BoundedOptimizerPanel({
               <p>{summary.privatePilotPrepPacket.blockedOutputs.join(', ')}</p>
             </article>
           </div>
+          <div className="result-callout">
+            <strong>No-data feedback handoff: {summary.privatePilotPrepPacket.feedbackHandoff.status}.</strong>
+            <ul className="compact-list">
+              {summary.privatePilotPrepPacket.feedbackHandoff.worksheetSections.map((section) => (
+                <li key={section.id}>
+                  {section.label}: {section.detail}
+                </li>
+              ))}
+            </ul>
+            <p>Accepted evidence: {summary.privatePilotPrepPacket.feedbackHandoff.acceptedEvidence.join(', ')}</p>
+            <p>Excluded data: {summary.privatePilotPrepPacket.feedbackHandoff.excludedData.join(', ')}</p>
+            <p>{summary.privatePilotPrepPacket.feedbackHandoff.boundary}</p>
+          </div>
           <p className="table-note">{summary.privatePilotPrepPacket.boundary}</p>
         </section>
       ) : null}
