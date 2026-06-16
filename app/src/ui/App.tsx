@@ -18,6 +18,7 @@ import { PlanValidationResult, validatePlanForGuidedIntake } from '../data/planV
 import { fromV2Payload } from '../data/domainAdapter';
 import {
   AnnualDetailView,
+  MasterDetailSequencingReviewRow,
   ResultsWorkspaceSection,
   resultsWorkspaceMap,
   selectAccountBucketChartSeries,
@@ -39,6 +40,7 @@ import {
   selectFundingSourceRows,
   selectIncomeSourceRows,
   selectMinimumExpenseCoverageSummary,
+  selectMasterDetailRows,
   selectOptimizerDecisionBoundaries,
   selectOptimizerInputReview,
   selectOverviewMetrics,
@@ -55,6 +57,7 @@ import {
   selectRetirementAnswerSummary,
   selectScenarioChoiceCards,
   selectScenarioComparisonRows,
+  selectScenarioDecisionSummary,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingTaxChartSeries,
@@ -4426,6 +4429,8 @@ function ResultsHandoffPanel({
   const reconciliation = selectCashFlowReconciliation(firstRow);
   const fundingRows = selectFundingSourceRows(firstRow).filter((row) => Math.round(row.amount) !== 0);
   const annualDetailRows = selectAnnualDetailRows(result);
+  const masterDetailRowsForDownload = selectMasterDetailRows(result, plan);
+  const masterDetailRows = selectMasterDetailRows(result, plan, betaSequencingRowsForMasterDetail(optimizer));
   const annualDetailSummary = selectAnnualDetailSummary(result);
   const portfolioChartSeries = selectPortfolioChartSeries(result);
   const spendingTaxChartSeries = selectSpendingTaxChartSeries(result);
@@ -4451,6 +4456,7 @@ function ResultsHandoffPanel({
   const decisionChecklist = selectDecisionChecklist(result, plan);
   const decisionDetailRows = selectDecisionDetailRows(result, plan);
   const scenarioComparisonRows = selectScenarioComparisonRows(result, scenarios);
+  const scenarioDecisionSummary = selectScenarioDecisionSummary(scenarioComparisonRows);
   const scenarioAssumptionRows = selectScenarioAssumptionRows(plan);
   const survivorSummary = selectSurvivorViewSummary(result, plan);
   const survivorComparison = selectSurvivorComparison(result, survivor, plan);
@@ -4483,7 +4489,9 @@ function ResultsHandoffPanel({
     stressSummary: stressTestSummary,
     taxSummary,
     accountStory: accountDrawdownStory,
-    incomeRows: incomeSourceRows
+    incomeRows: incomeSourceRows,
+    masterDetailRows,
+    scenarioComparisonRows
   });
   const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
   const spendingPathBridge = selectSpendingPathBridgeSummary(plan);
@@ -4535,6 +4543,19 @@ function ResultsHandoffPanel({
     const a = document.createElement('a');
     a.href = url;
     a.download = `${safeFilenamePart(plan.title || 'retirement-plan')}-year-by-year.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadMasterDetailCsv() {
+    const csv = masterDetailRowsToCsv(masterDetailRowsForDownload);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeFilenamePart(plan.title || 'retirement-plan')}-master-detail.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -4748,6 +4769,7 @@ function ResultsHandoffPanel({
             readinessSummary={readinessSummary}
             scenarioAssumptionRows={scenarioAssumptionRows}
             scenarioComparisonRows={scenarioComparisonRows}
+            scenarioDecisionSummary={scenarioDecisionSummary}
             spendingStress={spendingStressSummary}
             sourceStory={sourceStory}
             taxPressureExplanation={taxPressureExplanation}
@@ -4767,7 +4789,9 @@ function ResultsHandoffPanel({
           <ExportSavePanel
             annualDetailRows={annualDetailRows}
             hasUnsavedChanges={hasUnsavedChanges}
+            masterDetailRows={masterDetailRowsForDownload}
             onDownloadAnnualCsv={downloadAnnualDetailCsv}
+            onDownloadMasterDetailCsv={downloadMasterDetailCsv}
             onDownload={onDownload}
             plan={plan}
             readinessRows={readinessRows}
@@ -5098,9 +5122,26 @@ function RetirementAnswerLayerPanel({
     verdictCard: 'Verdict card',
     spendingBand: 'Spending band',
     fundingFlow: 'Funding flow',
+    accountStack: 'Account stack',
+    taxTimeline: 'Tax timeline',
+    netWorthLine: 'Net worth line',
+    outflowStack: 'Outflow stack',
     actionStack: 'Action stack',
     riskTimeline: 'Risk timeline'
   };
+  const comparisonLabels: Record<ReturnType<typeof selectRetirementAnswerLayer>['rows'][number]['comparisonDeltas'][number]['focus'], string> = {
+    spending: 'Spend delta',
+    tax: 'Tax delta',
+    estate: 'Portfolio delta',
+    horizon: 'Funded through'
+  };
+
+  function comparisonValue(delta: ReturnType<typeof selectRetirementAnswerLayer>['rows'][number]['comparisonDeltas'][number]): string {
+    if (delta.focus === 'tax') return formatSignedMoney(delta.lifetimeTaxDelta);
+    if (delta.focus === 'estate') return formatSignedMoney(delta.endPortfolioDelta);
+    if (delta.focus === 'horizon') return delta.fundedThroughYear ? String(delta.fundedThroughYear) : '-';
+    return formatSignedMoney(delta.annualAfterTaxSpendingDelta);
+  }
 
   return (
     <section className={`retirement-answer-layer answer-layer-${layer.status}`}>
@@ -5116,6 +5157,38 @@ function RetirementAnswerLayerPanel({
             <strong>{row.question}</strong>
             <p>{row.answer}</p>
             <small>{row.evidence}</small>
+            {row.evidenceRefs.length ? (
+              <dl className="mini-ledger">
+                <div>
+                  <dt>Evidence</dt>
+                  <dd>{row.evidenceRefs.map((ref) => `${resultsSectionTitle(ref.dataSheet)} ${ref.rowKey}`).join(', ')}</dd>
+                </div>
+                <div>
+                  <dt>Fields</dt>
+                  <dd>{row.evidenceRefs.flatMap((ref) => ref.fields).slice(0, 4).join(', ')}</dd>
+                </div>
+              </dl>
+            ) : null}
+            {row.comparisonDeltas.length ? (
+              <dl className="mini-ledger">
+                <div>
+                  <dt>{comparisonLabels[row.comparisonDeltas[0].focus]}</dt>
+                  <dd>{comparisonValue(row.comparisonDeltas[0])}</dd>
+                </div>
+                <div>
+                  <dt>Compared with</dt>
+                  <dd>{row.comparisonDeltas[0].label}</dd>
+                </div>
+                <div>
+                  <dt>Why it matters</dt>
+                  <dd>{row.comparisonDeltas[0].explanation}</dd>
+                </div>
+                <div>
+                  <dt>Trade-off</dt>
+                  <dd>{row.comparisonDeltas[0].caveat}</dd>
+                </div>
+              </dl>
+            ) : null}
             <div>
               <em>{visualLabels[row.visualizationHint]}</em>
               <em>{resultsSectionTitle(row.dataSheet)} data</em>
@@ -5492,6 +5565,7 @@ function DetailsResultsPanel({
   readinessSummary,
   scenarioAssumptionRows,
   scenarioComparisonRows,
+  scenarioDecisionSummary,
   spendingStress,
   sourceStory,
   taxPressureExplanation,
@@ -5580,6 +5654,7 @@ function DetailsResultsPanel({
   readinessSummary: ReturnType<typeof selectResultsReadinessSummary>;
   scenarioAssumptionRows: ReturnType<typeof selectScenarioAssumptionRows>;
   scenarioComparisonRows: ReturnType<typeof selectScenarioComparisonRows>;
+  scenarioDecisionSummary: ReturnType<typeof selectScenarioDecisionSummary>;
   spendingStress: ReturnType<typeof selectSpendingStressSummary>;
   sourceStory: ReturnType<typeof selectSourceReconciliationStory>;
   taxPressureExplanation: ReturnType<typeof selectTaxPressureExplanation>;
@@ -5698,6 +5773,7 @@ function DetailsResultsPanel({
         <TaxPressurePanel explanation={taxPressureExplanation} loading={loading} rows={taxPressureRows} />
       ) : null}
       <div className="result-section-label">Scenario evidence</div>
+      <ScenarioDecisionSummaryPanel summary={scenarioDecisionSummary} />
       <AssumptionLabPanel
         appliedDraft={assumptionLabAppliedDraft}
         activeDraft={assumptionLabDraft}
@@ -5714,6 +5790,7 @@ function DetailsResultsPanel({
         scenarioAssumptionRows={scenarioAssumptionRows}
       />
       <SpendingStressPanel loading={loading} summary={spendingStress} />
+      <SequencingEvidenceReviewPanel boundedOptimizer={boundedOptimizer} />
       {SHOW_SCENARIO_RESEARCH_PANELS ? (
         <>
           <ScenarioAssumptionsPanel rows={scenarioAssumptionRows} />
@@ -5794,6 +5871,43 @@ function DetailsResultsPanel({
         </>
       ) : null}
     </div>
+  );
+}
+
+function ScenarioDecisionSummaryPanel({ summary }: { summary: ReturnType<typeof selectScenarioDecisionSummary> }) {
+  return (
+    <section className={`result-card scenario-decision-summary scenario-decision-${summary.status}`}>
+      <p className="eyebrow">Scenario decision summary</p>
+      <h3>{summary.headline}</h3>
+      <p>{summary.detail}</p>
+      <div className="result-table-wrap">
+        <table className="result-table">
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Best current alternate</th>
+              <th>Read</th>
+              <th>Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.rows.map((row) => (
+              <tr className={row.status === 'tradeoff' ? 'warning-row' : ''} key={row.id}>
+                <td>{row.label}</td>
+                <td>{row.bestScenarioLabel}</td>
+                <td>{row.value}</td>
+                <td>{resultsSectionTitle(row.dataSheet)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <ul className="compact-list">
+        {summary.rows.map((row) => (
+          <li key={row.id}>{row.label}: {row.detail}</li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -5984,6 +6098,112 @@ function BenefitTimingReadinessPanel({
         This does not recommend when to start benefits. Confirm eligibility, health assumptions, bridge-year spending,
         and CRA or Service Canada details before relying on a timing comparison.
       </p>
+    </section>
+  );
+}
+
+function SequencingEvidenceReviewPanel({ boundedOptimizer }: { boundedOptimizer: BoundedOptimizerSummary | null }) {
+  const adapter = boundedOptimizer?.betaSavedSequencingAdapter || null;
+  const rows = adapter?.rows || [];
+  const readyRows = rows.filter((row) => row.qualityStatus === 'readyForBetaReview').length;
+  const contextRows = rows.filter((row) => row.qualityStatus === 'readyWithContext').length;
+  const reviewRows = rows.filter((row) => row.qualityStatus === 'reviewBeforeSave').length;
+  const sourceYears = Array.from(new Set(rows.map((row) => row.year))).sort((a, b) => a - b);
+  const sourceYearLabel = sourceYears.length
+    ? `${sourceYears[0]}${sourceYears.length > 1 ? `-${sourceYears[sourceYears.length - 1]}` : ''}`
+    : 'Waiting';
+  const visibleRows = rows.slice(0, 5);
+  const qualityRepairReasons = Array.from(
+    new Set(rows.flatMap((row) => (row.qualityStatus === 'reviewBeforeSave' ? row.qualityReasons : [])))
+  ).slice(0, 4);
+  const stopReasons = [
+    !adapter ? 'Optimizer sequencing evidence has not loaded yet.' : '',
+    adapter?.status === 'blocked' ? 'The optimizer sequencing adapter is blocked.' : '',
+    reviewRows > 0 ? `${reviewRows} review row${reviewRows === 1 ? '' : 's'} need quality repair before wider use.` : '',
+    adapter?.blockedOutputs.includes('csvOutput') ? 'CSV sequencing output remains closed.' : '',
+    adapter?.blockedOutputs.includes('reportOutput') ? 'Report sequencing output remains closed.' : '',
+    adapter?.blockedOutputs.includes('finalAnnualInstructions') ? 'Final annual instructions remain closed.' : ''
+  ].filter(Boolean);
+
+  return (
+    <section className={`result-card sequencing-evidence-review sequencing-evidence-${adapter?.status || 'blocked'}`}>
+      <p className="eyebrow">Sequencing evidence check</p>
+      <h3>{adapter?.status === 'readyForBetaReview' ? 'Account sequencing evidence is available for review.' : 'Account sequencing evidence is still gated.'}</h3>
+      <p>
+        This check confirms whether optimizer sequencing evidence can support the internal master-detail review. Public
+        downloads, reports, and saved plan files stay unchanged.
+      </p>
+      <div className="summary-grid">
+        <Metric label="Review rows" value={String(rows.length)} />
+        <Metric label="Source years" value={sourceYearLabel} />
+        <Metric label="Public download" value="Closed" />
+        <Metric label="Plan file" value="Unchanged" />
+      </div>
+      <dl className="mini-ledger">
+        <div>
+          <dt>Ready rows</dt>
+          <dd>{readyRows}</dd>
+        </div>
+        <div>
+          <dt>Context rows</dt>
+          <dd>{contextRows}</dd>
+        </div>
+        <div>
+          <dt>Review rows</dt>
+          <dd>{reviewRows}</dd>
+        </div>
+        <div>
+          <dt>Allowed review fields</dt>
+          <dd>{adapter?.allowedFields.join(', ') || 'Waiting for optimizer evidence'}</dd>
+        </div>
+      </dl>
+      <p className="table-note">
+        {adapter?.summary || 'Sequencing review rows appear after the optimizer has enough annual account evidence.'}
+      </p>
+      <div className="result-callout">
+        <strong>{stopReasons.length ? 'Stop conditions still apply.' : 'No stop conditions are visible in this compact check.'}</strong>
+        <ul className="compact-list">
+          {(stopReasons.length ? stopReasons : ['Keep this as review evidence until public-output gates are explicitly opened.']).map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      </div>
+      {qualityRepairReasons.length ? (
+        <div className="result-callout">
+          <strong>Quality repair summary.</strong>
+          <ul className="compact-list">
+            {qualityRepairReasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {visibleRows.length ? (
+        <div className="result-table-wrap">
+          <table className="result-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Review source</th>
+                <th>Review amount</th>
+                <th>Quality</th>
+                <th>Boundary</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => (
+                <tr key={`${row.year}-${row.accountLabel}-${row.reviewAmount}`}>
+                  <td>{row.year}</td>
+                  <td>{row.accountLabel}</td>
+                  <td>{formatMoney(row.reviewAmount)}</td>
+                  <td>{row.qualityStatus}</td>
+                  <td>{row.boundaryStatus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -10785,7 +11005,9 @@ function AssumptionsResultsPanel({ plan }: { plan: V2PlanPayload }) {
 function ExportSavePanel({
   annualDetailRows,
   hasUnsavedChanges,
+  masterDetailRows,
   onDownloadAnnualCsv,
+  onDownloadMasterDetailCsv,
   onDownload,
   plan,
   readinessRows,
@@ -10794,7 +11016,9 @@ function ExportSavePanel({
 }: {
   annualDetailRows: ReturnType<typeof selectAnnualDetailRows>;
   hasUnsavedChanges: boolean;
+  masterDetailRows: ReturnType<typeof selectMasterDetailRows>;
   onDownloadAnnualCsv: () => void;
+  onDownloadMasterDetailCsv: () => void;
   onDownload: () => void;
   plan: V2PlanPayload;
   readinessRows: ReturnType<typeof selectResultsReadinessRows>;
@@ -10916,6 +11140,32 @@ function ExportSavePanel({
             Download year-by-year CSV
           </button>
         </section>
+
+        <section className="result-card">
+          <p className="eyebrow">Download details</p>
+          <h3>Download master-detail CSV</h3>
+          <p>
+            Download a ledger-style spreadsheet that traces spending, income, withdrawals, taxes, balances, debt, and
+            estate evidence by year.
+          </p>
+          <dl className="result-ledger">
+            <div>
+              <dt>Rows</dt>
+              <dd>{masterDetailRows.length}</dd>
+            </div>
+            <div>
+              <dt>File type</dt>
+              <dd>CSV spreadsheet</dd>
+            </div>
+            <div>
+              <dt>Plan file</dt>
+              <dd>Unchanged</dd>
+            </div>
+          </dl>
+          <button className="ghost" type="button" onClick={onDownloadMasterDetailCsv} disabled={!masterDetailRows.length}>
+            Download master-detail CSV
+          </button>
+        </section>
       </div>
     </div>
   );
@@ -10978,6 +11228,7 @@ function ResultsReadinessPanel({
 }
 
 type AnnualDetailCsvRow = ReturnType<typeof selectAnnualDetailRows>[number];
+type MasterDetailCsvRow = ReturnType<typeof selectMasterDetailRows>[number];
 
 const annualDetailCsvColumns: Array<{ id: keyof AnnualDetailCsvRow; label: string }> = [
   { id: 'year', label: 'Year' },
@@ -11011,6 +11262,46 @@ const annualDetailCsvColumns: Array<{ id: keyof AnnualDetailCsvRow; label: strin
   { id: 'reconciliationStatus', label: 'Money-flow check' }
 ];
 
+const masterDetailCsvColumns: Array<{ id: keyof MasterDetailCsvRow; label: string }> = [
+  { id: 'year', label: 'Year' },
+  { id: 'ages', label: 'Age(s)' },
+  { id: 'baseSpending', label: 'Base spending' },
+  { id: 'additionalExpenses', label: 'Additional expenses' },
+  { id: 'totalSpending', label: 'Total spending' },
+  { id: 'afterTaxSpending', label: 'After-tax spending' },
+  { id: 'salary', label: 'Salary' },
+  { id: 'dbPension', label: 'DB pension' },
+  { id: 'cpp', label: 'CPP' },
+  { id: 'oas', label: 'OAS' },
+  { id: 'otherInflows', label: 'Other inflows' },
+  { id: 'totalIncomeAndInflows', label: 'Total income and inflows' },
+  { id: 'registeredWithdrawals', label: 'Registered withdrawals' },
+  { id: 'tfsaWithdrawals', label: 'TFSA withdrawals' },
+  { id: 'nonRegisteredWithdrawals', label: 'Non-registered withdrawals' },
+  { id: 'cashWithdrawals', label: 'Cash withdrawals' },
+  { id: 'totalPortfolioWithdrawals', label: 'Total portfolio withdrawals' },
+  { id: 'taxableIncome', label: 'Taxable income' },
+  { id: 'totalTax', label: 'Total tax' },
+  { id: 'oasClawback', label: 'OAS clawback' },
+  { id: 'rrspBalance', label: 'RRSP/RRIF balance' },
+  { id: 'tfsaBalance', label: 'TFSA balance' },
+  { id: 'lifBalance', label: 'LIF balance' },
+  { id: 'nonRegisteredBalance', label: 'Non-registered balance' },
+  { id: 'cashBalance', label: 'Cash balance' },
+  { id: 'totalFinancialAssets', label: 'Total financial assets' },
+  { id: 'mortgageOwing', label: 'Mortgage owing' },
+  { id: 'mortgagePaid', label: 'Mortgage paid' },
+  { id: 'netWorth', label: 'Net worth' },
+  { id: 'estateBeforeTax', label: 'Estate before tax' },
+  { id: 'estateTaxableIncome', label: 'Estate taxable income' },
+  { id: 'estateTax', label: 'Estate tax' },
+  { id: 'shortfall', label: 'Shortfall' },
+  { id: 'surplus', label: 'Surplus' },
+  { id: 'reconciliationGap', label: 'Reconciliation gap' },
+  { id: 'cashFlowDelta', label: 'Unexplained gap' },
+  { id: 'reconciliationStatus', label: 'Money-flow check' }
+];
+
 function csvCell(value: unknown): string {
   const text = value === null || value === undefined ? '' : String(value);
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -11020,6 +11311,27 @@ function annualDetailRowsToCsv(rows: ReturnType<typeof selectAnnualDetailRows>):
   const header = annualDetailCsvColumns.map((column) => csvCell(column.label)).join(',');
   const body = rows.map((row) =>
     annualDetailCsvColumns.map((column) => csvCell(row[column.id])).join(',')
+  );
+  return [header, ...body].join('\n');
+}
+
+function betaSequencingRowsForMasterDetail(optimizer: BoundedOptimizerSummary | null): MasterDetailSequencingReviewRow[] {
+  return optimizer?.betaSavedSequencingAdapter?.rows.map((row) => ({
+    year: row.year,
+    accountLabel: row.accountLabel,
+    reviewAmount: row.reviewAmount,
+    sourceEvidence: row.sourceEvidence,
+    taxContext: row.taxContext,
+    constraintContext: row.constraintContext,
+    qualityStatus: row.qualityStatus,
+    boundaryStatus: row.boundaryStatus
+  })) || [];
+}
+
+function masterDetailRowsToCsv(rows: ReturnType<typeof selectMasterDetailRows>): string {
+  const header = masterDetailCsvColumns.map((column) => csvCell(column.label)).join(',');
+  const body = rows.map((row) =>
+    masterDetailCsvColumns.map((column) => csvCell(row[column.id])).join(',')
   );
   return [header, ...body].join('\n');
 }

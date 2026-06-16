@@ -216,6 +216,64 @@ export type AnnualDetailRow = {
   reconciliationStatus: CashFlowReconciliation['status'];
 };
 
+export type MasterDetailRow = {
+  year: number;
+  ages: string;
+  baseSpending: number;
+  additionalExpenses: number;
+  totalSpending: number;
+  afterTaxSpending: number;
+  salary: number;
+  dbPension: number;
+  cpp: number;
+  oas: number;
+  otherInflows: number;
+  totalIncomeAndInflows: number;
+  registeredWithdrawals: number;
+  tfsaWithdrawals: number;
+  nonRegisteredWithdrawals: number;
+  cashWithdrawals: number;
+  totalPortfolioWithdrawals: number;
+  taxableIncome: number;
+  totalTax: number;
+  oasClawback: number;
+  rrspBalance: number;
+  tfsaBalance: number;
+  lifBalance: number;
+  nonRegisteredBalance: number;
+  cashBalance: number;
+  totalFinancialAssets: number;
+  mortgageOwing: number;
+  mortgagePaid: number;
+  netWorth: number;
+  estateBeforeTax: number;
+  estateTaxableIncome: number;
+  estateTax: number;
+  shortfall: number;
+  surplus: number;
+  reconciliationGap: number;
+  cashFlowDelta: number;
+  reconciliationStatus: CashFlowReconciliation['status'];
+  betaSequencingReviewAmount: number | null;
+  betaSequencingAccountLabel: string;
+  betaSequencingSourceEvidence: string;
+  betaSequencingTaxContext: string;
+  betaSequencingConstraintContext: string;
+  betaSequencingQualityStatus: string;
+  betaSequencingBoundaryStatus: string;
+};
+
+export type MasterDetailSequencingReviewRow = {
+  year: number;
+  accountLabel: string;
+  reviewAmount: number;
+  sourceEvidence: string;
+  taxContext: string;
+  constraintContext: string;
+  qualityStatus: string;
+  boundaryStatus: string;
+};
+
 export type AnnualDetailSummary = {
   firstYear: number | null;
   finalYear: number | null;
@@ -371,10 +429,29 @@ export type ScenarioComparisonRow = {
   label: string;
   endPortfolioDelta: number;
   firstYearSpendingDelta: number;
+  firstYearAfterTaxSpendingDelta: number;
+  monthlyAfterTaxSpendingDelta: number;
   lifetimeTaxDelta: number;
   firstShortfallYear: number | null;
   fundedThroughYear: number | null;
   status: 'improves' | 'mixed' | 'worse' | 'notAvailable';
+};
+
+export type ScenarioDecisionSummaryRow = {
+  id: 'spendingRoom' | 'taxEfficiency' | 'estateCushion' | 'fundedHorizon';
+  label: string;
+  status: 'ready' | 'notAvailable' | 'tradeoff';
+  bestScenarioLabel: string;
+  value: string;
+  detail: string;
+  dataSheet: ResultsWorkspaceSection;
+};
+
+export type ScenarioDecisionSummary = {
+  status: 'ready' | 'notAvailable';
+  headline: string;
+  detail: string;
+  rows: ScenarioDecisionSummaryRow[];
 };
 
 export type AssumptionLabControl = {
@@ -794,13 +871,54 @@ export type SpendingCapacitySummary = {
 
 export type RetirementAnswerLayerStatus = 'ready' | 'review' | 'blocked';
 
+export type RetirementAnswerEvidenceRef = {
+  label: string;
+  dataSheet: ResultsWorkspaceSection;
+  rowKey: string;
+  fields: string[];
+  detail: string;
+};
+
+export type RetirementAnswerComparisonDelta = {
+  label: string;
+  status: ScenarioComparisonRow['status'];
+  focus: 'spending' | 'tax' | 'estate' | 'horizon';
+  explanation: string;
+  caveat: string;
+  annualAfterTaxSpendingDelta: number;
+  monthlyAfterTaxSpendingDelta: number;
+  endPortfolioDelta: number;
+  lifetimeTaxDelta: number;
+  fundedThroughYear: number | null;
+};
+
 export type RetirementAnswerLayerRow = {
-  id: 'retireTiming' | 'spendingCapacity' | 'incomeDirection' | 'nextMoves' | 'riskReview';
+  id:
+    | 'retireTiming'
+    | 'spendingCapacity'
+    | 'fundingPath'
+    | 'accountPath'
+    | 'taxDrag'
+    | 'netWorthEstate'
+    | 'goalsOutflows'
+    | 'riskReview'
+    | 'nextMoves';
   question: string;
   status: RetirementAnswerLayerStatus;
   answer: string;
   evidence: string;
-  visualizationHint: 'verdictCard' | 'spendingBand' | 'fundingFlow' | 'actionStack' | 'riskTimeline';
+  evidenceRefs: RetirementAnswerEvidenceRef[];
+  comparisonDeltas: RetirementAnswerComparisonDelta[];
+  visualizationHint:
+    | 'verdictCard'
+    | 'spendingBand'
+    | 'fundingFlow'
+    | 'accountStack'
+    | 'taxTimeline'
+    | 'netWorthLine'
+    | 'outflowStack'
+    | 'riskTimeline'
+    | 'actionStack';
   dataSheet: ResultsWorkspaceSection;
 };
 
@@ -3132,7 +3250,9 @@ export function selectRetirementAnswerLayer({
   stressSummary,
   taxSummary,
   accountStory,
-  incomeRows
+  incomeRows,
+  masterDetailRows = [],
+  scenarioComparisonRows = []
 }: {
   retirementAnswer: RetirementAnswerSummary;
   spendingCapacity: SpendingCapacitySummary;
@@ -3141,6 +3261,8 @@ export function selectRetirementAnswerLayer({
   taxSummary: TaxSummaryMetrics;
   accountStory: AccountDrawdownStorySummary;
   incomeRows: IncomeSourceRow[];
+  masterDetailRows?: MasterDetailRow[];
+  scenarioComparisonRows?: ScenarioComparisonRow[];
 }): RetirementAnswerLayer {
   const incomeLeaders = [...incomeRows]
     .filter((row) => row.firstYearAmount > 0)
@@ -3165,6 +3287,77 @@ export function selectRetirementAnswerLayer({
     taxSummary.lifetimeTax > 0
       ? `Lifetime tax ${moneyText(taxSummary.lifetimeTax)}; peak tax ${moneyText(taxSummary.peakTax)}${taxSummary.peakTaxYear ? ` in ${taxSummary.peakTaxYear}` : ''}.`
       : 'Tax evidence needs result rows.';
+  const firstDetail = masterDetailRows[0] || null;
+  const finalDetail = masterDetailRows[masterDetailRows.length - 1] || null;
+  function comparisonDeltasFor(focus: RetirementAnswerComparisonDelta['focus']): RetirementAnswerComparisonDelta[] {
+    const availableRows = scenarioComparisonRows.filter((row) => row.status !== 'notAvailable');
+    const sortedRows = [...availableRows].sort((a, b) => {
+      if (focus === 'spending') return b.firstYearAfterTaxSpendingDelta - a.firstYearAfterTaxSpendingDelta;
+      if (focus === 'tax') return a.lifetimeTaxDelta - b.lifetimeTaxDelta;
+      if (focus === 'estate') return b.endPortfolioDelta - a.endPortfolioDelta;
+      return n(b.fundedThroughYear ?? 0) - n(a.fundedThroughYear ?? 0) || b.endPortfolioDelta - a.endPortfolioDelta;
+    });
+
+    return sortedRows.slice(0, 3).map((row) => ({
+      label: row.label,
+      status: row.status,
+      focus,
+      explanation: comparisonDeltaExplanation(focus, row),
+      caveat: comparisonDeltaCaveat(focus, row),
+      annualAfterTaxSpendingDelta: row.firstYearAfterTaxSpendingDelta,
+      monthlyAfterTaxSpendingDelta: row.monthlyAfterTaxSpendingDelta,
+      endPortfolioDelta: row.endPortfolioDelta,
+      lifetimeTaxDelta: row.lifetimeTaxDelta,
+      fundedThroughYear: row.fundedThroughYear
+    }));
+  }
+
+  function comparisonDeltaExplanation(focus: RetirementAnswerComparisonDelta['focus'], row: ScenarioComparisonRow): string {
+    if (focus === 'spending') {
+      return row.firstYearAfterTaxSpendingDelta >= 0
+        ? `${row.label} preserves or improves first-year after-tax spending versus the current plan.`
+        : `${row.label} lowers first-year after-tax spending, so it is mainly a repair or cushion trade-off.`;
+    }
+    if (focus === 'tax') {
+      return row.lifetimeTaxDelta <= 0
+        ? `${row.label} has the lowest lifetime-tax pressure among the available alternates for this card.`
+        : `${row.label} still increases lifetime tax, but is the least costly available tax comparison for this card.`;
+    }
+    if (focus === 'estate') {
+      return row.endPortfolioDelta >= 0
+        ? `${row.label} leaves the strongest projected ending portfolio among the available alternates.`
+        : `${row.label} leaves less projected money, so the estate/cushion benefit is limited.`;
+    }
+    return row.firstShortfallYear
+      ? `${row.label} funds the plan through ${row.fundedThroughYear || '-'}, but still shows a later shortfall.`
+      : `${row.label} reaches ${row.fundedThroughYear || '-'} without a projected shortfall in this comparison.`;
+  }
+
+  function comparisonDeltaCaveat(focus: RetirementAnswerComparisonDelta['focus'], row: ScenarioComparisonRow): string {
+    if (row.status === 'worse') return 'This alternate weakens at least one core result and should be treated as a warning, not a recommendation.';
+    if (focus === 'spending') return 'Confirm the spending change matches the household lifestyle before treating this as better.';
+    if (focus === 'tax') return 'Lower tax is not automatically better if it reduces spending, survivor security, or estate intent.';
+    if (focus === 'estate') return 'A larger ending portfolio is only better when it matches the household estate intention.';
+    return 'A longer funded horizon still depends on the return, inflation, tax, and spending assumptions holding up.';
+  }
+
+  function evidenceRef(
+    label: string,
+    row: MasterDetailRow | null,
+    fields: string[],
+    dataSheet: ResultsWorkspaceSection
+  ): RetirementAnswerEvidenceRef[] {
+    if (!row) return [];
+    return [
+      {
+        label,
+        dataSheet,
+        rowKey: String(row.year),
+        fields,
+        detail: `Master-detail year ${row.year}: ${fields.join(', ')}.`
+      }
+    ];
+  }
 
   const rows: RetirementAnswerLayerRow[] = [
     {
@@ -3175,6 +3368,8 @@ export function selectRetirementAnswerLayer({
       evidence: retirementAnswer.fundedThroughYear
         ? `Funded-through year ${retirementAnswer.fundedThroughYear}; projected money left ${moneyText(retirementAnswer.projectedMoneyLeft)}.`
         : 'Funded-through evidence is not available yet.',
+      evidenceRefs: evidenceRef('Funded horizon and ending assets', finalDetail, ['totalFinancialAssets', 'shortfall', 'netWorth'], 'annualDetail'),
+      comparisonDeltas: comparisonDeltasFor('horizon'),
       visualizationHint: 'verdictCard',
       dataSheet: 'annualDetail'
     },
@@ -3189,26 +3384,71 @@ export function selectRetirementAnswerLayer({
             : 'ready',
       answer: spendingCapacity.headline,
       evidence: `${spendingCapacity.planningEstimateLabel}: ${moneyText(spendingCapacity.estimatedSustainableAnnualSpending)} per year; projected money left ${moneyText(spendingCapacity.projectedMoneyLeft)}.`,
+      evidenceRefs: evidenceRef('First-year spending support', firstDetail, ['baseSpending', 'additionalExpenses', 'afterTaxSpending'], 'cashFlow'),
+      comparisonDeltas: comparisonDeltasFor('spending'),
       visualizationHint: 'spendingBand',
       dataSheet: 'stressTests'
     },
     {
-      id: 'incomeDirection',
+      id: 'fundingPath',
       question: 'Where does retirement income appear to come from?',
       status: incomeLeaders.length ? 'ready' : 'review',
       answer: `${recommendedPath.recommendedLabel} is the current review path, not an instruction.`,
       evidence: `${incomeEvidence} ${taxEvidence}`,
+      evidenceRefs: evidenceRef('First-year funding path', firstDetail, ['salary', 'dbPension', 'cpp', 'oas', 'totalPortfolioWithdrawals'], 'incomeSources'),
+      comparisonDeltas: comparisonDeltasFor('spending'),
       visualizationHint: 'fundingFlow',
       dataSheet: 'incomeSources'
     },
     {
-      id: 'nextMoves',
-      question: 'What should be reviewed next?',
-      status: topAction ? 'ready' : 'review',
-      answer: topAction ? topAction.label : 'Review actions need more evidence.',
-      evidence: topAction ? topAction.detail : recommendedPath.headline,
-      visualizationHint: 'actionStack',
-      dataSheet: topAction?.detailArea ?? 'details'
+      id: 'accountPath',
+      question: 'Which accounts carry the plan over time?',
+      status: accountStory.status === 'ok' ? 'ready' : 'review',
+      answer: accountStory.headline,
+      evidence: `Start portfolio ${moneyText(accountStory.startPortfolio)}; end portfolio ${moneyText(accountStory.endPortfolio)}; lowest portfolio ${moneyText(accountStory.lowestPortfolio)}${accountStory.lowestPortfolioYear ? ` in ${accountStory.lowestPortfolioYear}` : ''}.`,
+      evidenceRefs: [
+        ...evidenceRef('Opening account evidence', firstDetail, ['rrspBalance', 'tfsaBalance', 'lifBalance', 'nonRegisteredBalance', 'cashBalance'], 'accounts'),
+        ...evidenceRef('Ending account evidence', finalDetail, ['rrspBalance', 'tfsaBalance', 'lifBalance', 'nonRegisteredBalance', 'cashBalance'], 'accounts')
+      ],
+      comparisonDeltas: comparisonDeltasFor('estate'),
+      visualizationHint: 'accountStack',
+      dataSheet: 'accounts'
+    },
+    {
+      id: 'taxDrag',
+      question: 'How much tax drag does the plan carry?',
+      status: taxSummary.lifetimeTax > 0 ? 'ready' : 'review',
+      answer:
+        taxSummary.lifetimeTax > 0
+          ? `Estimated lifetime tax is ${moneyText(taxSummary.lifetimeTax)}.`
+          : 'Tax evidence needs year-by-year result rows.',
+      evidence: taxEvidence,
+      evidenceRefs: evidenceRef('Tax and clawback evidence', firstDetail, ['taxableIncome', 'totalTax', 'oasClawback'], 'taxes'),
+      comparisonDeltas: comparisonDeltasFor('tax'),
+      visualizationHint: 'taxTimeline',
+      dataSheet: 'taxes'
+    },
+    {
+      id: 'netWorthEstate',
+      question: 'What happens to net worth and estate value?',
+      status: retirementAnswer.status === 'cannotTell' ? 'blocked' : 'ready',
+      answer: spendingCapacity.estateTradeoff,
+      evidence: `Projected money left ${moneyText(spendingCapacity.projectedMoneyLeft)}; estate target ${moneyText(spendingCapacity.estateTarget)}.`,
+      evidenceRefs: evidenceRef('Estate and net worth evidence', finalDetail, ['netWorth', 'estateBeforeTax', 'estateTaxableIncome', 'estateTax'], 'annualDetail'),
+      comparisonDeltas: comparisonDeltasFor('estate'),
+      visualizationHint: 'netWorthLine',
+      dataSheet: 'annualDetail'
+    },
+    {
+      id: 'goalsOutflows',
+      question: 'Which lifestyle goals and outflows are being funded?',
+      status: spendingCapacity.status === 'cannotTell' ? 'blocked' : spendingCapacity.status === 'needsReduction' ? 'review' : 'ready',
+      answer: spendingCapacity.planningEstimateDetail,
+      evidence: `Early retirement spending ${moneyText(spendingCapacity.earlyRetirementSpending)}; late-life spending ${moneyText(spendingCapacity.lateLifeSpending)}; annual room ${moneyText(spendingCapacity.estimatedAnnualRoom)}.`,
+      evidenceRefs: evidenceRef('Lifestyle and one-time outflow evidence', firstDetail, ['baseSpending', 'additionalExpenses', 'totalSpending'], 'cashFlow'),
+      comparisonDeltas: comparisonDeltasFor('spending'),
+      visualizationHint: 'outflowStack',
+      dataSheet: 'cashFlow'
     },
     {
       id: 'riskReview',
@@ -3216,8 +3456,24 @@ export function selectRetirementAnswerLayer({
       status: stressSummary.status === 'ok' && accountStory.status === 'ok' ? 'ready' : 'review',
       answer: stressSummary.headline,
       evidence: `${stressSummary.fundedYears}/${stressSummary.totalYears} stress years funded; ${accountStory.headline}`,
+      evidenceRefs: evidenceRef('Risk evidence', finalDetail, ['shortfall', 'surplus', 'reconciliationStatus'], 'stressTests'),
+      comparisonDeltas: comparisonDeltasFor('horizon'),
       visualizationHint: 'riskTimeline',
       dataSheet: 'stressTests'
+    },
+    {
+      id: 'nextMoves',
+      question: 'What should be reviewed next?',
+      status: topAction ? 'ready' : 'review',
+      answer: topAction ? topAction.label : 'Review actions need more evidence.',
+      evidence: topAction ? topAction.detail : recommendedPath.headline,
+      evidenceRefs: [
+        ...evidenceRef('Current-year review evidence', firstDetail, ['reconciliationStatus', 'cashFlowDelta'], topAction?.detailArea ?? 'details'),
+        ...evidenceRef('Ending review evidence', finalDetail, ['netWorth', 'totalTax', 'shortfall'], topAction?.detailArea ?? 'details')
+      ],
+      comparisonDeltas: comparisonDeltasFor('horizon'),
+      visualizationHint: 'actionStack',
+      dataSheet: topAction?.detailArea ?? 'details'
     }
   ];
 
@@ -3230,10 +3486,10 @@ export function selectRetirementAnswerLayer({
           ? 'The planner has the core retirement answers, with review items still visible.'
           : 'The planner has a coherent answer layer ready to guide future visualization.',
     detail:
-      'This layer defines the answer objects first: retirement timing, spending capacity, income direction, next moves, and risk review. Graphs should be chosen later to explain these answers, with data sheets available for inspection.',
+      'This layer defines the answer objects first: retirement timing, spending capacity, funding path, account path, tax drag, net worth and estate, goals and outflows, risks, and next moves. Graphs should be chosen later to explain these answers, with data sheets available for inspection.',
     rows,
     visualizationPrinciple:
-      'Choose visuals after the answer contract is stable: verdict cards for viability, spending bands for capacity, funding flows for income sources, action stacks for next moves, and timelines for risk.',
+      'Choose visuals after the answer contract is stable: verdict cards for viability, spending bands for capacity, funding flows for income sources, account stacks for balances, tax timelines for tax drag, net-worth lines for estate outcomes, outflow stacks for lifestyle goals, action stacks for next moves, and timelines for risk.',
     blockedVisualizationWork: ['fullUiRedesign', 'publicOptimizerOutput', 'savedRecommendations', 'finalAdviceLanguage']
   };
 }
@@ -9531,6 +9787,103 @@ export function selectAnnualDetailRows(result: SimulationResult | null | undefin
   });
 }
 
+function baseSpendingForYear(plan: V2PlanPayload | null | undefined, row: AnnualSimulationRow): number {
+  const oneOffOutflow = n(row.oneOff_outflow);
+  if (oneOffOutflow > 0) return n(row.spending) - oneOffOutflow;
+  if (!plan) return n(row.spending);
+  const spending = plan.spending || {};
+  const gogo = n(spending.gogo);
+  const slowgo = n(spending.slowgo);
+  const nogo = n(spending.nogo);
+  const spendingAge = Math.max(n(row.ageF), n(row.ageM));
+  if (spending.gogoEnd && spendingAge <= spending.gogoEnd) return gogo || n(row.spending) - n(row.oneOff_outflow);
+  if (spending.slowgoEnd && spendingAge <= spending.slowgoEnd) return slowgo || gogo || n(row.spending) - n(row.oneOff_outflow);
+  return nogo || slowgo || gogo || n(row.spending) - n(row.oneOff_outflow);
+}
+
+export function selectMasterDetailRows(
+  result: SimulationResult | null | undefined,
+  plan?: V2PlanPayload | null,
+  sequencingReviewRows: MasterDetailSequencingReviewRow[] = []
+): MasterDetailRow[] {
+  const rows = rowsFrom(result);
+  const sequencingRowsByYear = new Map<number, MasterDetailSequencingReviewRow[]>();
+  for (const reviewRow of sequencingReviewRows) {
+    sequencingRowsByYear.set(reviewRow.year, [...(sequencingRowsByYear.get(reviewRow.year) || []), reviewRow]);
+  }
+  return rows.map((row, index) => {
+    const reconciliation = selectCashFlowReconciliation(row);
+    const salary = n(row.salary_f) + n(row.salary_m);
+    const dbPension = n(row.dbPension) + n(row.dbPension_m) + n(row.dbSurvivor);
+    const cpp = n(row.cpp_f) + n(row.cpp_m);
+    const oas = n(row.oas_f) + n(row.oas_m);
+    const otherInflows = n(row.downsize_proceeds);
+    const registeredWithdrawals = n(row.rrif_draw_f) + n(row.rrif_draw_m) + n(row.lif_draw);
+    const tfsaWithdrawals = n(row.tfsa_draw);
+    const nonRegisteredWithdrawals = n(row.nonreg_draw);
+    const cashWithdrawals = n(row.cash_draw);
+    const totalPortfolioWithdrawals = registeredWithdrawals + tfsaWithdrawals + nonRegisteredWithdrawals + cashWithdrawals;
+    const baseSpending = Math.max(0, baseSpendingForYear(plan, row));
+    const additionalExpenses = Math.max(0, n(row.spending) - baseSpending);
+    const previousMortgage = index > 0 ? n(rows[index - 1].mortgage) : n(plan?.mortgage?.balance);
+    const mortgageOwing = n(row.mortgage);
+    const mortgagePaid = Math.max(0, previousMortgage - mortgageOwing);
+    const taxableIncome = n(row.taxableIncome);
+    const totalTax = n(row.totalTaxYear);
+    const sequencingRows = sequencingRowsByYear.get(row.year) || [];
+    const betaSequencingReviewAmount = sequencingRows.length
+      ? sequencingRows.reduce((sum, reviewRow) => sum + n(reviewRow.reviewAmount), 0)
+      : null;
+
+    return {
+      year: row.year,
+      ages: n(row.ageM) > 0 ? `${row.ageF} / ${row.ageM}` : String(row.ageF),
+      baseSpending,
+      additionalExpenses,
+      totalSpending: n(row.spending),
+      afterTaxSpending: n(row.totalAftaxYear),
+      salary,
+      dbPension,
+      cpp,
+      oas,
+      otherInflows,
+      totalIncomeAndInflows: salary + dbPension + cpp + oas + otherInflows,
+      registeredWithdrawals,
+      tfsaWithdrawals,
+      nonRegisteredWithdrawals,
+      cashWithdrawals,
+      totalPortfolioWithdrawals,
+      taxableIncome,
+      totalTax,
+      oasClawback: n(row.totalOasClawY),
+      rrspBalance: n(row.bal_rrsp),
+      tfsaBalance: n(row.bal_tfsa),
+      lifBalance: n(row.bal_lif),
+      nonRegisteredBalance: n(row.bal_nonreg),
+      cashBalance: n(row.bal_cash),
+      totalFinancialAssets: n(row.bal_total),
+      mortgageOwing,
+      mortgagePaid,
+      netWorth: n(row.bal_total) - mortgageOwing,
+      estateBeforeTax: n(row.bal_total) - mortgageOwing,
+      estateTaxableIncome: taxableIncome,
+      estateTax: totalTax,
+      shortfall: n(row.shortfall),
+      surplus: n(row.surplus),
+      reconciliationGap: reconciliation.reconciliationDelta,
+      cashFlowDelta: reconciliation.cashFlowDelta,
+      reconciliationStatus: reconciliation.status,
+      betaSequencingReviewAmount,
+      betaSequencingAccountLabel: sequencingRows.map((reviewRow) => reviewRow.accountLabel).join('; '),
+      betaSequencingSourceEvidence: sequencingRows.map((reviewRow) => reviewRow.sourceEvidence).join('; '),
+      betaSequencingTaxContext: sequencingRows.map((reviewRow) => reviewRow.taxContext).join('; '),
+      betaSequencingConstraintContext: sequencingRows.map((reviewRow) => reviewRow.constraintContext).join('; '),
+      betaSequencingQualityStatus: sequencingRows.map((reviewRow) => reviewRow.qualityStatus).join('; '),
+      betaSequencingBoundaryStatus: sequencingRows.map((reviewRow) => reviewRow.boundaryStatus).join('; ')
+    };
+  });
+}
+
 export function selectAnnualDetailSummary(result: SimulationResult | null | undefined): AnnualDetailSummary {
   const rows = selectAnnualDetailRows(result);
   const first = rows[0];
@@ -10160,6 +10513,8 @@ export function selectScenarioComparisonRows(
         label,
         endPortfolioDelta: 0,
         firstYearSpendingDelta: 0,
+        firstYearAfterTaxSpendingDelta: 0,
+        monthlyAfterTaxSpendingDelta: 0,
         lifetimeTaxDelta: 0,
         firstShortfallYear: null,
         fundedThroughYear: null,
@@ -10172,6 +10527,7 @@ export function selectScenarioComparisonRows(
     const firstShortfall = rowsFrom(scenario).find((row) => n(row.shortfall) > RECONCILIATION_TOLERANCE);
     const endPortfolioDelta = scenarioOverview.endPortfolio - baselineOverview.endPortfolio;
     const firstYearSpendingDelta = scenarioOverview.firstYearSpending - baselineOverview.firstYearSpending;
+    const firstYearAfterTaxSpendingDelta = n(rowsFrom(scenario)[0]?.totalAftaxYear) - n(rowsFrom(baseline)[0]?.totalAftaxYear);
     const lifetimeTaxDelta = scenarioTax.lifetimeTax - baselineTax.lifetimeTax;
     const status: ScenarioComparisonRow['status'] =
       endPortfolioDelta > RECONCILIATION_TOLERANCE && !firstShortfall
@@ -10185,12 +10541,126 @@ export function selectScenarioComparisonRows(
       label,
       endPortfolioDelta,
       firstYearSpendingDelta,
+      firstYearAfterTaxSpendingDelta,
+      monthlyAfterTaxSpendingDelta: firstYearAfterTaxSpendingDelta / 12,
       lifetimeTaxDelta,
       firstShortfallYear: firstShortfall?.year ?? null,
       fundedThroughYear: firstShortfall ? firstShortfall.year - 1 : scenarioOverview.lastYear,
       status
     };
   });
+}
+
+export function selectScenarioDecisionSummary(rows: ScenarioComparisonRow[]): ScenarioDecisionSummary {
+  const available = rows.filter((row) => row.status !== 'notAvailable');
+  if (!available.length) {
+    return {
+      status: 'notAvailable',
+      headline: 'Scenario comparison needs runnable alternatives.',
+      detail: 'Add enough plan inputs to compare spending, tax, estate, and funded-horizon trade-offs.',
+      rows: [
+        {
+          id: 'spendingRoom',
+          label: 'Spending room',
+          status: 'notAvailable',
+          bestScenarioLabel: 'Waiting for scenarios',
+          value: '-',
+          detail: 'Annual and monthly after-tax spending deltas will appear after a scenario runs.',
+          dataSheet: 'stressTests'
+        },
+        {
+          id: 'taxEfficiency',
+          label: 'Tax efficiency',
+          status: 'notAvailable',
+          bestScenarioLabel: 'Waiting for scenarios',
+          value: '-',
+          detail: 'Lifetime-tax deltas will appear after a scenario runs.',
+          dataSheet: 'taxes'
+        },
+        {
+          id: 'estateCushion',
+          label: 'Estate / cushion',
+          status: 'notAvailable',
+          bestScenarioLabel: 'Waiting for scenarios',
+          value: '-',
+          detail: 'Ending-portfolio deltas will appear after a scenario runs.',
+          dataSheet: 'annualDetail'
+        },
+        {
+          id: 'fundedHorizon',
+          label: 'Funded horizon',
+          status: 'notAvailable',
+          bestScenarioLabel: 'Waiting for scenarios',
+          value: '-',
+          detail: 'Funded-through years will appear after a scenario runs.',
+          dataSheet: 'stressTests'
+        }
+      ]
+    };
+  }
+
+  const spending = [...available].sort((a, b) => b.firstYearAfterTaxSpendingDelta - a.firstYearAfterTaxSpendingDelta)[0];
+  const tax = [...available].sort((a, b) => a.lifetimeTaxDelta - b.lifetimeTaxDelta)[0];
+  const estate = [...available].sort((a, b) => b.endPortfolioDelta - a.endPortfolioDelta)[0];
+  const horizon = [...available].sort((a, b) => n(b.fundedThroughYear ?? 0) - n(a.fundedThroughYear ?? 0))[0];
+
+  const rowsOut: ScenarioDecisionSummaryRow[] = [
+    {
+      id: 'spendingRoom',
+      label: 'Spending room',
+      status: spending.firstYearAfterTaxSpendingDelta >= 0 ? 'ready' : 'tradeoff',
+      bestScenarioLabel: spending.label,
+      value: `${signedMoneyText(spending.firstYearAfterTaxSpendingDelta)} / yr (${signedMoneyText(spending.monthlyAfterTaxSpendingDelta)} / mo)`,
+      detail:
+        spending.firstYearAfterTaxSpendingDelta >= 0
+          ? 'This alternate preserves or increases first-year after-tax spending.'
+          : 'This alternate reduces first-year after-tax spending, so treat it as a trade-off rather than extra room.',
+      dataSheet: 'stressTests'
+    },
+    {
+      id: 'taxEfficiency',
+      label: 'Tax efficiency',
+      status: tax.lifetimeTaxDelta <= 0 ? 'ready' : 'tradeoff',
+      bestScenarioLabel: tax.label,
+      value: signedMoneyText(tax.lifetimeTaxDelta),
+      detail:
+        tax.lifetimeTaxDelta <= 0
+          ? 'This alternate has the lowest lifetime-tax delta among the available scenarios.'
+          : 'All available alternates increase lifetime tax in this comparison set.',
+      dataSheet: 'taxes'
+    },
+    {
+      id: 'estateCushion',
+      label: 'Estate / cushion',
+      status: estate.endPortfolioDelta >= 0 ? 'ready' : 'tradeoff',
+      bestScenarioLabel: estate.label,
+      value: signedMoneyText(estate.endPortfolioDelta),
+      detail:
+        estate.endPortfolioDelta >= 0
+          ? 'This alternate leaves the strongest ending portfolio among the available scenarios.'
+          : 'All available alternates reduce the ending portfolio in this comparison set.',
+      dataSheet: 'annualDetail'
+    },
+    {
+      id: 'fundedHorizon',
+      label: 'Funded horizon',
+      status: horizon.firstShortfallYear ? 'tradeoff' : 'ready',
+      bestScenarioLabel: horizon.label,
+      value: horizon.fundedThroughYear ? String(horizon.fundedThroughYear) : '-',
+      detail: horizon.firstShortfallYear
+        ? `This alternate still shows a shortfall beginning in ${horizon.firstShortfallYear}.`
+        : 'This alternate reaches the end of the projection without a shortfall in the available comparison set.',
+      dataSheet: 'stressTests'
+    }
+  ];
+
+  return {
+    status: 'ready',
+    headline: 'Scenario comparison is ready to explain trade-offs.',
+    detail:
+      'Use these rows to decide which scenario best supports spending, tax efficiency, estate/cushion, or funded horizon before choosing a visual treatment.',
+    rows: rowsOut
+  };
 }
 
 export function selectScenarioAssumptionRows(plan: V2PlanPayload | null | undefined): ScenarioAssumptionRow[] {

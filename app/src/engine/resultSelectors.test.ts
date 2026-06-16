@@ -20,6 +20,7 @@ import {
   selectEstateIntentSummary,
   selectFundingSourceRows,
   selectIncomeSourceRows,
+  selectMasterDetailRows,
   selectMinimumExpenseCoverageSummary,
   selectMonthlyCapacityFundingTraceImplementationAudit,
   selectMonthlyCapacityFundingTraceImplementationCloseout,
@@ -181,6 +182,7 @@ import {
   selectScenarioCards,
   selectScenarioChoiceCards,
   selectScenarioComparisonRows,
+  selectScenarioDecisionSummary,
   selectScenarioAssumptionRows,
   selectSourceReconciliationStory,
   selectSpendingCapacitySummary,
@@ -562,6 +564,8 @@ describe('result selectors', () => {
     expect(stressScenarioRows).toHaveLength(3);
     expect(stressScenarioRows.find((row) => row.id === 'spendLessGogo')).toMatchObject({
       status: 'improves',
+      firstYearAfterTaxSpendingDelta: -7000,
+      monthlyAfterTaxSpendingDelta: -7000 / 12,
       fundedThroughYear: 2029
     });
     expect(survivorStress).toMatchObject({
@@ -741,6 +745,10 @@ describe('result selectors', () => {
     const answer = selectRetirementAnswerSummary(fixture, planFixture);
     const spending = selectSpendingCapacitySummary(fixture, {}, planFixture, answer);
     const recommended = selectRecommendedPath(fixture, {}, null, planFixture);
+    const scenarioRows = selectScenarioComparisonRows(fixture, {
+      retireLater: withRows([{ totalTaxYear: 9000, bal_total: 550000 }, { totalTaxYear: 9000, bal_total: 580000 }]),
+      spendLessGogo: withRows([{ spending: 63000, totalAftaxYear: 63000, bal_total: 520000 }, { bal_total: 540000 }])
+    });
     const layer = selectRetirementAnswerLayer({
       retirementAnswer: answer,
       spendingCapacity: spending,
@@ -748,27 +756,67 @@ describe('result selectors', () => {
       stressSummary: selectStressTestSummary(fixture),
       taxSummary: selectTaxSummaryMetrics(fixture),
       accountStory: selectAccountDrawdownStory(fixture),
-      incomeRows: selectIncomeSourceRows(fixture)
+      incomeRows: selectIncomeSourceRows(fixture),
+      masterDetailRows: selectMasterDetailRows(fixture, planFixture),
+      scenarioComparisonRows: scenarioRows
     });
 
     expect(layer.status).toBe('review');
     expect(layer.rows.map((row) => row.id)).toEqual([
       'retireTiming',
       'spendingCapacity',
-      'incomeDirection',
-      'nextMoves',
-      'riskReview'
+      'fundingPath',
+      'accountPath',
+      'taxDrag',
+      'netWorthEstate',
+      'goalsOutflows',
+      'riskReview',
+      'nextMoves'
     ]);
     expect(layer.rows.map((row) => row.visualizationHint)).toEqual([
       'verdictCard',
       'spendingBand',
       'fundingFlow',
-      'actionStack',
-      'riskTimeline'
+      'accountStack',
+      'taxTimeline',
+      'netWorthLine',
+      'outflowStack',
+      'riskTimeline',
+      'actionStack'
     ]);
-    expect(layer.rows.find((row) => row.id === 'incomeDirection')).toMatchObject({
+    expect(layer.rows.find((row) => row.id === 'fundingPath')).toMatchObject({
       answer: expect.stringContaining('not an instruction'),
       dataSheet: 'incomeSources'
+    });
+    expect(layer.rows.find((row) => row.id === 'accountPath')).toMatchObject({
+      dataSheet: 'accounts',
+      visualizationHint: 'accountStack'
+    });
+    expect(layer.rows.find((row) => row.id === 'taxDrag')).toMatchObject({
+      dataSheet: 'taxes',
+      visualizationHint: 'taxTimeline'
+    });
+    expect(layer.rows.find((row) => row.id === 'spendingCapacity')?.evidenceRefs[0]).toMatchObject({
+      rowKey: '2028',
+      fields: expect.arrayContaining(['baseSpending', 'additionalExpenses', 'afterTaxSpending'])
+    });
+    expect(layer.rows.find((row) => row.id === 'spendingCapacity')?.comparisonDeltas[0]).toMatchObject({
+      focus: 'spending',
+      label: 'Retire two years later',
+      annualAfterTaxSpendingDelta: 0,
+      monthlyAfterTaxSpendingDelta: 0,
+      explanation: expect.stringContaining('preserves or improves first-year after-tax spending'),
+      caveat: expect.stringContaining('household lifestyle')
+    });
+    expect(layer.rows.find((row) => row.id === 'taxDrag')?.comparisonDeltas[0]).toMatchObject({
+      focus: 'tax',
+      label: 'Spend a little less early',
+      caveat: expect.stringContaining('Lower tax is not automatically better')
+    });
+    expect(layer.rows.find((row) => row.id === 'netWorthEstate')?.comparisonDeltas[0]).toMatchObject({
+      focus: 'estate',
+      label: 'Retire two years later',
+      caveat: expect.stringContaining('estate intention')
     });
     expect(layer.visualizationPrinciple).toContain('Choose visuals after the answer contract is stable');
     expect(layer.blockedVisualizationWork).toEqual([
@@ -777,6 +825,67 @@ describe('result selectors', () => {
       'savedRecommendations',
       'finalAdviceLanguage'
     ]);
+  });
+
+  it('builds master-detail rows as the ledger evidence behind answer cards and exports', () => {
+    const rows = selectMasterDetailRows(fixture, {
+      ...planFixture,
+      mortgage: { balance: 120000, rate: 0.04, monthly: 1200 }
+    });
+    const first = rows[0];
+
+    expect(rows).toHaveLength(fixture.years.length);
+    expect(first).toMatchObject({
+      year: fixture.years[0].year,
+      ages: String(fixture.years[0].ageF),
+      baseSpending: fixture.years[0].spending - (fixture.years[0].oneOff_outflow ?? 0),
+      additionalExpenses: fixture.years[0].oneOff_outflow,
+      totalSpending: fixture.years[0].spending,
+      salary: 0,
+      totalTax: fixture.years[0].totalTaxYear,
+      rrspBalance: fixture.years[0].bal_rrsp,
+      totalFinancialAssets: fixture.years[0].bal_total,
+      mortgageOwing: fixture.years[0].mortgage ?? 0,
+      reconciliationStatus: 'ok'
+    });
+    expect(first.totalPortfolioWithdrawals).toBe(
+      first.registeredWithdrawals + first.tfsaWithdrawals + first.nonRegisteredWithdrawals + first.cashWithdrawals
+    );
+    expect(first.netWorth).toBe(first.totalFinancialAssets - first.mortgageOwing);
+    expect(first.estateBeforeTax).toBe(first.netWorth);
+    expect(first.betaSequencingReviewAmount).toBeNull();
+  });
+
+  it('can attach internal beta sequencing review evidence to master-detail rows without requiring public export', () => {
+    const rows = selectMasterDetailRows(fixture, planFixture, [
+      {
+        year: 2028,
+        accountLabel: 'Registered accounts',
+        reviewAmount: 12500,
+        sourceEvidence: 'registered withdrawal fields; annual account total 12500',
+        taxContext: 'Tax context for review only',
+        constraintContext: 'Minimum floor context',
+        qualityStatus: 'readyForBetaReview',
+        boundaryStatus: 'Internal beta review row only; not exported.'
+      },
+      {
+        year: 2028,
+        accountLabel: 'Cash reserve',
+        reviewAmount: 21616,
+        sourceEvidence: 'cash withdrawal field; annual account total 34116',
+        taxContext: 'Tax context for review only',
+        constraintContext: 'Minimum floor context',
+        qualityStatus: 'readyWithContext',
+        boundaryStatus: 'Internal beta review row only; not exported.'
+      }
+    ]);
+
+    expect(rows[0]).toMatchObject({
+      betaSequencingReviewAmount: 34116,
+      betaSequencingAccountLabel: 'Registered accounts; Cash reserve',
+      betaSequencingQualityStatus: 'readyForBetaReview; readyWithContext'
+    });
+    expect(rows[0].betaSequencingBoundaryStatus).toContain('not exported');
   });
 
   it('defines slider-ready assumption controls and side-by-side optimal plan comparisons', () => {
@@ -795,6 +904,7 @@ describe('result selectors', () => {
       spendLessGogo: withRows([{ spending: 63000, totalAftaxYear: 63000, bal_total: 520000 }, { bal_total: 540000 }]),
       delayBenefits: withRows([{ cpp_f: 0, oas_f: 0 }, { bal_total: 510000 }])
     });
+    const scenarioDecision = selectScenarioDecisionSummary(scenarioRows);
     const lab = selectAssumptionLabSummary({
       plan: planFixture,
       recommendedPath: recommended,
@@ -832,6 +942,24 @@ describe('result selectors', () => {
     });
     expect(lab.comparisonSlots.find((slot) => slot.sourceCandidateId === 'spendLessGogo')).toMatchObject({
       firstYearSpendingDelta: -7000
+    });
+    expect(scenarioDecision).toMatchObject({
+      status: 'ready',
+      headline: expect.stringContaining('Scenario comparison is ready')
+    });
+    expect(scenarioDecision.rows.map((row) => row.id)).toEqual([
+      'spendingRoom',
+      'taxEfficiency',
+      'estateCushion',
+      'fundedHorizon'
+    ]);
+    expect(scenarioDecision.rows.find((row) => row.id === 'spendingRoom')).toMatchObject({
+      bestScenarioLabel: 'Retire two years later',
+      value: '$0 / yr ($0 / mo)'
+    });
+    expect(scenarioDecision.rows.find((row) => row.id === 'estateCushion')).toMatchObject({
+      bestScenarioLabel: 'Retire two years later',
+      value: '+$80,000'
     });
     expect(lab.scenarioDecision).toMatchObject({
       status: 'singleAdjustmentSelected',

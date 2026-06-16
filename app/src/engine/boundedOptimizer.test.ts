@@ -1544,6 +1544,42 @@ describe('bounded optimizer runner', () => {
       'blocked',
       'blocked'
     ]);
+    expect(summary.csvReportGate.csvColumnContract.map((column) => column.id)).toEqual([
+      'year',
+      'accountLabel',
+      'reviewAmount',
+      'sourceEvidence',
+      'taxContext',
+      'constraintContext',
+      'qualityStatus',
+      'boundaryStatus'
+    ]);
+    expect(summary.csvReportGate.csvColumnContract.find((column) => column.id === 'reviewAmount')).toMatchObject({
+      label: 'Review amount',
+      sourceField: 'reviewAmount',
+      status: 'planned',
+      detail: expect.stringContaining('review evidence only')
+    });
+    expect(summary.csvReportGate.reportRowContract.map((row) => row.id)).toEqual([
+      'summary',
+      'accountRows',
+      'taxContext',
+      'constraintContext',
+      'qualityBoundary'
+    ]);
+    expect(summary.csvReportGate.reportRowContract.find((row) => row.id === 'qualityBoundary')).toMatchObject({
+      status: 'blocked',
+      detail: expect.stringContaining('output remains blocked')
+    });
+    expect(summary.csvReportGate.masterDetailMapping).toEqual([
+      { masterDetailField: 'year', source: 'year', status: 'planned' },
+      { masterDetailField: 'accountLabel', source: 'accountLabel', status: 'planned' },
+      { masterDetailField: 'reviewAmount', source: 'reviewAmount', status: 'planned' },
+      { masterDetailField: 'sourceEvidence', source: 'sourceEvidence', status: 'planned' },
+      { masterDetailField: 'taxContext', source: 'taxContext', status: 'planned' },
+      { masterDetailField: 'constraintContext', source: 'constraintContext', status: 'planned' },
+      { masterDetailField: 'qualityStatus', source: 'qualityStatus', status: 'planned' }
+    ]);
     expect(summary.publicSafetyValidation).toMatchObject({
       status: 'notPublicReady',
       decision: 'keepPublicOptimizerClosed',

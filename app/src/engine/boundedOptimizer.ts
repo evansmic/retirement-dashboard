@@ -734,6 +734,32 @@ export type OptimizerCsvReportGate = {
     status: 'ready' | 'blocked';
     detail: string;
   }>;
+  csvColumnContract: Array<{
+    id:
+      | 'year'
+      | 'accountLabel'
+      | 'reviewAmount'
+      | 'sourceEvidence'
+      | 'taxContext'
+      | 'constraintContext'
+      | 'qualityStatus'
+      | 'boundaryStatus';
+    label: string;
+    sourceField: keyof OptimizerBetaSavedSequencingRow;
+    status: 'planned' | 'blocked';
+    detail: string;
+  }>;
+  reportRowContract: Array<{
+    id: 'summary' | 'accountRows' | 'taxContext' | 'constraintContext' | 'qualityBoundary';
+    label: string;
+    status: 'planned' | 'blocked';
+    detail: string;
+  }>;
+  masterDetailMapping: Array<{
+    masterDetailField: 'year' | 'accountLabel' | 'reviewAmount' | 'sourceEvidence' | 'taxContext' | 'constraintContext' | 'qualityStatus';
+    source: keyof OptimizerBetaSavedSequencingRow;
+    status: 'planned';
+  }>;
   allowedFutureFields: OptimizerBetaSavedSequencingAdapter['allowedFields'];
   excludedFields: Array<
     | 'finalInstruction'
@@ -6750,6 +6776,105 @@ export function selectOptimizerCsvReportGate({
     schemaSaveDecision.allowedSavedKeys.length === 0;
   const rowEvidenceReady = betaSavedSequencingAdapter.status === 'readyForBetaReview' && betaSavedSequencingAdapter.rows.length > 0;
   const status: OptimizerCsvReportGate['status'] = savedBoundaryReady && rowEvidenceReady ? 'readyForGateReview' : 'blocked';
+  const csvColumnContract: OptimizerCsvReportGate['csvColumnContract'] = [
+    {
+      id: 'year',
+      label: 'Year',
+      sourceField: 'year',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Maps the runtime beta sequencing review row to the future master-detail year column.'
+    },
+    {
+      id: 'accountLabel',
+      label: 'Account / source',
+      sourceField: 'accountLabel',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Names the account bucket or source being reviewed without making it a withdrawal command.'
+    },
+    {
+      id: 'reviewAmount',
+      label: 'Review amount',
+      sourceField: 'reviewAmount',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Shows a rounded modelled amount for review evidence only.'
+    },
+    {
+      id: 'sourceEvidence',
+      label: 'Source evidence',
+      sourceField: 'sourceEvidence',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Explains which runtime candidate fields produced the row.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context',
+      sourceField: 'taxContext',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Carries tax context without tax-bracket targets or tax advice.'
+    },
+    {
+      id: 'constraintContext',
+      label: 'Constraint context',
+      sourceField: 'constraintContext',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Carries floor, estate, survivor, or benefit-timing context where available.'
+    },
+    {
+      id: 'qualityStatus',
+      label: 'Review quality',
+      sourceField: 'qualityStatus',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Keeps review-before-save quality visible in any future output.'
+    },
+    {
+      id: 'boundaryStatus',
+      label: 'Boundary status',
+      sourceField: 'boundaryStatus',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Repeats that the row is review evidence, not final annual instructions.'
+    }
+  ];
+  const reportRowContract: OptimizerCsvReportGate['reportRowContract'] = [
+    {
+      id: 'summary',
+      label: 'Sequencing review summary',
+      status: status === 'readyForGateReview' ? 'planned' : 'blocked',
+      detail: 'Printable report may later summarize beta sequencing review status, but this gate does not add report output.'
+    },
+    {
+      id: 'accountRows',
+      label: 'Annual account review rows',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Report rows may later list year/account/amount/source evidence with non-advisory labels.'
+    },
+    {
+      id: 'taxContext',
+      label: 'Tax context notes',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Report copy may later show tax context only, with no tax-bracket wording.'
+    },
+    {
+      id: 'constraintContext',
+      label: 'Constraint notes',
+      status: rowEvidenceReady ? 'planned' : 'blocked',
+      detail: 'Report copy may later show minimum floor, survivor, estate, and benefit-timing context.'
+    },
+    {
+      id: 'qualityBoundary',
+      label: 'Review boundary',
+      status: 'blocked',
+      detail: 'Report output remains blocked until wording safety and public scenario coverage pass.'
+    }
+  ];
+  const masterDetailMapping: OptimizerCsvReportGate['masterDetailMapping'] = [
+    { masterDetailField: 'year', source: 'year', status: 'planned' },
+    { masterDetailField: 'accountLabel', source: 'accountLabel', status: 'planned' },
+    { masterDetailField: 'reviewAmount', source: 'reviewAmount', status: 'planned' },
+    { masterDetailField: 'sourceEvidence', source: 'sourceEvidence', status: 'planned' },
+    { masterDetailField: 'taxContext', source: 'taxContext', status: 'planned' },
+    { masterDetailField: 'constraintContext', source: 'constraintContext', status: 'planned' },
+    { masterDetailField: 'qualityStatus', source: 'qualityStatus', status: 'planned' }
+  ];
   return {
     status,
     decision: 'keepCsvAndReportSequencingBlocked',
@@ -6776,13 +6901,13 @@ export function selectOptimizerCsvReportGate({
         id: 'csvColumnContract',
         label: 'CSV column contract',
         status: 'blocked',
-        detail: 'CSV column names, ordering, null handling, and non-advisory wording still need a separate contract.'
+        detail: 'CSV column names, ordering, null handling, and non-advisory wording are now planned here, but output remains blocked.'
       },
       {
         id: 'reportRowContract',
         label: 'Report row contract',
         status: 'blocked',
-        detail: 'Printable report placement, labels, summaries, and explanatory copy still need a separate contract.'
+        detail: 'Printable report placement, labels, summaries, and explanatory copy are now planned here, but report output remains blocked.'
       },
       {
         id: 'wordingSafety',
@@ -6797,6 +6922,9 @@ export function selectOptimizerCsvReportGate({
         detail: 'Real-planning release needs unsupported-case handling and broader scenario validation before exports open.'
       }
     ],
+    csvColumnContract,
+    reportRowContract,
+    masterDetailMapping,
     allowedFutureFields: betaSavedSequencingAdapter.allowedFields,
     excludedFields: [
       'finalInstruction',
