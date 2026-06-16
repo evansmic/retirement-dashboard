@@ -1017,6 +1017,7 @@ export type RetirementPresentationModule = {
   answerQuestion: string;
   status: RetirementAnswerLayerStatus;
   primaryMode: RetirementPresentationMode;
+  firstScreenRole: 'hero' | 'primaryAnswer' | 'supportingAnswer' | 'detailToggle';
   graphPattern: RetirementAnswerLayerRow['visualizationHint'];
   dataSheet: ResultsWorkspaceSection;
   dataSheetToggleLabel: string;
@@ -1032,6 +1033,10 @@ export type RetirementPresentationPlan = {
   status: RetirementAnswerLayerStatus;
   headline: string;
   modules: RetirementPresentationModule[];
+  firstScreenModuleIds: RetirementAnswerLayerRow['id'][];
+  supportingModuleIds: RetirementAnswerLayerRow['id'][];
+  detailToggleModuleIds: RetirementAnswerLayerRow['id'][];
+  storyOrder: RetirementAnswerLayerRow['id'][];
   defaultModes: RetirementPresentationMode[];
   comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'];
   progressBehavior: string;
@@ -3603,6 +3608,14 @@ export function selectRetirementAnswerLayer({
 }
 
 export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): RetirementPresentationPlan {
+  const firstScreenModuleIds: RetirementAnswerLayerRow['id'][] = ['retireTiming', 'spendingCapacity', 'nextMoves'];
+  const supportingModuleIds: RetirementAnswerLayerRow['id'][] = ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'];
+  const detailToggleModuleIds: RetirementAnswerLayerRow['id'][] = ['accountPath', 'goalsOutflows'];
+  const storyOrder: RetirementAnswerLayerRow['id'][] = [
+    ...firstScreenModuleIds,
+    ...supportingModuleIds,
+    ...detailToggleModuleIds
+  ];
   const controlMap: Record<
     RetirementAnswerLayerRow['id'],
     RetirementPresentationModule['supportedAssumptionControls']
@@ -3628,6 +3641,18 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
     riskTimeline: 'Show funded years, shortfall years, and stress sensitivity in calm review language.',
     actionStack: 'Prioritize the next review actions and link each action back to its evidence sheet.'
   };
+  const roleMap: Record<RetirementAnswerLayerRow['id'], RetirementPresentationModule['firstScreenRole']> = {
+    retireTiming: 'hero',
+    spendingCapacity: 'primaryAnswer',
+    nextMoves: 'primaryAnswer',
+    riskReview: 'supportingAnswer',
+    fundingPath: 'supportingAnswer',
+    taxDrag: 'supportingAnswer',
+    netWorthEstate: 'supportingAnswer',
+    accountPath: 'detailToggle',
+    goalsOutflows: 'detailToggle'
+  };
+  const rowById = new Map(layer.rows.map((row) => [row.id, row]));
 
   return {
     status: layer.status,
@@ -3635,13 +3660,16 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
       layer.status === 'blocked'
         ? 'Presentation planning waits for a coherent retirement answer layer.'
         : 'Answer cards, graphs, and data sheets can now be planned from one contract.',
-    modules: layer.rows.map((row) => {
+    modules: storyOrder.flatMap((id) => {
+      const row = rowById.get(id);
+      if (!row) return [];
       const dataSheet = row.evidenceRefs[0]?.dataSheet ?? row.dataSheet;
-      return {
+      return [{
         id: row.id,
         answerQuestion: row.question,
         status: row.status,
         primaryMode: 'answerCard',
+        firstScreenRole: roleMap[row.id],
         graphPattern: row.visualizationHint,
         dataSheet,
         dataSheetToggleLabel: `${dataSheet} sheet`,
@@ -3649,8 +3677,12 @@ export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): 
         evidenceLabels: row.evidenceRefs.map((ref) => ref.label),
         comparisonFocus: row.comparisonDeltas[0]?.focus ?? 'none',
         purpose: purposeMap[row.visualizationHint]
-      };
+      }];
     }),
+    firstScreenModuleIds,
+    supportingModuleIds,
+    detailToggleModuleIds,
+    storyOrder,
     defaultModes: ['answerCard', 'graph', 'dataSheet'],
     comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'],
     progressBehavior:

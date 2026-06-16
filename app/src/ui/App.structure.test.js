@@ -1237,8 +1237,15 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Presentation planning contract');
     expect(appSource).toContain('presentationPlan.defaultModes');
     expect(appSource).toContain('presentationPlan.comparisonSlots');
+    expect(appSource).toContain('presentationPlan.firstScreenModuleIds');
+    expect(appSource).toContain('presentationPlan.supportingModuleIds');
+    expect(appSource).toContain('presentationPlan.detailToggleModuleIds');
+    expect(appSource).toContain('First-read cards');
+    expect(appSource).toContain('Supporting graphics');
+    expect(appSource).toContain('Data-sheet toggles');
     expect(appSource).toContain('retirement-presentation-grid');
     expect(appSource).toContain('module.supportedAssumptionControls');
+    expect(appSource).toContain('module.firstScreenRole');
   });
 
   it('keeps first-results mobile layout guarded without adding Overview density', () => {

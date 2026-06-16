@@ -5219,15 +5219,31 @@ function RetirementAnswerLayerPanel({
           <Metric label="Default views" value={presentationPlan.defaultModes.join(' / ')} />
           <Metric label="Comparison slots" value={presentationPlan.comparisonSlots.length} />
           <Metric label="Presentation modules" value={presentationPlan.modules.length} />
+          <Metric label="First-read cards" value={presentationPlan.firstScreenModuleIds.length} />
         </div>
+        <dl className="mini-ledger presentation-story-order">
+          <div>
+            <dt>First read</dt>
+            <dd>{presentationPlan.firstScreenModuleIds.join(', ')}</dd>
+          </div>
+          <div>
+            <dt>Supporting graphics</dt>
+            <dd>{presentationPlan.supportingModuleIds.join(', ')}</dd>
+          </div>
+          <div>
+            <dt>Data-sheet toggles</dt>
+            <dd>{presentationPlan.detailToggleModuleIds.join(', ')}</dd>
+          </div>
+        </dl>
         <div className="retirement-presentation-grid">
           {presentationPlan.modules.slice(0, 6).map((module) => (
             <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>
-              <span>{module.graphPattern}</span>
+              <span>{module.firstScreenRole}</span>
               <strong>{module.answerQuestion}</strong>
               <p>{module.purpose}</p>
               <small>
-                Toggle: {module.dataSheetToggleLabel}; assumptions: {module.supportedAssumptionControls.join(', ')}.
+                Graph: {module.graphPattern}; toggle: {module.dataSheetToggleLabel}; assumptions:{' '}
+                {module.supportedAssumptionControls.join(', ')}.
               </small>
             </article>
           ))}

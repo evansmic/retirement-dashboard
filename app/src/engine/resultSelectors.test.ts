@@ -832,15 +832,41 @@ describe('result selectors', () => {
     expect(presentation).toMatchObject({
       status: 'review',
       headline: expect.stringContaining('Answer cards, graphs, and data sheets'),
+      firstScreenModuleIds: ['retireTiming', 'spendingCapacity', 'nextMoves'],
+      supportingModuleIds: ['riskReview', 'fundingPath', 'taxDrag', 'netWorthEstate'],
+      detailToggleModuleIds: ['accountPath', 'goalsOutflows'],
+      storyOrder: [
+        'retireTiming',
+        'spendingCapacity',
+        'nextMoves',
+        'riskReview',
+        'fundingPath',
+        'taxDrag',
+        'netWorthEstate',
+        'accountPath',
+        'goalsOutflows'
+      ],
       defaultModes: ['answerCard', 'graph', 'dataSheet'],
       comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'],
       progressBehavior: expect.stringContaining('explicit progress state'),
       boundary: expect.stringContaining('does not redesign the UI'),
       nextStep: expect.stringContaining('first-screen graphical patterns')
     });
-    expect(presentation.modules.map((module) => module.id)).toEqual(layer.rows.map((row) => row.id));
+    expect(presentation.modules.map((module) => module.id)).toEqual(presentation.storyOrder);
+    expect(presentation.modules.map((module) => module.firstScreenRole)).toEqual([
+      'hero',
+      'primaryAnswer',
+      'primaryAnswer',
+      'supportingAnswer',
+      'supportingAnswer',
+      'supportingAnswer',
+      'supportingAnswer',
+      'detailToggle',
+      'detailToggle'
+    ]);
     expect(presentation.modules.find((module) => module.id === 'spendingCapacity')).toMatchObject({
       primaryMode: 'answerCard',
+      firstScreenRole: 'primaryAnswer',
       graphPattern: 'spendingBand',
       dataSheet: 'cashFlow',
       dataSheetToggleLabel: 'cashFlow sheet',
@@ -849,6 +875,7 @@ describe('result selectors', () => {
       purpose: expect.stringContaining('after-tax spending')
     });
     expect(presentation.modules.find((module) => module.id === 'fundingPath')).toMatchObject({
+      firstScreenRole: 'supportingAnswer',
       graphPattern: 'fundingFlow',
       dataSheet: 'incomeSources',
       supportedAssumptionControls: ['retirementAge', 'cppOasTiming', 'residenceSaleDate'],

@@ -1866,6 +1866,10 @@ button.secondary,
   gap: 10px;
 }
 
+.presentation-story-order {
+  background: #f8fafc;
+}
+
 .presentation-module {
   display: grid;
   gap: 6px;
