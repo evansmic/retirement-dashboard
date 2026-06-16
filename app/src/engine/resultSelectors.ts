@@ -1010,6 +1010,35 @@ export type RetirementAnswerLayer = {
   blockedVisualizationWork: Array<'fullUiRedesign' | 'publicOptimizerOutput' | 'savedRecommendations' | 'finalAdviceLanguage'>;
 };
 
+export type RetirementPresentationMode = 'answerCard' | 'graph' | 'dataSheet';
+
+export type RetirementPresentationModule = {
+  id: RetirementAnswerLayerRow['id'];
+  answerQuestion: string;
+  status: RetirementAnswerLayerStatus;
+  primaryMode: RetirementPresentationMode;
+  graphPattern: RetirementAnswerLayerRow['visualizationHint'];
+  dataSheet: ResultsWorkspaceSection;
+  dataSheetToggleLabel: string;
+  supportedAssumptionControls: Array<
+    'retirementAge' | 'cppOasTiming' | 'investmentReturn' | 'spendingLevel' | 'residenceSaleDate' | 'survivorYear'
+  >;
+  evidenceLabels: string[];
+  comparisonFocus: RetirementAnswerComparisonDelta['focus'] | 'none';
+  purpose: string;
+};
+
+export type RetirementPresentationPlan = {
+  status: RetirementAnswerLayerStatus;
+  headline: string;
+  modules: RetirementPresentationModule[];
+  defaultModes: RetirementPresentationMode[];
+  comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'];
+  progressBehavior: string;
+  boundary: string;
+  nextStep: string;
+};
+
 export type MonthlyCapacityStatus = 'cannotTell' | 'gap' | 'tight' | 'covered';
 
 export type MonthlyCapacityOption = {
@@ -3570,6 +3599,66 @@ export function selectRetirementAnswerLayer({
     visualizationPrinciple:
       'Choose visuals after the answer contract is stable: verdict cards for viability, spending bands for capacity, funding flows for income sources, account stacks for balances, tax timelines for tax drag, net-worth lines for estate outcomes, outflow stacks for lifestyle goals, action stacks for next moves, and timelines for risk.',
     blockedVisualizationWork: ['fullUiRedesign', 'publicOptimizerOutput', 'savedRecommendations', 'finalAdviceLanguage']
+  };
+}
+
+export function selectRetirementPresentationPlan(layer: RetirementAnswerLayer): RetirementPresentationPlan {
+  const controlMap: Record<
+    RetirementAnswerLayerRow['id'],
+    RetirementPresentationModule['supportedAssumptionControls']
+  > = {
+    retireTiming: ['retirementAge', 'cppOasTiming', 'investmentReturn'],
+    spendingCapacity: ['retirementAge', 'investmentReturn', 'spendingLevel'],
+    fundingPath: ['retirementAge', 'cppOasTiming', 'residenceSaleDate'],
+    accountPath: ['retirementAge', 'investmentReturn', 'spendingLevel', 'residenceSaleDate'],
+    taxDrag: ['cppOasTiming', 'spendingLevel', 'residenceSaleDate'],
+    netWorthEstate: ['retirementAge', 'investmentReturn', 'spendingLevel', 'residenceSaleDate', 'survivorYear'],
+    goalsOutflows: ['spendingLevel', 'residenceSaleDate'],
+    riskReview: ['investmentReturn', 'spendingLevel', 'survivorYear'],
+    nextMoves: ['retirementAge', 'cppOasTiming', 'investmentReturn', 'spendingLevel', 'residenceSaleDate', 'survivorYear']
+  };
+  const purposeMap: Record<RetirementAnswerLayerRow['visualizationHint'], string> = {
+    verdictCard: 'Lead with the plain retirement verdict before charts or ledgers.',
+    spendingBand: 'Show the supported after-tax spending range and whether the current lifestyle fits.',
+    fundingFlow: 'Explain which income and asset sources fund each phase without turning the row into account instructions.',
+    accountStack: 'Show how registered, TFSA, taxable, cash, and debt balances evolve over time.',
+    taxTimeline: 'Show lifetime tax drag, annual pressure, and clawback evidence without implying lower tax is always better.',
+    netWorthLine: 'Show portfolio and estate trajectory so spending trade-offs stay visible.',
+    outflowStack: 'Show base spending, one-time expenses, vacations, debt payments, and other goals as funded outflows.',
+    riskTimeline: 'Show funded years, shortfall years, and stress sensitivity in calm review language.',
+    actionStack: 'Prioritize the next review actions and link each action back to its evidence sheet.'
+  };
+
+  return {
+    status: layer.status,
+    headline:
+      layer.status === 'blocked'
+        ? 'Presentation planning waits for a coherent retirement answer layer.'
+        : 'Answer cards, graphs, and data sheets can now be planned from one contract.',
+    modules: layer.rows.map((row) => {
+      const dataSheet = row.evidenceRefs[0]?.dataSheet ?? row.dataSheet;
+      return {
+        id: row.id,
+        answerQuestion: row.question,
+        status: row.status,
+        primaryMode: 'answerCard',
+        graphPattern: row.visualizationHint,
+        dataSheet,
+        dataSheetToggleLabel: `${dataSheet} sheet`,
+        supportedAssumptionControls: controlMap[row.id],
+        evidenceLabels: row.evidenceRefs.map((ref) => ref.label),
+        comparisonFocus: row.comparisonDeltas[0]?.focus ?? 'none',
+        purpose: purposeMap[row.visualizationHint]
+      };
+    }),
+    defaultModes: ['answerCard', 'graph', 'dataSheet'],
+    comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'],
+    progressBehavior:
+      'Changing retirement age, CPP/OAS timing, returns, spending, residence-sale timing, or survivor timing should rerun the optimizer with an explicit progress state before refreshing comparison cards.',
+    boundary:
+      'This is a presentation contract only. It does not redesign the UI, add charts, save scenarios, create advice language, open public optimizer output, or create account-level annual instructions.',
+    nextStep:
+      'Use these modules to choose first-screen graphical patterns after pilot or owner review confirms which retirement questions matter most.'
   };
 }
 

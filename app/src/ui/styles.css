@@ -1841,6 +1841,71 @@ button.secondary,
   border-left-color: #d79b92;
 }
 
+.retirement-presentation-plan {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d5dde6;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.retirement-presentation-plan h4,
+.retirement-presentation-plan p {
+  margin: 0;
+}
+
+.retirement-presentation-plan h4 {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.retirement-presentation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.presentation-module {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 4px solid #9fb2c1;
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 10px;
+}
+
+.presentation-module span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.presentation-module strong {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.presentation-module p,
+.presentation-module small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.presentation-module-ready {
+  border-left-color: var(--green);
+}
+
+.presentation-module-review {
+  border-left-color: #d8b676;
+}
+
+.presentation-module-blocked {
+  border-left-color: #d79b92;
+}
+
 .answer-layer-blocked {
   border-color: #d79b92;
   background: #fff4f1;
@@ -4058,6 +4123,7 @@ button.secondary,
   .retirement-actions > div,
   .spending-capacity-grid,
   .retirement-answer-layer-grid,
+  .retirement-presentation-grid,
   .estate-intent-grid,
   .overview-highlight-grid,
   .details-card-grid,

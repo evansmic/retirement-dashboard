@@ -179,6 +179,7 @@ import {
   selectResultsReadinessRows,
   selectResultsReadinessSummary,
   selectRetirementAnswerLayer,
+  selectRetirementPresentationPlan,
   selectRetirementAnswerSummary,
   selectScenarioCards,
   selectScenarioChoiceCards,
@@ -826,6 +827,38 @@ describe('result selectors', () => {
       'savedRecommendations',
       'finalAdviceLanguage'
     ]);
+
+    const presentation = selectRetirementPresentationPlan(layer);
+    expect(presentation).toMatchObject({
+      status: 'review',
+      headline: expect.stringContaining('Answer cards, graphs, and data sheets'),
+      defaultModes: ['answerCard', 'graph', 'dataSheet'],
+      comparisonSlots: ['currentPlan', 'optimalPlan', 'comparisonA', 'comparisonB'],
+      progressBehavior: expect.stringContaining('explicit progress state'),
+      boundary: expect.stringContaining('does not redesign the UI'),
+      nextStep: expect.stringContaining('first-screen graphical patterns')
+    });
+    expect(presentation.modules.map((module) => module.id)).toEqual(layer.rows.map((row) => row.id));
+    expect(presentation.modules.find((module) => module.id === 'spendingCapacity')).toMatchObject({
+      primaryMode: 'answerCard',
+      graphPattern: 'spendingBand',
+      dataSheet: 'cashFlow',
+      dataSheetToggleLabel: 'cashFlow sheet',
+      supportedAssumptionControls: ['retirementAge', 'investmentReturn', 'spendingLevel'],
+      comparisonFocus: 'spending',
+      purpose: expect.stringContaining('after-tax spending')
+    });
+    expect(presentation.modules.find((module) => module.id === 'fundingPath')).toMatchObject({
+      graphPattern: 'fundingFlow',
+      dataSheet: 'incomeSources',
+      supportedAssumptionControls: ['retirementAge', 'cppOasTiming', 'residenceSaleDate'],
+      purpose: expect.stringContaining('which income and asset sources fund each phase')
+    });
+    expect(presentation.modules.find((module) => module.id === 'netWorthEstate')).toMatchObject({
+      graphPattern: 'netWorthLine',
+      supportedAssumptionControls: expect.arrayContaining(['survivorYear']),
+      comparisonFocus: 'estate'
+    });
   });
 
   it('builds master-detail rows as the ledger evidence behind answer cards and exports', () => {

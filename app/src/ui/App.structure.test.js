@@ -1233,6 +1233,12 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('Verdict card');
     expect(appSource).toContain('Funding flow');
     expect(appSource).toContain('data');
+    expect(appSource).toContain('selectRetirementPresentationPlan');
+    expect(appSource).toContain('Presentation planning contract');
+    expect(appSource).toContain('presentationPlan.defaultModes');
+    expect(appSource).toContain('presentationPlan.comparisonSlots');
+    expect(appSource).toContain('retirement-presentation-grid');
+    expect(appSource).toContain('module.supportedAssumptionControls');
   });
 
   it('keeps first-results mobile layout guarded without adding Overview density', () => {

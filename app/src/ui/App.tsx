@@ -51,6 +51,7 @@ import {
   selectRecommendedPath,
   selectReconciliationDiagnostics,
   selectRetirementAnswerLayer,
+  selectRetirementPresentationPlan,
   selectFeedbackReviewPackage,
   selectReleaseReadinessCheckpoint,
   selectResultsReadinessRows,
@@ -4495,6 +4496,7 @@ function ResultsHandoffPanel({
     masterDetailRows,
     scenarioComparisonRows
   });
+  const retirementPresentationPlan = selectRetirementPresentationPlan(retirementAnswerLayer);
   const minimumExpenseCoverage = selectMinimumExpenseCoverageSummary(result, plan, spendingCapacity);
   const spendingPathBridge = selectSpendingPathBridgeSummary(plan);
   const discretionaryRoomBridge = selectDiscretionaryRoomBridgeSummary(minimumExpenseCoverage, spendingCapacity);
@@ -4851,7 +4853,11 @@ function ResultsHandoffPanel({
               spendingCapacity={spendingCapacity}
             />
             <SpendingCapacityPanel loading={loading} summary={spendingCapacity} />
-            <RetirementAnswerLayerPanel loading={loading} layer={retirementAnswerLayer} />
+            <RetirementAnswerLayerPanel
+              loading={loading}
+              layer={retirementAnswerLayer}
+              presentationPlan={retirementPresentationPlan}
+            />
             <ReviewTheseFirstPanel
               actions={retirementAnswer.actions}
               loading={loading}
@@ -5116,10 +5122,12 @@ function SpendingCapacityPanel({
 
 function RetirementAnswerLayerPanel({
   layer,
-  loading
+  loading,
+  presentationPlan
 }: {
   layer: ReturnType<typeof selectRetirementAnswerLayer>;
   loading: boolean;
+  presentationPlan: ReturnType<typeof selectRetirementPresentationPlan>;
 }) {
   const visualLabels: Record<ReturnType<typeof selectRetirementAnswerLayer>['rows'][number]['visualizationHint'], string> = {
     verdictCard: 'Verdict card',
@@ -5201,6 +5209,32 @@ function RetirementAnswerLayerPanel({
       </div>
       <p className="table-note">{layer.visualizationPrinciple}</p>
       <p className="table-note">Still deferred: {layer.blockedVisualizationWork.join(', ')}.</p>
+      <div className="retirement-presentation-plan">
+        <div>
+          <p className="eyebrow">Presentation planning contract</p>
+          <h4>{presentationPlan.headline}</h4>
+          <p>{presentationPlan.progressBehavior}</p>
+        </div>
+        <div className="summary-grid">
+          <Metric label="Default views" value={presentationPlan.defaultModes.join(' / ')} />
+          <Metric label="Comparison slots" value={presentationPlan.comparisonSlots.length} />
+          <Metric label="Presentation modules" value={presentationPlan.modules.length} />
+        </div>
+        <div className="retirement-presentation-grid">
+          {presentationPlan.modules.slice(0, 6).map((module) => (
+            <article className={`presentation-module presentation-module-${module.status}`} key={module.id}>
+              <span>{module.graphPattern}</span>
+              <strong>{module.answerQuestion}</strong>
+              <p>{module.purpose}</p>
+              <small>
+                Toggle: {module.dataSheetToggleLabel}; assumptions: {module.supportedAssumptionControls.join(', ')}.
+              </small>
+            </article>
+          ))}
+        </div>
+        <p className="table-note">{presentationPlan.boundary}</p>
+        <p className="table-note">{presentationPlan.nextStep}</p>
+      </div>
     </section>
   );
 }
