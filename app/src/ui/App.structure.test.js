@@ -1314,6 +1314,9 @@ describe('Results overview structure', () => {
     expect(appSource).toContain('feedbackHandoff.worksheetSections');
     expect(appSource).toContain('Accepted evidence');
     expect(appSource).toContain('Excluded data');
+    expect(appSource).toContain('Pilot readiness verification');
+    expect(appSource).toContain('pilotReadinessChecklist.verificationRows');
+    expect(appSource).toContain('No-go signals');
     expect(appSource).toContain('optimizer-private-pilot-requirements');
     expect(appSource).toContain('private-pilot-row-');
     expect(boundedOptimizerSource).toContain('definePrivatePilotBeforePublicOutput');

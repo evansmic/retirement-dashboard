@@ -7692,6 +7692,18 @@ function BoundedOptimizerPanel({
             <p>Excluded data: {summary.privatePilotPrepPacket.feedbackHandoff.excludedData.join(', ')}</p>
             <p>{summary.privatePilotPrepPacket.feedbackHandoff.boundary}</p>
           </div>
+          <div className="result-callout">
+            <strong>Pilot readiness verification: {summary.privatePilotPrepPacket.pilotReadinessChecklist.status}.</strong>
+            <ul className="compact-list">
+              {summary.privatePilotPrepPacket.pilotReadinessChecklist.verificationRows.map((row) => (
+                <li key={row.id}>
+                  {row.label}: {row.status} ({row.command})
+                </li>
+              ))}
+            </ul>
+            <p>No-go signals: {summary.privatePilotPrepPacket.pilotReadinessChecklist.noGoSignals.join(', ')}</p>
+            <p>{summary.privatePilotPrepPacket.pilotReadinessChecklist.boundary}</p>
+          </div>
           <p className="table-note">{summary.privatePilotPrepPacket.boundary}</p>
         </section>
       ) : null}

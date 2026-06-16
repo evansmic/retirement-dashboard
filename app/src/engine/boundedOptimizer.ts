@@ -1131,6 +1131,27 @@ export type OptimizerPrivatePilotPrepPacket = {
     failSignal: string;
     boundary: string;
   };
+  pilotReadinessChecklist: {
+    status: 'readyToVerifyBeforeScheduling' | 'blocked';
+    verificationRows: Array<{
+      id: 'focusedOptimizer' | 'uiStructure' | 'productionBuild' | 'lowStorageFullSuite' | 'noDataBoundary' | 'blockedOutputs';
+      label: string;
+      status: 'ready' | 'required' | 'blocked';
+      command: string;
+      detail: string;
+    }>;
+    noGoSignals: Array<
+      | 'failedFocusedChecks'
+      | 'failedProductionBuild'
+      | 'failedLowStorageRunner'
+      | 'inAppFeedbackStorage'
+      | 'publicOutputOpened'
+      | 'instructionCopyVisible'
+    >;
+    summary: string;
+    boundary: string;
+    nextStep: string;
+  };
   testerLimit: OptimizerPrivatePilotRequirements['testerLimit'];
   blockedOutputs: OptimizerPrivatePilotReleaseDecision['blockedOutputs'];
   summary: string;
@@ -6913,6 +6934,68 @@ export function selectOptimizerPrivatePilotPrepPacket({
         'Any unresolved instruction, advice, tax-bracket, saved-output, or material missing-context confusion keeps public optimizer output closed.',
       boundary:
         'Feedback handoff is a manual outside-app artifact only. The planner does not collect, persist, upload, score, or summarize pilot feedback.'
+    },
+    pilotReadinessChecklist: {
+      status: prepReady ? 'readyToVerifyBeforeScheduling' : 'blocked',
+      verificationRows: [
+        {
+          id: 'focusedOptimizer',
+          label: 'Focused optimizer check',
+          status: prepReady ? 'ready' : 'blocked',
+          command: 'npx vitest run app/src/engine/boundedOptimizer.test.ts -t "runs candidates through the provided runner"',
+          detail: 'Confirms optimizer gates, pilot prep packet, no-data handoff, and blocked public outputs.'
+        },
+        {
+          id: 'uiStructure',
+          label: 'UI structure check',
+          status: prepReady ? 'ready' : 'blocked',
+          command: 'npx vitest run app/src/ui/App.structure.test.js -t "explains bounded optimizer output"',
+          detail: 'Confirms private pilot prep, no-data handoff, and blocked-output copy stay visible in Results Details.'
+        },
+        {
+          id: 'productionBuild',
+          label: 'Production build',
+          status: 'required',
+          command: 'npm run build',
+          detail: 'Required before any private pilot session is scheduled.'
+        },
+        {
+          id: 'lowStorageFullSuite',
+          label: 'Low-storage full suite',
+          status: 'required',
+          command: 'npm run test:full:low-storage',
+          detail: 'Required verification baseline on the current low-storage machine.'
+        },
+        {
+          id: 'noDataBoundary',
+          label: 'No-data boundary',
+          status: prepReady ? 'ready' : 'blocked',
+          command: 'manual review',
+          detail: 'Confirm there is no in-app feedback form, persisted feedback field, telemetry, or upload path.'
+        },
+        {
+          id: 'blockedOutputs',
+          label: 'Blocked outputs',
+          status: prepReady ? 'ready' : 'blocked',
+          command: 'manual review',
+          detail: 'Confirm public release, production UI, saved optimizer output, final instructions, tax-bracket wording, CSV sequencing, and report sequencing remain closed.'
+        }
+      ],
+      noGoSignals: [
+        'failedFocusedChecks',
+        'failedProductionBuild',
+        'failedLowStorageRunner',
+        'inAppFeedbackStorage',
+        'publicOutputOpened',
+        'instructionCopyVisible'
+      ],
+      summary: prepReady
+        ? 'Pilot readiness has a current verification checklist, but pilot scheduling still waits for the required commands to pass immediately beforehand.'
+        : 'Pilot readiness verification waits for the prep packet gates.',
+      boundary:
+        'This checklist records verification expectations only. It does not run a pilot, collect feedback, store tester data, open public release, or unlock final instructions and sequencing outputs.',
+      nextStep:
+        'Run the required verification commands immediately before scheduling any opt-in private household review.'
     },
     testerLimit: privatePilotRequirements.testerLimit,
     blockedOutputs: privatePilotReleaseDecision.blockedOutputs,

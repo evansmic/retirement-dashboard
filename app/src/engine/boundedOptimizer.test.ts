@@ -2069,6 +2069,36 @@ describe('bounded optimizer runner', () => {
       'stopCondition',
       'nextAction'
     ]);
+    expect(summary.privatePilotPrepPacket.pilotReadinessChecklist).toMatchObject({
+      status: 'readyToVerifyBeforeScheduling',
+      summary: expect.stringContaining('current verification checklist'),
+      boundary: expect.stringContaining('does not run a pilot'),
+      nextStep: expect.stringContaining('immediately before scheduling')
+    });
+    expect(summary.privatePilotPrepPacket.pilotReadinessChecklist.verificationRows.map((item) => item.id)).toEqual([
+      'focusedOptimizer',
+      'uiStructure',
+      'productionBuild',
+      'lowStorageFullSuite',
+      'noDataBoundary',
+      'blockedOutputs'
+    ]);
+    expect(summary.privatePilotPrepPacket.pilotReadinessChecklist.verificationRows.map((item) => item.command)).toEqual([
+      'npx vitest run app/src/engine/boundedOptimizer.test.ts -t "runs candidates through the provided runner"',
+      'npx vitest run app/src/ui/App.structure.test.js -t "explains bounded optimizer output"',
+      'npm run build',
+      'npm run test:full:low-storage',
+      'manual review',
+      'manual review'
+    ]);
+    expect(summary.privatePilotPrepPacket.pilotReadinessChecklist.noGoSignals).toEqual([
+      'failedFocusedChecks',
+      'failedProductionBuild',
+      'failedLowStorageRunner',
+      'inAppFeedbackStorage',
+      'publicOutputOpened',
+      'instructionCopyVisible'
+    ]);
     expect(summary.privatePilotPrepPacket.blockedOutputs).toEqual(summary.privatePilotReleaseDecision.blockedOutputs);
     expect(summary.limitedPublicBetaDecision).toMatchObject({
       status: 'publicClosedPilotEvidenceRequired',
